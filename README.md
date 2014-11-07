@@ -14,7 +14,7 @@ It’s built on the hard-earned experience of several commercial BLE projects an
 Features
 ========
 
-*	Full-coverage API documentation.
+*	Full-coverage API documentation: http://idevicesinc.com/sweetblue/docs/api
 *	Sample applications.
 *	Battle-tested in commercial apps.
 *	Plain old Java with zero API-level dependencies.
@@ -22,6 +22,7 @@ Features
 *	Highly configurable scan filtering.
 *	Atomic and non-atomic transactions for easily coordinating authentication handshakes, initialization, and firmware updates.
 *	Undiscovery based on last time seen.
+*	Clean leakage of underlying native stack objects in case of emergency.
 *	Verbose logging that outputs human-readable thread IDs, UUIDs, status codes and states instead of alphabet soup.
 *	Wrangles a whole nest of thread spaghetti so you don’t have to - make a call on main thread, get a callback on main thread.
 *	Internal priority job queue that ensures serialization of all operations so native stack doesn’t get overloaded and important stuff gets done first.
@@ -43,7 +44,7 @@ Features
 Getting Started
 ===============
 
-Add these to the root of your AndroidManifiest.xml:
+Add these to the root of your AndroidManifest.xml:
 ```xml
 <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19" />
 <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -52,59 +53,38 @@ Add these to the root of your AndroidManifiest.xml:
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 ```
-Make an Activity that looks something like this:
+Then this is all it takes to connect and read a characteristic:
 ```java
-public class MyActivity extends Activity
+BleManager bleManager = new BleManager(this);
+
+bleManager.startScan(new BleManager.DiscoveryListener()
 {
-  private BleManager m_bleManager;
-	
-	@Override protected void onCreate(Bundle savedInstanceState)
+	@Override public void onDeviceDiscovered(BleDevice device)
 	{
-		super.onCreate(savedInstanceState);
+		bleManager.stopScan();
 		
-		m_bleManager = new BleManager(this);
-		
-		m_bleManager.startScan(new BleManager.I_DiscoveryListener()
+		device.connect(new BleDevice.StateListener()
 		{
-			@Override public void onDeviceDiscovered(BleDevice device)
+			@Override public void onStateChange(BleDevice device, int oldStateMask, int newStateMask)
 			{
-				m_bleManager.stopScan();
-				
-				device.connect(new BleDevice.I_StateListener()
+				if( DeviceState.INITIALIZED.wasEntered(oldStateMask, newStateMask) )
 				{
-					@Override public void onStateChange(BleDevice device, int oldStateMask, int newStateMask)
+					Log.i("SweetBlueExample", device.getDebugName() + " just initialized!");
+					
+					device.read(StandardUuids.BATTERY_LEVEL_CHARACTERISTIC_UUID, new BleDevice.ReadWriteListener()
 					{
-						if( E_BleDeviceState.INITIALIZED.wasEntered(oldStateMask, newStateMask) )
+						@Override public void onReadOrWriteComplete(Result result)
 						{
-							String toastText = device.getDebugName() + " just initialized!";
-							Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
+							if( result.wasSuccess() )
+							{
+								Log.i("SweetBlueExample", "Battery level is " + result.data[0] + "%");
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		});
 	}
-	
-	@Override protected void onResume()
-	{
-		super.onResume();
-		
-		m_bleManager.onResume();
-	}
-	
-	@Override protected void onPause()
-	{
-		super.onPause();
-		
-		m_bleManager.onPause();
-	}
-
-	@Override protected void onDestroy()
-	{
-		super.onDestroy();
-		
-		m_bleManager.onDestroy();
-	}
-}
+});
 ```
 
