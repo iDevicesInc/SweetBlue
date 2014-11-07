@@ -88,3 +88,7 @@ bleManager.startScan(new BleManager.DiscoveryListener()
 });
 ```
 
+Licensing
+=========
+
+SweetBlue is released here under the [GPLv3](http://www.gnu.org/copyleft/gpl.html). Please visit http://idevicesinc.com/sweetblue for commercial licensing options.
