@@ -3,6 +3,7 @@ Why?
 
 Android's BLE stack has some...issues...
 
+* https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues
 * https://code.google.com/p/android/issues/detail?id=58381
 * http://androidcommunity.com/nike-blames-ble-for-their-shunning-of-android-20131202/
 * http://stackoverflow.com/questions/17870189/android-4-3-bluetooth-low-energy-unstable
