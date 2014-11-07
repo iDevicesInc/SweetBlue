@@ -55,7 +55,7 @@ Add these to the root of your AndroidManifest.xml:
 ```
 Then this is all it takes to connect and read a characteristic:
 ```java
-BleManager bleManager = new BleManager(this);
+BleManager bleManager = new BleManager(MyActivity.this);
 
 bleManager.startScan(new BleManager.DiscoveryListener()
 {
