@@ -31,7 +31,7 @@ Features
 *	Detection and correction of dozens of BLE failure conditions.
 *	Numerous manufacturer-specific workarounds and hacks all hidden from you.
 *	Built-in polling for read characteristics with optional change-tracking to simulate notifications.
-*	Continuous scanning that saves battery and defers to more important operations by stopping and starting as needed under the hood.
+*	Continuous scanning mode that saves battery and defers to more important operations by stopping and starting as needed under the hood.
 *	Transparent retries for transient failure conditions related to connecting, getting services, and scanning.
 *	Rich callback mechanisms with clear enumerated reasons when something goes wrong like connection or read/write failures.
 *	Distills dozen-line, boilerplate, booby-trapped, native API usage into single method calls.
