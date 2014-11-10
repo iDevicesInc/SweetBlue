@@ -33,7 +33,7 @@ Features
 *	Built-in polling for read characteristics with optional change-tracking to simulate notifications.
 *	Continuous scanning mode that saves battery and defers to more important operations by stopping and starting as needed under the hood.
 *	Transparent retries for transient failure conditions related to connecting, getting services, and scanning.
-*	Rich callback mechanisms with clear enumerated reasons when something goes wrong like connection or read/write failures.
+*	Comprehensive callback system with clear enumerated reasons when something goes wrong like connection or read/write failures.
 *	Distills dozen-line, boilerplate, booby-trapped, native API usage into single method calls.
 *	Transparently falls back to Bluetooth Classic for certain BLE failure conditions.
 *	On-the-fly-configurable reconnection loops started automatically when random disconnects occur, e.g. from going out of range.
