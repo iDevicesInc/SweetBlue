@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/bar_padding" >
+
+    <TextView
+        android:id="@+id/device_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center|left"
+        android:textSize="@dimen/title_font_size" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/scan_button_height" >
+
+        <Button
+            android:id="@+id/connect_button"
+            android:layout_width="@dimen/scan_button_width"
+            android:layout_height="@dimen/scan_button_height"
+            android:singleLine="true"
+            android:text="@string/device_connect"
+            android:textSize="@dimen/button_font_size" />
+
+        <Button
+            android:id="@+id/disconnect_button"
+            android:layout_width="@dimen/scan_button_width"
+            android:layout_height="@dimen/scan_button_height"
+            android:singleLine="true"
+            android:text="@string/device_disconnect"
+            android:textSize="@dimen/button_font_size" />
+
+        <Button
+            android:id="@+id/bond_button"
+            android:layout_width="@dimen/scan_button_width"
+            android:layout_height="@dimen/scan_button_height"
+            android:singleLine="true"
+            android:text="@string/device_bond"
+            android:textSize="@dimen/button_font_size" />
+
+        <Button
+            android:id="@+id/unbond_button"
+            android:layout_width="@dimen/scan_button_width"
+            android:layout_height="@dimen/scan_button_height"
+            android:singleLine="true"
+            android:text="@string/device_unbond"
+            android:textSize="@dimen/button_font_size" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/device_status"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:ellipsize="marquee"
+        android:gravity="center|left"
+        android:singleLine="false"
+        android:text="@string/not_scanning"
+        android:textSize="@dimen/status_font_size" />
+
+</LinearLayout>

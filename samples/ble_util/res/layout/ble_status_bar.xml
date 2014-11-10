@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/TextView01"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ble_status"
+        android:textSize="@dimen/default_font_size"
+        android:visibility="visible" />
+
+    <TextView
+        android:id="@+id/ble_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="false"
+        android:text="@string/not_scanning"
+        android:textSize="@dimen/status_font_size"
+        android:visibility="visible" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ble_native_status"
+        android:textSize="@dimen/default_font_size"
+        android:visibility="visible" />
+
+    <TextView
+        android:id="@+id/native_ble_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="false"
+        android:text="@string/not_scanning"
+        android:textSize="@dimen/status_font_size" />
+
+</LinearLayout>

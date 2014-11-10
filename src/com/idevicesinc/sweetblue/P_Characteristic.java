@@ -1,0 +1,70 @@
+package com.idevicesinc.sweetblue;
+
+import java.util.UUID;
+
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
+
+/**
+ * 
+ * @author dougkoellmer
+ *
+ */
+class P_Characteristic
+{
+	private final BluetoothGattCharacteristic m_native;
+	private final P_Service m_service;
+	private final BleDevice m_device;
+	
+	public P_Characteristic(P_Service service, BluetoothGattCharacteristic characteristic_native)
+	{
+		m_service = service;
+		m_device = m_service.getDevice();
+		m_native = characteristic_native;
+	}
+	
+//	public BleCharacteristic(BleDevice device, BluetoothGattCharacteristic characteristic_native)
+//	{
+//		m_service = null;
+//		m_device = device;
+//		m_native = characteristic_native;
+//	}
+	
+	public UUID getUuid()
+	{
+		return m_native.getUuid();
+	}
+	
+	public BluetoothGattCharacteristic getNative()
+	{
+		return m_native;
+	}
+	
+	public BleDevice getDevice()
+	{
+		return m_device;
+	}
+	
+	public P_Service getService()
+	{
+		return m_service;
+	}
+	
+	BluetoothGattCharacteristic getGuaranteedNative()
+	{
+		if( m_service == null )  return m_native;
+		
+		BluetoothGatt gatt = m_service.getDevice().getGatt();
+		
+		if( gatt == null )  return null;
+		
+		BluetoothGattService service = gatt.getService(m_service.getUuid());
+		
+		if( service == null )  return null;
+		
+		BluetoothGattCharacteristic characteristic = service.getCharacteristic(getUuid());
+		
+		return characteristic;
+	}
+}

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Bluetooth Utility</string>
+    
+    <string name="scan_options">Scan Options</string>
+    <string name="scan_status">Status</string>
+    
+    
+    <string name="scanning">ON</string>
+    <string name="not_scanning">OFF</string>
+    
+    <string name="natively_scanning">native on</string>
+    <string name="natively_not_scanning">native off</string>
+    
+    <string name="scan_infinite">\u221E</string>
+    <string name="scan_for_x_sec">{{seconds}}sec 1x</string>
+    <string name="scan_for_x_sec_repeated">{{seconds}}sec pulses</string>
+    <string name="stop_scanning">Stop</string>
+    
+    <string name="generic_ok">OK</string>
+    
+    <string name="ble_not_supported">It does not appear that Bluetooth Low Energy is supported on this device.</string>
+    
+    <string name="ble_options">Ble Options</string>
+    <string name="ble_enable">Enable</string>
+    <string name="ble_disable">Disable</string>
+    <string name="ble_status">Abstracted Status: </string>
+    <string name="ble_native_status">Native Status: </string>
+    <string name="ble_unbond_all">Unbond All</string>
+    <string name="ble_nuke">Nuke</string>
+    
+    
+    <string name="device_status">Status</string>
+    <string name="device_connect">Connect</string>
+    <string name="device_disconnect">Disconnect</string>
+    <string name="device_bond">Bond</string>
+    <string name="device_unbond">Unbond</string>
+    
+    
+    <string name="uhoh_title">{{reason}}</string>
+    <string name="uhoh_message_nuke">It appears that Android\'s less-than-perfect bluetooth stack has gone astray. It is suggested that you drop a nuke to perhaps alleviate the problem.</string>
+    <string name="uhoh_message_nuke_drop">Drop Nuke</string>
+    <string name="uhoh_message_nuke_cancel">Cancel</string>
+    <string name="uhoh_message_phone_restart">It appears that Android\'s bluetooth stack is completely broken. A phone restart may be required.</string>
+    <string name="uhoh_message_phone_restart_ok">OK</string>
+    <string name="uhoh_message_weirdness">Something weird happened with the underlying ble stack. It will probably recover but you may have to nuke the stack or restart your phone if you keep seeing this.</string>
+    <string name="uhoh_message_weirdness_ok">OK</string>
+
+</resources>

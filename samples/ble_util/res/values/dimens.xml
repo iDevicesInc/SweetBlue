@@ -1,0 +1,14 @@
+<resources>
+    
+    <dimen name="row_height">25dp</dimen>
+    <dimen name="default_font_size">15sp</dimen>
+    <dimen name="title_font_size">@dimen/default_font_size</dimen>
+    <dimen name="scan_button_width">80dp</dimen>
+    <dimen name="scan_button_height">40dp</dimen>
+    <dimen name="default_padding">10dp</dimen>
+    <dimen name="bar_padding">@dimen/default_padding</dimen>
+    <dimen name="title_height">40dp</dimen>
+    <dimen name="button_font_size">10sp</dimen>
+    <dimen name="status_font_size">12sp</dimen>
+
+</resources>
