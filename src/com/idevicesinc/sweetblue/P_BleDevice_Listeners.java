@@ -207,7 +207,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if( status == PS_GattStatus.UNKNOWN_STATUS_FOR_IMMEDIATE_CONNECTION_FAILURE )
 				{
-//					m_device.getManager().uhOh(E_UhOhReason.UNKNOWN_CONNECTION_ERROR);
+//					m_device.getManager().uhOh(UhOhReason.UNKNOWN_CONNECTION_ERROR);
 				}
 			}
 		}

@@ -36,7 +36,7 @@ public abstract class BleTransaction
 		
 		/**
 		 * The transaction's {@link BleDevice} became {@link E_DeviceState#DISCONNECTED}
-		 * or/and {@link BleManager} went {@link E_BleState#OFF}.
+		 * or/and {@link BleManager} went {@link BleState#OFF}.
 		 */
 		CANCELLED,
 		

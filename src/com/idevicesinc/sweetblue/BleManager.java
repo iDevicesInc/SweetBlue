@@ -1432,7 +1432,7 @@ public class BleManager
 	
 	void uhOh(UhOh reason)
 	{
-//		if( reason == E_UhOh.UNKNOWN_CONNECTION_ERROR )
+//		if( reason == UhOh.UNKNOWN_CONNECTION_ERROR )
 //		{
 //			m_connectionFailTracker = 0;
 //		}
@@ -1450,7 +1450,7 @@ public class BleManager
 		{
 			m_connectionFailTracker = 0;
 			
-//			uhOh(E_UhOh.MULTIPLE_CONNECTIONS_FAILED);
+//			uhOh(UhOh.MULTIPLE_CONNECTIONS_FAILED);
 		}
 	}
 	

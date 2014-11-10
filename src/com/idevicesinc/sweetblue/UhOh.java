@@ -85,13 +85,13 @@ public enum UhOh
 	CONNECTED_WITHOUT_EVER_CONNECTING,
 	
 	/**
-	 * Similar in concept to {@link E_UhOh#RANDOM_EXCEPTION} but used when {@link DeadObjectException} is thrown.
+	 * Similar in concept to {@link UhOh#RANDOM_EXCEPTION} but used when {@link DeadObjectException} is thrown.
 	 */
 	DEAD_OBJECT_EXCEPTION,
 	
 	/**
 	 * The underlying native BLE stack enjoys surprising you with random exceptions. Every time a new one is discovered
-	 * it is wrapped in a try/catch and this {@link E_UhOh} is dispatched.
+	 * it is wrapped in a try/catch and this {@link UhOh} is dispatched.
 	 */
 	RANDOM_EXCEPTION,
 	

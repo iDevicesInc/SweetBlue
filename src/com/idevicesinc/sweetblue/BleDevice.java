@@ -81,13 +81,13 @@ public class BleDevice
 			FAILED_IMMEDIATELY,
 			
 			/**
-			 * The operation was cancelled either by the device becoming {@link E_DeviceState#DISCONNECTED} or {@link BleManager} turning {@link E_BleState#OFF}.
+			 * The operation was cancelled either by the device becoming {@link E_DeviceState#DISCONNECTED} or {@link BleManager} turning {@link BleState#OFF}.
 			 */
 			CANCELLED,
 			
 			/**
 			 * Used if {@link Result#type} {@link E_Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()}.
-			 * Will throw an {@link E_UhOh#READ_RETURNED_NULL} but hopefully it was just a glitch. If problem persists try {@link BleManager#dropTacticalNuke()}.
+			 * Will throw an {@link UhOh#READ_RETURNED_NULL} but hopefully it was just a glitch. If problem persists try {@link BleManager#dropTacticalNuke()}.
 			 */
 			NULL_CHARACTERISTIC_VALUE,
 			
