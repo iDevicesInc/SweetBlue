@@ -541,13 +541,13 @@ public class BleDevice
 	/**
 	 * Similar to {@link #is(DeviceState)} and {@link #isAny(DeviceState...)} but allows you
 	 * to give a simple query made up of {@link DeviceState} and {@link Boolean} pairs. So an example
-	 * would be <code>is({@link DeviceState#CONNECTING}, true, {@link DeviceState#ATTEMPTING_RECONNECT}, false)</code>.
+	 * would be <code>myDevice.is({@link DeviceState#CONNECTING}, true, {@link DeviceState#ATTEMPTING_RECONNECT}, false)</code>.
 	 */
 	public boolean is(Object ... query)
 	{
 		synchronized (m_threadLock)
 		{
-			if( query.length == 0 )  return false;
+			if( query == null || query.length == 0 )  return false;
 			
 			for( int i = 0; i < query.length; i+=2 )
 			{

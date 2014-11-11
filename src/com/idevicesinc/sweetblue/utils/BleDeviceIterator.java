@@ -41,9 +41,12 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		
 		if( m_query == null )
 		{
-			m_next = m_base < m_all.size() ? m_base : null;
-			
-			return true;
+			if( m_base < m_all.size() )
+			{
+				m_next = m_base;
+				
+				return true;
+			}
 		}
 		else
 		{
