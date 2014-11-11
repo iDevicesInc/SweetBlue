@@ -44,7 +44,7 @@ Features
 
 Getting Started
 ===============
-Download the library and copy it to a subfolder of your project such as MyApp/libs/. In Eclipse, right-click on your project, choose Build Path->Configure Build Path...->Add Folder... and select MyApp/libs/sweetblue/src/. Other folders in MyApp/libs/sweetblue/ like MyApp/libs/sweetblue/samples/ are included in this repo for convenience but are not essential so you may delete them.
+[Download](https://github.com/iDevicesInc/SweetBlue/releases) the library and copy it to a subfolder of your project such as MyApp/libs/. In Eclipse, right-click on your project, choose Build Path->Configure Build Path...->Add Folder... and select MyApp/libs/sweetblue/src/. Other folders in MyApp/libs/sweetblue/ like MyApp/libs/sweetblue/samples/ are included in this repo for convenience but are not essential so you may delete them.
 
 Now add these to the root of MyApp/AndroidManifest.xml:
 ```xml
@@ -93,4 +93,4 @@ bleManager.startScan(new BleManager.DiscoveryListener()
 Licensing
 =========
 
-SweetBlue is released here under the [GPLv3](http://www.gnu.org/copyleft/gpl.html). Please visit http://idevicesinc.com/sweetblue for commercial licensing options.
+SweetBlue is released here under the [GPLv3](http://www.gnu.org/copyleft/gpl.html). Please visit http://idevicesinc.com/sweetblue for proprietary licensing options.
