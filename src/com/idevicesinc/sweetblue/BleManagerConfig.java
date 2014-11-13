@@ -391,27 +391,30 @@ public class BleManagerConfig implements Cloneable
 	public int		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
+	 * Default is null, meaning no filtering - all discovered devices will be piped through {@link BleManager.DiscoveryListener}.
+	 * 
 	 * @see AdvertisingFilter
 	 */
 	public AdvertisingFilter defaultAdvertisingFilter;
 	
 	/**
+	 * Default is null, meaning the library won't preemptively attempt to bond for any characteristic operations.
 	 * @see BondingFilter
 	 */
 	public BondingFilter bondingFilter;
 	
 	/**
-	 * Can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
+	 * Default is null - Can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
 	 * which will override the implementation provided here.
 	 * 
 	 * @see BleManager.DiscoveryListener
 	 */
-	public BleManager.DiscoveryListener defaultDiscoveryListener;
+	public BleManager.DiscoveryListener defaultDiscoveryListener = null;
 	
 	/**
-	 * Set an implementation here to have fine control over reconnect behavior - basically how often/long
-	 * the library attempts to reconnect to a device that for example may have gone out of range. By default
-	 * this is set to an instance of {@link DefaultReconnectRateLimiter}. Set this variable to
+	 * Default is an instance of {@link DefaultReconnectRateLimiter} - set an implementation here to
+	 * have fine control over reconnect behavior. This is basically how often and how long
+	 * the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
 	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
 	 * {@link #manageCpuWakeLock} useful in order to force the app/device to stay awake while attempting a reconnect.
 	 * 
@@ -431,10 +434,10 @@ public class BleManagerConfig implements Cloneable
 	};
 	
 	/**
-	 * Optional, only used if {@link #loggingEnabled} is true. Provides a look-up table
+	 * Default is null - optional, only used if {@link #loggingEnabled} is true. Provides a look-up table
 	 * so logs can show the name associated with a {@link UUID} along with its numeric string.
 	 */
-	public List<UuidNameMap> uuidNameMaps;
+	public List<UuidNameMap> uuidNameMaps = null;
 	
 	//--- DRK > Not sure if this is useful so keeping it package private for now.
 	int		connectionFailUhOhCount						= 0;
