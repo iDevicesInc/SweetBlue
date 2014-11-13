@@ -391,7 +391,8 @@ public class BleManagerConfig implements Cloneable
 	public int		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
-	 * Default is null, meaning no filtering - all discovered devices will be piped through {@link BleManager.DiscoveryListener}.
+	 * Default is null, meaning no filtering - all discovered devices will
+	 * be piped through your {@link BleManager.DiscoveryListener} instance.
 	 * 
 	 * @see AdvertisingFilter
 	 */

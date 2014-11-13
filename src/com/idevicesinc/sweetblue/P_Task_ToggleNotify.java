@@ -53,7 +53,10 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			this.fail();  return;
 		}
 		
-		descriptor.setValue(m_enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+		if( !descriptor.setValue(m_enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE) )
+		{
+			this.fail();  return;
+		}
 		
 		if( !getDevice().getGatt().writeDescriptor(descriptor) )
 		{
