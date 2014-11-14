@@ -15,8 +15,8 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener;
  * the app can warn its user about. It's kind of like an {@link Exception} but they can be so common
  * that using {@link Exception} would render this library unusable without a rat's nest of try/catches.
  * Instead you implement {@link BleManager.UhOhListener} to receive them. Each {@link UhOh} has a {@link UhOh#getRemedy()}
- * that suggests what might be done about it. 
- * 
+ * that suggests what might be done about it.
+ * <br><br>
  * The term UhOh may be ridiculous but it was only chosen because Android's bluetooth stack behaves so ridiculously in the first place.
  * 
  * @see UhOhListener
