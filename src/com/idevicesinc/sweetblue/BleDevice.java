@@ -91,10 +91,16 @@ public class BleDevice
 			CANCELLED,
 			
 			/**
-			 * Used if {@link Result#type} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()}.
+			 * Used if {@link Result#type} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
+			 * the operation being otherwise "successful".
 			 * Will throw an {@link UhOh#READ_RETURNED_NULL} but hopefully it was just a glitch. If problem persists try {@link BleManager#dropTacticalNuke()}.
 			 */
 			NULL_CHARACTERISTIC_VALUE,
+			
+			/**
+			 * Used when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data}. 
+			 */
+			EMPTY_CHARACTERISTIC_VALUE,
 			
 			/**
 			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means
@@ -193,13 +199,18 @@ public class BleDevice
 			 */
 			public final double totalTime;
 			
-			Result(BleDevice device, UUID uuid, Type type, byte[] data, Status status, double totalTime, double transitTime)
+			Result(BleDevice device, UUID uuid, Type type, byte[] data_in, Status status_in, double totalTime, double transitTime)
 			{
+				if( data_in.length == 0 )
+				{
+					status_in = Status.EMPTY_CHARACTERISTIC_VALUE;
+				}
+				
 				this.device = device;
 				this.uuid = uuid;
 				this.type = type;
-				this.data = data != null ? data : EMPTY_BYTE_ARRAY;
-				this.status = status;
+				this.data = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
+				this.status = status_in;
 				this.totalTime = totalTime;
 				this.transitTime = transitTime;
 			}
@@ -963,6 +974,7 @@ public class BleDevice
 				
 				return;
 			}
+			
 			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 			
 			if( characteristic != null && is(INITIALIZED) )
