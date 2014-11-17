@@ -70,6 +70,11 @@ public class BleDevice
 			NO_MATCHING_CHARACTERISTIC,
 			
 			/**
+			 * You tried to do a read on a characteristic that is write-only, or vice-versa, or tried to read a notify-only characteristic, etc., etc. 
+			 */
+			OPERATION_NOT_SUPPORTED,
+			
+			/**
 			 * Device is not {@link DeviceState#CONNECTED}.
 			 */
 			NOT_CONNECTED,
@@ -130,6 +135,12 @@ public class BleDevice
 			 * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)}.
 			 */
 			NOTIFICATION,
+			
+			/**
+			 * Similar to {@link #NOTIFICATION}, kicked off from {@link BleDevice#enableNotify(UUID, ReadWriteListener)},
+			 * but under the hood this is treated differently.
+			 */
+			INDICATION,
 			
 			/**
 			 * Associated with {@link BleDevice#startChangeTrackingPoll(UUID, Interval, ReadWriteListener)} or
@@ -941,6 +952,17 @@ public class BleDevice
 	{
 		synchronized (m_threadLock)
 		{
+			Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.NOTIFICATION);
+			
+			if( earlyOutResult != null )
+			{
+				if( listener != null )
+				{
+					listener.onReadOrWriteComplete(earlyOutResult);
+				}
+				
+				return;
+			}
 			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 			
 			if( characteristic != null && is(INITIALIZED) )
@@ -1471,7 +1493,6 @@ public class BleDevice
 	void onFullyInitialized(Object ... extraFlags)
 	{
 		m_mngr.onConnectionSucceeded();
-		m_pollMngr.enableNotifications();
 		m_reconnectMngr.stop();
 		m_connectionFailMngr.onFullyInitialized();
 		
@@ -1480,6 +1501,8 @@ public class BleDevice
 			extraFlags, ATTEMPTING_RECONNECT, false, CONNECTING_OVERALL, false,
 			AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true
 		);
+		
+		m_pollMngr.enableNotifications();
 	}
 	
 	private void setStateToDisconnected(boolean attemptingReconnect, boolean fromBleCallback)
@@ -1658,15 +1681,19 @@ public class BleDevice
 	{
 		synchronized (m_threadLock)
 		{
-			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+			Result earlyOut = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, type);
 			
-			if( characteristic == null )
+			if( earlyOut != null )
 			{
-				Result result = new Result(this, uuid, type, EMPTY_BYTE_ARRAY, Status.NO_MATCHING_CHARACTERISTIC, 0.0, 0.0);
-				listener.onReadOrWriteComplete(result);
+				if( listener != null )
+				{
+					listener.onReadOrWriteComplete(earlyOut);
+				}
 				
 				return;
 			}
+			
+			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 			
 			read_internal(characteristic, type, listener);
 		}
@@ -1686,15 +1713,19 @@ public class BleDevice
 	{
 		synchronized (m_threadLock)
 		{
-			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+			Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, data, Type.WRITE);
 			
-			if( characteristic == null )
+			if( earlyOutResult != null )
 			{
-				Result result = new Result(this, uuid, Type.WRITE, EMPTY_BYTE_ARRAY, Status.NO_MATCHING_CHARACTERISTIC, 0.0, 0.0);
-				listener.onReadOrWriteComplete(result);
+				if( listener != null )
+				{
+					listener.onReadOrWriteComplete(earlyOutResult);
+				}
 				
 				return;
 			}
+			
+			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 			
 			write_internal(characteristic, data, listener);
 		}

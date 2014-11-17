@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.util.Log;
@@ -103,6 +107,104 @@ class P_ServiceManager
 		}
 	}
 	
+	BleDevice.ReadWriteListener.Result getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
+	{
+		if( !m_device.is(DeviceState.CONNECTED) )
+		{
+			if( type != BleDevice.ReadWriteListener.Type.NOTIFICATION )
+			{
+				Result result = new Result(m_device, uuid, type, data, Status.NOT_CONNECTED, 0.0, 0.0);
+				
+				return result;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		
+		P_Characteristic characteristic = getCharacteristic(uuid);
+		BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
+		type = modifyType(char_native, type);
+		
+		if( characteristic == null || char_native == null )
+		{
+			Result result = new Result(m_device, uuid, type, data, Status.NO_MATCHING_CHARACTERISTIC, 0.0, 0.0);
+			
+			return result;
+		}
+		
+		int property = getProperty(type);
+		
+		if( (char_native.getProperties() & property) == 0x0 )
+		{
+			Result result = new Result(m_device, uuid, type, data, Status.OPERATION_NOT_SUPPORTED, 0.0, 0.0);
+			
+			return result;
+		}
+		
+		return null;
+	}
+	
+	BleDevice.ReadWriteListener.Type modifyType(BluetoothGattCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
+	{
+		if( char_native != null )
+		{
+			if( type == Type.NOTIFICATION )
+			{
+				if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0x0 )
+				{
+					if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0x0 )
+					{
+						type = Type.INDICATION;
+					}
+				}
+			}
+		}
+		
+		return type;
+	}
+	
+	private int getProperty(BleDevice.ReadWriteListener.Type type)
+	{
+		int property = 0x0;
+		
+		switch(type)
+		{
+			case READ:
+			case POLL:
+			case PSUEDO_NOTIFICATION:
+			{
+				property = BluetoothGattCharacteristic.PROPERTY_READ;
+				
+				break;
+			}
+			
+			case WRITE:
+			{
+				property = BluetoothGattCharacteristic.PROPERTY_WRITE;
+				
+				break;
+			}
+			
+			case NOTIFICATION:
+			{
+				property = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
+						
+				break;
+			}
+			
+			case INDICATION:
+			{
+				property = BluetoothGattCharacteristic.PROPERTY_INDICATE;
+						
+				break;
+			}
+		}
+		
+		return property;
+	}
+	
 	private boolean hasOldService(BluetoothGattService service_native)
 	{
 		for( int i = 0; i < m_oldServices.size(); i++ )
@@ -190,3 +292,4 @@ class P_ServiceManager
 		}
 	}
 }
+

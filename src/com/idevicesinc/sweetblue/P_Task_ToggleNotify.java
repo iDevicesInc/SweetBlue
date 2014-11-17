@@ -18,6 +18,12 @@ import android.bluetooth.BluetoothGattDescriptor;
  */
 class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {
+	private static enum Type
+	{
+		NOTIFY,
+		INDICATE
+	}
+	
 	private final boolean m_enable;
 	
 	public P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable)
@@ -53,7 +59,25 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			this.fail();  return;
 		}
 		
-		if( !descriptor.setValue(m_enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE) )
+		Type type = null;
+		
+		if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0x0 )
+		{
+			type = Type.NOTIFY;
+		}
+		else if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0x0 )
+		{
+			type = Type.INDICATE;
+		}
+		else
+		{
+			type = Type.NOTIFY;
+		}
+		
+		final byte[] enableValue = type == Type.NOTIFY ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.ENABLE_INDICATION_VALUE;
+		final byte[] disableValue = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
+		
+		if( !descriptor.setValue(m_enable ? enableValue : disableValue) )
 		{
 			this.fail();  return;
 		}

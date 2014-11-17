@@ -5,12 +5,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
  * 
@@ -131,14 +133,17 @@ class P_PollManager
 		
 		void onCharacteristicChangedFromNativeNotify(byte[] value)
 		{
+			BluetoothGattCharacteristic char_native = m_device.getServiceManager().getCharacteristic(m_uuid).getGuaranteedNative(); 
+			Type type = m_device.getServiceManager().modifyType(char_native, Type.NOTIFICATION);
+			
 			if( value == null )
 			{
-				Result result = new Result(m_device, m_uuid, Type.NOTIFICATION, value, Status.NULL_CHARACTERISTIC_VALUE, 0.0, 0.0);
+				Result result = new Result(m_device, m_uuid, type, value, Status.NULL_CHARACTERISTIC_VALUE, 0.0, 0.0);
 				m_internalPollingListener.onReadOrWriteComplete(result);
 			}
 			else
 			{
-				Result result = new Result(m_device, m_uuid, Type.NOTIFICATION, value, Status.SUCCESS, 0.0, 0.0);
+				Result result = new Result(m_device, m_uuid, type, value, Status.SUCCESS, 0.0, 0.0);
 				m_internalPollingListener.onReadOrWriteComplete(result);
 			}
 			
@@ -154,6 +159,7 @@ class P_PollManager
 		void update(double timeStep)
 		{
 			if( m_interval <= 0.0 )  return;
+			if( m_interval == Interval.INFINITE.seconds )  return;
 			
 			m_timeTracker += timeStep;
 			
@@ -264,7 +270,23 @@ class P_PollManager
 				
 				if( ithEntry.usingNotify() )
 				{
+					BleDevice.ReadWriteListener.Result earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.NOTIFICATION);
+					
+					if( earlyOutResult != null )
+					{
+						if( ithEntry.m_externalReadWriteListener != null )
+						{
+							ithEntry.m_externalReadWriteListener.onReadOrWriteComplete(earlyOutResult);
+						}
+						
+						m_entries.remove(i);
+						i--;
+						
+						continue;
+					}
+					
 					P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(ithEntry.m_uuid);
+					
 					m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(characteristic, /*enable=*/true));
 				}
 			}

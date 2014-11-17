@@ -115,6 +115,7 @@ public class BleManagerConfig implements Cloneable
 	
 	/**
 	 * An optional interface you can implement on {@link BleManagerConfig#reconnectRateLimiter } to control reconnection behavior.
+	 * Note that {@link BleDevice#disconnect()} will also cancel any ongoing reconnect loop.
 	 * 
 	 * @see #reconnectRateLimiter
 	 * @see DefaultReconnectRateLimiter
@@ -135,8 +136,8 @@ public class BleManagerConfig implements Cloneable
 		
 		/**
 		 * Called for every connection failure while device is {@link DeviceState#ATTEMPTING_RECONNECT}.
-		 * Use the static members of this interface to create return values to stop reconnection or try again
-		 * instantly. Use static methods of {@link Interval} to try again after some amount of time. Numeric parameters
+		 * Use the static members of this interface to create return values to stop reconnection ({@link #CANCEL}) or try again
+		 * instantly ({@link #INSTANTLY}). Use static methods of {@link Interval} to try again after some amount of time. Numeric parameters
 		 * are provided in order to give the app a variety of ways to calculate the next delay. Use all, some, or none of them.
 		 */
 		Interval getTimeToNextReconnect(BleDevice device, int connectFailureCount, Interval totalTimeReconnecting, Interval previousDelay);

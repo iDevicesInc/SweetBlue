@@ -51,6 +51,15 @@ class P_Characteristic
 		return m_service;
 	}
 	
+	boolean isSupported(int BluetoothGattCharacteristic_PROPERTY)
+	{
+		BluetoothGattCharacteristic char_native = getGuaranteedNative();
+		
+		if( char_native == null )  return false;
+		
+		return (char_native.getProperties() & BluetoothGattCharacteristic_PROPERTY) != 0x0;
+	}
+	
 	BluetoothGattCharacteristic getGuaranteedNative()
 	{
 		if( m_service == null )  return m_native;
