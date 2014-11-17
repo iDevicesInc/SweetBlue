@@ -73,7 +73,7 @@ bleManager.startScan(new BleManager.DiscoveryListener()
 				{
 					Log.i("SweetBlueExample", device.getDebugName() + " just initialized!");
 					
-					device.read(StandardUuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+					device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
 					{
 						@Override public void onReadOrWriteComplete(Result result)
 						{
