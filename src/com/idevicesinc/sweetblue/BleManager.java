@@ -602,17 +602,17 @@ public class BleManager
 	/**
 	 * Overload of {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter, DiscoveryListener)}
 	 */
-	public void startScan(Interval interval, AdvertisingFilter filter)
+	public void startScan(Interval scanTime, AdvertisingFilter filter)
 	{
-		startScan(Interval.INFINITE, filter, (DiscoveryListener)null);
+		startScan(scanTime, filter, (DiscoveryListener)null);
 	}
 	
 	/**
 	 * Overload of {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter, DiscoveryListener)}
 	 */
-	public void startScan(Interval interval, DiscoveryListener discoveryListener)
+	public void startScan(Interval scanTime, DiscoveryListener discoveryListener)
 	{
-		startScan(Interval.INFINITE, (AdvertisingFilter)null, discoveryListener);
+		startScan(scanTime, (AdvertisingFilter)null, discoveryListener);
 	}
 	
 	/**
