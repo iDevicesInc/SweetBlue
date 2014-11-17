@@ -26,8 +26,6 @@ public class MyActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		
-		Uuids.fromShort((short)0x180f, "");
-		
 		m_bleManager = new BleManager(MyActivity.this);
 		
 		m_bleManager.startScan(new BleManager.DiscoveryListener()
