@@ -1727,14 +1727,6 @@ public class BleDevice
 			
 			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 			
-			write_internal(characteristic, data, listener);
-		}
-	}
-	
-	void write_internal(P_Characteristic characteristic, byte[] data, P_WrappingReadWriteListener listener)
-	{
-		synchronized (m_threadLock)
-		{
 			boolean requiresBonding = requiresBonding(characteristic);
 			
 			m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
