@@ -96,7 +96,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 
 		 if( Utils.isSuccess(status) )
 		 {
-			succeed();
+			 succeed();
 		 }
 		 else
 		 {
