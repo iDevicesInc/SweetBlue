@@ -107,8 +107,9 @@ public class BleManager
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_Discovery(DiscoveryListener)} to receive
 	 * callbacks when a device is discovered after calling various {@link BleManager#startScan()}
-	 * or {@link BleManager#startPeriodicScan(Interval, Interval)} methods.
-	 * <<br><br>
+	 * or {@link BleManager#startPeriodicScan(Interval, Interval)} methods. You can also provide this to various
+	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
+	 * <br><br>
 	 * Use {@link DiscoveryListener_Full} for more detailed events.
 	 * 
 	 * @author dougkoellmer
@@ -583,7 +584,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Calls {@link #startScan(Interval, AdvertisingFilter)} with {@link Interval#INFINITE}.
+	 * Calls {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter)} with {@link Interval#INFINITE}.
 	 */
 	public void startScan(AdvertisingFilter filter)
 	{
@@ -599,7 +600,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Overload of {@link #startScan(Interval, AdvertisingFilter, DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter, DiscoveryListener)}
 	 */
 	public void startScan(Interval interval, AdvertisingFilter filter)
 	{
@@ -607,7 +608,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Overload of {@link #startScan(Interval, AdvertisingFilter, DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter, DiscoveryListener)}
 	 */
 	public void startScan(Interval interval, DiscoveryListener discoveryListener)
 	{

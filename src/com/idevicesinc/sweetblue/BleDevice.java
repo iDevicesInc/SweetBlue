@@ -56,8 +56,8 @@ public class BleDevice
 		public static enum Status
 		{
 			/**
-			 * If {@link Result#type} {@link E_Type#isRead()} then {@link Result#data} should contain
-			 * some data returned from the device. If type is {@link E_Type#WRITE} then {@link Result#data}
+			 * If {@link Result#type} {@link Type#isRead()} then {@link Result#data} should contain
+			 * some data returned from the device. If type is {@link Type#WRITE} then {@link Result#data}
 			 * was sent to the device.
 			 */
 			SUCCESS,
@@ -70,7 +70,7 @@ public class BleDevice
 			NO_MATCHING_CHARACTERISTIC,
 			
 			/**
-			 * Device is not {@link E_DeviceState#CONNECTED}.
+			 * Device is not {@link DeviceState#CONNECTED}.
 			 */
 			NOT_CONNECTED,
 			
@@ -81,19 +81,19 @@ public class BleDevice
 			FAILED_IMMEDIATELY,
 			
 			/**
-			 * The operation was cancelled either by the device becoming {@link E_DeviceState#DISCONNECTED} or {@link BleManager} turning {@link BleState#OFF}.
+			 * The operation was cancelled either by the device becoming {@link DeviceState#DISCONNECTED} or {@link BleManager} turning {@link BleState#OFF}.
 			 */
 			CANCELLED,
 			
 			/**
-			 * Used if {@link Result#type} {@link E_Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()}.
+			 * Used if {@link Result#type} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()}.
 			 * Will throw an {@link UhOh#READ_RETURNED_NULL} but hopefully it was just a glitch. If problem persists try {@link BleManager#dropTacticalNuke()}.
 			 */
 			NULL_CHARACTERISTIC_VALUE,
 			
 			/**
 			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means
-			 * for example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int) returned
+			 * for example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)} returned
 			 * a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted, whatever.
 			 */
 			FAILED_EVENTUALLY,
@@ -210,7 +210,7 @@ public class BleDevice
 	
 	/**
 	 * Provide an implementation to {@link BleDevice#setListener_State(StateListener)} and/or
-	 * {@link BleManager#setListener_DeviceState(StateListener)} to receive state change events.
+	 * {@link BleManager#setListener_DeviceState(BleDevice.StateListener)} to receive state change events.
 	 * 
 	 * @see DeviceState
 	 * @see BleDevice#setListener_State(StateListener)
@@ -275,8 +275,8 @@ public class BleDevice
 			
 			/**
 			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
-			 * but only occurs after the device is {@link E_DeviceState#CONNECTED} and we're going through {@link E_DeviceState#GETTING_SERVICES},
-			 * or {@link E_DeviceState#AUTHENTICATING}, or what have you.
+			 * but only occurs after the device is {@link DeviceState#CONNECTED} and we're going through {@link DeviceState#GETTING_SERVICES},
+			 * or {@link DeviceState#AUTHENTICATING}, or what have you.
 			 */
 			ROGUE_DISCONNECT,
 			

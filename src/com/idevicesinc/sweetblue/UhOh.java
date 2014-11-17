@@ -29,7 +29,7 @@ public enum UhOh
 	/**
 	 * A {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)}
 	 * took longer than {@link BleManagerConfig#DEFAULT_TASK_TIMEOUT} seconds.
-	 * You will also get a {@link BleDevice.ReadWriteListener.Result} with {@link E_Status#TIMED_OUT}
+	 * You will also get a {@link BleDevice.ReadWriteListener.Result} with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}
 	 * but a timeout is a sort of fringe case that should not regularly happen.
 	 */
 	READ_TIMED_OUT,
@@ -53,7 +53,7 @@ public enum UhOh
 	INCONSISTENT_NATIVE_BLE_STATE,
 	
 	/**
-	 * A {@link BleDevice} went from {@link E_DeviceState#BONDING} to {@link E_DeviceState#UNBONDED}.
+	 * A {@link BleDevice} went from {@link DeviceState#BONDING} to {@link DeviceState#UNBONDED}.
 	 */
 	WENT_FROM_BONDING_TO_UNBONDED,
 	

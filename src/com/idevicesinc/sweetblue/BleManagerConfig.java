@@ -105,7 +105,7 @@ public class BleManagerConfig implements Cloneable
 		
 		/**
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
-		 * and the {@link Collection} passed into {@link #DefaultAdvertisingFilter(Collection)}.
+		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultAdvertisingFilter#DefaultAdvertisingFilter(Collection)}.
 		 */
 		@Override public boolean acknowledgeDiscovery(BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName, String normalizedDeviceName, byte[] scanRecord, int rssi)
 		{
@@ -258,7 +258,7 @@ public class BleManagerConfig implements Cloneable
 	 * connected but one or more devices are {@link DeviceState#ATTEMPTING_RECONNECT}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link ReconnectRateLimiter#CANCEL} from {@link ReconnectRateLimiter#getTimeToNextReconnect(BleDevice, int, double, double)}.
+	 * {@link ReconnectRateLimiter#CANCEL} from {@link ReconnectRateLimiter#getTimeToNextReconnect(BleDevice, int, Interval, Interval)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  
@@ -287,7 +287,7 @@ public class BleManagerConfig implements Cloneable
 	 * <br><br>
 	 * HOWEVER, it's important to note that the library WILL automatically revert to autoConnect==true after a first failed
 	 * connection if you do a retry by returning {@link BleDevice.ConnectionFailListener.Please#RETRY} from
-	 * {@link ConnectionFailListener#onConnectionFail(BleDevice, BleDevice.ConnectionFailListener.E_Reason, int)}.
+	 * {@link ConnectionFailListener#onConnectionFail(BleDevice, BleDevice.ConnectionFailListener.Reason, int)}.
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
@@ -347,12 +347,12 @@ public class BleManagerConfig implements Cloneable
 	public Interval autoScanIntervalWhileAppIsPaused	= Interval.DISABLED;
 	
 	/**
-	 * Default is {@link Interval#DEFAULT_MINIMUM_SCAN_TIME} seconds - Minimum amount of time in seconds that the library strives to give to a scanning operation.  
+	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Minimum amount of time in seconds that the library strives to give to a scanning operation.  
 	 */
 	public Interval	idealMinScanTime					= Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
-	 * Default is {@link Interval#DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
+	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
 	 * approximated by checking when the last time was that we discovered a device,
 	 * and if this time is greater than {@link #scanKeepAlive} then the device is undiscovered. However a scan
 	 * operation must be allowed a certain amount of time to make sure it discovers all nearby devices that are
@@ -364,7 +364,7 @@ public class BleManagerConfig implements Cloneable
 	public Interval	minScanTimeToInvokeUndiscovery		= Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
-	 * Default is {@link Interval#DEFAULT_SCAN_KEEP_ALIVE} seconds - If a device exceeds this amount of time since its
+	 * Default is {@link #DEFAULT_SCAN_KEEP_ALIVE} seconds - If a device exceeds this amount of time since its
 	 * last discovery then it is a candidate for being undiscovered.
 	 * The default for this option attempts to accommodate the worst Android phones (BLE-wise), which may make it seem
 	 * like it takes a long time to undiscover a device. You may want to configure this number based on the phone or
@@ -376,7 +376,7 @@ public class BleManagerConfig implements Cloneable
 	public Interval	scanKeepAlive						= Interval.seconds(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
-	 * Default is {@link Interval#DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
+	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
 	 * 
 	 * @see BleDevice#getAverageWriteTime()
 	 * @see #nForAverageRunningReadTime
@@ -384,7 +384,7 @@ public class BleManagerConfig implements Cloneable
 	public int		nForAverageRunningWriteTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
-	 * Default is {@link Interval#DEFAULT_RUNNING_AVERAGE_N} - Same thing as {@link #nForAverageRunningWriteTime} but for reads.
+	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - Same thing as {@link #nForAverageRunningWriteTime} but for reads.
 	 * 
 	 * @see BleDevice#getAverageWriteTime()
 	 * @see #nForAverageRunningWriteTime

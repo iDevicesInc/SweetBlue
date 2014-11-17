@@ -35,7 +35,7 @@ public abstract class BleTransaction
 		SUCCEEDED,
 		
 		/**
-		 * The transaction's {@link BleDevice} became {@link E_DeviceState#DISCONNECTED}
+		 * The transaction's {@link BleDevice} became {@link DeviceState#DISCONNECTED}
 		 * or/and {@link BleManager} went {@link BleState#OFF}.
 		 */
 		CANCELLED,
