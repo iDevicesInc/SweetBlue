@@ -103,6 +103,12 @@ public class BleManagerConfig implements Cloneable
 			m_whitelist = new ArrayList<UUID>(whitelist);
 		}
 		
+		public DefaultAdvertisingFilter(UUID whitelist)
+		{
+			m_whitelist = new ArrayList<UUID>();
+			m_whitelist.add(whitelist);
+		}
+		
 		/**
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
 		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultAdvertisingFilter#DefaultAdvertisingFilter(Collection)}.
@@ -205,7 +211,8 @@ public class BleManagerConfig implements Cloneable
 	public boolean autoGetServices						= true;
 	
 	/**
-	 * Some android devices have known issues when it comes to bonding. So far the worst culprits
+	 * Default is true if phone is manufactured by Sony, false otherwise (sorry Sony) - Some
+	 * android devices have known issues when it comes to bonding. So far the worst culprits
 	 * are Xperias. To be safe this is set to true by default if we're running on a Sony device.
 	 * The problem seems to be associated with mismanagement of pairing keys by the OS and
 	 * this brute force solution seems to be the only way to smooth things out.

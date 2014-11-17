@@ -45,6 +45,14 @@ public class Uuids
 	}
 	
 	/**
+	 * Overload of {@link #fromShort(short)} so you don't have to downcast hardcoded integers yourself.
+	 */
+	public static UUID fromShort(int assignedNumber)
+	{
+		return fromShort((short)assignedNumber);
+	}
+	
+	/**
 	 * Convenience overload of {@link #fromShort(String, String)} that converts the given
 	 * short to a {@link String} hex representation.
 	 * For example to create the battery level characteristic you would call
@@ -55,6 +63,15 @@ public class Uuids
 		String hex = Integer.toHexString(assignedNumber & 0xffff);
 		
 		return fromShort(hex, uuidTemplate);
+	}
+	
+	/**
+	 * Convenience overload of {@link #fromShort(short, String)} so you don't
+	 * have to downcast hardcoded integers yourself.
+	 */
+	public static UUID fromShort(int assignedNumber, String uuidTemplate)
+	{
+		return fromShort((short) assignedNumber, uuidTemplate);
 	}
 	
 	/**
