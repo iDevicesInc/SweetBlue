@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
-import com.idevicesinc.sweetblue.utils.StandardUuids;
+import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import android.Manifest;
@@ -62,8 +62,9 @@ public class BleManagerConfig implements Cloneable
 	
 	/**
 	 * An optional whitelisting mechanism for scanning. Provide an implementation at
-	 * {@link BleManagerConfig#defaultAdvertisingFilter} or {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter)}
-	 * or {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter, Interval)}.
+	 * {@link BleManagerConfig#defaultAdvertisingFilter} or one of the various {@link BleManager#startScan()}
+	 * oveloads, i.e. {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter)},
+	 * {@link BleManager#startScan(Interval, BleManagerConfig.AdvertisingFilter)}, etc.
 	 * 
 	 * @author dougkoellmer
 	 */
@@ -400,6 +401,7 @@ public class BleManagerConfig implements Cloneable
 	
 	/**
 	 * Default is null, meaning the library won't preemptively attempt to bond for any characteristic operations.
+	 * 
 	 * @see BondingFilter
 	 */
 	public BondingFilter bondingFilter;
@@ -449,7 +451,7 @@ public class BleManagerConfig implements Cloneable
 	}
 	
 	/**
-	 * Convenience constructor that populates {@link #uuidNameMaps} with {@link StandardUuids}
+	 * Convenience constructor that populates {@link #uuidNameMaps} with {@link Uuids}
 	 * using {@link ReflectionUuidNameMap} if logging is enabled.
 	 * 
 	 * @param loggingEnabled_in Sets {@link #loggingEnabled}.
@@ -461,7 +463,7 @@ public class BleManagerConfig implements Cloneable
 		if( this.loggingEnabled )
 		{
 			uuidNameMaps = new ArrayList<UuidNameMap>();
-			uuidNameMaps.add(new ReflectionUuidNameMap(StandardUuids.class));
+			uuidNameMaps.add(new ReflectionUuidNameMap(Uuids.class));
 		}
 	}
 	

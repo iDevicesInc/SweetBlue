@@ -7,6 +7,7 @@ import static com.idevicesinc.sweetblue.BleState.*;
 import java.util.List;
 import java.util.UUID;
 
+import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
 import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -513,7 +514,7 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime)
 	{
-		startPeriodicScan(scanActiveTime, scanPauseTime, null);
+		startPeriodicScan(scanActiveTime, scanPauseTime, (AdvertisingFilter)null, (DiscoveryListener)null);
 	}
 	
 	/**
@@ -521,12 +522,30 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, DiscoveryListener discoveryListener)
 	{
+		startPeriodicScan(scanActiveTime, scanPauseTime, (AdvertisingFilter)null, discoveryListener);
+	}
+	
+	/**
+	 * Same as {@link #startPeriodicScan(Interval, Interval)} but adds a filter too.
+	 */
+	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.AdvertisingFilter filter)
+	{
+		startPeriodicScan(scanActiveTime, scanPauseTime, filter, (DiscoveryListener)null);
+	}
+	
+	/**
+	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(DiscoveryListener)} for you too and adds a filter.
+	 */
+	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.AdvertisingFilter filter, DiscoveryListener discoveryListener)
+	{
 		synchronized (m_threadLock)
 		{
 			if( discoveryListener != null )
 			{
 				setListener_Discovery(discoveryListener);
 			}
+			
+			m_filterMngr.add(filter);
 			
 			m_config.autoScanTime = scanActiveTime;
 			m_config.autoScanInterval = scanPauseTime;
@@ -564,25 +583,57 @@ public class BleManager
 	}
 	
 	/**
+	 * Calls {@link #startScan(Interval, AdvertisingFilter)} with {@link Interval#INFINITE}.
+	 */
+	public void startScan(AdvertisingFilter filter)
+	{
+		startScan(Interval.INFINITE, filter, (DiscoveryListener)null);
+	}
+	
+	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 */
 	public void startScan(DiscoveryListener discoveryListener)
 	{
-		startScan(Interval.INFINITE, discoveryListener);
+		startScan(Interval.INFINITE, (AdvertisingFilter)null, discoveryListener);
 	}
 	
 	/**
-	 * Starts a scan that will last for the given time (roughly).
+	 * Overload of {@link #startScan(Interval, AdvertisingFilter, DiscoveryListener)}
+	 */
+	public void startScan(Interval interval, AdvertisingFilter filter)
+	{
+		startScan(Interval.INFINITE, filter, (DiscoveryListener)null);
+	}
+	
+	/**
+	 * Overload of {@link #startScan(Interval, AdvertisingFilter, DiscoveryListener)}
+	 */
+	public void startScan(Interval interval, DiscoveryListener discoveryListener)
+	{
+		startScan(Interval.INFINITE, (AdvertisingFilter)null, discoveryListener);
+	}
+	
+	/**
+	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
+	 */
+	public void startScan(AdvertisingFilter filter, DiscoveryListener discoveryListener)
+	{
+		startScan(Interval.INFINITE, filter, discoveryListener);
+	}
+	
+	/**
+	 * Starts a scan that will generally last for the given time (roughly).
 	 */
 	public void startScan(Interval scanTime)
 	{
-		startScan(scanTime, null);
+		startScan(scanTime, (AdvertisingFilter)null, (DiscoveryListener) null);
 	}
 	
 	/**
 	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 */
-	public void startScan(Interval scanTime, DiscoveryListener discoveryListener)
+	public void startScan(Interval scanTime, AdvertisingFilter filter, DiscoveryListener discoveryListener)
 	{
 		synchronized (m_threadLock)
 		{
@@ -596,7 +647,7 @@ public class BleManager
 				setListener_Discovery(discoveryListener);
 			}
 			
-//			m_filterMngr.add(filter);
+			m_filterMngr.add(filter);
 			
 			P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
 			

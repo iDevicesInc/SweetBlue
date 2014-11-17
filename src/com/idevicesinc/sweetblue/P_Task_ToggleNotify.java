@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
-import com.idevicesinc.sweetblue.utils.StandardUuids;
+import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import android.bluetooth.BluetoothGatt;
@@ -46,7 +46,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			this.fail();  return;
 		}
 		
-		BluetoothGattDescriptor descriptor = char_native.getDescriptor(StandardUuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID);
+		BluetoothGattDescriptor descriptor = char_native.getDescriptor(Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID);
 		
 		if( descriptor == null )
 		{
@@ -68,7 +68,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	{
 		 getManager().ASSERT(gatt == getDevice().getGatt());
 		 
-		 if( !uuid.equals(StandardUuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID) )  return;
+		 if( !uuid.equals(Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID) )  return;
 
 		 if( Utils.isSuccess(status) )
 		 {

@@ -32,6 +32,11 @@ class P_AdvertisingFilterManager
 	{
 		if( filter == null )  return;
 		
+		if( m_filters.contains(filter) )
+		{
+			return;
+		}
+		
 		m_filters.add(filter);
 	}
 	

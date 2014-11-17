@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig;
 /**
  * Convenience implementation of {@link UuidNameMap} that takes a {@link Class} object
  * and through reflection attempts to parse out all the static UUID members, for example
- * on {@link StandardUuids}.
+ * on {@link Uuids}.
  * 
  * Provide an instance to {@link BleManagerConfig#uuidNameMaps} if desired.
  * 

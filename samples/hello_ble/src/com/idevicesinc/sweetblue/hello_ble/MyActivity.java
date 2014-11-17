@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.DeviceState;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
-import com.idevicesinc.sweetblue.utils.StandardUuids;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -26,6 +26,8 @@ public class MyActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		
+		Uuids.fromShort((short)0x180f, "");
+		
 		m_bleManager = new BleManager(MyActivity.this);
 		
 		m_bleManager.startScan(new BleManager.DiscoveryListener()
@@ -42,7 +44,7 @@ public class MyActivity extends Activity
 						{
 							Log.i("SweetBlueExample", device.getDebugName() + " just initialized!");
 							
-							device.read(StandardUuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+							device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
 							{
 								@Override public void onReadOrWriteComplete(Result result)
 								{
