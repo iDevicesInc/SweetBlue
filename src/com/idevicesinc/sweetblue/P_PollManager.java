@@ -134,7 +134,7 @@ class P_PollManager
 		void onCharacteristicChangedFromNativeNotify(byte[] value)
 		{
 			BluetoothGattCharacteristic char_native = m_device.getServiceManager().getCharacteristic(m_uuid).getGuaranteedNative(); 
-			Type type = m_device.getServiceManager().modifyType(char_native, Type.NOTIFICATION);
+			Type type = m_device.getServiceManager().modifyResultType(char_native, Type.NOTIFICATION);
 			
 			if( value == null )
 			{
