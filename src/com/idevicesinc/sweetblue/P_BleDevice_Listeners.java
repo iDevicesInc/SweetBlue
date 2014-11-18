@@ -344,10 +344,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 	void onNativeBondStateChanged(int previousState, int newState)
 	{
-		synchronized (m_device.m_threadLock)
-		{
-			onNativeBondStateChanged_private(previousState, newState);
-		}
+		onNativeBondStateChanged_private(previousState, newState);
 	}
 	
 	private void onNativeBondStateChanged_private(int previousState, int newState)

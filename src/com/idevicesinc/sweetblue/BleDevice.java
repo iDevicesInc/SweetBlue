@@ -435,10 +435,7 @@ public class BleDevice
 	 */
 	public void setListener_State(StateListener listener)
 	{
-		synchronized (m_threadLock)
-		{
-			m_stateTracker.setListener(listener);
-		}
+		m_stateTracker.setListener(listener);
 	}
 	
 	/**
@@ -466,10 +463,7 @@ public class BleDevice
 	 */
 	public int getStateMask()
 	{
-		synchronized (m_threadLock)
-		{
-			return m_stateTracker.getState();
-		}
+		return m_stateTracker.getState();
 	}
 	
 	/**
@@ -501,10 +495,7 @@ public class BleDevice
 	 */
 	public int getRssi()
 	{
-		synchronized (m_threadLock)
-		{
-			return m_rssi;
-		}
+		return m_rssi;
 	}
 	
 	/**
@@ -522,11 +513,8 @@ public class BleDevice
 	 */
 	public UUID[] getAdvertisedServices()
 	{
-		synchronized (m_threadLock)
-		{
-			UUID[] toReturn = m_advertisedServices.size() > 0 ? new UUID[m_advertisedServices.size()] : EMPTY_UUID_ARRAY;
-			return m_advertisedServices.toArray(toReturn);
-		}
+		UUID[] toReturn = m_advertisedServices.size() > 0 ? new UUID[m_advertisedServices.size()] : EMPTY_UUID_ARRAY;
+		return m_advertisedServices.toArray(toReturn);
 	}
 	
 	/**
@@ -536,15 +524,12 @@ public class BleDevice
 	 */
 	public boolean isAny(DeviceState ... states)
 	{
-		synchronized (m_threadLock)
+		for( int i = 0; i < states.length; i++ )
 		{
-			for( int i = 0; i < states.length; i++ )
-			{
-				if( is(states[i]) )  return true;
-			}
-			
-			return false;
+			if( is(states[i]) )  return true;
 		}
+		
+		return false;
 	}
 	
 	/**
@@ -554,10 +539,7 @@ public class BleDevice
 	 */
 	public boolean is(DeviceState state)
 	{
-		synchronized (m_threadLock)
-		{
-			return state.overlaps(getStateMask());
-		}
+		return state.overlaps(getStateMask());
 	}
 	
 	/**
@@ -567,28 +549,25 @@ public class BleDevice
 	 */
 	public boolean is(Object ... query)
 	{
-		synchronized (m_threadLock)
+		if( query == null || query.length == 0 )	return false;
+		
+		for( int i = 0; i < query.length; i+=2 )
 		{
-			if( query == null || query.length == 0 )  return false;
+			Object first = query[i];
+			Object second = i+1 < query.length ? query[i+1] : null;
 			
-			for( int i = 0; i < query.length; i+=2 )
+			if( first == null || second == null )	return false;
+			
+			if( !(first instanceof DeviceState) || !(second instanceof Boolean) )
 			{
-				Object first = query[i];
-				Object second = i+1 < query.length ? query[i+1] : null;
-				
-				if( first == null || second == null )  return false;
-				
-				if( !(first instanceof DeviceState) || !(second instanceof Boolean) )
-				{
-					return false;
-				}
-				
-				DeviceState state = (DeviceState) first;
-				Boolean value  = (Boolean) second;
-				
-				if( value && !this.is(state) )  return false;
-				else if( !value && this.is(state) )  return false;
+				return false;
 			}
+			
+			DeviceState state = (DeviceState) first;
+			Boolean value  = (Boolean) second;
+			
+			if( value && !this.is(state) )			return false;
+			else if( !value && this.is(state) )		return false;
 		}
 		
 		return true;
@@ -671,10 +650,7 @@ public class BleDevice
 	 */
 	public BluetoothGatt getGatt()
 	{
-		synchronized (m_threadLock)
-		{
-			return m_nativeWrapper.getGatt();
-		}
+		return m_nativeWrapper.getGatt();
 	}
 	
 	/**
@@ -706,14 +682,11 @@ public class BleDevice
 	 */
 	public void bond()
 	{
-		synchronized (m_threadLock)
-		{
-			if( isAny(BONDING, BONDED) )  return;
+		if( isAny(BONDING, BONDED) )  return;
+	
+		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
 		
-			m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
-			
-			m_stateTracker.append(BONDING);
-		}
+		m_stateTracker.append(BONDING);
 	}
 	
 	/**
@@ -723,10 +696,7 @@ public class BleDevice
 	 */
 	public void unbond()
 	{
-		synchronized (m_threadLock)
-		{
-			removeBond(null);
-		}
+		removeBond(null);
 	}
 	
 	/**
@@ -961,29 +931,26 @@ public class BleDevice
 	 */
 	public void enableNotify(UUID uuid, Interval forceReadTimeout, ReadWriteListener listener)
 	{
-		synchronized (m_threadLock)
+		Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.NOTIFICATION);
+		
+		if( earlyOutResult != null )
 		{
-			Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.NOTIFICATION);
-			
-			if( earlyOutResult != null )
+			if( listener != null )
 			{
-				if( listener != null )
-				{
-					listener.onReadOrWriteComplete(earlyOutResult);
-				}
-				
-				return;
+				listener.onReadOrWriteComplete(earlyOutResult);
 			}
 			
-			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
-			
-			if( characteristic != null && is(INITIALIZED) )
-			{
-				m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/true));
-			}
-			
-			m_pollMngr.startPoll(uuid, forceReadTimeout.seconds, listener, /*trackChanges=*/true, /*usingNotify=*/true);
+			return;
 		}
+		
+		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		
+		if( characteristic != null && is(INITIALIZED) )
+		{
+			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/true));
+		}
+		
+		m_pollMngr.startPoll(uuid, forceReadTimeout.seconds, listener, /*trackChanges=*/true, /*usingNotify=*/true);
 	}	
 	
 	/**
@@ -1015,15 +982,12 @@ public class BleDevice
 	 */
 	public boolean updateFirmware(BleTransaction txn)
 	{
-		synchronized (m_threadLock)
-		{
-			if( is(UPDATING_FIRMWARE) )  return false;
-			if( !is(INITIALIZED) )  return false;
-			
-			m_txnMngr.onFirmwareUpdate(txn);
-			
-			return true;
-		}
+		if( is(UPDATING_FIRMWARE) )  return false;
+		if( !is(INITIALIZED) )  return false;
+		
+		m_txnMngr.onFirmwareUpdate(txn);
+		
+		return true;
 	}
 	
 	/**
@@ -1076,79 +1040,67 @@ public class BleDevice
 	
 	void onNewlyDiscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
 	{
-		synchronized (m_threadLock)
+		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
+		
+		if( m_mngr.m_config.removeBondOnDiscovery )
 		{
-			onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
+			m_stateTracker.update
+			(
+				BONDING,		false,
+				BONDED,			false,
+				UNBONDED,		true,
+				UNDISCOVERED,	false,
+				DISCOVERED,		true,
+				ADVERTISING,	true,
+				DISCONNECTED,	true
+			);
 			
-			if( m_mngr.m_config.removeBondOnDiscovery )
-			{
-				m_stateTracker.update
-				(
-					BONDING,		false,
-					BONDED,			false,
-					UNBONDED,		true,
-					UNDISCOVERED,	false,
-					DISCOVERED,		true,
-					ADVERTISING,	true,
-					DISCONNECTED,	true
-				);
-				
-				m_queue.add(new P_Task_Unbond(this, m_taskStateListener));
-			}
-			else
-			{
-				m_stateTracker.update
-				(
-					BONDING,		m_nativeWrapper.isNativelyBonding(),
-					BONDED,			m_nativeWrapper.isNativelyBonded(),
-					UNBONDED,		m_nativeWrapper.isNativelyUnbonded(),
-					UNDISCOVERED,	false,
-					DISCOVERED,		true,
-					ADVERTISING,	true,
-					DISCONNECTED,	true
-				);
-			}
+			m_queue.add(new P_Task_Unbond(this, m_taskStateListener));
+		}
+		else
+		{
+			m_stateTracker.update
+			(
+				BONDING,		m_nativeWrapper.isNativelyBonding(),
+				BONDED,			m_nativeWrapper.isNativelyBonded(),
+				UNBONDED,		m_nativeWrapper.isNativelyUnbonded(),
+				UNDISCOVERED,	false,
+				DISCOVERED,		true,
+				ADVERTISING,	true,
+				DISCONNECTED,	true
+			);
 		}
 	}
 	
 	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
 	{
-		synchronized (m_threadLock)
-		{
-			onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
-			
-			m_stateTracker.update
-			(
-				BONDING,		m_nativeWrapper.isNativelyBonding(),
-				BONDED,			m_nativeWrapper.isNativelyBonded()
-			);
-		}
+		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
+		
+		m_stateTracker.update
+		(
+			BONDING,		m_nativeWrapper.isNativelyBonding(),
+			BONDED,			m_nativeWrapper.isNativelyBonded()
+		);
 	}
 	
 	void onUndiscovered()
 	{
-		synchronized (m_threadLock)
-		{
-			m_reconnectMngr.stop();
-			
-			m_stateTracker.set
-			(
-				UNDISCOVERED,	true,
-				DISCOVERED,		false,
-				ADVERTISING,	false,
-				BONDING,		m_nativeWrapper.isNativelyBonding(),
-				BONDED,			m_nativeWrapper.isNativelyBonded(),
-				UNBONDED,		m_nativeWrapper.isNativelyUnbonded()
-			);
-		}
+		m_reconnectMngr.stop();
+		
+		m_stateTracker.set
+		(
+			UNDISCOVERED,	true,
+			DISCOVERED,		false,
+			ADVERTISING,	false,
+			BONDING,		m_nativeWrapper.isNativelyBonding(),
+			BONDED,			m_nativeWrapper.isNativelyBonded(),
+			UNBONDED,		m_nativeWrapper.isNativelyUnbonded()
+		);
 	}
 	
 	double getTimeSinceLastDiscovery()
 	{
-		synchronized (m_threadLock)
-		{
-			return m_timeSinceLastDiscovery;
-		}
+		return m_timeSinceLastDiscovery;
 	}
 	
 	private void onDiscovered_private(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
@@ -1161,14 +1113,11 @@ public class BleDevice
 	
 	void update(double timeStep)
 	{
-		synchronized (m_threadLock)
-		{
-			m_timeSinceLastDiscovery += timeStep;
-			
-			m_pollMngr.update(timeStep);
-			m_txnMngr.update(timeStep);
-			m_reconnectMngr.update(timeStep);
-		}
+		m_timeSinceLastDiscovery += timeStep;
+		
+		m_pollMngr.update(timeStep);
+		m_txnMngr.update(timeStep);
+		m_reconnectMngr.update(timeStep);
 	}
 	
 	void removeBond(PE_TaskPriority priority)
@@ -1233,24 +1182,21 @@ public class BleDevice
 	}
 	
 	private void connect_private(BleTransaction authenticationTxn, BleTransaction initTxn, boolean isReconnect)
-	{		
-		synchronized (m_threadLock)
-		{
-			if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))  return;
-			
-			if( is(INITIALIZED) )
-			{
-				m_mngr.ASSERT(false, "Device is initialized but not connected!");
-				
-				return;
-			}
+	{
+		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))  return;
 		
-			m_txnMngr.onConnect(authenticationTxn, initTxn);
+		if( is(INITIALIZED) )
+		{
+			m_mngr.ASSERT(false, "Device is initialized but not connected!");
 			
-			m_queue.add(new P_Task_Connect(this, m_taskStateListener));
-			
-			onConnecting(/*definitelyExplicit=*/true, isReconnect);
+			return;
 		}
+	
+		m_txnMngr.onConnect(authenticationTxn, initTxn);
+		
+		m_queue.add(new P_Task_Connect(this, m_taskStateListener));
+		
+		onConnecting(/*definitelyExplicit=*/true, isReconnect);
 	}
 	
 	void onConnecting(boolean definitelyExplicit, boolean isReconnect)
@@ -1350,37 +1296,34 @@ public class BleDevice
 			{
 				@Override public void onStateChange(PA_Task task, PE_TaskState state)
 				{
-					synchronized (m_threadLock)
+					if( state.isEndingState() )
 					{
-						if( state.isEndingState() )
+						if(state == PE_TaskState.SUCCEEDED )
 						{
-							if(state == PE_TaskState.SUCCEEDED )
+							if( m_mngr.m_config.autoGetServices )
 							{
-								if( m_mngr.m_config.autoGetServices )
-								{
-									getServices(BONDING, false, BONDED, true);
-								}
-								else
-								{
-									m_txnMngr.runAuthOrInitTxnIfNeeded(BONDING, false, BONDED, true);
-								}
-							}
-							else if( state == PE_TaskState.SOFTLY_CANCELLED )
-							{
-								//--- DRK > This actually means native bonding succeeded but since it was "cancelled"
-								//---		by a disconnect we don't update the state tracker.
-//								onNativeBond();
+								getServices(BONDING, false, BONDED, true);
 							}
 							else
 							{
-								if( m_mngr.m_config.autoGetServices )
-								{
-									getServices(BONDING, false, BONDED, false);
-								}
-								else
-								{
-									m_txnMngr.runAuthOrInitTxnIfNeeded(BONDING, false, BONDED, false);
-								}
+								m_txnMngr.runAuthOrInitTxnIfNeeded(BONDING, false, BONDED, true);
+							}
+						}
+						else if( state == PE_TaskState.SOFTLY_CANCELLED )
+						{
+							//--- DRK > This actually means native bonding succeeded but since it was "cancelled"
+							//---		by a disconnect we don't update the state tracker.
+//								onNativeBond();
+						}
+						else
+						{
+							if( m_mngr.m_config.autoGetServices )
+							{
+								getServices(BONDING, false, BONDED, false);
+							}
+							else
+							{
+								m_txnMngr.runAuthOrInitTxnIfNeeded(BONDING, false, BONDED, false);
 							}
 						}
 					}
@@ -1572,45 +1515,42 @@ public class BleDevice
 	
 	private void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting)
 	{
-		synchronized (m_threadLock)
+		boolean wasConnecting = is(CONNECTING_OVERALL);
+		boolean attemptingReconnect = is(ATTEMPTING_RECONNECT);
+		
+		if( connectionFailReasonIfConnecting == Reason.EXPLICITLY_CANCELLED )
 		{
-			boolean wasConnecting = is(CONNECTING_OVERALL);
-			boolean attemptingReconnect = is(ATTEMPTING_RECONNECT);
+			attemptingReconnect = false;
+		}
+		
+		if( isAny(CONNECTED, CONNECTING_OVERALL, INITIALIZED) )
+		{
+			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false);
 			
-			if( connectionFailReasonIfConnecting == Reason.EXPLICITLY_CANCELLED )
-			{
-				attemptingReconnect = false;
-			}
-			
-			if( isAny(CONNECTED, CONNECTING_OVERALL, INITIALIZED) )
-			{
-				setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false);
-				
-				m_txnMngr.cancelAllTransactions();
+			m_txnMngr.cancelAllTransactions();
 //				m_txnMngr.clearAllTxns();
-				
-				if( !attemptingReconnect )
-				{
-					m_reconnectMngr.stop();
-				}
-			}
-			else
-			{
-				if( !attemptingReconnect )
-				{
-					m_stateTracker.update(ATTEMPTING_RECONNECT, false);
-					m_reconnectMngr.stop();
-				}
-			}
 			
-			m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable));
-			
-			if( wasConnecting )
+			if( !attemptingReconnect )
 			{
-				if( m_mngr.ASSERT(connectionFailReasonIfConnecting != null ) )
-				{
-					m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, attemptingReconnect);
-				}
+				m_reconnectMngr.stop();
+			}
+		}
+		else
+		{
+			if( !attemptingReconnect )
+			{
+				m_stateTracker.update(ATTEMPTING_RECONNECT, false);
+				m_reconnectMngr.stop();
+			}
+		}
+		
+		m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable));
+		
+		if( wasConnecting )
+		{
+			if( m_mngr.ASSERT(connectionFailReasonIfConnecting != null ) )
+			{
+				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, attemptingReconnect);
 			}
 		}
 	}
@@ -1691,73 +1631,61 @@ public class BleDevice
 	
 	void read_internal(UUID uuid, Type type, P_WrappingReadWriteListener listener)
 	{
-		synchronized (m_threadLock)
+		Result earlyOut = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, type);
+		
+		if( earlyOut != null )
 		{
-			Result earlyOut = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, type);
-			
-			if( earlyOut != null )
+			if( listener != null )
 			{
-				if( listener != null )
-				{
-					listener.onReadOrWriteComplete(earlyOut);
-				}
-				
-				return;
+				listener.onReadOrWriteComplete(earlyOut);
 			}
 			
-			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
-			
-			read_internal(characteristic, type, listener);
+			return;
 		}
+		
+		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		
+		read_internal(characteristic, type, listener);
 	}
 	
 	void read_internal(P_Characteristic characteristic, Type type, P_WrappingReadWriteListener listener)
 	{
-		synchronized (m_threadLock)
-		{
-			boolean requiresBonding = requiresBonding(characteristic);
-			
-			m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
-		}
+		boolean requiresBonding = requiresBonding(characteristic);
+		
+		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	void write_internal(UUID uuid, byte[] data, P_WrappingReadWriteListener listener)
 	{
-		synchronized (m_threadLock)
+		Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, data, Type.WRITE);
+		
+		if( earlyOutResult != null )
 		{
-			Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, data, Type.WRITE);
-			
-			if( earlyOutResult != null )
+			if( listener != null )
 			{
-				if( listener != null )
-				{
-					listener.onReadOrWriteComplete(earlyOutResult);
-				}
-				
-				return;
+				listener.onReadOrWriteComplete(earlyOutResult);
 			}
 			
-			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
-			
-			boolean requiresBonding = requiresBonding(characteristic);
-			
-			m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+			return;
 		}
+		
+		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		
+		boolean requiresBonding = requiresBonding(characteristic);
+		
+		m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	private void disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)
 	{
-		synchronized (m_threadLock)
+		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		
+		if( characteristic != null )
 		{
-			P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
-			
-			if( characteristic != null )
-			{
-				m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/false));
-			}
-			
-			m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /*usingNotify=*/true);
+			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/false));
 		}
+		
+		m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /*usingNotify=*/true);
 	}
 	
 	private boolean requiresBonding(P_Characteristic characteristic)

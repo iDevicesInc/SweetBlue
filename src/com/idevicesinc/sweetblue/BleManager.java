@@ -334,15 +334,12 @@ public class BleManager
 	 */
 	public boolean isAny(BleState ... states)
 	{
-		synchronized (m_threadLock)
+		for( int i = 0; i < states.length; i++ )
 		{
-			for( int i = 0; i < states.length; i++ )
-			{
-				if( is(states[i]) )  return true;
-			}
-			
-			return false;
+			if( is(states[i]) )  return true;
 		}
+		
+		return false;
 	}
 	
 	/**
@@ -352,10 +349,7 @@ public class BleManager
 	 */
 	public boolean is(BleState state)
 	{
-		synchronized (m_threadLock)
-		{
-			return state.overlaps(getStateMask());
-		}
+		return state.overlaps(getStateMask());
 	}
 	
 	/**
@@ -402,16 +396,13 @@ public class BleManager
 	 */
 	public void setListener_Assert(AssertListener listener)
 	{
-		synchronized (m_threadLock)
+		if( listener != null )
 		{
-			if( listener != null )
-			{
-				m_assertionListener = new P_WrappingAssertionListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-			}
-			else
-			{
-				m_assertionListener = null;
-			}
+			m_assertionListener = new P_WrappingAssertionListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_assertionListener = null;
 		}
 	}
 
@@ -420,16 +411,13 @@ public class BleManager
 	 */
 	public void setListener_Discovery(DiscoveryListener listener)
 	{
-		synchronized (m_threadLock)
+		if( listener != null )
 		{
-			if( listener != null )
-			{
-				m_discoveryListener = new P_WrappingDiscoveryListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-			}
-			else
-			{
-				m_discoveryListener = null;
-			}
+			m_discoveryListener = new P_WrappingDiscoveryListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_discoveryListener = null;
 		}
 	}
 	
@@ -439,15 +427,12 @@ public class BleManager
 	 */
 	public DiscoveryListener getListener_Discovery()
 	{
-		synchronized (m_threadLock)
+		if( m_discoveryListener != null )
 		{
-			if( m_discoveryListener != null )
-			{
-				return ((P_WrappingDiscoveryListener)m_discoveryListener).m_listener;
-			}
-			
-			return null;
+			return ((P_WrappingDiscoveryListener)m_discoveryListener).m_listener;
 		}
+		
+		return null;
 	}
 	
 	/**
@@ -455,10 +440,7 @@ public class BleManager
 	 */
 	public void setListener_State(StateListener listener)
 	{
-		synchronized (m_threadLock)
-		{
-			m_stateTracker.setListener(listener);
-		}
+		m_stateTracker.setListener(listener);
 	}
 	
 	/**
@@ -470,10 +452,7 @@ public class BleManager
 	 */
 	public void setListener_DeviceState(BleDevice.StateListener listener)
 	{
-		synchronized (m_threadLock)
-		{
-			m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-		}
+		m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 	}
 	
 	/**
@@ -487,10 +466,7 @@ public class BleManager
 	 */
 	public void setListener_ConnectionFail(BleDevice.ConnectionFailListener listener)
 	{
-		synchronized (m_threadLock)
-		{
-			m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-		}
+		m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 	}
 	
 	/**
@@ -498,10 +474,7 @@ public class BleManager
 	 */
 	public void setListener_NativeState(NativeStateListener listener)
 	{
-		synchronized (m_threadLock)
-		{
-			m_nativeStateTracker.setListener(listener);
-		}
+		m_nativeStateTracker.setListener(listener);
 	}
 	
 	/**
@@ -539,24 +512,21 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.AdvertisingFilter filter, DiscoveryListener discoveryListener)
 	{
-		synchronized (m_threadLock)
+		if( discoveryListener != null )
 		{
-			if( discoveryListener != null )
+			setListener_Discovery(discoveryListener);
+		}
+		
+		m_filterMngr.add(filter);
+		
+		m_config.autoScanTime = scanActiveTime;
+		m_config.autoScanInterval = scanPauseTime;
+		
+		if( Interval.isEnabled(m_config.autoScanTime) )
+		{
+			if( doAutoScan() )
 			{
-				setListener_Discovery(discoveryListener);
-			}
-			
-			m_filterMngr.add(filter);
-			
-			m_config.autoScanTime = scanActiveTime;
-			m_config.autoScanInterval = scanPauseTime;
-			
-			if( Interval.isEnabled(m_config.autoScanTime) )
-			{
-				if( doAutoScan() )
-				{
-					startScan(m_config.autoScanTime);
-				}
+				startScan(m_config.autoScanTime);
 			}
 		}
 	}
@@ -567,12 +537,9 @@ public class BleManager
 	 */
 	public void stopPeriodicScan()
 	{
-		synchronized (m_threadLock)
-		{
-			m_config.autoScanTime = Interval.DISABLED;
-			
-			this.stopScan();
-		}
+		m_config.autoScanTime = Interval.DISABLED;
+		
+		this.stopScan();
 	}
 
 	/**
@@ -636,34 +603,31 @@ public class BleManager
 	 */
 	public void startScan(Interval scanTime, AdvertisingFilter filter, DiscoveryListener discoveryListener)
 	{
-		synchronized (m_threadLock)
+		m_timeNotScanning = 0.0;
+		scanTime = scanTime.seconds < 0.0 ? Interval.INFINITE : scanTime;
+		
+		if( !is(ON) )  return;
+		
+		if( discoveryListener != null )
 		{
-			m_timeNotScanning = 0.0;
-			scanTime = scanTime.seconds < 0.0 ? Interval.INFINITE : scanTime;
+			setListener_Discovery(discoveryListener);
+		}
+		
+		m_filterMngr.add(filter);
+		
+		P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
+		
+		if( scanTask != null )
+		{
+			scanTask.resetTimeout(scanTime.seconds);
+		}
+		else
+		{
+			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 			
-			if( !is(ON) )  return;
+			m_stateTracker.append(BleState.SCANNING);
 			
-			if( discoveryListener != null )
-			{
-				setListener_Discovery(discoveryListener);
-			}
-			
-			m_filterMngr.add(filter);
-			
-			P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
-			
-			if( scanTask != null )
-			{
-				scanTask.resetTimeout(scanTime.seconds);
-			}
-			else
-			{
-				ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
-				
-				m_stateTracker.append(BleState.SCANNING);
-				
-				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.seconds));
-			}
+			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.seconds));
 		}
 	}
 	
@@ -715,12 +679,9 @@ public class BleManager
 				Log.e(BleManager.class.getSimpleName(), "ASSERTION FAILED " + message, dummyException);
 			}
 			
-			synchronized (m_threadLock)
+			if( m_assertionListener != null )
 			{
-				if( m_assertionListener != null )
-				{
-					m_assertionListener.onAssertFailed(this, message, dummyException.getStackTrace());
-				}
+				m_assertionListener.onAssertFailed(this, message, dummyException.getStackTrace());
 			}
 
 			return false;
@@ -736,10 +697,7 @@ public class BleManager
 	 */
 	public int getStateMask()
 	{
-		synchronized (m_threadLock)
-		{
-			return m_stateTracker.getState();
-		}
+		return m_stateTracker.getState();
 	}
 	
 	/**
@@ -750,10 +708,7 @@ public class BleManager
 	 */
 	public int getNativeStateMask()
 	{
-		synchronized (m_threadLock)
-		{
-			return m_nativeStateTracker.getState();
-		}
+		return m_nativeStateTracker.getState();
 	}
 	
 	/**
@@ -761,17 +716,14 @@ public class BleManager
 	 */
 	public void enableBle()
 	{
-		synchronized (m_threadLock)
+		if( isAny(TURNING_ON, ON) )  return;
+		
+		if( is(OFF) )
 		{
-			if( isAny(TURNING_ON, ON) )  return;
-			
-			if( is(OFF) )
-			{
-				m_stateTracker.update(TURNING_ON, true, OFF, false);
-			}
-			
-			m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
+			m_stateTracker.update(TURNING_ON, true, OFF, false);
 		}
+		
+		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
 	}
 	
 	/**
@@ -800,10 +752,7 @@ public class BleManager
 	 */
 	public void dropTacticalNuke(NukeEndListener listener)
 	{
-		synchronized (m_threadLock)
-		{
-			dropTacticalNuke_synchronized(listener);
-		}
+		dropTacticalNuke_synchronized(listener);
 	}
 	
 	/**
@@ -832,16 +781,13 @@ public class BleManager
 	 */
 	public void onResume()
 	{
-		synchronized (m_threadLock)
+		m_triedToStartScanAfterResume = false;
+		m_isForegrounded = true;
+		m_timeForegrounded = 0.0;
+		
+		if( Interval.isDisabled(m_config.autoScanDelayAfterResume) )
 		{
-			m_triedToStartScanAfterResume = false;
-			m_isForegrounded = true;
-			m_timeForegrounded = 0.0;
-			
-			if( Interval.isDisabled(m_config.autoScanDelayAfterResume) )
-			{
-				m_triedToStartScanAfterResume = true;
-			}
+			m_triedToStartScanAfterResume = true;
 		}
 	}
 	
@@ -850,16 +796,13 @@ public class BleManager
 	 */
 	public void onPause()
 	{
-		synchronized (m_threadLock)
+		m_triedToStartScanAfterResume = false;
+		m_isForegrounded = false;
+		m_timeForegrounded = 0.0;
+		
+		if( m_config.stopScanOnPause && is(SCANNING) )
 		{
-			m_triedToStartScanAfterResume = false;
-			m_isForegrounded = false;
-			m_timeForegrounded = 0.0;
-			
-			if( m_config.stopScanOnPause && is(SCANNING) )
-			{
-				stopScan();
-			}
+			stopScan();
 		}
 	}
 	
@@ -888,17 +831,14 @@ public class BleManager
 	 */
 	public void stopScan()
 	{
-		synchronized (m_threadLock)
+		m_timeNotScanning = 0.0;
+		
+		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
 		{
-			m_timeNotScanning = 0.0;
-			
-			if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
-			{
-				m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
-			}
-	
-			m_stateTracker.remove(BleState.SCANNING);
+			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
+
+		m_stateTracker.remove(BleState.SCANNING);
 	}
 	
 	/**
@@ -1017,10 +957,7 @@ public class BleManager
 	
 	private void disableBle(boolean removeAllBonds)
 	{
-		synchronized (m_threadLock)
-		{
-			disableBle_synchronized(removeAllBonds);
-		}
+		disableBle_synchronized(removeAllBonds);
 	}
 	
 	private void disableBle_synchronized(boolean removeAllBonds)
@@ -1223,10 +1160,7 @@ public class BleManager
 	
 	void onDiscovered(BluetoothDevice device_native, int rssi, byte[] scanRecord_nullable)
 	{
-		synchronized (m_threadLock)
-		{
-			onDiscovered_synchronized(device_native, rssi, scanRecord_nullable);
-		}
+		onDiscovered_synchronized(device_native, rssi, scanRecord_nullable);
 	}
 	
 	private void onDiscovered_synchronized(BluetoothDevice device_native, int rssi, byte[] scanRecord_nullable)
@@ -1407,10 +1341,7 @@ public class BleManager
 	 */
 	public void update(double timeStep)
 	{
-		synchronized (m_threadLock)
-		{
-			update_synchronized(timeStep);
-		}
+		update_synchronized(timeStep);
 	}
 	
 	private void update_synchronized(double timeStep)

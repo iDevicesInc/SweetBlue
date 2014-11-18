@@ -190,10 +190,7 @@ class P_BleManager_Listeners
 		{
 			@Override public void run()
 			{
-				synchronized (m_mngr.m_threadLock)
-				{
-					onNativeBleStateChange(previousNativeState, newNativeState);
-				}
+				onNativeBleStateChange(previousNativeState, newNativeState);
 			}
 		});
 	}

@@ -181,7 +181,7 @@ public class BleManagerConfig implements Cloneable
 	 * thread. If {@link #runOnMainThread}==true then this setting is meaningless because SweetBlue's
 	 * internal thread is already the main thread to begin with.
 	 */
-	public boolean postCallbacksToMainThread			= true;
+	boolean postCallbacksToMainThread			= true;
 	
 	/**
 	 * Default is false - this option may help mitigate crashes with "Unfortunately,
@@ -256,7 +256,7 @@ public class BleManagerConfig implements Cloneable
 	 * some theories that since proved invalid. While the library can still sort of do so, it's now 
 	 * recommended to run on the main thread in order to avoid any possible multithreading issues.
 	 */
-	public boolean runOnMainThread						= true;
+	boolean runOnMainThread						= true;
 	
 	/**
 	 * Default is true - requires the {@link Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
