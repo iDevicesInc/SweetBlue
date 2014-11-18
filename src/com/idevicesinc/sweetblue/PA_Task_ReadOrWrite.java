@@ -117,6 +117,17 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_RequiresConnection
 			}
 		}
 		
+		if( this.getState() == PE_TaskState.ARMED )
+		{
+			if( task instanceof P_Task_Connect )
+			{
+				if( task.getDevice().equals(this.getDevice()) )
+				{
+					return true;
+				}
+			}
+		}
+		
 		return false;
 	}
 	
