@@ -102,7 +102,7 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 	
 	private void updateStatus(int deviceStateMask)
 	{
-		SpannableString status = Utils.makeStateString(DeviceState.values(), deviceStateMask);
+		SpannableString status = Utils.makeStateString(BleDeviceState.values(), deviceStateMask);
 		m_status.setText(status);
 	}
 
