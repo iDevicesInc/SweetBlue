@@ -1,10 +1,9 @@
+CSS_FILE=doc_style.css
+CSS_SOURCE_PATH=./assets/$CSS_FILE
+TARGET_PATH=../doc/api/
+
 cd ../src
 
-#CSS_PATH=$ANDROID_HOME/extras/google/google_play_services/docs/assets/android-developer-docs.css
-#CSS_PATH=$ANDROID_HOME/docs/assets/android-developer-docs.css
-#CSS_PATH=../assets/doc_style.css
-
-
-javadoc -protected -windowtitle SweetBlue -author -d ../doc/api com.idevicesinc.sweetblue
+javadoc -stylesheetfile ../scripts/$CSS_SOURCE_PATH -protected -windowtitle SweetBlue -author -d $TARGET_PATH com.idevicesinc.sweetblue
 
 cd -
