@@ -16,8 +16,6 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener;
  * that using {@link Exception} would render this library unusable without a rat's nest of try/catches.
  * Instead you implement {@link BleManager.UhOhListener} to receive them. Each {@link UhOh} has a {@link UhOh#getRemedy()}
  * that suggests what might be done about it.
- * <br><br>
- * The term UhOh may be ridiculous but it was only chosen because Android's bluetooth stack behaves so ridiculously in the first place.
  * 
  * @see UhOhListener
  * @see BleManager#setListener_UhOh(UhOhListener)
