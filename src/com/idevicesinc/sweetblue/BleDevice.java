@@ -27,7 +27,7 @@ import static com.idevicesinc.sweetblue.DeviceState.*;
  * BLE-specific abstraction for the rather useless {@link BluetoothDevice} class and the rather hard-to-use
  * {@link BluetoothGatt} class. It does everything you would expect, like providing methods for connecting,
  * reading/writing characteristics, enabling notifications, etc.
- * 
+ * <br><br>
  * Instances of this class are generally not created by the calling library or application, but rather are
  * creating implicitly by {@link BleManager} as a result of a scanning operation (e.g. {@link BleManager#startScan()}
  * and sent to you through {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)}.

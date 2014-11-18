@@ -225,7 +225,7 @@ class P_NativeDeviceWrapper
 			if( !m_mngr.ASSERT(m_gatt != null) )  return;
 			
 			//--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
-			//---		Don't want to keep it here because I'm afraid it has a higher chance to do bad than good.
+			//---		Don't want to keep it here because I'm afraid it has a better chance to do bad than good.
 //			if( disconnectAlso )
 //			{
 //				m_gatt.disconnect();
