@@ -705,7 +705,7 @@ public class BleDevice
 	 */
 	public void connect()
 	{
-		connect(null, null);
+		connect((StateListener)null);
 	}
 	
 	/**
@@ -713,7 +713,16 @@ public class BleDevice
 	 */
 	public void connect(StateListener stateListener)
 	{
-		connect(null, null, stateListener);
+		connect(stateListener, null);
+	}
+	
+	/**
+	 * Same as {@link #connect()} but calls {@link #setListener_State(StateListener)} and
+	 * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
+	 */
+	public void connect(StateListener stateListener, ConnectionFailListener failListener)
+	{
+		connect(null, null, stateListener, failListener);
 	}
 	
 	/**
@@ -728,7 +737,7 @@ public class BleDevice
 	 */
 	public void connectAndAuthenticate(BleTransaction authenticationTxn)
 	{
-		connect(authenticationTxn, null);
+		connectAndAuthenticate(authenticationTxn, null);
 	}
 	
 	/**
@@ -736,7 +745,16 @@ public class BleDevice
 	 */
 	public void connectAndAuthenticate(BleTransaction authenticationTxn, StateListener stateListener)
 	{
-		connect(authenticationTxn, null, stateListener);
+		connectAndAuthenticate(authenticationTxn, stateListener, (ConnectionFailListener) null);
+	}
+	
+	/**
+	 * Same as {@link #connectAndAuthenticate(BleTransaction)} but calls {@link #setListener_State(StateListener)}
+	 * and {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
+	 */
+	public void connectAndAuthenticate(BleTransaction authenticationTxn, StateListener stateListener, ConnectionFailListener failListener)
+	{
+		connect(authenticationTxn, null, stateListener, failListener);
 	}
 	
 	/**
@@ -751,7 +769,7 @@ public class BleDevice
 	 */
 	public void connectAndInitialize(BleTransaction initTxn)
 	{
-		connect(null, initTxn);
+		connectAndInitialize(initTxn, null);
 	}
 	
 	/**
@@ -759,7 +777,17 @@ public class BleDevice
 	 */
 	public void connectAndInitialize(BleTransaction initTxn, StateListener stateListener)
 	{
-		connect(null, initTxn, stateListener);
+		connectAndInitialize(initTxn, stateListener, (ConnectionFailListener)null);
+	}
+	
+	
+	/**
+	 * Same as {@link #connectAndInitialize(BleTransaction)} but calls 
+	 * {@link #setListener_State(StateListener)} and {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
+	 */
+	public void connectAndInitialize(BleTransaction initTxn, StateListener stateListener, ConnectionFailListener failListener)
+	{
+		connect(null, initTxn, stateListener, failListener);
 	}
 	
 	/**
@@ -772,7 +800,7 @@ public class BleDevice
 	 */
 	public void connect(BleTransaction authenticationTxn, BleTransaction initTxn)
 	{
-		connect(authenticationTxn, initTxn, null);
+		connect(authenticationTxn, initTxn, (StateListener)null, (ConnectionFailListener)null);
 	}
 	
 	/**
@@ -780,9 +808,23 @@ public class BleDevice
 	 */
 	public void connect(BleTransaction authenticationTxn, BleTransaction initTxn, StateListener stateListener)
 	{
+		connect(authenticationTxn, initTxn, stateListener, (ConnectionFailListener)null);
+	}
+	
+	/**
+	 * Same as {@link #connect(BleTransaction, BleTransaction)} but calls
+	 * {@link #setListener_State(StateListener)} and {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
+	 */
+	public void connect(BleTransaction authenticationTxn, BleTransaction initTxn, StateListener stateListener, ConnectionFailListener failListener)
+	{
 		if( stateListener != null )
 		{
 			setListener_State(stateListener);
+		}
+		
+		if( failListener != null )
+		{
+			setListener_ConnectionFail(failListener);
 		}
 		
 		m_connectionFailMngr.onExplicitConnectionStarted();
