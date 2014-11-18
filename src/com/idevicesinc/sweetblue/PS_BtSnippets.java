@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.DeviceState.BONDED;
-import static com.idevicesinc.sweetblue.DeviceState.BONDING;
+import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
+import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 /**

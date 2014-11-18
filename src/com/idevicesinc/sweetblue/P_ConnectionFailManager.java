@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.DeviceState.ATTEMPTING_RECONNECT;
+import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
 
 import java.util.ArrayList;
 import java.util.Arrays;

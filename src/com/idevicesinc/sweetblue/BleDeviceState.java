@@ -17,7 +17,7 @@ import com.idevicesinc.sweetblue.utils.BitwiseEnum;
  * 
  * @author dougkoellmer
  */
-public enum DeviceState implements BitwiseEnum
+public enum BleDeviceState implements BitwiseEnum
 {
 	/**
 	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)}.
@@ -170,7 +170,7 @@ public enum DeviceState implements BitwiseEnum
 	 * 
 	 * @param stateMask Generally the value returned by {@link BleDevice#getStateMask()}.
 	 */
-	public static DeviceState getTransitoryConnectionState(int stateMask)
+	public static BleDeviceState getTransitoryConnectionState(int stateMask)
 	{
 		if( CONNECTED.overlaps(stateMask) )
 		{

@@ -143,7 +143,7 @@ class P_DeviceManager
 				BleDevice device = get(i);
 
 				//--- DRK > Just an early-out performance check here.
-				if( device.is(DeviceState.CONNECTED) )
+				if( device.is(BleDeviceState.CONNECTED) )
 				{
 					device.disconnectExplicitly(priority);
 				}
@@ -203,7 +203,7 @@ class P_DeviceManager
 					for( int i = m_list.size()-1; i >= 0; i-- )
 					{
 						BleDevice device = get(i);
-						boolean purgeable = (device.getStateMask() & ~DeviceState.PURGEABLE_MASK) == 0x0;
+						boolean purgeable = (device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0;
 						
 						if( purgeable )
 						{
@@ -220,7 +220,7 @@ class P_DeviceManager
 		});
 	}
 	
-	boolean hasDevice(DeviceState ... filter)
+	boolean hasDevice(BleDeviceState ... filter)
 	{
 		synchronized (m_list)
 		{

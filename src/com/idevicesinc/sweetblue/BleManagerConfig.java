@@ -139,7 +139,7 @@ public class BleManagerConfig implements Cloneable
 		public static final Interval CANCEL = Interval.seconds(-1.0);
 		
 		/**
-		 * Called for every connection failure while device is {@link DeviceState#ATTEMPTING_RECONNECT}.
+		 * Called for every connection failure while device is {@link BleDeviceState#ATTEMPTING_RECONNECT}.
 		 * Use the static members of this interface to create return values to stop reconnection ({@link #CANCEL}) or try again
 		 * instantly ({@link #INSTANTLY}). Use static methods of {@link Interval} to try again after some amount of time. Numeric parameters
 		 * are provided in order to give the app a variety of ways to calculate the next delay. Use all, some, or none of them.
@@ -201,13 +201,13 @@ public class BleManagerConfig implements Cloneable
 	
 	/**
 	 * Default is false - use this option to globally force bonding after a
-	 * {@link BleDevice} is {@link DeviceState#CONNECTED} if it is not {@link DeviceState#BONDED} already.
+	 * {@link BleDevice} is {@link BleDeviceState#CONNECTED} if it is not {@link BleDeviceState#BONDED} already.
 	 */
 	public boolean autoBondAfterConnect					= false;
 	
 	/**
 	 * Default is true - whether to automatically get services immediately after a {@link BleDevice} is
-	 * {@link DeviceState#CONNECTED}. Currently this is the only way to get a device's services.
+	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
 	 */
 	public boolean autoGetServices						= true;
 	
@@ -227,7 +227,7 @@ public class BleManagerConfig implements Cloneable
 	
 	/**
 	 * Default is false - set this to allow or disallow autoscanning while any
-	 * {@link BleDevice} is {@link DeviceState#UPDATING_FIRMWARE}. If false,
+	 * {@link BleDevice} is {@link BleDeviceState#UPDATING_FIRMWARE}. If false,
 	 * then firmware updates may complete faster if you're periodically scanning
 	 * through {@link #autoScanTime} or {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 * {@link BleManager#startScan()} will still start a scan regardless.
@@ -264,7 +264,7 @@ public class BleManagerConfig implements Cloneable
 	 * It should look like this: {@code<uses-permission android:name="android.permission.WAKE_LOCK" />}
 	 * Sets whether the library will attempt to obtain a wake lock in certain situations.
 	 * For now the only situation is when there are no remote bluetooth devices
-	 * connected but one or more devices are {@link DeviceState#ATTEMPTING_RECONNECT}.
+	 * connected but one or more devices are {@link BleDeviceState#ATTEMPTING_RECONNECT}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
 	 * {@link ReconnectRateLimiter#CANCEL} from {@link ReconnectRateLimiter#getTimeToNextReconnect(BleDevice, int, Interval, Interval)}.

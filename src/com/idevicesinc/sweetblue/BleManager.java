@@ -65,7 +65,7 @@ import android.util.Log;
  *                  {
  *                      {@literal @}Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits)
  *                      {
- *                          if( DeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
+ *                          if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
  *                          {
  *                              String toastText = device.getDebugName() + " just initialized!";
  *                              Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
@@ -143,7 +143,7 @@ public class BleManager
 		 * for this callback. Undiscovery is approximated with a timeout based on the last time we discovered a device.
 		 * Consequently you should expect that this callback will take some amount of time to receive after an
 		 * advertising device is turned off or goes out of range or what have you. It's generally not as fast as other
-		 * state changes like {@link DeviceState#DISCONNECTED} or getting {@link DeviceState#DISCOVERED} in the first place.
+		 * state changes like {@link BleDeviceState#DISCONNECTED} or getting {@link BleDeviceState#DISCOVERED} in the first place.
 		 *  
 		 * @see BleManagerConfig#minScanTimeToInvokeUndiscovery
 		 * @see BleManagerConfig#scanKeepAlive
@@ -444,7 +444,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Convenience method to listen for all changes in {@link DeviceState} for all devices.
+	 * Convenience method to listen for all changes in {@link BleDeviceState} for all devices.
 	 * The listener provided will get called in addition to and after the listener, if any, provided
 	 * to {@link BleDevice#setListener_State(BleDevice.StateListener)}.
 	 * 
@@ -756,7 +756,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Removes bonds for all devices that are {@link DeviceState#BONDED}.
+	 * Removes bonds for all devices that are {@link BleDeviceState#BONDED}.
 	 * Essentially a convenience method for calling {@link BleDevice#unbond()},
 	 * on each device individually.
 	 */
@@ -842,7 +842,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Gets a known {@link DeviceState#DISCOVERED} device by MAC address, or <code>null</code> if there is no such device.
+	 * Gets a known {@link BleDeviceState#DISCOVERED} device by MAC address, or <code>null</code> if there is no such device.
 	 */
 	public BleDevice getDevice(String address)
 	{
@@ -860,7 +860,7 @@ public class BleManager
 	/**
 	 * Returns the first device that is in the given state, or null if no match is found.
 	 */
-	public BleDevice getDevice(DeviceState state)
+	public BleDevice getDevice(BleDeviceState state)
 	{
 		for( int i = 0; i < m_deviceMngr.getCount(); i++ )
 		{
@@ -878,7 +878,7 @@ public class BleManager
 	/**
 	 * Returns true if we have a device in the given state.
 	 */
-	public boolean hasDevice(DeviceState state)
+	public boolean hasDevice(BleDeviceState state)
 	{
 		return getDevice(state) != null;
 	}
@@ -930,9 +930,9 @@ public class BleManager
 	}
 	
 	/**
-	 * Same as {@link #getDevice(DeviceState)} except returns all matching devices.
+	 * Same as {@link #getDevice(BleDeviceState)} except returns all matching devices.
 	 */
-	public BleDeviceIterator getDevices(DeviceState state)
+	public BleDeviceIterator getDevices(BleDeviceState state)
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList(), state, true);
 	}
@@ -1410,7 +1410,7 @@ public class BleManager
 	
 	private boolean doAutoScan()
 	{
-		return m_config.autoScanDuringFirmwareUpdates || !m_deviceMngr.hasDevice(DeviceState.UPDATING_FIRMWARE);
+		return m_config.autoScanDuringFirmwareUpdates || !m_deviceMngr.hasDevice(BleDeviceState.UPDATING_FIRMWARE);
 	}
 	
 	void uhOh(UhOh reason)

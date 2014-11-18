@@ -51,7 +51,7 @@ public enum UhOh
 	INCONSISTENT_NATIVE_BLE_STATE,
 	
 	/**
-	 * A {@link BleDevice} went from {@link DeviceState#BONDING} to {@link DeviceState#UNBONDED}.
+	 * A {@link BleDevice} went from {@link BleDeviceState#BONDING} to {@link BleDeviceState#UNBONDED}.
 	 */
 	WENT_FROM_BONDING_TO_UNBONDED,
 	

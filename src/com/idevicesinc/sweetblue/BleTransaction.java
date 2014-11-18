@@ -35,7 +35,7 @@ public abstract class BleTransaction
 		SUCCEEDED,
 		
 		/**
-		 * The transaction's {@link BleDevice} became {@link DeviceState#DISCONNECTED}
+		 * The transaction's {@link BleDevice} became {@link BleDeviceState#DISCONNECTED}
 		 * or/and {@link BleManager} went {@link BleState#OFF}.
 		 */
 		CANCELLED,
@@ -99,7 +99,7 @@ public abstract class BleTransaction
 	/**
 	 * Called when a transaction ends, either due to the transaction itself finishing itself
 	 * through {@link #fail()} or {@link #succeed()}, or from the library implicitly ending
-	 * the transaction, for example if {@link #getDevice()} becomes {@link DeviceState#DISCONNECTED}.
+	 * the transaction, for example if {@link #getDevice()} becomes {@link BleDeviceState#DISCONNECTED}.
 	 * 
 	 * Override this method to wrap up any loose ends or notify UI or what have you.
 	 */

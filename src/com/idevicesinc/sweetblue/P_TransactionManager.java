@@ -1,10 +1,10 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.DeviceState.ATTEMPTING_RECONNECT;
-import static com.idevicesinc.sweetblue.DeviceState.AUTHENTICATED;
-import static com.idevicesinc.sweetblue.DeviceState.AUTHENTICATING;
-import static com.idevicesinc.sweetblue.DeviceState.INITIALIZING;
-import static com.idevicesinc.sweetblue.DeviceState.UPDATING_FIRMWARE;
+import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
+import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATED;
+import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATING;
+import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
+import static com.idevicesinc.sweetblue.BleDeviceState.UPDATING_FIRMWARE;
 
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
@@ -32,7 +32,7 @@ class P_TransactionManager
 
 			m_current = null;
 			
-			if( !m_device.is(DeviceState.CONNECTED) )
+			if( !m_device.is(BleDeviceState.CONNECTED) )
 			{
 				if( reason == EndReason.CANCELLED )
 				{

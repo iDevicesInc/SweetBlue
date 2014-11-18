@@ -1,10 +1,10 @@
 package com.idevicesinc.sweetblue.utils;
 
-import com.idevicesinc.sweetblue.DeviceState;
+import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.BleState;
 
 /**
- * Implementations are {@link DeviceState} and {@link BleState}.
+ * Implementations are {@link BleDeviceState} and {@link BleState}.
  * Not intended for implementations outside this library.
  * 
  * @author dougkoellmer

@@ -109,7 +109,7 @@ class P_ServiceManager
 	
 	BleDevice.ReadWriteListener.Result getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
 	{
-		if( !m_device.is(DeviceState.CONNECTED) )
+		if( !m_device.is(BleDeviceState.CONNECTED) )
 		{
 			if( type != BleDevice.ReadWriteListener.Type.NOTIFICATION )
 			{

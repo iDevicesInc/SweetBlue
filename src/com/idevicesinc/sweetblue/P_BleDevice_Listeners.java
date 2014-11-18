@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 
-import static com.idevicesinc.sweetblue.DeviceState.*;
+import static com.idevicesinc.sweetblue.BleDeviceState.*;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;

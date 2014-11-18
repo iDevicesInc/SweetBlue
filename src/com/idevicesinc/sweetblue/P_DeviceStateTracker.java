@@ -19,7 +19,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 		
 		m_device = device;
 		
-		set(DeviceState.UNDISCOVERED, true, DeviceState.DISCONNECTED, true);
+		set(BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 	}
 	
 	public void setListener(StateListener listener)
@@ -51,7 +51,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 
 	@Override protected void append_assert(BitwiseEnum newState)
 	{
-		if( newState.ordinal() > DeviceState.CONNECTING.ordinal() )
+		if( newState.ordinal() > BleDeviceState.CONNECTING.ordinal() )
 		{
 			//--- DRK > No longer valid...during the connection flow a rogue disconnect can come in.
 			//---		This immediately changes the native state of the device but the actual callback
@@ -63,6 +63,6 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	@Override public String toString()
 	{
-		return super.toString(DeviceState.values());
+		return super.toString(BleDeviceState.values());
 	}
 }

@@ -20,7 +20,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.os.Build;
 import android.util.Log;
-import static com.idevicesinc.sweetblue.DeviceState.*;
+import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 /**
  * This is the one other class you will use the most besides {@link BleManager}. It acts as a
@@ -75,7 +75,7 @@ public class BleDevice
 			OPERATION_NOT_SUPPORTED,
 			
 			/**
-			 * Device is not {@link DeviceState#CONNECTED}.
+			 * Device is not {@link BleDeviceState#CONNECTED}.
 			 */
 			NOT_CONNECTED,
 			
@@ -86,7 +86,7 @@ public class BleDevice
 			FAILED_IMMEDIATELY,
 			
 			/**
-			 * The operation was cancelled either by the device becoming {@link DeviceState#DISCONNECTED} or {@link BleManager} turning {@link BleState#OFF}.
+			 * The operation was cancelled either by the device becoming {@link BleDeviceState#DISCONNECTED} or {@link BleManager} turning {@link BleState#OFF}.
 			 */
 			CANCELLED,
 			
@@ -234,7 +234,7 @@ public class BleDevice
 	 * Provide an implementation to {@link BleDevice#setListener_State(StateListener)} and/or
 	 * {@link BleManager#setListener_DeviceState(BleDevice.StateListener)} to receive state change events.
 	 * 
-	 * @see DeviceState
+	 * @see BleDeviceState
 	 * @see BleDevice#setListener_State(StateListener)
 	 * 
 	 * @author dougkoellmer
@@ -242,10 +242,10 @@ public class BleDevice
 	public static interface StateListener
 	{
 		/**
-		 * Called when a device's bitwise {@link DeviceState} changes. As many bits as possible are flipped at the same time.
+		 * Called when a device's bitwise {@link BleDeviceState} changes. As many bits as possible are flipped at the same time.
 		 *  
-		 * @param oldStateBits The previous bitwise representation of {@link DeviceState}.
-		 * @param newStateBits The new and now current bitwise representation of {@link DeviceState}. Will be the same as {@link BleDevice#getStateMask()}.
+		 * @param oldStateBits The previous bitwise representation of {@link BleDeviceState}.
+		 * @param newStateBits The new and now current bitwise representation of {@link BleDeviceState}. Will be the same as {@link BleDevice#getStateMask()}.
 		 */
 		void onStateChange(BleDevice device, int oldStateBits, int newStateBits);
 	}
@@ -297,8 +297,8 @@ public class BleDevice
 			
 			/**
 			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
-			 * but only occurs after the device is {@link DeviceState#CONNECTED} and we're going through {@link DeviceState#GETTING_SERVICES},
-			 * or {@link DeviceState#AUTHENTICATING}, or what have you.
+			 * but only occurs after the device is {@link BleDeviceState#CONNECTED} and we're going through {@link BleDeviceState#GETTING_SERVICES},
+			 * or {@link BleDeviceState#AUTHENTICATING}, or what have you.
 			 */
 			ROGUE_DISCONNECT,
 			
@@ -317,12 +317,12 @@ public class BleDevice
 		}
 		
 		/**
-		 * Return value is ignored if device is either {@link DeviceState#ATTEMPTING_RECONNECT} or reason is {@link Reason#EXPLICITLY_CANCELLED}.
-		 * If the device is {@link DeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleManagerConfig.ReconnectRateLimiter}.
+		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason is {@link Reason#EXPLICITLY_CANCELLED}.
+		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleManagerConfig.ReconnectRateLimiter}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
 		 * lets the library handle things in a slightly more optimized fashion and so is recommended for that reason also.
 		 * <br><br>
-		 * NOTE that this callback gets fired *after* {@link StateListener} lets you know that the device is {@link DeviceState#DISCONNECTED}.
+		 * NOTE that this callback gets fired *after* {@link StateListener} lets you know that the device is {@link BleDeviceState#DISCONNECTED}.
 		 */
 		Please onConnectionFail(BleDevice device, ConnectionFailListener.Reason reason, int failureCountSoFar);
 	}
@@ -457,9 +457,9 @@ public class BleDevice
 	}
 	
 	/**
-	 * Returns the bitwise state mask representation of {@link DeviceState} for this device.
+	 * Returns the bitwise state mask representation of {@link BleDeviceState} for this device.
 	 * 
-	 * @see DeviceState
+	 * @see BleDeviceState
 	 */
 	public int getStateMask()
 	{
@@ -520,9 +520,9 @@ public class BleDevice
 	/**
 	 * Returns whether the device is in any of the provided states.
 	 * 
-	 * @see #is(DeviceState)
+	 * @see #is(BleDeviceState)
 	 */
-	public boolean isAny(DeviceState ... states)
+	public boolean isAny(BleDeviceState ... states)
 	{
 		for( int i = 0; i < states.length; i++ )
 		{
@@ -535,17 +535,17 @@ public class BleDevice
 	/**
 	 * Returns whether the device is in the provided state.
 	 * 
-	 * @see #isAny(DeviceState...)
+	 * @see #isAny(BleDeviceState...)
 	 */
-	public boolean is(DeviceState state)
+	public boolean is(BleDeviceState state)
 	{
 		return state.overlaps(getStateMask());
 	}
 	
 	/**
-	 * Similar to {@link #is(DeviceState)} and {@link #isAny(DeviceState...)} but allows you
-	 * to give a simple query made up of {@link DeviceState} and {@link Boolean} pairs. So an example
-	 * would be <code>myDevice.is({@link DeviceState#CONNECTING}, true, {@link DeviceState#ATTEMPTING_RECONNECT}, false)</code>.
+	 * Similar to {@link #is(BleDeviceState)} and {@link #isAny(BleDeviceState...)} but allows you
+	 * to give a simple query made up of {@link BleDeviceState} and {@link Boolean} pairs. So an example
+	 * would be <code>myDevice.is({@link BleDeviceState#CONNECTING}, true, {@link BleDeviceState#ATTEMPTING_RECONNECT}, false)</code>.
 	 */
 	public boolean is(Object ... query)
 	{
@@ -558,12 +558,12 @@ public class BleDevice
 			
 			if( first == null || second == null )	return false;
 			
-			if( !(first instanceof DeviceState) || !(second instanceof Boolean) )
+			if( !(first instanceof BleDeviceState) || !(second instanceof Boolean) )
 			{
 				return false;
 			}
 			
-			DeviceState state = (DeviceState) first;
+			BleDeviceState state = (BleDeviceState) first;
 			Boolean value  = (Boolean) second;
 			
 			if( value && !this.is(state) )			return false;
@@ -619,7 +619,7 @@ public class BleDevice
 	
 	/**
 	 * Returns the native characteristic for the given UUID in case you need lower-level access.
-	 * You should only call this after {@link DeviceState#GETTING_SERVICES} has completed.
+	 * You should only call this after {@link BleDeviceState#GETTING_SERVICES} has completed.
 	 * Please see the warning for {@link #getNative()}.
 	 */
 	public BluetoothGattCharacteristic getNativeCharacteristic(UUID uuid)
@@ -633,7 +633,7 @@ public class BleDevice
 	
 	/**
 	 * Returns the native service for the given UUID in case you need lower-level access.
-	 * You should only call this after {@link DeviceState#GETTING_SERVICES} has completed.
+	 * You should only call this after {@link BleDeviceState#GETTING_SERVICES} has completed.
 	 * Please see the warning for {@link #getNative()}.
 	 */
 	public BluetoothGattService getNativeService(UUID uuid)
@@ -700,7 +700,7 @@ public class BleDevice
 	}
 	
 	/**
-	 * Starts a connection process, or does nothing if already {@link DeviceState#CONNECTED} or {@link DeviceState#CONNECTING}.
+	 * Starts a connection process, or does nothing if already {@link BleDeviceState#CONNECTED} or {@link BleDeviceState#CONNECTING}.
 	 * Use {@link #setListener_ConnectionFail(ConnectionFailListener)} and {@link #setListener_State(StateListener)} to receive callbacks for progress and errors.
 	 */
 	public void connect()
@@ -723,8 +723,8 @@ public class BleDevice
 	 * application for your device than you ;-)
 	 * 
 	 * @see #connect()
-	 * @see DeviceState#AUTHENTICATING
-	 * @see DeviceState#AUTHENTICATED
+	 * @see BleDeviceState#AUTHENTICATING
+	 * @see BleDeviceState#AUTHENTICATED
 	 */
 	public void connectAndAuthenticate(BleTransaction authenticationTxn)
 	{
@@ -741,13 +741,13 @@ public class BleDevice
 	
 	/**
 	 * Same as {@link #connect()} but provides a hook for the app to do some kind of initialization
-	 * before it's considered fully {@link DeviceState#INITIALIZED}. For example if you had a BLE-enabled thermometer
+	 * before it's considered fully {@link BleDeviceState#INITIALIZED}. For example if you had a BLE-enabled thermometer
 	 * you could use this transaction to attempt an initial temperature read before updating your UI
 	 * to indicate "full" connection success, even though BLE connection itself already succeeded.
 	 * 
 	 * @see #connect()
-	 * @see DeviceState#INITIALIZING
-	 * @see DeviceState#INITIALIZED
+	 * @see BleDeviceState#INITIALIZING
+	 * @see BleDeviceState#INITIALIZED
 	 */
 	public void connectAndInitialize(BleTransaction initTxn)
 	{
@@ -791,11 +791,11 @@ public class BleDevice
 	}
 	
 	/**
-	 * Disconnects from a connected device or does nothing if already {@link DeviceState#DISCONNECTED}.
+	 * Disconnects from a connected device or does nothing if already {@link BleDeviceState#DISCONNECTED}.
 	 * You can call this at any point during the connection process as a whole, during
 	 * reads and writes, during transactions, whenever, and the device will cleanly
 	 * cancel all ongoing operations. This method will also bring the device out of the
-	 * {@link DeviceState#ATTEMPTING_RECONNECT} state.
+	 * {@link BleDeviceState#ATTEMPTING_RECONNECT} state.
 	 * 
 	 * @see ConnectionFailListener.Reason#EXPLICITLY_CANCELLED
 	 */
@@ -971,11 +971,11 @@ public class BleDevice
 	}
 	
 	/**
-	 * Kicks off a firmware update transaction if it's not already taking place and the device is {@link DeviceState#INITIALIZED}.
-	 * This will put the device into the {@link DeviceState#UPDATING_FIRMWARE} state.
+	 * Kicks off a firmware update transaction if it's not already taking place and the device is {@link BleDeviceState#INITIALIZED}.
+	 * This will put the device into the {@link BleDeviceState#UPDATING_FIRMWARE} state.
 	 * 
 	 * @return	{@link Boolean#TRUE} if firmware update has started, otherwise {@link Boolean#FALSE} if device is either already
-	 * 			{@link DeviceState#UPDATING_FIRMWARE} or is not {@link DeviceState#INITIALIZED}.
+	 * 			{@link BleDeviceState#UPDATING_FIRMWARE} or is not {@link BleDeviceState#INITIALIZED}.
 	 * 	
 	 * @see BleManagerConfig#includeFirmwareUpdateReadWriteTimesInAverage
 	 * @see BleManagerConfig#autoScanDuringFirmwareUpdates

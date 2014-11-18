@@ -114,7 +114,7 @@ class P_ReconnectManager
 		
 		m_totalTime += timeStep;
 		
-		if( !m_device.is(DeviceState.DISCONNECTED) )  return;
+		if( !m_device.is(BleDeviceState.DISCONNECTED) )  return;
 		
 		m_timeTracker += timeStep;
 		
