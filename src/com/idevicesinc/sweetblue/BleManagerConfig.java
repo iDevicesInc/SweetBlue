@@ -31,8 +31,6 @@ public class BleManagerConfig implements Cloneable
 {
 	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
 	public static final double DEFAULT_AUTO_SCAN_INTERVAL				= 3.0;
-	public static final double DEFAULT_INITIAL_RECONNECT_DELAY			= 2.0;
-	public static final double DEFAULT_RECONNECT_ATTEMPT_RATE			= 4.0;
 	public static final double DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME 	= 0.5;
 	public static final double DEFAULT_TASK_TIMEOUT						= 10.0;
 	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/10.0;
@@ -157,15 +155,18 @@ public class BleManagerConfig implements Cloneable
 	 */
 	public static class DefaultReconnectRateLimiter implements ReconnectRateLimiter
 	{
+		public static final Interval DEFAULT_INITIAL_RECONNECT_DELAY = INSTANTLY;
+		public static final Interval DEFAULT_RECONNECT_ATTEMPT_RATE = Interval.seconds(3.0);
+		
 		@Override public Interval getTimeToNextReconnect(BleDevice device, int connectFailureCount, Interval totalTimeReconnecting, Interval previousDelay)
 		{
 			if( connectFailureCount == 0 )
 			{
-				return Interval.seconds(DEFAULT_INITIAL_RECONNECT_DELAY);
+				return DEFAULT_INITIAL_RECONNECT_DELAY;
 			}
 			else
 			{
-				return Interval.seconds(DEFAULT_RECONNECT_ATTEMPT_RATE);
+				return DEFAULT_RECONNECT_ATTEMPT_RATE;
 			}
 		}
 	}

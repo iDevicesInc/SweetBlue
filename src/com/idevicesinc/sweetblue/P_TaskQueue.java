@@ -174,7 +174,7 @@ class P_TaskQueue
 
 		if( m_current == null )
 		{
-			update$dequeue();
+			update_dequeue();
 		}
 		
 		if( getCurrent() != null )
@@ -185,7 +185,7 @@ class P_TaskQueue
 		m_updateCount++;
 	}
 	
-	private void update$dequeue()
+	private void update_dequeue()
 	{
 		if( !m_mngr.ASSERT(m_current == null) )  return;
 		if( m_queue.size() == 0 )  return;
