@@ -69,7 +69,7 @@ bleManager.startScan(new BleManager.DiscoveryListener()
 		{
 			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits)
 			{
-				if( DeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
+				if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
 				{
 					Log.i("SweetBlueExample", device.getDebugName() + " just initialized!");
 					
