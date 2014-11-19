@@ -1037,7 +1037,9 @@ public class BleDevice
 	}
 	
 	/**
-	 * Enables notification on the given characteristic.
+	 * Enables notification on the given characteristic. The listener will be called both for the notifications
+	 * themselves and for the actual registration for the notification. Switch on {@link Type#ENABLING_NOTIFICATION}
+	 * and {@link Type#NOTIFICATION} (or {@link Type#INDICATION}).
 	 */
 	public void enableNotify(UUID uuid, ReadWriteListener listener)
 	{

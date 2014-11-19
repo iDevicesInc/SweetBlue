@@ -33,19 +33,6 @@ public class MyActivity extends Activity
 		{
 			@Override public void onDeviceDiscovered(final BleDevice device)
 			{
-				device.enableNotify(Uuids.fromShort(0x2A37), new BleDevice.ReadWriteListener()
-				{
-					@Override public void onReadOrWriteComplete(Result result)
-					{
-						if( result.type == Type.ENABLING_NOTIFICATION || result.type == Type.DISABLING_NOTIFICATION )
-						{
-							Log.i("SweetBlueExample", "notification-related");
-						}
-						
-						device.disableNotify(Uuids.fromShort(0x2A37), this);
-					}	
-				});
-				
 				m_bleManager.stopScan();
 				
 				device.connect(new BleDevice.StateListener()
