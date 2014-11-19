@@ -49,7 +49,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		{
 			boolean autoConnect = getDevice().shouldUseAutoConnect();
 			
-			BluetoothGatt gatt = getDevice().getNative().connectGatt(getDevice().getManager().getContext(), autoConnect, getDevice().getListeners());
+			BluetoothGatt gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplication(), autoConnect, getDevice().getListeners());
 			
 			if( gatt == null )
 			{

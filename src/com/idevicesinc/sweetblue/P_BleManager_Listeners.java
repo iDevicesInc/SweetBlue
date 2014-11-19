@@ -138,12 +138,12 @@ class P_BleManager_Listeners
 		intentFilter.addAction(BluetoothDevice.ACTION_UUID);
 		intentFilter.addAction(PS_GattStatus.BluetoothDevice_ACTION_DISAPPEARED);
 		
-		m_mngr.getContext().registerReceiver(m_receiver, intentFilter);
+		m_mngr.getApplication().registerReceiver(m_receiver, intentFilter);
 	}
 	
 	void onDestroy()
 	{
-		m_mngr.getContext().unregisterReceiver(m_receiver);
+		m_mngr.getApplication().unregisterReceiver(m_receiver);
 	}
 	
 	PA_Task.I_StateListener getScanTaskListener()

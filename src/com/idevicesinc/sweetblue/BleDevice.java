@@ -69,9 +69,9 @@ public class BleDevice
 			NOT_CONNECTED,
 			
 			/**
-			 * Couldn't find a matching {@link Result#target} for {@link Result#uuid} which was given to {@link BleDevice#read(UUID, ReadWriteListener)},
+			 * Couldn't find a matching {@link Result#target} for {@link Result#charUuid} (or {@link Result#descUuid})which was given to {@link BleDevice#read(UUID, ReadWriteListener)},
 			 * {@link BleDevice#write(UUID, byte[])}, etc. This most likely means that the internal call to {@link BluetoothGatt#discoverServices()}
-			 * didn't find any {@link BluetoothGattService} that contains the given {@link Result#uuid}.
+			 * didn't find any {@link BluetoothGattService} that contains the given {@link Result#charUuid}.
 			 */
 			NO_MATCHING_TARGET,
 			

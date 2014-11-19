@@ -827,11 +827,11 @@ public class BleManager
 	}
 	
 	/**
-	 * Returns the {@link Context} (probably an {@link Activity}) provided to the constructor.
+	 * Returns the {@link Application} provided to the constructor.
 	 */
-	public Context getContext()
+	public Application getApplication()
 	{
-		return m_context;
+		return (Application) m_context;
 	}
 	
 	/**
