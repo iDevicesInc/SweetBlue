@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -113,7 +114,7 @@ class P_ServiceManager
 		{
 			if( type != BleDevice.ReadWriteListener.Type.NOTIFICATION )
 			{
-				Result result = new Result(m_device, uuid, type, data, Status.NOT_CONNECTED, 0.0, 0.0);
+				Result result = new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NOT_CONNECTED, 0.0, 0.0);
 				
 				return result;
 			}
@@ -129,7 +130,7 @@ class P_ServiceManager
 		
 		if( characteristic == null || char_native == null )
 		{
-			Result result = new Result(m_device, uuid, type, data, Status.NO_MATCHING_CHARACTERISTIC, 0.0, 0.0);
+			Result result = new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, 0.0, 0.0);
 			
 			return result;
 		}
@@ -138,7 +139,7 @@ class P_ServiceManager
 		
 		if( (char_native.getProperties() & property) == 0x0 )
 		{
-			Result result = new Result(m_device, uuid, type, data, Status.OPERATION_NOT_SUPPORTED, 0.0, 0.0);
+			Result result = new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.OPERATION_NOT_SUPPORTED, 0.0, 0.0);
 			
 			return result;
 		}

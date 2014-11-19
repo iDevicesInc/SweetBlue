@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import java.util.UUID;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -30,9 +31,9 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		m_data = data;
 	}
 	
-	@Override protected Result newResult(Status status)
+	@Override protected Result newResult(Status status, Target target, UUID charUuid, UUID descUuid)
 	{
-		return new Result(getDevice(), m_characteristic.getUuid(), Type.WRITE, m_data, status, getTotalTime(), getTotalTimeExecuting());
+		return new Result(getDevice(), charUuid, descUuid, Type.WRITE, target, m_data, status, getTotalTime(), getTotalTimeExecuting());
 	}
 
 	@Override public void execute()
@@ -41,21 +42,24 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		
 		if( char_native == null )
 		{
-			fail(Status.NO_MATCHING_CHARACTERISTIC);  return;
+			fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
 		}
 		
-		char_native.setValue(m_data);
+		if( !char_native.setValue(m_data) )
+		{
+			fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+		}
 		
 		if( !getDevice().getGatt().writeCharacteristic(char_native) )
 		{
-			fail(Status.FAILED_IMMEDIATELY);
+			fail(Status.FAILED_TO_SEND_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 		}
 	}
 	
 	@Override protected void succeed()
 	{
-		Result result = newResult(Status.SUCCESS); 
-		getDevice().addWriteTime(result.totalTime);
+		Result result = newResult(Status.SUCCESS, getDefaultTarget(), m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID); 
+		getDevice().addWriteTime(result.totalTime.seconds);
 		m_readWriteListener.onReadOrWriteComplete(result);
 		 
 		super.succeed();
@@ -75,7 +79,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		 }
 		 else
 		 {
-			 fail(Status.FAILED_EVENTUALLY);
+			 fail(Status.FAILED_EVENTUALLY, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
 		 }
 	}
 	
@@ -85,13 +89,13 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		{
 			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " write timed out!");
 			
-			m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT));
+			m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED));
+			m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 		}
 	}
 }

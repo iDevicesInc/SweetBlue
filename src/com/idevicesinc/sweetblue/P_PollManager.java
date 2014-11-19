@@ -10,6 +10,7 @@ import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -138,12 +139,12 @@ class P_PollManager
 			
 			if( value == null )
 			{
-				Result result = new Result(m_device, m_uuid, type, value, Status.NULL_CHARACTERISTIC_VALUE, 0.0, 0.0);
+				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_VALUE_RETURNED, 0.0, 0.0);
 				m_internalPollingListener.onReadOrWriteComplete(result);
 			}
 			else
 			{
-				Result result = new Result(m_device, m_uuid, type, value, Status.SUCCESS, 0.0, 0.0);
+				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, 0.0, 0.0);
 				m_internalPollingListener.onReadOrWriteComplete(result);
 			}
 			

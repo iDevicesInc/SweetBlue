@@ -10,14 +10,14 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
-import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
+import android.bluetooth.*;
 import android.os.Build;
 import android.util.Log;
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
@@ -63,11 +63,16 @@ public class BleDevice
 			SUCCESS,
 			
 			/**
-			 * Couldn't find a matching characteristic for {@link Result#uuid} which was given to {@link BleDevice#read(UUID, ReadWriteListener)},
+			 * Device is not {@link BleDeviceState#CONNECTED}.
+			 */
+			NOT_CONNECTED,
+			
+			/**
+			 * Couldn't find a matching {@link Result#target} for {@link Result#uuid} which was given to {@link BleDevice#read(UUID, ReadWriteListener)},
 			 * {@link BleDevice#write(UUID, byte[])}, etc. This most likely means that the internal call to {@link BluetoothGatt#discoverServices()}
 			 * didn't find any {@link BluetoothGattService} that contains the given {@link Result#uuid}.
 			 */
-			NO_MATCHING_CHARACTERISTIC,
+			NO_MATCHING_TARGET,
 			
 			/**
 			 * You tried to do a read on a characteristic that is write-only, or vice-versa, or tried to read a notify-only characteristic, etc., etc. 
@@ -75,15 +80,21 @@ public class BleDevice
 			OPERATION_NOT_SUPPORTED,
 			
 			/**
-			 * Device is not {@link BleDeviceState#CONNECTED}.
+			 * {@link BluetoothGatt#setCharacteristicNotification(BluetoothGattCharacteristic, boolean)} returned false for an unknown reason.
 			 */
-			NOT_CONNECTED,
+			FAILED_TO_REGISTER_FOR_NOTIFICATIONS,
+			
+			/**
+			 * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of its overloads) or
+			 * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its overloads) returned false.
+			 */
+			FAILED_TO_WRITE_VALUE_TO_TARGET,
 			
 			/**
 			 * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)} or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
 			 * or etc. returned {@link Boolean#false} and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#dropTacticalNuke()}.
 			 */
-			FAILED_IMMEDIATELY,
+			FAILED_TO_SEND_OUT,
 			
 			/**
 			 * The operation was cancelled either by the device becoming {@link BleDeviceState#DISCONNECTED} or {@link BleManager} turning {@link BleState#OFF}.
@@ -95,12 +106,12 @@ public class BleDevice
 			 * the operation being otherwise "successful".
 			 * Will throw an {@link UhOh#READ_RETURNED_NULL} but hopefully it was just a glitch. If problem persists try {@link BleManager#dropTacticalNuke()}.
 			 */
-			NULL_CHARACTERISTIC_VALUE,
+			NULL_VALUE_RETURNED,
 			
 			/**
 			 * Used when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data}. 
 			 */
-			EMPTY_CHARACTERISTIC_VALUE,
+			EMPTY_VALUE_RETURNED,
 			
 			/**
 			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means
@@ -138,7 +149,7 @@ public class BleDevice
 			POLL,
 			
 			/**
-			 * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)}.
+			 * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} when we actually get a notification.
 			 */
 			NOTIFICATION,
 			
@@ -152,15 +163,45 @@ public class BleDevice
 			 * Associated with {@link BleDevice#startChangeTrackingPoll(UUID, Interval, ReadWriteListener)} or
 			 * {@link BleDevice#enableNotify(UUID, Interval, ReadWriteListener)} where a force-read timeout is invoked.
 			 */
-			PSUEDO_NOTIFICATION;
+			PSUEDO_NOTIFICATION,
+			
+			/**
+			 * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and called when enabling the notification
+			 * completes by writing to the Descriptor of the given {@link UUID}. {@link Status#SUCCESS} doesn't <i>necessarily</i> mean
+			 * that notifications will definitely work (there may be other issues in the underlying stack), but it's a reasonable guarantee.
+			 */
+			ENABLING_NOTIFICATION,
+			
+			/**
+			 * Opposite of {@link #ENABLING_NOTIFICATION}.
+			 */
+			DISABLING_NOTIFICATION;
 			
 			/**
 			 * Returns {@link Boolean#TRUE} if <code>this</code> does not equal {@link #WRITE}, otherwise {@link Boolean#FALSE}.
 			 */
 			public boolean isRead()
 			{
-				return this != WRITE;
+				return this != WRITE && this != ENABLING_NOTIFICATION && this != DISABLING_NOTIFICATION;
 			}
+		}
+		
+		/**
+		 * The type of GATT object that {@link Result#charUuid} represents.
+		 *  
+		 * @author dougkoellmer
+		 */
+		public static enum Target
+		{
+			/**
+			 * The {@link Result} returned has to do with a {@link BluetoothGattCharacteristic} under the hood.
+			 */
+			CHARACTERISTIC,
+			
+			/**
+			 * The {@link Result} returned has to do with a {@link BluetoothGattDescriptor} under the hood.
+			 */
+			DESCRIPTOR
 		}
 		
 		/**
@@ -170,10 +211,39 @@ public class BleDevice
 		 */
 		public static class Result
 		{
-			//--- DRK > These don't need comments.
+			/**
+			 * Value used in place of <code>null</code>, for now only indicating that {@link #descUuid}
+			 * isn't used for the {@link Result} because {@link #target} is {@link Target#CHARACTERISTIC}.
+			 */
+			public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
+			
+			/**
+			 * The {@link BleDevice} this {@link Result} is for.
+			 */
 			public final BleDevice device;
-			public final UUID uuid;
+			
+			/**
+			 * The type of operation, read, write, etc.
+			 */
 			public final Type type;
+			
+			/**
+			 * The type of GATT object this {@link Result} is for, characteristic or descriptor.
+			 */
+			public final Target target;
+			
+			/**
+			 * The {@link UUID} of the characteristic associated with this {@link Result}. This will always be
+			 * a valid {@link UUID}, even if {@link #target} is {@link Target#DESCRIPTOR}.
+			 */
+			public final UUID charUuid;
+			
+			/**
+			 * The {@link UUID} of the descriptor associated with this {@link Result}. If {@link #target} is
+			 * {@link Target#CHARACTERISTIC} then this will be referentially equal (i.e. you can use == to compare)
+			 * to {@link #NON_APPLICABLE_UUID}.
+			 */
+			public final UUID descUuid;
 			
 			/**
 			 * The data sent to the peripheral if {@link Result#type} is {@link Type#WRITE},
@@ -189,30 +259,32 @@ public class BleDevice
 			public final Status status;
 			
 			/**
-			 * Time in seconds spent "over the air" - so in the native stack, peripheral, what have you.
+			 * Time spent "over the air" - so in the native stack, processing in the peripheral's embedded software, what have you.
 			 */
-			public final double transitTime;
+			public final Interval transitTime;
 			
 			/**
-			 * Total time in seconds it took for the operation to complete, whether success or failure.
+			 * Total time it took for the operation to complete, whether success or failure.
 			 * This mainly includes time spent in the internal job queue plus {@link Result#transitTime}.
 			 */
-			public final double totalTime;
+			public final Interval totalTime;
 			
-			Result(BleDevice device, UUID uuid, Type type, byte[] data_in, Status status_in, double totalTime, double transitTime)
+			Result(BleDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, Status status_in, double totalTime, double transitTime)
 			{
 				if( data_in.length == 0 )
 				{
-					status_in = Status.EMPTY_CHARACTERISTIC_VALUE;
+					status_in = Status.EMPTY_VALUE_RETURNED;
 				}
 				
 				this.device = device;
-				this.uuid = uuid;
-				this.type = type;
+				this.charUuid = charUuid_in;
+				this.descUuid = descUuid_in != null ? descUuid_in : NON_APPLICABLE_UUID;
+				this.type = type_in;
+				this.target = target_in;
 				this.data = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
 				this.status = status_in;
-				this.totalTime = totalTime;
-				this.transitTime = transitTime;
+				this.totalTime = Interval.seconds(totalTime);
+				this.transitTime = Interval.seconds(transitTime);
 			}
 			
 			/**

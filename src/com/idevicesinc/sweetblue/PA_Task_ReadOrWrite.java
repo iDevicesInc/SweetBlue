@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -31,13 +32,25 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_RequiresConnection
 		m_priority = priority != null ? priority : PE_TaskPriority.FOR_NORMAL_READS_WRITES;
 	}
 	
-	protected abstract Result newResult(Status status);
+	protected abstract Result newResult(Status status, Target target, UUID charUuid, UUID descUuid);
 	
-	protected void fail(Status status)
+	//--- DRK > Will have to be overridden in the future if we decide to support descriptor reads/writes.
+	protected Target getDefaultTarget()
+	{
+		return Target.CHARACTERISTIC;
+	}
+	
+	//--- DRK > Will have to be overridden by read/write tasks if we ever support direct descriptor operations.
+	protected UUID getDescriptorUuid()
+	{
+		return Result.NON_APPLICABLE_UUID;
+	}
+	
+	protected void fail(Status status, Target target, UUID charUuid, UUID descUuid)
 	{
 		if( m_readWriteListener != null )
 		{
-			m_readWriteListener.onReadOrWriteComplete(newResult(status));
+			m_readWriteListener.onReadOrWriteComplete(newResult(status, target, charUuid, descUuid));
 		}
 		
 		this.fail();
@@ -51,7 +64,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_RequiresConnection
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
 			}
 		}
 		

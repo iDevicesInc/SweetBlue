@@ -66,13 +66,15 @@ class P_Characteristic
 		
 		BluetoothGatt gatt = m_service.getDevice().getGatt();
 		
-		if( gatt == null )  return null;
+		if( gatt == null )  return m_native;
 		
 		BluetoothGattService service = gatt.getService(m_service.getUuid());
 		
-		if( service == null )  return null;
+		if( service == null )  return m_native;
 		
 		BluetoothGattCharacteristic characteristic = service.getCharacteristic(getUuid());
+		
+		if( characteristic == null )  return m_native;
 		
 		return characteristic;
 	}
