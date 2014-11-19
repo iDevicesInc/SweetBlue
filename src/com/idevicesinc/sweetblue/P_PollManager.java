@@ -123,7 +123,7 @@ class P_PollManager
 			return
 				usingNotify == m_usingNotify												&&
 				uuid.equals(m_uuid)															&&
-				interval_nullable == null || interval_nullable == m_interval				&&
+				(interval_nullable == null || interval_nullable == m_interval)				&&
 				readWriteListener.equals(m_externalReadWriteListener)						 ;
 		}
 		
