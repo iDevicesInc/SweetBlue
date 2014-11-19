@@ -4,6 +4,6 @@ TARGET_PATH=../doc/api/
 
 cd ../src
 
-javadoc -stylesheetfile ../scripts/$CSS_SOURCE_PATH -protected -windowtitle SweetBlue -author -d $TARGET_PATH com.idevicesinc.sweetblue
+javadoc -stylesheetfile ../scripts/$CSS_SOURCE_PATH -protected -windowtitle SweetBlue -author -d $TARGET_PATH -subpackages com.idevicesinc.sweetblue
 
 cd -
