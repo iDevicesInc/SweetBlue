@@ -8,6 +8,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -26,7 +27,7 @@ public class MyActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		
-		m_bleManager = new BleManager(MyActivity.this);
+		m_bleManager = new BleManager(getApplication());
 		
 		m_bleManager.startScan(new BleManagerConfig.DefaultAdvertisingFilter(Uuids.fromShort(0x180D)), new BleManager.DiscoveryListener()
 		{

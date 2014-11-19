@@ -60,7 +60,7 @@ public class MainActivity extends Activity
 		this.closeOptionsMenu();
 		this.closeContextMenu();
 		
-		m_bleMngr = new BleManager(this, m_bleManagerConfig);
+		m_bleMngr = new BleManager(getApplication(), m_bleManagerConfig);
 		m_alertMngr = new AlertManager(this, m_bleMngr);
 		m_viewController = new ViewController(this, m_bleMngr);
 		this.setContentView(m_viewController);

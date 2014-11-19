@@ -16,6 +16,7 @@ import com.idevicesinc.sweetblue.utils.UpdateLoop;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -272,27 +273,35 @@ public class BleManager
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
 	
+	private static int s_instanceCount = 0;
+	
 	/**
 	 * Create an instance with default configuration options set.
 	 * This calls {@link #BleManager(Context, BleManagerConfig)} with a {@link BleManagerConfig}
 	 * created using the default constructor of {@link BleManagerConfig#BleManagerConfig()}.
+	 * 
+	 * @throws InstantiationError if you try to create more than one instance.
 	 */
-	public BleManager(Context context)
+	public BleManager(Application application)
 	{
-		this(context, new BleManagerConfig());
+		this(application, new BleManagerConfig());
 	}
 	
 	/**
 	 * Create an instance with special configuration options set.
+	 * 
+	 * @throws InstantiationError if you try to create more than one instance.
 	 */
-	public BleManager(Context context, BleManagerConfig config)
+	public BleManager(Application application, BleManagerConfig config)
 	{
-		m_context = context;
+		if( s_instanceCount >= 1 )  throw new InstantiationError("There can only be one instance of "+BleManager.class.getSimpleName() + " created per application.");
+		
+		m_context = application;
 		m_config = config.clone();
 		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultAdvertisingFilter);
 		m_logger = new P_Logger(m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled);
 		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.asDouble(m_config.uhOhCallbackThrottle));
-		m_btMngr = (BluetoothManager) context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
+		m_btMngr = (BluetoothManager) application.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleState nativeState = BleState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_StateTracker(this);
 		m_stateTracker.append(nativeState);
@@ -300,7 +309,7 @@ public class BleManager
 		m_nativeStateTracker.append(nativeState);
 		m_mainThreadHandler = new Handler(m_context.getMainLooper());
 		m_taskQueue = new P_TaskQueue(this);
-		m_crashResolver = new P_BluetoothCrashResolver(context);
+		m_crashResolver = new P_BluetoothCrashResolver(application);
 		m_deviceMngr = new P_DeviceManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
 		m_wakeLockMngr = new P_WakeLockManager(this, m_config.manageCpuWakeLock);
@@ -327,6 +336,8 @@ public class BleManager
 		{
 			m_updateLoop = null;
 		}
+		
+		s_instanceCount++;
 	}
 	
 	/**
