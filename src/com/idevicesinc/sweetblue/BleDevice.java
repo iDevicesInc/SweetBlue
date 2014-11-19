@@ -24,8 +24,8 @@ import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 /**
  * This is the one other class you will use the most besides {@link BleManager}. It acts as a
- * BLE-specific abstraction for the rather useless {@link BluetoothDevice} class and the rather hard-to-use
- * {@link BluetoothGatt} class. It does everything you would expect, like providing methods for connecting,
+ * BLE-specific abstraction for the {@link BluetoothDevice} and {@link BluetoothGatt} classes.
+ * It does everything you would expect, like providing methods for connecting,
  * reading/writing characteristics, enabling notifications, etc.
  * <br><br>
  * Instances of this class are generally not created by the calling library or application, but rather are
@@ -1039,7 +1039,7 @@ public class BleDevice
 	/**
 	 * Enables notification on the given characteristic. The listener will be called both for the notifications
 	 * themselves and for the actual registration for the notification. Switch on {@link Type#ENABLING_NOTIFICATION}
-	 * and {@link Type#NOTIFICATION} (or {@link Type#INDICATION}).
+	 * and {@link Type#NOTIFICATION} (or {@link Type#INDICATION}) in your listener to distinguish between these.
 	 */
 	public void enableNotify(UUID uuid, ReadWriteListener listener)
 	{
@@ -1078,7 +1078,9 @@ public class BleDevice
 	
 	/**
 	 * Disables all notifications enabled by {@link #enableNotify(UUID, ReadWriteListener)} or 
-	 * {@link #enableNotify(UUID, Interval, ReadWriteListener)}.
+	 * {@link #enableNotify(UUID, Interval, ReadWriteListener)}. The listener provided should be
+	 * the same one that you passed to {@link #enableNotify(UUID, ReadWriteListener)}. Listen
+	 * for {@link Type#DISABLING_NOTIFICATION} in your listener to know when the remote device actually confirmed.
 	 */
 	public void disableNotify(UUID uuid, ReadWriteListener listener)
 	{
