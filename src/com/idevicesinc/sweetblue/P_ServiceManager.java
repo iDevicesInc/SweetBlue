@@ -112,7 +112,7 @@ class P_ServiceManager
 	{
 		if( !m_device.is(BleDeviceState.CONNECTED) )
 		{
-			if( type != BleDevice.ReadWriteListener.Type.NOTIFICATION )
+			if( type != BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION && type != BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION)
 			{
 				Result result = new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NOT_CONNECTED, 0.0, 0.0);
 				
@@ -176,9 +176,10 @@ class P_ServiceManager
 			
 			case WRITE:					return BluetoothGattCharacteristic.PROPERTY_WRITE;
 			
-			case NOTIFICATION:			return BluetoothGattCharacteristic.PROPERTY_NOTIFY;
-			
-			case INDICATION:			return BluetoothGattCharacteristic.PROPERTY_INDICATE;
+			case ENABLING_NOTIFICATION:
+			case DISABLING_NOTIFICATION:
+			case NOTIFICATION:
+			case INDICATION:			return BluetoothGattCharacteristic.PROPERTY_INDICATE | BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 		}
 		
 		return 0x0;

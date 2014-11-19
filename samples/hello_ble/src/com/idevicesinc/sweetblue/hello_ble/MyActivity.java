@@ -28,15 +28,28 @@ public class MyActivity extends Activity
 		
 		m_bleManager = new BleManager(MyActivity.this);
 		
-		m_bleManager.startScan(new BleManager.DiscoveryListener()
+		m_bleManager.startScan(new BleManagerConfig.DefaultAdvertisingFilter(Uuids.fromShort(0x180D)), new BleManager.DiscoveryListener()
 		{
-			@Override public void onDeviceDiscovered(BleDevice device)
+			@Override public void onDeviceDiscovered(final BleDevice device)
 			{
+				device.enableNotify(Uuids.fromShort(0x2A37), new BleDevice.ReadWriteListener()
+				{
+					@Override public void onReadOrWriteComplete(Result result)
+					{
+						if( result.type == Type.ENABLING_NOTIFICATION || result.type == Type.DISABLING_NOTIFICATION )
+						{
+							Log.i("SweetBlueExample", "notification-related");
+						}
+						
+						device.disableNotify(Uuids.fromShort(0x2A37), this);
+					}	
+				});
+				
 				m_bleManager.stopScan();
 				
 				device.connect(new BleDevice.StateListener()
 				{
-					@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits)
+					@Override public void onStateChange(final BleDevice device, int oldStateBits, int newStateBits)
 					{
 						if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
 						{

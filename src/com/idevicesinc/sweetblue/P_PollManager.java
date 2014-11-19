@@ -271,7 +271,7 @@ class P_PollManager
 				
 				if( ithEntry.usingNotify() )
 				{
-					BleDevice.ReadWriteListener.Result earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.NOTIFICATION);
+					BleDevice.ReadWriteListener.Result earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION);
 					
 					if( earlyOutResult != null )
 					{
@@ -288,7 +288,8 @@ class P_PollManager
 					
 					P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(ithEntry.m_uuid);
 					
-					m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(characteristic, /*enable=*/true));
+					P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(ithEntry.m_externalReadWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+					m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
 				}
 			}
 		}

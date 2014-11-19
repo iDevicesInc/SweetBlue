@@ -30,14 +30,14 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	private byte[] m_writeValue = null;
 	
-	public P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable)
+	public P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener)
 	{
-		this(characteristic, enable, null);
+		this(characteristic, enable, writeListener, null);
 	}
 	
-	public P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable, PE_TaskPriority priority)
+	private P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener, PE_TaskPriority priority)
 	{
-		super(characteristic, null, false, null, priority);
+		super(characteristic, writeListener, false, null, priority);
 		
 		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
 		m_enable = enable;
@@ -103,7 +103,11 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	{
 		Result result = newResult(Status.SUCCESS, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid); 
 //		getDevice().addWriteTime(result.totalTime);
-		m_readWriteListener.onReadOrWriteComplete(result);
+		
+		if( m_readWriteListener != null )
+		{
+			m_readWriteListener.onReadOrWriteComplete(result);
+		}
 		 
 		super.succeed();
 	}
@@ -120,7 +124,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		 }
 		 else
 		 {
-			 fail(Status.FAILED_EVENTUALLY, Target.DESCRIPTOR, m_characteristic.getUuid(), descUuid);
+			 fail(Status.REMOTE_GATT_FAILURE, Target.DESCRIPTOR, m_characteristic.getUuid(), descUuid);
 		 }
 	}
 	

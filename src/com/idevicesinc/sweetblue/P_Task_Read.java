@@ -92,7 +92,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		 }
 		 else
 		 {
-			 fail(Status.FAILED_EVENTUALLY, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			 fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 		 }
 	}
 	

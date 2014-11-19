@@ -48,6 +48,7 @@ public class BleDevice
 		/**
 		 * A value returned to {@link ReadWriteListener#onReadOrWriteComplete(Result)} by way of
 		 * {@link Result#status} that indicates success of the operation or the reason for its failure.
+		 * This enum is <i>not</i> meant to match up with BluetoothGatt.GATT_* values in any way.
 		 * 
 		 * @see Result#status
 		 * 
@@ -118,7 +119,7 @@ public class BleDevice
 			 * for example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)} returned
 			 * a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted, whatever.
 			 */
-			FAILED_EVENTUALLY,
+			REMOTE_GATT_FAILURE,
 			
 			/**
 			 * Operation took longer than {@link BleManagerConfig#DEFAULT_TASK_TIMEOUT} seconds so we cut it loose.
@@ -271,7 +272,7 @@ public class BleDevice
 			
 			Result(BleDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, Status status_in, double totalTime, double transitTime)
 			{
-				if( data_in.length == 0 )
+				if( data_in != null && data_in.length == 0 && type_in.isRead() )
 				{
 					status_in = Status.EMPTY_VALUE_RETURNED;
 				}
@@ -293,6 +294,11 @@ public class BleDevice
 			public boolean wasSuccess()
 			{
 				return status == Status.SUCCESS;
+			}
+			
+			@Override public String toString()
+			{
+				return "status="+status+" type="+type+" target="+target+" charUuid="+charUuid;
 			}
 		}
 		
@@ -1045,7 +1051,7 @@ public class BleDevice
 	 */
 	public void enableNotify(UUID uuid, Interval forceReadTimeout, ReadWriteListener listener)
 	{
-		Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.NOTIFICATION);
+		Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.ENABLING_NOTIFICATION);
 		
 		if( earlyOutResult != null )
 		{
@@ -1059,9 +1065,10 @@ public class BleDevice
 		
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		
-		if( characteristic != null && is(INITIALIZED) )
+		if( characteristic != null && is(CONNECTED) )
 		{
-			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/true));
+			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
+			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
 		}
 		
 		m_pollMngr.startPoll(uuid, forceReadTimeout.seconds, listener, /*trackChanges=*/true, /*usingNotify=*/true);
@@ -1556,6 +1563,8 @@ public class BleDevice
 		m_serviceMngr.clear();
 		m_serviceMngr.loadDiscoveredServices();
 		
+		m_pollMngr.enableNotifications();
+		
 		m_txnMngr.runAuthOrInitTxnIfNeeded(GETTING_SERVICES, false);
 	}
 	
@@ -1570,8 +1579,6 @@ public class BleDevice
 			extraFlags, ATTEMPTING_RECONNECT, false, CONNECTING_OVERALL, false,
 			AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true
 		);
-		
-		m_pollMngr.enableNotifications();
 	}
 	
 	private void setStateToDisconnected(boolean attemptingReconnect, boolean fromBleCallback)
@@ -1792,11 +1799,24 @@ public class BleDevice
 	
 	private void disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)
 	{
+		Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.DISABLING_NOTIFICATION);
+		
+		if( earlyOutResult != null )
+		{
+			if( listener != null )
+			{
+				listener.onReadOrWriteComplete(earlyOutResult);
+			}
+			
+			return;
+		}
+		
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		
-		if( characteristic != null )
+		if( characteristic != null && is(CONNECTED) )
 		{
-			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/false));
+			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
+			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/false, wrappingListener));
 		}
 		
 		m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /*usingNotify=*/true);
