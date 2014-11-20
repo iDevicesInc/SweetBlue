@@ -86,7 +86,7 @@ public enum BleState implements BitwiseEnum
 
 	@Override public int bit()
 	{
-		return 1 << (ordinal() + 1);
+		return 0x1 << ordinal();
 	}
 	
 	@Override public boolean overlaps(int mask)
