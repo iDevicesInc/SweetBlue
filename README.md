@@ -44,15 +44,15 @@ Features
 
 Getting Started
 ===============
-[Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release and copy it to a subfolder of your project such as MyApp/libs/. To add to Eclipse...
+[Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release and copy it to a subfolder of your project such as *MyApp/libs/*. To add to Eclipse...
  1. Right-click on your project.
  2. Click *Choose Build Path*->
  3. Click *Configure Build Path...*
  4. Click the *Source* tab (if it's not already selected).
  5. Click *Add Folder...*
- 6. Check the box next to MyApp/libs/sweetblue/src/.
+ 6. Check the box next to *MyApp/libs/sweetblue/src/*.
 
-Other folders in MyApp/libs/sweetblue/ like MyApp/libs/sweetblue/samples/ are included in this repo for convenience but are not essential so you may delete them.
+Other folders in *MyApp/libs/sweetblue/* like *MyApp/libs/sweetblue/samples/* are included in this repo for convenience but are not essential so you may delete them.
 
 Now add these to the root of MyApp/AndroidManifest.xml:
 ```xml
