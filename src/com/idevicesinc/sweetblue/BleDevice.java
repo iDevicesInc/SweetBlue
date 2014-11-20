@@ -110,6 +110,7 @@ public class BleDevice
 			
 			/**
 			 * Used when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data}. 
+			 * Note that {@link Result#data} can be a zero-length array in other scenarios as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc.
 			 */
 			EMPTY_VALUE_RETURNED,
 			
@@ -168,7 +169,7 @@ public class BleDevice
 			/**
 			 * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and called when enabling the notification
 			 * completes by writing to the Descriptor of the given {@link UUID}. {@link Status#SUCCESS} doesn't <i>necessarily</i> mean
-			 * that notifications will definitely work (there may be other issues in the underlying stack), but it's a reasonable guarantee.
+			 * that notifications will definitely now work (there may be other issues in the underlying stack), but it's a reasonable guarantee.
 			 */
 			ENABLING_NOTIFICATION,
 			
@@ -270,12 +271,7 @@ public class BleDevice
 			public final Interval totalTime;
 			
 			Result(BleDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, Status status_in, double totalTime, double transitTime)
-			{
-				if( data_in != null && data_in.length == 0 && type_in.isRead() )
-				{
-					status_in = Status.EMPTY_VALUE_RETURNED;
-				}
-				
+			{				
 				this.device = device;
 				this.charUuid = charUuid_in;
 				this.descUuid = descUuid_in != null ? descUuid_in : NON_APPLICABLE_UUID;

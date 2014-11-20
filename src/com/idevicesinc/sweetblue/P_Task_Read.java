@@ -80,8 +80,15 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		 if( Utils.isSuccess(status) )
 		 {
 			 if( value != null )
-			 {				 
-				 succeed(value, Target.CHARACTERISTIC);
+			 {
+				 if( value.length == 0 )
+				 {
+					 fail(Status.EMPTY_VALUE_RETURNED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+				 }
+				 else
+				 {
+				 	succeed(value, Target.CHARACTERISTIC);
+				 }
 			 }
 			 else
 			 {

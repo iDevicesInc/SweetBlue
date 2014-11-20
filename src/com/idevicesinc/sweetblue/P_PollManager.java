@@ -143,8 +143,16 @@ class P_PollManager
 			}
 			else
 			{
-				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, 0.0, 0.0);
-				m_internalPollingListener.onReadOrWriteComplete(result);
+				if( value.length == 0 )
+				{
+					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_VALUE_RETURNED, 0.0, 0.0);
+					m_internalPollingListener.onReadOrWriteComplete(result);
+				}
+				else
+				{
+					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, 0.0, 0.0);
+					m_internalPollingListener.onReadOrWriteComplete(result);
+				}
 			}
 			
 			m_timeTracker = 0.0;
