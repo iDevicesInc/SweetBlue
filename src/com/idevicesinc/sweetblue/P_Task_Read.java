@@ -73,29 +73,29 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 	{
 		getManager().ASSERT(gatt == getDevice().getGatt());
 		 
-		 if( !this.isFor(uuid) )  return;
+		if( !this.isFor(uuid) )  return;
 		 
-		 if( !acknowledgeCallback(status) )  return;
-
-		 if( Utils.isSuccess(status) )
-		 {
-			 if( value != null )
-			 {
-				 if( value.length == 0 )
-				 {
+		if( !acknowledgeCallback(status) )  return;
+		
+		if( Utils.isSuccess(status) )
+		{
+			if( value != null )
+			{
+				if( value.length == 0 )
+				{
 					 fail(Status.EMPTY_VALUE_RETURNED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
-				 }
-				 else
-				 {
-				 	succeed(value, Target.CHARACTERISTIC);
-				 }
-			 }
-			 else
-			 {
-				 fail(Status.NULL_VALUE_RETURNED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+				}
+				else
+				{
+				 succeed(value, Target.CHARACTERISTIC);
+				}
+			}
+			else
+			{
+				fail(Status.NULL_VALUE_RETURNED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 				 
-				 getManager().uhOh(UhOh.READ_RETURNED_NULL);
-			 }
+				getManager().uhOh(UhOh.READ_RETURNED_NULL);
+			}
 		 }
 		 else
 		 {

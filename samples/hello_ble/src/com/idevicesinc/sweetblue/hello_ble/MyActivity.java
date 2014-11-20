@@ -5,6 +5,7 @@ import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleManagerConfig.DefaultAdvertisingFilter;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import android.app.Activity;
