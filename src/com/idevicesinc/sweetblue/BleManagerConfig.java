@@ -9,6 +9,7 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.app.Application;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
@@ -20,7 +21,7 @@ import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
- * Provides a number of options to pass to the {@link BleManager#BleManager(Context, BleManagerConfig)}
+ * Provides a number of options to pass to the {@link BleManager#BleManager(Application, BleManagerConfig)}
  * constructor. Use {@link Interval#DISABLED} or <code>null</code> to disable any time-based options. 
  * 
  * @author dougkoellmer
@@ -259,7 +260,7 @@ public class BleManagerConfig implements Cloneable
 	
 	/**
 	 * Default is true - requires the {@link Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
-	 * It should look like this: {@code<uses-permission android:name="android.permission.WAKE_LOCK" />}
+	 * It should look like this: {@code <uses-permission android:name="android.permission.WAKE_LOCK" />}
 	 * Sets whether the library will attempt to obtain a wake lock in certain situations.
 	 * For now the only situation is when there are no remote bluetooth devices
 	 * connected but one or more devices are {@link BleDeviceState#ATTEMPTING_RECONNECT}.
