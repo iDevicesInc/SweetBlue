@@ -110,7 +110,7 @@ public class BleManager
 	 * or {@link BleManager#startPeriodicScan(Interval, Interval)} methods. You can also provide this to various
 	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 * <br><br>
-	 * Use {@link DiscoveryListener_Full} for more detailed events.
+	 * Use {@link DiscoveryListener_Full} for additional discovery lifecycle events.
 	 * 
 	 * @author dougkoellmer
 	 */

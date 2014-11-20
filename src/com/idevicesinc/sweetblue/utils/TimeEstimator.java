@@ -4,6 +4,7 @@ package com.idevicesinc.sweetblue.utils;
 /**
  * A zero-dependency utility class to track running average time of operations
  * and estimate the completion time of long running operations like firmware updates.
+ * Basically takes times as doubles representing seconds, and spits back the same.
  * 
  * @author dougkoellmer
  */
@@ -33,7 +34,7 @@ public class TimeEstimator
 	}
 	
 	/**
-	 * Lets this class act as a utility for calculating the running average completion time of arbirtrary operations.
+	 * Lets this class act as a utility for calculating the running average completion time of arbitrary operations.
 	 */
 	public TimeEstimator(int runningAverageN)
 	{

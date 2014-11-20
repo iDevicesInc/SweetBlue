@@ -44,6 +44,9 @@ abstract class PA_Task
 	
 	private int m_updateCount = 0;
 	
+	private long m_timeCreated;
+	private long m_timeExecuted;
+	
 	private boolean m_softlyCancelled = false;
 	
 	protected final P_Logger m_logger;
@@ -56,7 +59,7 @@ abstract class PA_Task
 			//---		we actually make it here.
 			if( m_state /*still*/== PE_TaskState.EXECUTING )
 			{
-				execute();
+				execute_wrapper();
 			}
 		}
 	};
@@ -85,6 +88,7 @@ abstract class PA_Task
 		m_maxRetries = 0;
 		m_timeout = timeout;
 		m_logger = m_manager.getLogger();
+		m_timeCreated = System.currentTimeMillis();
 		
 		if( listener == null && this instanceof I_StateListener )
 		{
@@ -214,6 +218,13 @@ abstract class PA_Task
 		return true;
 	}
 	
+	private void execute_wrapper()
+	{
+		m_timeExecuted = System.currentTimeMillis();
+		
+		execute();
+	}
+	
 	abstract void execute();
 	
 	void setEndingState(PE_TaskState endingState)
@@ -281,7 +292,7 @@ abstract class PA_Task
 								}
 								else
 								{
-									execute();
+									execute_wrapper();
 								}
 								
 								return;
@@ -320,23 +331,12 @@ abstract class PA_Task
 	
 	public double getTotalTimeExecuting()
 	{
-		return m_totalTimeExecuting;
+		return (System.currentTimeMillis() - m_timeExecuted)/1000.0;
 	}
 	
 	public double getTotalTime()
 	{
-		if( m_state == PE_TaskState.QUEUED )
-		{
-			return m_queue.getTime() - m_addedToQueueTime;
-		}
-		else if( m_state == PE_TaskState.CREATED )
-		{
-			return 0.0;
-		}
-		else
-		{
-			return m_totalTimeQueuedAndArmedAndExecuting;
-		}
+		return (System.currentTimeMillis() - m_timeCreated)/1000.0;
 	}
 	
 	public BleDevice getDevice()

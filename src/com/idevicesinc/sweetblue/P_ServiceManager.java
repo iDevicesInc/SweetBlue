@@ -107,6 +107,11 @@ class P_ServiceManager
 		}
 	}
 	
+	private BleDevice.ReadWriteListener.Result newNoMatchingTargetResult(Type type, byte[] data, UUID uuid)
+	{
+		return new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, 0.0, 0.0);
+	}
+	
 	BleDevice.ReadWriteListener.Result getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
 	{
 		if( !m_device.is(BleDeviceState.CONNECTED) )
@@ -124,14 +129,18 @@ class P_ServiceManager
 		}
 		
 		P_Characteristic characteristic = getCharacteristic(uuid);
+		
+		if( characteristic == null )
+		{
+			return newNoMatchingTargetResult(type, data, uuid);
+		}
+		
 		BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
 		type = modifyResultType(char_native, type);
 		
-		if( characteristic == null || char_native == null )
+		if( char_native == null )
 		{
-			Result result = new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, 0.0, 0.0);
-			
-			return result;
+			return newNoMatchingTargetResult(type, data, uuid);
 		}
 		
 		int property = getProperty(type);
