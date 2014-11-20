@@ -29,7 +29,7 @@ public class MyActivity extends Activity
 		
 		m_bleManager = new BleManager(getApplication());
 		
-		m_bleManager.startScan(new BleManagerConfig.DefaultAdvertisingFilter(Uuids.fromShort(0x180D)), new BleManager.DiscoveryListener()
+		m_bleManager.startScan(new BleManager.DiscoveryListener()
 		{
 			@Override public void onDeviceDiscovered(final BleDevice device)
 			{
