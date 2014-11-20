@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothGatt;
 
 /**
  * 

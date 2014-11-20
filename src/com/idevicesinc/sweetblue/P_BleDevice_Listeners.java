@@ -2,23 +2,16 @@ package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
 
-import com.idevicesinc.sweetblue.BleTransaction.EndReason;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
-import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
-
-import static com.idevicesinc.sweetblue.BleDeviceState.*;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Handler;
-import android.util.Log;
+
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.utils.UpdateLoop;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * 

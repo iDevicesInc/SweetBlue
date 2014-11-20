@@ -1,26 +1,25 @@
 package com.idevicesinc.sweetblue;
 
+import static com.idevicesinc.sweetblue.BleDeviceState.*;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
-import com.idevicesinc.sweetblue.utils.*;
-import com.idevicesinc.sweetblue.utils.TimeEstimator;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.*;
-import android.os.Build;
-import android.util.Log;
-import static com.idevicesinc.sweetblue.BleDeviceState.*;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.TimeEstimator;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
  * This is the one other class you will use the most besides {@link BleManager}. It acts as a

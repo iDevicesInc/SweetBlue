@@ -1,8 +1,8 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.utils.Utils;
-
 import android.os.Handler;
+
+import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * 

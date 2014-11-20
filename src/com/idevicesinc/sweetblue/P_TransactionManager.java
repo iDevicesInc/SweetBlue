@@ -1,13 +1,12 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
 import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATED;
 import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATING;
 import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
 import static com.idevicesinc.sweetblue.BleDeviceState.UPDATING_FIRMWARE;
 
-import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 
 /**
  * 

@@ -1,18 +1,9 @@
 package com.idevicesinc.sweetblue;
 
-import java.util.ArrayList;
-
 import static com.idevicesinc.sweetblue.BleState.*;
 
 import java.util.List;
 import java.util.UUID;
-
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
-import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
-import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
-import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
 
 import android.Manifest;
 import android.app.Activity;
@@ -27,6 +18,14 @@ import android.os.DeadObjectException;
 import android.os.Handler;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
+
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
+import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
+import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.UpdateLoop;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * The entry point to the library. Typical pattern is to create one instance of this class per application

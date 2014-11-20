@@ -5,21 +5,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
-import com.idevicesinc.sweetblue.BleManager.UhOhListener;
-import com.idevicesinc.sweetblue.utils.UuidNameMap;
-import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
-import com.idevicesinc.sweetblue.utils.Uuids;
-import com.idevicesinc.sweetblue.utils.Utils;
-
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.content.Context;
+
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
+import com.idevicesinc.sweetblue.BleManager.UhOhListener;
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
+import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.UuidNameMap;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
  * Provides a number of options to pass to the {@link BleManager#BleManager(Context, BleManagerConfig)}

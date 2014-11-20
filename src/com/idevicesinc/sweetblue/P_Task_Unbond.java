@@ -2,10 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import java.lang.reflect.Method;
 
-import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
-
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothGatt;
 
 /**
  * 

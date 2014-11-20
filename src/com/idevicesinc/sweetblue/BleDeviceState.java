@@ -1,12 +1,11 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
-import com.idevicesinc.sweetblue.BleManagerConfig.ReconnectRateLimiter;
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
  * An enumeration of the various states that a {@link BleDevice} can be in.

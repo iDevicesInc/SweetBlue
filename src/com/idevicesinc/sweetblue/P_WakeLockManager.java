@@ -1,12 +1,12 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.utils.Utils;
-
 import android.Manifest.permission;
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
+
+import com.idevicesinc.sweetblue.utils.Utils;
 
 class P_WakeLockManager
 {

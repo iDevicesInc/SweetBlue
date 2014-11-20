@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.util.Log;
 
 /**
  * 

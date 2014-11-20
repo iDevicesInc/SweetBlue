@@ -1,8 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothAdapter.LeScanCallback;
 
 /**
  * 

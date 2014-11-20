@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import java.util.HashMap;
 
-import com.idevicesinc.sweetblue.BleManager.NukeEndListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 
 

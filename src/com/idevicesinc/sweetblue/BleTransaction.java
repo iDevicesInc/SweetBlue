@@ -1,11 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import java.util.HashMap;
-
-import com.idevicesinc.sweetblue.BleDevice.*;
-
-import java.util.Iterator;
-
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.utils.Utils;
 

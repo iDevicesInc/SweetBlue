@@ -2,9 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothAdapter.LeScanCallback;
-
 /**
  * 
  * @author dougkoellmer

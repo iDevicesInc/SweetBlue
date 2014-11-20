@@ -5,15 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import com.idevicesinc.sweetblue.utils.UuidNameMap;
-import com.idevicesinc.sweetblue.utils.Utils;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothProfile;
 import android.os.Process;
 import android.util.Log;
+
+import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.UuidNameMap;
 
 /**
  * 

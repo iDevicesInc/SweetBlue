@@ -1,10 +1,8 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleDevice.StateListener;
-import com.idevicesinc.sweetblue.utils.BitwiseEnum;
-
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
+
+import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 
 /**
  * An enumeration of the various states that a {@link BleManager} can be in.

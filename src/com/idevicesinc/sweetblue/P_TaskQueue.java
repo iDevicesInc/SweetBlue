@@ -1,12 +1,9 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.view.View;
 
 /**
  * 

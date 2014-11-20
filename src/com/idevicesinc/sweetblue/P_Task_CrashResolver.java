@@ -1,6 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
 
 /**
  * 

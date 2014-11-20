@@ -1,10 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener_Full;
 

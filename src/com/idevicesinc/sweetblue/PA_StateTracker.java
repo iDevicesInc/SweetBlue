@@ -1,8 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import android.util.Log;
-
-import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 
 /**
