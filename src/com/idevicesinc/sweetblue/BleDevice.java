@@ -807,7 +807,10 @@ public class BleDevice
 	 * Same as {@link #connect()} but provides a hook for the app to do some kind of authentication
 	 * handshake if it wishes. This is popular with commercial BLE devices where you don't want 
 	 * hobbyists or competitors using your devices for nefarious purposes - like releasing a better
-	 * application for your device than you ;-)
+	 * application for your device than you ;-). Usually the characteristics read/written inside
+	 * this transaction are encrypted and so one way or another will require the device to become
+	 * {@link BleDeviceState#BONDED}. This should happen automatically for you, i.e you shouldn't
+	 * need to call {@link #bond()} yourself.
 	 * 
 	 * @see #connect()
 	 * @see BleDeviceState#AUTHENTICATING
