@@ -182,7 +182,7 @@ public class BleDevice
 			
 			/**
 			 * Returns {@link Boolean#TRUE} for every {@link Type} except {@link #WRITE}, {@link #ENABLING_NOTIFICATION}, and {@link #DISABLING_NOTIFICATION}.
-			 * Overall, this convenience method is meant to tell you when we've received something from the device as opposed to writing something to it. 
+			 * Overall this convenience method is meant to tell you when we've <i>received</i> something from the device as opposed to writing something to it. 
 			 */
 			public boolean isRead()
 			{
