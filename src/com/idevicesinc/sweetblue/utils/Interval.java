@@ -35,16 +35,25 @@ public class Interval
 		this.milliseconds = milliseconds_in;
 	}
 
+	/**
+	 * Returns a new {@link Interval} representings the given number of seconds.
+	 */
 	public static Interval seconds(double value)
 	{
 		return new Interval(value, (long) (value*1000));
 	}
 	
+	/**
+	 * Returns a new {@link Interval} representings the given number of milliseconds.
+	 */
 	public static Interval milliseconds(long milliseconds)
 	{
 		return new Interval(((double)milliseconds)/1000.0, milliseconds);
 	}
 	
+	/**
+	 * Returns the double values as seconds from a given nullable {@link Interval}.
+	 */
 	public static double asDouble(Interval interval_nullable)
 	{
 		if( interval_nullable == null )
@@ -96,7 +105,7 @@ public class Interval
 	
 	@Override public boolean equals(Object object)
 	{
-		if( object instanceof Interval )
+		if( object != null && object instanceof Interval )
 		{
 			return ((Interval)object).seconds == this.seconds;
 		}
