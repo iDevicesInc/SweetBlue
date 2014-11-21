@@ -181,11 +181,20 @@ public class BleDevice
 			DISABLING_NOTIFICATION;
 			
 			/**
-			 * Returns {@link Boolean#TRUE} if <code>this</code> does not equal {@link #WRITE}, otherwise {@link Boolean#FALSE}.
+			 * Returns {@link Boolean#TRUE} for every {@link Type} except {@link #WRITE}, {@link #ENABLING_NOTIFICATION}, and {@link #DISABLING_NOTIFICATION}.
+			 * Overall, this convenience method is meant to tell you when we've received something from the device as opposed to writing something to it. 
 			 */
 			public boolean isRead()
 			{
 				return this != WRITE && this != ENABLING_NOTIFICATION && this != DISABLING_NOTIFICATION;
+			}
+			
+			/**
+			 * Returns true for {@link #NOTIFICATION}, {@link #PSUEDO_NOTIFICATION}, and {@link #INDICATION}.
+			 */
+			public boolean isNotification()
+			{
+				return this == NOTIFICATION || this == PSUEDO_NOTIFICATION || this == INDICATION;
 			}
 		}
 		
