@@ -4,7 +4,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.idevicesinc.sweetblue.BleDevice;
+import com.idevicesinc.sweetblue.BleManager;
 
+/**
+ * Implementation of {@link Iterator} for {@link BleDevice} instances, returned from {@link BleManager#getDevices()} and its overloads.
+ * 
+ * @author dougkoellmer
+ */
 public class BleDeviceIterator implements Iterator<BleDevice>
 {
 	private final List<BleDevice> m_all;

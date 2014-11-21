@@ -10,8 +10,16 @@ import android.os.Looper;
  */
 public class UpdateLoop
 {
+	/**
+	 * A callback where you handle the update time step.
+	 * 
+	 * @author dougkoellmer
+	 */
 	public static interface Callback
 	{
+		/**
+		 * Gives you the amount of time that has passed in seconds since the last callback.
+		 */
 		void onUpdate(double timestep);
 	}
 	
