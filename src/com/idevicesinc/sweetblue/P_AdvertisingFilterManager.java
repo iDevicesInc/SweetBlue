@@ -28,6 +28,11 @@ class P_AdvertisingFilterManager
 		m_filters.clear();
 	}
 	
+	void remove(AdvertisingFilter filter)
+	{
+		while( m_filters.remove(filter) ){};
+	}
+	
 	void add(AdvertisingFilter filter)
 	{
 		if( filter == null )  return;

@@ -858,6 +858,18 @@ public class BleManager
 		stopScan_private();
 	}
 	
+	/**
+	 * Same as {@link #stopScan()} but also unregisters any filter supplied to various overloads of
+	 * {@link #startScan()} or {@link #startPeriodicScan(Interval, Interval)} that take an {@link BleManagerConfig.AdvertisingFilter}.
+	 * Calling {@link #stopScan()} alone will keep any previously registered filters active.
+	 */
+	public void stopScan(AdvertisingFilter filter)
+	{
+		m_filterMngr.remove(filter);
+		
+		stopScan();
+	}
+	
 	private void stopScan_private()
 	{
 		m_timeNotScanning = 0.0;
@@ -1346,7 +1358,7 @@ public class BleManager
 	
 	void clearScanningRelatedMembers()
 	{
-		m_filterMngr.clear();
+//		m_filterMngr.clear();
 		
 		m_timeNotScanning = 0.0;
 		
