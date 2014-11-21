@@ -21,7 +21,13 @@ public interface BitwiseEnum
 	 */
 	boolean overlaps(int mask);
 	
+	/**
+	 * Same as {@link Enum#ordinal()}.
+	 */
 	int ordinal();
 	
+	/**
+	 * Same as {@link Enum#name()}.
+	 */
 	String name();
 }
