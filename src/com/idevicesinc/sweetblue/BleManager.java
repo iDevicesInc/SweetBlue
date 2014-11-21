@@ -268,6 +268,7 @@ public class BleManager
 
 	private double m_timeForegrounded = 0.0;
 	private double m_timeNotScanning = 0.0;
+	private boolean m_doingInfiniteScan = false;
 	
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
@@ -549,7 +550,10 @@ public class BleManager
 	{
 		m_config.autoScanTime = Interval.DISABLED;
 		
-		this.stopScan();
+		if( !m_doingInfiniteScan )
+		{
+			this.stopScan();
+		}
 	}
 
 	/**
@@ -617,6 +621,8 @@ public class BleManager
 		scanTime = scanTime.seconds < 0.0 ? Interval.INFINITE : scanTime;
 		
 		if( !is(ON) )  return;
+		
+		m_doingInfiniteScan = scanTime.equals(Interval.INFINITE);
 		
 		if( discoveryListener != null )
 		{
@@ -795,7 +801,13 @@ public class BleManager
 		m_isForegrounded = true;
 		m_timeForegrounded = 0.0;
 		
-		if( Interval.isDisabled(m_config.autoScanDelayAfterResume) )
+		if( m_doingInfiniteScan )
+		{
+			m_triedToStartScanAfterResume = true;
+			
+			startScan();
+		}
+		else if( Interval.isDisabled(m_config.autoScanDelayAfterResume) )
 		{
 			m_triedToStartScanAfterResume = true;
 		}
@@ -812,7 +824,7 @@ public class BleManager
 		
 		if( m_config.stopScanOnPause && is(SCANNING) )
 		{
-			stopScan();
+			stopScan_private();
 		}
 	}
 	
@@ -840,6 +852,13 @@ public class BleManager
 	 * but scanning in general will still continue periodically until you call {@link #stopPeriodicScan()}.
 	 */
 	public void stopScan()
+	{
+		m_doingInfiniteScan = false;
+		
+		stopScan_private();
+	}
+	
+	private void stopScan_private()
 	{
 		m_timeNotScanning = 0.0;
 		

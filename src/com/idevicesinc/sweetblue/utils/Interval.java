@@ -91,6 +91,16 @@ public class Interval
 		return interval <= 0.0;
 	}
 	
+	@Override public boolean equals(Object object)
+	{
+		if( object instanceof Interval )
+		{
+			return ((Interval)object).seconds == this.seconds;
+		}
+		
+		return super.equals(object);
+	}
+	
 	@Override public String toString()
 	{
 		return seconds+"secs/"+milliseconds+"millis"; 

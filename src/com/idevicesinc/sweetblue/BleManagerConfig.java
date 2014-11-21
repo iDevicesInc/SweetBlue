@@ -192,7 +192,9 @@ public class BleManagerConfig implements Cloneable
 	public boolean enableCrashResolver					= false;
 	
 	/**
-	 * Default is true - makes it so {@link BleManager#stopScan()} is called after {@link BleManager#onPause()}.
+	 * Default is true - makes it so {@link BleManager#stopScan()} is called automatically after {@link BleManager#onPause()}.
+	 * If you're doing an infinite scan (e.g. by calling {@link BleManager#startScan()}, i.e. no timeout), then the scan
+	 * will automatically continue after {@link BleManager#onResume()} is called.
 	 * 
 	 * @see BleManager#onPause()
 	 */
