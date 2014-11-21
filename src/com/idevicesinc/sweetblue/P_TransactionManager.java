@@ -49,6 +49,8 @@ class P_TransactionManager
 			{
 				if (reason == EndReason.SUCCEEDED)
 				{
+					m_device.getPollManager().enableNotifications();
+					
 					if ( m_initTxn != null)
 					{
 						m_device.getStateTracker().update(AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, true);
@@ -276,6 +278,8 @@ class P_TransactionManager
 		{
 			if( m_authTxn == null && m_initTxn == null )
 			{
+				m_device.getPollManager().enableNotifications();
+				
 				m_device.onFullyInitialized(extraFlags);
 			}
 			else if( m_authTxn != null )
@@ -286,6 +290,8 @@ class P_TransactionManager
 			}
 			else if( m_initTxn != null )
 			{
+				m_device.getPollManager().enableNotifications();
+				
 				m_device.getStateTracker().update(extraFlags, AUTHENTICATED, true, INITIALIZING, true);
 				
 				start(m_initTxn);

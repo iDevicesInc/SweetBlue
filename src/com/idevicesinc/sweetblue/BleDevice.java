@@ -16,7 +16,9 @@ import android.bluetooth.BluetoothGattService;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
 import com.idevicesinc.sweetblue.utils.Uuids;
@@ -1046,8 +1048,8 @@ public class BleDevice
 	
 	/**
 	 * Same as {@link #enableNotify(UUID, ReadWriteListener)} but forces a read after a given amount of time.
-	 * If we haven't received a notification in some time it may be an indication that notifications have broken,
-	 * in the underlying stack.
+	 * If you received {@link Status#SUCCESS} for {@link Type#ENABLING_NOTIFICATION} but haven't received an
+	 * actual notification in some time it may be a sign that notifications have broken in the underlying stack.
 	 */
 	public void enableNotify(UUID uuid, Interval forceReadTimeout, ReadWriteListener listener)
 	{
@@ -1060,15 +1062,32 @@ public class BleDevice
 				listener.onReadOrWriteComplete(earlyOutResult);
 			}
 			
-			return;
+			if( earlyOutResult.status == Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)) )
+			{
+				//--- DRK > No need to put this notify in the poll manager because either the characteristic wasn't found
+				//---		or the notify (or indicate) property isn't supported and we're not doing a backing read poll. 		
+				return;
+			}
 		}
 		
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		E_NotifyState notifyState = m_pollMngr.getNotifyState(uuid);
+		boolean shouldSendOutNotifyEnable = notifyState == E_NotifyState.NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status != Status.OPERATION_NOT_SUPPORTED);
 		
-		if( characteristic != null && is(CONNECTED) )
+		if( shouldSendOutNotifyEnable && characteristic != null && is(CONNECTED) )
 		{
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
 			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
+			
+			m_pollMngr.onNotifyStateChange(uuid, E_NotifyState.ENABLING);
+		}
+		else if( notifyState == E_NotifyState.ENABLED )
+		{
+			if( listener != null )
+			{
+				Result result = m_pollMngr.newAlreadyEnabledResult(characteristic);
+				listener.onReadOrWriteComplete(result);
+			}
 		}
 		
 		m_pollMngr.startPoll(uuid, forceReadTimeout.seconds, listener, /*trackChanges=*/true, /*usingNotify=*/true);
@@ -1565,8 +1584,6 @@ public class BleDevice
 		m_serviceMngr.clear();
 		m_serviceMngr.loadDiscoveredServices();
 		
-		m_pollMngr.enableNotifications();
-		
 		m_txnMngr.runAuthOrInitTxnIfNeeded(GETTING_SERVICES, false);
 	}
 	
@@ -1692,6 +1709,8 @@ public class BleDevice
 //			
 //			return;
 //		}
+		
+		m_pollMngr.resetNotifyStates();
 		
 		boolean attemptingReconnect = false;
 		

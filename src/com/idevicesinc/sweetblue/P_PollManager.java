@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
  * 
@@ -20,13 +22,31 @@ import com.idevicesinc.sweetblue.utils.Interval;
  */
 class P_PollManager
 {
+	static enum E_NotifyState
+	{
+		NOT_ENABLED, ENABLING, ENABLED;
+	}
+	
 	private static class PollingReadListener extends P_WrappingReadWriteListener
 	{
 		protected CallbackEntry m_entry;
+		private ReadWriteListener m_overrideListener;
 		
 		PollingReadListener(ReadWriteListener readWriteListener, Handler handler, boolean postToMain)
 		{
-			super(readWriteListener, handler, postToMain);
+			super(null, handler, postToMain);
+			
+			addListener(readWriteListener);
+		}
+		
+		private boolean hasListener(ReadWriteListener listener)
+		{
+			return listener == m_overrideListener;
+		}
+		
+		private void addListener(ReadWriteListener listener)
+		{
+			m_overrideListener = listener;
 		}
 		
 		private void init(CallbackEntry entry)
@@ -37,8 +57,8 @@ class P_PollManager
 		@Override public void onReadOrWriteComplete(Result result)
 		{
 			m_entry.onSuccessOrFailure();
-			
-			super.onReadOrWriteComplete(result);
+
+			super.onReadOrWriteComplete(m_overrideListener, result);
 		}
 	}
 	
@@ -78,11 +98,11 @@ class P_PollManager
 	private static class CallbackEntry
 	{
 		private final BleDevice m_device;
-		private final ReadWriteListener m_externalReadWriteListener;
-		private final PollingReadListener m_internalPollingListener;
+		private final PollingReadListener m_pollingReadListener;
 		private final double m_interval;
 		private final UUID m_uuid;
 		private final boolean m_usingNotify;
+		private E_NotifyState m_notifyState;
 		
 		private double m_timeTracker;
 		private boolean m_waitingForResponse;
@@ -91,25 +111,25 @@ class P_PollManager
 		{
 			m_uuid = uuid;
 			m_interval = interval;
-			m_externalReadWriteListener = readWriteListener;
 			m_device = device;
 			m_usingNotify = usingNotify;
+			m_notifyState = E_NotifyState.NOT_ENABLED;
 			
 			if( trackChanges || m_usingNotify)
 			{
-				m_internalPollingListener = new TrackingWrappingReadListener(m_externalReadWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+				m_pollingReadListener = new TrackingWrappingReadListener(readWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
 			}
 			else
 			{
-				m_internalPollingListener = new PollingReadListener(m_externalReadWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+				m_pollingReadListener = new PollingReadListener(readWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
 			}
 			
-			m_internalPollingListener.init(this);
+			m_pollingReadListener.init(this);
 		}
 		
 		boolean trackingChanges()
 		{
-			return m_internalPollingListener instanceof TrackingWrappingReadListener;
+			return m_pollingReadListener instanceof TrackingWrappingReadListener;
 		}
 		
 		boolean usingNotify()
@@ -117,13 +137,13 @@ class P_PollManager
 			return m_usingNotify;
 		}
 		
-		boolean isFor(UUID uuid, Double interval_nullable, ReadWriteListener readWriteListener, boolean usingNotify)
+		boolean isFor(UUID uuid, Double interval_nullable, ReadWriteListener readWriteListener_nullable, boolean usingNotify)
 		{
 			return
-				usingNotify == m_usingNotify												&&
-				uuid.equals(m_uuid)															&&
-				(interval_nullable == null || interval_nullable == m_interval)				&&
-				readWriteListener.equals(m_externalReadWriteListener)						 ;
+				usingNotify == m_usingNotify																			&&
+				uuid.equals(m_uuid)																						&&
+				(interval_nullable == null || interval_nullable == m_interval)											&&
+				(readWriteListener_nullable == null || m_pollingReadListener.hasListener(readWriteListener_nullable) )	;
 		}
 		
 		boolean isFor(UUID uuid)
@@ -139,19 +159,19 @@ class P_PollManager
 			if( value == null )
 			{
 				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_VALUE_RETURNED, 0.0, 0.0);
-				m_internalPollingListener.onReadOrWriteComplete(result);
+				m_pollingReadListener.onReadOrWriteComplete(result);
 			}
 			else
 			{
 				if( value.length == 0 )
 				{
 					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_VALUE_RETURNED, 0.0, 0.0);
-					m_internalPollingListener.onReadOrWriteComplete(result);
+					m_pollingReadListener.onReadOrWriteComplete(result);
 				}
 				else
 				{
 					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, 0.0, 0.0);
-					m_internalPollingListener.onReadOrWriteComplete(result);
+					m_pollingReadListener.onReadOrWriteComplete(result);
 				}
 			}
 			
@@ -181,7 +201,7 @@ class P_PollManager
 					{
 						m_waitingForResponse = true;
 						Type type = trackingChanges() ? Type.PSUEDO_NOTIFICATION : Type.POLL;
-						m_device.read_internal(m_uuid, type, m_internalPollingListener);
+						m_device.read_internal(m_uuid, type, m_pollingReadListener);
 					}
 				}
 			}
@@ -199,44 +219,46 @@ class P_PollManager
 	
 	void startPoll(UUID uuid, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
 	{
-		synchronized (m_device.m_threadLock){
-		synchronized (m_entries)
-		{
-			if( !m_device.getManager().m_config.allowDuplicatePollEntries )
-			{
-				for( int i = m_entries.size()-1; i >= 0; i-- )
-				{
-					CallbackEntry ithEntry = m_entries.get(i);
-					
-					if( ithEntry.isFor(uuid, interval, listener, usingNotify) )
-					{
-						if( ithEntry.trackingChanges() == trackChanges)
-						{
-							return;
-						}
-					}
-				}
-			}
-
-			m_entries.add(new CallbackEntry(m_device, uuid, interval, listener, trackChanges, usingNotify));
-		}}
-	}
-	
-	void stopPoll(UUID uuid, Double interval_nullable, ReadWriteListener listener, boolean usingNotify)
-	{
-		synchronized (m_device.m_threadLock){
-		synchronized (m_entries)
+		if( !m_device.getManager().m_config.allowDuplicatePollEntries )
 		{
 			for( int i = m_entries.size()-1; i >= 0; i-- )
 			{
 				CallbackEntry ithEntry = m_entries.get(i);
 				
-				if( ithEntry.isFor(uuid, interval_nullable, listener, usingNotify) )
+				if( ithEntry.isFor(uuid, interval, /*listener=*/null, usingNotify) )
 				{
-					m_entries.remove(i);
+					if( ithEntry.trackingChanges() == trackChanges)
+					{
+						ithEntry.m_pollingReadListener.addListener(listener);
+						
+						return;
+					}
 				}
 			}
-		}}
+		}
+		
+		CallbackEntry newEntry = new CallbackEntry(m_device, uuid, interval, listener, trackChanges, usingNotify);
+		
+		if( usingNotify )
+		{
+			E_NotifyState state = getNotifyState(uuid);
+			newEntry.m_notifyState = state;
+		}
+
+		m_entries.add(newEntry);
+	}
+	
+	void stopPoll(UUID uuid, Double interval_nullable, ReadWriteListener listener, boolean usingNotify)
+	{
+		for( int i = m_entries.size()-1; i >= 0; i-- )
+		{
+			CallbackEntry ithEntry = m_entries.get(i);
+			
+			if( ithEntry.isFor(uuid, interval_nullable, listener, usingNotify) )
+			{
+				m_entries.remove(i);
+			}
+		}
 	}
 	
 	void update(double timeStep)
@@ -268,37 +290,95 @@ class P_PollManager
 		}
 	}
 	
+	E_NotifyState getNotifyState(UUID uuid)
+	{
+		E_NotifyState highestState = E_NotifyState.NOT_ENABLED;
+		
+		for( int i = 0; i < m_entries.size(); i++ )
+		{
+			CallbackEntry ithEntry = m_entries.get(i);
+			
+			if( ithEntry.isFor(uuid) )
+			{
+				if( ithEntry.m_notifyState.ordinal() > highestState.ordinal() )
+				{
+					highestState = ithEntry.m_notifyState;
+				}
+			}
+		}
+		
+		return highestState;
+	}
+	
+	void onNotifyStateChange(UUID uuid, E_NotifyState state)
+	{
+		for( int i = 0; i < m_entries.size(); i++ )
+		{
+			CallbackEntry ithEntry = m_entries.get(i);
+			
+			if( ithEntry.usingNotify() && ithEntry.isFor(uuid) )
+			{
+				ithEntry.m_notifyState = state;
+			}
+		}
+	}
+	
+	void resetNotifyStates()
+	{
+		for( int i = 0; i < m_entries.size(); i++ )
+		{
+			CallbackEntry ithEntry = m_entries.get(i);
+			
+			ithEntry.m_notifyState = E_NotifyState.NOT_ENABLED;
+		}
+	}
+	
 	void enableNotifications()
 	{
-		synchronized (m_entries)
+		for( int i = 0; i < m_entries.size(); i++ )
 		{
-			for( int i = 0; i < m_entries.size(); i++ )
+			CallbackEntry ithEntry = m_entries.get(i);
+			
+			if( ithEntry.usingNotify() )
 			{
-				CallbackEntry ithEntry = m_entries.get(i);
+				E_NotifyState notifyState = getNotifyState(ithEntry.m_uuid);
 				
-				if( ithEntry.usingNotify() )
+				P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(ithEntry.m_uuid);
+				
+				if( notifyState == E_NotifyState.NOT_ENABLED )
 				{
 					BleDevice.ReadWriteListener.Result earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION);
 					
 					if( earlyOutResult != null )
 					{
-						if( ithEntry.m_externalReadWriteListener != null )
-						{
-							ithEntry.m_externalReadWriteListener.onReadOrWriteComplete(earlyOutResult);
-						}
-						
-						m_entries.remove(i);
-						i--;
-						
-						continue;
+						ithEntry.m_pollingReadListener.onReadOrWriteComplete(earlyOutResult);
 					}
-					
-					P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(ithEntry.m_uuid);
-					
-					P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(ithEntry.m_externalReadWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
-					m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
+					else
+					{
+						P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(ithEntry.m_pollingReadListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
+						
+						notifyState = E_NotifyState.ENABLING;
+					}
 				}
+				
+				if( notifyState == E_NotifyState.ENABLED && ithEntry.m_notifyState != E_NotifyState.ENABLED )
+				{
+					Result result = newAlreadyEnabledResult(characteristic);
+					ithEntry.m_pollingReadListener.onReadOrWriteComplete(result);
+				}
+				
+				ithEntry.m_notifyState = notifyState;
 			}
 		}
+	}
+	
+	Result newAlreadyEnabledResult(P_Characteristic characteristic)
+	{
+		//--- DRK > Just being anal with the null check here.
+		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic.getNative(), /*enable=*/true) : BleDevice.EMPTY_BYTE_ARRAY;
+		Result result = new Result(m_device, characteristic.getUuid(), Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, 0.0, 0.0);
+		
+		return result;
 	}
 }

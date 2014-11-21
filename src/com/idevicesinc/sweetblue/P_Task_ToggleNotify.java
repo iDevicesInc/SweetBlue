@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
+import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -47,6 +48,28 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	{
 		return m_writeValue != null ? m_writeValue : BleDevice.EMPTY_BYTE_ARRAY;
 	}
+	
+	static byte[] getWriteValue(BluetoothGattCharacteristic char_native, boolean enable)
+	{
+		Type type = null;
+		
+		if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0x0 )
+		{
+			type = Type.NOTIFY;
+		}
+		else if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0x0 )
+		{
+			type = Type.INDICATE;
+		}
+		else
+		{
+			type = Type.NOTIFY;
+		}
+		
+		final byte[] enableValue = type == Type.NOTIFY ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.ENABLE_INDICATION_VALUE;
+		final byte[] disableValue = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
+		return enable ? enableValue : disableValue;
+	}
 
 	@Override public void execute()
 	{
@@ -69,24 +92,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			this.fail(Status.NO_MATCHING_TARGET, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);  return;
 		}
 		
-		Type type = null;
-		
-		if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0x0 )
-		{
-			type = Type.NOTIFY;
-		}
-		else if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0x0 )
-		{
-			type = Type.INDICATE;
-		}
-		else
-		{
-			type = Type.NOTIFY;
-		}
-		
-		final byte[] enableValue = type == Type.NOTIFY ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.ENABLE_INDICATION_VALUE;
-		final byte[] disableValue = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
-		m_writeValue = m_enable ? enableValue : disableValue;
+		m_writeValue = getWriteValue(char_native, m_enable);
 		
 		if( !descriptor.setValue(getWriteValue()) )
 		{
@@ -99,10 +105,29 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		}
 	}
 	
+	@Override protected void fail(Status status, Target target, UUID charUuid, UUID descUuid)
+	{
+		if( m_enable )
+		{
+			getDevice().getPollManager().onNotifyStateChange(m_characteristic.getUuid(), E_NotifyState.NOT_ENABLED);
+		}
+		
+		super.fail(status, target, charUuid, descUuid);
+	}
+	
 	@Override protected void succeed()
 	{
 		Result result = newResult(Status.SUCCESS, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid); 
 //		getDevice().addWriteTime(result.totalTime);
+		
+		if( m_enable )
+		{
+			getDevice().getPollManager().onNotifyStateChange(m_characteristic.getUuid(), E_NotifyState.ENABLED);
+		}
+		else
+		{
+			getDevice().getPollManager().onNotifyStateChange(m_characteristic.getUuid(), E_NotifyState.NOT_ENABLED);
+		}
 		
 		if( m_readWriteListener != null )
 		{

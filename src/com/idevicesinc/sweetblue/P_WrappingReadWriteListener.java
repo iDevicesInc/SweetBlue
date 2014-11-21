@@ -19,9 +19,9 @@ class P_WrappingReadWriteListener extends PA_CallbackWrapper implements ReadWrit
 		m_listener = listener;
 	}
 	
-	@Override public void onReadOrWriteComplete(final Result result)
+	protected void onReadOrWriteComplete(final ReadWriteListener listener, final Result result)
 	{
-		if( m_listener == null )  return;
+		if( listener == null )  return;
 		
 		if( postToMain() )
 		{
@@ -29,13 +29,18 @@ class P_WrappingReadWriteListener extends PA_CallbackWrapper implements ReadWrit
 			{
 				@Override public void run()
 				{
-					m_listener.onReadOrWriteComplete(result);
+					listener.onReadOrWriteComplete(result);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onReadOrWriteComplete(result);
+			listener.onReadOrWriteComplete(result);
 		}
+	}
+	
+	@Override public void onReadOrWriteComplete(final Result result)
+	{
+		onReadOrWriteComplete(m_listener, result);
 	}
 }
