@@ -14,7 +14,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig;
 public interface UuidNameMap
 {
 	/**
-	 * Returns the name of the {@link UUID} to be used for logging/debugging purposes, for example "BATTERY_LEVEL_CHARACTERISTIC".
+	 * Returns the name of the {@link UUID} to be used for logging/debugging purposes, for example "BATTERY_LEVEL".
 	 */
 	String getUuidName(String uuid);
 }

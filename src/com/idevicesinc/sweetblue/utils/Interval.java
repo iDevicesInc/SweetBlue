@@ -20,6 +20,9 @@ public class Interval
 	 */
 	public static final Interval DISABLED = Interval.seconds(DISABLED_VALUE);
 	
+	/**
+	 * Use this special value to signify positive infinite.
+	 */
 	public static final Interval INFINITE = Interval.seconds(Double.POSITIVE_INFINITY);
 	
 	
