@@ -20,7 +20,7 @@ Features
 *	Battle-tested in commercial apps.
 *	Plain old Java with zero API-level dependencies.
 *	Rich, queryable state tracking that makes UI integration a breeze. 
-*	Highly configurable scanning with time limits, periodic bursts, advanced filtering, and more.
+*	Highly configurable scanning with min/max time limits, periodic bursts, advanced filtering, and more.
 *	Atomic and non-atomic transactions for easily coordinating authentication handshakes, initialization, and firmware updates.
 *	Undiscovery based on last time seen.
 *	Clean leakage of underlying native stack objects in case of emergency.
