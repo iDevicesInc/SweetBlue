@@ -5,7 +5,9 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * Abstract base class for transactions passed to various methods of {@link BleDevice}. Transactions provide a convenient way
- * to encapsulate a series of reads and writes for things like authentication handshakes, firmware updates, etc.
+ * to encapsulate a series of reads and writes for things like authentication handshakes, firmware updates, etc. You optionally
+ * provide subclass instances to the various overloads of {@link BleDevice#connect()}. Normally in your {@link #start(BleDevice)}
+ * method you then do some reads/writes and call {@link #succeed()} or {@link #fail()} depending on the {@link Status} returned.
  * 
  * @see BleDevice#updateFirmware(BleTransaction)
  * @see BleDevice#connectAndAuthenticate(BleTransaction)
@@ -86,7 +88,8 @@ public abstract class BleTransaction
 	}
 	
 	/**
-	 * Implement this method to kick off your transaction.
+	 * Implement this method to kick off your transaction. Usually you kick off some reads/writes inside
+	 * your override and call {@link #succeed()} or {@link #fail()} depending on how things went.
 	 */
 	protected abstract void start(BleDevice device);
 	
