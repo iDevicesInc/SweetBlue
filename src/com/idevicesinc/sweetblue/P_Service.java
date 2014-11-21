@@ -46,4 +46,9 @@ class P_Service
 	{
 		m_mngr.loadDiscoveredCharacteristics();
 	}
+	
+	@Override public String toString()
+	{
+		return m_mngr.toString();
+	}
 }

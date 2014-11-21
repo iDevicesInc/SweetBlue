@@ -88,4 +88,24 @@ class P_CharacteristicManager
 			}
 		}
 	}
+	
+	@Override public String toString()
+	{
+		String toReturn = "[";
+		boolean foundOne = false;
+		for( UUID uuid : m_characteristics.keySet() )
+		{
+			foundOne = true;
+			toReturn += uuid +", ";
+		}
+		
+		if( foundOne )
+		{
+			toReturn = toReturn.substring(0, toReturn.length()-1);
+		}
+		
+		toReturn += "]";
+		
+		return toReturn;
+	}
 }
