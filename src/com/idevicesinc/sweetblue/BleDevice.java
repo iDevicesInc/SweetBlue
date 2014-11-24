@@ -49,7 +49,7 @@ public class BleDevice
 		/**
 		 * A value returned to {@link ReadWriteListener#onReadOrWriteComplete(Result)} by way of
 		 * {@link Result#status} that indicates success of the operation or the reason for its failure.
-		 * This enum is <i>not</i> meant to match up with BluetoothGatt.GATT_* values in any way.
+		 * This enum is <i>not</i> meant to match up with {@link BluetoothGatt}.GATT_* values in any way.
 		 * 
 		 * @see Result#status
 		 * 
@@ -58,7 +58,7 @@ public class BleDevice
 		public static enum Status
 		{
 			/**
-			 * If {@link Result#type} {@link Type#isRead()} then {@link Result#data} should contain
+			 * If {@link Result#type} {@link Type#isRead()} then {@link Result#data} will contain
 			 * some data returned from the device. If type is {@link Type#WRITE} then {@link Result#data}
 			 * was sent to the device.
 			 */
@@ -70,9 +70,10 @@ public class BleDevice
 			NOT_CONNECTED,
 			
 			/**
-			 * Couldn't find a matching {@link Result#target} for {@link Result#charUuid} (or {@link Result#descUuid})which was given to {@link BleDevice#read(UUID, ReadWriteListener)},
+			 * Couldn't find a matching {@link Result#target} for the {@link Result#charUuid} (or {@link Result#descUuid} if {@link Result#target} is
+			 * {@link Target#DESCRIPTOR}) which was given to {@link BleDevice#read(UUID, ReadWriteListener)},
 			 * {@link BleDevice#write(UUID, byte[])}, etc. This most likely means that the internal call to {@link BluetoothGatt#discoverServices()}
-			 * didn't find any {@link BluetoothGattService} that contains the given {@link Result#charUuid}.
+			 * didn't find any {@link BluetoothGattService} that contained a {@link BluetoothGattCharacteristic} for {@link Result#charUuid}.
 			 */
 			NO_MATCHING_TARGET,
 			
@@ -83,8 +84,10 @@ public class BleDevice
 			
 			/**
 			 * {@link BluetoothGatt#setCharacteristicNotification(BluetoothGattCharacteristic, boolean)} returned false for an unknown reason.
+			 * This {@link Status} is only relevant for calls to {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and
+			 * {@link BleDevice#disableNotify(UUID, ReadWriteListener)} (or the various overloads).
 			 */
-			FAILED_TO_REGISTER_FOR_NOTIFICATIONS,
+			FAILED_TO_TOGGLE_NOTIFICATION,
 			
 			/**
 			 * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of its overloads) or
@@ -112,7 +115,7 @@ public class BleDevice
 			
 			/**
 			 * Used when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data}. 
-			 * Note that {@link Result#data} can be a zero-length array in other scenarios as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc.
+			 * Note that {@link Result#data} can be a zero-length array for other statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc.
 			 */
 			EMPTY_VALUE_RETURNED,
 			

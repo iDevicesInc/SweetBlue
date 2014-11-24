@@ -82,7 +82,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( !getDevice().getGatt().setCharacteristicNotification(char_native, m_enable) )
 		{
-			this.fail(Status.FAILED_TO_REGISTER_FOR_NOTIFICATIONS, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
+			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
 		}
 		
 		BluetoothGattDescriptor descriptor = char_native.getDescriptor(m_descUuid);
