@@ -63,7 +63,7 @@ Now add these to the root of MyApp/AndroidManifest.xml:
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 ```
-Then this is all it takes to connect and read a characteristic:
+Then this is all it takes to discover a device, connect to it, and read a characteristic:
 ```java
 BleManager bleManager = new BleManager(getApplication());
 
