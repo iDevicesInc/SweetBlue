@@ -79,8 +79,6 @@ bleManager.startScan(new BleManager.DiscoveryListener()
 			{
 				if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
 				{
-					Log.i("SweetBlueExample", device.getDebugName() + " just initialized!");
-					
 					device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
 					{
 						@Override public void onReadOrWriteComplete(Result result)
