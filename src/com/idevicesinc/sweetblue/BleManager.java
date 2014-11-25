@@ -30,7 +30,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 /**
  * The entry point to the library. Typical pattern is to create one instance of this class per application
  * and keep it around for the duration of your application, across multiple {@link Activity} instances. Make sure
- * to hook up this manager to lifecycle events for your app as a whole: {@link #onPause()}, {@link #onResume()}, and {@link #onDestroy()}.
+ * to hook up this manager to lifecycle events for your app as a whole: {@link #onPause()} and {@link #onResume()}.
  * <br><br>
  * Also put the following entries (or something similar) in the root of your AndroidManifest.xml:
  * <br><br>
