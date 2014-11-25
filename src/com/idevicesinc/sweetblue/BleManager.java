@@ -89,13 +89,6 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *         
  *          m_bleManager.onPause();
  *      }
- * 
- *      {@literal @}Override protected void onDestroy()
- *      {
- *          super.onDestroy();
- *         
- *          m_bleManager.onDestroy();
- *      }
  * }
  * </code>
  * </pre>
@@ -793,7 +786,8 @@ public class BleManager
 	}
 	
 	/**
-	 * Call this from your app's {@link Activity#onResume()} method.
+	 * Opposite of {@link #onPause()}, to be called from your override of {@link Activity#onResume()} for each {@link Activity}
+	 * in your application. See comment for {@link #onPause()} for a similar explanation for why you should call this method.
 	 */
 	public void onResume()
 	{
@@ -814,7 +808,11 @@ public class BleManager
 	}
 	
 	/**
-	 * Call this from your app's {@link Activity#onPause()} method.
+	 * It's generally recommended to call this in your override of {@link Activity#onPause()} for each {@link Activity}
+	 * in your application. This doesn't do much for now, just a little bookkeeping and stops scan automatically if
+	 * {@link BleManagerConfig#stopScanOnPause} is <code>true</code>. Strictly speaking you don't *have* to call this method,
+	 * but another good reason is for future-proofing. Later releases of this library may do other more important things
+	 * in this method so it's good to have it being called just in case.
 	 */
 	public void onPause()
 	{
@@ -830,8 +828,10 @@ public class BleManager
 	
 	/**
 	 * Call this from your app's {@link Activity#onDestroy()} method.
+	 * NOTE: Apparently no good way to know when app as a whole is being destroyed
+	 * and not individual Activitys, so keeping this package-private for now.
 	 */
-	public void onDestroy()
+	void onDestroy()
 	{
 		m_wakeLockMngr.clear();
 		m_listeners.onDestroy();
