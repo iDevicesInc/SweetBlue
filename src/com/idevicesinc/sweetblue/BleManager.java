@@ -829,7 +829,7 @@ public class BleManager
 	/**
 	 * Call this from your app's {@link Activity#onDestroy()} method.
 	 * NOTE: Apparently no good way to know when app as a whole is being destroyed
-	 * and not individual Activitys, so keeping this package-private for now.
+	 * and not individual Activities, so keeping this package-private for now.
 	 */
 	void onDestroy()
 	{
