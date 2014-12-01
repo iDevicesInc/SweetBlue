@@ -36,7 +36,7 @@ public class Interval
 	}
 
 	/**
-	 * Returns a new {@link Interval} representings the given number of seconds.
+	 * Returns a new {@link Interval} representing the given number of seconds.
 	 */
 	public static Interval seconds(double value)
 	{
@@ -44,7 +44,7 @@ public class Interval
 	}
 	
 	/**
-	 * Returns a new {@link Interval} representings the given number of milliseconds.
+	 * Returns a new {@link Interval} representing the given number of milliseconds.
 	 */
 	public static Interval milliseconds(long milliseconds)
 	{

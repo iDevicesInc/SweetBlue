@@ -25,7 +25,7 @@ public class Uuids
 	public static final UUID CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID	= fromShort("2902");
 	
 	/**
-	 * Convenience overload of {@link #fromShort(String, String)} that uses #STANDARD_UUID_TEMPLATE.
+	 * Convenience overload of {@link #fromShort(String, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
 	 * For example to create the battery level characteristic you would call
 	 * <code>{@link Uuids}.fromShort("180f")</code>.
 	 */
@@ -35,7 +35,7 @@ public class Uuids
 	}
 	
 	/**
-	 * Convenience overload of {@link #fromShort(short, String)} that uses #STANDARD_UUID_TEMPLATE.
+	 * Convenience overload of {@link #fromShort(short, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
 	 * For example to create the battery level characteristic you would call
 	 * <code>{@link Uuids}.fromShort((short)0x180f)</code>.
 	 */
