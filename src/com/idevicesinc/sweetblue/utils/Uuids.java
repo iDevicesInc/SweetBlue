@@ -10,8 +10,15 @@ import java.util.UUID;
  */
 public class Uuids
 {
+	/**
+	 * A {@link UUID} instance composed of all zeros and used instead of <code>null</code> in various places.
+	 */
 	public static final UUID INVALID												= new UUID(0x0, 0x0);
 	
+	/**
+	 * The template for standard services, characteristics, and descriptors - see {@linkplain https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx}.
+	 * This is used to generate some of the other static {@link UUID} instances in this class using {@link #fromShort(String, String)}.
+	 */
 	public static final String STANDARD_UUID_TEMPLATE								= "00000000-0000-1000-8000-00805f9b34fb";
 	
 	public static final UUID GENERIC_ATTRIBUTES_SERVICE_UUID 						= fromShort("1801");
@@ -79,7 +86,7 @@ public class Uuids
 	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
 	 * 
 	 * @param assignedNumber	A {@link String} of length 4 as the hex representation of a 2-byte (short) value, for example "2a19".
-	 * @param uuidTemplate		See #STANDARD_UUID_TEMPLATE for an example.
+	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
 	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
 	 */
 	public static UUID fromShort(String assignedNumber, String uuidTemplate)
