@@ -16,13 +16,15 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 {
 	protected final boolean m_requiresBonding;
 	private final BleTransaction m_txn;
+	private final PE_TaskPriority m_priority;
 	
-	PA_Task_Transactionable(BleDevice device, BleTransaction txn_nullable, boolean requiresBonding)
+	PA_Task_Transactionable(BleDevice device, BleTransaction txn_nullable, boolean requiresBonding, PE_TaskPriority priority)
 	{
 		super(device, null);
 		
 		m_requiresBonding = requiresBonding;
 		m_txn = txn_nullable;
+		m_priority = priority != null ? priority : PE_TaskPriority.FOR_NORMAL_READS_WRITES;
 	}
 	
 	
@@ -103,5 +105,10 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		}
 		
 		return super.isMoreImportantThan(task);
+	}
+	
+	@Override public PE_TaskPriority getPriority()
+	{
+		return m_priority;
 	}
 }

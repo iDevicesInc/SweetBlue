@@ -307,6 +307,11 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			@Override public void run_nested()
 			{
+				if( Utils.isSuccess(status) )
+				{
+					m_device.updateRssi(rssi);
+				}
+				
 				P_Task_ReadRssi task = m_queue.getCurrent(P_Task_ReadRssi.class, m_device);
 				
 				if (task == null)  return;

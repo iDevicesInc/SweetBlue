@@ -30,7 +30,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
  * reading/writing characteristics, enabling notifications, etc.
  * <br><br>
  * Instances of this class are generally not created by the calling library or application, but rather are
- * creating implicitly by {@link BleManager} as a result of a scanning operation (e.g. {@link BleManager#startScan()}
+ * created implicitly by {@link BleManager} as a result of a scanning operation (e.g. {@link BleManager#startScan()}
  * and sent to you through {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)}.
  * 
  * @author dougkoellmer
@@ -40,7 +40,7 @@ public class BleDevice
 	/**
 	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
 	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
-	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, etc.
+	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
 	 * 
 	 * @author dougkoellmer
 	 */
@@ -312,12 +312,12 @@ public class BleDevice
 				this.rssi = device.getRssi();
 			}
 			
-			Result(BleDevice device, int rssi_in, Status status_in, double totalTime, double transitTime)
+			Result(BleDevice device, Type type_in, int rssi_in, Status status_in, double totalTime, double transitTime)
 			{
 				this.device = device;
 				this.charUuid = NON_APPLICABLE_UUID;;
 				this.descUuid = NON_APPLICABLE_UUID;
-				this.type = Type.READ;
+				this.type = type_in;
 				this.target = Target.RSSI;
 				this.status = status_in;
 				this.totalTime = Interval.seconds(totalTime);
@@ -339,11 +339,11 @@ public class BleDevice
 			{
 				if( target == Target.RSSI )
 				{
-					return "status="+status+" target="+target+" rssi="+rssi;
+					return "status="+status+" type="+type+" target="+target+" rssi="+rssi;
 				}
 				else
 				{
-					return "status="+status+" type="+type+" target="+target+" charUuid="+charUuid;
+					return "status="+status+" type="+type+" target="+target+" charUuid="+charUuid +" data="+data;
 				}
 			}
 		}
@@ -509,6 +509,7 @@ public class BleDevice
 			final P_TransactionManager m_txnMngr;
 	private final P_ReconnectManager m_reconnectMngr;
 	private final P_ConnectionFailManager m_connectionFailMngr;
+	private final P_RssiPollManager m_rssiPollMngr;
 	
 	private final TimeEstimator m_writeTimeEstimator;
 	private final TimeEstimator m_readTimeEstimator;
@@ -549,6 +550,7 @@ public class BleDevice
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
 		m_writeTimeEstimator = new TimeEstimator(m_mngr.m_config.nForAverageRunningWriteTime);
 		m_readTimeEstimator = new TimeEstimator(m_mngr.m_config.nForAverageRunningReadTime);
+		m_rssiPollMngr = new P_RssiPollManager(this);
 		
 		m_alwaysUseAutoConnect = m_mngr.m_config.alwaysUseAutoConnect;
 		m_useAutoConnect = m_alwaysUseAutoConnect;
@@ -1108,7 +1110,41 @@ public class BleDevice
 		}
 		
 		P_WrappingReadWriteListener wrappingListener = listener != null ? new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread) : null;
-		m_queue.add(new P_Task_ReadRssi(this, wrappingListener , m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		readRssi_internal(Type.READ, wrappingListener);
+	}
+	
+	/**
+	 * Same as {@link #startPoll(UUID, Interval, ReadWriteListener)} but for when you don't care when/if the RSSI
+	 * is actually updated.
+	 */
+	public void startRssiPoll(Interval interval)
+	{
+		startRssiPoll(interval, null);
+	}
+	
+	/**
+	 * Kicks off a poll that automatically calls {@link #readRssi(ReadWriteListener)} at the {@link Interval} frequency specified.
+	 * This can be called before the device is actually {@link BleDeviceState#CONNECTED}. If you call this more than once in a row
+	 * then the most recent call's parameters will be respected.
+	 */
+	public void startRssiPoll(Interval interval, ReadWriteListener listener)
+	{
+		P_WrappingReadWriteListener wrappingListener = listener != null ? new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread) : null;
+		
+		m_rssiPollMngr.start(interval.seconds, wrappingListener);
+	}
+	
+	/**
+	 * Stops an RSSI poll previously started either by {@link #startRssiPoll(Interval)} or {@link #startRssiPoll(Interval, ReadWriteListener)}.
+	 */
+	public void stopRssiPoll()
+	{
+		m_rssiPollMngr.stop();
+	}
+	
+	void readRssi_internal(Type type, P_WrappingReadWriteListener listener)
+	{
+		m_queue.add(new P_Task_ReadRssi(this, listener , m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
 	}
 	
 	/**
@@ -1348,6 +1384,7 @@ public class BleDevice
 		m_pollMngr.update(timeStep);
 		m_txnMngr.update(timeStep);
 		m_reconnectMngr.update(timeStep);
+		m_rssiPollMngr.update(timeStep);
 	}
 	
 	void removeBond(PE_TaskPriority priority)

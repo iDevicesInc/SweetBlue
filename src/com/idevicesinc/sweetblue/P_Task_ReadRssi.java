@@ -18,16 +18,14 @@ import com.idevicesinc.sweetblue.utils.Utils;
 class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {	
 	protected final P_WrappingReadWriteListener m_readWriteListener;
-	private final PE_TaskPriority m_priority;
-	private final BleTransaction m_txn;
+	private final Type m_type;
 	
-	public P_Task_ReadRssi(BleDevice device, P_WrappingReadWriteListener readListener, BleTransaction txn_nullable, PE_TaskPriority priority)
+	public P_Task_ReadRssi(BleDevice device, P_WrappingReadWriteListener readListener, BleTransaction txn_nullable, PE_TaskPriority priority, Type type)
 	{
-		super(device, txn_nullable, false);
+		super(device, txn_nullable, false, priority);
 		
 		m_readWriteListener = readListener;
-		m_txn = txn_nullable;
-		m_priority = priority;
+		m_type = type;
 	}
 	
 	private Result newResult(Status status)
@@ -37,7 +35,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	private Result newResult(Status status, int rssi)
 	{
-		return new Result(getDevice(), /*rssi=*/rssi, status, getTotalTime(), getTotalTimeExecuting());
+		return new Result(getDevice(), m_type, /*rssi=*/rssi, status, getTotalTime(), getTotalTimeExecuting());
 	}
 	
 	@Override protected boolean isExecutable()
@@ -91,8 +89,6 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		
 		if( Utils.isSuccess(status) )
 		{
-			getDevice().updateRssi(rssi);
-			
 			succeed(rssi);
 		}
 		else
@@ -117,10 +113,5 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED));
 			}
 		}
-	}
-	
-	@Override public PE_TaskPriority getPriority()
-	{
-		return m_priority;
 	}
 }
