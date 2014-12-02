@@ -21,6 +21,7 @@ Features
 *	Plain old Java with zero API-level dependencies.
 *	Rich, queryable state tracking that makes UI integration a breeze.
 *	No service discovery needed...it handles it for you.
+*	Easy RSSI tracking with built-in polling and caching.
 *	Highly configurable scanning with min/max time limits, periodic bursts, advanced filtering, and more.
 *	Atomic and non-atomic transactions for easily coordinating authentication handshakes, initialization, and firmware updates.
 *	Undiscovery based on last time seen.
