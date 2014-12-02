@@ -13,7 +13,7 @@ enum PE_TaskPriority
 	CRITICAL;	// for enabling/disabling ble and for removing bonds and disconnecting before actual ble disable.
 	
 	static final PE_TaskPriority FOR_NORMAL_READS_WRITES				= LOW;
-	static final PE_TaskPriority FOR_EXPLICIT_BONDING_CONNECTING		= MEDIUM;
-	static final PE_TaskPriority FOR_PRIORITY_READS_WRITES			= MEDIUM;
-	static final PE_TaskPriority FOR_IMPLICIT_BONDING_CONNECTING		= HIGH;
+	static final PE_TaskPriority FOR_EXPLICIT_BONDING_AND_CONNECTING	= MEDIUM;
+	static final PE_TaskPriority FOR_PRIORITY_READS_WRITES				= MEDIUM;
+	static final PE_TaskPriority FOR_IMPLICIT_BONDING_AND_CONNECTING	= HIGH;
 }

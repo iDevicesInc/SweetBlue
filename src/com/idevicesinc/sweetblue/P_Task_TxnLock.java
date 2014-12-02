@@ -30,14 +30,14 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 	
 	@Override public PE_TaskPriority getPriority()
 	{
-		return PE_TaskPriority.FOR_EXPLICIT_BONDING_CONNECTING;
+		return PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING;
 	}
 	
 	@Override public boolean isInterruptableBy(PA_Task task)
 	{
-		if( task instanceof PA_Task_ReadOrWrite )
+		if( task instanceof PA_Task_Transactionable )
 		{
-			PA_Task_ReadOrWrite task_cast = (PA_Task_ReadOrWrite) task;
+			PA_Task_Transactionable task_cast = (PA_Task_Transactionable) task;
 			
 			if( this.getDevice() == task_cast.getDevice() && this.getTxn() == task_cast.getTxn() )
 			{

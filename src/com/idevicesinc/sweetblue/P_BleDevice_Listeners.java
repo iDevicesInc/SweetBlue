@@ -163,7 +163,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (!m_queue.isCurrent(P_Task_Connect.class, m_device))
 				{
-					P_Task_Connect task = new P_Task_Connect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_CONNECTING);
+					P_Task_Connect task = new P_Task_Connect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
 					m_queue.add(task);
 				}
 
@@ -212,7 +212,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			
 			if (!m_queue.isCurrent(P_Task_Disconnect.class, m_device))
 			{
-				P_Task_Disconnect task = new P_Task_Disconnect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_CONNECTING);
+				P_Task_Disconnect task = new P_Task_Disconnect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
 				m_queue.add(task);
 			}
 
@@ -384,7 +384,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 			if (!m_queue.isCurrent(P_Task_Bond.class, m_device))
 			{
-				m_queue.add(new P_Task_Bond(m_device, /*explicit=*/false, /*partOfConnection=*/false, m_taskStateListener, PE_TaskPriority.FOR_IMPLICIT_BONDING_CONNECTING));
+				m_queue.add(new P_Task_Bond(m_device, /*explicit=*/false, /*partOfConnection=*/false, m_taskStateListener, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING));
 			}
 
 			m_queue.fail(P_Task_Unbond.class, m_device);

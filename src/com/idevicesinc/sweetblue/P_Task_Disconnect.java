@@ -14,7 +14,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 	{
 		super(device, listener);
 		
-		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_CONNECTING : priority;
+		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
 		m_explicit = explicit;
 	}
 	

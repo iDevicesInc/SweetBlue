@@ -73,7 +73,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	@Override public boolean isInterruptableBy(PA_Task otherTask)
 	{
-		if( otherTask instanceof P_Task_Read || otherTask instanceof P_Task_Write )
+		if( otherTask instanceof P_Task_Read || otherTask instanceof P_Task_Write || otherTask instanceof P_Task_ReadRssi )
 		{
 			if( otherTask.getPriority().ordinal() > PE_TaskPriority.FOR_NORMAL_READS_WRITES.ordinal() )
 			{
