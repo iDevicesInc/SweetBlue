@@ -34,7 +34,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 			return;
 		}
 		
-		if( getDevice().getGatt() == null )
+		if( getDevice().getNativeGatt() == null )
 		{
 			m_logger.w("Already disconnected and gatt==null!");
 			
@@ -52,7 +52,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 		
 		if( m_explicit )
 		{
-			getDevice().getGatt().disconnect();
+			getDevice().getNativeGatt().disconnect();
 		}
 		else
 		{

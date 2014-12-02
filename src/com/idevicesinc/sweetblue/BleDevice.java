@@ -202,7 +202,7 @@ public class BleDevice
 		}
 		
 		/**
-		 * The type of GATT object that {@link Result#charUuid} represents.
+		 * The type of GATT object that is the target of the {@link Result}.
 		 *  
 		 * @author dougkoellmer
 		 */
@@ -216,7 +216,12 @@ public class BleDevice
 			/**
 			 * The {@link Result} returned has to do with a {@link BluetoothGattDescriptor} under the hood.
 			 */
-			DESCRIPTOR
+			DESCRIPTOR,
+			
+			/**
+			 * The {@link Result} is coming in from using {@link BleDevice#readRssi(ReadWriteListener)}.
+			 */
+			RSSI
 		}
 		
 		/**
@@ -227,8 +232,10 @@ public class BleDevice
 		public static class Result
 		{
 			/**
-			 * Value used in place of <code>null</code>, for now only indicating that {@link #descUuid}
-			 * isn't used for the {@link Result} because {@link #target} is {@link Target#CHARACTERISTIC}.
+			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid}
+			 * isn't used for the {@link Result} because {@link #target} is {@link Target#CHARACTERISTIC},
+			 * or that both {@link #descUuid} and {@link #charUuid} aren't applicable because {@link #target}
+			 * is {@link Target#RSSI}.
 			 */
 			public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
 			
@@ -267,6 +274,12 @@ public class BleDevice
 			public final byte[] data;
 			
 			/**
+			 * This value gets updated as a result of a {@link BleDevice#readRssi(ReadWriteListener)} call.
+			 * It will always be equivalent to {@link BleDevice#getRssi()}.
+			 */
+			public final int rssi;
+			
+			/**
 			 * Indicates either success or the type of failure. Some values of {@link Status} are not
 			 * used for certain values of {@link Type}. For example a {@link Type#NOTIFICATION}
 			 * cannot fail with {@link Status#TIMED_OUT}.
@@ -285,16 +298,33 @@ public class BleDevice
 			public final Interval totalTime;
 			
 			Result(BleDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, Status status_in, double totalTime, double transitTime)
-			{				
+			{
 				this.device = device;
-				this.charUuid = charUuid_in;
+				this.charUuid = charUuid_in != null ? charUuid_in : NON_APPLICABLE_UUID;;
 				this.descUuid = descUuid_in != null ? descUuid_in : NON_APPLICABLE_UUID;
 				this.type = type_in;
 				this.target = target_in;
-				this.data = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
 				this.status = status_in;
 				this.totalTime = Interval.seconds(totalTime);
 				this.transitTime = Interval.seconds(transitTime);
+				
+				this.data = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
+				this.rssi = device.getRssi();
+			}
+			
+			Result(BleDevice device, int rssi_in, Status status_in, double totalTime, double transitTime)
+			{
+				this.device = device;
+				this.charUuid = NON_APPLICABLE_UUID;;
+				this.descUuid = NON_APPLICABLE_UUID;
+				this.type = Type.READ;
+				this.target = Target.RSSI;
+				this.status = status_in;
+				this.totalTime = Interval.seconds(totalTime);
+				this.transitTime = Interval.seconds(transitTime);
+				
+				this.data = EMPTY_BYTE_ARRAY;
+				this.rssi = status_in == Status.SUCCESS ? rssi_in : device.getRssi();
 			}
 			
 			/**
@@ -307,7 +337,14 @@ public class BleDevice
 			
 			@Override public String toString()
 			{
-				return "status="+status+" type="+type+" target="+target+" charUuid="+charUuid;
+				if( target == Target.RSSI )
+				{
+					return "status="+status+" target="+target+" rssi="+rssi;
+				}
+				else
+				{
+					return "status="+status+" type="+type+" target="+target+" charUuid="+charUuid;
+				}
 			}
 		}
 		
@@ -662,7 +699,7 @@ public class BleDevice
 	
 	/**
 	 * Returns the raw, unmodified device name retrieved from the stack.
-	 * Same as {@link BluetoothDevice#getName()}.
+	 * Equivalent to {@link BluetoothDevice#getName()}.
 	 */
 	public String getNativeName()
 	{
@@ -735,7 +772,7 @@ public class BleDevice
 	/**
 	 * See pertinent warning for {@link #getNative()}.
 	 */
-	public BluetoothGatt getGatt()
+	public BluetoothGatt getNativeGatt()
 	{
 		return m_nativeWrapper.getGatt();
 	}
@@ -1041,6 +1078,40 @@ public class BleDevice
 	}
 	
 	/**
+	 * Same as {@link #readRssi(ReadWriteListener)} but use this method when you don't much care when/if the RSSI
+	 * is actually updated.
+	 */
+	public void readRssi()
+	{
+		readRssi(null);
+	}
+	
+	/**
+	 * Wrapper for {@link BluetoothGatt#readRemoteRssi()}. This will eventually update the value returned
+	 * by {@link #getRssi()} but it is not instantaneous. When a new RSSI is actually received the given
+	 * listener will be called. The device must be {@link BleDeviceState#CONNECTED} for this call to succeed.
+	 * When the device is not {@link BleDeviceState#CONNECTED} then the value returned by {@link #getRssi()}
+	 * will be automatically updated every time this device is discovered (or rediscovered) by a scan operation.
+	 */
+	public void readRssi(ReadWriteListener listener)
+	{
+		Result earlyOut = m_serviceMngr.getEarlyOutResult(Uuids.INVALID, EMPTY_BYTE_ARRAY, Type.READ);
+		
+		if( earlyOut != null )
+		{
+			if( listener != null )
+			{
+				listener.onReadOrWriteComplete(earlyOut);
+			}
+			
+			return;
+		}
+		
+		P_WrappingReadWriteListener wrappingListener = listener != null ? new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread) : null;
+		m_queue.add(new P_Task_ReadRssi(this, wrappingListener , m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+	}
+	
+	/**
 	 * Reads a characteristic from the device.
 	 */
 	public void read(UUID uuid, ReadWriteListener listener)
@@ -1260,9 +1331,14 @@ public class BleDevice
 	private void onDiscovered_private(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
 	{
 		m_timeSinceLastDiscovery = 0.0;
-		m_rssi = rssi;
+		updateRssi(rssi);
 		m_advertisedServices = advertisedServices_nullable == null || advertisedServices_nullable.size() == 0 ? m_advertisedServices : advertisedServices_nullable;
 		m_scanRecord = scanRecord_nullable != null ? scanRecord_nullable : m_scanRecord;
+	}
+	
+	void updateRssi(int rssi)
+	{
+		m_rssi = rssi;
 	}
 	
 	void update(double timeStep)

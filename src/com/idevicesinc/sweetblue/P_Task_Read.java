@@ -19,11 +19,6 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {
 	private final Type m_type;
 	
-	public P_Task_Read(P_Characteristic characteristic, Type type, boolean requiresBonding, P_WrappingReadWriteListener readListener)
-	{
-		this(characteristic, type, requiresBonding, readListener, null, null);
-	}
-	
 	public P_Task_Read(P_Characteristic characteristic, Type type, boolean requiresBonding, P_WrappingReadWriteListener readListener, BleTransaction txn, PE_TaskPriority priority)
 	{
 		super(characteristic, readListener, requiresBonding, txn, priority);
@@ -50,7 +45,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 			fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
 		}
 		
-		if( !getDevice().getGatt().readCharacteristic(char_native) )
+		if( !getDevice().getNativeGatt().readCharacteristic(char_native) )
 		{
 			fail(Status.FAILED_TO_SEND_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 		}
@@ -71,7 +66,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 	
 	public void onCharacteristicRead(BluetoothGatt gatt, UUID uuid, byte[] value, int status)
 	{
-		getManager().ASSERT(gatt == getDevice().getGatt());
+		getManager().ASSERT(gatt == getDevice().getNativeGatt());
 		 
 		if( !this.isFor(uuid) )  return;
 		 
@@ -109,13 +104,19 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		{
 			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " read timed out!");
 			
-			m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			if( m_readWriteListener != null )
+			{
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			}
 			
 			getManager().uhOh(UhOh.READ_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			if( m_readWriteListener != null )
+			{
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			}
 		}
 	}
 }

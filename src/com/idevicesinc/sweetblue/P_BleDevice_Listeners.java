@@ -278,8 +278,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		});
 	}
 
-	@Override
-	public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status)
+	@Override public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status)
 	{
 		final UUID uuid = characteristic.getUuid();
 		m_logger.i(m_logger.charName(uuid));
@@ -296,6 +295,23 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				if (task == null)  return;
 		
 				task.onCharacteristicWrite(gatt, uuid, status);
+			}
+		});
+	}
+	
+	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int status)
+	{
+		UpdateLoop updater = m_device.getManager().getUpdateLoop();
+		
+		updater.postIfNeeded(new SynchronizedRunnable()
+		{
+			@Override public void run_nested()
+			{
+				P_Task_ReadRssi task = m_queue.getCurrent(P_Task_ReadRssi.class, m_device);
+				
+				if (task == null)  return;
+		
+				task.onReadRemoteRssi(gatt, rssi, status);
 			}
 		});
 	}

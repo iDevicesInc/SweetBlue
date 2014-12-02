@@ -50,7 +50,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 			fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 		}
 		
-		if( !getDevice().getGatt().writeCharacteristic(char_native) )
+		if( !getDevice().getNativeGatt().writeCharacteristic(char_native) )
 		{
 			fail(Status.FAILED_TO_SEND_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 		}
@@ -67,7 +67,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	public void onCharacteristicWrite(BluetoothGatt gatt, UUID uuid, int status)
 	{
-		 getManager().ASSERT(gatt == getDevice().getGatt());
+		 getManager().ASSERT(gatt == getDevice().getNativeGatt());
 		 
 		 if( !this.isFor(uuid) )  return;
 		 
@@ -89,13 +89,19 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		{
 			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " write timed out!");
 			
-			m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			if( m_readWriteListener != null )
+			{
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			}
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			if( m_readWriteListener != null )
+			{
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			}
 		}
 	}
 }

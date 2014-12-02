@@ -13,6 +13,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
  * 
@@ -114,11 +115,13 @@ class P_ServiceManager
 	
 	BleDevice.ReadWriteListener.Result getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
 	{
+		Target target = uuid == Uuids.INVALID ? Target.RSSI : Target.DESCRIPTOR;
+		
 		if( !m_device.is(BleDeviceState.CONNECTED) )
 		{
 			if( type != BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION && type != BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION)
 			{
-				Result result = new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NOT_CONNECTED, 0.0, 0.0);
+				Result result = new Result(m_device, uuid, null, type, target, data, Status.NOT_CONNECTED, 0.0, 0.0);
 				
 				return result;
 			}
@@ -127,6 +130,8 @@ class P_ServiceManager
 				return null;
 			}
 		}
+		
+		if( target == Target.RSSI )  return null;
 		
 		P_Characteristic characteristic = getCharacteristic(uuid);
 		
@@ -147,7 +152,7 @@ class P_ServiceManager
 		
 		if( (char_native.getProperties() & property) == 0x0 )
 		{
-			Result result = new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.OPERATION_NOT_SUPPORTED, 0.0, 0.0);
+			Result result = new Result(m_device, uuid, null, type, target, data, Status.OPERATION_NOT_SUPPORTED, 0.0, 0.0);
 			
 			return result;
 		}
@@ -212,11 +217,11 @@ class P_ServiceManager
 	{
 		synchronized (m_serviceMap)
 		{
-			if( !m_device.getManager().ASSERT(m_device.getGatt() != null) )  return;
+			if( !m_device.getManager().ASSERT(m_device.getNativeGatt() != null) )  return;
 			
 			//--- DRK > Observed a random concurrent modification exception a few times, so
 			//---		applying this blanket fix to at least avoid that.
-			List<BluetoothGattService> services = m_device.getGatt().getServices();
+			List<BluetoothGattService> services = m_device.getNativeGatt().getServices();
 			Object[] raw = services.toArray();
 			
 			for( int i = 0; i < raw.length; i++ )

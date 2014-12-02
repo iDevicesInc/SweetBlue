@@ -80,7 +80,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			this.fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
 		}
 		
-		if( !getDevice().getGatt().setCharacteristicNotification(char_native, m_enable) )
+		if( !getDevice().getNativeGatt().setCharacteristicNotification(char_native, m_enable) )
 		{
 			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
 		}
@@ -99,7 +99,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			this.fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);  return;
 		}
 		
-		if( !getDevice().getGatt().writeDescriptor(descriptor) )
+		if( !getDevice().getNativeGatt().writeDescriptor(descriptor) )
 		{
 			this.fail(Status.FAILED_TO_SEND_OUT, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);  return;
 		}
@@ -139,7 +139,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	public void onDescriptorWrite(BluetoothGatt gatt, UUID descUuid, int status)
 	{
-		 getManager().ASSERT(gatt == getDevice().getGatt());
+		 getManager().ASSERT(gatt == getDevice().getNativeGatt());
 		 
 		 if( !descUuid.equals(Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID) )  return;
 

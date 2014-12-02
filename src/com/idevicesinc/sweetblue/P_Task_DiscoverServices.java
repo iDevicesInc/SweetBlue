@@ -14,7 +14,7 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 
 	@Override public void execute()
 	{
-		if( !getDevice().getGatt().discoverServices() )
+		if( !getDevice().getNativeGatt().discoverServices() )
 		{
 			fail();
 			

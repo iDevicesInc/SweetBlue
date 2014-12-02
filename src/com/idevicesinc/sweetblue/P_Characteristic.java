@@ -64,7 +64,7 @@ class P_Characteristic
 	{
 		if( m_service == null )  return m_native;
 		
-		BluetoothGatt gatt = m_service.getDevice().getGatt();
+		BluetoothGatt gatt = m_service.getDevice().getNativeGatt();
 		
 		if( gatt == null )  return m_native;
 		

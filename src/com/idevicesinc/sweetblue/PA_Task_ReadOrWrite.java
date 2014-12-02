@@ -12,22 +12,18 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
  * 
  * @author dougkoellmer
  */
-abstract class PA_Task_ReadOrWrite extends PA_Task_RequiresConnection
+abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 {
 	protected final P_Characteristic m_characteristic;
 	protected final P_WrappingReadWriteListener m_readWriteListener;
-	protected final boolean m_requiresBonding;
 	private final PE_TaskPriority m_priority;
-	private final BleTransaction m_txn;
 	
 	PA_Task_ReadOrWrite(P_Characteristic characteristic, P_WrappingReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
 	{
-		super(characteristic.getDevice(), null);
+		super(characteristic.getDevice(), txn_nullable, requiresBonding);
 		
 		m_characteristic = characteristic;
 		m_readWriteListener = readWriteListener;
-		m_requiresBonding = requiresBonding;
-		m_txn = txn_nullable;
 		m_priority = priority != null ? priority : PE_TaskPriority.FOR_NORMAL_READS_WRITES;
 	}
 	
@@ -68,11 +64,6 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_RequiresConnection
 		}
 		
 		return super_isExecutable;
-	}
-	
-	public BleTransaction getTxn()
-	{
-		return m_txn;
 	}
 	
 	protected boolean acknowledgeCallback(int status)
@@ -168,7 +159,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_RequiresConnection
 		{
 			if( !(this instanceof P_Task_ToggleNotify) )
 			{
-				if( getDevice().is(BleDeviceState.INITIALIZED) )
+				if( this.getDevice().is(BleDeviceState.INITIALIZED) )
 				{
 					return true;
 				}
