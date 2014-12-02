@@ -1129,9 +1129,7 @@ public class BleDevice
 	 */
 	public void startRssiPoll(Interval interval, ReadWriteListener listener)
 	{
-		P_WrappingReadWriteListener wrappingListener = listener != null ? new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread) : null;
-		
-		m_rssiPollMngr.start(interval.seconds, wrappingListener);
+		m_rssiPollMngr.start(interval.seconds, listener);
 	}
 	
 	/**

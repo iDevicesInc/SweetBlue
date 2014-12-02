@@ -32,7 +32,7 @@ public class BleManagerConfig implements Cloneable
 	public static final double DEFAULT_AUTO_SCAN_INTERVAL				= 3.0;
 	public static final double DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME 	= 0.5;
 	public static final double DEFAULT_TASK_TIMEOUT						= 10.0;
-	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/10.0;
+	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/30.0;
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
