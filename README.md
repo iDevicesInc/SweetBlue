@@ -73,8 +73,6 @@ bleManager.startScan(new BleManager.DiscoveryListener()
 {
 	@Override public void onDeviceDiscovered(BleDevice device)
 	{
-		bleManager.stopScan();
-		
 		device.connect(new BleDevice.StateListener()
 		{
 			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits)
