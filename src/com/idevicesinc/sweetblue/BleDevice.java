@@ -140,7 +140,7 @@ public class BleDevice
 		public static enum Type
 		{
 			/**
-			 * Associated with {@link BleDevice#read(UUID, ReadWriteListener)}.
+			 * Associated with {@link BleDevice#read(UUID, ReadWriteListener)} or {@link BleDevice#readRssi(ReadWriteListener)}.
 			 */
 			READ,
 			
@@ -150,7 +150,8 @@ public class BleDevice
 			WRITE,
 			
 			/**
-			 * Associated with {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)}.
+			 * Associated with {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)} or 
+			 * {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
 			 */
 			POLL,
 			
@@ -219,7 +220,8 @@ public class BleDevice
 			DESCRIPTOR,
 			
 			/**
-			 * The {@link Result} is coming in from using {@link BleDevice#readRssi(ReadWriteListener)}.
+			 * The {@link Result} is coming in from using {@link BleDevice#readRssi(ReadWriteListener)}
+			 * or {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
 			 */
 			RSSI
 		}
