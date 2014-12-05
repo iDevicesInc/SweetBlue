@@ -433,20 +433,30 @@ public class BleDevice
 			 */
 			EXPLICITLY_CANCELLED;
 		}
-		
+
 		/**
 		 * Simply a more explicit return value than {@link Boolean}.
+		 * 
+		 * @author dougkoellmer
 		 */
 		public static enum Please
 		{
-			RETRY, DO_NOT_RETRY;
+			/**
+			 * Return this to retry the connection, continuing the connection fail retry loop.
+			 */
+			RETRY,
+			
+			/**
+			 * Return this to stop the connection fail retry loop.
+			 */
+			DO_NOT_RETRY;
 		}
 		
 		/**
 		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason is {@link Reason#EXPLICITLY_CANCELLED}.
 		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleManagerConfig.ReconnectRateLimiter}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
-		 * lets the library handle things in a slightly more optimized fashion and so is recommended for that reason also.
+		 * lets the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
 		 * <br><br>
 		 * NOTE that this callback gets fired *after* {@link StateListener} lets you know that the device is {@link BleDeviceState#DISCONNECTED}.
 		 */
