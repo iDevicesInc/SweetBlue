@@ -312,22 +312,18 @@ public class BleManager
 			this.setListener_Discovery(m_config.defaultDiscoveryListener);
 		}
 		
-		if( Interval.isEnabled(m_config.autoUpdateRate) )
+		if( m_config.runOnMainThread )
 		{
-			if( m_config.runOnMainThread )
-			{
-				m_updateLoop = UpdateLoop.newMainThreadLoop(m_updateLoopCallback);
-			}
-			else
-			{
-				m_updateLoop = UpdateLoop.newAnonThreadLoop(m_updateLoopCallback);
-			}
-			
-			startAutoUpdate(Interval.asDouble(m_config.autoUpdateRate));
+			m_updateLoop = UpdateLoop.newMainThreadLoop(m_updateLoopCallback);
 		}
 		else
 		{
-			m_updateLoop = null;
+			m_updateLoop = UpdateLoop.newAnonThreadLoop(m_updateLoopCallback);
+		}
+		
+		if( Interval.isEnabled(m_config.autoUpdateRate) )
+		{
+			startAutoUpdate(Interval.asDouble(m_config.autoUpdateRate));
 		}
 		
 		s_instanceCount++;
@@ -1077,11 +1073,6 @@ public class BleManager
 				}
 			}
 		}));
-	}
-	
-	void startAutoUpdate()
-	{
-		startAutoUpdate(Interval.asDouble(m_config.autoUpdateRate));
 	}
 	
 	void startAutoUpdate(double updateRate)
