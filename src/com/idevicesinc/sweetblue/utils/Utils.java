@@ -290,13 +290,18 @@ public class Utils
 		System.arraycopy(source, sourceBegin, destination, 0, sourceEnd - sourceBegin);
 		return destination;
 	}
-
-	public static void memcpy(byte[] dest, byte[] source, int size)
+	
+	public static void memcpy(byte[] dest, byte[] source, int size, int destOffset, int sourceOffset)
 	{
 		for(int i = 0; i < size; i++)
 		{
-			dest[i] = source[i];
+			dest[i+destOffset] = source[i+sourceOffset];
 		}
+	}
+
+	public static void memcpy(byte[] dest, byte[] source, int size)
+	{
+		memcpy(dest, source, size, /*destOffset=*/0, /*destOffset=*/0);
 	}
 
 	public static void memset(byte[] data, byte value, int size)
