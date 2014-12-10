@@ -455,6 +455,10 @@ public class BleManagerConfig implements Cloneable
 	//--- DRK > Not sure if this is useful so keeping it package private for now.
 	int		connectionFailUhOhCount						= 0;
 	
+	/**
+	 * Creates a {@link BleManagerConfig} with all default options set. See each member of this class
+	 * for what the default options are set to.
+	 */
 	public BleManagerConfig()
 	{
 		this(false);

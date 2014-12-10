@@ -273,7 +273,7 @@ public class BleManager
 	 * If you call this after you call {@link #get(Application, BleManagerConfig)} (for example in another
 	 * {@link Activity}), the {@link BleManagerConfig} originally passed in will be used.
 	 * Otherwise this calls {@link #get(Application, BleManagerConfig)} with a {@link BleManagerConfig}
-	 * created using the default constructor {@link BleManagerConfig#BleManagerConfig()}.
+	 * instance created using the default constructor {@link BleManagerConfig#BleManagerConfig()}.
 	 */
 	public static BleManager get(Application application)
 	{
