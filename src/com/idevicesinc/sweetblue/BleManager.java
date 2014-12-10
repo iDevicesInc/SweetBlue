@@ -53,7 +53,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *      {
  *          super.onCreate(savedInstanceState);
  *         
- *          m_bleManager = BleManager.get(getApplication());
+ *          m_bleManager = BleManager.get(this);
  *         
  *          m_bleManager.startScan(new BleManager.DiscoveryListener()
  *          {
