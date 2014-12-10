@@ -60,7 +60,7 @@ public class MainActivity extends Activity
 		this.closeOptionsMenu();
 		this.closeContextMenu();
 		
-		m_bleMngr = new BleManager(getApplication(), m_bleManagerConfig);
+		m_bleMngr = BleManager.get(getApplication(), m_bleManagerConfig);
 		m_alertMngr = new AlertManager(this, m_bleMngr);
 		m_viewController = new ViewController(this, m_bleMngr);
 		this.setContentView(m_viewController);
@@ -92,12 +92,5 @@ public class MainActivity extends Activity
 		super.onPause();
 		
 		m_bleMngr.onPause();
-    }
-    
-    @Override protected void onDestroy()
-    {
-		super.onDestroy();
-		
-		m_bleMngr.onDestroy();
     }
 }

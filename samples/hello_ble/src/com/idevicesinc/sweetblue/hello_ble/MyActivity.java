@@ -28,7 +28,7 @@ public class MyActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		
-		m_bleManager = new BleManager(getApplication());
+		m_bleManager = BleManager.get(getApplication());
 		
 		m_bleManager.startScan(new BleManager.DiscoveryListener()
 		{
@@ -73,12 +73,5 @@ public class MyActivity extends Activity
 		super.onPause();
 		
 		m_bleManager.onPause();
-	}
-
-	@Override protected void onDestroy()
-	{
-		super.onDestroy();
-		
-		m_bleManager.onDestroy();
 	}
 }
