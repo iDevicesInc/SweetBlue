@@ -67,9 +67,7 @@ Now add these to the root of MyApp/AndroidManifest.xml:
 ```
 Then this is all it takes to discover a device, connect to it, and read a characteristic:
 ```java
-final BleManager bleManager = new BleManager(getApplication());
-
-bleManager.startScan(new BleManager.DiscoveryListener()
+BleManager.get(getApplication()).startScan(new BleManager.DiscoveryListener()
 {
 	@Override public void onDeviceDiscovered(BleDevice device)
 	{
