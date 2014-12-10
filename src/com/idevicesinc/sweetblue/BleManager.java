@@ -269,7 +269,8 @@ public class BleManager
 	private static BleManager s_instance = null;
 	
 	/**
-	 * Same as {@link #get(Application)} but takes an {@link Activity} as a convenience.
+	 * Same as {@link #get(Application)} but takes an {@link Activity} as a convenience
+	 * and calls {@link Activity#getApplication()} for you.
 	 */
 	public static BleManager get(Activity activity)
 	{
@@ -277,7 +278,8 @@ public class BleManager
 	}
 	
 	/**
-	 * Same as {@link #get(Application, BleManagerConfig)} but takes an {@link Activity} as a convenience.
+	 * Same as {@link #get(Application, BleManagerConfig)} but takes an {@link Activity} as a convenience
+	 * and calls {@link Activity#getApplication()} for you.
 	 */
 	public static BleManager get(Activity activity, BleManagerConfig config)
 	{
