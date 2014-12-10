@@ -65,9 +65,9 @@ Now add these to the root of MyApp/AndroidManifest.xml:
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 ```
-Then this is all it takes to discover a device, connect to it, and read a characteristic:
+Then, from your `Activity`, this is all it takes to discover a device, connect to it, and read a characteristic:
 ```java
-BleManager.get(getApplication()).startScan(new BleManager.DiscoveryListener()
+BleManager.get(this).startScan(new BleManager.DiscoveryListener()
 {
 	@Override public void onDeviceDiscovered(BleDevice device)
 	{
