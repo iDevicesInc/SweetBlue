@@ -28,7 +28,7 @@ public enum BleDeviceState implements BitwiseEnum
 	 * If {@link BleManagerConfig#reconnectRateLimiter} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
 	 * {@link BleManagerConfig.ReconnectRateLimiter#CANCEL} from {@link BleManagerConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDevice, int, Interval, Interval)}
-	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects. 
+	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
 	 */
 	ATTEMPTING_RECONNECT,
@@ -55,12 +55,12 @@ public enum BleDeviceState implements BitwiseEnum
 	UNBONDED,
 	
 	/**
-	 * Analogous of {@link BluetoothDevice#BOND_BONDING}. May not be relevant for your application if you don't use encrypted characteristics.
+	 * Analogous to {@link BluetoothDevice#BOND_BONDING}. May not be relevant for your application if you don't use encrypted characteristics.
 	 */
 	BONDING,
 	
 	/**
-	 * Analogous of {@link BluetoothDevice#BOND_BONDED}. May not be relevant for your application if you don't use encrypted characteristics.
+	 * Analogous to {@link BluetoothDevice#BOND_BONDED}. May not be relevant for your application if you don't use encrypted characteristics.
 	 */
 	BONDED,
 	
@@ -71,14 +71,14 @@ public enum BleDeviceState implements BitwiseEnum
 	CONNECTING_OVERALL,
 	
 	/**
-	 * Analogous to {@link BluetoothProfile#STATE_CONNECTING}. If this state is active then we're establishing an actual BLE connection.
+	 * Analogous to {@link BluetoothProfile#STATE_CONNECTING}. If this state is active then we're in the middle of establishing an actual BLE connection.
 	 */
 	CONNECTING,
 	
 	/**
 	 * Analogous to {@link BluetoothProfile#STATE_CONNECTED}. Once this state becomes active we don't consider ourselves "fully" connected
 	 * because we still generally have to discover services and maybe do a few reads or writes to initialize things. So generally speaking
-	 * no actual action should be taken when the {@link BleDevice} becomes {@link #CONNECTED}. Instead it's best to listen for {@link #INITIALIZED}.
+	 * no significant action should be taken when the {@link BleDevice} becomes {@link #CONNECTED}. Instead it's best to listen for {@link #INITIALIZED}.
 	 */
 	CONNECTED,
 	
@@ -113,8 +113,8 @@ public enum BleDeviceState implements BitwiseEnum
 	 * <br><br>
 	 * This state becomes active either if the {@link BleTransaction} provided to {@link BleDevice#connectAndInitialize(BleTransaction)} or
 	 * {@link BleDevice#connect(BleTransaction, BleTransaction)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
-	 * {@link BleDevice#connect()} or {@link BleDevice#connectAndAuthenticate(BleTransaction)} - i.e. you connect without authentication.
-	 * In the latter case the {@link #INITIALIZING} state is skipped and we go straight to being implicitly {@link #INITIALIZED}.
+	 * {@link BleDevice#connect()} or {@link BleDevice#connectAndAuthenticate(BleTransaction)} or etc.- i.e. you connect without an initialization
+	 * transaction. In the latter case the {@link #INITIALIZING} state is skipped and we go straight to being implicitly {@link #INITIALIZED}.
 	 */
 	INITIALIZED,
 	

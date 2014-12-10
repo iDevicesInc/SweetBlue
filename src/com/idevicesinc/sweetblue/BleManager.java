@@ -269,6 +269,22 @@ public class BleManager
 	private static BleManager s_instance = null;
 	
 	/**
+	 * Same as {@link #get(Application)} but takes an {@link Activity} as a convenience.
+	 */
+	public static BleManager get(Activity activity)
+	{
+		return get(activity.getApplication());
+	}
+	
+	/**
+	 * Same as {@link #get(Application, BleManagerConfig)} but takes an {@link Activity} as a convenience.
+	 */
+	public static BleManager get(Activity activity, BleManagerConfig config)
+	{
+		return get(activity.getApplication(), config);
+	}
+	
+	/**
 	 * Create an instance or retrieve an already-created instance with default configuration options set.
 	 * If you call this after you call {@link #get(Application, BleManagerConfig)} (for example in another
 	 * {@link Activity}), the {@link BleManagerConfig} originally passed in will be used.
