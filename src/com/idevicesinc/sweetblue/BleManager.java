@@ -53,7 +53,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *      {
  *          super.onCreate(savedInstanceState);
  *         
- *          m_bleManager = new BleManager(getApplication());
+ *          m_bleManager = BleManager.get(getApplication());
  *         
  *          m_bleManager.startScan(new BleManager.DiscoveryListener()
  *          {
@@ -238,16 +238,16 @@ public class BleManager
 	private final BluetoothManager m_btMngr;
 	private final P_AdvertisingFilterManager m_filterMngr;
 	private final P_BluetoothCrashResolver m_crashResolver;
-	private final P_Logger m_logger;
-			final BleManagerConfig m_config;
+	private			P_Logger m_logger;
+				  BleManagerConfig m_config;
 			final P_DeviceManager m_deviceMngr;
 	private final P_BleManager_Listeners m_listeners;
 	private final P_StateTracker m_stateTracker;
 	private final P_NativeStateTracker m_nativeStateTracker;
-	private final UpdateLoop m_updateLoop;
+	private 	 UpdateLoop m_updateLoop;
 	private final P_TaskQueue m_taskQueue;
-	private final P_UhOhThrottler m_uhOhThrottler;
-			final P_WakeLockManager m_wakeLockMngr;
+	private 	P_UhOhThrottler m_uhOhThrottler;
+				P_WakeLockManager m_wakeLockMngr;
 	
 	private int m_connectionFailTracker = 0;
 	
@@ -266,7 +266,62 @@ public class BleManager
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
 	
-	private static int s_instanceCount = 0;
+	private static BleManager s_instance = null;
+	
+	/**
+	 * Create an instance or retrieve an already-created instance with default configuration options set.
+	 * If you call this after you call {@link #get(Application, BleManagerConfig)} (for example in another
+	 * {@link Activity}), the {@link BleManagerConfig} originally passed in will be used.
+	 * Otherwise this calls {@link #get(Application, BleManagerConfig)} with a {@link BleManagerConfig}
+	 * created using the default constructor {@link BleManagerConfig#BleManagerConfig()}.
+	 */
+	public static BleManager get(Application application)
+	{
+		if( s_instance == null )
+		{
+			return get(application, new BleManagerConfig());
+		}
+		else
+		{
+			verifySingleton(application);
+			
+			return s_instance;
+		}
+	}
+	
+	/**
+	 * Create an instance or retrieve an already-created instance with custom configuration options set.
+	 * If you call this more than once (for example from a different {@link Activity}
+	 * with different {@link BleManagerConfig} options set then the newer options overwrite the older options. 
+	 */
+	public static BleManager get(Application application, BleManagerConfig config)
+	{
+		if( s_instance == null )
+		{
+			s_instance = new BleManager(application, config);
+			
+			return s_instance;
+		}
+		else
+		{
+			verifySingleton(application);
+			
+			s_instance.m_config = config.clone();
+			s_instance.initLogger();
+			s_instance.initConfigDependentMembers();
+			
+			return s_instance;
+		}
+	}
+	
+	private static void verifySingleton(Application application)
+	{
+		if( s_instance != null && s_instance.getApplication() != application )
+		{
+			//--- DRK > Not sure how/if this could happen, but I never underestimate Android.
+			throw new InstantiationError("There can only be one instance of "+BleManager.class.getSimpleName() + " created per application.");
+		}
+	}
 	
 	/**
 	 * Create an instance with default configuration options set.
@@ -275,7 +330,7 @@ public class BleManager
 	 * 
 	 * @throws InstantiationError if you try to create more than one instance.
 	 */
-	public BleManager(Application application)
+	private BleManager(Application application)
 	{
 		this(application, new BleManagerConfig());
 	}
@@ -285,15 +340,12 @@ public class BleManager
 	 * 
 	 * @throws InstantiationError if you try to create more than one instance.
 	 */
-	public BleManager(Application application, BleManagerConfig config)
+	private BleManager(Application application, BleManagerConfig config)
 	{
-		if( s_instanceCount >= 1 )  throw new InstantiationError("There can only be one instance of "+BleManager.class.getSimpleName() + " created per application.");
-		
 		m_context = application;
 		m_config = config.clone();
+		initLogger();
 		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultAdvertisingFilter);
-		m_logger = new P_Logger(m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled);
-		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.asDouble(m_config.uhOhCallbackThrottle));
 		m_btMngr = (BluetoothManager) application.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleState nativeState = BleState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_StateTracker(this);
@@ -305,11 +357,38 @@ public class BleManager
 		m_crashResolver = new P_BluetoothCrashResolver(application);
 		m_deviceMngr = new P_DeviceManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
-		m_wakeLockMngr = new P_WakeLockManager(this, m_config.manageCpuWakeLock);
+		
+		initConfigDependentMembers();
+	}
+	
+	private void initLogger()
+	{
+		m_logger = new P_Logger(m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled);
+	}
+	
+	private void initConfigDependentMembers()
+	{
+		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.asDouble(m_config.uhOhCallbackThrottle));
+		
+		if( m_wakeLockMngr == null )
+		{
+			m_wakeLockMngr = new P_WakeLockManager(this, m_config.manageCpuWakeLock);
+		}
+		else if( m_wakeLockMngr != null && m_config.manageCpuWakeLock == false )
+		{
+			m_wakeLockMngr.clear();
+			m_wakeLockMngr = new P_WakeLockManager(this, m_config.manageCpuWakeLock);
+		}
 		
 		if( m_config.defaultDiscoveryListener != null )
 		{
 			this.setListener_Discovery(m_config.defaultDiscoveryListener);
+		}
+		
+		if( m_updateLoop != null )
+		{
+			m_updateLoop.stop();
+			m_updateLoop = null;
 		}
 		
 		if( m_config.runOnMainThread )
@@ -325,8 +404,6 @@ public class BleManager
 		{
 			startAutoUpdate(Interval.asDouble(m_config.autoUpdateRate));
 		}
-		
-		s_instanceCount++;
 	}
 	
 	/**
