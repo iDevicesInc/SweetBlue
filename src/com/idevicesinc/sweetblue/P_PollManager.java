@@ -153,6 +153,16 @@ class P_PollManager
 		
 		void onCharacteristicChangedFromNativeNotify(byte[] value)
 		{
+			//--- DRK > The early-outs in this method are for when, for example, a native onNotify comes in on a random thread,
+			//---		BleDevice#disconnect() is called on main thread before notify gets passed to main thread (to here).
+			//---		Explicit disconnect clears all service/characteristic state and notify shouldn't get sent to app-land
+			//---		regardless.
+			if( m_device.is(BleDeviceState.DISCONNECTED) )  return;
+			
+			P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(m_uuid);
+			
+			if( characteristic == null )  return;
+			
 			BluetoothGattCharacteristic char_native = m_device.getServiceManager().getCharacteristic(m_uuid).getGuaranteedNative(); 
 			Type type = m_device.getServiceManager().modifyResultType(char_native, Type.NOTIFICATION);
 			
