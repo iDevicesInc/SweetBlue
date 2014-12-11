@@ -97,4 +97,4 @@ BleManager.get(this).startScan(new BleManager.DiscoveryListener()
 Licensing
 =========
 
-SweetBlue is released here under the [GPLv3](http://www.gnu.org/copyleft/gpl.html). Please visit http://idevicesinc.com/sweetblue for proprietary licensing options. In a nutshell, if you're developing a for-profit commercial app, you will most-likely be required to purchase a license. You may use this library for free for evaluation purposes.
+SweetBlue is released here under the [GPLv3](http://www.gnu.org/copyleft/gpl.html). Please visit http://idevicesinc.com/sweetblue for proprietary licensing options. In a nutshell, if you're developing a for-profit commercial app, you will most-likely be required to purchase a license. You may use this library for free for evaluation purposes. See the [FAQ](https://github.com/iDevicesInc/SweetBlue/wiki/FAQ) for more details.
