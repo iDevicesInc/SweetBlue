@@ -812,7 +812,8 @@ public class BleManager
 	}
 	
 	/**
-	 * Enables BLE if manager is currently {@link BleState#OFF}. Otherwise does nothing.
+	 * Enables BLE if manager is currently {@link BleState#OFF} or {@link BleState#TURNING_OFF}, otherwise does nothing.
+	 * For a convenient way to ask your user first see {@link #enableBleWithIntent(Activity, int)}.
 	 */
 	public void enableBle()
 	{
@@ -868,10 +869,14 @@ public class BleManager
 	/**
 	 * Convenience method to request your user to enable ble in a "standard" way
 	 * with an {@link Intent} instead of using {@link #enableBle()} directly.
-	 * Result is posted as normal to {@link Activity#onActivityResult()}.
+	 * Result will be posted as normal to {@link Activity#onActivityResult()}.
+	 * If current state is {@link BleState#ON} or {@link BleState#TURNING_ON}
+	 * this method early outs and does nothing.
 	 */
 	public void enableBleWithIntent(Activity callingActivity, int requestCode)
 	{
+		if( isAny(ON, TURNING_ON) )  return;
+		
 		Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 		callingActivity.startActivityForResult(enableBtIntent, requestCode);
 	}
