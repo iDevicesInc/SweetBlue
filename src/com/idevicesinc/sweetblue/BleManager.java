@@ -342,21 +342,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Create an instance with default configuration options set.
-	 * This calls {@link #BleManager(Application, BleManagerConfig)} with a {@link BleManagerConfig}
-	 * created using the default constructor of {@link BleManagerConfig#BleManagerConfig()}.
-	 * 
-	 * @throws InstantiationError if you try to create more than one instance.
-	 */
-	private BleManager(Application application)
-	{
-		this(application, new BleManagerConfig());
-	}
-	
-	/**
 	 * Create an instance with special configuration options set.
-	 * 
-	 * @throws InstantiationError if you try to create more than one instance.
 	 */
 	private BleManager(Application application, BleManagerConfig config)
 	{
