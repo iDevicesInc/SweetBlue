@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_DeviceStateTracker extends PA_StateTracker

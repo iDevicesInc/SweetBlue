@@ -8,7 +8,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  */
 class P_RssiPollManager
 {

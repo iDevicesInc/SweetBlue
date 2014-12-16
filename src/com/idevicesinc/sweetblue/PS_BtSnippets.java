@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 /**
  * Just some commented out snippets that I don't feel like digging through SVN for if I ever need them again.
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class PS_BtSnippets

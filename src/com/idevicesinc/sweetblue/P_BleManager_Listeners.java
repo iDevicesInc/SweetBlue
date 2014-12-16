@@ -11,7 +11,7 @@ import android.util.Log;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_BleManager_Listeners

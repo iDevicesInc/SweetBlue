@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothGatt;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Task_Connect extends PA_Task_RequiresBleOn

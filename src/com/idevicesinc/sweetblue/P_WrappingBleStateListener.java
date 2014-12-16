@@ -4,7 +4,7 @@ import android.os.Handler;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManager.StateListener, BleManager.NativeStateListener

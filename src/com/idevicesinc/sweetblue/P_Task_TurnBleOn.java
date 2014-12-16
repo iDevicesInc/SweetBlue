@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Task_TurnBleOn extends PA_Task

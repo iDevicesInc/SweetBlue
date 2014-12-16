@@ -33,7 +33,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
  * created implicitly by {@link BleManager} as a result of a scanning operation (e.g. {@link BleManager#startScan()}
  * and sent to you through {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)}.
  * 
- * @author dougkoellmer
+ * 
  */
 public class BleDevice
 {
@@ -42,7 +42,7 @@ public class BleDevice
 	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
 	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface ReadWriteListener
 	{
@@ -53,7 +53,7 @@ public class BleDevice
 		 * 
 		 * @see Result#status
 		 * 
-		 * @author dougkoellmer
+		 * 
 		 */
 		public static enum Status
 		{
@@ -135,7 +135,7 @@ public class BleDevice
 		/**
 		 * The type of operation for a {@link Result} - read, write, poll, etc.
 		 * 
-		 * @author dougkoellmer
+		 * 
 		 */
 		public static enum Type
 		{
@@ -205,7 +205,7 @@ public class BleDevice
 		/**
 		 * The type of GATT object that is the target of the {@link Result}.
 		 *  
-		 * @author dougkoellmer
+		 * 
 		 */
 		public static enum Target
 		{
@@ -229,7 +229,7 @@ public class BleDevice
 		/**
 		 * Provides a bunch of information about a completed read, write, or notification.
 		 * 
-		 * @author dougkoellmer
+		 * 
 		 */
 		public static class Result
 		{
@@ -363,7 +363,7 @@ public class BleDevice
 	 * @see BleDeviceState
 	 * @see BleDevice#setListener_State(StateListener)
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface StateListener
 	{
@@ -382,14 +382,14 @@ public class BleDevice
 	 * @see DefaultConnectionFailListener
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface ConnectionFailListener
 	{
 		/**
 		 * The reason for the connection failure.
 		 * 
-		 * @author dougkoellmer
+		 * 
 		 */
 		public static enum Reason
 		{
@@ -437,7 +437,7 @@ public class BleDevice
 		/**
 		 * Simply a more explicit return value than {@link Boolean}.
 		 * 
-		 * @author dougkoellmer
+		 * 
 		 */
 		public static enum Please
 		{
@@ -480,7 +480,7 @@ public class BleDevice
 	 * @see ConnectionFailListener
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static class DefaultConnectionFailListener implements ConnectionFailListener
 	{

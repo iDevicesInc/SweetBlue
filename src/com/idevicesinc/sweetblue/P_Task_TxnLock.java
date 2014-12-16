@@ -4,7 +4,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Task_TxnLock extends PA_Task_RequiresBleOn

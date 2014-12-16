@@ -19,7 +19,7 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener;
  * @see UhOhListener
  * @see BleManager#setListener_UhOh(UhOhListener)
  * 
- * @author dougkoellmer
+ * 
  */
 public enum UhOh
 {
@@ -140,7 +140,7 @@ public enum UhOh
 	 * The suggested remedy for each {@link UhOh}. This can be used as a proxy for the severity
 	 * of the issue.
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static enum Remedy
 	{

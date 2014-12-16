@@ -6,14 +6,14 @@ import android.os.Looper;
 /**
  * Zero-dependency (besides Android) utility class for creating an update loop.
  * 
- * @author dougkoellmer
+ * 
  */
 public class UpdateLoop
 {
 	/**
 	 * A callback where you handle the update time step.
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface Callback
 	{

@@ -15,7 +15,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  * 
  */
 class P_BleDevice_Listeners extends BluetoothGattCallback

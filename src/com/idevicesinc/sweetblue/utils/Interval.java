@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig;
  * {@link BleManager} and {@link BleDevice}. An {@link Interval} is a self-documenting
  * and "type-comfortable" way of representing time instead of using naked numeric primitives.
  *  
- * @author dougkoellmer
+ * 
  */
 public class Interval
 {

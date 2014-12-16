@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  */
 class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {	

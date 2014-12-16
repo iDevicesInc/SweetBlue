@@ -17,7 +17,7 @@ import com.idevicesinc.sweetblue.utils.UuidNameMap;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Logger

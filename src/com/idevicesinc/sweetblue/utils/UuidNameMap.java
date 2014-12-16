@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig;
  * 
  * @see BleManagerConfig#uuidNameMaps
  * 
- * @author dougkoellmer
+ * 
  */
 public interface UuidNameMap
 {

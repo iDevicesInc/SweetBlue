@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_StateTracker extends PA_StateTracker

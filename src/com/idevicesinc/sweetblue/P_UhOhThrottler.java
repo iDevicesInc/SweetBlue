@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_UhOhThrottler

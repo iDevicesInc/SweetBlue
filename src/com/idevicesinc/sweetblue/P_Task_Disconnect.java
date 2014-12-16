@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Task_Disconnect extends PA_Task_RequiresBleOn

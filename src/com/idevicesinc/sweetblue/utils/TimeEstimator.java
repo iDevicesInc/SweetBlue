@@ -6,7 +6,7 @@ package com.idevicesinc.sweetblue.utils;
  * and estimate the completion time of long running operations like firmware updates.
  * Basically takes times as doubles representing seconds, and spits back the same.
  * 
- * @author dougkoellmer
+ * 
  */
 public class TimeEstimator
 {

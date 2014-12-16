@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  */
 class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {

@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class PS_GattStatus

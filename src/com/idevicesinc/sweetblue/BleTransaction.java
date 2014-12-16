@@ -14,14 +14,14 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * @see BleDevice#connectAndInitialize(BleTransaction)
  * @see BleDevice#connect(BleTransaction, BleTransaction)
  * 
- * @author dougkoellmer
+ * 
  */
 public abstract class BleTransaction
 {
 	/**
 	 * Values are passed to {@link BleTransaction#onEnd(BleDevice, EndReason)}.
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	protected static enum EndReason
 	{

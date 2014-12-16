@@ -4,7 +4,7 @@ import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 abstract class PA_StateTracker

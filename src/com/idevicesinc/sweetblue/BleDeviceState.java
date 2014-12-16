@@ -14,7 +14,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
  * 
  * @see BleDevice.StateListener
  * 
- * @author dougkoellmer
+ * 
  */
 public enum BleDeviceState implements BitwiseEnum
 {

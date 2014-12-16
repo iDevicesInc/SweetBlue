@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Task_CrashResolver extends PA_Task_RequiresBleOn 

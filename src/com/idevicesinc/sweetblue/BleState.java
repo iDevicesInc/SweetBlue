@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.BitwiseEnum;
  * @see BleManager#is(BleState)
  * @see BleManager#getStateMask()
  * 
- * @author dougkoellmer
+ * 
  */
 public enum BleState implements BitwiseEnum
 {

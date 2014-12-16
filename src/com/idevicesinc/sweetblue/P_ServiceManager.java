@@ -17,7 +17,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_ServiceManager

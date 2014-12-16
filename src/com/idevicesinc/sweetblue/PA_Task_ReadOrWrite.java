@@ -10,7 +10,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  */
 abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 {

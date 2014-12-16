@@ -10,7 +10,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_AdvertisingFilterManager

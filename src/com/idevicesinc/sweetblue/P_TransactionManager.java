@@ -10,7 +10,7 @@ import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_TransactionManager

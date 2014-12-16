@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  */
 class P_WrappingReadWriteListener extends PA_CallbackWrapper implements ReadWriteListener
 {

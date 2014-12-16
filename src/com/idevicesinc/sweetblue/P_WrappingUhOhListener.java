@@ -4,7 +4,7 @@ import android.os.Handler;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_WrappingUhOhListener extends PA_CallbackWrapper implements BleManager.UhOhListener

@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_ConnectionFailManager

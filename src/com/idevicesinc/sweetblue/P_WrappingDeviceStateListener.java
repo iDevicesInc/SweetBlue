@@ -4,7 +4,7 @@ import android.os.Handler;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_WrappingDeviceStateListener extends PA_CallbackWrapper implements BleDevice.StateListener, BleDevice.ConnectionFailListener

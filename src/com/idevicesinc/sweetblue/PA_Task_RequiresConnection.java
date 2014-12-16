@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn

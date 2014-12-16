@@ -7,7 +7,7 @@ import android.os.Looper;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_TaskQueue

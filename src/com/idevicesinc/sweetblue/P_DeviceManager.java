@@ -8,7 +8,7 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener_Full;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_DeviceManager

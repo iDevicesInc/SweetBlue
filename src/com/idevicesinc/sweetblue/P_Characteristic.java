@@ -8,7 +8,7 @@ import android.bluetooth.BluetoothGattService;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Characteristic

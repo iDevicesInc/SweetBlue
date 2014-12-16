@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  */
 abstract class PA_CallbackWrapper
 {

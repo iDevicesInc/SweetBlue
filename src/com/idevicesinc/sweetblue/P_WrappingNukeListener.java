@@ -6,7 +6,7 @@ import android.os.Handler;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_WrappingNukeListener extends PA_CallbackWrapper implements BleManager.NukeEndListener

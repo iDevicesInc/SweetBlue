@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  */
 abstract class PA_Task
 {

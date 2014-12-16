@@ -93,7 +93,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * </code>
  * </pre>
  * 
- * @author dougkoellmer
+ * 
  */
 public class BleManager
 {
@@ -105,7 +105,7 @@ public class BleManager
 	 * <br><br>
 	 * Use {@link DiscoveryListener_Full} for additional discovery lifecycle events.
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface DiscoveryListener
 	{
@@ -120,7 +120,7 @@ public class BleManager
 	/**
 	 * Use this listener instead of {@link DiscoveryListener} to get more info on the discovery lifecycle.
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface DiscoveryListener_Full extends DiscoveryListener
 	{
@@ -148,7 +148,7 @@ public class BleManager
 	 * Provide an implementation to {@link BleManager#setListener_State(StateListener)} to receive callbacks
 	 * when the {@link BleManager} undergoes a {@link BleState} change.
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface StateListener
 	{
@@ -167,7 +167,7 @@ public class BleManager
 	 * but reflects what is going on in the actual underlying stack, which may lag slightly behind the
 	 * abstracted state reflected by {@link StateListener}. Most apps will not find this callback useful.
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface NativeStateListener
 	{
@@ -186,7 +186,7 @@ public class BleManager
 	 * 
 	 * @see UhOh
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface UhOhListener
 	{
@@ -202,7 +202,7 @@ public class BleManager
 	 * 
 	 * @see BleManager#dropTacticalNuke(NukeEndListener)
 	 * 
-	 * @author dougkoellmer
+	 * 
 	 */
 	public static interface NukeEndListener
 	{

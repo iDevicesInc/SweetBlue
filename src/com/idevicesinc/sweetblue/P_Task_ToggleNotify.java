@@ -15,7 +15,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener

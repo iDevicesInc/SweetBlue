@@ -16,7 +16,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig;
  * @see BleManagerConfig#uuidNameMaps
  * @see BasicUuidNameMap
  * 
- * @author dougkoellmer
+ * 
  */
 public class ReflectionUuidNameMap implements UuidNameMap
 {

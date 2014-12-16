@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_ReconnectManager

@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 
 /**
  * 
- * @author dougkoellmer
+ * 
  *
  */
 class P_Task_Bond extends PA_Task_RequiresBleOn
