@@ -22,9 +22,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
  * Provides a number of options to pass to the {@link BleManager#BleManager(Application, BleManagerConfig)}
- * constructor. Use {@link Interval#DISABLED} or <code>null</code> to disable any time-based options. 
- * 
- * 
+ * constructor. Use {@link Interval#DISABLED} or <code>null</code> to disable any time-based options.
  */
 public class BleManagerConfig implements Cloneable
 {
@@ -49,8 +47,6 @@ public class BleManagerConfig implements Cloneable
 	 * bonding, so implementing this interface on {@link BleManagerConfig#bondingFilter} lets the app give
 	 * a hint to the library so it can bond before attempting to read or write an encrypted characteristic.
 	 * Providing these hints lets the library handle things in a more deterministic and optimized fashion, but is not required.
-	 * 
-	 * 
 	 */
 	public static interface BondingFilter
 	{
@@ -62,8 +58,6 @@ public class BleManagerConfig implements Cloneable
 	 * {@link BleManagerConfig#defaultAdvertisingFilter} or one of the various {@link BleManager#startScan()}
 	 * oveloads, i.e. {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter)},
 	 * {@link BleManager#startScan(Interval, BleManagerConfig.AdvertisingFilter)}, etc.
-	 * 
-	 * 
 	 */
 	public static interface AdvertisingFilter
 	{
@@ -88,8 +82,6 @@ public class BleManagerConfig implements Cloneable
 	/**
 	 * Convenience implementation of {@link AdvertisingFilter} which filters using
 	 * a whitelist of known primary advertising {@link UUID}s passed in to the constructor.
-	 * 
-	 * 
 	 */
 	public static class DefaultAdvertisingFilter implements AdvertisingFilter
 	{
@@ -122,8 +114,6 @@ public class BleManagerConfig implements Cloneable
 	 * 
 	 * @see #reconnectRateLimiter
 	 * @see DefaultReconnectRateLimiter
-	 * 
-	 * 
 	 */
 	public static interface ReconnectRateLimiter
 	{
@@ -149,8 +139,6 @@ public class BleManagerConfig implements Cloneable
 	/**
 	 * Default implementation of {@link ReconnectRateLimiter} that uses {@link #DEFAULT_INITIAL_RECONNECT_DELAY}
 	 * and {@link #DEFAULT_RECONNECT_ATTEMPT_RATE} to infinitely try to reconnect.
-	 * 
-	 * 
 	 */
 	public static class DefaultReconnectRateLimiter implements ReconnectRateLimiter
 	{

@@ -17,6 +17,8 @@ class PS_GattStatus
 	//--- DRK > People are referencing this as GATT_ERROR or GATT_INTERNAL_ERROR on stackoverflow but no mentions in the project. 
 	public static final int UNKNOWN_STATUS_FOR_SERVICE_DISCOVERY_FAILURE = 129;
 	
+	public static final int BYTE_LIMIT = 20;
+	
 	
 	//--- DRK > List from https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.3_r1.1/stack/include/gatt_api.h
 	//---		Copy/pasting here for easier reference or in case that resource disappears or something.

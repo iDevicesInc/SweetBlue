@@ -32,8 +32,6 @@ import com.idevicesinc.sweetblue.utils.Uuids;
  * Instances of this class are generally not created by the calling library or application, but rather are
  * created implicitly by {@link BleManager} as a result of a scanning operation (e.g. {@link BleManager#startScan()}
  * and sent to you through {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)}.
- * 
- * 
  */
 public class BleDevice
 {
@@ -41,8 +39,6 @@ public class BleDevice
 	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
 	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
 	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
-	 * 
-	 * 
 	 */
 	public static interface ReadWriteListener
 	{
@@ -52,8 +48,6 @@ public class BleDevice
 		 * This enum is <i>not</i> meant to match up with {@link BluetoothGatt}.GATT_* values in any way.
 		 * 
 		 * @see Result#status
-		 * 
-		 * 
 		 */
 		public static enum Status
 		{
@@ -107,17 +101,19 @@ public class BleDevice
 			CANCELLED,
 			
 			/**
-			 * Used if {@link Result#type} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
-			 * the operation being otherwise "successful".
-			 * Will throw an {@link UhOh#READ_RETURNED_NULL} but hopefully it was just a glitch. If problem persists try {@link BleManager#dropTacticalNuke()}.
+			 * Used either when {@link Result#type} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
+			 * the operation being otherwise "successful", <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter.
+			 * For the read case, the library will throw an {@link UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch.
+			 * If the problem persists try {@link BleManager#dropTacticalNuke()}.
 			 */
-			NULL_VALUE_RETURNED,
+			NULL_DATA,
 			
 			/**
-			 * Used when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data}. 
+			 * Used either when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data}.
+			 * <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a non-null but zero-length data parameter.
 			 * Note that {@link Result#data} can be a zero-length array for other statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc.
 			 */
-			EMPTY_VALUE_RETURNED,
+			EMPTY_DATA,
 			
 			/**
 			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means
@@ -134,8 +130,6 @@ public class BleDevice
 		
 		/**
 		 * The type of operation for a {@link Result} - read, write, poll, etc.
-		 * 
-		 * 
 		 */
 		public static enum Type
 		{
@@ -203,9 +197,7 @@ public class BleDevice
 		}
 		
 		/**
-		 * The type of GATT object that is the target of the {@link Result}.
-		 *  
-		 * 
+		 * The type of GATT object, provided by {@link Result#target}.
 		 */
 		public static enum Target
 		{
@@ -228,8 +220,6 @@ public class BleDevice
 		
 		/**
 		 * Provides a bunch of information about a completed read, write, or notification.
-		 * 
-		 * 
 		 */
 		public static class Result
 		{
@@ -362,8 +352,6 @@ public class BleDevice
 	 * 
 	 * @see BleDeviceState
 	 * @see BleDevice#setListener_State(StateListener)
-	 * 
-	 * 
 	 */
 	public static interface StateListener
 	{
@@ -381,15 +369,11 @@ public class BleDevice
 	 * 
 	 * @see DefaultConnectionFailListener
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
-	 * 
-	 * 
 	 */
 	public static interface ConnectionFailListener
 	{
 		/**
 		 * The reason for the connection failure.
-		 * 
-		 * 
 		 */
 		public static enum Reason
 		{
@@ -436,8 +420,6 @@ public class BleDevice
 
 		/**
 		 * Simply a more explicit return value than {@link Boolean}.
-		 * 
-		 * 
 		 */
 		public static enum Please
 		{
@@ -466,7 +448,7 @@ public class BleDevice
 	/**
 	 * The default retry count provided to {@link DefaultConnectionFailListener}. So if you were to call
 	 * {@link BleDevice#connect()} and all connections failed, in total the library would try to connect
-	 * {@link #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
+	 * {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
 	 * 
 	 * @see DefaultConnectionFailListener
 	 */
@@ -479,8 +461,6 @@ public class BleDevice
 	 * 
 	 * @see ConnectionFailListener
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
-	 * 
-	 * 
 	 */
 	public static class DefaultConnectionFailListener implements ConnectionFailListener
 	{

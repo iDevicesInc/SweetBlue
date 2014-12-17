@@ -131,6 +131,18 @@ class P_ServiceManager
 			}
 		}
 		
+		if( type == Type.WRITE )
+		{
+			if( data == null )
+			{
+				return new Result(m_device, uuid, null, type, target, data, Status.NULL_DATA, 0.0, 0.0);
+			}
+			else if( data.length == 0 )
+			{
+				return new Result(m_device, uuid, data, type, target, data, Status.EMPTY_DATA, 0.0, 0.0);
+			}
+		}
+		
 		if( target == Target.RSSI )  return null;
 		
 		P_Characteristic characteristic = getCharacteristic(uuid);

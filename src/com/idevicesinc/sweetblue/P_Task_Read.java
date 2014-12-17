@@ -42,12 +42,16 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		
 		if( char_native == null )
 		{
-			fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
+			fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			
+			return;
 		}
 		
 		if( !getDevice().getNativeGatt().readCharacteristic(char_native) )
 		{
 			fail(Status.FAILED_TO_SEND_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			
+			return;
 		}
 	}
 	
@@ -78,16 +82,16 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 			{
 				if( value.length == 0 )
 				{
-					 fail(Status.EMPTY_VALUE_RETURNED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+					 fail(Status.EMPTY_DATA, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 				}
 				else
 				{
-				 succeed(value, Target.CHARACTERISTIC);
+					succeed(value, Target.CHARACTERISTIC);
 				}
 			}
 			else
 			{
-				fail(Status.NULL_VALUE_RETURNED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+				fail(Status.NULL_DATA, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 				 
 				getManager().uhOh(UhOh.READ_RETURNED_NULL);
 			}

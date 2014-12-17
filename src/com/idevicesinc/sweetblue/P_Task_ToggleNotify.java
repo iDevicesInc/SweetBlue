@@ -77,31 +77,41 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( char_native == null )
 		{
-			this.fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
+			this.fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			
+			return;
 		}
 		
 		if( !getDevice().getNativeGatt().setCharacteristicNotification(char_native, m_enable) )
 		{
-			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
+			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			
+			return;
 		}
 		
 		BluetoothGattDescriptor descriptor = char_native.getDescriptor(m_descUuid);
 		
 		if( descriptor == null )
 		{
-			this.fail(Status.NO_MATCHING_TARGET, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);  return;
+			this.fail(Status.NO_MATCHING_TARGET, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			
+			return;
 		}
 		
 		m_writeValue = getWriteValue(char_native, m_enable);
 		
 		if( !descriptor.setValue(getWriteValue()) )
 		{
-			this.fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);  return;
+			this.fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			
+			return;
 		}
 		
 		if( !getDevice().getNativeGatt().writeDescriptor(descriptor) )
 		{
-			this.fail(Status.FAILED_TO_SEND_OUT, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);  return;
+			this.fail(Status.FAILED_TO_SEND_OUT, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			
+			return;
 		}
 	}
 	

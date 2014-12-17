@@ -168,14 +168,14 @@ class P_PollManager
 			
 			if( value == null )
 			{
-				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_VALUE_RETURNED, 0.0, 0.0);
+				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, 0.0, 0.0);
 				m_pollingReadListener.onReadOrWriteComplete(result);
 			}
 			else
 			{
 				if( value.length == 0 )
 				{
-					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_VALUE_RETURNED, 0.0, 0.0);
+					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, 0.0, 0.0);
 					m_pollingReadListener.onReadOrWriteComplete(result);
 				}
 				else

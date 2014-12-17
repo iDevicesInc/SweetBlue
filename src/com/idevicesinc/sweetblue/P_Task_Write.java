@@ -19,6 +19,12 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 {
 	private final byte[] m_data;
 	
+	private int m_offset = 0;
+	private byte[] m_buffer;
+	private final int m_chunkSize = PS_GattStatus.BYTE_LIMIT;
+	
+	private final BluetoothGattCharacteristic m_char_native;
+	
 	public P_Task_Write(P_Characteristic characteristic, byte[] data, boolean requiresBonding, P_WrappingReadWriteListener writeListener)
 	{
 		this(characteristic, data, requiresBonding, writeListener, null, null);
@@ -29,30 +35,73 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		super(characteristic, writeListener, requiresBonding, txn, priority);
 		
 		m_data = data;
+		
+		m_char_native = m_characteristic.getGuaranteedNative();
 	}
 	
 	@Override protected Result newResult(Status status, Target target, UUID charUuid, UUID descUuid)
 	{
 		return new Result(getDevice(), charUuid, descUuid, Type.WRITE, target, m_data, status, getTotalTime(), getTotalTimeExecuting());
 	}
+	
+	private boolean weBeChunkin()
+	{
+		return m_data.length > m_chunkSize;
+	}
 
 	@Override public void execute()
-	{
-		BluetoothGattCharacteristic char_native = m_characteristic.getGuaranteedNative();
-		
-		if( char_native == null )
+	{		
+		if( m_char_native == null )
 		{
-			fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);  return;
+			fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			
+			return;
 		}
 		
-		if( !char_native.setValue(m_data) )
+		if( !weBeChunkin() )
+		{
+			write(m_data);
+		}
+		else
+		{
+			if( !getDevice().getNativeGatt().beginReliableWrite() )
+			{
+				fail(Status.FAILED_TO_SEND_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+				
+				return;
+			}
+			
+			writeNextChunk();
+		}
+	}
+	
+	private void writeNextChunk()
+	{		
+		m_buffer = m_buffer != null ? m_buffer : new byte[m_chunkSize];
+		Utils.memset(m_buffer, (byte) 0x0, m_buffer.length);
+		int copySize = m_data.length - m_offset;
+		copySize = copySize > m_chunkSize ? m_chunkSize : copySize;
+		Utils.memcpy(m_buffer, m_data, copySize, 0, m_offset);
+		
+		m_offset += copySize;
+		
+		write(m_buffer);
+	}
+	
+	private void write(byte[] data)
+	{
+		if( !m_char_native.setValue(data) )
 		{
 			fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			
+			return;
 		}
 		
-		if( !getDevice().getNativeGatt().writeCharacteristic(char_native) )
+		if( !getDevice().getNativeGatt().writeCharacteristic(m_char_native) )
 		{
 			fail(Status.FAILED_TO_SEND_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			
+			return;
 		}
 	}
 	
@@ -72,15 +121,49 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		 if( !this.isFor(uuid) )  return;
 		 
 		 if( !acknowledgeCallback(status) )  return;
-				 
+
 		 if( Utils.isSuccess(status) )
 		 {
-			succeed();
+			 if( weBeChunkin() )
+			 {
+				 //TODO: Verify bytes got sent correctly, whatever that means.
+				 
+				 if( m_offset >= m_data.length )
+				 {
+					 if( !getDevice().getNativeGatt().executeReliableWrite() )
+					 {
+						 //TODO: Use new more accurate error status?
+						 fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
+						 
+						 return;
+					 }
+				 }
+				 else
+				 {
+					 writeNextChunk();
+				 }
+			 }
+			 else
+			 {
+				 succeed();
+			 }
 		 }
 		 else
 		 {
 			 fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
 		 }
+	}
+	
+	public void onReliableWriteCompleted(BluetoothGatt gatt, int status)
+	{
+		if( Utils.isSuccess(status) )
+		{
+			succeed();
+		}
+		else
+		{
+			fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, m_char_native.getUuid(), Result.NON_APPLICABLE_UUID);
+		}
 	}
 	
 	@Override public void onStateChange(PA_Task task, PE_TaskState state)
