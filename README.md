@@ -24,6 +24,7 @@ Features
 *	Easy RSSI tracking with built-in polling and caching.
 *	Highly configurable scanning with min/max time limits, periodic bursts, advanced filtering, and more.
 *	Atomic and non-atomic transactions for easily coordinating authentication handshakes, initialization, and firmware updates.
+*	Automatic striping of characteristic writes greater than [MTU](http://en.wikipedia.org/wiki/Maximum_transmission_unit) size of 20 bytes.
 *	Undiscovery based on last time seen.
 *	Clean leakage of underlying native stack objects in case of emergency.
 *	Verbose logging that outputs human-readable thread IDs, UUIDs, status codes and states instead of alphabet soup.
