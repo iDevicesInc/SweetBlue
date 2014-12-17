@@ -139,7 +139,7 @@ class P_ServiceManager
 			}
 			else if( data.length == 0 )
 			{
-				return new Result(m_device, uuid, data, type, target, data, Status.EMPTY_DATA, 0.0, 0.0);
+				return new Result(m_device, uuid, null, type, target, data, Status.EMPTY_DATA, 0.0, 0.0);
 			}
 		}
 		
