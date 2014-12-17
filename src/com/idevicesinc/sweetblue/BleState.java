@@ -12,8 +12,6 @@ import com.idevicesinc.sweetblue.utils.BitwiseEnum;
  * @see BleManager.NativeStateListener
  * @see BleManager#is(BleState)
  * @see BleManager#getStateMask()
- * 
- * 
  */
 public enum BleState implements BitwiseEnum
 {

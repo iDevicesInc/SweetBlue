@@ -8,8 +8,6 @@ import com.idevicesinc.sweetblue.BleManagerConfig;
  * Provide an implementation to {@link BleManagerConfig#uuidNameMaps}.
  * 
  * @see BleManagerConfig#uuidNameMaps
- * 
- * 
  */
 public interface UuidNameMap
 {

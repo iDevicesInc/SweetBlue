@@ -26,8 +26,6 @@ import android.util.Log;
 
 /**
  * Some static utility methods that are probably not very useful outside the library.
- * 
- * 
  */
 public class Utils
 {

@@ -6,8 +6,6 @@ import com.idevicesinc.sweetblue.BleState;
 /**
  * Implementations are {@link BleDeviceState} and {@link BleState}.
  * Not intended for implementations outside this library.
- * 
- * 
  */
 public interface BitwiseEnum
 {

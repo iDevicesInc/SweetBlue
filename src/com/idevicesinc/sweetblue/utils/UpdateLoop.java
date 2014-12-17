@@ -5,8 +5,6 @@ import android.os.Looper;
 
 /**
  * Zero-dependency (besides Android) utility class for creating an update loop.
- * 
- * 
  */
 public class UpdateLoop
 {

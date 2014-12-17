@@ -13,8 +13,6 @@ import com.idevicesinc.sweetblue.utils.Interval;
  * Use {@link BleDevice#setListener_State(StateListener)} to be notified of state changes.
  * 
  * @see BleDevice.StateListener
- * 
- * 
  */
 public enum BleDeviceState implements BitwiseEnum
 {

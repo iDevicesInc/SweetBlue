@@ -5,8 +5,6 @@ package com.idevicesinc.sweetblue.utils;
  * A zero-dependency utility class to track running average time of operations
  * and estimate the completion time of long running operations like firmware updates.
  * Basically takes times as doubles representing seconds, and spits back the same.
- * 
- * 
  */
 public class TimeEstimator
 {

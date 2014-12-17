@@ -92,8 +92,6 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * }
  * </code>
  * </pre>
- * 
- * 
  */
 public class BleManager
 {
@@ -104,8 +102,6 @@ public class BleManager
 	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 * <br><br>
 	 * Use {@link DiscoveryListener_Full} for additional discovery lifecycle events.
-	 * 
-	 * 
 	 */
 	public static interface DiscoveryListener
 	{
@@ -119,8 +115,6 @@ public class BleManager
 	
 	/**
 	 * Use this listener instead of {@link DiscoveryListener} to get more info on the discovery lifecycle.
-	 * 
-	 * 
 	 */
 	public static interface DiscoveryListener_Full extends DiscoveryListener
 	{
@@ -147,8 +141,6 @@ public class BleManager
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_State(StateListener)} to receive callbacks
 	 * when the {@link BleManager} undergoes a {@link BleState} change.
-	 * 
-	 * 
 	 */
 	public static interface StateListener
 	{
@@ -166,8 +158,6 @@ public class BleManager
 	 * when the {@link BleManager} undergoes a *native* {@link BleState} change. This is similar to {@link StateListener}
 	 * but reflects what is going on in the actual underlying stack, which may lag slightly behind the
 	 * abstracted state reflected by {@link StateListener}. Most apps will not find this callback useful.
-	 * 
-	 * 
 	 */
 	public static interface NativeStateListener
 	{
@@ -185,8 +175,6 @@ public class BleManager
 	 * to receive a callback when an {@link UhOh} occurs.
 	 * 
 	 * @see UhOh
-	 * 
-	 * 
 	 */
 	public static interface UhOhListener
 	{
@@ -201,8 +189,6 @@ public class BleManager
 	 * to be notified when a nuke operation is complete.
 	 * 
 	 * @see BleManager#dropTacticalNuke(NukeEndListener)
-	 * 
-	 * 
 	 */
 	public static interface NukeEndListener
 	{
@@ -270,7 +256,7 @@ public class BleManager
 	
 	/**
 	 * Same as {@link #get(Application)} but takes an {@link Activity} as a convenience
-	 * and calls {@link Activity#getApplication()} for you.
+	 * and forwards {@link Activity#getApplication()} for you.
 	 */
 	public static BleManager get(Activity activity)
 	{
@@ -279,7 +265,7 @@ public class BleManager
 	
 	/**
 	 * Same as {@link #get(Application, BleManagerConfig)} but takes an {@link Activity} as a convenience
-	 * and calls {@link Activity#getApplication()} for you.
+	 * and forwards {@link Activity#getApplication()} for you.
 	 */
 	public static BleManager get(Activity activity, BleManagerConfig config)
 	{

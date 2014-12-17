@@ -18,8 +18,6 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener;
  * 
  * @see UhOhListener
  * @see BleManager#setListener_UhOh(UhOhListener)
- * 
- * 
  */
 public enum UhOh
 {

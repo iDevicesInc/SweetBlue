@@ -13,8 +13,6 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * @see BleDevice#connectAndAuthenticate(BleTransaction)
  * @see BleDevice#connectAndInitialize(BleTransaction)
  * @see BleDevice#connect(BleTransaction, BleTransaction)
- * 
- * 
  */
 public abstract class BleTransaction
 {

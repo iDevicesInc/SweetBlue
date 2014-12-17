@@ -21,7 +21,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	private int m_offset = 0;
 	private byte[] m_buffer;
-	private final int m_chunkSize = PS_GattStatus.BYTE_LIMIT;
+	private final int m_maxChunkSize = PS_GattStatus.BYTE_LIMIT;
 	
 	private final BluetoothGattCharacteristic m_char_native;
 	
@@ -46,7 +46,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	private boolean weBeChunkin()
 	{
-		return m_data.length > m_chunkSize;
+		return m_data.length > m_maxChunkSize;
 	}
 
 	@Override public void execute()
@@ -77,10 +77,10 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	private void writeNextChunk()
 	{		
-		m_buffer = m_buffer != null ? m_buffer : new byte[m_chunkSize];
+		m_buffer = m_buffer != null ? m_buffer : new byte[m_maxChunkSize];
 		Utils.memset(m_buffer, (byte) 0x0, m_buffer.length);
 		int copySize = m_data.length - m_offset;
-		copySize = copySize > m_chunkSize ? m_chunkSize : copySize;
+		copySize = copySize > m_maxChunkSize ? m_maxChunkSize : copySize;
 		Utils.memcpy(m_buffer, m_data, copySize, 0, m_offset);
 		
 		m_offset += copySize;
@@ -141,6 +141,8 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 				 else
 				 {
 					 writeNextChunk();
+					 
+					 resetTimeout(TIMEOUT_DEFAULT);
 				 }
 			 }
 			 else
