@@ -130,7 +130,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 				 
 				 if( m_offset >= m_data.length )
 				 {
-					 if( !getDevice().getNativeGatt().executeReliableWrite() )
+					 if( !gatt.executeReliableWrite() )
 					 {
 						 //TODO: Use new more accurate error status?
 						 fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
@@ -152,6 +152,11 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		 }
 		 else
 		 {
+			 if( weBeChunkin() )
+			 {
+				 gatt.abortReliableWrite();
+			 }
+			 
 			 fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
 		 }
 	}
@@ -164,7 +169,23 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		}
 		else
 		{
+			//--- DRK > Not sure if this is implicitly handled or not...hopefully not a problem to call more than once.
+			abortReliableWriteIfNeeded();
+			
 			fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, m_char_native.getUuid(), Result.NON_APPLICABLE_UUID);
+		}
+	}
+	
+	private boolean canAbortReliableWrite()
+	{
+		return getDevice().getNativeGatt() != null && weBeChunkin();
+	}
+	
+	private void abortReliableWriteIfNeeded()
+	{
+		if( canAbortReliableWrite() )
+		{
+			getDevice().getNativeGatt().abortReliableWrite();
 		}
 	}
 	
@@ -173,6 +194,8 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		if( state == PE_TaskState.TIMED_OUT )
 		{
 			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " write timed out!");
+			
+			abortReliableWriteIfNeeded();
 			
 			if( m_readWriteListener != null )
 			{
@@ -183,6 +206,8 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
+			abortReliableWriteIfNeeded();
+			
 			if( m_readWriteListener != null )
 			{
 				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));

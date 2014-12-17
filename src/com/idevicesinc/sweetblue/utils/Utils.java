@@ -51,7 +51,7 @@ public class Utils
 
 	public static boolean isSuccess(int gattStatus)
 	{
-		return gattStatus == 0 || gattStatus == 1;
+		return gattStatus == 0;// || gattStatus == 1;
 	}
 	
 	public static String normalizeDeviceName(String deviceName)
