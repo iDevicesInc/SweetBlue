@@ -52,11 +52,12 @@ Getting Started
  1. Find the *Package Explorer* view.
  2. Expand *MyApp/libs/sweetblue/*.
  3. Right-click on the *src* folder.
- 4. Click *Use as Source Folder*.
+ 4. Hover over *Choose Build Path*->
+ 5. Click *Use as Source Folder*.
 
 ...or the longer way...
  1. Right-click on your project.
- 2. Click *Choose Build Path*->
+ 2. Hover over *Choose Build Path*->
  3. Click *Configure Build Path...*
  4. Click the *Source* tab (if it's not already selected).
  5. Click *Add Folder...*
