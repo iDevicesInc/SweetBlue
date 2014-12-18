@@ -17,11 +17,13 @@ import com.idevicesinc.sweetblue.utils.Utils;
  */
 class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {
-	private final byte[] m_data;
+	private final byte[] m_allDataToSend;
 	
 	private int m_offset = 0;
-	private byte[] m_buffer;
+	private byte[] m_maxChunkBuffer;
 	private final int m_maxChunkSize = PS_GattStatus.BYTE_LIMIT;
+	
+	private byte[] m_lastChunkBufferSent;
 	
 	private final BluetoothGattCharacteristic m_char_native;
 	
@@ -34,19 +36,19 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	{
 		super(characteristic, writeListener, requiresBonding, txn, priority);
 		
-		m_data = data;
+		m_allDataToSend = data;
 		
 		m_char_native = m_characteristic.getGuaranteedNative();
 	}
 	
 	@Override protected Result newResult(Status status, Target target, UUID charUuid, UUID descUuid)
 	{
-		return new Result(getDevice(), charUuid, descUuid, Type.WRITE, target, m_data, status, getTotalTime(), getTotalTimeExecuting());
+		return new Result(getDevice(), charUuid, descUuid, Type.WRITE, target, m_allDataToSend, status, getTotalTime(), getTotalTimeExecuting());
 	}
 	
 	private boolean weBeChunkin()
 	{
-		return m_data.length > m_maxChunkSize;
+		return m_allDataToSend.length > m_maxChunkSize;
 	}
 
 	@Override public void execute()
@@ -60,7 +62,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		
 		if( !weBeChunkin() )
 		{
-			write(m_data);
+			write(m_allDataToSend);
 		}
 		else
 		{
@@ -75,17 +77,24 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		}
 	}
 	
+	private byte[] getMaxChunkBuffer()
+	{
+		m_maxChunkBuffer = m_maxChunkBuffer != null ? m_maxChunkBuffer : new byte[m_maxChunkSize];
+		Utils.memset(m_maxChunkBuffer, (byte) 0x0, m_maxChunkBuffer.length);
+		
+		return m_maxChunkBuffer;
+	}
+	
 	private void writeNextChunk()
-	{		
-		m_buffer = m_buffer != null ? m_buffer : new byte[m_maxChunkSize];
-		Utils.memset(m_buffer, (byte) 0x0, m_buffer.length);
-		int copySize = m_data.length - m_offset;
+	{
+		int copySize = m_allDataToSend.length - m_offset;
 		copySize = copySize > m_maxChunkSize ? m_maxChunkSize : copySize;
-		Utils.memcpy(m_buffer, m_data, copySize, 0, m_offset);
+		m_lastChunkBufferSent = copySize == m_maxChunkSize ? getMaxChunkBuffer() : new byte[copySize];
+		Utils.memcpy(m_lastChunkBufferSent, m_allDataToSend, copySize, 0, m_offset);
 		
 		m_offset += copySize;
 		
-		write(m_buffer);
+		write(m_lastChunkBufferSent);
 	}
 	
 	private void write(byte[] data)
@@ -128,7 +137,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 			 {
 				 //TODO: Verify bytes got sent correctly, whatever that means.
 				 
-				 if( m_offset >= m_data.length )
+				 if( m_offset >= m_allDataToSend.length )
 				 {
 					 if( !gatt.executeReliableWrite() )
 					 {
