@@ -25,7 +25,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		m_readWriteListener = readWriteListener;
 	}
 	
-	protected abstract Result newResult(Status status, Target target, UUID charUuid, UUID descUuid);
+	protected abstract Result newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid);
 	
 	//--- DRK > Will have to be overridden in the future if we decide to support descriptor reads/writes.
 	protected Target getDefaultTarget()
@@ -39,11 +39,11 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		return Result.NON_APPLICABLE_UUID;
 	}
 	
-	protected void fail(Status status, Target target, UUID charUuid, UUID descUuid)
+	protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
 		if( m_readWriteListener != null )
 		{
-			m_readWriteListener.onReadOrWriteComplete(newResult(status, target, charUuid, descUuid));
+			m_readWriteListener.onReadOrWriteComplete(newResult(status, gattStatus, target, charUuid, descUuid));
 		}
 		
 		this.fail();
@@ -57,7 +57,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NON_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
 			}
 		}
 		

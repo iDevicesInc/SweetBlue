@@ -28,14 +28,9 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		m_type = type;
 	}
 	
-	private Result newResult(Status status)
+	private Result newResult(Status status, int gattStatus, int rssi)
 	{
-		return newResult(status, 0);
-	}
-	
-	private Result newResult(Status status, int rssi)
-	{
-		return new Result(getDevice(), m_type, /*rssi=*/rssi, status, getTotalTime(), getTotalTimeExecuting());
+		return new Result(getDevice(), m_type, /*rssi=*/rssi, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
 	
 	@Override protected boolean isExecutable()
@@ -46,18 +41,18 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NON_APPLICABLE, 0));
 			}
 		}
 		
 		return super_isExecutable;
 	}
 	
-	protected void fail(Status status)
+	private void fail(Status status, int gattStatus)
 	{
 		if( m_readWriteListener != null )
 		{
-			m_readWriteListener.onReadOrWriteComplete(newResult(status));
+			m_readWriteListener.onReadOrWriteComplete(newResult(status, gattStatus, 0));
 		}
 		
 		this.fail();
@@ -67,13 +62,13 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		if( !getDevice().getNativeGatt().readRemoteRssi() )
 		{
-			fail(Status.FAILED_TO_SEND_OUT);
+			fail(Status.FAILED_TO_SEND_OUT, Result.GATT_STATUS_NON_APPLICABLE);
 		}
 	}
 	
-	private void succeed(int rssi)
+	private void succeed(int gattStatus, int rssi)
 	{
-		Result result = newResult(Status.SUCCESS, rssi);
+		Result result = newResult(Status.SUCCESS, gattStatus, rssi);
 		
 		if( m_readWriteListener != null )
 		{
@@ -89,11 +84,11 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		
 		if( Utils.isSuccess(status) )
 		{
-			succeed(rssi);
+			succeed(status, rssi);
 		}
 		else
 		{
-			fail(Status.REMOTE_GATT_FAILURE);
+			fail(Status.REMOTE_GATT_FAILURE, status);
 		}
 	}
 	
@@ -103,14 +98,14 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Result.GATT_STATUS_NON_APPLICABLE, 0));
 			}
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Result.GATT_STATUS_NON_APPLICABLE, 0));
 			}
 		}
 	}

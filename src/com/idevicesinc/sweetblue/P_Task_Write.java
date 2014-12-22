@@ -41,9 +41,9 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		m_char_native = m_characteristic.getGuaranteedNative();
 	}
 	
-	@Override protected Result newResult(Status status, Target target, UUID charUuid, UUID descUuid)
+	@Override protected Result newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
-		return new Result(getDevice(), charUuid, descUuid, Type.WRITE, target, m_allDataToSend, status, getTotalTime(), getTotalTimeExecuting());
+		return new Result(getDevice(), charUuid, descUuid, Type.WRITE, target, m_allDataToSend, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
 	
 	private boolean weBeChunkin()
@@ -55,7 +55,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	{		
 		if( m_char_native == null )
 		{
-			fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.NO_MATCHING_TARGET, Result.GATT_STATUS_NON_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -68,7 +68,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		{
 			if( !getDevice().getNativeGatt().beginReliableWrite() )
 			{
-				fail(Status.FAILED_TO_SEND_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+				fail(Status.FAILED_TO_SEND_OUT, Result.GATT_STATUS_NON_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 				
 				return;
 			}
@@ -101,14 +101,14 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	{
 		if( !m_char_native.setValue(data) )
 		{
-			fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Result.GATT_STATUS_NON_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().writeCharacteristic(m_char_native) )
 		{
-			fail(Status.FAILED_TO_SEND_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.FAILED_TO_SEND_OUT, Result.GATT_STATUS_NON_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -116,22 +116,22 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	@Override protected void succeed()
 	{
-		Result result = newResult(Status.SUCCESS, getDefaultTarget(), m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID); 
+		Result result = newResult(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getDefaultTarget(), m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID); 
 		getDevice().addWriteTime(result.totalTime.seconds);
 		m_readWriteListener.onReadOrWriteComplete(result);
 		 
 		super.succeed();
 	}
 	
-	public void onCharacteristicWrite(BluetoothGatt gatt, UUID uuid, int status)
+	public void onCharacteristicWrite(BluetoothGatt gatt, UUID uuid, int gattStatus)
 	{
 		 getManager().ASSERT(gatt == getDevice().getNativeGatt());
 		 
 		 if( !this.isFor(uuid) )  return;
 		 
-		 if( !acknowledgeCallback(status) )  return;
+		 if( !acknowledgeCallback(gattStatus) )  return;
 
-		 if( Utils.isSuccess(status) )
+		 if( Utils.isSuccess(gattStatus) )
 		 {
 			 if( weBeChunkin() )
 			 {
@@ -142,7 +142,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 					 if( !gatt.executeReliableWrite() )
 					 {
 						 //TODO: Use new more accurate error status?
-						 fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
+						 fail(Status.REMOTE_GATT_FAILURE, gattStatus, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
 						 
 						 return;
 					 }
@@ -166,13 +166,13 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 				 gatt.abortReliableWrite();
 			 }
 			 
-			 fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
+			 fail(Status.REMOTE_GATT_FAILURE, gattStatus, Target.CHARACTERISTIC, uuid, Result.NON_APPLICABLE_UUID);
 		 }
 	}
 	
-	public void onReliableWriteCompleted(BluetoothGatt gatt, int status)
+	public void onReliableWriteCompleted(BluetoothGatt gatt, int gattStatus)
 	{
-		if( Utils.isSuccess(status) )
+		if( Utils.isSuccess(gattStatus) )
 		{
 			succeed();
 		}
@@ -181,7 +181,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 			//--- DRK > Not sure if this is implicitly handled or not...hopefully not a problem to call more than once.
 			abortReliableWriteIfNeeded();
 			
-			fail(Status.REMOTE_GATT_FAILURE, Target.CHARACTERISTIC, m_char_native.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.REMOTE_GATT_FAILURE, gattStatus, Target.CHARACTERISTIC, m_char_native.getUuid(), Result.NON_APPLICABLE_UUID);
 		}
 	}
 	
@@ -208,7 +208,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 			
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Result.GATT_STATUS_NON_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 			}
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
@@ -219,7 +219,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 			
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Result.GATT_STATUS_NON_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 			}
 		}
 	}

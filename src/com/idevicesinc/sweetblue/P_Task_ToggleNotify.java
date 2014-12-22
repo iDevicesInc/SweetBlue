@@ -77,14 +77,14 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( char_native == null )
 		{
-			this.fail(Status.NO_MATCHING_TARGET, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			this.fail(Status.NO_MATCHING_TARGET, Result.GATT_STATUS_NON_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().setCharacteristicNotification(char_native, m_enable) )
 		{
-			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, Result.GATT_STATUS_NON_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -93,7 +93,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( descriptor == null )
 		{
-			this.fail(Status.NO_MATCHING_TARGET, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			this.fail(Status.NO_MATCHING_TARGET, Result.GATT_STATUS_NON_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
 			
 			return;
 		}
@@ -102,32 +102,32 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( !descriptor.setValue(getWriteValue()) )
 		{
-			this.fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			this.fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Result.GATT_STATUS_NON_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().writeDescriptor(descriptor) )
 		{
-			this.fail(Status.FAILED_TO_SEND_OUT, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			this.fail(Status.FAILED_TO_SEND_OUT, Result.GATT_STATUS_NON_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
 			
 			return;
 		}
 	}
 	
-	@Override protected void fail(Status status, Target target, UUID charUuid, UUID descUuid)
+	@Override protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
 		if( m_enable )
 		{
 			getDevice().getPollManager().onNotifyStateChange(m_characteristic.getUuid(), E_NotifyState.NOT_ENABLED);
 		}
 		
-		super.fail(status, target, charUuid, descUuid);
+		super.fail(status, gattStatus, target, charUuid, descUuid);
 	}
 	
 	@Override protected void succeed()
 	{
-		Result result = newResult(Status.SUCCESS, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid); 
+		Result result = newResult(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid); 
 //		getDevice().addWriteTime(result.totalTime);
 		
 		if( m_enable )
@@ -159,7 +159,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		 }
 		 else
 		 {
-			 fail(Status.REMOTE_GATT_FAILURE, Target.DESCRIPTOR, m_characteristic.getUuid(), descUuid);
+			 fail(Status.REMOTE_GATT_FAILURE, status, Target.DESCRIPTOR, m_characteristic.getUuid(), descUuid);
 		 }
 	}
 	
@@ -169,7 +169,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		{
 			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " descriptor write timed out!");
 			
-			m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid));
+			m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Result.GATT_STATUS_NON_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid));
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
@@ -177,7 +177,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		{
 			Target target = this.getState() == PE_TaskState.EXECUTING ? Target.DESCRIPTOR : Target.CHARACTERISTIC;
 			UUID descUuid = target == Target.DESCRIPTOR ? m_descUuid : Result.NON_APPLICABLE_UUID;
-			m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, target, m_characteristic.getUuid(), descUuid));
+			m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Result.GATT_STATUS_NON_APPLICABLE, target, m_characteristic.getUuid(), descUuid));
 		}
 	}
 	
@@ -191,8 +191,8 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		return m_enable ? BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION : BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION;
 	}
 
-	@Override protected Result newResult(Status status, Target target, UUID charUuid, UUID descUuid)
+	@Override protected Result newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
-		return new Result(getDevice(), charUuid, descUuid, getReadWriteType(), target, getWriteValue(), status, getTotalTime(), getTotalTimeExecuting());
+		return new Result(getDevice(), charUuid, descUuid, getReadWriteType(), target, getWriteValue(), status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
 }

@@ -231,6 +231,8 @@ public class BleDevice
 			 */
 			public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
 			
+			public static final int GATT_STATUS_NON_APPLICABLE = -1;
+			
 			/**
 			 * The {@link BleDevice} this {@link Result} is for.
 			 */
@@ -289,7 +291,23 @@ public class BleDevice
 			 */
 			public final Interval totalTime;
 			
-			Result(BleDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, Status status_in, double totalTime, double transitTime)
+			/**
+			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is,
+			 * for example, {@link Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point
+			 * where a gatt status is provided, in which case this member is set to {@link #GATT_STATUS_NON_APPLICABLE}
+			 * (value of {@value #GATT_STATUS_NON_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater
+			 * than <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status}
+			 * is {@link Status#SUCCESS} or {@link Status#REMOTE_GATT_FAILURE}. There are some other cases where this will be 0 for
+			 * success but {@link #status} is for example {@link Status#NULL_DATA} - in other words the underlying stack deemed the 
+			 * operation a success but SweetBlue disagrees. For this reason it's recommended to treat this value as a debugging tool
+			 * and use {@link #status} for actual application logic if possible.
+			 * <br><br>
+			 * See {@link BluetoothGatt} for its static <code>GATT_*</code> members.
+			 * Also see {@link PS_GattStatus} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be accurate or up-to-date.
+			 */
+			public final int gattStatus;
+			
+			Result(BleDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, Status status_in, int gattStatus_in, double totalTime, double transitTime)
 			{
 				this.device = device;
 				this.charUuid = charUuid_in != null ? charUuid_in : NON_APPLICABLE_UUID;;
@@ -297,6 +315,7 @@ public class BleDevice
 				this.type = type_in;
 				this.target = target_in;
 				this.status = status_in;
+				this.gattStatus = gattStatus_in;
 				this.totalTime = Interval.seconds(totalTime);
 				this.transitTime = Interval.seconds(transitTime);
 				
@@ -304,7 +323,7 @@ public class BleDevice
 				this.rssi = device.getRssi();
 			}
 			
-			Result(BleDevice device, Type type_in, int rssi_in, Status status_in, double totalTime, double transitTime)
+			Result(BleDevice device, Type type_in, int rssi_in, Status status_in, int gattStatus_in, double totalTime, double transitTime)
 			{
 				this.device = device;
 				this.charUuid = NON_APPLICABLE_UUID;;
@@ -312,6 +331,7 @@ public class BleDevice
 				this.type = type_in;
 				this.target = Target.RSSI;
 				this.status = status_in;
+				this.gattStatus = gattStatus_in;
 				this.totalTime = Interval.seconds(totalTime);
 				this.transitTime = Interval.seconds(transitTime);
 				

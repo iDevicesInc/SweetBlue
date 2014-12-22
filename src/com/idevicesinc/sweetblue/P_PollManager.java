@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Handler;
 
@@ -165,22 +166,23 @@ class P_PollManager
 			
 			BluetoothGattCharacteristic char_native = m_device.getServiceManager().getCharacteristic(m_uuid).getGuaranteedNative(); 
 			Type type = m_device.getServiceManager().modifyResultType(char_native, Type.NOTIFICATION);
+			int gattStatus = Result.GATT_STATUS_NON_APPLICABLE;
 			
 			if( value == null )
 			{
-				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, 0.0, 0.0);
+				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0);
 				m_pollingReadListener.onReadOrWriteComplete(result);
 			}
 			else
 			{
 				if( value.length == 0 )
 				{
-					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, 0.0, 0.0);
+					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
 					m_pollingReadListener.onReadOrWriteComplete(result);
 				}
 				else
 				{
-					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, 0.0, 0.0);
+					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0);
 					m_pollingReadListener.onReadOrWriteComplete(result);
 				}
 			}
@@ -387,7 +389,8 @@ class P_PollManager
 	{
 		//--- DRK > Just being anal with the null check here.
 		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic.getNative(), /*enable=*/true) : BleDevice.EMPTY_BYTE_ARRAY;
-		Result result = new Result(m_device, characteristic.getUuid(), Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, 0.0, 0.0);
+		int gattStatus = BluetoothGatt.GATT_SUCCESS;
+		Result result = new Result(m_device, characteristic.getUuid(), Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0);
 		
 		return result;
 	}

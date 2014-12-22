@@ -110,18 +110,20 @@ class P_ServiceManager
 	
 	private BleDevice.ReadWriteListener.Result newNoMatchingTargetResult(Type type, byte[] data, UUID uuid)
 	{
-		return new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, 0.0, 0.0);
+		int gattStatus = Result.GATT_STATUS_NON_APPLICABLE;
+		return new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0);
 	}
 	
 	BleDevice.ReadWriteListener.Result getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
 	{
 		Target target = uuid == Uuids.INVALID ? Target.RSSI : Target.CHARACTERISTIC;
+		final int gattStatus = Result.GATT_STATUS_NON_APPLICABLE;
 		
 		if( !m_device.is(BleDeviceState.CONNECTED) )
 		{
 			if( type != BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION && type != BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION)
-			{
-				Result result = new Result(m_device, uuid, null, type, target, data, Status.NOT_CONNECTED, 0.0, 0.0);
+			{				
+				Result result = new Result(m_device, uuid, null, type, target, data, Status.NOT_CONNECTED, gattStatus, 0.0, 0.0);
 				
 				return result;
 			}
@@ -135,11 +137,11 @@ class P_ServiceManager
 		{
 			if( data == null )
 			{
-				return new Result(m_device, uuid, null, type, target, data, Status.NULL_DATA, 0.0, 0.0);
+				return new Result(m_device, uuid, null, type, target, data, Status.NULL_DATA, gattStatus, 0.0, 0.0);
 			}
 			else if( data.length == 0 )
 			{
-				return new Result(m_device, uuid, null, type, target, data, Status.EMPTY_DATA, 0.0, 0.0);
+				return new Result(m_device, uuid, null, type, target, data, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
 			}
 		}
 		
@@ -164,7 +166,8 @@ class P_ServiceManager
 		
 		if( (char_native.getProperties() & property) == 0x0 )
 		{
-			Result result = new Result(m_device, uuid, null, type, target, data, Status.OPERATION_NOT_SUPPORTED, 0.0, 0.0);
+			//TODO: Use correct gatt status even though we never reach gatt layer?
+			Result result = new Result(m_device, uuid, null, type, target, data, Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0);
 			
 			return result;
 		}
