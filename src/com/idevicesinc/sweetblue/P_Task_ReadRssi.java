@@ -41,7 +41,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NON_APPLICABLE, 0));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NOT_APPLICABLE, 0));
 			}
 		}
 		
@@ -62,7 +62,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		if( !getDevice().getNativeGatt().readRemoteRssi() )
 		{
-			fail(Status.FAILED_TO_SEND_OUT, Result.GATT_STATUS_NON_APPLICABLE);
+			fail(Status.FAILED_TO_SEND_OUT, Result.GATT_STATUS_NOT_APPLICABLE);
 		}
 	}
 	
@@ -98,14 +98,14 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Result.GATT_STATUS_NON_APPLICABLE, 0));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Result.GATT_STATUS_NOT_APPLICABLE, 0));
 			}
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Result.GATT_STATUS_NON_APPLICABLE, 0));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Result.GATT_STATUS_NOT_APPLICABLE, 0));
 			}
 		}
 	}

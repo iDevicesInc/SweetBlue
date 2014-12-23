@@ -57,7 +57,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NON_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
+				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
 			}
 		}
 		

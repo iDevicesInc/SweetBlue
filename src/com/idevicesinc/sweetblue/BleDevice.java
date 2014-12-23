@@ -111,7 +111,8 @@ public class BleDevice
 			/**
 			 * Used either when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data}.
 			 * <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a non-null but zero-length data parameter.
-			 * Note that {@link Result#data} can be a zero-length array for other statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc.
+			 * Note that {@link Result#data} will be a zero-length array for all other statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc.
+			 * In other words it's never null.
 			 */
 			EMPTY_DATA,
 			
@@ -156,7 +157,7 @@ public class BleDevice
 			
 			/**
 			 * Similar to {@link #NOTIFICATION}, kicked off from {@link BleDevice#enableNotify(UUID, ReadWriteListener)},
-			 * but under the hood this is treated differently.
+			 * but under the hood this is treated slightly differently.
 			 */
 			INDICATION,
 			
@@ -188,7 +189,7 @@ public class BleDevice
 			}
 			
 			/**
-			 * Returns true for {@link #NOTIFICATION}, {@link #PSUEDO_NOTIFICATION}, and {@link #INDICATION}.
+			 * Returns true if <code>this</code> is {@link #NOTIFICATION}, {@link #PSUEDO_NOTIFICATION}, or {@link #INDICATION}.
 			 */
 			public boolean isNotification()
 			{
@@ -231,7 +232,11 @@ public class BleDevice
 			 */
 			public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
 			
-			public static final int GATT_STATUS_NON_APPLICABLE = -1;
+			/**
+			 * Status code used for {@link #gattStatus} when the operation didn't get to a point where a
+			 * gatt status from the underlying stack is provided.
+			 */
+			public static final int GATT_STATUS_NOT_APPLICABLE = -1;
 			
 			/**
 			 * The {@link BleDevice} this {@link Result} is for.
@@ -264,12 +269,13 @@ public class BleDevice
 			/**
 			 * The data sent to the peripheral if {@link Result#type} is {@link Type#WRITE},
 			 * otherwise the data received from the peripheral if {@link Result#type} {@link Type#isRead()}.
+			 * This will never be null. For error statuses it will be a zero-length array.
 			 */
 			public final byte[] data;
 			
 			/**
 			 * This value gets updated as a result of a {@link BleDevice#readRssi(ReadWriteListener)} call.
-			 * It will always be equivalent to {@link BleDevice#getRssi()}.
+			 * It will always be equivalent to {@link BleDevice#getRssi()} but is included here for convenience.
 			 */
 			public final int rssi;
 			
@@ -294,16 +300,17 @@ public class BleDevice
 			/**
 			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is,
 			 * for example, {@link Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point
-			 * where a gatt status is provided, in which case this member is set to {@link #GATT_STATUS_NON_APPLICABLE}
-			 * (value of {@value #GATT_STATUS_NON_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater
+			 * where a gatt status is provided, in which case this member is set to {@link #GATT_STATUS_NOT_APPLICABLE}
+			 * (value of {@value #GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater
 			 * than <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status}
-			 * is {@link Status#SUCCESS} or {@link Status#REMOTE_GATT_FAILURE}. There are some other cases where this will be 0 for
+			 * is {@link Status#SUCCESS} or {@link Status#REMOTE_GATT_FAILURE}. There are also some cases where this will be 0 for
 			 * success but {@link #status} is for example {@link Status#NULL_DATA} - in other words the underlying stack deemed the 
-			 * operation a success but SweetBlue disagrees. For this reason it's recommended to treat this value as a debugging tool
+			 * operation a success but SweetBlue disagreed. For this reason it's recommended to treat this value as a debugging tool
 			 * and use {@link #status} for actual application logic if possible.
 			 * <br><br>
-			 * See {@link BluetoothGatt} for its static <code>GATT_*</code> members.
-			 * Also see {@link PS_GattStatus} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be accurate or up-to-date.
+			 * See {@link BluetoothGatt} for its static <code>GATT_*</code> status code members.
+			 * Also see {@link PS_GattStatus} for SweetBlue's more comprehensive internal reference list of gatt status values.
+			 * This list may not be totally accurate or up-to-date.
 			 */
 			public final int gattStatus;
 			
