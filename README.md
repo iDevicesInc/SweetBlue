@@ -29,7 +29,7 @@ Features
 *	Clean leakage of underlying native stack objects in case of emergency.
 *	Wraps Android API level checks that gate certain methods.
 *	Verbose logging that outputs human-readable thread IDs, UUIDs, status codes and states instead of alphabet soup.
-*	Wrangles a whole nest of thread spaghetti so you don’t have to - make a call on main thread, get a callback on main thread.
+*	Wrangles a big bowl of thread spaghetti so you don’t have to - make a call on main thread, get a callback on main thread.
 *	Internal priority job queue that ensures serialization of all operations so native stack doesn’t get overloaded and important stuff gets done first.
 *	Optimal coordination of the BLE stack when connected to multiple devices.
 *	Detection and correction of dozens of BLE failure conditions.
