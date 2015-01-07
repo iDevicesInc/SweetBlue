@@ -516,6 +516,7 @@ public class BleDevice
 	final P_NativeDeviceWrapper m_nativeWrapper;
 	
 	private double m_timeSinceLastDiscovery;
+	private double m_timeConnected = 0.0;
 	
 			final P_BleDevice_Listeners m_listeners;
 	private final P_ServiceManager m_serviceMngr;
@@ -716,6 +717,18 @@ public class BleDevice
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * If {@link #is(BleDeviceState)} returns true for the given state (i.e. if the device is in the given state)
+	 * then this method will (a) return the amount of time that the device has been in the state. Otherwise, this will
+	 * (b) return the amount of time that the device was *previously* in that state. Otherwise, if the device has never
+	 * been in the state, it will (c) return 0.0 seconds. Case (b) might be useful for example for checking how long
+	 * you were connected for after becoming {@link BleDeviceState#DISCONNECTED}, for analytics purposes or whatever.
+	 */
+	public Interval getTimeInState(BleDeviceState state)
+	{
+		return Interval.milliseconds(m_stateTracker.getTimeInState(state.ordinal()));
 	}
 	
 	/**

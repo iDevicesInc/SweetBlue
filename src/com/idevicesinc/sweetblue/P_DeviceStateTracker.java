@@ -15,7 +15,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	P_DeviceStateTracker(BleDevice device)
 	{
-		super(device.getManager().getLogger());
+		super(device.getManager().getLogger(), BleDeviceState.values());
 		
 		m_device = device;
 		

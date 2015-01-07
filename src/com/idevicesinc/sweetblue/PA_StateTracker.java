@@ -13,10 +13,12 @@ abstract class PA_StateTracker
 	private final P_Logger m_logger;
 	
 	private final Object m_lock = new Object();
+	private final long[] m_timesInState;
 	
-	PA_StateTracker(P_Logger logger)
+	PA_StateTracker(P_Logger logger, BitwiseEnum[] enums)
 	{
 		m_logger = logger;
+		m_timesInState = new long[enums.length];
 	}
 	
 	public int getState()
@@ -134,10 +136,43 @@ abstract class PA_StateTracker
 		}
 	}
 	
+	long getTimeInState(int stateOrdinal)
+	{
+		int bit = (0x1 << stateOrdinal);
+		
+		if( (bit & m_stateMask) != 0x0 )
+		{
+			return System.currentTimeMillis() - m_timesInState[stateOrdinal];
+		}
+		else
+		{
+			return m_timesInState[stateOrdinal];
+		}
+	}
+	
 	private void setStateMask(int newStateBits)
 	{
 		int oldStateBits = m_stateMask;
 		m_stateMask = newStateBits;
+		
+		//--- DRK > Minor skip optimization...shouldn't actually skip (too much) in practice
+		//---		if other parts of the library are handling their state tracking sanely.
+		if( oldStateBits != newStateBits )
+		{
+			for( int i = 0, bit = 0x1; i < m_timesInState.length; i++, bit <<= 0x1 )
+			{
+				//--- DRK > State exited...
+				if( (oldStateBits & bit) != 0x0 && (newStateBits & bit) == 0x0 )
+				{
+					m_timesInState[i] = System.currentTimeMillis() - m_timesInState[i];
+				}
+				//--- DRK > State entered...
+				else if( (oldStateBits & bit) == 0x0 && (newStateBits & bit) != 0x0 )
+				{
+					m_timesInState[i] = System.currentTimeMillis();
+				}
+			}
+		}
 		
 		fireStateChange(oldStateBits, newStateBits);
 	}

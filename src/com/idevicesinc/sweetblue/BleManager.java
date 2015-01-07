@@ -420,6 +420,16 @@ public class BleManager
 	}
 	
 	/**
+	 * See similar comment for {@link BleDevice#getTimeInState(BleDeviceState)}.
+	 * 
+	 * @see BleDevice#getTimeInState(BleDeviceState)
+	 */
+	public Interval getTimeInState(BleState state)
+	{
+		return Interval.milliseconds(m_stateTracker.getTimeInState(state.ordinal()));
+	}
+	
+	/**
 	 * Checks the underlying stack to see if BLE is supported on the phone.
 	 * Note that this call can lie on at least one Sony Xperia model, returning 
 	 * true when it should return false. Perhaps other models as well.

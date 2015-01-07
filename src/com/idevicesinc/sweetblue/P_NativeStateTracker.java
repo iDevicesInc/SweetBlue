@@ -13,7 +13,7 @@ class P_NativeStateTracker extends PA_StateTracker
 	
 	P_NativeStateTracker(BleManager mngr)
 	{
-		super(mngr.getLogger());
+		super(mngr.getLogger(), BleState.values());
 		
 		m_mngr = mngr;
 	}
