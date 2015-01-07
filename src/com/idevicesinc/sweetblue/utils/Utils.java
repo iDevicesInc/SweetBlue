@@ -424,4 +424,9 @@ public class Utils
 		
 	    return (res == PackageManager.PERMISSION_GRANTED);
 	}
+	
+	public static short unsignedByte(byte value)
+	{
+		return (short) (value & 0xff);
+	}
 }
