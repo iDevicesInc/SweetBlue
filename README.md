@@ -57,12 +57,13 @@ Getting Started
  5. Click *Use as Source Folder*.
 
 ...or the longer way...
- 1. Right-click on your project.
- 2. Hover over *Choose Build Path*->
- 3. Click *Configure Build Path...*
- 4. Click the *Source* tab (if it's not already selected).
- 5. Click *Add Folder...*
- 6. Check the box next to *MyApp/libs/sweetblue/src/*.
+ 1. Find the *Package Explorer* view.
+ 2. Right-click on your project.
+ 3. Hover over *Choose Build Path*->
+ 4. Click *Configure Build Path...*
+ 5. Click the *Source* tab (if it's not already selected).
+ 6. Click *Add Folder...*
+ 7. Check the box next to *MyApp/libs/sweetblue/src/*.
 
 Other folders in *MyApp/libs/sweetblue/* like *MyApp/libs/sweetblue/samples/* are included in this repo for convenience but are not essential so you may delete them.
 
