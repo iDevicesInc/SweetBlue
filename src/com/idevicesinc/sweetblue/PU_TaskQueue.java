@@ -35,7 +35,7 @@ class PU_TaskQueue
 		{
 			if( mngr_nullable == null )
 			{
-				if( device_nullable == null || device_nullable != null && device_nullable.equals(task.getDevice()) )
+				if( device_nullable == null || (device_nullable != null && device_nullable.equals(task.getDevice())) )
 				{
 					return true;
 				}

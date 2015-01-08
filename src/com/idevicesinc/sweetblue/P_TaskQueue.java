@@ -144,10 +144,10 @@ class P_TaskQueue
 		{
 			@Override public void run()
 			{
-				if(			tryCancellingCurrentTask(newTask)		){}
-				else if(	tryInterruptingCurrentTask(newTask) 	){}
-				else if(	tryInsertingIntoQueue(newTask) 			){}
-				else		addToBack(newTask)						;;;
+						if	(	tryCancellingCurrentTask	(newTask)	){}
+				else	if	(	tryInterruptingCurrentTask	(newTask) 	){}
+				else	if	(	tryInsertingIntoQueue		(newTask) 	){}
+				else		{	addToBack					(newTask);	};;
 			}
 		});
 		
