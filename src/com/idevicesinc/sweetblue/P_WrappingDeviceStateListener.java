@@ -28,7 +28,7 @@ class P_WrappingDeviceStateListener extends PA_CallbackWrapper implements BleDev
 		m_connectionFailListener = listener;
 	}
 	
-	@Override public void onStateChange(final BleDevice device, final int oldStateBits, final int newStateBits)
+	@Override public void onStateChange(final BleDevice device, final int oldStateBits, final int newStateBits, final int explicitnessMask)
 	{
 		if( postToMain() )
 		{
@@ -36,13 +36,13 @@ class P_WrappingDeviceStateListener extends PA_CallbackWrapper implements BleDev
 			{
 				@Override public void run()
 				{
-					m_stateListener.onStateChange(device, oldStateBits, newStateBits);
+					m_stateListener.onStateChange(device, oldStateBits, newStateBits, explicitnessMask);
 				}
 			});
 		}
 		else
 		{
-			m_stateListener.onStateChange(device, oldStateBits, newStateBits);
+			m_stateListener.onStateChange(device, oldStateBits, newStateBits, explicitnessMask);
 		}
 	}
 

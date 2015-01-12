@@ -27,7 +27,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 		this(device, explicit, partOfConnection, listener, null);
 	}
 	
-	public boolean isExplicit()
+	@Override public boolean isExplicit()
 	{
 		return m_explicit;
 	}

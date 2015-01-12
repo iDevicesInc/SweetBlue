@@ -21,6 +21,7 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
 import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -149,8 +150,9 @@ public class BleManager
 		 *  
 		 * @param oldStateBits The previous bitwise representation of {@link BleState}.
 		 * @param newStateBits The new and now current bitwise representation of {@link BleState}. Will be the same as {@link BleManager#getStateMask()}.
+		 * @param explicitnessMask See same param for {@link BleDevice.StateListener#onStateChange(BleDevice, int, int, int)}.
 		 */
-		void onBleStateChange(BleManager manager, int oldStateBits, int newStateBits);
+		void onBleStateChange(BleManager manager, int oldStateBits, int newStateBits, int explicitnessMask);
 	}
 	
 	/**
@@ -166,8 +168,9 @@ public class BleManager
 		 *  
 		 * @param oldStateBits The previous bitwise representation of {@link BleState}.
 		 * @param newStateBits The new and now current bitwise representation of {@link BleState}. Will be the same as {@link BleManager#getNativeStateMask()}.
+		 * @param explicitnessMask See same param for {@link BleDevice.StateListener#onStateChange(BleDevice, int, int, int)}.
 		 */
-		void onNativeBleStateChange(BleManager manager, int oldStateBits, int newStateBits);
+		void onNativeBleStateChange(BleManager manager, int oldStateBits, int newStateBits, int explicitnessMask);
 	}
 	
 	/**
@@ -339,9 +342,9 @@ public class BleManager
 		m_btMngr = (BluetoothManager) application.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleState nativeState = BleState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_StateTracker(this);
-		m_stateTracker.append(nativeState);
+		m_stateTracker.append(nativeState, E_Intent.IMPLICIT);
 		m_nativeStateTracker = new P_NativeStateTracker(this);
-		m_nativeStateTracker.append(nativeState);
+		m_nativeStateTracker.append(nativeState, E_Intent.IMPLICIT);
 		m_mainThreadHandler = new Handler(m_context.getMainLooper());
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(application);
@@ -427,6 +430,16 @@ public class BleManager
 	public Interval getTimeInState(BleState state)
 	{
 		return Interval.milliseconds(m_stateTracker.getTimeInState(state.ordinal()));
+	}
+	
+	/**
+	 * See similar comment for {@link BleDevice#getTimeInState(BleDeviceState)}.
+	 * 
+	 * @see BleDevice#getTimeInState(BleDeviceState)
+	 */
+	public Interval getTimeInNativeState(BleState state)
+	{
+		return Interval.milliseconds(m_nativeStateTracker.getTimeInState(state.ordinal()));
 	}
 	
 	/**
@@ -707,7 +720,7 @@ public class BleManager
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 			
-			m_stateTracker.append(BleState.SCANNING);
+			m_stateTracker.append(BleState.SCANNING, E_Intent.EXPLICIT);
 			
 			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.seconds));
 		}
@@ -803,7 +816,7 @@ public class BleManager
 		
 		if( is(OFF) )
 		{
-			m_stateTracker.update(TURNING_ON, true, OFF, false);
+			m_stateTracker.update(E_Intent.EXPLICIT, TURNING_ON, true, OFF, false);
 		}
 		
 		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
@@ -900,7 +913,7 @@ public class BleManager
 		
 		if( m_config.stopScanOnPause && is(SCANNING) )
 		{
-			stopScan_private();
+			stopScan_private(E_Intent.IMPLICIT);
 		}
 	}
 	
@@ -933,7 +946,7 @@ public class BleManager
 	{
 		m_doingInfiniteScan = false;
 		
-		stopScan_private();
+		stopScan_private(E_Intent.EXPLICIT);
 	}
 	
 	/**
@@ -948,7 +961,7 @@ public class BleManager
 		stopScan();
 	}
 	
-	private void stopScan_private()
+	private void stopScan_private(E_Intent intent)
 	{
 		m_timeNotScanning = 0.0;
 		
@@ -957,7 +970,7 @@ public class BleManager
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
 
-		m_stateTracker.remove(BleState.SCANNING);
+		m_stateTracker.remove(BleState.SCANNING, intent);
 	}
 	
 	/**
@@ -1085,7 +1098,7 @@ public class BleManager
 		
 		if( is(ON) )
 		{
-			m_stateTracker.update(TURNING_OFF, true, ON, false);
+			m_stateTracker.update(E_Intent.EXPLICIT, TURNING_OFF, true, ON, false);
 		}
 		
 		m_deviceMngr.disconnectAll(PE_TaskPriority.CRITICAL);
@@ -1104,10 +1117,10 @@ public class BleManager
 				{
 					if( is(NUKING) )
 					{
-						m_nativeStateTracker.append(NUKING);
+						m_nativeStateTracker.append(NUKING, E_Intent.EXPLICIT);
 					}
 					
-					m_deviceMngr.undiscoverAll();
+					m_deviceMngr.undiscoverAll(E_Intent.EXPLICIT);
 				}
 			}
 		});
@@ -1134,7 +1147,7 @@ public class BleManager
 			return;
 		}
 		
-		m_stateTracker.append(NUKING);
+		m_stateTracker.append(NUKING, E_Intent.EXPLICIT);
 		
 		m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
 		
@@ -1148,8 +1161,8 @@ public class BleManager
 				{
 					NukeEndListener nukeListeners = m_nukeListeners;
 					m_nukeListeners = null;
-					m_nativeStateTracker.remove(NUKING);
-					m_stateTracker.remove(NUKING);
+					m_nativeStateTracker.remove(NUKING, E_Intent.IMPLICIT);
+					m_stateTracker.remove(NUKING, E_Intent.IMPLICIT);
 					
 					if( nukeListeners != null )  nukeListeners.onNukeEnded(BleManager.this);
 				}
@@ -1173,7 +1186,7 @@ public class BleManager
 		}
 	}
 	
-	P_Task_Scan.E_Mode startNativeScan()
+	P_Task_Scan.E_Mode startNativeScan(E_Intent intent)
 	{
 		//--- DRK > Not sure how useful this retry loop is. I've definitely seen startLeScan 
 		//---		fail but then work again at a later time (seconds-minutes later), so
@@ -1240,7 +1253,7 @@ public class BleManager
 				}
 				else
 				{
-					m_nativeStateTracker.append(BleState.SCANNING);
+					m_nativeStateTracker.append(BleState.SCANNING, intent);
 					
 					uhOh(UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
 					
@@ -1264,7 +1277,7 @@ public class BleManager
 				m_crashResolver.start();
 			}
 			
-			m_nativeStateTracker.append(BleState.SCANNING);
+			m_nativeStateTracker.append(BleState.SCANNING, intent);
 			
 			return E_Mode.BLE;
 		}
@@ -1426,16 +1439,16 @@ public class BleManager
 			m_crashResolver.stop();
 		}
 		
-		m_nativeStateTracker.remove(BleState.SCANNING);
+		m_nativeStateTracker.remove(BleState.SCANNING, scanTask.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
 	}
 	
-	void clearScanningRelatedMembers()
+	void clearScanningRelatedMembers(E_Intent intent)
 	{
 //		m_filterMngr.clear();
 		
 		m_timeNotScanning = 0.0;
 		
-		m_stateTracker.remove(BleState.SCANNING);
+		m_stateTracker.remove(BleState.SCANNING, intent);
 	}
 	
 	void tryPurgingStaleDevices(double scanTime)

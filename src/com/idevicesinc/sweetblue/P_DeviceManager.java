@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener_Full;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
 /**
  * 
@@ -149,7 +150,7 @@ class P_DeviceManager
 		}
 	}
 
-	void undiscoverAll()
+	void undiscoverAll(PA_StateTracker.E_Intent intent)
 	{
 		synchronized (m_list)
 		{
@@ -163,14 +164,14 @@ class P_DeviceManager
 			{
 				BleDevice device = (BleDevice) rawList[i];
 				
-				undiscoverDevice(device, m_mngr.m_discoveryListener);
+				undiscoverDevice(device, m_mngr.m_discoveryListener, intent);
 			}
 		}
 	}
 	
-	private static void undiscoverDevice(BleDevice device, BleManager.DiscoveryListener listener)
+	private static void undiscoverDevice(BleDevice device, BleManager.DiscoveryListener listener, PA_StateTracker.E_Intent intent)
 	{
-		device.onUndiscovered();
+		device.onUndiscovered(intent);
 		
 		if( listener != null )
 		{
@@ -209,7 +210,7 @@ class P_DeviceManager
 							{
 								remove(device);
 								
-								undiscoverDevice(device, listener);
+								undiscoverDevice(device, listener, E_Intent.IMPLICIT);
 							}
 						}
 					}

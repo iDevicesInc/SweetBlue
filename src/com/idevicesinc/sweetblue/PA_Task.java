@@ -399,7 +399,7 @@ abstract class PA_Task
 		String name = this.getClass().getSimpleName();
 		name = name.replace("BtTask_", "");
 		
-		String deviceEntry = getDevice() != null ? " " + getDevice().getDebugName(): "";
+		String deviceEntry = getDevice() != null ? " " + getDevice().getName_debug(): "";
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
 		return name + "(" + m_state.name() + deviceEntry + addition + ")";
 	}
@@ -410,6 +410,11 @@ abstract class PA_Task
 	}
 	
 	public boolean executeOnSeperateThread()
+	{
+		return false;
+	}
+	
+	public boolean isExplicit()
 	{
 		return false;
 	}

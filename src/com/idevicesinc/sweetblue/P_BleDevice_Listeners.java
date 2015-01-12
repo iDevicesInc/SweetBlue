@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -62,7 +63,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 							m_device.setToAlwaysUseAutoConnectIfItWorked();
 						}
 						
-						m_device.onNativeConnect();
+						m_device.onNativeConnect(connectTask.isExplicit());
 					}
 					else if( state == PE_TaskState.NO_OP )
 					{
@@ -186,7 +187,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (!m_queue.succeed(P_Task_Connect.class, m_device))
 				{
-					m_device.onNativeConnect();
+					m_device.onNativeConnect(/*explicit=*/false);
 				}
 			}
 			else
@@ -394,14 +395,17 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			
 			if (!m_queue.succeed(P_Task_Unbond.class, m_device))
 			{
-				m_device.onNativeUnbond();
+				m_device.onNativeUnbond(E_Intent.IMPLICIT);
 			}
 		}
 		else if (newState == BluetoothDevice.BOND_BONDING)
 		{
-			m_device.onNativeBonding();
+			P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
+			E_Intent intent = task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+			boolean isCurrent = task != null; // avoiding erroneous dead code warning from putting this directly in if-clause below.
+			m_device.onNativeBonding(intent);
 
-			if (!m_queue.isCurrent(P_Task_Bond.class, m_device))
+			if ( !isCurrent )
 			{
 				m_queue.add(new P_Task_Bond(m_device, /*explicit=*/false, /*partOfConnection=*/false, m_taskStateListener, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING));
 			}
@@ -414,7 +418,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 			if (!m_queue.succeed(P_Task_Bond.class, m_device))
 			{
-				m_device.onNativeBond();
+				m_device.onNativeBond(E_Intent.IMPLICIT);
 			}
 		}
 	}

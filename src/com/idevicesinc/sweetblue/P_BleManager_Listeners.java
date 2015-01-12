@@ -1,6 +1,10 @@
 package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleState.SCANNING;
+
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesllc.connected.view.widgets.E_InterceptValue;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -54,7 +58,7 @@ class P_BleManager_Listeners
 				}
 				else
 				{
-					m_mngr.clearScanningRelatedMembers();
+					m_mngr.clearScanningRelatedMembers(scanTask.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
 				}
 			}
 		}
@@ -202,6 +206,7 @@ class P_BleManager_Listeners
 		BluetoothAdapter bluetoothAdapter = m_mngr.getNative().getAdapter();
 		int adapterState = bluetoothAdapter.getState();
 		boolean inconsistentState = adapterState != newNativeState;
+		PA_StateTracker.E_Intent intent = E_Intent.EXPLICIT;
 		
 		if( newNativeState == BluetoothAdapter.ERROR )
 		{
@@ -211,20 +216,24 @@ class P_BleManager_Listeners
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_OFF )
 		{
-			//--- DRK > Should have already been handled by the "turning off" event, but this is just to be 
-			//---		sure all devices are cleared in case something weird happens and we go straight
-			//---		from ON to OFF or something.
-			m_mngr.m_deviceMngr.undiscoverAll();
 			m_mngr.m_wakeLockMngr.clear();
 			
 			m_taskQueue.fail(P_Task_TurnBleOn.class, m_mngr);
+			P_Task_TurnBleOff turnOffTask = m_taskQueue.getCurrent(P_Task_TurnBleOff.class, m_mngr);
+			intent = turnOffTask == null || turnOffTask.isImplicit() ? E_Intent.IMPLICIT : intent;
 			m_taskQueue.succeed(P_Task_TurnBleOff.class, m_mngr);
+			
+			//--- DRK > Should have already been handled by the "turning off" event, but this is just to be 
+			//---		sure all devices are cleared in case something weird happens and we go straight
+			//---		from ON to OFF or something.
+			m_mngr.m_deviceMngr.undiscoverAll(intent);
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_TURNING_ON )
 		{
 			if( !m_taskQueue.isCurrent(P_Task_TurnBleOn.class, m_mngr) )
 			{
 				m_taskQueue.add(new P_Task_TurnBleOn(m_mngr, /*implicit=*/true));
+				intent = E_Intent.IMPLICIT;
 			}
 			
 			m_taskQueue.fail(P_Task_TurnBleOff.class, m_mngr);
@@ -232,14 +241,17 @@ class P_BleManager_Listeners
 		else if( newNativeState == BluetoothAdapter.STATE_ON )
 		{
 			m_taskQueue.fail(P_Task_TurnBleOff.class, m_mngr);
+			P_Task_TurnBleOn turnOnTask = m_taskQueue.getCurrent(P_Task_TurnBleOn.class, m_mngr);
+			intent = turnOnTask == null || turnOnTask.isImplicit() ? E_Intent.IMPLICIT : intent;
 			m_taskQueue.succeed(P_Task_TurnBleOn.class, m_mngr);
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_TURNING_OFF )
 		{
 			if( !m_taskQueue.isCurrent(P_Task_TurnBleOff.class, m_mngr) )
 			{
-				m_mngr.m_deviceMngr.undiscoverAll();
+				m_mngr.m_deviceMngr.undiscoverAll(E_Intent.IMPLICIT);
 				m_taskQueue.add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
+				intent = E_Intent.IMPLICIT;
 			}
 			
 			m_taskQueue.fail(P_Task_TurnBleOn.class, m_mngr);
@@ -248,8 +260,8 @@ class P_BleManager_Listeners
 		BleState previousState = BleState.get(previousNativeState);
 		BleState newState = BleState.get(newNativeState);
 		
-		m_mngr.getNativeStateTracker().update(previousState, false, newState, true);
-		m_mngr.getStateTracker().update(previousState, false, newState, true);
+		m_mngr.getNativeStateTracker().update(intent, previousState, false, newState, true);
+		m_mngr.getStateTracker().update(intent, previousState, false, newState, true);
 		
 		if( previousNativeState == BluetoothAdapter.STATE_TURNING_OFF && newNativeState == BluetoothAdapter.STATE_ON )
 		{

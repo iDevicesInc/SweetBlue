@@ -28,7 +28,7 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 		m_nativeListener = listener;
 	}
 
-	@Override public void onBleStateChange(final BleManager manager, final int oldStateBits, final int newStateBits)
+	@Override public void onBleStateChange(final BleManager manager, final int oldStateBits, final int newStateBits, final int explicitnessMask)
 	{
 		if( postToMain() )
 		{
@@ -36,17 +36,17 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 			{
 				@Override public void run()
 				{
-					m_listener.onBleStateChange(manager, oldStateBits, newStateBits);
+					m_listener.onBleStateChange(manager, oldStateBits, newStateBits, explicitnessMask);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onBleStateChange(manager, oldStateBits, newStateBits);
+			m_listener.onBleStateChange(manager, oldStateBits, newStateBits, explicitnessMask);
 		}
 	}
 
-	@Override public void onNativeBleStateChange(final BleManager manager, final int oldStateBits, final int newStateBits)
+	@Override public void onNativeBleStateChange(final BleManager manager, final int oldStateBits, final int newStateBits, final int explicitnessMask)
 	{
 		if( postToMain() )
 		{
@@ -54,13 +54,13 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 			{
 				@Override public void run()
 				{
-					m_nativeListener.onNativeBleStateChange(manager, oldStateBits, newStateBits);
+					m_nativeListener.onNativeBleStateChange(manager, oldStateBits, newStateBits, explicitnessMask);
 				}
 			});
 		}
 		else
 		{
-			m_nativeListener.onNativeBleStateChange(manager, oldStateBits, newStateBits);
+			m_nativeListener.onNativeBleStateChange(manager, oldStateBits, newStateBits, explicitnessMask);
 		}
 	}
 }

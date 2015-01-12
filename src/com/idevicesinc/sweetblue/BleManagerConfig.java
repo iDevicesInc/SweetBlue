@@ -69,7 +69,7 @@ public class BleManagerConfig implements Cloneable
 		 * @param advertisedServices	A list of {@link UUID}s parsed from {@code scanRecord} as a convenience. May be empty, notably
 		 * 								if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
 		 * @param rawDeviceName			The unaltered device name retrieved from the native bluetooth stack.
-		 * @param normalizedDeviceName	See {@link BleDevice#getNormalizedName()} for an explanation.
+		 * @param normalizedDeviceName	See {@link BleDevice#getName_normalized()} for an explanation.
 		 * @param scanRecord			The raw scan record received when the device was discovered. May be empty, especially
 		 * 								if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
 		 * @param rssi					The RSSI received when the device was discovered.
@@ -110,7 +110,6 @@ public class BleManagerConfig implements Cloneable
 	
 	/**
 	 * An optional interface you can implement on {@link BleManagerConfig#reconnectRateLimiter } to control reconnection behavior.
-	 * Note that {@link BleDevice#disconnect()} will also cancel any ongoing reconnect loop.
 	 * 
 	 * @see #reconnectRateLimiter
 	 * @see DefaultReconnectRateLimiter
@@ -124,12 +123,13 @@ public class BleManagerConfig implements Cloneable
 		
 		/**
 		 * Return this from {@link #getTimeToNextReconnect(BleDevice, int, Interval, Interval)} to stop a reconnect attempt loop.
+		 * Note that {@link BleDevice#disconnect()} will also cancel any ongoing reconnect loop.
 		 */
 		public static final Interval CANCEL = Interval.seconds(-1.0);
 		
 		/**
 		 * Called for every connection failure while device is {@link BleDeviceState#ATTEMPTING_RECONNECT}.
-		 * Use the static members of this interface to create return values to stop reconnection ({@link #CANCEL}) or try again
+		 * Use the static members of this interface as return values to stop reconnection ({@link #CANCEL}) or try again
 		 * instantly ({@link #INSTANTLY}). Use static methods of {@link Interval} to try again after some amount of time. Numeric parameters
 		 * are provided in order to give the app a variety of ways to calculate the next delay. Use all, some, or none of them.
 		 */
@@ -165,17 +165,10 @@ public class BleManagerConfig implements Cloneable
 	public boolean loggingEnabled						= false;
 	
 	/**
-	 * Default is true - whether all callbacks are posted to the main thread or from SweetBlue's internal
-	 * thread. If {@link #runOnMainThread}==true then this setting is meaningless because SweetBlue's
-	 * internal thread is already the main thread to begin with.
-	 */
-	boolean postCallbacksToMainThread			= true;
-	
-	/**
 	 * Default is false - this option may help mitigate crashes with "Unfortunately,
 	 * Bluetooth Share has stopped" error messages. See https://github.com/RadiusNetworks/bluetooth-crash-resolver or
 	 * http://developer.radiusnetworks.com/2014/04/02/a-solution-for-android-bluetooth-crashes.html or
-	 * Google "Bluetooth Crash Resolver".
+	 * Google "Bluetooth Crash Resolver" for more information.
 	 */
 	public boolean enableCrashResolver					= false;
 	
@@ -247,6 +240,13 @@ public class BleManagerConfig implements Cloneable
 	 * recommended to run on the main thread in order to avoid any possible multithreading issues.
 	 */
 	boolean runOnMainThread						= true;
+	
+	/**
+	 * Default is true - whether all callbacks are posted to the main thread or from SweetBlue's internal
+	 * thread. If {@link #runOnMainThread}==true then this setting is meaningless because SweetBlue's
+	 * internal thread is already the main thread to begin with.
+	 */
+	boolean postCallbacksToMainThread			= true;
 	
 	/**
 	 * Default is true - requires the {@link Manifest.permission#WAKE_LOCK} permission in your app's manifest file.

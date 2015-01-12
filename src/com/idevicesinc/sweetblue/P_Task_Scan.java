@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
@@ -16,6 +17,9 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	private E_Mode m_mode = null;
 	
+	//TODO
+	private final boolean m_explicit = true;
+	
 	public P_Task_Scan(BleManager manager, I_StateListener listener)
 	{
 		super(manager, listener);
@@ -28,7 +32,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		m_mode = getManager().startNativeScan();
+		m_mode = getManager().startNativeScan(m_explicit ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
 		
 		if( m_mode == null )
 		{
@@ -92,5 +96,10 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 		
 		return super.isInterruptableBy(otherTask);
+	}
+	
+	@Override public boolean isExplicit()
+	{
+		return m_explicit;
 	}
 }

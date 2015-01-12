@@ -19,7 +19,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 		
 		m_device = device;
 		
-		set(BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
+		set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 	}
 	
 	public void setListener(StateListener listener)
@@ -34,16 +34,16 @@ class P_DeviceStateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int explicitnessMask)
 	{
 		if( m_stateListener != null )
 		{
-			m_stateListener.onStateChange(m_device, oldStateBits, newStateBits);
+			m_stateListener.onStateChange(m_device, oldStateBits, newStateBits, explicitnessMask);
 		}
 		
 		if( m_device.getManager().m_defaultDeviceStateListener != null )
 		{
-			m_device.getManager().m_defaultDeviceStateListener.onStateChange(m_device, oldStateBits, newStateBits);
+			m_device.getManager().m_defaultDeviceStateListener.onStateChange(m_device, oldStateBits, newStateBits, explicitnessMask);
 		}
 		
 //		m_device.getManager().getLogger().e(this.toString());

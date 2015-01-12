@@ -15,6 +15,16 @@ abstract class PA_StateTracker
 	private final Object m_lock = new Object();
 	private final long[] m_timesInState;
 	
+	static enum E_Intent
+	{
+		EXPLICIT, IMPLICIT;
+		
+		public int getMask()
+		{
+			return this == EXPLICIT ? 0xFFFFFFFF : 0x0;
+		}
+	}
+	
 	PA_StateTracker(P_Logger logger, BitwiseEnum[] enums)
 	{
 		m_logger = logger;
@@ -74,17 +84,11 @@ abstract class PA_StateTracker
 		return newStateBits;
 	}
 	
-	void update(Object ... statesAndValues)
-	{
-		synchronized ( m_lock )
-		{
-			int newStateBits = getMask(m_stateMask, statesAndValues);
-		
-			setStateMask(newStateBits);
-		}
-	}
 	
-	void append(BitwiseEnum newState)
+	
+	
+	
+	void append(BitwiseEnum newState, E_Intent intent)
 	{
 		synchronized ( m_lock )
 		{
@@ -97,15 +101,15 @@ abstract class PA_StateTracker
 			
 			append_assert(newState);
 			
-			setStateMask(m_stateMask | newState.bit());
+			setStateMask(m_stateMask | newState.bit(), intent == E_Intent.EXPLICIT ? newState.bit() : 0x0);
 		}
 	}
 	
-	void remove(BitwiseEnum state)
+	void remove(BitwiseEnum state, E_Intent intent)
 	{
 		synchronized ( m_lock )
 		{
-			setStateMask(m_stateMask & ~state.bit() );
+			setStateMask(m_stateMask & ~state.bit(), intent == E_Intent.EXPLICIT ? state.bit() : 0x0);
 		}
 	}
 	
@@ -126,13 +130,33 @@ abstract class PA_StateTracker
 //		setStateMask(newStateBits);
 //	}
 	
-	void set(Object ... statesAndValues)
+	void set(E_Intent intent, Object ... statesAndValues)
+	{
+		set(intent.getMask(), statesAndValues);
+	}
+	
+	private void set(int explicitnessMask, Object ... statesAndValues)
 	{
 		synchronized ( m_lock )
 		{
 			int newStateBits = getMask(0x0, statesAndValues);
 			
-			setStateMask(newStateBits);
+			setStateMask(newStateBits, explicitnessMask);
+		}
+	}
+	
+	void update(E_Intent intent, Object ... statesAndValues)
+	{
+		update(intent.getMask(), statesAndValues);
+	}
+	
+	private void update(int explicitnessMask, Object ... statesAndValues)
+	{
+		synchronized ( m_lock )
+		{
+			int newStateBits = getMask(m_stateMask, statesAndValues);
+		
+			setStateMask(newStateBits, explicitnessMask);
 		}
 	}
 	
@@ -150,7 +174,7 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	private void setStateMask(int newStateBits)
+	private void setStateMask(int newStateBits, int explicitnessMask)
 	{
 		int oldStateBits = m_stateMask;
 		m_stateMask = newStateBits;
@@ -171,15 +195,23 @@ abstract class PA_StateTracker
 				{
 					m_timesInState[i] = System.currentTimeMillis();
 				}
+				else
+				{
+					explicitnessMask &= ~bit;
+				}
 			}
 		}
+		else
+		{
+			explicitnessMask = 0x0;
+		}
 		
-		fireStateChange(oldStateBits, newStateBits);
+		fireStateChange(oldStateBits, newStateBits, explicitnessMask);
 	}
 	
-	protected abstract void onStateChange(int oldStateBits, int newStateBits);
+	protected abstract void onStateChange(int oldStateBits, int newStateBits, int explicitnessMask);
 	
-	private void fireStateChange(int oldStateBits, int newStateBits)
+	private void fireStateChange(int oldStateBits, int newStateBits, int explicitnessMask)
 	{
 		if( oldStateBits == newStateBits )
 		{
@@ -190,7 +222,7 @@ abstract class PA_StateTracker
 			return;
 		}
 		
-		onStateChange(oldStateBits, newStateBits);
+		onStateChange(oldStateBits, newStateBits, explicitnessMask);
 	}
 	
 	protected String toString(BitwiseEnum[] enums)

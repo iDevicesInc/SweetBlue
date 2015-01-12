@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +23,7 @@ import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
 import com.idevicesinc.sweetblue.utils.Uuids;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
 /**
  * This is the one other class you will use the most besides {@link BleManager}. It acts as a
@@ -72,7 +74,7 @@ public class BleDevice
 			NO_MATCHING_TARGET,
 			
 			/**
-			 * You tried to do a read on a characteristic that is write-only, or vice-versa, or tried to read a notify-only characteristic, etc., etc. 
+			 * You tried to do a read on a characteristic that is write-only, or vice-versa, or tried to read a notify-only characteristic, or etc., etc. 
 			 */
 			OPERATION_NOT_SUPPORTED,
 			
@@ -87,7 +89,7 @@ public class BleDevice
 			 * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of its overloads) or
 			 * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its overloads) returned false.
 			 */
-			FAILED_TO_WRITE_VALUE_TO_TARGET,
+			FAILED_TO_SET_VALUE_ON_TARGET,
 			
 			/**
 			 * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)} or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
@@ -109,9 +111,9 @@ public class BleDevice
 			NULL_DATA,
 			
 			/**
-			 * Used either when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data}.
-			 * <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a non-null but zero-length data parameter.
-			 * Note that {@link Result#data} will be a zero-length array for all other statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc.
+			 * Used either when {@link Result#type} {@link Type#isRead()} and the operation was "successful" but returned a zero-length array for {@link Result#data},
+			 * <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) was called with a non-null but zero-length data parameter.
+			 * Note that {@link Result#data} will be a zero-length array for all other error statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc.
 			 * In other words it's never null.
 			 */
 			EMPTY_DATA,
@@ -309,8 +311,8 @@ public class BleDevice
 			 * and use {@link #status} for actual application logic if possible.
 			 * <br><br>
 			 * See {@link BluetoothGatt} for its static <code>GATT_*</code> status code members.
-			 * Also see {@link PS_GattStatus} for SweetBlue's more comprehensive internal reference list of gatt status values.
-			 * This list may not be totally accurate or up-to-date.
+			 * Also see the source code (commented out) of {@link PS_GattStatus} for SweetBlue's more comprehensive internal
+			 * reference list of gatt status values. This list may not be totally accurate or up-to-date.
 			 */
 			public final int gattStatus;
 			
@@ -387,8 +389,17 @@ public class BleDevice
 		 *  
 		 * @param oldStateBits The previous bitwise representation of {@link BleDeviceState}.
 		 * @param newStateBits The new and now current bitwise representation of {@link BleDeviceState}. Will be the same as {@link BleDevice#getStateMask()}.
+		 * @param explicitnessMask For each old->new bit difference, this mask will tell you if the transition was explicit. Explicit generally means a call was made to
+		 * 							a public method of the library from app-code to trigger the state change, and so usually the stacktrace started from a user input event upstream.
+		 * 							Otherwise the given bit will be 0x0 and so the state change was implicit. An example of explicitness is if you call
+		 * 							{@link BleDevice#disconnect()} in response to a button click, whereas implicit would be if the device disconnected because it
+		 * 							went out of range. As much as possible these flags are meant to represent the actual app <i>user's</i> intent, not the intent of you
+		 * 							the programmer. For example after a disconnect you might be using {@link BleManagerConfig#reconnectRateLimiter} to try periodically
+		 * 							reconnecting. From you the programmer's perspective a connect, if/when it happens, is arguably an explicit action. From the user's
+		 * 							perspective however the connect was implicit. Therefore this mask is currently meant to serve an analytics or debugging role,
+		 * 							not to necessarily gate application logic.
 		 */
-		void onStateChange(BleDevice device, int oldStateBits, int newStateBits);
+		void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask);
 	}
 	
 	/**
@@ -546,6 +557,8 @@ public class BleDevice
 	
 	private boolean m_useAutoConnect = false;
 	private boolean m_alwaysUseAutoConnect = false;
+	
+	private Boolean m_lastConnectOrDisconnectWasUserExplicit = null;
 	
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -724,7 +737,7 @@ public class BleDevice
 	 * then this method will (a) return the amount of time that the device has been in the state. Otherwise, this will
 	 * (b) return the amount of time that the device was *previously* in that state. Otherwise, if the device has never
 	 * been in the state, it will (c) return 0.0 seconds. Case (b) might be useful for example for checking how long
-	 * you were connected for after becoming {@link BleDeviceState#DISCONNECTED}, for analytics purposes or whatever.
+	 * you <i>were</i> connected for after becoming {@link BleDeviceState#DISCONNECTED}, for analytics purposes or whatever.
 	 */
 	public Interval getTimeInState(BleDeviceState state)
 	{
@@ -733,15 +746,16 @@ public class BleDevice
 	
 	/**
 	 * Returns the raw, unmodified device name retrieved from the stack.
-	 * Equivalent to {@link BluetoothDevice#getName()}.
+	 * Equivalent to {@link BluetoothDevice#getName()}. It's suggested to use {@link #getName_normalized()}
+	 * if you're using the name to match/filter against something, e.g. an entry in a config file or for advertising filtering.
 	 */
-	public String getNativeName()
+	public String getName_native()
 	{
 		return m_nativeWrapper.getNativeName();
 	}
 	
 	/**
-	 * The name retrieved from {@link #getNativeName()} can change arbitrarily, like the last 4 of the MAC
+	 * The name retrieved from {@link #getName_native()} can change arbitrarily, like the last 4 of the MAC
 	 * address can get appended sometimes, and spaces might get changed to underscores or vice-versa,
 	 * caps to lowercase, etc. This may somehow be standard, to-the-spec behavior but to the newcomer it's
 	 * confusing and potentially time-bomb-bug-inducing, like if you're using device name as a filter for something and 
@@ -749,17 +763,17 @@ public class BleDevice
 	 * attempt to normalize name behavior and always return the same name regardless of the underlying stack's
 	 * whimsy. The target format is all lowercase and underscore-delimited with no trailing MAC address.
 	 */
-	public String getNormalizedName()
+	public String getName_normalized()
 	{
 		return m_nativeWrapper.getNormalizedName();
 	}
 	
 	/**
-	 * Returns a name useful for logging and debugging. As of this writing it is {@link #getNormalizedName()}
+	 * Returns a name useful for logging and debugging. As of this writing it is {@link #getName_normalized()}
 	 * plus the last four digits of the device's MAC address from {@link #getMacAddress()}.
 	 * {@link BleDevice#toString()} uses this.
 	 */
-	public String getDebugName()
+	public String getName_debug()
 	{
 		return m_nativeWrapper.getDebugName();
 	}
@@ -844,7 +858,7 @@ public class BleDevice
 	
 		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
 		
-		m_stateTracker.append(BONDING);
+		m_stateTracker.append(BONDING, E_Intent.EXPLICIT);
 	}
 	
 	/**
@@ -1286,7 +1300,7 @@ public class BleDevice
 	 */
 	@Override public String toString()
 	{
-		return getDebugName() + " " + m_stateTracker.toString();
+		return getName_debug() + " " + m_stateTracker.toString();
 	}
 	
 	private boolean addOperationTime()
@@ -1337,6 +1351,7 @@ public class BleDevice
 		{
 			m_stateTracker.update
 			(
+				E_Intent.IMPLICIT,
 				BONDING,		false,
 				BONDED,			false,
 				UNBONDED,		true,
@@ -1352,6 +1367,7 @@ public class BleDevice
 		{
 			m_stateTracker.update
 			(
+				E_Intent.IMPLICIT,
 				BONDING,		m_nativeWrapper.isNativelyBonding(),
 				BONDED,			m_nativeWrapper.isNativelyBonded(),
 				UNBONDED,		m_nativeWrapper.isNativelyUnbonded(),
@@ -1369,17 +1385,19 @@ public class BleDevice
 		
 		m_stateTracker.update
 		(
+			PA_StateTracker.E_Intent.IMPLICIT,
 			BONDING,		m_nativeWrapper.isNativelyBonding(),
 			BONDED,			m_nativeWrapper.isNativelyBonded()
 		);
 	}
 	
-	void onUndiscovered()
+	void onUndiscovered(E_Intent intent)
 	{
 		m_reconnectMngr.stop();
 		
 		m_stateTracker.set
 		(
+			intent,
 			UNDISCOVERED,	true,
 			DISCOVERED,		false,
 			ADVERTISING,	false,
@@ -1421,22 +1439,24 @@ public class BleDevice
 	{
 		m_queue.add(new P_Task_Unbond(this, m_taskStateListener, priority));
 		
-		m_stateTracker.update(BONDED, false, BONDING, false, UNBONDED, true);
+		m_stateTracker.update(E_Intent.EXPLICIT, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
 	void onBondTaskStateChange(PA_Task task, PE_TaskState state)
 	{
+		E_Intent intent = task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+		
 		if( task.getClass() == P_Task_Bond.class )
 		{
 			if( state.isEndingState() )
 			{
 				if( state == PE_TaskState.SUCCEEDED )
 				{
-					this.onNativeBond();
+					this.onNativeBond(intent);
 				}
 				else
 				{
-					this.onNativeBondFailed();
+					this.onNativeBondFailed(intent);
 				}
 			}
 		}
@@ -1444,7 +1464,7 @@ public class BleDevice
 		{
 			if( state == PE_TaskState.SUCCEEDED )
 			{
-				this.onNativeUnbond();
+				this.onNativeUnbond(intent);
 			}
 			else
 			{
@@ -1453,24 +1473,24 @@ public class BleDevice
 		}
 	}
 	
-	void onNativeUnbond()
+	void onNativeUnbond(E_Intent intent)
 	{
-		m_stateTracker.update(BONDED, false, BONDING, false, UNBONDED, true);
+		m_stateTracker.update(intent, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
-	void onNativeBonding()
+	void onNativeBonding(E_Intent intent)
 	{
-		m_stateTracker.update(BONDED, false, BONDING, true, UNBONDED, false);
+		m_stateTracker.update(intent, BONDED, false, BONDING, true, UNBONDED, false);
 	}
 	
-	void onNativeBond()
+	void onNativeBond(E_Intent intent)
 	{
-		m_stateTracker.update(BONDED, true, BONDING, false, UNBONDED, false);
+		m_stateTracker.update(intent, BONDED, true, BONDING, false, UNBONDED, false);
 	}
 	
-	void onNativeBondFailed()
+	void onNativeBondFailed(E_Intent intent)
 	{
-		m_stateTracker.update(BONDED, false, BONDING, false, UNBONDED, true);
+		m_stateTracker.update(intent, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
 	void attemptReconnect()
@@ -1480,6 +1500,8 @@ public class BleDevice
 	
 	private void connect_private(BleTransaction authenticationTxn, BleTransaction initTxn, boolean isReconnect)
 	{
+		m_lastConnectOrDisconnectWasUserExplicit = true;
+		
 		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))  return;
 		
 		if( is(INITIALIZED) )
@@ -1498,6 +1520,8 @@ public class BleDevice
 	
 	void onConnecting(boolean definitelyExplicit, boolean isReconnect)
 	{
+		m_lastConnectOrDisconnectWasUserExplicit = definitelyExplicit;
+		
 		if( is(/*already*/CONNECTING) )
 		{
 			P_Task_Connect task = getTaskQueue().getCurrent(P_Task_Connect.class, this);
@@ -1514,11 +1538,11 @@ public class BleDevice
 				//---		for whatever reason. Making a judgement call that the user would then expect reconnect to stop.
 				//---		In other words it's not stopped for any hard technical reasons...it could go on.
 				m_reconnectMngr.stop();
-				m_stateTracker.update(ATTEMPTING_RECONNECT, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
+				m_stateTracker.update(E_Intent.EXPLICIT, ATTEMPTING_RECONNECT, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
 			}
 			else
 			{
-				m_stateTracker.update(CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
+				m_stateTracker.update(lastConnectDisconnectIntent(), CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
 			}
 		}
 	}
@@ -1543,8 +1567,11 @@ public class BleDevice
 		return m_nativeWrapper.isNativelyBonded() || m_nativeWrapper.isNativelyBonding();
 	}
 	
-	void onNativeConnect()
+	void onNativeConnect(boolean explicit)
 	{
+		E_Intent intent = explicit && !is(ATTEMPTING_RECONNECT) ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.EXPLICIT;
+		
 		if( is(/*already*/CONNECTED) )
 		{
 			//--- DRK > Possible to get here when implicit tasks are involved I think. Not sure if assertion should be here,
@@ -1586,6 +1613,8 @@ public class BleDevice
 		
 		
 		boolean bond = m_mngr.m_config.autoBondAfterConnect && !isBondingOrBonded();
+		
+		
 		
 		if( bond )
 		{
@@ -1629,7 +1658,7 @@ public class BleDevice
 
 			m_stateTracker.update
 			(
-				DISCONNECTED,false, CONNECTING_OVERALL,true, CONNECTING,false, CONNECTED,true, BONDING,true, ADVERTISING,false
+				intent,  DISCONNECTED,false,  CONNECTING_OVERALL,true,  CONNECTING,false,  CONNECTED,true,  BONDING,true,  ADVERTISING,false
 			);
 		}
 		else
@@ -1687,7 +1716,7 @@ public class BleDevice
 		//---		callbacks to the app but eventually things settle down and we're good again.
 		if( m_nativeWrapper.isNativelyConnected() )
 		{
-			m_stateTracker.update(extraFlags, GETTING_SERVICES, true);
+			m_stateTracker.update(lastConnectDisconnectIntent(), extraFlags, GETTING_SERVICES, true);
 		}
 	}
 	
@@ -1709,7 +1738,7 @@ public class BleDevice
 		
 		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL) )
 		{
-			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false);
+			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false, E_Intent.IMPLICIT);
 		}
 		
 		if( wasConnecting )
@@ -1750,12 +1779,13 @@ public class BleDevice
 		
 		m_stateTracker.update
 		(
+			lastConnectDisconnectIntent(),
 			extraFlags, ATTEMPTING_RECONNECT, false, CONNECTING_OVERALL, false,
 			AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true
 		);
 	}
 	
-	private void setStateToDisconnected(boolean attemptingReconnect, boolean fromBleCallback)
+	private void setStateToDisconnected(boolean attemptingReconnect, boolean fromBleCallback, E_Intent intent)
 	{
 		//--- DRK > Device probably wasn't advertising while connected so here we reset the timer to keep
 		//---		it from being immediately undiscovered after disconnection.
@@ -1768,6 +1798,7 @@ public class BleDevice
 		{
 			m_stateTracker.set
 			(
+				intent,
 				DISCOVERED, true,
 				DISCONNECTED, true,
 				BONDING, false,
@@ -1783,6 +1814,7 @@ public class BleDevice
 		{
 			m_stateTracker.set
 			(
+				intent,
 				DISCOVERED, true,
 				DISCONNECTED, true,
 				BONDING, m_nativeWrapper.isNativelyBonding(),
@@ -1818,9 +1850,12 @@ public class BleDevice
 			attemptingReconnect = false;
 		}
 		
+		E_Intent intent = connectionFailReasonIfConnecting==Reason.EXPLICITLY_CANCELLED ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.EXPLICIT;
+		
 		if( isAny(CONNECTED, CONNECTING_OVERALL, INITIALIZED) )
 		{
-			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false);
+			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false, intent);
 			
 			m_txnMngr.cancelAllTransactions();
 //				m_txnMngr.clearAllTxns();
@@ -1834,7 +1869,7 @@ public class BleDevice
 		{
 			if( !attemptingReconnect )
 			{
-				m_stateTracker.update(ATTEMPTING_RECONNECT, false);
+				m_stateTracker.update(intent, ATTEMPTING_RECONNECT, false);
 				m_reconnectMngr.stop();
 			}
 		}
@@ -1856,6 +1891,8 @@ public class BleDevice
 	
 	void onNativeDisconnect(boolean wasExplicit)
 	{
+		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;
+		
 //		if( m_state.ordinal() < E_State.CONNECTING.ordinal() )
 //		{
 //			m_logger.w("Already disconnected!");
@@ -1895,8 +1932,7 @@ public class BleDevice
 		}
 		
 		attemptingReconnect = attemptingReconnect || is(ATTEMPTING_RECONNECT);
-		
-		setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/true);
+		setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/true, wasExplicit ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
 		
 		if( !attemptingReconnect )
 		{
@@ -2003,6 +2039,18 @@ public class BleDevice
 		if( m_mngr.m_config.bondingFilter == null )  return false;
 		
 		return m_mngr.m_config.bondingFilter.requiresBonding(characteristic.getUuid());
+	}
+	
+	E_Intent lastConnectDisconnectIntent()
+	{
+		if( m_lastConnectOrDisconnectWasUserExplicit == null )
+		{
+			return E_Intent.IMPLICIT;
+		}
+		else
+		{
+			return m_lastConnectOrDisconnectWasUserExplicit ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+		}
 	}
 	
 	private PE_TaskPriority getOverrideReadWritePriority()

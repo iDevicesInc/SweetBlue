@@ -102,7 +102,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( !descriptor.setValue(getWriteValue()) )
 		{
-			this.fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Result.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, Result.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
 			
 			return;
 		}
