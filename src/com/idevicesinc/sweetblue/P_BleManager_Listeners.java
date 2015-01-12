@@ -3,7 +3,6 @@ package com.idevicesinc.sweetblue;
 import static com.idevicesinc.sweetblue.BleState.SCANNING;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
-import com.idevicesllc.connected.view.widgets.E_InterceptValue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
