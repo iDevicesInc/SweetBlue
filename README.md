@@ -84,7 +84,7 @@ BleManager.get(this).startScan(new BleManager.DiscoveryListener()
 	{
 		device.connect(new BleDevice.StateListener()
 		{
-			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits)
+			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask)
 			{
 				if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
 				{
