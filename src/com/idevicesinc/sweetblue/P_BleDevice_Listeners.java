@@ -401,7 +401,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		else if (newState == BluetoothDevice.BOND_BONDING)
 		{
 			P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
-			E_Intent intent = task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+			E_Intent intent = task != null && task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
 			boolean isCurrent = task != null; // avoiding erroneous dead code warning from putting this directly in if-clause below.
 			m_device.onNativeBonding(intent);
 
