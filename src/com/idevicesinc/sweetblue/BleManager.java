@@ -1062,6 +1062,14 @@ public class BleManager
 	}
 	
 	/**
+	 * Returns the number of devices this manager is...managing.
+	 */
+	public int getDeviceCount()
+	{
+		return m_deviceMngr.getCount();
+	}
+	
+	/**
 	 * Returns whether we have any devices. For example if you have never called {@link #startScan()}
 	 * (or similar) then this will return false.
 	 */

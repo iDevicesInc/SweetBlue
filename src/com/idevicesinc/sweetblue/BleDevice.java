@@ -1047,6 +1047,16 @@ public class BleDevice
 	}
 	
 	/**
+	 * Convenience method that calls {@link BleManager#undiscover(BleDevice)}.
+	 * 
+	 * @see BleManager#undiscover(BleDevice)
+	 */
+	public boolean undiscover()
+	{
+		return m_mngr.undiscover(this);
+	}
+	
+	/**
 	 * First checks referential equality and if {@link Boolean#FALSE} checks equality of {@link #getMacAddress()}.
 	 * Note that ideally this method isn't useful to you and never returns true (besides the identity
 	 * case, which isn't useful to you). Otherwise it probably means your app is holding on to old references
