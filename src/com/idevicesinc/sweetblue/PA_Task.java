@@ -271,32 +271,30 @@ abstract class PA_Task
 	//						}
 	//					}
 						
+						if( m_softlyCancelled )
+						{
+							softlyCancel();
+							
+							return;
+						}
+						
 						if( isExecutable() )
 						{
-							if( m_softlyCancelled )
+							setState(PE_TaskState.EXECUTING);
+							
+							if( executeOnSeperateThread() )
 							{
-								softlyCancel();
-								
-								return;
+								//--- DRK > Executing on separate thread in case this method is called on the main thread,
+								//---		or a synchronization block in BtTaskQueue indirectly blocks the main thread.
+								//---		Some things like a failing scan call can block its thread for several seconds.
+								m_executeHandler.post(m_executeRunnable);
 							}
 							else
 							{
-								setState(PE_TaskState.EXECUTING);
-								
-								if( executeOnSeperateThread() )
-								{
-									//--- DRK > Executing on separate thread in case this method is called on the main thread,
-									//---		or a synchronization block in BtTaskQueue indirectly blocks the main thread.
-									//---		Some things like a failing scan call can block its thread for several seconds.
-									m_executeHandler.post(m_executeRunnable);
-								}
-								else
-								{
-									execute_wrapper();
-								}
-								
-								return;
+								execute_wrapper();
 							}
+							
+							return;
 						}
 						else
 						{
