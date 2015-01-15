@@ -42,7 +42,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * {@code <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" /> }<br>
  * {@code <uses-permission android:name="android.permission.WAKE_LOCK" /> } <br>
  * <br><br>
- * {@link permission#WAKE_LOCK} is recommended but optional, only needed if {@link BleManagerConfig#manageCpuWakeLock} is enabled to aid with reconnect loops.
+ * {@link permission#WAKE_LOCK} is recommended but optional, needed if {@link BleManagerConfig#manageCpuWakeLock} is enabled to aid with reconnect loops.
  * <br><br><br>
  * 
  * Then here is a simple example usage:<pre><code>
