@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import android.Manifest;
+import android.Manifest.permission;
 import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
@@ -29,8 +30,7 @@ import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
- * The entry point to the library. Typical pattern is to create one instance of this class per application
- * and keep it around for the duration of your application, across multiple {@link Activity} instances. Make sure
+ * The entry point to the library. Get a singleton instance using {@link #get(Activity, BleManagerConfig)} or its overloads. Make sure
  * to hook up this manager to lifecycle events for your app as a whole: {@link #onPause()} and {@link #onResume()}.
  * <br><br>
  * Also put the following entries (or something similar) in the root of your AndroidManifest.xml:
@@ -40,10 +40,10 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * {@code <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> }<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" /> }<br>
  * {@code <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" /> }<br>
+ * {@code <uses-permission android:name="android.permission.WAKE_LOCK" /> } <br>
  * <br><br>
- * If you want {@link BleManagerConfig#manageCpuWakeLock} to aid with reconnect loops you will also need:
- * <br><br>
- * {@code <uses-permission android:name="android.permission.WAKE_LOCK" /> } <br><br><br>
+ * {@link permission#WAKE_LOCK} is recommended but optional, only needed if {@link BleManagerConfig#manageCpuWakeLock} is enabled to aid with reconnect loops.
+ * <br><br><br>
  * 
  * Then here is a simple example usage:<pre><code>
  * public class MyActivity extends Activity
