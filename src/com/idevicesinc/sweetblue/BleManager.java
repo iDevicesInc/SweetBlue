@@ -1122,13 +1122,14 @@ public class BleManager
 	 * {@link BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)} will be called.
 	 * No clear use case has been thought of but the method is here just in case anyway.
 	 * 
-	 * @return	true if the device was undiscovered, false if manager doesn't contain an instance,
-	 * 			checked referentially, not through {@link BleDevice#equals(BleDevice)} (i.e. by mac address).
+	 * @return	true if the device was undiscovered, false if device is already {@link BleDeviceState#UNDISCOVERED} or manager
+	 * 			doesn't contain an instance, checked referentially, not through {@link BleDevice#equals(BleDevice)} (i.e. by mac address).
 	 */
 	public boolean undiscover(BleDevice device)
 	{
-		if( device == null )		return false;
-		if( !hasDevice(device) )	return false;
+		if( device == null )							return false;
+		if( !hasDevice(device) )						return false;
+		if( device.is(BleDeviceState.UNDISCOVERED) )	return false;
 		
 		if( device.is(BleDeviceState.CONNECTED) )
 		{
