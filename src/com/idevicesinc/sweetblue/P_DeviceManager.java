@@ -33,6 +33,21 @@ class P_DeviceManager
 		return m_list;
 	}
 	
+	public boolean has(BleDevice device)
+	{
+		synchronized (m_list)
+		{
+			for( int i = 0; i < m_list.size(); i++ )
+			{
+				BleDevice device_ith = m_list.get(i);
+				
+				if( device_ith == device )  return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public BleDevice get(int i)
 	{
 		synchronized (m_list)
@@ -182,6 +197,16 @@ class P_DeviceManager
 		}
 	}
 	
+	void undiscoverAndRemove(BleDevice device, BleManager.DiscoveryListener discoveryListener, E_Intent intent)
+	{
+		synchronized (m_list)
+		{
+			remove(device);
+		
+			undiscoverDevice(device, discoveryListener, intent);
+		}
+	}
+	
 	void purgeStaleDevices(final double scanKeepAlive, final BleManager.DiscoveryListener listener)
 	{
 		//--- DRK > Band-aid fix for a potential race condition where scan is stopped from main thread (e.g. by backgrounding).
@@ -202,15 +227,13 @@ class P_DeviceManager
 					for( int i = m_list.size()-1; i >= 0; i-- )
 					{
 						BleDevice device = get(i);
-						boolean purgeable = (device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0;
+						boolean purgeable = device.getCreationType() != BleDevice.CreationType.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
 						
 						if( purgeable )
 						{
 							if( device.getTimeSinceLastDiscovery() > scanKeepAlive )
 							{
-								remove(device);
-								
-								undiscoverDevice(device, listener, E_Intent.IMPLICIT);
+								undiscoverAndRemove(device, listener, E_Intent.IMPLICIT);
 							}
 						}
 					}

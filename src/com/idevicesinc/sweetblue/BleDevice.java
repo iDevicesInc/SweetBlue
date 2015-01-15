@@ -520,6 +520,24 @@ public class BleDevice
 		}
 	}
 	
+	/**
+	 * Enumeration signifying how a {@link BleDevice} instance was created.
+	 */
+	public static enum CreationType
+	{
+		/**
+		 * Created from {@link BleManager#newDevice(String, String)} or overloads.
+		 * This type of device can only be {@link BleDeviceState#UNDISCOVERED} by using
+		 * {@link BleManager#undiscover(BleDevice)}.
+		 */
+		EXPLICIT,
+		
+		/**
+		 * Created from an advertising discovery right before {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)} is called.
+		 */
+		FROM_DISCOVERY;
+	}
+	
 	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener(DEFAULT_CONNECTION_FAIL_RETRY_COUNT);
 
 	final Object m_threadLock = new Object();
@@ -527,7 +545,6 @@ public class BleDevice
 	final P_NativeDeviceWrapper m_nativeWrapper;
 	
 	private double m_timeSinceLastDiscovery;
-	private double m_timeConnected = 0.0;
 	
 			final P_BleDevice_Listeners m_listeners;
 	private final P_ServiceManager m_serviceMngr;
@@ -546,6 +563,8 @@ public class BleDevice
 	private final TimeEstimator m_readTimeEstimator;
 	
 	private final PA_Task.I_StateListener m_taskStateListener;
+	
+	private final CreationType m_creationType;
 	
 	private static final UUID[]				EMPTY_UUID_ARRAY	= new UUID[0];
 	private static final ArrayList<UUID>	EMPTY_LIST			= new ArrayList<UUID>();
@@ -567,10 +586,11 @@ public class BleDevice
 	public Object appData;
 	
 	
-	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName)
+	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName, String nativeName, CreationType creationType)
 	{
 		m_mngr = mngr;
-		m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName);
+		m_creationType = creationType;
+		m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName, nativeName);
 		m_queue = m_mngr.getTaskQueue();
 		m_listeners = new P_BleDevice_Listeners(this);
 		m_logger = m_mngr.getLogger();
@@ -587,6 +607,11 @@ public class BleDevice
 		
 		m_alwaysUseAutoConnect = m_mngr.m_config.alwaysUseAutoConnect;
 		m_useAutoConnect = m_alwaysUseAutoConnect;
+	}
+	
+	public CreationType getCreationType()
+	{
+		return m_creationType;
 	}
 	
 	/**

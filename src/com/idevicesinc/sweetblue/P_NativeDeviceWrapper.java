@@ -21,13 +21,12 @@ class P_NativeDeviceWrapper
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
 	private	Integer m_nativeConnectionState = null;
 	
-	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String normalizedName)
+	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String normalizedName, String nativeName)
 	{
 		m_device = device;
 		m_native = device_native;
 		m_address = m_native.getAddress() == null ? "" : m_native.getAddress();
 		
-		String nativeName = m_native.getName();
 		nativeName = nativeName != null ? nativeName : "";
 		m_nativeName = nativeName;
 		

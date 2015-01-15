@@ -64,7 +64,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *                 
  *                  device.connect(new BleDevice.StateListener()
  *                  {
- *                      {@literal @}Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits)
+ *                      {@literal @}Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask)
  *                      {
  *                          if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
  *                          {
@@ -976,17 +976,26 @@ public class BleManager
 	/**
 	 * Gets a known {@link BleDeviceState#DISCOVERED} device by MAC address, or <code>null</code> if there is no such device.
 	 */
-	public BleDevice getDevice(String address)
+	public BleDevice getDevice(String macAddress)
 	{
-		return m_deviceMngr.get(address);
+		return m_deviceMngr.get(macAddress);
 	}
 	
 	/**
 	 * Shortcut for checking if {@link #getDevice(String)} returns <code>null</code>.
 	 */
-	public boolean hasDevice(String address)
+	public boolean hasDevice(String macAddress)
 	{
-		return getDevice(address) != null;
+		return getDevice(macAddress) != null;
+	}
+	
+	/**
+	 * Might not be useful to outside world. Used for sanity/early-out checks internally. Keeping private for now.
+	 * Does referential equality check.
+	 */
+	private boolean hasDevice(BleDevice device)
+	{
+		return m_deviceMngr.has(device);
 	}
 	
 	/**
@@ -1076,6 +1085,59 @@ public class BleManager
 	public BleDeviceIterator getDevices(Object ... query)
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList(), query);
+	}
+	
+	/**
+	 * Same as {@link #newDevice(String, String)} but uses an empty string for the name.
+	 */
+	public BleDevice newDevice(String macAddress)
+	{
+		return newDevice(macAddress, "");
+	}
+	
+	/**
+	 * Creates a new {@link BleDevice} or returns an existing one if the macAddress matches.
+	 * {@link DiscoveryListener#onDeviceDiscovered(BleDevice)} will be called if a new device
+	 * is created.
+	 */
+	public BleDevice newDevice(String macAddress, String name)
+	{
+		final BleDevice existingDevice = this.getDevice(macAddress);
+		
+		if( existingDevice != null )  return existingDevice;
+		
+		final BluetoothDevice device_native = getNative().getAdapter().getRemoteDevice(macAddress);
+		
+		if( device_native == null )  return null;
+		
+		final String name_normalized = Utils.normalizeDeviceName(name); 
+		
+		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDevice.CreationType.EXPLICIT);
+		
+		return newDevice;
+	}
+	
+	/**
+	 * Forcefully undiscovers a device, disconnecting it first if needed and removing it from this manager's internal list.
+	 * {@link BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)} will be called.
+	 * No clear use case has been thought of but the method is here just in case anyway.
+	 * 
+	 * @return	true if the device was undiscovered, false if manager doesn't contain an instance,
+	 * 			checked referentially, not through {@link BleDevice#equals(BleDevice)} (i.e. by mac address).
+	 */
+	public boolean undiscover(BleDevice device)
+	{
+		if( device == null )		return false;
+		if( !hasDevice(device) )	return false;
+		
+		if( device.is(BleDeviceState.CONNECTED) )
+		{
+			device.disconnect();
+		}
+		 
+		m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, E_Intent.EXPLICIT);
+		
+		return true;
 	}
 	
 	//--- DRK > Smooshing together a bunch of package-private accessors here.
@@ -1370,12 +1432,19 @@ public class BleManager
 		
     	if ( device == null )
     	{
-    		device = new BleDevice(BleManager.this, device_native, normalizedDeviceName);
-    		m_deviceMngr.add(device);
+    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDevice.CreationType.FROM_DISCOVERY);
     		newlyDiscovered = true;
     	}
     	
     	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
+	}
+	
+	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDevice.CreationType creationType)
+	{
+		final BleDevice device = new BleDevice(BleManager.this, device_native, normalizedName, nativeName, creationType);
+		m_deviceMngr.add(device);
+		
+		return device;
 	}
     	
     void onDiscovered_wrapItUp(BleDevice device, boolean newlyDiscovered, List<UUID> services_nullable, byte[] scanRecord_nullable, int rssi)
