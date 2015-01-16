@@ -56,7 +56,47 @@ class P_DeviceManager
 		}
 	}
 	
-	public int getCount()
+	int getCount(Object[] query)
+	{
+		int count = 0;
+		
+		synchronized (m_list)
+		{
+			for( int i = 0; i < m_list.size(); i++ )
+			{
+				BleDevice device_ith = m_list.get(i);
+				
+				if( device_ith.is(query) )
+				{
+					count++;
+				}
+			}
+		}
+		
+		return count;
+	}
+	
+	int getCount(BleDeviceState state)
+	{
+		int count = 0;
+		
+		synchronized (m_list)
+		{
+			for( int i = 0; i < m_list.size(); i++ )
+			{
+				BleDevice device_ith = m_list.get(i);
+				
+				if( device_ith.is(state) )
+				{
+					count++;
+				}
+			}
+		}
+		
+		return count;
+	}
+	
+	int getCount()
 	{
 		synchronized (m_list)
 		{
@@ -227,7 +267,7 @@ class P_DeviceManager
 					for( int i = m_list.size()-1; i >= 0; i-- )
 					{
 						BleDevice device = get(i);
-						boolean purgeable = device.getCreationType() != BleDevice.CreationType.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
+						boolean purgeable = device.getOrigin() != BleDevice.Origin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
 						
 						if( purgeable )
 						{

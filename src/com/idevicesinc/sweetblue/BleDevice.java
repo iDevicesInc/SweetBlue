@@ -523,7 +523,7 @@ public class BleDevice
 	/**
 	 * Enumeration signifying how a {@link BleDevice} instance was created.
 	 */
-	public static enum CreationType
+	public static enum Origin
 	{
 		/**
 		 * Created from {@link BleManager#newDevice(String, String)} or overloads.
@@ -564,7 +564,7 @@ public class BleDevice
 	
 	private final PA_Task.I_StateListener m_taskStateListener;
 	
-	private final CreationType m_creationType;
+	private final Origin m_origin;
 	
 	private static final UUID[]				EMPTY_UUID_ARRAY	= new UUID[0];
 	private static final ArrayList<UUID>	EMPTY_LIST			= new ArrayList<UUID>();
@@ -586,10 +586,10 @@ public class BleDevice
 	public Object appData;
 	
 	
-	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName, String nativeName, CreationType creationType)
+	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName, String nativeName, Origin origin)
 	{
 		m_mngr = mngr;
-		m_creationType = creationType;
+		m_origin = origin; 
 		m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName, nativeName);
 		m_queue = m_mngr.getTaskQueue();
 		m_listeners = new P_BleDevice_Listeners(this);
@@ -609,9 +609,9 @@ public class BleDevice
 		m_useAutoConnect = m_alwaysUseAutoConnect;
 	}
 	
-	public CreationType getCreationType()
+	public Origin getOrigin()
 	{
-		return m_creationType;
+		return m_origin;
 	}
 	
 	/**

@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleState.*;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -1062,7 +1063,8 @@ public class BleManager
 	}
 	
 	/**
-	 * Returns the number of devices this manager is...managing.
+	 * Returns the total number of devices this manager is...managing.
+	 * This includes all devices that are {@link BleDeviceState#DISCOVERED}. 
 	 */
 	public int getDeviceCount()
 	{
@@ -1070,8 +1072,35 @@ public class BleManager
 	}
 	
 	/**
+	 * Returns the number of devices that are in the current state.
+	 */
+	public int getDeviceCount(BleDeviceState state)
+	{
+		return m_deviceMngr.getCount(state);
+	}
+	
+	/**
+	 * Returns the number of devices that match the given query.
+	 * See {@link BleDevice#is(Object...)} for the query format.
+	 */
+	public int getDeviceCount(Object ... query)
+	{
+		return m_deviceMngr.getCount(query);
+	}
+	
+	/**
+	 * Accessor into the underlying array used to store {@link BleDevice} instances.
+	 * Combine with {@link #getDeviceCount()} to iterate, or you may want to use the
+	 * {@link Iterator} returned from {@link #getDevices()} and its various overloads instead.
+	 */
+	public BleDevice getDeviceAt(int index)
+	{
+		return m_deviceMngr.get(index);
+	}
+	
+	/**
 	 * Returns whether we have any devices. For example if you have never called {@link #startScan()}
-	 * (or similar) then this will return false.
+	 * or {@link #newDevice(String)} (or similar) then this will return false.
 	 */
 	public boolean hasDevices()
 	{
@@ -1120,7 +1149,7 @@ public class BleManager
 		
 		final String name_normalized = Utils.normalizeDeviceName(name); 
 		
-		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDevice.CreationType.EXPLICIT);
+		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDevice.Origin.EXPLICIT);
 		
 		return newDevice;
 	}
@@ -1441,16 +1470,16 @@ public class BleManager
 		
     	if ( device == null )
     	{
-    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDevice.CreationType.FROM_DISCOVERY);
+    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDevice.Origin.FROM_DISCOVERY);
     		newlyDiscovered = true;
     	}
     	
     	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
 	}
 	
-	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDevice.CreationType creationType)
+	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDevice.Origin origin)
 	{
-		final BleDevice device = new BleDevice(BleManager.this, device_native, normalizedName, nativeName, creationType);
+		final BleDevice device = new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin);
 		m_deviceMngr.add(device);
 		
 		return device;
