@@ -22,7 +22,7 @@ class P_WakeLockManager
 		
 		if( enabled )
 		{
-			if( !Utils.hasPermission(mngr.getApplication(), permission.WAKE_LOCK) )
+			if( !Utils.hasPermission(mngr.getApplicationContext(), permission.WAKE_LOCK) )
 			{
 				Log.w(P_WakeLockManager.class.getSimpleName(), "PERMISSION REQUIRED: " + permission.WAKE_LOCK + ". Set BleManagerConfig#manageCpuWakeLock to false to disable wake lock management.");
 				
@@ -31,7 +31,7 @@ class P_WakeLockManager
 				return;
 			}
 			
-			PowerManager powerMngr = (PowerManager) m_mngr.getApplication().getSystemService(Context.POWER_SERVICE);
+			PowerManager powerMngr = (PowerManager) m_mngr.getApplicationContext().getSystemService(Context.POWER_SERVICE);
 			m_wakeLock = powerMngr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG);
 		}
 		else

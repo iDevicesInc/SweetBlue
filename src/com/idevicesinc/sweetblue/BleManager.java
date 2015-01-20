@@ -259,39 +259,21 @@ public class BleManager
 	private static BleManager s_instance = null;
 	
 	/**
-	 * Same as {@link #get(Application)} but takes an {@link Activity} as a convenience
-	 * and forwards {@link Activity#getApplication()} for you.
-	 */
-	public static BleManager get(Activity activity)
-	{
-		return get(activity.getApplication());
-	}
-	
-	/**
-	 * Same as {@link #get(Application, BleManagerConfig)} but takes an {@link Activity} as a convenience
-	 * and forwards {@link Activity#getApplication()} for you.
-	 */
-	public static BleManager get(Activity activity, BleManagerConfig config)
-	{
-		return get(activity.getApplication(), config);
-	}
-	
-	/**
 	 * Create an instance or retrieve an already-created instance with default configuration options set.
-	 * If you call this after you call {@link #get(Application, BleManagerConfig)} (for example in another
+	 * If you call this after you call {@link #get(Context, BleManagerConfig)} (for example in another
 	 * {@link Activity}), the {@link BleManagerConfig} originally passed in will be used.
-	 * Otherwise this calls {@link #get(Application, BleManagerConfig)} with a {@link BleManagerConfig}
+	 * Otherwise this calls {@link #get(Context, BleManagerConfig)} with a {@link BleManagerConfig}
 	 * instance created using the default constructor {@link BleManagerConfig#BleManagerConfig()}.
 	 */
-	public static BleManager get(Application application)
+	public static BleManager get(Context context)
 	{
 		if( s_instance == null )
 		{
-			return get(application, new BleManagerConfig());
+			return get(context, new BleManagerConfig());
 		}
 		else
 		{
-			verifySingleton(application);
+			verifySingleton(context);
 			
 			return s_instance;
 		}
@@ -302,17 +284,17 @@ public class BleManager
 	 * If you call this more than once (for example from a different {@link Activity}
 	 * with different {@link BleManagerConfig} options set then the newer options overwrite the older options. 
 	 */
-	public static BleManager get(Application application, BleManagerConfig config)
+	public static BleManager get(Context context, BleManagerConfig config)
 	{
 		if( s_instance == null )
 		{
-			s_instance = new BleManager(application, config);
+			s_instance = new BleManager(context, config);
 			
 			return s_instance;
 		}
 		else
 		{
-			verifySingleton(application);
+			verifySingleton(context);
 			
 			s_instance.m_config = config.clone();
 			s_instance.initLogger();
@@ -322,9 +304,9 @@ public class BleManager
 		}
 	}
 	
-	private static void verifySingleton(Application application)
+	private static void verifySingleton(Context context)
 	{
-		if( s_instance != null && s_instance.getApplication() != application )
+		if( s_instance != null )//&& s_instance.getApplication() != application )
 		{
 			//--- DRK > Not sure how/if this could happen, but I never underestimate Android.
 			throw new InstantiationError("There can only be one instance of "+BleManager.class.getSimpleName() + " created per application.");
@@ -334,13 +316,13 @@ public class BleManager
 	/**
 	 * Create an instance with special configuration options set.
 	 */
-	private BleManager(Application application, BleManagerConfig config)
+	private BleManager(Context context, BleManagerConfig config)
 	{
-		m_context = application;
+		m_context = context.getApplicationContext();
 		m_config = config.clone();
 		initLogger();
 		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultAdvertisingFilter);
-		m_btMngr = (BluetoothManager) application.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
+		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleState nativeState = BleState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_StateTracker(this);
 		m_stateTracker.append(nativeState, E_Intent.IMPLICIT);
@@ -348,7 +330,7 @@ public class BleManager
 		m_nativeStateTracker.append(nativeState, E_Intent.IMPLICIT);
 		m_mainThreadHandler = new Handler(m_context.getMainLooper());
 		m_taskQueue = new P_TaskQueue(this);
-		m_crashResolver = new P_BluetoothCrashResolver(application);
+		m_crashResolver = new P_BluetoothCrashResolver(m_context);
 		m_deviceMngr = new P_DeviceManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
 		
@@ -932,7 +914,7 @@ public class BleManager
 	/**
 	 * Returns the {@link Application} provided to the constructor.
 	 */
-	public Application getApplication()
+	public Context getApplicationContext()
 	{
 		return (Application) m_context;
 	}
