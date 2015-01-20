@@ -41,7 +41,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NOT_APPLICABLE, 0));
+				m_readWriteListener.onResult(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NOT_APPLICABLE, 0));
 			}
 		}
 		
@@ -52,7 +52,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		if( m_readWriteListener != null )
 		{
-			m_readWriteListener.onReadOrWriteComplete(newResult(status, gattStatus, 0));
+			m_readWriteListener.onResult(newResult(status, gattStatus, 0));
 		}
 		
 		this.fail();
@@ -72,7 +72,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		
 		if( m_readWriteListener != null )
 		{
-			m_readWriteListener.onReadOrWriteComplete(result);
+			m_readWriteListener.onResult(result);
 		}
 		 
 		super.succeed();
@@ -98,14 +98,14 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.TIMED_OUT, Result.GATT_STATUS_NOT_APPLICABLE, 0));
+				m_readWriteListener.onResult(newResult(Status.TIMED_OUT, Result.GATT_STATUS_NOT_APPLICABLE, 0));
 			}
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.CANCELLED, Result.GATT_STATUS_NOT_APPLICABLE, 0));
+				m_readWriteListener.onResult(newResult(Status.CANCELLED, Result.GATT_STATUS_NOT_APPLICABLE, 0));
 			}
 		}
 	}

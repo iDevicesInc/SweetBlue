@@ -55,11 +55,11 @@ class P_PollManager
 			m_entry = entry;
 		}
 		
-		@Override public void onReadOrWriteComplete(Result result)
+		@Override public void onResult(Result result)
 		{
 			m_entry.onSuccessOrFailure();
 
-			super.onReadOrWriteComplete(m_overrideListener, result);
+			super.onResult(m_overrideListener, result);
 		}
 	}
 	
@@ -72,13 +72,13 @@ class P_PollManager
 			super(readWriteListener, handler, postToMain);
 		}
 		
-		@Override public void onReadOrWriteComplete(Result result)
+		@Override public void onResult(Result result)
 		{
 			if( result.status == Status.SUCCESS )
 			{
 				if( m_lastValue == null || !Arrays.equals(m_lastValue, result.data) )
 				{
-					super.onReadOrWriteComplete(result);
+					super.onResult(result);
 				}
 				else
 				{
@@ -91,7 +91,7 @@ class P_PollManager
 			{
 				m_lastValue = null;
 				
-				super.onReadOrWriteComplete(result);
+				super.onResult(result);
 			}
 		}
 	}
@@ -171,19 +171,19 @@ class P_PollManager
 			if( value == null )
 			{
 				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0);
-				m_pollingReadListener.onReadOrWriteComplete(result);
+				m_pollingReadListener.onResult(result);
 			}
 			else
 			{
 				if( value.length == 0 )
 				{
 					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
-					m_pollingReadListener.onReadOrWriteComplete(result);
+					m_pollingReadListener.onResult(result);
 				}
 				else
 				{
 					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0);
-					m_pollingReadListener.onReadOrWriteComplete(result);
+					m_pollingReadListener.onResult(result);
 				}
 			}
 			
@@ -363,7 +363,7 @@ class P_PollManager
 					
 					if( earlyOutResult != null )
 					{
-						ithEntry.m_pollingReadListener.onReadOrWriteComplete(earlyOutResult);
+						ithEntry.m_pollingReadListener.onResult(earlyOutResult);
 					}
 					else
 					{
@@ -377,7 +377,7 @@ class P_PollManager
 				if( notifyState == E_NotifyState.ENABLED && ithEntry.m_notifyState != E_NotifyState.ENABLED )
 				{
 					Result result = newAlreadyEnabledResult(characteristic);
-					ithEntry.m_pollingReadListener.onReadOrWriteComplete(result);
+					ithEntry.m_pollingReadListener.onResult(result);
 				}
 				
 				ithEntry.m_notifyState = notifyState;

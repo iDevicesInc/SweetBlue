@@ -45,7 +45,7 @@ public class BleDevice
 	public static interface ReadWriteListener
 	{
 		/**
-		 * A value returned to {@link ReadWriteListener#onReadOrWriteComplete(Result)} by way of
+		 * A value returned to {@link ReadWriteListener#onResult(Result)} by way of
 		 * {@link Result#status} that indicates success of the operation or the reason for its failure.
 		 * This enum is <i>not</i> meant to match up with {@link BluetoothGatt}.GATT_* values in any way.
 		 * 
@@ -122,6 +122,7 @@ public class BleDevice
 			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means
 			 * for example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)} returned
 			 * a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted, whatever.
+			 * Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}.
 			 */
 			REMOTE_GATT_FAILURE,
 			
@@ -370,9 +371,9 @@ public class BleDevice
 		}
 		
 		/**
-		 * Called when a read or write is complete or when a notification comes in.
+		 * Called when a read or write is complete or when a notification comes in or when a notification is enabled/disabled.
 		 */
-		void onReadOrWriteComplete(Result result);
+		void onResult(Result result);
 	}
 	
 	/**
@@ -484,15 +485,6 @@ public class BleDevice
 	}
 	
 	/**
-	 * The default retry count provided to {@link DefaultConnectionFailListener}. So if you were to call
-	 * {@link BleDevice#connect()} and all connections failed, in total the library would try to connect
-	 * {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
-	 * 
-	 * @see DefaultConnectionFailListener
-	 */
-	public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
-	
-	/**
 	 * Default implementation of {@link ConnectionFailListener} that attempts a certain number of retries.
 	 * An instance of this class is set by default for all new {@link BleDevice} instances using {@link BleDevice#DEFAULT_CONNECTION_FAIL_RETRY_COUNT}.
 	 * Use {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)} to override the default behavior.
@@ -538,7 +530,21 @@ public class BleDevice
 		FROM_DISCOVERY;
 	}
 	
+	/**
+	 * The default retry count provided to {@link DefaultConnectionFailListener}. So if you were to call
+	 * {@link BleDevice#connect()} and all connections failed, in total the library would try to connect
+	 * {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
+	 * 
+	 * @see DefaultConnectionFailListener
+	 */
+	public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
+	
 	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener(DEFAULT_CONNECTION_FAIL_RETRY_COUNT);
+	
+	private static final UUID[]				EMPTY_UUID_ARRAY	= new UUID[0];
+	private static final ArrayList<UUID>	EMPTY_LIST			= new ArrayList<UUID>();
+			static final byte[]				EMPTY_BYTE_ARRAY	= new byte[0];
+			
 
 	final Object m_threadLock = new Object();
 	
@@ -565,10 +571,6 @@ public class BleDevice
 	private final PA_Task.I_StateListener m_taskStateListener;
 	
 	private final Origin m_origin;
-	
-	private static final UUID[]				EMPTY_UUID_ARRAY	= new UUID[0];
-	private static final ArrayList<UUID>	EMPTY_LIST			= new ArrayList<UUID>();
-			static final byte[]				EMPTY_BYTE_ARRAY	= new byte[0];
 	
 	private int m_rssi = 0;
 	private List<UUID> m_advertisedServices = EMPTY_LIST;
@@ -1184,7 +1186,7 @@ public class BleDevice
 		{
 			if( listener != null )
 			{
-				listener.onReadOrWriteComplete(earlyOut);
+				listener.onResult(earlyOut);
 			}
 			
 			return;
@@ -1257,7 +1259,7 @@ public class BleDevice
 		{
 			if( listener != null )
 			{
-				listener.onReadOrWriteComplete(earlyOutResult);
+				listener.onResult(earlyOutResult);
 			}
 			
 			if( earlyOutResult.status == Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)) )
@@ -1284,7 +1286,7 @@ public class BleDevice
 			if( listener != null )
 			{
 				Result result = m_pollMngr.newAlreadyEnabledResult(characteristic);
-				listener.onReadOrWriteComplete(result);
+				listener.onResult(result);
 			}
 		}
 		
@@ -2005,7 +2007,7 @@ public class BleDevice
 		{
 			if( listener != null )
 			{
-				listener.onReadOrWriteComplete(earlyOut);
+				listener.onResult(earlyOut);
 			}
 			
 			return;
@@ -2031,7 +2033,7 @@ public class BleDevice
 		{
 			if( listener != null )
 			{
-				listener.onReadOrWriteComplete(earlyOutResult);
+				listener.onResult(earlyOutResult);
 			}
 			
 			return;
@@ -2052,7 +2054,7 @@ public class BleDevice
 		{
 			if( listener != null )
 			{
-				listener.onReadOrWriteComplete(earlyOutResult);
+				listener.onResult(earlyOutResult);
 			}
 			
 			return;
