@@ -1,6 +1,12 @@
+#!/bin/sh
+
 CSS_FILE=doc_style.css
 CSS_SOURCE_PATH=./assets/$CSS_FILE
-TARGET_PATH=../doc/api/
+TARGET_PATH=../docs/api/
+
+source config.sh
+
+echo "${GLITZ}BUILDING DOCS${GLITZ}"
 
 cd ../src
 
