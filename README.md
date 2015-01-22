@@ -86,7 +86,7 @@ Getting Started
     				{
     					device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
     					{
-    						@Override public void onReadOrWriteComplete(Result result)
+    						@Override public void onResult(Result result)
     						{
     							if( result.wasSuccess() )
     							{
