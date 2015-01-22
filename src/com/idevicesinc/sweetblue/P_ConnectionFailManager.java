@@ -84,7 +84,7 @@ class P_ConnectionFailManager
 		retryChoice = retryChoice != null ? retryChoice : Please.DO_NOT_RETRY;
 		retryChoice = !isAttemptingReconnect ? retryChoice : Please.DO_NOT_RETRY;
 		
-		if( reason_nullable == ConnectionFailListener.Reason.EXPLICITLY_CANCELLED )
+		if( reason_nullable != null && reason_nullable.wasCancelled() )
 		{
 			retryChoice = Please.DO_NOT_RETRY;
 		}

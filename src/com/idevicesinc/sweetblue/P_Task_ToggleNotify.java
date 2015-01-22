@@ -177,7 +177,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		{
 			Target target = this.getState() == PE_TaskState.EXECUTING ? Target.DESCRIPTOR : Target.CHARACTERISTIC;
 			UUID descUuid = target == Target.DESCRIPTOR ? m_descUuid : Result.NON_APPLICABLE_UUID;
-			m_readWriteListener.onResult(newResult(Status.CANCELLED, Result.GATT_STATUS_NOT_APPLICABLE, target, m_characteristic.getUuid(), descUuid));
+			m_readWriteListener.onResult(newResult(getCancelType(), Result.GATT_STATUS_NOT_APPLICABLE, target, m_characteristic.getUuid(), descUuid));
 		}
 	}
 	

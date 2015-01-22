@@ -444,9 +444,9 @@ public class BleManager
 	 * Disables BLE if manager is {@link BleState#ON}. This disconnects all current
 	 * connections, stops scanning, and forgets all discovered devices.
 	 */
-	public void disableBle()
+	public void turnOff()
 	{
-		disableBle(false);
+		turnOff(false);
 	}
 	
 	/**
@@ -793,9 +793,9 @@ public class BleManager
 	
 	/**
 	 * Enables BLE if manager is currently {@link BleState#OFF} or {@link BleState#TURNING_OFF}, otherwise does nothing.
-	 * For a convenient way to ask your user first see {@link #enableBleWithIntent(Activity, int)}.
+	 * For a convenient way to ask your user first see {@link #turnOnWithIntent(Activity, int)}.
 	 */
-	public void enableBle()
+	public void turnOn()
 	{
 		if( isAny(TURNING_ON, ON) )  return;
 		
@@ -810,7 +810,7 @@ public class BleManager
 	/**
 	 * This is essentially a big red reset button for the Bluetooth stack. Use it ruthlessly
 	 * when the stack seems to be acting up, like when you can't connect to a device that you should be 
-	 * able to connect to. It's similar to calling {@link #disableBle()} then {@link #enableBle()},
+	 * able to connect to. It's similar to calling {@link #turnOff()} then {@link #turnOn()},
 	 * but also does other things like removing all bonds (similar to {@link #unbondAll()}) and
 	 * other "special sauce" such that you should use this method instead of trying to reset the
 	 * stack manually with component calls.
@@ -848,12 +848,12 @@ public class BleManager
 	
 	/**
 	 * Convenience method to request your user to enable ble in a "standard" way
-	 * with an {@link Intent} instead of using {@link #enableBle()} directly.
+	 * with an {@link Intent} instead of using {@link #turnOn()} directly.
 	 * Result will be posted as normal to {@link Activity#onActivityResult()}.
 	 * If current state is {@link BleState#ON} or {@link BleState#TURNING_ON}
 	 * this method early outs and does nothing.
 	 */
-	public void enableBleWithIntent(Activity callingActivity, int requestCode)
+	public void turnOnWithIntent(Activity callingActivity, int requestCode)
 	{
 		if( isAny(ON, TURNING_ON) )  return;
 		
@@ -1171,12 +1171,12 @@ public class BleManager
 	P_Logger					getLogger(){					return m_logger;					}
 	
 	
-	private void disableBle(boolean removeAllBonds)
+	private void turnOff(boolean removeAllBonds)
 	{
-		disableBle_synchronized(removeAllBonds);
+		turnOff_synchronized(removeAllBonds);
 	}
 	
-	private void disableBle_synchronized(boolean removeAllBonds)
+	private void turnOff_synchronized(boolean removeAllBonds)
 	{
 		if( isAny(TURNING_OFF, OFF) )  return;
 		
@@ -1185,7 +1185,7 @@ public class BleManager
 			m_stateTracker.update(E_Intent.EXPLICIT, TURNING_OFF, true, ON, false);
 		}
 		
-		m_deviceMngr.disconnectAll(PE_TaskPriority.CRITICAL);
+		m_deviceMngr.disconnectAllForTurnOff(PE_TaskPriority.CRITICAL);
 		
 		if( removeAllBonds )
 		{
@@ -1235,7 +1235,7 @@ public class BleManager
 		
 		m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
 		
-		disableBle(/*removeAllBonds=*/true);
+		turnOff(/*removeAllBonds=*/true);
 
 		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
 		{
@@ -1376,7 +1376,7 @@ public class BleManager
 	
 	private void onDiscovered_synchronized(BluetoothDevice device_native, int rssi, byte[] scanRecord_nullable)
 	{
-		//--- DRK > Protects against fringe case where scan task is executing and app calls disableBle().
+		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
 		//---		discover another device or two. We're checking the enum state as opposed to the native
 		//---		integer state because in this case the "turn off ble" task hasn't started yet and thus

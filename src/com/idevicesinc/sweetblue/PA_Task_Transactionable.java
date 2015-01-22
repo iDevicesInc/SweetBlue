@@ -27,6 +27,20 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		m_priority = priority != null ? priority : PE_TaskPriority.FOR_NORMAL_READS_WRITES;
 	}
 	
+	protected final BleDevice.ReadWriteListener.Status getCancelType()
+	{
+		BleManager mngr = this.getManager();
+		
+		if( mngr.is(BleState.TURNING_OFF) )
+		{
+			return BleDevice.ReadWriteListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
+		}
+		else
+		{
+			return BleDevice.ReadWriteListener.Status.CANCELLED_FROM_DISCONNECT;
+		}
+	}
+	
 	
 	public BleTransaction getTxn()
 	{

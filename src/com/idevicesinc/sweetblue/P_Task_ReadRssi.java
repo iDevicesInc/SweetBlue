@@ -105,7 +105,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onResult(newResult(Status.CANCELLED, Result.GATT_STATUS_NOT_APPLICABLE, 0));
+				m_readWriteListener.onResult(newResult(getCancelType(), Result.GATT_STATUS_NOT_APPLICABLE, 0));
 			}
 		}
 	}

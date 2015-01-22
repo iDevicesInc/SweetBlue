@@ -232,7 +232,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 			
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onResult(newResult(Status.CANCELLED, Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+				m_readWriteListener.onResult(newResult(getCancelType(), Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 			}
 		}
 	}

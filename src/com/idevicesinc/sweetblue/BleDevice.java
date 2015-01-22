@@ -98,9 +98,16 @@ public class BleDevice
 			FAILED_TO_SEND_OUT,
 			
 			/**
-			 * The operation was cancelled either by the device becoming {@link BleDeviceState#DISCONNECTED} or {@link BleManager} turning {@link BleState#OFF}.
+			 * The operation was cancelled either by the device becoming {@link BleDeviceState#DISCONNECTED}.
 			 */
-			CANCELLED,
+			CANCELLED_FROM_DISCONNECT,
+			
+			/**
+			 * The operation was cancelled because {@link BleManager} went {@link BleState#TURNING_OFF} or {@link BleState#OFF}.
+			 * Note that if the user turns off BLE from their OS settings then {@link Result#status} might be {@link #CANCELLED_FROM_DISCONNECT}
+			 * because we might get the disconnect callback before the turning off callback.
+			 */
+			CANCELLED_FROM_BLE_TURNING_OFF,
 			
 			/**
 			 * Used either when {@link Result#type} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
@@ -130,6 +137,14 @@ public class BleDevice
 			 * Operation took longer than {@link BleManagerConfig#DEFAULT_TASK_TIMEOUT} seconds so we cut it loose.
 			 */
 			TIMED_OUT;
+			
+			/**
+			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@value #CANCELLED_FROM_BLE_TURNING_OFF}.
+			 */
+			public boolean wasCancelled()
+			{
+				return this == CANCELLED_FROM_DISCONNECT || this == Status.CANCELLED_FROM_BLE_TURNING_OFF;
+			}
 		}
 		
 		/**
@@ -357,6 +372,30 @@ public class BleDevice
 				return status == Status.SUCCESS;
 			}
 			
+			/**
+			 * Forwards {@link Status#wasCancelled()}.
+			 */
+			public boolean wasCancelled()
+			{
+				return status.wasCancelled();
+			}
+			
+			/**
+			 * Forwards {@link Type#isNotification()}.
+			 */
+			public boolean isNotification()
+			{
+				return type.isNotification();
+			}
+			
+			/**
+			 * Forwards {@link Type#isRead()}.
+			 */
+			public boolean isRead()
+			{
+				return type.isRead();
+			}
+			
 			@Override public String toString()
 			{
 				if( target == Target.RSSI )
@@ -447,14 +486,28 @@ public class BleDevice
 			/**
 			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
 			 * but only occurs after the device is {@link BleDeviceState#CONNECTED} and we're going through {@link BleDeviceState#GETTING_SERVICES},
-			 * or {@link BleDeviceState#AUTHENTICATING}, or what have you.
+			 * or {@link BleDeviceState#AUTHENTICATING}, or what have you. It might from the device turning off, or going out of range, or any other
+			 * random reason.
 			 */
 			ROGUE_DISCONNECT,
 			
 			/**
 			 * {@link BleDevice#disconnect()} was called sometime during the connection process.
 			 */
-			EXPLICITLY_CANCELLED;
+			CANCELLED_FROM_DISCONNECT,
+			
+			/**
+			 * {@link BleManager#dropTacticalNuke()} or {@link BleManager#turnOff()} (or overloads) were called sometime during the connection process.
+			 */
+			CANCELLED_FROM_BLE_TURNING_OFF;
+			
+			/**
+			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@value #CANCELLED_FROM_BLE_TURNING_OFF}.
+			 */
+			public boolean wasCancelled()
+			{
+				return this == CANCELLED_FROM_DISCONNECT || this == CANCELLED_FROM_BLE_TURNING_OFF;
+			}
 		}
 
 		/**
@@ -1045,7 +1098,7 @@ public class BleDevice
 	 */
 	public void disconnect()
 	{
-		disconnectExplicitly(null);
+		disconnectWithReason(/*priority=*/null, Reason.CANCELLED_FROM_DISCONNECT);
 	}
 	
 	/**
@@ -1863,31 +1916,31 @@ public class BleDevice
 		}
 	}
 	
-	void disconnectExplicitly(PE_TaskPriority priority)
-	{
-		m_useAutoConnect = m_alwaysUseAutoConnect;
-		
-		m_connectionFailMngr.onExplicitDisconnect();
-		
-		disconnectWithReason(priority, ConnectionFailListener.Reason.EXPLICITLY_CANCELLED);
-	}
-	
 	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting)
 	{
 		disconnectWithReason(null, connectionFailReasonIfConnecting);
 	}
 	
-	private void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting)
+	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting)
 	{
+		boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
+		
+		if( cancelled )
+		{
+			m_useAutoConnect = m_alwaysUseAutoConnect;
+			
+			m_connectionFailMngr.onExplicitDisconnect();
+		}
+		
 		boolean wasConnecting = is(CONNECTING_OVERALL);
 		boolean attemptingReconnect = is(ATTEMPTING_RECONNECT);
 		
-		if( connectionFailReasonIfConnecting == Reason.EXPLICITLY_CANCELLED )
+		if( cancelled )
 		{
 			attemptingReconnect = false;
 		}
 		
-		E_Intent intent = connectionFailReasonIfConnecting==Reason.EXPLICITLY_CANCELLED ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+		E_Intent intent = cancelled ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.EXPLICIT;
 		
 		if( isAny(CONNECTED, CONNECTING_OVERALL, INITIALIZED) )
@@ -1964,7 +2017,14 @@ public class BleDevice
 		{
 			if( m_mngr.ASSERT(!wasExplicit) )
 			{
-				connectionFailReason_nullable = ConnectionFailListener.Reason.ROGUE_DISCONNECT;
+				if( m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF) )
+				{
+					connectionFailReason_nullable = ConnectionFailListener.Reason.CANCELLED_FROM_BLE_TURNING_OFF;
+				}
+				else
+				{
+					connectionFailReason_nullable = ConnectionFailListener.Reason.ROGUE_DISCONNECT;
+				}
 			}
 		}
 		

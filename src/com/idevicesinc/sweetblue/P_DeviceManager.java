@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener_Full;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
@@ -188,7 +189,7 @@ class P_DeviceManager
 		}
 	}
 	
-	void disconnectAll(PE_TaskPriority priority)
+	void disconnectAllForTurnOff(PE_TaskPriority priority)
 	{
 		synchronized (m_list)
 		{
@@ -199,7 +200,7 @@ class P_DeviceManager
 				//--- DRK > Just an early-out performance check here.
 				if( device.is(BleDeviceState.CONNECTED) )
 				{
-					device.disconnectExplicitly(priority);
+					device.disconnectWithReason(priority, Reason.CANCELLED_FROM_BLE_TURNING_OFF);
 				}
 			}
 		}
