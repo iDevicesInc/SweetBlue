@@ -48,9 +48,9 @@ Features
 
 Getting Started
 ===============
- 1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as *MyApp/libs/*.
- 2. Add to Eclipse...
-  1. Find the *Package Explorer* view.
+ 1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/libs/`.
+ 2. If using Eclipse...
+  1. Open the *Package Explorer* view.
   2. Expand *MyApp/libs/sweetblue/*.
   3. Right-click on the *src* folder.
   4. Hover over *Choose Build Path*->
