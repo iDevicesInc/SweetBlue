@@ -48,35 +48,23 @@ Features
 
 Getting Started
 ===============
-[Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release and copy it to a subfolder of your project such as *MyApp/libs/*. Add to **Eclipse** the short way...
-
- 1. Find the *Package Explorer* view.
- 2. Expand *MyApp/libs/sweetblue/*.
- 3. Right-click on the *src* folder.
- 4. Hover over *Choose Build Path*->
- 5. Click *Use as Source Folder*.
-
-...or the longer way...
- 1. Find the *Package Explorer* view.
- 2. Right-click on your project.
- 3. Hover over *Choose Build Path*->
- 4. Click *Configure Build Path...*
- 5. Click the *Source* tab (if it's not already selected).
- 6. Click *Add Folder...*
- 7. Check the box next to *MyApp/libs/sweetblue/src/*.
-
-Other folders in *MyApp/libs/sweetblue/* like *MyApp/libs/sweetblue/samples/* are included in this repo for convenience but are not essential so you may delete them.
-
-Now add these to the root of MyApp/AndroidManifest.xml:
-```xml
-<uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19" />
-<uses-permission android:name="android.permission.BLUETOOTH" />
-<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-<uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
-<uses-permission android:name="android.permission.WAKE_LOCK" />
-<uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
-```
-Then, from your `Activity`, this is all it takes to discover a device, connect to it, and read a characteristic:
+ 1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as *MyApp/libs/*.
+ 2. Add to Eclipse...
+  1. Find the *Package Explorer* view.
+  2. Expand *MyApp/libs/sweetblue/*.
+  3. Right-click on the *src* folder.
+  4. Hover over *Choose Build Path*->
+  5. Click *Use as Source Folder*.
+ 3. Now add these to the root of MyApp/AndroidManifest.xml:
+	```xml
+	<uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19" />
+	<uses-permission android:name="android.permission.BLUETOOTH" />
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+	<uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+	```
+ 4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
 ```java
 BleManager.get(this).startScan(new BleManager.DiscoveryListener()
 {
@@ -104,6 +92,8 @@ BleManager.get(this).startScan(new BleManager.DiscoveryListener()
 	}
 });
 ```
+
+Other folders in *MyApp/libs/sweetblue/* like *MyApp/libs/sweetblue/samples/* are included in this repo for convenience but are not essential so you may delete them.
 
 Licensing
 =========
