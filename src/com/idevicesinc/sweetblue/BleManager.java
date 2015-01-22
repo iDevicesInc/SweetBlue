@@ -306,11 +306,13 @@ public class BleManager
 	
 	private static void verifySingleton(Context context)
 	{
-		if( s_instance != null )//&& s_instance.getApplication() != application )
-		{
-			//--- DRK > Not sure how/if this could happen, but I never underestimate Android.
-			throw new InstantiationError("There can only be one instance of "+BleManager.class.getSimpleName() + " created per application.");
-		}
+		//--- DRK > Not confident how this method behaves with complex applications, multiple activities, services, widgets, etc.
+		//---		Don't want to throw Errors needlessly, so commenting out for now.
+//		if( s_instance != null && s_instance.getApplicationContext() != context.getApplicationContext() )
+//		{
+//			//--- DRK > Not sure how/if this could happen, but I never underestimate Android.
+//			throw new InstantiationError("There can only be one instance of "+BleManager.class.getSimpleName() + " created per application.");
+//		}
 	}
 	
 	/**
