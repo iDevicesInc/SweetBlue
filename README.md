@@ -57,7 +57,7 @@ Getting Started
       2. Hover over `Build Path->`.
       3. Click `Use as Source Folder`.
   4. If building from JAR...
-      1. Open the `jars` folder.
+      1. Expand the `jars` folder.
       2. Right click on `sweetblue_{version}.jar`.
       3. Hover over `Build Path->`.
       4. Click `Add to Build Path`.
