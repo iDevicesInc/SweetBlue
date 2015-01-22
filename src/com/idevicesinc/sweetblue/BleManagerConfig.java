@@ -119,7 +119,7 @@ public class BleManagerConfig implements Cloneable
 		/**
 		 * Return this from {@link #getTimeToNextReconnect(BleDevice, int, Interval, Interval)} to instantly reconnect.
 		 */
-		public static final Interval INSTANTLY = Interval.seconds(0.0);
+		public static final Interval INSTANTLY = Interval.ZERO;
 		
 		/**
 		 * Return this from {@link #getTimeToNextReconnect(BleDevice, int, Interval, Interval)} to stop a reconnect attempt loop.

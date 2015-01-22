@@ -494,19 +494,19 @@ public class BleDevice
 			/**
 			 * {@link BleDevice#disconnect()} was called sometime during the connection process.
 			 */
-			CANCELLED_FROM_DISCONNECT,
+			EXPLICIT_DISCONNECT,
 			
 			/**
 			 * {@link BleManager#dropTacticalNuke()} or {@link BleManager#turnOff()} (or overloads) were called sometime during the connection process.
 			 */
-			CANCELLED_FROM_BLE_TURNING_OFF;
+			BLE_TURNING_OFF;
 			
 			/**
-			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@value #CANCELLED_FROM_BLE_TURNING_OFF}.
+			 * Returns true for {@link #EXPLICIT_DISCONNECT} or {@value #BLE_TURNING_OFF}.
 			 */
 			public boolean wasCancelled()
 			{
-				return this == CANCELLED_FROM_DISCONNECT || this == CANCELLED_FROM_BLE_TURNING_OFF;
+				return this == EXPLICIT_DISCONNECT || this == BLE_TURNING_OFF;
 			}
 		}
 
@@ -527,14 +527,20 @@ public class BleDevice
 		}
 		
 		/**
-		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason is {@link Reason#EXPLICITLY_CANCELLED}.
+		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#wasCancelled()}.
 		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleManagerConfig.ReconnectRateLimiter}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
 		 * lets the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
 		 * <br><br>
 		 * NOTE that this callback gets fired *after* {@link StateListener} lets you know that the device is {@link BleDeviceState#DISCONNECTED}.
+		 * <br><br>
+		 * The time parameters passed to this method are of optional use to you to decide if connecting again is worth it. For example if you've 
+		 * been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
+		 * 
+		 * @param latestAttemptTime How long the last connection attempt took before failing.
+		 * @param totalAttemptTime How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
 		 */
-		Please onConnectionFail(BleDevice device, ConnectionFailListener.Reason reason, int failureCountSoFar);
+		Please onConnectionFail(BleDevice device, ConnectionFailListener.Reason reason, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime);
 	}
 	
 	/**
@@ -559,7 +565,7 @@ public class BleDevice
 			return m_retryCount;
 		}
 		
-		@Override public Please onConnectionFail(BleDevice device, Reason reason, int failureCountSoFar)
+		@Override public Please onConnectionFail(BleDevice device, Reason reason, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime)
 		{
 			return failureCountSoFar <= m_retryCount ? Please.RETRY : Please.DO_NOT_RETRY; 
 		}
@@ -1094,11 +1100,11 @@ public class BleDevice
 	 * cancel all ongoing operations. This method will also bring the device out of the
 	 * {@link BleDeviceState#ATTEMPTING_RECONNECT} state.
 	 * 
-	 * @see ConnectionFailListener.Reason#EXPLICITLY_CANCELLED
+	 * @see ConnectionFailListener.Reason#EXPLICIT_DISCONNECT
 	 */
 	public void disconnect()
 	{
-		disconnectWithReason(/*priority=*/null, Reason.CANCELLED_FROM_DISCONNECT);
+		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT);
 	}
 	
 	/**
@@ -2019,7 +2025,7 @@ public class BleDevice
 			{
 				if( m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF) )
 				{
-					connectionFailReason_nullable = ConnectionFailListener.Reason.CANCELLED_FROM_BLE_TURNING_OFF;
+					connectionFailReason_nullable = ConnectionFailListener.Reason.BLE_TURNING_OFF;
 				}
 				else
 				{

@@ -23,6 +23,11 @@ public class Interval
 	 */
 	public static final Interval INFINITE = Interval.seconds(Double.POSITIVE_INFINITY);
 	
+	/**
+	 * Convenience value for zero time.
+	 */
+	public static final Interval ZERO = Interval.seconds(0.0);
+	
 	
 	public final double seconds;
 	public final long milliseconds;
