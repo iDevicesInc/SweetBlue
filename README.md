@@ -67,33 +67,33 @@ Getting Started
     ```
         
  4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
-```java
-BleManager.get(this).startScan(new BleManager.DiscoveryListener()
-{
-	@Override public void onDeviceDiscovered(BleDevice device)
-	{
-		device.connect(new BleDevice.StateListener()
-		{
-			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask)
-			{
-				if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
-				{
-					device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
-					{
-						@Override public void onReadOrWriteComplete(Result result)
-						{
-							if( result.wasSuccess() )
-							{
-								Log.i("SweetBlueExample", "Battery level is " + result.data[0] + "%");
-							}
-						}
-					});
-				}
-			}
-		});
-	}
-});
-```
+    ```java
+    BleManager.get(this).startScan(new BleManager.DiscoveryListener()
+    {
+    	@Override public void onDeviceDiscovered(BleDevice device)
+    	{
+    		device.connect(new BleDevice.StateListener()
+    		{
+    			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask)
+    			{
+    				if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
+    				{
+    					device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+    					{
+    						@Override public void onReadOrWriteComplete(Result result)
+    						{
+    							if( result.wasSuccess() )
+    							{
+    								Log.i("SweetBlueExample", "Battery level is " + result.data[0] + "%");
+    							}
+    						}
+    					});
+    				}
+    			}
+    		});
+    	}
+    });
+    ```
 
 Other folders in *MyApp/libs/sweetblue/* like *MyApp/libs/sweetblue/samples/* are included in this repo for convenience but are not essential so you may delete them.
 
