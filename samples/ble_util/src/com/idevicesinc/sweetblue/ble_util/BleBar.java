@@ -58,7 +58,7 @@ public class BleBar extends LinearLayout
 		{	
 			@Override public void onClick(View v)
 			{
-				m_bleMngr.enableBle();
+				m_bleMngr.turnOn();
 			}
 		});
 		
@@ -66,7 +66,7 @@ public class BleBar extends LinearLayout
 		{	
 			@Override public void onClick(View v)
 			{
-				m_bleMngr.disableBle();
+				m_bleMngr.turnOff();
 			}
 		});
 		

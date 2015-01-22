@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.*;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
@@ -111,7 +112,7 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 		updateStatus(newStateBits);
 	}
 
-	@Override public Please onConnectionFail(BleDevice device, Reason reason, int failureCountSoFar)
+	@Override public Please onConnectionFail(BleDevice device, Reason reason, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime)
 	{
 		if( failureCountSoFar < CONNECTION_RETRY_COUNT )
 		{
