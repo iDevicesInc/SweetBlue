@@ -31,7 +31,7 @@ import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
- * The entry point to the library. Get a singleton instance using {@link #get(Activity, BleManagerConfig)} or its overloads. Make sure
+ * The entry point to the library. Get a singleton instance using {@link #get(Context, BleManagerConfig)} or its overloads. Make sure
  * to hook up this manager to lifecycle events for your app as a whole: {@link #onPause()} and {@link #onResume()}.
  * <br><br>
  * Also put the following entries (or something similar) in the root of your AndroidManifest.xml:
