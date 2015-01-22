@@ -56,13 +56,15 @@ Getting Started
   4. Hover over *Choose Build Path*->
   5. Click *Use as Source Folder*.
  3. Now add these to the root of MyApp/AndroidManifest.xml:
-
+ 
+    ```xml
         <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19" />
         <uses-permission android:name="android.permission.BLUETOOTH" />
         <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
         <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
         <uses-permission android:name="android.permission.WAKE_LOCK" />
         <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    ```
         
  4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
 ```java
