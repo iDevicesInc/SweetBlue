@@ -38,15 +38,15 @@ public class MyActivity extends Activity
 				
 				device.connect(new BleDevice.StateListener()
 				{
-					@Override public void onStateChange(final BleDevice device, int oldStateBits, int newStateBits)
+					@Override public void onStateChange(final BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask)
 					{
 						if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
 						{
-							Log.i("SweetBlueExample", device.getDebugName() + " just initialized!");
+							Log.i("SweetBlueExample", device.getName_debug() + " just initialized!");
 							
 							device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
 							{
-								@Override public void onReadOrWriteComplete(Result result)
+								@Override public void onResult(Result result)
 								{
 									if( result.wasSuccess() )
 									{

@@ -53,12 +53,12 @@ public class BleStatusBar extends FrameLayout implements BleManager.StateListene
 		m_nativeStatus.setText(status);
 	}
 	
-	@Override public void onBleStateChange(BleManager manager, int oldStateBits, int newStateBits)
+	@Override public void onBleStateChange(BleManager manager, int oldStateBits, int newStateBits, int explicitnessMask)
 	{
 		updateStatus();
 	}
 
-	@Override public void onNativeBleStateChange(BleManager manager, int oldStateBits, int newStateBits)
+	@Override public void onNativeBleStateChange(BleManager manager, int oldStateBits, int newStateBits, int explicitnessMask)
 	{
 		updateStatus();
 	}

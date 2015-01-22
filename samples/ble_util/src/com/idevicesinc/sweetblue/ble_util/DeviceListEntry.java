@@ -81,7 +81,7 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 
 		updateStatus(m_device.getStateMask());
 		
-		String name = m_device.getNormalizedName();
+		String name = m_device.getName_normalized();
 		if( name.length() == 0 )
 		{
 			name = m_device.getMacAddress();
@@ -106,7 +106,7 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 		m_status.setText(status);
 	}
 
-	@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits)
+	@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask)
 	{
 		updateStatus(newStateBits);
 	}
@@ -119,7 +119,7 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 		}
 		else
 		{
-			Toast.makeText(getContext(), device.getDebugName() + " connection failed with " + failureCountSoFar + " retries - " + reason, Toast.LENGTH_LONG).show();
+			Toast.makeText(getContext(), device.getName_debug() + " connection failed with " + failureCountSoFar + " retries - " + reason, Toast.LENGTH_LONG).show();
 			
 			return Please.DO_NOT_RETRY;
 		}
