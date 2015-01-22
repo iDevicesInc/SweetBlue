@@ -50,12 +50,12 @@ Getting Started
 ===============
  1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/libs/`.
  2. If using Eclipse...
-  1. Open the *Package Explorer* view.
-  2. Expand *MyApp/libs/sweetblue/*.
-  3. Right-click on the *src* folder.
-  4. Hover over *Choose Build Path*->
-  5. Click *Use as Source Folder*.
- 3. Now add these to the root of MyApp/AndroidManifest.xml:
+  1. Open the `Package Explorer` view.
+  2. Expand `MyApp/libs/sweetblue/`.
+  3. Right-click on the `src` folder.
+  4. Hover over `Choose Build Path->`
+  5. Click `Use as Source Folder`.
+ 3. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```xml
     <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19" />
@@ -95,7 +95,7 @@ Getting Started
     });
     ```
 
-Other folders in *MyApp/libs/sweetblue/* like *MyApp/libs/sweetblue/samples/* are included in this repo for convenience but are not essential so you may delete them.
+Other folders in `MyApp/libs/sweetblue/` like `MyApp/libs/sweetblue/samples/` are included in this repo for convenience but are not essential so you may delete them.
 
 Licensing
 =========
