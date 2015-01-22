@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#sh build_then_upload_docs.sh
+sh build_then_upload_docs.sh
 
 source config.sh
 
