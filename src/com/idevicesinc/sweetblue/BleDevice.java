@@ -106,6 +106,8 @@ public class BleDevice
 			 * The operation was cancelled because {@link BleManager} went {@link BleState#TURNING_OFF} or {@link BleState#OFF}.
 			 * Note that if the user turns off BLE from their OS settings then {@link Result#status} might be {@link #CANCELLED_FROM_DISCONNECT}
 			 * because we might get the disconnect callback before the turning off callback.
+			 * <br><br>
+			 * Either way, the device was or will be disconnected.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF,
 			
