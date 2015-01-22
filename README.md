@@ -52,9 +52,15 @@ Getting Started
  2. If using Eclipse...
   1. Open the `Package Explorer` view.
   2. Expand `MyApp/libs/sweetblue/`.
-  3. Right-click on the `src` folder.
-  4. Hover over `Choose Build Path->`
-  5. Click `Use as Source Folder`.
+  3. If building from source...
+      1. Right-click on the `src` folder.
+      2. Hover over `Build Path->`.
+      3. Click `Use as Source Folder`.
+  4. If building from JAR...
+      1. Open the `jars` folder.
+      2. Right click on `sweetblue_{version}.jar`.
+      3. Hover over `Build Path->`.
+      4. Click `Add to Build Path`.
  3. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```xml
