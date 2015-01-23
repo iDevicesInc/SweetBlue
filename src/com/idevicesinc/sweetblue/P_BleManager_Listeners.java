@@ -262,6 +262,17 @@ class P_BleManager_Listeners
 		m_mngr.getNativeStateTracker().update(intent, previousState, false, newState, true);
 		m_mngr.getStateTracker().update(intent, previousState, false, newState, true);
 		
+		if( previousNativeState != BluetoothAdapter.STATE_ON && newNativeState == BluetoothAdapter.STATE_ON )
+		{
+			m_mngr.m_deviceMngr.rediscoverDevices();
+			
+			if( m_mngr.m_config.autoReconnectDevicesWhenBleTurnsBackOn )
+			{
+				m_mngr.m_deviceMngr.reconnectDevicesAfterBleTurningBackOn();
+			}
+		}
+		
+		
 		if( previousNativeState == BluetoothAdapter.STATE_TURNING_OFF && newNativeState == BluetoothAdapter.STATE_ON )
 		{
 			m_mngr.uhOh(UhOh.CANNOT_DISABLE_BLUETOOTH);

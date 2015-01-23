@@ -56,7 +56,7 @@ public class Utils
 	
 	public static String normalizeDeviceName(String deviceName)
 	{
-		if( deviceName == null )  return "";
+		if( deviceName == null || deviceName.length() == 0 )  return "";
 		
 		String[] nameParts = deviceName.split("-");
 		String consistentName = nameParts[0];

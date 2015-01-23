@@ -205,6 +205,38 @@ class P_DeviceManager
 			}
 		}
 	}
+	
+	void rediscoverDevices()
+	{
+		synchronized (m_list)
+		{
+			for( int i = m_list.size()-1; i >= 0; i-- )
+			{
+				BleDevice device = (BleDevice) m_list.get(i);
+				
+				if( !device.is(BleDeviceState.DISCOVERED) )
+				{
+					device.onNewlyDiscovered(null, device.getRssi(), null);
+				}
+			}
+		}
+	}
+	
+	void reconnectDevicesAfterBleTurningBackOn()
+	{
+		synchronized (m_list)
+		{
+			for( int i = m_list.size()-1; i >= 0; i-- )
+			{
+				BleDevice device = (BleDevice) m_list.get(i);
+				
+				if( device.lastDisconnectWasBecauseOfBleTurnOff() )
+				{
+					device.connect();
+				}
+			}
+		}
+	}
 
 	void undiscoverAll(PA_StateTracker.E_Intent intent)
 	{
@@ -213,20 +245,29 @@ class P_DeviceManager
 			m_mngr.ASSERT(!m_updating, "Undiscovering devices while updating!");
 			
 			Object[] rawList = m_list.toArray();
-			m_map.clear();
-			m_list.clear();
 			
-			for( int i = rawList.length-1; i >= 0; i-- )
+			if( !m_mngr.m_config.retainDevicesWhenBleTurnsOff )
 			{
-				BleDevice device = (BleDevice) rawList[i];
-				
-				undiscoverDevice(device, m_mngr.m_discoveryListener, intent);
+				m_map.clear();
+				m_list.clear();
+			}
+			
+			if( m_mngr.m_config.undiscoverDevicesWhenBleTurnsOff )
+			{
+				for( int i = rawList.length-1; i >= 0; i-- )
+				{
+					BleDevice device = (BleDevice) rawList[i];
+					
+					undiscoverDevice(device, m_mngr.m_discoveryListener, intent);
+				}
 			}
 		}
 	}
 	
 	private static void undiscoverDevice(BleDevice device, BleManager.DiscoveryListener listener, PA_StateTracker.E_Intent intent)
 	{
+		if( !device.is(BleDeviceState.DISCOVERED) )  return;
+		
 		device.onUndiscovered(intent);
 		
 		if( listener != null )

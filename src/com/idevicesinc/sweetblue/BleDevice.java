@@ -641,6 +641,7 @@ public class BleDevice
 	private boolean m_alwaysUseAutoConnect = false;
 	
 	private Boolean m_lastConnectOrDisconnectWasUserExplicit = null;
+	private boolean m_lastDisconnectWasBecauseOfBleTurnOff = false; 
 	
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -1667,6 +1668,8 @@ public class BleDevice
 	
 	void onNativeConnect(boolean explicit)
 	{
+		m_lastDisconnectWasBecauseOfBleTurnOff = false; // DRK > Just being anal.
+		
 		E_Intent intent = explicit && !is(ATTEMPTING_RECONNECT) ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.EXPLICIT;
 		
@@ -1987,8 +1990,15 @@ public class BleDevice
 	{
 	}
 	
+	boolean lastDisconnectWasBecauseOfBleTurnOff()
+	{
+		return m_lastDisconnectWasBecauseOfBleTurnOff;
+	}
+	
 	void onNativeDisconnect(boolean wasExplicit)
 	{
+		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF);
+		
 		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;
 		
 //		if( m_state.ordinal() < E_State.CONNECTING.ordinal() )

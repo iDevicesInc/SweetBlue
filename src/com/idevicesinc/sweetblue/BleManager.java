@@ -44,6 +44,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * {@code <uses-permission android:name="android.permission.WAKE_LOCK" /> } <br>
  * <br><br>
  * {@link permission#WAKE_LOCK} is recommended but optional, needed if {@link BleManagerConfig#manageCpuWakeLock} is enabled to aid with reconnect loops.
+ * As of now it's enabled by default.
  * <br><br><br>
  *
  * Then here is a simple example usage:<pre><code>
@@ -1129,7 +1130,7 @@ public class BleManager
 
 		final BluetoothDevice device_native = getNative().getAdapter().getRemoteDevice(macAddress);
 
-		if( device_native == null )  return null;
+		if( device_native == null )  return null; //--- DRK > API says this should never happen...not trusting it!
 
 		final String name_normalized = Utils.normalizeDeviceName(name);
 
@@ -1305,6 +1306,10 @@ public class BleManager
 					//--- DRK > It's been observed that right on app start up startLeScan can fail with a log
 					//---		message saying it's already started...not sure if it's my fault or not but throwing
 					//---		this in as a last ditch effort to "fix" things.
+					//---
+					//---		UPDATE: It's been observed through simple test apps that when restarting an app through eclipse,
+					//---		Android somehow, sometimes, keeps the same actual BleManager instance in memory, so it's not 
+					//---		far-fetched to assume that the scan from the previous app run can sometimes still be ongoing.
 					m_btMngr.getAdapter().stopLeScan(m_listeners.m_scanCallback);
 				}
 				else
