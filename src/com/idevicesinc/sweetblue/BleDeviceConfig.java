@@ -14,8 +14,6 @@ import android.app.Application;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
-import com.idevicesinc.sweetblue.BleManagerConfig.DefaultReconnectRateLimiter;
-import com.idevicesinc.sweetblue.BleManagerConfig.ReconnectRateLimiter;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -26,6 +24,8 @@ import com.idevicesinc.sweetblue.utils.Uuids;
  * Provides a number of options to pass to {@link BleDevice#setConfig(BleDeviceConfig)}.
  * This class is also the super class of {@link BleManagerConfig}, which you can pass
  * to {@link BleManager#get(Context, BleManagerConfig)} to set base options for all devices at once.
+ * For all options in this class, you may set the value to <code>null</code> and the value will
+ * be inherited from the {@link BleManagerConfig}.
  */
 public class BleDeviceConfig implements Cloneable
 {
@@ -95,16 +95,16 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Default is false - use this option to globally force bonding after a
+	 * Default is false - use this option to force bonding after a
 	 * {@link BleDevice} is {@link BleDeviceState#CONNECTED} if it is not {@link BleDeviceState#BONDED} already.
 	 */
-	public boolean autoBondAfterConnect					= false;
+	public Boolean autoBondAfterConnect					= false;
 	
 	/**
 	 * Default is true - whether to automatically get services immediately after a {@link BleDevice} is
 	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
 	 */
-	public boolean autoGetServices						= true;
+	public Boolean autoGetServices						= true;
 	
 	/**
 	 * Default is true if phone is manufactured by Sony, false otherwise (sorry Sony) - Some
@@ -113,12 +113,12 @@ public class BleDeviceConfig implements Cloneable
 	 * The problem seems to be associated with mismanagement of pairing keys by the OS and
 	 * this brute force solution seems to be the only way to smooth things out.
 	 */
-	public boolean removeBondOnDisconnect				= Utils.isSony();
+	public Boolean removeBondOnDisconnect				= Utils.isSony();
 	
 	/**
 	 * Default is same as {@link #removeBondOnDisconnect} - see {@link #removeBondOnDisconnect} for explanation.
 	 */
-	public boolean removeBondOnDiscovery				= removeBondOnDisconnect;
+	public Boolean removeBondOnDiscovery				= removeBondOnDisconnect;
 	
 	/**
 	 * Default is false - if true and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
@@ -126,7 +126,7 @@ public class BleDeviceConfig implements Cloneable
 	 * parameters then two identical polls would run which would probably be wasteful and unintentional.
 	 * This option provides a defense against that situation.
 	 */
-	public boolean allowDuplicatePollEntries			= false;
+	public Boolean allowDuplicatePollEntries			= false;
 	
 	/**
 	 * Default is false - {@link BleDevice#getAverageReadTime()} and {@link BleDevice#getAverageWriteTime()} can be 
@@ -136,7 +136,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageReadTime()
 	 * @see BleDevice#getAverageWriteTime() 
 	 */
-	public boolean includeFirmwareUpdateReadWriteTimesInAverage = false;
+	public Boolean includeFirmwareUpdateReadWriteTimesInAverage = false;
 	
 	/**
 	 * Default is false - see the <code>boolean autoConnect</code> parameter of
@@ -156,7 +156,7 @@ public class BleDeviceConfig implements Cloneable
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
 	 * failed connection for the library to internally start using autoConnect==true).
 	 */
-	public boolean alwaysUseAutoConnect = false;
+	public Boolean alwaysUseAutoConnect = false;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
@@ -188,7 +188,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageWriteTime()
 	 * @see #nForAverageRunningReadTime
 	 */
-	public int		nForAverageRunningWriteTime			= DEFAULT_RUNNING_AVERAGE_N;
+	public Integer		nForAverageRunningWriteTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - Same thing as {@link #nForAverageRunningWriteTime} but for reads.
@@ -196,7 +196,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageWriteTime()
 	 * @see #nForAverageRunningWriteTime
 	 */
-	public int		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
+	public Integer		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
 	 * Default is null, meaning the library won't preemptively attempt to bond for any characteristic operations.
@@ -217,6 +217,11 @@ public class BleDeviceConfig implements Cloneable
 	 * @see DefaultReconnectRateLimiter
 	 */
 	public ReconnectRateLimiter reconnectRateLimiter = new DefaultReconnectRateLimiter();
+	
+	static boolean bool(Boolean bool)
+	{
+		return bool == null ? false : bool;
+	}
 	
 	public BleDeviceConfig()
 	{

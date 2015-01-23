@@ -7,6 +7,7 @@ import java.util.List;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener_Full;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
  * 
@@ -294,7 +295,7 @@ class P_DeviceManager
 		}
 	}
 	
-	void purgeStaleDevices(final double scanKeepAlive, final BleManager.DiscoveryListener listener)
+	void purgeStaleDevices(final double scanTime, final BleManager.DiscoveryListener listener)
 	{
 		//--- DRK > Band-aid fix for a potential race condition where scan is stopped from main thread (e.g. by backgrounding).
 		//---		Thus we can start going through this list but then still get some discovery callbacks at the same time.
@@ -314,11 +315,20 @@ class P_DeviceManager
 					for( int i = m_list.size()-1; i >= 0; i-- )
 					{
 						BleDevice device = get(i);
+						
+						Interval minScanTimeToInvokeUndiscovery = BleDevice.conf_interval(device.conf_device().minScanTimeToInvokeUndiscovery, device.conf_mngr().minScanTimeToInvokeUndiscovery);
+						if( Interval.isDisabled(minScanTimeToInvokeUndiscovery) )  continue;
+						
+						Interval scanKeepAlive_interval = BleDevice.conf_interval(device.conf_device().scanKeepAlive, device.conf_mngr().scanKeepAlive);
+						if( Interval.isDisabled(scanKeepAlive_interval) )  continue;
+
+						if( scanTime < Interval.asDouble(minScanTimeToInvokeUndiscovery) )  continue;
+						
 						boolean purgeable = device.getOrigin() != BleDevice.Origin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
 						
 						if( purgeable )
 						{
-							if( device.getTimeSinceLastDiscovery() > scanKeepAlive )
+							if( device.getTimeSinceLastDiscovery() > scanKeepAlive_interval.seconds )
 							{
 								undiscoverAndRemove(device, listener, E_Intent.IMPLICIT);
 							}

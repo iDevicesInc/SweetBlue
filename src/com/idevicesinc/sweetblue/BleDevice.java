@@ -688,6 +688,26 @@ public class BleDevice
 		m_config = config;
 	}
 	
+	BleDeviceConfig conf_device()
+	{
+		return m_config != null ? m_config : conf_mngr();
+	}
+	
+	BleManagerConfig conf_mngr()
+	{
+		return m_mngr.m_config;
+	}
+	
+	static boolean conf_bool(Boolean bool_device, Boolean bool_mngr)
+	{
+		return bool_device != null ? bool_device : BleDeviceConfig.bool(bool_mngr);
+	}
+	
+	static Interval conf_interval(Interval interval_device, Interval interval_mngr)
+	{
+		return interval_device != null ? interval_device : interval_mngr;
+	}
+	
 	public Origin getOrigin()
 	{
 		return m_origin;
@@ -1417,21 +1437,23 @@ public class BleDevice
 		return getName_debug() + " " + m_stateTracker.toString();
 	}
 	
-	private boolean addOperationTime()
+	private boolean shouldAddOperationTime()
 	{
-		return m_mngr.m_config.includeFirmwareUpdateReadWriteTimesInAverage || !is(UPDATING_FIRMWARE);
+		boolean includeFirmwareUpdateReadWriteTimesInAverage = conf_bool(conf_device().includeFirmwareUpdateReadWriteTimesInAverage, conf_mngr().includeFirmwareUpdateReadWriteTimesInAverage);
+		
+		return includeFirmwareUpdateReadWriteTimesInAverage || !is(UPDATING_FIRMWARE);
 	}
 	
 	void addReadTime(double timeStep)
 	{
-		if( !addOperationTime() )  return;
+		if( !shouldAddOperationTime() )  return;
 		
 		m_readTimeEstimator.addTime(timeStep);
 	}
 	
 	void addWriteTime(double timeStep)
 	{
-		if( !addOperationTime() )  return;
+		if( !shouldAddOperationTime() )  return;
 		
 		m_writeTimeEstimator.addTime(timeStep);
 	}
@@ -1461,7 +1483,9 @@ public class BleDevice
 	{
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 		
-		if( m_mngr.m_config.removeBondOnDiscovery )
+		boolean removeBondOnDiscovery = conf_bool(conf_device().removeBondOnDiscovery, conf_mngr().removeBondOnDiscovery);
+		
+		if( removeBondOnDiscovery )
 		{
 			m_stateTracker.update
 			(
@@ -1728,8 +1752,8 @@ public class BleDevice
 		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
 		
 		
-		boolean bond = m_mngr.m_config.autoBondAfterConnect && !isBondingOrBonded();
-		
+		boolean autobond = conf_bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
+		boolean bond = autobond && !isBondingOrBonded();
 		
 		
 		if( bond )
@@ -1779,7 +1803,8 @@ public class BleDevice
 		}
 		else
 		{
-			if( m_mngr.m_config.autoGetServices )
+			boolean autoGetServices = conf_bool(conf_device().autoGetServices, conf_mngr().autoGetServices);
+			if( autoGetServices )
 			{
 				getServices(DISCONNECTED,false, CONNECTING_OVERALL,true, CONNECTING,false, CONNECTED,true, ADVERTISING,false);
 			}
@@ -1910,7 +1935,9 @@ public class BleDevice
 		m_serviceMngr.clear();
 		m_txnMngr.clearQueueLock();
 		
-		if( fromBleCallback && m_mngr.m_config.removeBondOnDisconnect )
+		boolean removeBondOnDisconnect = conf_bool(conf_device().removeBondOnDisconnect, conf_mngr().removeBondOnDisconnect);
+		
+		if( fromBleCallback && removeBondOnDisconnect )
 		{
 			m_stateTracker.set
 			(
@@ -2166,9 +2193,12 @@ public class BleDevice
 	
 	private boolean requiresBonding(P_Characteristic characteristic)
 	{
-		if( m_mngr.m_config.bondingFilter == null )  return false;
+		BleDeviceConfig.BondingFilter bondingFilter = conf_device().bondingFilter;
+		bondingFilter = bondingFilter != null ? bondingFilter : conf_mngr().bondingFilter;
 		
-		return m_mngr.m_config.bondingFilter.requiresBonding(characteristic.getUuid());
+		if( bondingFilter == null )  return false;
+		
+		return bondingFilter.requiresBonding(characteristic.getUuid());
 	}
 	
 	E_Intent lastConnectDisconnectIntent()

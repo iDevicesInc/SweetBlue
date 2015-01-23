@@ -64,7 +64,8 @@ class P_ReconnectManager
 	
 	private double getNextTime()
 	{
-		BleManagerConfig.ReconnectRateLimiter rateLimiter = m_device.getManager().m_config.reconnectRateLimiter;
+		BleDeviceConfig.ReconnectRateLimiter rateLimiter = m_device.conf_device().reconnectRateLimiter;
+		rateLimiter = rateLimiter != null ? rateLimiter : m_device.conf_mngr().reconnectRateLimiter;
 		
 		if( rateLimiter == null )
 		{

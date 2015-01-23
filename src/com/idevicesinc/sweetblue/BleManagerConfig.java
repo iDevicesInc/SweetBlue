@@ -8,10 +8,8 @@ import java.util.UUID;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.app.Application;
 
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 import com.idevicesinc.sweetblue.utils.Interval;

@@ -1549,12 +1549,7 @@ public class BleManager
 
 	void tryPurgingStaleDevices(double scanTime)
 	{
-		if( Interval.isDisabled(m_config.minScanTimeToInvokeUndiscovery) )  return;
-		if( Interval.isDisabled(m_config.scanKeepAlive) )  return;
-
-		if( scanTime < Interval.asDouble(m_config.minScanTimeToInvokeUndiscovery) )  return;
-
-		m_deviceMngr.purgeStaleDevices(Interval.asDouble(m_config.scanKeepAlive), m_discoveryListener);
+		m_deviceMngr.purgeStaleDevices(scanTime, m_discoveryListener);
 	}
 
 	/**
