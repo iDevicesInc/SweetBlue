@@ -217,6 +217,11 @@ class P_DeviceManager
 				if( !device.is(BleDeviceState.DISCOVERED) )
 				{
 					device.onNewlyDiscovered(null, device.getRssi(), null);
+					
+					if( m_mngr.m_discoveryListener != null )
+		    		{
+						m_mngr.m_discoveryListener.onDeviceDiscovered(device);
+		    		}
 				}
 			}
 		}
