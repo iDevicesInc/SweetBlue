@@ -230,7 +230,9 @@ public class BleManagerConfig implements Cloneable
 	 * discovery through {@link BluetoothAdapter#startDiscovery()}. Be aware that classic
 	 * discovery may not discover some or any advertising BLE devices, nor will it provide
 	 * a scanRecord or advertisedServices to {@link AdvertisingFilter#acknowledgeDiscovery}.
-	 * As such this is meant as a back-up solution for BLE scanning, not something to be relied on.
+	 * Most likely you will be forced to filter on name only for your implementation of
+	 * {@link AdvertisingFilter#acknowledgeDiscovery(BluetoothDevice, List, String, String, byte[], int)}.
+	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.
 	 */
 	public boolean revertToClassicDiscoveryIfNeeded		= true;
 	
