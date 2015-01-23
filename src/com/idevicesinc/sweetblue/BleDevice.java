@@ -31,8 +31,8 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
  * It does everything you would expect, like providing methods for connecting,
  * reading/writing characteristics, enabling notifications, etc.
  * <br><br>
- * Instances of this class are generally not created by the calling library or application, but rather are
- * created implicitly by {@link BleManager} as a result of a scanning operation (e.g. {@link BleManager#startScan()}
+ * Although instances of this class can be created explicitly through {@link BleManager#newDevice(String, String)}, usually
+ * they're created implicitly by {@link BleManager} as a result of a scanning operation (e.g. {@link BleManager#startScan()}
  * and sent to you through {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)}.
  */
 public class BleDevice
@@ -103,7 +103,7 @@ public class BleDevice
 			CANCELLED_FROM_DISCONNECT,
 			
 			/**
-			 * The operation was cancelled because {@link BleManager} went {@link BleState#TURNING_OFF} or {@link BleState#OFF}.
+			 * The operation was cancelled because {@link BleManager} went {@link BleState#TURNING_OFF} and/or {@link BleState#OFF}.
 			 * Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then {@link Result#status} could potentially
 			 * be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get the disconnect callback before the turning off callback.
 			 * Basic testing has revealed that this is *not* the case, but you never know.
@@ -647,6 +647,8 @@ public class BleDevice
 	private Boolean m_lastConnectOrDisconnectWasUserExplicit = null;
 	private boolean m_lastDisconnectWasBecauseOfBleTurnOff = false; 
 	
+	private BleDeviceConfig m_config = null;
+	
 	/**
 	 * Field for app to associate any data it wants with instances of this class
 	 * instead of having to subclass or manage associative hash maps or something.
@@ -675,6 +677,15 @@ public class BleDevice
 		
 		m_alwaysUseAutoConnect = m_mngr.m_config.alwaysUseAutoConnect;
 		m_useAutoConnect = m_alwaysUseAutoConnect;
+	}
+	
+	/**
+	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
+	 * for this individual device. 
+	 */
+	public void setConfig(BleDeviceConfig config)
+	{
+		m_config = config;
 	}
 	
 	public Origin getOrigin()

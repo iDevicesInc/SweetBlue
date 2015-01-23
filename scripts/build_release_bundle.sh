@@ -4,12 +4,6 @@ sh build_then_upload_docs.sh
 
 source config.sh
 
-SWEETBLUE_SRC_PATH=../src
-STAGE=script_output
-JAR_NAME=sweetblue_$SEMVER
-JAVADOC_JAR_NAME="sweetblue_${SEMVER}-javadoc"
-SOURCES_JAR_NAME="sweetblue_${SEMVER}-sources"
-BUNDLE_FOLDER=$STAGE/$JAR_NAME
 ANDROID_JAR=$ANDROID_HOME/platforms/android-$ANDROID_API_LEVEL/android.jar
 JAR_DIR=$BUNDLE_FOLDER/jars
 CP_TARGET=$BUNDLE_FOLDER/src_temp
