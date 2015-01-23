@@ -23,6 +23,7 @@ Features
 *	Automatic service discovery.
 *	Easy RSSI tracking with built-in polling and caching.
 *	Highly configurable scanning with min/max time limits, periodic bursts, advanced filtering, and more.
+*	Continuous scanning mode that saves battery and defers to more important operations by stopping and starting as needed under the hood.
 *	Atomic and non-atomic transactions for easily coordinating authentication handshakes, initialization, and firmware updates.
 *	Automatic striping of characteristic writes greater than [MTU](http://en.wikipedia.org/wiki/Maximum_transmission_unit) size of 20 bytes.
 *	Undiscovery based on last time seen.
@@ -35,12 +36,12 @@ Features
 *	Detection and correction of dozens of BLE failure conditions.
 *	Numerous manufacturer-specific workarounds and hacks all hidden from you.
 *	Built-in polling for read characteristics with optional change-tracking to simulate notifications.
-*	Continuous scanning mode that saves battery and defers to more important operations by stopping and starting as needed under the hood.
 *	Transparent retries for transient failure conditions related to connecting, getting services, and scanning.
 *	Comprehensive callback system with clear enumerated reasons when something goes wrong like connection or read/write failures.
 *	Distills dozens of lines of boilerplate, booby-trapped, native API usages into single method calls.
 *	Transparently falls back to Bluetooth Classic for certain BLE failure conditions.
 *	On-the-fly-configurable reconnection loops started automatically when random disconnects occur, e.g. from going out of range.
+*	Retention and automatic reconnection of devices after BLE off->on cycle.
 *	One convenient method to completely unwind and reset the Bluetooth stack.
 *	Detection and reporting of BLE failure conditions that user should take action on, such as restarting the Bluetooth stack or even the entire phone.
 *	Runtime analytics for tracking average operation times, total elapsed times, and time estimates for long-running operations like firmware updates.
