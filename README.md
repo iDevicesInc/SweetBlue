@@ -49,19 +49,41 @@ Features
 
 Getting Started
 ===============
- 1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/libs/`.
- 2. If using **Eclipse**...
-  1. Open the `Package Explorer` view.
-  2. Expand `MyApp/libs/sweetblue/`.
-  3. If building with source...
+ 1. If using **Eclipse**...
+  1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/libs/`.
+  2. Open the `Package Explorer` view.
+  3. Expand `MyApp/libs/sweetblue/`.
+  4. If building with source...
       1. Right-click on the `src` folder.
       2. Hover over `Build Path->`.
       3. Click `Use as Source Folder`.
-  4. If building with JAR...
+  5. If building with JAR...
       1. Expand the `jars` folder.
       2. Right click on `sweetblue_{version}.jar`.
       3. Hover over `Build Path->`.
       4. Click `Add to Build Path`.
+ 2. If using **Android Studio** or **Gradle**...
+  1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/src/main/lib/`.
+  2. Open the app module's `build.gradle` file.
+  3. If building with source, add the following line to sourceSets:
+      
+      ```gradle
+      android {
+          ...
+          sourceSets {
+              ...
+              main.java.srcDirs += 'src/main/lib/SweetBlue-master/src'
+          }
+      }
+      ```
+  4. If building with JAR, add the following line to dependencies:
+      
+      ```gradle
+      dependencies {
+          ...
+          compile fileTree(dir: 'libs', include: '*.jar')
+      }
+      ```
  3. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```xml
