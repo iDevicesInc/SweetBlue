@@ -41,7 +41,7 @@ Features
 *	Distills dozens of lines of boilerplate, booby-trapped, native API usages into single method calls.
 *	Transparently falls back to Bluetooth Classic for certain BLE failure conditions.
 *	On-the-fly-configurable reconnection loops started automatically when random disconnects occur, e.g. from going out of range.
-*	Retention and automatic reconnection of devices after BLE off->on cycle.
+*	Retention and automatic reconnection of devices after BLE off->on cycle or even complete app reboot.
 *	One convenient method to completely unwind and reset the Bluetooth stack.
 *	Detection and reporting of BLE failure conditions that user should take action on, such as restarting the Bluetooth stack or even the entire phone.
 *	Runtime analytics for tracking average operation times, total elapsed times, and time estimates for long-running operations like firmware updates.
