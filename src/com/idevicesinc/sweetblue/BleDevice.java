@@ -104,8 +104,9 @@ public class BleDevice
 			
 			/**
 			 * The operation was cancelled because {@link BleManager} went {@link BleState#TURNING_OFF} or {@link BleState#OFF}.
-			 * Note that if the user turns off BLE from their OS settings then {@link Result#status} might be {@link #CANCELLED_FROM_DISCONNECT}
-			 * because we might get the disconnect callback before the turning off callback.
+			 * Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then {@link Result#status} could potentially
+			 * be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get the disconnect callback before the turning off callback.
+			 * Basic testing has revealed that this is *not* the case, but you never know.
 			 * <br><br>
 			 * Either way, the device was or will be disconnected.
 			 */
@@ -500,6 +501,9 @@ public class BleDevice
 			
 			/**
 			 * {@link BleManager#dropTacticalNuke()} or {@link BleManager#turnOff()} (or overloads) were called sometime during the connection process.
+			 * Basic testing reveals that this value will also be used when a user turns off BLE by going through their OS settings, airplane mode, etc.,
+			 * but it's not absolutely *certain* that this behavior is consistent across phones. For example there might be a phone that kills all
+			 * connections before going through the ble turn-off process, in which case SweetBlue doesn't know the difference and {@link #ROGUE_DISCONNECT} will be used.
 			 */
 			BLE_TURNING_OFF;
 			
