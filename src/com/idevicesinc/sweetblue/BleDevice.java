@@ -581,7 +581,7 @@ public class BleDevice
 				this.gattStatus = gattStatus_in;
 				this.highestStateReached = highestStateReached_in != null ? highestStateReached_in : BleDeviceState.NULL;
 				
-				device.getManager().ASSERT(false, "highestState shouldn't be null.");
+				device.getManager().ASSERT(highestStateReached_in != null, "highestState shouldn't be null.");
 			}
 		}
 		
