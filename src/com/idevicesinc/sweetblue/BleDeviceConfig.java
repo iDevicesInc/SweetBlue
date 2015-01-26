@@ -12,20 +12,20 @@ import android.content.Context;
 import android.app.Application;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
-import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.UuidNameMap;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
- * Provides a number of options to pass to {@link BleDevice#setConfig(BleDeviceConfig)}.
+ * Provides a number of options to (optionally) pass to {@link BleDevice#setConfig(BleDeviceConfig)}.
  * This class is also the super class of {@link BleManagerConfig}, which you can pass
  * to {@link BleManager#get(Context, BleManagerConfig)} to set base options for all devices at once.
- * For all options in this class, you may set the value to <code>null</code> and the value will
- * be inherited from the {@link BleManagerConfig}.
+ * For all options in this class, you may set the value to <code>null</code> when passed to {@link BleDevice#setConfig(BleDeviceConfig)}
+ * and the value will then be inherited from the {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)}.
+ * Otherwise, if the value is not <code>null</code> it will override any option in the {@link BleManagerConfig}.
+ * If an option is ultimately <code>null</code> (<code>null</code> when passed to {@link BleDevice#setConfig(BleDeviceConfig)}
+ * *and* {@link BleManager#get(Context, BleManagerConfig)}) then it is interpreted as <code>false</code>.
+ * <br><br>
+ * NOTE: you can use {@link Interval#DISABLED} instead of <code>null</code> to disable any time-based options, for code readability's sake.
  */
 public class BleDeviceConfig implements Cloneable
 {
@@ -159,6 +159,37 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean alwaysUseAutoConnect = false;
 	
 	/**
+	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in memory when it goes {@link BleState#OFF}.
+	 * If <code>false</code> then a device will be purged and you'll have to do {@link BleManager#startScan()} again to discover devices.
+	 * <br><br>
+	 * NOTE: if this flag is true for {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)} then this
+	 * applies to all devices.
+	 */
+	public Boolean retainDeviceWhenBleTurnsOff = true;
+	
+	/**
+	 * Default is <code>true</code> - only applicable if {@link #retainDeviceWhenBleTurnsOff} is also true. If {@link #retainDeviceWhenBleTurnsOff}
+	 * is false then devices will be undiscovered when {@link BleManager} goes {@link BleState#OFF} regardless.
+	 * <br><br>
+	 * NOTE: See NOTE {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}. 
+	 * 
+	 * @see #retainDeviceWhenBleTurnsOff
+	 * @see #autoReconnectDeviceWhenBleTurnsBackOn
+	 */
+	public Boolean undiscoverDeviceWhenBleTurnsOff = true;
+	
+	/**
+	 * Default is <code>true</code> - if devices are kept in memory for a {@link BleManager#turnOff()}/{@link BleManager#turnOn()} cycle
+	 * (or a {@link BleManager#dropTacticalNuke()}) because {@link #retainDeviceWhenBleTurnsOff} is <code>true</code>, then a {@link BleDevice#connect()}
+	 * will be attempted for any devices that were previously {@link BleDeviceState#CONNECTED}.
+	 * <br><br>
+	 * NOTE: See NOTE {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}.
+	 * 
+	 * @see #retainDeviceWhenBleTurnsOff
+	 */
+	public Boolean autoReconnectDeviceWhenBleTurnsBackOn = true;
+	
+	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
 	 * approximated by checking when the last time was that we discovered a device,
 	 * and if this time is greater than {@link #scanKeepAlive} then the device is undiscovered. However a scan
@@ -203,7 +234,7 @@ public class BleDeviceConfig implements Cloneable
 	 * 
 	 * @see BondingFilter
 	 */
-	public BondingFilter bondingFilter;
+	public BondingFilter bondingFilter						= null;
 	
 	/**
 	 * Default is an instance of {@link DefaultReconnectRateLimiter} - set an implementation here to
@@ -221,6 +252,21 @@ public class BleDeviceConfig implements Cloneable
 	static boolean bool(Boolean bool)
 	{
 		return bool == null ? false : bool;
+	}
+	
+	static boolean conf_bool(Boolean bool_device, Boolean bool_mngr)
+	{
+		return bool_device != null ? bool_device : BleDeviceConfig.bool(bool_mngr);
+	}
+	
+	static Interval conf_interval(Interval interval_device, Interval interval_mngr)
+	{
+		return interval_device != null ? interval_device : interval_mngr;
+	}
+	
+	static Integer conf_int(Integer int_device, Integer int_mngr)
+	{
+		return int_device != null ? int_device : int_mngr;
 	}
 	
 	public BleDeviceConfig()

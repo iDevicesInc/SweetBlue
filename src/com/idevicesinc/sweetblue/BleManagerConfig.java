@@ -166,30 +166,6 @@ public class BleManagerConfig extends BleDeviceConfig
 	public boolean manageCpuWakeLock					= true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether {@link BleManager} will keep its list of devices in memory when it goes {@link BleState#OFF}.
-	 * If <code>false</code> then the list will be purged and you'll have to do {@link BleManager#startScan()} again to discover devices.
-	 */
-	public boolean retainDevicesWhenBleTurnsOff = true;
-	
-	/**
-	 * Default is <code>true</code> - only applicable if {@link #retainDevicesWhenBleTurnsOff} is also true. If {@link #retainDevicesWhenBleTurnsOff}
-	 * is false then devices will be undiscovered when {@link BleManager} goes {@link BleState#OFF} regardless.
-	 * 
-	 * @see #retainDevicesWhenBleTurnsOff
-	 * @see #autoConnectDevicesWhenBleTurnsBackOn
-	 */
-	public boolean undiscoverDevicesWhenBleTurnsOff = true;
-	
-	/**
-	 * Default is <code>true</code> - if devices are kept in memory for a {@link BleManager#turnOff()}/{@link BleManager#turnOn()} cycle
-	 * (or a {@link BleManager#dropTacticalNuke()}) because {@link #retainDevicesWhenBleTurnsOff} is <code>true</code>, then a {@link BleDevice#connect()}
-	 * will be attempted for any devices that were previously {@link BleDeviceState#CONNECTED}.
-	 * 
-	 * @see #retainDevicesWhenBleTurnsOff
-	 */
-	public boolean autoReconnectDevicesWhenBleTurnsBackOn = true;
-	
-	/**
 	 * Default is {@value #DEFAULT_UH_OH_CALLBACK_THROTTLE} seconds - {@link UhOh} callbacks from {@link UhOhListener}
 	 * can be a little spammy at times so this is an option to throttle them back on a per-{@link UhOh} basis.
 	 * Set this to {@link Interval#DISABLED} to receive all every {@link UhOh} and manage them yourself.
@@ -251,7 +227,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see AdvertisingFilter
 	 */
-	public AdvertisingFilter defaultAdvertisingFilter;
+	public AdvertisingFilter defaultAdvertisingFilter				= null;
 	
 	/**
 	 * Default is null - Can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
@@ -259,7 +235,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see BleManager.DiscoveryListener
 	 */
-	public BleManager.DiscoveryListener defaultDiscoveryListener = null;
+	public BleManager.DiscoveryListener defaultDiscoveryListener	= null;
 	
 	/**
 	 * Used if {@link #loggingEnabled} is true. Gives threads names so they are more easily identifiable.

@@ -1205,7 +1205,7 @@ public class BleManager
 						m_nativeStateTracker.append(NUKING, E_Intent.EXPLICIT);
 					}
 
-					m_deviceMngr.undiscoverAll(E_Intent.EXPLICIT);
+					m_deviceMngr.undiscoverAllForTurnOff(E_Intent.EXPLICIT);
 				}
 			}
 		});

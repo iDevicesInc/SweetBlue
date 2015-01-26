@@ -630,8 +630,8 @@ public class BleDevice
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
 	
-	private final TimeEstimator m_writeTimeEstimator;
-	private final TimeEstimator m_readTimeEstimator;
+	private TimeEstimator m_writeTimeEstimator;
+	private TimeEstimator m_readTimeEstimator;
 	
 	private final PA_Task.I_StateListener m_taskStateListener;
 	
@@ -671,8 +671,7 @@ public class BleDevice
 		m_taskStateListener = m_listeners.m_taskStateListener;
 		m_reconnectMngr = new P_ReconnectManager(this);
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
-		m_writeTimeEstimator = new TimeEstimator(m_mngr.m_config.nForAverageRunningWriteTime);
-		m_readTimeEstimator = new TimeEstimator(m_mngr.m_config.nForAverageRunningReadTime);
+		initEstimators();
 		m_rssiPollMngr = new P_RssiPollManager(this);
 		
 		m_alwaysUseAutoConnect = m_mngr.m_config.alwaysUseAutoConnect;
@@ -685,7 +684,30 @@ public class BleDevice
 	 */
 	public void setConfig(BleDeviceConfig config)
 	{
-		m_config = config;
+		m_config = config == null ? null : config.clone();
+		
+		initEstimators();
+		
+		//--- DRK > Not really sure how this config option should be interpreted, but here's a first stab for now.
+		//---		Fringe enough use case that I don't think it's really a big deal.
+		boolean alwaysUseAutoConnect = BleDeviceConfig.conf_bool(conf_device().alwaysUseAutoConnect, conf_mngr().alwaysUseAutoConnect);
+		if( alwaysUseAutoConnect )
+		{
+			m_alwaysUseAutoConnect = m_useAutoConnect = true;
+		}
+		else
+		{
+			m_alwaysUseAutoConnect = false;
+		}
+	}
+	
+	private void initEstimators()
+	{
+		Integer nForAverageRunningWriteTime = BleDeviceConfig.conf_int(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
+		m_writeTimeEstimator = nForAverageRunningWriteTime == null ? null : new TimeEstimator(nForAverageRunningWriteTime);
+		
+		Integer nForAverageRunningReadTime = BleDeviceConfig.conf_int(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
+		m_readTimeEstimator = nForAverageRunningReadTime == null ? null : new TimeEstimator(nForAverageRunningReadTime);
 	}
 	
 	BleDeviceConfig conf_device()
@@ -696,16 +718,6 @@ public class BleDevice
 	BleManagerConfig conf_mngr()
 	{
 		return m_mngr.m_config;
-	}
-	
-	static boolean conf_bool(Boolean bool_device, Boolean bool_mngr)
-	{
-		return bool_device != null ? bool_device : BleDeviceConfig.bool(bool_mngr);
-	}
-	
-	static Interval conf_interval(Interval interval_device, Interval interval_mngr)
-	{
-		return interval_device != null ? interval_device : interval_mngr;
 	}
 	
 	public Origin getOrigin()
@@ -757,7 +769,7 @@ public class BleDevice
 	 */
 	public double getAverageReadTime()
 	{
-		return m_readTimeEstimator.getRunningAverage();
+		return m_readTimeEstimator != null ? m_readTimeEstimator.getRunningAverage() : 0.0;
 	}
 	
 	/**
@@ -769,7 +781,7 @@ public class BleDevice
 	 */
 	public double getAverageWriteTime()
 	{
-		return m_writeTimeEstimator.getRunningAverage();
+		return m_writeTimeEstimator != null ? m_writeTimeEstimator.getRunningAverage() : 0.0;
 	}
 	
 	/**
@@ -1412,6 +1424,8 @@ public class BleDevice
 	/**
 	 * Kicks off a firmware update transaction if it's not already taking place and the device is {@link BleDeviceState#INITIALIZED}.
 	 * This will put the device into the {@link BleDeviceState#UPDATING_FIRMWARE} state.
+	 * <br><br>
+	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly how much time it will take for the firmware update to complete.
 	 * 
 	 * @return	{@link Boolean#TRUE} if firmware update has started, otherwise {@link Boolean#FALSE} if device is either already
 	 * 			{@link BleDeviceState#UPDATING_FIRMWARE} or is not {@link BleDeviceState#INITIALIZED}.
@@ -1439,7 +1453,7 @@ public class BleDevice
 	
 	private boolean shouldAddOperationTime()
 	{
-		boolean includeFirmwareUpdateReadWriteTimesInAverage = conf_bool(conf_device().includeFirmwareUpdateReadWriteTimesInAverage, conf_mngr().includeFirmwareUpdateReadWriteTimesInAverage);
+		boolean includeFirmwareUpdateReadWriteTimesInAverage = BleDeviceConfig.conf_bool(conf_device().includeFirmwareUpdateReadWriteTimesInAverage, conf_mngr().includeFirmwareUpdateReadWriteTimesInAverage);
 		
 		return includeFirmwareUpdateReadWriteTimesInAverage || !is(UPDATING_FIRMWARE);
 	}
@@ -1448,14 +1462,20 @@ public class BleDevice
 	{
 		if( !shouldAddOperationTime() )  return;
 		
-		m_readTimeEstimator.addTime(timeStep);
+		if( m_readTimeEstimator != null )
+		{
+			m_readTimeEstimator.addTime(timeStep);
+		}
 	}
 	
 	void addWriteTime(double timeStep)
 	{
 		if( !shouldAddOperationTime() )  return;
 		
-		m_writeTimeEstimator.addTime(timeStep);
+		if( m_writeTimeEstimator != null )
+		{
+			m_writeTimeEstimator.addTime(timeStep);
+		}
 	}
 	
 	void setToAlwaysUseAutoConnectIfItWorked()
@@ -1483,7 +1503,7 @@ public class BleDevice
 	{
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 		
-		boolean removeBondOnDiscovery = conf_bool(conf_device().removeBondOnDiscovery, conf_mngr().removeBondOnDiscovery);
+		boolean removeBondOnDiscovery = BleDeviceConfig.conf_bool(conf_device().removeBondOnDiscovery, conf_mngr().removeBondOnDiscovery);
 		
 		if( removeBondOnDiscovery )
 		{
@@ -1752,7 +1772,7 @@ public class BleDevice
 		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
 		
 		
-		boolean autobond = conf_bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
+		boolean autobond = BleDeviceConfig.conf_bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
 		boolean bond = autobond && !isBondingOrBonded();
 		
 		
@@ -1803,7 +1823,7 @@ public class BleDevice
 		}
 		else
 		{
-			boolean autoGetServices = conf_bool(conf_device().autoGetServices, conf_mngr().autoGetServices);
+			boolean autoGetServices = BleDeviceConfig.conf_bool(conf_device().autoGetServices, conf_mngr().autoGetServices);
 			if( autoGetServices )
 			{
 				getServices(DISCONNECTED,false, CONNECTING_OVERALL,true, CONNECTING,false, CONNECTED,true, ADVERTISING,false);
@@ -1935,7 +1955,7 @@ public class BleDevice
 		m_serviceMngr.clear();
 		m_txnMngr.clearQueueLock();
 		
-		boolean removeBondOnDisconnect = conf_bool(conf_device().removeBondOnDisconnect, conf_mngr().removeBondOnDisconnect);
+		boolean removeBondOnDisconnect = BleDeviceConfig.conf_bool(conf_device().removeBondOnDisconnect, conf_mngr().removeBondOnDisconnect);
 		
 		if( fromBleCallback && removeBondOnDisconnect )
 		{
