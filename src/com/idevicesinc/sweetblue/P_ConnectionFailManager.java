@@ -9,9 +9,6 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
- * 
- * 
- *
  */
 class P_ConnectionFailManager
 {

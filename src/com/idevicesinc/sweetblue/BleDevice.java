@@ -37,6 +37,13 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
  */
 public class BleDevice
 {
+	public static enum LastDisconnectReason
+	{
+		UNKNOWN,
+		IMPLICIT,
+		EXPLICIT;
+	}
+	
 	/**
 	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
 	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},

@@ -168,7 +168,8 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in memory when it goes {@link BleState#OFF}.
-	 * If <code>false</code> then a device will be purged and you'll have to do {@link BleManager#startScan()} again to discover devices.
+	 * If <code>false</code> then a device will be purged and you'll have to do {@link BleManager#startScan()} again to discover devices
+	 * if/when {@link BleManager} goes back {@link BleState#ON}.
 	 * <br><br>
 	 * NOTE: if this flag is true for {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)} then this
 	 * applies to all devices.
@@ -179,7 +180,7 @@ public class BleDeviceConfig implements Cloneable
 	 * Default is <code>true</code> - only applicable if {@link #retainDeviceWhenBleTurnsOff} is also true. If {@link #retainDeviceWhenBleTurnsOff}
 	 * is false then devices will be undiscovered when {@link BleManager} goes {@link BleState#OFF} regardless.
 	 * <br><br>
-	 * NOTE: See NOTE {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}. 
+	 * NOTE: See NOTE for {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}. 
 	 * 
 	 * @see #retainDeviceWhenBleTurnsOff
 	 * @see #autoReconnectDeviceWhenBleTurnsBackOn
@@ -191,11 +192,14 @@ public class BleDeviceConfig implements Cloneable
 	 * (or a {@link BleManager#dropTacticalNuke()}) because {@link #retainDeviceWhenBleTurnsOff} is <code>true</code>, then a {@link BleDevice#connect()}
 	 * will be attempted for any devices that were previously {@link BleDeviceState#CONNECTED}.
 	 * <br><br>
-	 * NOTE: See NOTE {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}.
+	 * NOTE: See NOTE for {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}.
 	 * 
 	 * @see #retainDeviceWhenBleTurnsOff
 	 */
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn = true;
+	
+	
+	public Boolean saveDisconnectReasonToDisk = true;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be

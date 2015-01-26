@@ -12,6 +12,7 @@ import android.app.Application;
 
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
+import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Packet;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -40,27 +41,65 @@ public class BleManagerConfig extends BleDeviceConfig
 	/**
 	 * An optional whitelisting mechanism for scanning. Provide an implementation at
 	 * {@link BleManagerConfig#defaultAdvertisingFilter} or one of the various {@link BleManager#startScan()}
-	 * oveloads, i.e. {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter)},
+	 * overloads, i.e. {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter)},
 	 * {@link BleManager#startScan(Interval, BleManagerConfig.AdvertisingFilter)}, etc.
 	 */
 	public static interface AdvertisingFilter
 	{
 		/**
-		 * Return true to acknowledge the discovery, in which case
-		 * {@link DiscoveryListener#onDeviceDiscovered(BleDevice)} will be called shortly.
-		 * 
-		 * @param nativeInstance		Other parameters are probably enough to make a decision but this native instance is provided just in case.
-		 * @param advertisedServices	A list of {@link UUID}s parsed from {@code scanRecord} as a convenience. May be empty, notably
-		 * 								if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
-		 * @param rawDeviceName			The unaltered device name retrieved from the native bluetooth stack.
-		 * @param normalizedDeviceName	See {@link BleDevice#getName_normalized()} for an explanation.
-		 * @param scanRecord			The raw scan record received when the device was discovered. May be empty, especially
-		 * 								if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
-		 * @param rssi					The RSSI received when the device was discovered.
+		 * Instances of this class are passed to {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} to aid in making a decision.
+		 */
+		public static class Packet
+		{
+			/**
+			 * Other parameters are probably enough to make a decision but this native instance is provided just in case.
+			 */
+			public final BluetoothDevice nativeInstance;
+			
+			/**
+			 * A list of {@link UUID}s parsed from {@code scanRecord} as a convenience. May be empty, notably
+			 * if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
+			 */
+			public final List<UUID> advertisedServices;
+			
+			/**
+			 * The unaltered device name retrieved from the native bluetooth stack.
+			 */
+			public final String rawDeviceName;
+			
+			/**
+			 * See {@link BleDevice#getName_normalized()} for an explanation.
+			 */
+			public final String normalizedDeviceName;
+			
+			/**
+			 * The raw scan record received when the device was discovered. May be empty, especially
+			 * if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
+			 */
+			public final byte[] scanRecord;
+			
+			/**
+			 * The RSSI received when the device was discovered.
+			 */
+			public final int rssi;
+			
+			Packet(BluetoothDevice nativeInstance_in, List<UUID> advertisedServices_in, String rawDeviceName_in, String normalizedDeviceName_in, byte[] scanRecord_in, int rssi_in)
+			{
+				this.nativeInstance = nativeInstance_in;
+				this.advertisedServices = advertisedServices_in;
+				this.rawDeviceName = rawDeviceName_in;
+				this.normalizedDeviceName = normalizedDeviceName_in;
+				this.scanRecord = scanRecord_in;
+				this.rssi = rssi_in;
+			}
+		}
+		
+		/**
+		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDeviceDiscovered(BleDevice)} will be called shortly.
 		 * 
 		 * @return						Whether to acknowledge the discovery.
 		 */
-		boolean acknowledgeDiscovery(BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName, String normalizedDeviceName, byte[] scanRecord, int rssi);
+		boolean acknowledgeDiscovery(Packet packet);
 	}
 	
 	/**
@@ -86,9 +125,9 @@ public class BleManagerConfig extends BleDeviceConfig
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
 		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultAdvertisingFilter#DefaultAdvertisingFilter(Collection)}.
 		 */
-		@Override public boolean acknowledgeDiscovery(BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName, String normalizedDeviceName, byte[] scanRecord, int rssi)
+		@Override public boolean acknowledgeDiscovery(Packet packet)
 		{
-			return Utils.haveMatchingIds(advertisedServices, m_whitelist);
+			return Utils.haveMatchingIds(packet.advertisedServices, m_whitelist);
 		}
 	}
 	
@@ -131,7 +170,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * discovery may not discover some or any advertising BLE devices, nor will it provide
 	 * a scanRecord or advertisedServices to {@link AdvertisingFilter#acknowledgeDiscovery}.
 	 * Most likely you will be forced to filter on name only for your implementation of
-	 * {@link AdvertisingFilter#acknowledgeDiscovery(BluetoothDevice, List, String, String, byte[], int)}.
+	 * {@link AdvertisingFilter#acknowledgeDiscovery(Packet)}.
 	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.
 	 */
 	public boolean revertToClassicDiscoveryIfNeeded		= true;

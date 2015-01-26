@@ -44,7 +44,6 @@ public class MainActivity extends Activity
 	
 	public MainActivity()
 	{
-		
 	}
 	
 	@Override protected void onCreate(Bundle savedInstanceState)

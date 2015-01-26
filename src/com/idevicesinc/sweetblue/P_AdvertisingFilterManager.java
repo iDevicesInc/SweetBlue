@@ -7,6 +7,7 @@ import java.util.UUID;
 import android.bluetooth.BluetoothDevice;
 
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
+import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Packet;
 
 /**
  * 
@@ -49,9 +50,13 @@ class P_AdvertisingFilterManager
 	{
 		if( m_filters.size() == 0 && m_default == null )  return true;
 		
+		Packet packet = null;
+		
 		if( m_default != null )
 		{
-			if( m_default.acknowledgeDiscovery(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi) )
+			packet = new Packet(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi);
+			
+			if( m_default.acknowledgeDiscovery(packet) )
 			{
 				return true;
 			}
@@ -59,9 +64,11 @@ class P_AdvertisingFilterManager
 		
 		for( int i = 0; i < m_filters.size(); i++ )
 		{
+			packet = packet != null ? packet : new Packet(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi);
+			
 			AdvertisingFilter ithFilter = m_filters.get(i);
 			
-			if( ithFilter.acknowledgeDiscovery(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi) )
+			if( ithFilter.acknowledgeDiscovery(packet) )
 			{
 				return true;
 			}
