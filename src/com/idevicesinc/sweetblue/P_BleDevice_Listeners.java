@@ -71,7 +71,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 					}
 					else
 					{
-						m_device.onConnectFail(state);
+						m_device.onConnectFail(state, connectTask.getGattStatus());
 					}
 				}
 			}
@@ -86,6 +86,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else if (task.getClass() == P_Task_DiscoverServices.class)
 			{
+				P_Task_DiscoverServices discoverTask = (P_Task_DiscoverServices) task;
 				if (state == PE_TaskState.EXECUTING)
 				{
 					// m_stateTracker.append(GETTING_SERVICES);
@@ -104,7 +105,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				}
 				else if (state.isEndingState() )
 				{
-					m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED);
+					m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED, discoverTask.getGattStatus());
 				}
 			}
 			else if (task.getClass() == P_Task_Bond.class)
@@ -136,7 +137,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		});
 	}
 	
-	private void onConnectionStateChange_synchronized(BluetoothGatt gatt, int status, int newState)
+	private void onConnectionStateChange_synchronized(BluetoothGatt gatt, int gattStatus, int newState)
 	{
 		if (newState == BluetoothProfile.STATE_DISCONNECTED )
 		{
@@ -156,7 +157,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else if (newState == BluetoothProfile.STATE_CONNECTING)
 		{
-			if (Utils.isSuccess(status))
+			if (Utils.isSuccess(gattStatus))
 			{
 				m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 
@@ -172,14 +173,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else
 			{
-				m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
-
-				m_queue.fail(P_Task_Connect.class, m_device);
+				onConnectFail(gatt, gattStatus);
 			}
 		}
 		else if (newState == BluetoothProfile.STATE_CONNECTED)
 		{
-			if (Utils.isSuccess(status))
+			if (Utils.isSuccess(gattStatus))
 			{
 				m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 				
@@ -192,17 +191,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else
 			{
-				m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
-				
-				if (!m_queue.fail(P_Task_Connect.class, m_device))
-				{
-					m_device.onConnectFail( (PE_TaskState)null );
-				}
-				
-				if( status == PS_GattStatus.UNKNOWN_STATUS_FOR_IMMEDIATE_CONNECTION_FAILURE )
-				{
-//					m_device.getManager().uhOh(UhOhReason.UNKNOWN_CONNECTION_ERROR);
-				}
+				onConnectFail(gatt, gattStatus);
 			}
 		}
 		else if (newState == BluetoothProfile.STATE_DISCONNECTING)
@@ -225,6 +214,27 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 	}
 	
+	private void onConnectFail(BluetoothGatt gatt, int gattStatus)
+	{
+		m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
+		
+		P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
+		
+		if( connectTask != null )
+		{
+			connectTask.onNativeFail(gattStatus);
+		}
+		else
+		{
+			m_device.onConnectFail( (PE_TaskState)null, gattStatus);
+		}
+		
+		if( gattStatus == PS_GattStatus.UNKNOWN_STATUS_FOR_IMMEDIATE_CONNECTION_FAILURE )
+		{
+//			m_device.getManager().uhOh(UhOhReason.UNKNOWN_CONNECTION_ERROR);
+		}
+	}
+	
 	private final Runnable m_servicesDiscoveredSuccessRunnable = new SynchronizedRunnable()
 	{
 		@Override public void run_nested()
@@ -237,23 +247,37 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		@Override public void run_nested()
 		{
-			m_queue.fail(P_Task_DiscoverServices.class, m_device);
+			
 		}
 	};
 
-	@Override public void onServicesDiscovered(BluetoothGatt gatt, int status)
+	@Override public void onServicesDiscovered(BluetoothGatt gatt, final int gattStatus)
 	{
-		m_logger.log_status(status);
+		m_logger.log_status(gattStatus);
 		
 		UpdateLoop updater = m_device.getManager().getUpdateLoop();
 
-		if( Utils.isSuccess(status) )
+		if( Utils.isSuccess(gattStatus) )
 		{
 			updater.postIfNeeded(m_servicesDiscoveredSuccessRunnable);
 		}
 		else
 		{
-			updater.postIfNeeded(m_servicesDiscoveredFailRunnable);
+			updater.postIfNeeded(new Runnable()
+			{
+				@Override public void run()
+				{
+					synchronized (m_device.m_threadLock)
+					{
+						P_Task_DiscoverServices task = m_queue.getCurrent(P_Task_DiscoverServices.class, m_device);
+						
+						if( task != null )
+						{
+							task.onNativeFail(gattStatus);
+						}
+					}
+				}
+			});
 		}
 	}
 	

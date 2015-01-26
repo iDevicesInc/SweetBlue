@@ -48,7 +48,7 @@ class P_WrappingDeviceStateListener extends PA_CallbackWrapper implements BleDev
 		}
 	}
 
-	@Override public Please onConnectionFail(final BleDevice device, final Reason cause, final int failureCount, final Interval latestAttemptTime, final Interval totalAttemptTime)
+	@Override public Please onConnectionFail(final Info moreInfo)
 	{
 //		if( postToMain() )
 //		{
@@ -62,7 +62,7 @@ class P_WrappingDeviceStateListener extends PA_CallbackWrapper implements BleDev
 //		}
 //		else
 //		{
-			return m_connectionFailListener.onConnectionFail(device, cause, failureCount, latestAttemptTime, totalAttemptTime);
+			return m_connectionFailListener.onConnectionFail(moreInfo);
 //		}
 	}
 }

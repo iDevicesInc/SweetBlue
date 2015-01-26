@@ -201,7 +201,7 @@ class P_DeviceManager
 				//--- DRK > Just an early-out performance check here.
 				if( device.is(BleDeviceState.CONNECTED) )
 				{
-					device.disconnectWithReason(priority, Reason.BLE_TURNING_OFF);
+					device.disconnectWithReason(priority, Reason.BLE_TURNING_OFF, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 		}

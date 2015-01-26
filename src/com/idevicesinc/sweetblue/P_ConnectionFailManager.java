@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -56,7 +57,7 @@ class P_ConnectionFailManager
 		return retryCount;
 	}
 	
-	Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, boolean isAttemptingReconnect)
+	Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, boolean isAttemptingReconnect, int gattStatus, BleDeviceState highestStateReached)
 	{
 		if( reason_nullable == null )  return Please.DO_NOT_RETRY;
 		
@@ -74,13 +75,15 @@ class P_ConnectionFailManager
 		Please retryChoice = null;
 		Interval attemptTime = Interval.ZERO; //TODO
 		
+		Info moreInfo = new Info(m_device, reason_nullable, m_failCount, attemptTime, attemptTime, gattStatus, highestStateReached);
+		
 		if( m_connectionFailListener != null )
 		{
-			retryChoice = m_connectionFailListener.onConnectionFail(m_device, reason_nullable, m_failCount, attemptTime, attemptTime);
+			retryChoice = m_connectionFailListener.onConnectionFail(moreInfo);
 		}
 		else if( m_device.getManager().m_defaultConnectionFailListener != null )
 		{
-			retryChoice = m_device.getManager().m_defaultConnectionFailListener.onConnectionFail(m_device, reason_nullable, m_failCount, attemptTime, attemptTime);
+			retryChoice = m_device.getManager().m_defaultConnectionFailListener.onConnectionFail(moreInfo);
 		}
 		
 		retryChoice = retryChoice != null ? retryChoice : Please.DO_NOT_RETRY;

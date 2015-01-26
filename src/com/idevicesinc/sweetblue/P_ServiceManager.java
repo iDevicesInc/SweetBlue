@@ -110,14 +110,14 @@ class P_ServiceManager
 	
 	private BleDevice.ReadWriteListener.Result newNoMatchingTargetResult(Type type, byte[] data, UUID uuid)
 	{
-		int gattStatus = Result.GATT_STATUS_NOT_APPLICABLE;
+		int gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 		return new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0);
 	}
 	
 	BleDevice.ReadWriteListener.Result getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
 	{
 		Target target = uuid == Uuids.INVALID ? Target.RSSI : Target.CHARACTERISTIC;
-		final int gattStatus = Result.GATT_STATUS_NOT_APPLICABLE;
+		final int gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 		
 		if( !m_device.is(BleDeviceState.CONNECTED) )
 		{

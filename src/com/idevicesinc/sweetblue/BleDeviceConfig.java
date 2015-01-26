@@ -34,6 +34,14 @@ public class BleDeviceConfig implements Cloneable
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 	
 	/**
+	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation didn't get to a point where a
+	 * gatt status from the underlying stack is provided.
+	 * <br><br>
+	 * Also used for {@link BleDevice.ConnectionFailListener.Info#gattStatus} for when the failure didn't involve the gatt layer.
+	 */
+	public static final int GATT_STATUS_NOT_APPLICABLE = -1;
+	
+	/**
 	 * In at least some cases it's not possible to determine beforehand whether a given characteristic requires
 	 * bonding, so implementing this interface on {@link BleManagerConfig#bondingFilter} lets the app give
 	 * a hint to the library so it can bond before attempting to read or write an encrypted characteristic.

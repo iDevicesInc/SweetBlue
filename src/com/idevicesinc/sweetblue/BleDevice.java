@@ -254,12 +254,6 @@ public class BleDevice
 			public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
 			
 			/**
-			 * Status code used for {@link #gattStatus} when the operation didn't get to a point where a
-			 * gatt status from the underlying stack is provided.
-			 */
-			public static final int GATT_STATUS_NOT_APPLICABLE = -1;
-			
-			/**
 			 * The {@link BleDevice} this {@link Result} is for.
 			 */
 			public final BleDevice device;
@@ -321,8 +315,8 @@ public class BleDevice
 			/**
 			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is,
 			 * for example, {@link Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point
-			 * where a gatt status is provided, in which case this member is set to {@link #GATT_STATUS_NOT_APPLICABLE}
-			 * (value of {@value #GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater
+			 * where a gatt status is provided, in which case this member is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}
+			 * (value of {@value BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater
 			 * than <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status}
 			 * is {@link Status#SUCCESS} or {@link Status#REMOTE_GATT_FAILURE}. There are also some cases where this will be 0 for
 			 * success but {@link #status} is for example {@link Status#NULL_DATA} - in other words the underlying stack deemed the 
@@ -533,6 +527,65 @@ public class BleDevice
 		}
 		
 		/**
+		 * Structure passed to {@link ConnectionFailListener#onConnectionFail(Info)} to provide more info about how/why the connection failed.
+		 */
+		public static class Info
+		{
+			/**
+			 * The {@link BleDevice} this {@link Info} is for.
+			 */
+			public final BleDevice device;
+			
+			/**
+			 * Why the connection failed.
+			 */
+			public final Reason reason;
+			
+			/**
+			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
+			 */
+			public final int failureCountSoFar;
+			
+			/**
+			 *  How long the last connection attempt took before failing.
+			 */
+			public final Interval latestAttemptTime;
+			
+			/**
+			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
+			 */
+			public final Interval totalAttemptTime;
+			
+			/**
+			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
+			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}. If not applicable, for example if {@link Info#reason} is
+			 * {@link Reason#EXPLICIT_DISCONNECT}, then this is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
+			 */
+			public final int gattStatus;
+			
+			/**
+			 * The highest state reached by the connection process.
+			 * <br><br>
+			 * TIP: You can use this to keep the visual feedback in your connection progress UI "bookmarked"
+			 * 		while the connection retries and goes through previous states again.
+			 */
+			public final BleDeviceState highestStateReached;
+			
+			Info(BleDevice device_in, Reason reason_in, int failureCountSoFar_in, Interval latestAttemptTime_in, Interval totalAttemptTime_in, int gattStatus_in, BleDeviceState highestStateReached_in)
+			{
+				this.device = device_in;
+				this.reason = reason_in;
+				this.failureCountSoFar = failureCountSoFar_in;
+				this.latestAttemptTime = latestAttemptTime_in;
+				this.totalAttemptTime = totalAttemptTime_in;
+				this.gattStatus = gattStatus_in;
+				this.highestStateReached = highestStateReached_in != null ? highestStateReached_in : BleDeviceState.NULL;
+				
+				device.getManager().ASSERT(false, "highestState shouldn't be null.");
+			}
+		}
+		
+		/**
 		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#wasCancelled()}.
 		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleManagerConfig.ReconnectRateLimiter}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
@@ -542,11 +595,8 @@ public class BleDevice
 		 * <br><br>
 		 * The time parameters passed to this method are of optional use to you to decide if connecting again is worth it. For example if you've 
 		 * been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
-		 * 
-		 * @param latestAttemptTime How long the last connection attempt took before failing.
-		 * @param totalAttemptTime How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
 		 */
-		Please onConnectionFail(BleDevice device, ConnectionFailListener.Reason reason, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime);
+		Please onConnectionFail(Info moreInfo);
 	}
 	
 	/**
@@ -571,9 +621,9 @@ public class BleDevice
 			return m_retryCount;
 		}
 		
-		@Override public Please onConnectionFail(BleDevice device, Reason reason, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime)
+		@Override public Please onConnectionFail(Info moreInfo)
 		{
-			return failureCountSoFar <= m_retryCount ? Please.RETRY : Please.DO_NOT_RETRY; 
+			return moreInfo.failureCountSoFar <= m_retryCount ? Please.RETRY : Please.DO_NOT_RETRY; 
 		}
 	}
 	
@@ -1154,7 +1204,7 @@ public class BleDevice
 	 */
 	public void disconnect()
 	{
-		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT);
+		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 	
 	/**
@@ -1881,11 +1931,12 @@ public class BleDevice
 		}
 	}
 	
-	void onConnectFail(PE_TaskState state)
+	void onConnectFail(PE_TaskState state, int gattStatus)
 	{
 		if( state == PE_TaskState.SOFTLY_CANCELLED )  return;
 	
 		boolean attemptingReconnect = is(ATTEMPTING_RECONNECT);
+		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 		
 		if( !m_nativeWrapper.isNativelyConnected() )
 		{
@@ -1911,7 +1962,7 @@ public class BleDevice
 				reason = Reason.NATIVE_CONNECTION_TIMED_OUT;
 			}
 
-			Please retry = m_connectionFailMngr.onConnectionFailed(reason, attemptingReconnect);
+			Please retry = m_connectionFailMngr.onConnectionFailed(reason, attemptingReconnect, gattStatus, highestState);
 			
 			if( !attemptingReconnect && retry == Please.RETRY )
 			{
@@ -1989,14 +2040,15 @@ public class BleDevice
 		}
 	}
 	
-	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting)
+	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, int gattStatus)
 	{
-		disconnectWithReason(null, connectionFailReasonIfConnecting);
+		disconnectWithReason(null, connectionFailReasonIfConnecting, gattStatus);
 	}
 	
-	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting)
+	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting, int gattStatus)
 	{
 		boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
+		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 		
 		if( cancelled )
 		{
@@ -2043,7 +2095,7 @@ public class BleDevice
 		{
 			if( m_mngr.ASSERT(connectionFailReasonIfConnecting != null ) )
 			{
-				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, attemptingReconnect);
+				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, attemptingReconnect, gattStatus, highestState);
 			}
 		}
 	}
@@ -2062,6 +2114,8 @@ public class BleDevice
 		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF);
 		
 		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;
+		
+		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 		
 //		if( m_state.ordinal() < E_State.CONNECTING.ordinal() )
 //		{
@@ -2123,7 +2177,7 @@ public class BleDevice
 //			m_txnMngr.clearFirmwareUpdateTxn();
 		}
 		
-		Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, attemptingReconnect);
+		Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.

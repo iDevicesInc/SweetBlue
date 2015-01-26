@@ -69,7 +69,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED);
+					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 			else if (txn == m_initTxn )
@@ -80,7 +80,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED);
+					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 			else if (txn == m_device.getFirmwareUpdateTxn())

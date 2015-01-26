@@ -17,6 +17,12 @@ import com.idevicesinc.sweetblue.utils.Interval;
 public enum BleDeviceState implements BitwiseEnum
 {
 	/**
+	 * Dummy value returned from any method that would otherwise return Java's built-in <code>null</code>.
+	 * A {@link BleDevice} will never be in this state.
+	 */
+	NULL,
+	
+	/**
 	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)}.
 	 * This means the object is effectively dead. {@link BleManager} has removed all references to it and you should do the same.
 	 */
@@ -181,6 +187,6 @@ public enum BleDeviceState implements BitwiseEnum
 			if( CONNECTING.overlaps(stateMask) )		return CONNECTING;
 		}
 		
-		return null;
+		return NULL;
 	}
 }

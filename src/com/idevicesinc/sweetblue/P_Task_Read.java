@@ -42,14 +42,14 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		
 		if( char_native == null )
 		{
-			fail(Status.NO_MATCHING_TARGET, Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().readCharacteristic(char_native) )
 		{
-			fail(Status.FAILED_TO_SEND_OUT, Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -110,7 +110,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 			
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onResult(newResult(Status.TIMED_OUT, Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+				m_readWriteListener.onResult(newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 			}
 			
 			getManager().uhOh(UhOh.READ_TIMED_OUT);
@@ -119,7 +119,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onResult(newResult(getCancelType(), Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+				m_readWriteListener.onResult(newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 			}
 		}
 	}

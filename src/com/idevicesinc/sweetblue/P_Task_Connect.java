@@ -11,6 +11,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
+	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 	
 	public P_Task_Connect(BleDevice device, I_StateListener listener)
 	{
@@ -84,6 +85,18 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	@Override public PE_TaskPriority getPriority()
 	{
 		return m_priority;
+	}
+	
+	public void onNativeFail(int gattStatus)
+	{
+		m_gattStatus = gattStatus;
+		
+		this.fail();
+	}
+	
+	public int getGattStatus()
+	{
+		return m_gattStatus;
 	}
 	
 	@Override public boolean isCancellableBy(PA_Task task)

@@ -112,15 +112,15 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 		updateStatus(newStateBits);
 	}
 
-	@Override public Please onConnectionFail(BleDevice device, Reason reason, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime)
+	@Override public Please onConnectionFail(Info moreInfo)
 	{
-		if( failureCountSoFar < CONNECTION_RETRY_COUNT )
+		if( moreInfo.failureCountSoFar < CONNECTION_RETRY_COUNT )
 		{
 			return Please.RETRY;
 		}
 		else
 		{
-			Toast.makeText(getContext(), device.getName_debug() + " connection failed with " + failureCountSoFar + " retries - " + reason, Toast.LENGTH_LONG).show();
+			Toast.makeText(getContext(), moreInfo.device.getName_debug() + " connection failed with " + moreInfo.failureCountSoFar + " retries - " + moreInfo.reason, Toast.LENGTH_LONG).show();
 			
 			return Please.DO_NOT_RETRY;
 		}
