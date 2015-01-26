@@ -65,7 +65,7 @@ Getting Started
  2. If using **Android Studio** or **Gradle**...
   1. [Download](http://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/src/main/lib/.`
   2. Open the app module's `build.gradle` file.
-  3. If building with source, add the following line to sourceSets:
+  3. If building with source, add the following to sourceSets:
  
     ```gradle
     android {
@@ -77,7 +77,7 @@ Getting Started
     }
     ```
 
-  4. If building with JAR, add the following line to dependencies:
+  4. If building with JAR, add the following to dependencies:
 
     ```gradle
     dependencies {
