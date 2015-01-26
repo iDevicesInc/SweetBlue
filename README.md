@@ -62,14 +62,6 @@ Getting Started
       2. Right click on `sweetblue_{version}.jar`.
       3. Hover over `Build Path->`.
       4. Click `Add to Build Path`.
-  4. If building with JAR, add the following line to dependencies:
-      
-      ```gradle
-      dependencies {
-          ...
-          compile fileTree(dir: 'libs', include: '*.jar')
-      }
-      ```
  3. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```xml
