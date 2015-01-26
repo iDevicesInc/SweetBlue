@@ -460,9 +460,16 @@ public class BleDevice
 		public static enum Reason
 		{
 			/**
-			 * Couldn't actually connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}.
+			 * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
+			 * because it returned <code>null</code>.
 			 */
-			NATIVE_CONNECTION_FAILED,
+			NATIVE_CONNECTION_FAILED_IMMEDIATELY,
+			
+			/**
+			 * Eventually got a callback to {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)} but {@link Info#gattStatus}
+			 * did not indicate success.
+			 */
+			NATIVE_CONNECTION_FAILED_EVENTUALLY,
 			
 			/**
 			 * {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)} took longer than
@@ -1962,7 +1969,7 @@ public class BleDevice
 		
 		if( wasConnecting )
 		{
-			ConnectionFailListener.Reason reason = ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED;
+			ConnectionFailListener.Reason reason = state == PE_TaskState.FAILED_IMMEDIATELY ? ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED_IMMEDIATELY : ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED_EVENTUALLY;
 			
 			if( state == PE_TaskState.TIMED_OUT )
 			{

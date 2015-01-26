@@ -171,6 +171,11 @@ abstract class PA_Task
 		m_queue.tryEndingTask(this, PE_TaskState.FAILED);
 	}
 	
+	protected void failImmediately()
+	{
+		m_queue.tryEndingTask(this, PE_TaskState.FAILED_IMMEDIATELY);
+	}
+	
 	protected void noOp()
 	{
 		m_queue.tryEndingTask(this, PE_TaskState.NO_OP);

@@ -53,8 +53,8 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			BluetoothGatt gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), autoConnect, getDevice().getListeners());
 			
 			if( gatt == null )
-			{
-				fail();
+			{				
+				failImmediately();
 				
 				return;
 			}
