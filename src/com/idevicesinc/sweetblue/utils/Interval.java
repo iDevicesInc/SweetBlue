@@ -55,6 +55,23 @@ public class Interval
 	}
 	
 	/**
+	 * Returns a new {@link Interval} representing the time since the given past epoch time,
+	 * using {@link System#currentTimeMillis()}.
+	 */
+	public static Interval since(long epochTime_milliseconds)
+	{
+		return Interval.delta(epochTime_milliseconds, System.currentTimeMillis());
+	}
+	
+	/**
+	 * Returns a new {@link Interval} representing the delta between the two epoch times.
+	 */
+	public static Interval delta(long earlierTime_millis, long laterTime_millis)
+	{
+		return Interval.milliseconds(laterTime_millis - earlierTime_millis);
+	}
+	
+	/**
 	 * Returns the double values as seconds from a given nullable {@link Interval}.
 	 */
 	public static double asDouble(Interval interval_nullable)

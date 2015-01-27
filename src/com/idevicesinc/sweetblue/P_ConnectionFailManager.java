@@ -19,12 +19,18 @@ class P_ConnectionFailManager
 	private ConnectionFailListener m_connectionFailListener = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER;
 	
 	private int m_failCount = 0;
+	private BleDeviceState m_highestStateReached_total = null;
+	
+	private Long m_timeOfFirstConnect = null;
+	private Long m_timeOfLastConnectFail = null;
 	
 	P_ConnectionFailManager(BleDevice device, P_ReconnectManager reconnectMngr)
 	{
 		m_device = device;
 		m_reconnectMngr = reconnectMngr;
 		m_logger = m_device.getManager().getLogger();
+		
+		resetFailCount();
 	}
 	
 	void onExplicitDisconnect()
@@ -40,11 +46,15 @@ class P_ConnectionFailManager
 	void onExplicitConnectionStarted()
 	{
 		resetFailCount();
+		
+		m_timeOfFirstConnect = System.currentTimeMillis();
 	}
 	
 	private void resetFailCount()
 	{
 		m_failCount = 0;
+		m_highestStateReached_total = null;
+		m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
 	}
 	
 	int getRetryCount()
@@ -58,6 +68,14 @@ class P_ConnectionFailManager
 	{
 		if( reason_nullable == null )  return Please.DO_NOT_RETRY;
 		
+		long currentTime = System.currentTimeMillis();
+		
+		//--- DRK > Can be null if this is a spontaneous connect (can happen with autoConnect sometimes for example).
+		m_timeOfFirstConnect = m_timeOfFirstConnect != null ? m_timeOfFirstConnect : currentTime;
+		Long timeOfLastConnectFail = m_timeOfLastConnectFail != null ? m_timeOfLastConnectFail : m_timeOfFirstConnect;
+		Interval attemptTime_latest = Interval.delta(timeOfLastConnectFail, currentTime);
+		Interval attemptTime_total = Interval.delta(m_timeOfFirstConnect, currentTime);
+		
 		m_logger.w(reason_nullable+"");
 		
 		if( isAttemptingReconnect )
@@ -70,9 +88,20 @@ class P_ConnectionFailManager
 		}
 		
 		Please retryChoice = null;
-		Interval attemptTime = Interval.ZERO; //TODO
 		
-		Info moreInfo = new Info(m_device, reason_nullable, m_failCount, attemptTime, attemptTime, gattStatus, highestStateReached);
+		if( m_highestStateReached_total == null )
+		{
+			m_highestStateReached_total = highestStateReached;
+		}
+		else
+		{
+			if( highestStateReached != null && highestStateReached.getConnectionOrdinal() > m_highestStateReached_total.getConnectionOrdinal() )
+			{
+				m_highestStateReached_total = highestStateReached;
+			}
+		}
+		
+		Info moreInfo = new Info(m_device, reason_nullable, m_failCount, attemptTime_latest, attemptTime_total, gattStatus, highestStateReached, m_highestStateReached_total);
 		
 		if( m_connectionFailListener != null )
 		{

@@ -189,4 +189,17 @@ public enum BleDeviceState implements BitwiseEnum
 		
 		return NULL;
 	}
+	
+	int getConnectionOrdinal()
+	{
+		switch(this)
+		{
+			case CONNECTING:			return 0;
+			case GETTING_SERVICES:		return 1;
+			case AUTHENTICATING:		return 2;
+			case BONDING:				return 3;
+			case INITIALIZING:			return 4;
+			default:					return -1;
+		}
+	}
 }

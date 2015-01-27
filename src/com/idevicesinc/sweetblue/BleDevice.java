@@ -568,18 +568,27 @@ public class BleDevice
 			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
 			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}. If not applicable, for example if {@link Info#reason} is
 			 * {@link Reason#EXPLICIT_DISCONNECT}, then this is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
+			 * <br><br>
+			 * See {@link Result#gattStatus} for more information.
+			 * 
+			 * @see Result#gattStatus
 			 */
 			public final int gattStatus;
 			
 			/**
-			 * The highest state reached by the connection process.
+			 * The highest state reached by the latest connection attempt.
+			 */
+			public final BleDeviceState highestStateReached_latest;
+			
+			/**
+			 * The highest state reached during the whole connection attempt cycle.
 			 * <br><br>
 			 * TIP: You can use this to keep the visual feedback in your connection progress UI "bookmarked"
 			 * 		while the connection retries and goes through previous states again.
 			 */
-			public final BleDeviceState highestStateReached;
+			public final BleDeviceState highestStateReached_total;
 			
-			Info(BleDevice device_in, Reason reason_in, int failureCountSoFar_in, Interval latestAttemptTime_in, Interval totalAttemptTime_in, int gattStatus_in, BleDeviceState highestStateReached_in)
+			Info(BleDevice device_in, Reason reason_in, int failureCountSoFar_in, Interval latestAttemptTime_in, Interval totalAttemptTime_in, int gattStatus_in, BleDeviceState highestStateReached_in, BleDeviceState highestStateReached_total_in)
 			{
 				this.device = device_in;
 				this.reason = reason_in;
@@ -587,9 +596,11 @@ public class BleDevice
 				this.latestAttemptTime = latestAttemptTime_in;
 				this.totalAttemptTime = totalAttemptTime_in;
 				this.gattStatus = gattStatus_in;
-				this.highestStateReached = highestStateReached_in != null ? highestStateReached_in : BleDeviceState.NULL;
+				this.highestStateReached_latest = highestStateReached_in != null ? highestStateReached_in : BleDeviceState.NULL;
+				this.highestStateReached_total = highestStateReached_total_in != null ? highestStateReached_total_in : BleDeviceState.NULL;
 				
-				device.getManager().ASSERT(highestStateReached_in != null, "highestState shouldn't be null.");
+				device.getManager().ASSERT(highestStateReached_in != null, "highestState_latest shouldn't be null.");
+				device.getManager().ASSERT(highestStateReached_total_in != null, "highestState_total shouldn't be null.");
 			}
 		}
 		
