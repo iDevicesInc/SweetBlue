@@ -12,7 +12,6 @@ import android.app.Application;
 
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Packet;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -46,6 +45,67 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public static interface AdvertisingFilter
 	{
+		/**
+		 * This enum gives you an indication of the last interaction with a device between app sessions or
+		 * in-app BLE {@link BleState#OFF}->{@link BleState#ON} cycles, which basically means how it was last {@link BleDeviceState#DISCONNECTED}.
+		 * Passed to {@link BleManagerConfig.AdvertisingFilter#acknowledgeDiscovery(BleManagerConfig.AdvertisingFilter.Packet)}
+		 * and {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice, LastDisconnect)}.
+		 * <br><br>
+		 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
+		 * <br><br>
+		 * TIP: If {@link Packet#lastDisconnect} isn't {@link LastDisconnect#UNKNOWN} then most likely you can early-out
+		 * and return <code>true</code> from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} without having to check
+		 * uuids or names matching.
+		 */
+		public static enum LastDisconnect
+		{
+			/**
+			 * The last disconnect is unknown because (a) device has never been seen before, (b)
+			 * reason for disconnect was app being killed and {@link BleDeviceConfig#saveDisconnectReasonToDisk}
+			 * was <code>false</code>, (c) app user cleared app data between app sessions, (d) etc., etc.
+			 */
+			UNKNOWN,
+			
+			/**
+			 * From a user experience perspective, the user may not have wanted the
+			 * disconnect to happen, and thus *probably* would want to be automatically connected again
+			 * as soon as the device is discovered.
+			 */
+			UNINTENTIONAL,
+			
+			/**
+			 * The last reason the device was {@link BleDeviceState#DISCONNECTED} was because {@link BleDevice#disconnect()}
+			 * was called, which most-likely means the user doesn't want to automatically connect to this device again.
+			 */
+			INTENTIONAL;
+			
+			private static final int DISK_VALUE__UNKNOWN		= -1;
+			private static final int DISK_VALUE__UNINTENTIONAL	= 0;
+			private static final int DISK_VALUE__INTENTIONAL	= 1;
+			
+			int toDiskValue()
+			{
+				switch(this)
+				{
+					case INTENTIONAL:		return DISK_VALUE__INTENTIONAL;
+					case UNINTENTIONAL:		return DISK_VALUE__UNINTENTIONAL;
+					case UNKNOWN:
+					default:				return DISK_VALUE__UNKNOWN;
+				}
+			}
+			
+			static LastDisconnect fromDiskValue(int diskValue)
+			{
+				switch(diskValue)
+				{
+					case DISK_VALUE__INTENTIONAL:		return INTENTIONAL;
+					case DISK_VALUE__UNINTENTIONAL:		return UNINTENTIONAL;
+					case DISK_VALUE__UNKNOWN:
+					default:							return UNKNOWN;
+				}
+			}
+		}
+		
 		/**
 		 * Instances of this class are passed to {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} to aid in making a decision.
 		 */
@@ -83,7 +143,12 @@ public class BleManagerConfig extends BleDeviceConfig
 			 */
 			public final int rssi;
 			
-			Packet(BluetoothDevice nativeInstance_in, List<UUID> advertisedServices_in, String rawDeviceName_in, String normalizedDeviceName_in, byte[] scanRecord_in, int rssi_in)
+			/**
+			 * The {@link LastDisconnect} of {@link #nativeInstance}.
+			 */
+			public final LastDisconnect lastDisconnect;
+			
+			Packet(BluetoothDevice nativeInstance_in, List<UUID> advertisedServices_in, String rawDeviceName_in, String normalizedDeviceName_in, byte[] scanRecord_in, int rssi_in, LastDisconnect lastDisconnect_in)
 			{
 				this.nativeInstance = nativeInstance_in;
 				this.advertisedServices = advertisedServices_in;
@@ -91,13 +156,14 @@ public class BleManagerConfig extends BleDeviceConfig
 				this.normalizedDeviceName = normalizedDeviceName_in;
 				this.scanRecord = scanRecord_in;
 				this.rssi = rssi_in;
+				this.lastDisconnect = lastDisconnect_in;
 			}
 		}
 		
 		/**
-		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDeviceDiscovered(BleDevice)} will be called shortly.
+		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDeviceDiscovered(BleDevice, LastDisconnect)} will be called shortly.
 		 * 
-		 * @return						Whether to acknowledge the discovery.
+		 * @return Whether to acknowledge the discovery.
 		 */
 		boolean acknowledgeDiscovery(Packet packet);
 	}

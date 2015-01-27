@@ -264,10 +264,9 @@ class P_BleManager_Listeners
 		
 		if( previousNativeState != BluetoothAdapter.STATE_ON && newNativeState == BluetoothAdapter.STATE_ON )
 		{
-			m_mngr.m_deviceMngr.rediscoverDevices();
+			m_mngr.m_deviceMngr.rediscoverDevicesAfterBleTurningBackOn();
 			m_mngr.m_deviceMngr.reconnectDevicesAfterBleTurningBackOn();
 		}
-		
 		
 		if( previousNativeState == BluetoothAdapter.STATE_TURNING_OFF && newNativeState == BluetoothAdapter.STATE_ON )
 		{

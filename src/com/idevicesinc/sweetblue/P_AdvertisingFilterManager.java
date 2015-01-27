@@ -7,6 +7,7 @@ import java.util.UUID;
 import android.bluetooth.BluetoothDevice;
 
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
+import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.LastDisconnect;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Packet;
 
 /**
@@ -46,7 +47,7 @@ class P_AdvertisingFilterManager
 		m_filters.add(filter);
 	}
 	
-	boolean allow(BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi)
+	boolean allow(BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi, LastDisconnect lastDisconnect)
 	{
 		if( m_filters.size() == 0 && m_default == null )  return true;
 		
@@ -54,7 +55,7 @@ class P_AdvertisingFilterManager
 		
 		if( m_default != null )
 		{
-			packet = new Packet(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi);
+			packet = new Packet(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnect);
 			
 			if( m_default.acknowledgeDiscovery(packet) )
 			{
@@ -64,7 +65,7 @@ class P_AdvertisingFilterManager
 		
 		for( int i = 0; i < m_filters.size(); i++ )
 		{
-			packet = packet != null ? packet : new Packet(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi);
+			packet = packet != null ? packet : new Packet(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnect);
 			
 			AdvertisingFilter ithFilter = m_filters.get(i);
 			

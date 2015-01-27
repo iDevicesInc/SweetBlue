@@ -38,7 +38,7 @@ public class MyActivity extends Activity
 				
 				device.connect(new BleDevice.StateListener()
 				{
-					@Override public void onStateChange(final BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask)
+					@Override public void onStateChange(final BleDevice device, int oldStateBits, int newStateBits, int intentMask)
 					{
 						if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
 						{

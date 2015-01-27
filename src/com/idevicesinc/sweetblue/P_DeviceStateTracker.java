@@ -34,16 +34,16 @@ class P_DeviceStateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits, int explicitnessMask)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
 	{
 		if( m_stateListener != null )
 		{
-			m_stateListener.onStateChange(m_device, oldStateBits, newStateBits, explicitnessMask);
+			m_stateListener.onStateChange(m_device, oldStateBits, newStateBits, intentMask);
 		}
 		
 		if( m_device.getManager().m_defaultDeviceStateListener != null )
 		{
-			m_device.getManager().m_defaultDeviceStateListener.onStateChange(m_device, oldStateBits, newStateBits, explicitnessMask);
+			m_device.getManager().m_defaultDeviceStateListener.onStateChange(m_device, oldStateBits, newStateBits, intentMask);
 		}
 		
 //		m_device.getManager().getLogger().e(this.toString());

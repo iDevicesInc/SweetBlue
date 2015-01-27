@@ -30,11 +30,11 @@ class P_StateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits, int explicitnessMask)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
 	{
 		if( m_stateListener != null )
 		{
-			m_stateListener.onBleStateChange(m_mngr, oldStateBits, newStateBits, explicitnessMask);
+			m_stateListener.onBleStateChange(m_mngr, oldStateBits, newStateBits, intentMask);
 		}
 	}
 	

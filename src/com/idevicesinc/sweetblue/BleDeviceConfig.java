@@ -9,9 +9,12 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.app.Application;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
+import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.LastDisconnect;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -198,8 +201,16 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn = true;
 	
-	
-	public Boolean saveDisconnectReasonToDisk = true;
+	/**
+	 * Default is <code>true</code> - controls whether a device's {@link BleManagerConfig.AdvertisingFilter.LastDisconnect}
+	 * is saved to and loaded from disk so that it can be restored across app sessions, undiscoveries, and BLE
+	 * {@link BleState#OFF}->{@link BleState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
+	 * any extra permissions. The main advantage of this is the following scenario: User connects to a device through your app,
+	 * does what they want, kills the app, then opens the app sometime later. {@link LastDisconnect#UNINTENTIONAL}
+	 * is sent to {@link DiscoveryListener#onDeviceDiscovered(BleDevice, Past)} which lets you know
+	 * that you can probably automatically connect to this device without user confirmation.
+	 */
+	public Boolean manageLastDisconnectOnDisk = true;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be

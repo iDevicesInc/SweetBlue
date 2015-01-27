@@ -135,13 +135,13 @@ abstract class PA_StateTracker
 		set(intent.getMask(), statesAndValues);
 	}
 	
-	private void set(int explicitnessMask, Object ... statesAndValues)
+	private void set(int intentMask, Object ... statesAndValues)
 	{
 		synchronized ( m_lock )
 		{
 			int newStateBits = getMask(0x0, statesAndValues);
 			
-			setStateMask(newStateBits, explicitnessMask);
+			setStateMask(newStateBits, intentMask);
 		}
 	}
 	
@@ -150,13 +150,13 @@ abstract class PA_StateTracker
 		update(intent.getMask(), statesAndValues);
 	}
 	
-	private void update(int explicitnessMask, Object ... statesAndValues)
+	private void update(int intentMask, Object ... statesAndValues)
 	{
 		synchronized ( m_lock )
 		{
 			int newStateBits = getMask(m_stateMask, statesAndValues);
 		
-			setStateMask(newStateBits, explicitnessMask);
+			setStateMask(newStateBits, intentMask);
 		}
 	}
 	
@@ -174,7 +174,7 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	private void setStateMask(int newStateBits, int explicitnessMask)
+	private void setStateMask(int newStateBits, int intentMask)
 	{
 		int oldStateBits = m_stateMask;
 		m_stateMask = newStateBits;
@@ -197,21 +197,21 @@ abstract class PA_StateTracker
 				}
 				else
 				{
-					explicitnessMask &= ~bit;
+					intentMask &= ~bit;
 				}
 			}
 		}
 		else
 		{
-			explicitnessMask = 0x0;
+			intentMask = 0x0;
 		}
 		
-		fireStateChange(oldStateBits, newStateBits, explicitnessMask);
+		fireStateChange(oldStateBits, newStateBits, intentMask);
 	}
 	
-	protected abstract void onStateChange(int oldStateBits, int newStateBits, int explicitnessMask);
+	protected abstract void onStateChange(int oldStateBits, int newStateBits, int intentMask);
 	
-	private void fireStateChange(int oldStateBits, int newStateBits, int explicitnessMask)
+	private void fireStateChange(int oldStateBits, int newStateBits, int intentMask)
 	{
 		if( oldStateBits == newStateBits )
 		{
@@ -222,7 +222,7 @@ abstract class PA_StateTracker
 			return;
 		}
 		
-		onStateChange(oldStateBits, newStateBits, explicitnessMask);
+		onStateChange(oldStateBits, newStateBits, intentMask);
 	}
 	
 	protected String toString(BitwiseEnum[] enums)
