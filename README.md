@@ -105,7 +105,7 @@ Getting Started
     	{
     		device.connect(new BleDevice.StateListener()
     		{
-    			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int explicitnessMask)
+    			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
     			{
     				if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
     				{
