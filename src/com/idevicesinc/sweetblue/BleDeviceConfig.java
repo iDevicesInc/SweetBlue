@@ -188,9 +188,7 @@ public class BleDeviceConfig implements Cloneable
 	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
-	 * HOWEVER, it's important to note that the library WILL automatically revert to autoConnect==true after a first failed
-	 * connection if you do a retry by returning {@link BleDevice.ConnectionFailListener.Please#RETRY} from
-	 * {@link ConnectionFailListener#onConnectionFail(ConnectionFailListener.Info)}.
+	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through {@link ConnectionFailListener.AutoConnectUsage}.
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
