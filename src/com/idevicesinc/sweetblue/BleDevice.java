@@ -679,11 +679,27 @@ public class BleDevice
 	 */
 	public static class DefaultConnectionFailListener implements ConnectionFailListener
 	{
-		private final int m_retryCount;
+		/**
+		 * The default retry count provided to {@link DefaultConnectionFailListener}. So if you were to call
+		 * {@link BleDevice#connect()} and all connections failed, in total the library would try to connect
+		 * {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
+		 * 
+		 * @see DefaultConnectionFailListener
+		 */
+		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 		
-		public DefaultConnectionFailListener(int retryCount)
+		/**
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#RETRY_USING_AUTOCONNECT}.
+		 */
+		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
+		
+		private final int m_retryCount;
+		private final int m_failCountBeforeUsingAutoConnect;
+
+		public DefaultConnectionFailListener(int retryCount, int failCountBeforeUsingAutoConnect)
 		{
 			m_retryCount = retryCount;
+			m_failCountBeforeUsingAutoConnect = failCountBeforeUsingAutoConnect;
 		}
 		
 		public int getRetryCount()
@@ -693,7 +709,14 @@ public class BleDevice
 		
 		@Override public Please onConnectionFail(Info moreInfo)
 		{
-			return moreInfo.failureCountSoFar <= m_retryCount ? Please.RETRY : Please.DO_NOT_RETRY; 
+			if( moreInfo.failureCountSoFar <= m_retryCount )
+			{
+				return moreInfo.failureCountSoFar >= m_failCountBeforeUsingAutoConnect ? Please.RETRY_USING_AUTOCONNECT : Please.RETRY; 
+			}
+			else
+			{
+				return Please.DO_NOT_RETRY;
+			}
 		}
 	}
 	
@@ -715,16 +738,9 @@ public class BleDevice
 		FROM_DISCOVERY;
 	}
 	
-	/**
-	 * The default retry count provided to {@link DefaultConnectionFailListener}. So if you were to call
-	 * {@link BleDevice#connect()} and all connections failed, in total the library would try to connect
-	 * {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
-	 * 
-	 * @see DefaultConnectionFailListener
-	 */
-	public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 	
-	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener(DEFAULT_CONNECTION_FAIL_RETRY_COUNT);
+	
+	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener(DefaultConnectionFailListener.DEFAULT_CONNECTION_FAIL_RETRY_COUNT, DefaultConnectionFailListener.DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT);
 	
 	private static final UUID[]				EMPTY_UUID_ARRAY	= new UUID[0];
 	private static final ArrayList<UUID>	EMPTY_LIST			= new ArrayList<UUID>();
