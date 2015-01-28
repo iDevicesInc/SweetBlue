@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.State;
 
 /**
  * 
@@ -25,7 +25,7 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	PA_StateTracker(P_Logger logger, BitwiseEnum[] enums)
+	PA_StateTracker(P_Logger logger, State[] enums)
 	{
 		m_logger = logger;
 		m_timesInState = new long[enums.length];
@@ -36,7 +36,7 @@ abstract class PA_StateTracker
 		return m_stateMask;
 	}
 	
-	boolean checkBitMatch(BitwiseEnum flag, boolean value)
+	boolean checkBitMatch(State flag, boolean value)
 	{
 		synchronized ( m_lock )
 		{
@@ -60,7 +60,7 @@ abstract class PA_StateTracker
 			}
 			
 			
-			BitwiseEnum state = (BitwiseEnum) statesAndValues[i];
+			State state = (State) statesAndValues[i];
 			boolean append = true;
 			
 			if( statesAndValues[i+1] instanceof Boolean )
@@ -88,7 +88,7 @@ abstract class PA_StateTracker
 	
 	
 	
-	void append(BitwiseEnum newState, E_Intent intent)
+	void append(State newState, E_Intent intent)
 	{
 		synchronized ( m_lock )
 		{
@@ -105,7 +105,7 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	void remove(BitwiseEnum state, E_Intent intent)
+	void remove(State state, E_Intent intent)
 	{
 		synchronized ( m_lock )
 		{
@@ -113,7 +113,7 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	protected void append_assert(BitwiseEnum newState){}
+	protected void append_assert(State newState){}
 	
 //	void appendMultiple(I_BitwiseEnum ... states)
 //	{
@@ -225,7 +225,7 @@ abstract class PA_StateTracker
 		onStateChange(oldStateBits, newStateBits, intentMask);
 	}
 	
-	protected String toString(BitwiseEnum[] enums)
+	protected String toString(State[] enums)
 	{
 		synchronized ( m_lock )
 		{

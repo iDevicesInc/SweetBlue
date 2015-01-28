@@ -18,11 +18,8 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.LastDisconnect;
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
-import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.TimeEstimator;
-import com.idevicesinc.sweetblue.utils.Uuids;
+import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
 /**
@@ -422,22 +419,31 @@ public class BleDevice
 	public static interface StateListener
 	{
 		/**
+		 * Subclass that adds the device field.
+		 */
+		public static class ChangeEvent extends State.ChangeEvent
+		{
+			/**
+			 * The device undergoing the state change.
+			 */
+			public final BleDevice device;
+			
+			ChangeEvent(BleDevice device_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
+			{
+				super(oldStateBits_in, newStateBits_in, intentMask_in);
+				
+				this.device = device_in;
+			}
+		}
+		
+		/**
 		 * Called when a device's bitwise {@link BleDeviceState} changes. As many bits as possible are flipped at the same time.
 		 *  
-		 * @param oldStateBits The previous bitwise representation of {@link BleDeviceState}.
-		 * @param newStateBits The new and now current bitwise representation of {@link BleDeviceState}. Will be the same as {@link BleDevice#getStateMask()}.
-		 * @param intentMask For each old->new bit difference, this mask will tell you if the transition was intentional. Intentional generally means a call was made to
-		 * 							a public method of the library from app-code to trigger the state change, and so usually the stacktrace started from a user input event upstream.
-		 * 							Otherwise the given bit will be 0x0 and so the state change was "unintentional". An example of intentional is if you call
-		 * 							{@link BleDevice#disconnect()} in response to a button click, whereas unintentional would be if the device disconnected because it
-		 * 							went out of range. As much as possible these flags are meant to represent the actual app <i>user's</i> intent through the app, not
-		 * 							the intent of you the programmer, nor the intent of the user outside the bounds of the app, like disconnecting by turning the peripheral off.
-		 * 							For example after a disconnect you might be using {@link BleManagerConfig#reconnectRateLimiter} to try periodically
-		 * 							reconnecting. From you the programmer's perspective a connect, if/when it happens, is arguably an intentional action. From the user's
-		 * 							perspective however the connect was unintentional. Therefore this mask is currently meant to serve an analytics or debugging role,
-		 * 							not to necessarily gate application logic.
+		 * @param oldStateBits 
+		 * @param newStateBits 
+		 * @param intentMask 
 		 */
-		void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int intentMask);
+		void onStateChange(ChangeEvent event);
 	}
 	
 	/**
@@ -569,7 +575,7 @@ public class BleDevice
 			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}. If not applicable, for example if {@link Info#reason} is
 			 * {@link Reason#EXPLICIT_DISCONNECT}, then this is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
 			 * <br><br>
-			 * See {@link Result#gattStatus} for more information.
+			 * See {@link Result#gattStatus} for more information about gatt status codes in general.
 			 * 
 			 * @see Result#gattStatus
 			 */
@@ -615,7 +621,7 @@ public class BleDevice
 		 * The time parameters passed to this method are of optional use to you to decide if connecting again is worth it. For example if you've 
 		 * been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
 		 */
-		Please onConnectionFail(Info moreInfo);
+		Please onConnectionFail(Info info);
 	}
 	
 	/**
@@ -2011,7 +2017,7 @@ public class BleDevice
 		//--- DRK > Saving last disconnect as unintentional here in case for some
 		//---		reason app is hard killed or something and we never get a disconnect callback.
 		final boolean hitDisk = BleDeviceConfig.conf_bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
-		m_mngr.m_lastDisconnectMngr.save(getMacAddress(), LastDisconnect.UNINTENTIONAL, hitDisk);
+		m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 		
 		m_stateTracker.update
 		(
@@ -2191,11 +2197,11 @@ public class BleDevice
 		
 		if( wasExplicit )
 		{
-			m_mngr.m_lastDisconnectMngr.save(getMacAddress(), LastDisconnect.INTENTIONAL, hitDisk);
+			m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.INTENTIONAL, hitDisk);
 		}
 		else if( !isConnectingOverall )
 		{
-			m_mngr.m_lastDisconnectMngr.save(getMacAddress(), LastDisconnect.UNINTENTIONAL, hitDisk);
+			m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 		}
 		
 		attemptingReconnect = attemptingReconnect || is(ATTEMPTING_RECONNECT);

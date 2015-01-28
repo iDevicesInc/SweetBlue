@@ -14,8 +14,7 @@ import android.app.Application;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.LastDisconnect;
-import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
@@ -202,12 +201,12 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn = true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether a device's {@link BleManagerConfig.AdvertisingFilter.LastDisconnect}
+	 * Default is <code>true</code> - controls whether the {@link State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
 	 * is saved to and loaded from disk so that it can be restored across app sessions, undiscoveries, and BLE
 	 * {@link BleState#OFF}->{@link BleState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
 	 * any extra permissions. The main advantage of this is the following scenario: User connects to a device through your app,
-	 * does what they want, kills the app, then opens the app sometime later. {@link LastDisconnect#UNINTENTIONAL}
-	 * is sent to {@link DiscoveryListener#onDeviceDiscovered(BleDevice, Past)} which lets you know
+	 * does what they want, kills the app, then opens the app sometime later. {@link State.ChangeIntent#UNINTENTIONAL}
+	 * is sent to {@link DiscoveryListener#onDeviceDiscovered(BleDevice, State.ChangeIntent)} which lets you know
 	 * that you can probably automatically connect to this device without user confirmation.
 	 */
 	public Boolean manageLastDisconnectOnDisk = true;

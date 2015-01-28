@@ -1,5 +1,8 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleManager.NativeStateListener;
+import com.idevicesinc.sweetblue.BleManager.StateListener;
+
 import android.os.Handler;
 
 /**
@@ -28,7 +31,7 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 		m_nativeListener = listener;
 	}
 
-	@Override public void onBleStateChange(final BleManager manager, final int oldStateBits, final int newStateBits, final int intentMask)
+	@Override public void onStateChange(final StateListener.ChangeEvent event)
 	{
 		if( postToMain() )
 		{
@@ -36,17 +39,17 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 			{
 				@Override public void run()
 				{
-					m_listener.onBleStateChange(manager, oldStateBits, newStateBits, intentMask);
+					m_listener.onStateChange(event);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onBleStateChange(manager, oldStateBits, newStateBits, intentMask);
+			m_listener.onStateChange(event);
 		}
 	}
 
-	@Override public void onNativeBleStateChange(final BleManager manager, final int oldStateBits, final int newStateBits, final int intentMask)
+	@Override public void onNativeStateChange(final NativeStateListener.ChangeEvent event)
 	{
 		if( postToMain() )
 		{
@@ -54,13 +57,13 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 			{
 				@Override public void run()
 				{
-					m_nativeListener.onNativeBleStateChange(manager, oldStateBits, newStateBits, intentMask);
+					m_nativeListener.onNativeStateChange(event);
 				}
 			});
 		}
 		else
 		{
-			m_nativeListener.onNativeBleStateChange(manager, oldStateBits, newStateBits, intentMask);
+			m_nativeListener.onNativeStateChange(event);
 		}
 	}
 }

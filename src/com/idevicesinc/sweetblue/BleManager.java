@@ -23,11 +23,11 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.LastDisconnect;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
 import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -114,12 +114,12 @@ public class BleManager
 		 * calling {@link BleManager#startScan()} (or its overloads)
 		 * or {@link BleManager#startPeriodicScan(Interval, Interval)}.
 		 * <br><br>
-		 * TIP: If {@link AdvertisingFilter.LastDisconnect} passed here is {@link LastDisconnect#UNINTENTIONAL}
-		 * then most often it's best to automatically connect without user confirmation.
+		 * TIP: If the {@link State.ChangeIntent} passed here is {@link State.ChangeIntent#UNINTENTIONAL}
+		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 * 
-		 * @param past See {@link AdvertisingFilter.LastDisconnect}
+		 * @param lastDisconnectIntent See {@link AdvertisingFilter.Packet#lastDisconnectIntent}.
 		 */
-		void onDeviceDiscovered(BleDevice device, AdvertisingFilter.LastDisconnect lastDisconnect);
+		void onDeviceDiscovered(BleDevice device, State.ChangeIntent lastDisconnectIntent);
 	}
 
 	/**
@@ -154,13 +154,28 @@ public class BleManager
 	public static interface StateListener
 	{
 		/**
-		 * Called when the manager's bitwise {@link BleState} changes. As many bits as possible are flipped at the same time.
-		 *
-		 * @param oldStateBits The previous bitwise representation of {@link BleState}.
-		 * @param newStateBits The new and now current bitwise representation of {@link BleState}. Will be the same as {@link BleManager#getStateMask()}.
-		 * @param intentMask See same param for {@link BleDevice.StateListener#onStateChange(BleDevice, int, int, int)}.
+		 * Subclass that adds the manager field.
 		 */
-		void onBleStateChange(BleManager manager, int oldStateBits, int newStateBits, int intentMask);
+		public static class ChangeEvent extends State.ChangeEvent
+		{
+			/**
+			 * The manager undergoing the state change.
+			 */
+			public final BleManager manager;
+			
+			ChangeEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
+			{
+				super(oldStateBits_in, newStateBits_in, intentMask_in);
+				
+				this.manager = manager_in;
+			}
+			
+		}
+		
+		/**
+		 * Called when the manager's abstracted {@link BleState} changes.
+		 */
+		void onStateChange(ChangeEvent event);
 	}
 
 	/**
@@ -172,13 +187,20 @@ public class BleManager
 	public static interface NativeStateListener
 	{
 		/**
-		 * Called when the manager's native bitwise {@link BleState} changes. As many bits as possible are flipped at the same time.
-		 *
-		 * @param oldStateBits The previous bitwise representation of {@link BleState}.
-		 * @param newStateBits The new and now current bitwise representation of {@link BleState}. Will be the same as {@link BleManager#getNativeStateMask()}.
-		 * @param intentMask See same param for {@link BleDevice.StateListener#onStateChange(BleDevice, int, int, int)}.
+		 * Class declared here to be make it implicitly imported for overrides.
 		 */
-		void onNativeBleStateChange(BleManager manager, int oldStateBits, int newStateBits, int intentMask);
+		public static class ChangeEvent extends StateListener.ChangeEvent
+		{
+			ChangeEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
+			{
+				super(manager_in, oldStateBits_in, newStateBits_in, intentMask_in);
+			}
+		}
+		
+		/**
+		 * Called when the manager's native bitwise {@link BleState} changes. As many bits as possible are flipped at the same time.
+		 */
+		void onNativeStateChange(ChangeEvent event);
 	}
 
 	/**
@@ -296,8 +318,8 @@ public class BleManager
 			  BleManagerConfig m_config;
 		final P_DeviceManager m_deviceMngr;
 	private final P_BleManager_Listeners m_listeners;
-	private final P_StateTracker m_stateTracker;
-	private final P_NativeStateTracker m_nativeStateTracker;
+	private final P_BleStateTracker m_stateTracker;
+	private final P_NativeBleStateTracker m_nativeStateTracker;
 	private 	 UpdateLoop m_updateLoop;
 	private final P_TaskQueue m_taskQueue;
 	private 	P_UhOhThrottler m_uhOhThrottler;
@@ -335,9 +357,9 @@ public class BleManager
 		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultAdvertisingFilter);
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleState nativeState = BleState.get(m_btMngr.getAdapter().getState());
-		m_stateTracker = new P_StateTracker(this);
+		m_stateTracker = new P_BleStateTracker(this);
 		m_stateTracker.append(nativeState, E_Intent.IMPLICIT);
-		m_nativeStateTracker = new P_NativeStateTracker(this);
+		m_nativeStateTracker = new P_NativeBleStateTracker(this);
 		m_nativeStateTracker.append(nativeState, E_Intent.IMPLICIT);
 		m_mainThreadHandler = new Handler(m_context.getMainLooper());
 		m_taskQueue = new P_TaskQueue(this);
@@ -1174,8 +1196,8 @@ public class BleManager
 	}
 
 	//--- DRK > Smooshing together a bunch of package-private accessors here.
-	P_StateTracker				getStateTracker(){				return m_stateTracker;				}
-	P_NativeStateTracker		getNativeStateTracker(){		return m_nativeStateTracker;		}
+	P_BleStateTracker				getStateTracker(){				return m_stateTracker;				}
+	P_NativeBleStateTracker		getNativeStateTracker(){		return m_nativeStateTracker;		}
 	UpdateLoop					getUpdateLoop(){				return m_updateLoop;				}
 	P_BluetoothCrashResolver	getCrashResolver(){				return m_crashResolver;				}
 	P_TaskQueue					getTaskQueue(){					return m_taskQueue;					}
@@ -1462,9 +1484,9 @@ public class BleManager
 	    	String deviceName = rawDeviceName;
 	    	deviceName = deviceName != null ? deviceName : "";
 	    	boolean hitDisk = BleDeviceConfig.bool(m_config.manageLastDisconnectOnDisk);
-	    	LastDisconnect lastDisconnect = m_lastDisconnectMngr.load(macAddress, hitDisk);
+	    	State.ChangeIntent lastDisconnectIntent = m_lastDisconnectMngr.load(macAddress, hitDisk);
 
-	    	if( !m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnect) )  return;
+	    	if( !m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent) )  return;
 		}
 
     	boolean newlyDiscovered = false;
@@ -1505,7 +1527,7 @@ public class BleManager
     		if( m_discoveryListener != null )
     		{
     			boolean hitDisk = BleDeviceConfig.conf_bool(device.conf_device().manageLastDisconnectOnDisk, device.conf_mngr().manageLastDisconnectOnDisk);
-    			LastDisconnect lastDisconnect = m_lastDisconnectMngr.load(device.getMacAddress(), hitDisk);
+    			State.ChangeIntent lastDisconnect = m_lastDisconnectMngr.load(device.getMacAddress(), hitDisk);
     			m_discoveryListener.onDeviceDiscovered(device, lastDisconnect);
     		}
     	}

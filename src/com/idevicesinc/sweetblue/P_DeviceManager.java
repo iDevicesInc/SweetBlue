@@ -6,9 +6,9 @@ import java.util.List;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener_Full;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.LastDisconnect;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.State;
 
 /**
  * 
@@ -222,9 +222,9 @@ class P_DeviceManager
 					
 					if( m_mngr.m_discoveryListener != null )
 		    		{
-						boolean hitDisk = BleDeviceConfig.conf_bool(device.conf_device().manageLastDisconnectOnDisk, device.conf_mngr().manageLastDisconnectOnDisk);
-						LastDisconnect lastDisconnect = m_mngr.m_lastDisconnectMngr.load(device.getMacAddress(), hitDisk);
-						m_mngr.m_discoveryListener.onDeviceDiscovered(device, lastDisconnect);
+						final boolean hitDisk = BleDeviceConfig.conf_bool(device.conf_device().manageLastDisconnectOnDisk, device.conf_mngr().manageLastDisconnectOnDisk);
+						final State.ChangeIntent lastDisconnectIntent = m_mngr.m_lastDisconnectMngr.load(device.getMacAddress(), hitDisk);
+						m_mngr.m_discoveryListener.onDeviceDiscovered(device, lastDisconnectIntent);
 		    		}
 				}
 			}

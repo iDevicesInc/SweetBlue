@@ -12,6 +12,8 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.idevicesinc.sweetblue.*;
+import com.idevicesinc.sweetblue.BleManager.NativeStateListener;
+import com.idevicesinc.sweetblue.BleManager.StateListener;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
@@ -53,12 +55,12 @@ public class BleStatusBar extends FrameLayout implements BleManager.StateListene
 		m_nativeStatus.setText(status);
 	}
 	
-	@Override public void onBleStateChange(BleManager manager, int oldStateBits, int newStateBits, int intentMask)
+	@Override public void onStateChange(StateListener.ChangeEvent event)
 	{
 		updateStatus();
 	}
 
-	@Override public void onNativeBleStateChange(BleManager manager, int oldStateBits, int newStateBits, int intentMask)
+	@Override public void onNativeStateChange(NativeStateListener.ChangeEvent event)
 	{
 		updateStatus();
 	}

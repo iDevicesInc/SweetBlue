@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.LastDisconnect;
+import com.idevicesinc.sweetblue.utils.State;
 
 import android.os.Handler;
 
@@ -23,7 +23,7 @@ class P_WrappingDiscoveryListener extends PA_CallbackWrapper implements BleManag
 		m_listener_full = listener instanceof BleManager.DiscoveryListener_Full ? (BleManager.DiscoveryListener_Full)listener : null;
 	}
 	
-	@Override public void onDeviceDiscovered(final BleDevice device, final LastDisconnect lastDisconnect)
+	@Override public void onDeviceDiscovered(final BleDevice device, final State.ChangeIntent lastDisconnectIntent)
 	{
 		if( postToMain() )
 		{
@@ -31,13 +31,13 @@ class P_WrappingDiscoveryListener extends PA_CallbackWrapper implements BleManag
 			{
 				@Override public void run()
 				{
-					m_listener.onDeviceDiscovered(device, lastDisconnect);
+					m_listener.onDeviceDiscovered(device, lastDisconnectIntent);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onDeviceDiscovered(device, lastDisconnect);
+			m_listener.onDeviceDiscovered(device, lastDisconnectIntent);
 		}
 	}
 	

@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
-import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
@@ -14,8 +14,8 @@ import com.idevicesinc.sweetblue.utils.Interval;
  * 
  * @see BleDevice.StateListener
  */
-public enum BleDeviceState implements BitwiseEnum
-{
+public enum BleDeviceState implements State
+{	
 	/**
 	 * Dummy value returned from any method that would otherwise return Java's built-in <code>null</code>.
 	 * A {@link BleDevice} will never be in this state.
@@ -141,23 +141,12 @@ public enum BleDeviceState implements BitwiseEnum
 		return 0x1 << ordinal();
 	}
 	
-	/**
-	 * Given an old and new state mask from {@link StateListener#onStateChange(BleDevice, int, int)}, this
-	 * method tells you whether the 'this' state was appended.
-	 * 
-	 * @see #wasExited(int, int)
-	 */
-	public boolean wasEntered(int oldStateBits, int newStateBits)
+	@Override public boolean wasEntered(int oldStateBits, int newStateBits)
 	{
 		return !this.overlaps(oldStateBits) && this.overlaps(newStateBits);
 	}
 	
-	/**
-	 * Reverse of {@link #wasEntered(int, int)}.
-	 * 
-	 * @see #wasEntered(int, int)
-	 */
-	public boolean wasExited(int oldStateBits, int newStateBits)
+	@Override public boolean wasExited(int oldStateBits, int newStateBits)
 	{
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}

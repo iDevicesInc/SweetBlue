@@ -385,7 +385,7 @@ public class Utils
 		}
 	}
 
-	public static SpannableString makeStateString(BitwiseEnum[] states, int stateMask)
+	public static SpannableString makeStateString(State[] states, int stateMask)
 	{
 		String rawString = "";
 		String spacer = "  ";

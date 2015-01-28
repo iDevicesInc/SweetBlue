@@ -10,7 +10,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.*;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.LastDisconnect;
+import com.idevicesinc.sweetblue.utils.State;
 
 /**
  * 
@@ -51,7 +51,7 @@ public class DeviceList extends ScrollView implements BleManager.DiscoveryListen
 		}
 	}
  
-	@Override public void onDeviceDiscovered(BleDevice device, LastDisconnect past)
+	@Override public void onDeviceDiscovered(BleDevice device, State.ChangeIntent lastDisconnectIntent)
 	{
 		DeviceListEntry entry = new DeviceListEntry(getContext(), device);
 		entry.setLayoutParams(new ScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));

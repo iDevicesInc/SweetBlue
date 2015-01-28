@@ -107,9 +107,9 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 		m_status.setText(status);
 	}
 
-	@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
+	@Override public void onStateChange(ChangeEvent event)
 	{
-		updateStatus(newStateBits);
+		updateStatus(event.newStateBits);
 	}
 
 	@Override public Please onConnectionFail(Info moreInfo)
