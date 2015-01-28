@@ -101,7 +101,7 @@ Getting Started
     ```java
     BleManager.get(this).startScan(new BleManager.DiscoveryListener()
     {
-    	@Override public void onDeviceDiscovered(BleDevice device)
+    	@Override public void onDeviceDiscovered(final BleDevice device)
     	{
     		device.connect(new BleDevice.StateListener()
     		{
