@@ -101,13 +101,13 @@ Getting Started
     ```java
     BleManager.get(this).startScan(new BleManager.DiscoveryListener()
     {
-    	@Override public void onDeviceDiscovered(BleDevice device)
+    	@Override public void onDeviceDiscovered(BleDevice device, ChangeIntent lastDisconnectIntent)
     	{
     		device.connect(new BleDevice.StateListener()
     		{
-    			@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
+    			@Override public void onStateChange(ChangeEvent event)
     			{
-    				if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
+    				if( event.wasEntered(BleDeviceState.INITIALIZED) )
     				{
     					device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
     					{
