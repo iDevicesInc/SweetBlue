@@ -101,7 +101,7 @@ Getting Started
     ```java
     BleManager.get(this).startScan(new BleManager.DiscoveryListener()
     {
-    	@Override public void onDeviceDiscovered(BleDevice device, ChangeIntent lastDisconnectIntent)
+    	@Override public void onDeviceDiscovered(BleDevice device, State.ChangeIntent lastDisconnectIntent)
     	{
     		device.connect(new BleDevice.StateListener()
     		{
