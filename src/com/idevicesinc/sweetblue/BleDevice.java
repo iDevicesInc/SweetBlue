@@ -96,7 +96,7 @@ public class BleDevice
 			FAILED_TO_SEND_OUT,
 			
 			/**
-			 * The operation was cancelled either by the device becoming {@link BleDeviceState#DISCONNECTED}.
+			 * The operation was cancelled by the device becoming {@link BleDeviceState#DISCONNECTED}.
 			 */
 			CANCELLED_FROM_DISCONNECT,
 			
@@ -140,7 +140,7 @@ public class BleDevice
 			TIMED_OUT;
 			
 			/**
-			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@value #CANCELLED_FROM_BLE_TURNING_OFF}.
+			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
 			 */
 			public boolean wasCancelled()
 			{

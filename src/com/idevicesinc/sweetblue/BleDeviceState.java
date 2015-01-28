@@ -23,15 +23,15 @@ public enum BleDeviceState implements State
 	NULL,
 	
 	/**
-	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)}.
+	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)}.
 	 * This means the object is effectively dead. {@link BleManager} has removed all references to it and you should do the same.
 	 */
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleManagerConfig#reconnectRateLimiter} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleDeviceConfig#reconnectRateLimiter} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
-	 * {@link BleManagerConfig.ReconnectRateLimiter#CANCEL} from {@link BleManagerConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDevice, int, Interval, Interval)}
+	 * {@link BleDeviceConfig.ReconnectRateLimiter#CANCEL} from {@link BleDeviceConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDeviceConfig.ReconnectRateLimiter.Info)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
 	 */

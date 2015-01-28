@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue.utils;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManagerConfig;
+import com.idevicesinc.sweetblue.*;
 
 /**
  * Used to set time-based options in {@link BleManagerConfig} and for various methods of
@@ -14,7 +14,7 @@ public class Interval
 	private static final double DISABLED_VALUE = -1.0;
 	
 	/**
-	 * Use this special value to disable options in {@link BleManagerConfig}.
+	 * Use this special value to disable options in {@link BleDeviceConfig} and {@link BleManagerConfig}.
 	 */
 	public static final Interval DISABLED = Interval.seconds(DISABLED_VALUE);
 	

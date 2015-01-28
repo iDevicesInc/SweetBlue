@@ -168,7 +168,7 @@ public abstract class BleTransaction
 	
 	/**
 	 * Call this from subclasses to indicate that the transaction has failed. Usually you call this in your
-	 * {@link BleDevice.ReadWriteListener#onReadOrWriteComplete(BleDevice.ReadWriteListener.Result)}
+	 * {@link BleDevice.ReadWriteListener#onResult(BleDevice.ReadWriteListener.Result)}
 	 * when {@link Status} is something other than {@link Status#SUCCESS}.
 	 * 
 	 * @return {@link Boolean#FALSE} if the transaction wasn't running to begin with.

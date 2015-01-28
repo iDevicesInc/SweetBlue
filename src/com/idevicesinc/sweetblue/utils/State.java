@@ -5,11 +5,8 @@ import com.idevicesinc.sweetblue.BleDeviceConfig;
 import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleState;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Packet;
 
 /**
  * Bitwise enum contract for representing the state of devices and managers.
@@ -170,8 +167,9 @@ public interface State
 	String name();
 	
 	/**
-	 * Given an old and new state mask from {@link StateListener#onStateChange(BleDevice, int, int)}, this
-	 * method tells you whether the 'this' state was appended.
+	 * Given an old and new state mask, for example from {@link BleDevice.StateListener#onStateChange(BleDevice.StateListener.ChangeEvent)}
+	 *  or {@link BleManager.StateListener#onStateChange(BleManager.StateListener.ChangeEvent)}, this method tells you whether the
+	 * the 'this' state was appended.
 	 * 
 	 * @see #wasExited(int, int)
 	 */

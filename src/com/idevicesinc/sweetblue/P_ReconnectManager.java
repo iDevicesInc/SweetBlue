@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRateLimiter;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
@@ -73,7 +74,8 @@ class P_ReconnectManager
 		}
 		else
 		{
-			Interval delay = rateLimiter.getTimeToNextReconnect(m_device, m_attemptCount, Interval.seconds(m_totalTime), Interval.seconds(m_delay));
+			ReconnectRateLimiter.Info info = new ReconnectRateLimiter.Info(m_device, m_attemptCount, Interval.seconds(m_totalTime), Interval.seconds(m_delay));
+			Interval delay = rateLimiter.getTimeToNextReconnect(info);
 			
 			delay = delay != null ? delay : BleManagerConfig.ReconnectRateLimiter.CANCEL;
 			

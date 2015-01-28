@@ -8,7 +8,7 @@ import java.util.UUID;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.app.Application;
+import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
@@ -20,7 +20,7 @@ import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
- * Provides a number of options to pass to the {@link BleManager#BleManager(Application, BleManagerConfig)}
+ * Provides a number of options to pass to the {@link BleManager#get(Context, BleManagerConfig)}
  * constructor. Use {@link Interval#DISABLED} or <code>null</code> to disable any time-based options.
  */
 public class BleManagerConfig extends BleDeviceConfig
@@ -105,7 +105,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		
 		/**
-		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDeviceDiscovered(BleDevice, LastDisconnect)} will be called shortly.
+		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDeviceDiscovered(BleDevice)} will be called shortly.
 		 * 
 		 * @return Whether to acknowledge the discovery.
 		 */
@@ -207,7 +207,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * connected but one or more devices are {@link BleDeviceState#ATTEMPTING_RECONNECT}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link ReconnectRateLimiter#CANCEL} from {@link ReconnectRateLimiter#getTimeToNextReconnect(BleDevice, int, Interval, Interval)}.
+	 * {@link BleDeviceConfig.ReconnectRateLimiter#CANCEL} from {@link BleDeviceConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDeviceConfig.ReconnectRateLimiter.Info)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  

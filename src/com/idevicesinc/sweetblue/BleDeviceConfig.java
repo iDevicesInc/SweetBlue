@@ -66,23 +66,57 @@ public class BleDeviceConfig implements Cloneable
 	public static interface ReconnectRateLimiter
 	{
 		/**
-		 * Return this from {@link #getTimeToNextReconnect(BleDevice, int, Interval, Interval)} to instantly reconnect.
+		 * Return this from {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to instantly reconnect.
 		 */
 		public static final Interval INSTANTLY = Interval.ZERO;
 		
 		/**
-		 * Return this from {@link #getTimeToNextReconnect(BleDevice, int, Interval, Interval)} to stop a reconnect attempt loop.
+		 * Return this from {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to stop a reconnect attempt loop.
 		 * Note that {@link BleDevice#disconnect()} will also cancel any ongoing reconnect loop.
 		 */
-		public static final Interval CANCEL = Interval.seconds(-1.0);
+		public static final Interval CANCEL = Interval.DISABLED;
+		
+		/**
+		 * Struct passed to {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to aid in making a decision.
+		 */
+		public static class Info
+		{
+			/**
+			 * The device that is currently {@link BleDeviceState#ATTEMPTING_RECONNECT}.
+			 */
+			public final BleDevice device;
+			
+			/**
+			 * The number of times a reconnect attempt has failed so far.
+			 */
+			public final int failureCount;
+			
+			/**
+			 * The total amount of time since the device went {@link BleDeviceState#DISCONNECTED} and we started the reconnect loop.
+			 */
+			public final Interval totalTimeReconnecting;
+			
+			/**
+			 * The previous {@link Interval} returned from {@link ReconnectRateLimiter#getTimeToNextReconnect(Info)}, or {@link Interval#ZERO}
+			 * for the first invocation.
+			 */
+			public final Interval previousDelay;
+			
+			Info(BleDevice device_in, int failureCount_in, Interval totalTimeReconnecting_in, Interval previousDelay_in)
+			{
+				this.device = device_in;
+				this.failureCount = failureCount_in;
+				this.totalTimeReconnecting = totalTimeReconnecting_in;
+				this.previousDelay = previousDelay_in;
+			}
+		}
 		
 		/**
 		 * Called for every connection failure while device is {@link BleDeviceState#ATTEMPTING_RECONNECT}.
-		 * Use the static members of this interface as return values to stop reconnection ({@link #CANCEL}) or try again
-		 * instantly ({@link #INSTANTLY}). Use static methods of {@link Interval} to try again after some amount of time. Numeric parameters
-		 * are provided in order to give the app a variety of ways to calculate the next delay. Use all, some, or none of them.
+		 * Use the static {@link Interval} members of this interface as return values to stop reconnection ({@link #CANCEL}) or try again
+		 * instantly ({@link #INSTANTLY}). Use static construction methods of {@link Interval} to try again after some amount of time.
 		 */
-		Interval getTimeToNextReconnect(BleDevice device, int connectFailureCount, Interval totalTimeReconnecting, Interval previousDelay);
+		Interval getTimeToNextReconnect(Info info);
 	}
 	
 	/**
@@ -94,9 +128,9 @@ public class BleDeviceConfig implements Cloneable
 		public static final Interval DEFAULT_INITIAL_RECONNECT_DELAY = INSTANTLY;
 		public static final Interval DEFAULT_RECONNECT_ATTEMPT_RATE = Interval.seconds(3.0);
 		
-		@Override public Interval getTimeToNextReconnect(BleDevice device, int connectFailureCount, Interval totalTimeReconnecting, Interval previousDelay)
+		@Override public Interval getTimeToNextReconnect(Info info)
 		{
-			if( connectFailureCount == 0 )
+			if( info.failureCount == 0 )
 			{
 				return DEFAULT_INITIAL_RECONNECT_DELAY;
 			}
@@ -163,7 +197,7 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * HOWEVER, it's important to note that the library WILL automatically revert to autoConnect==true after a first failed
 	 * connection if you do a retry by returning {@link BleDevice.ConnectionFailListener.Please#RETRY} from
-	 * {@link ConnectionFailListener#onConnectionFail(BleDevice, BleDevice.ConnectionFailListener.Reason, int)}.
+	 * {@link ConnectionFailListener#onConnectionFail(ConnectionFailListener.Info)}.
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
@@ -220,7 +254,7 @@ public class BleDeviceConfig implements Cloneable
 	 * operation must be allowed a certain amount of time to make sure it discovers all nearby devices that are
 	 * still advertising. This is that time in seconds.
 	 * 
-	 * @see BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)
+	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
 	 * @see #scanKeepAlive
 	 */
 	public Interval	minScanTimeToInvokeUndiscovery		= Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
@@ -232,7 +266,7 @@ public class BleDeviceConfig implements Cloneable
 	 * like it takes a long time to undiscover a device. You may want to configure this number based on the phone or
 	 * manufacturer. For example, based on testing, in order to make undiscovery snappier the Galaxy S5 could use lower times.
 	 * 
-	 * @see BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)
+	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
 	 * @see #minScanTimeToInvokeUndiscovery
 	 */
 	public Interval	scanKeepAlive						= Interval.seconds(DEFAULT_SCAN_KEEP_ALIVE);
@@ -265,9 +299,9 @@ public class BleDeviceConfig implements Cloneable
 	 * have fine control over reconnect behavior. This is basically how often and how long
 	 * the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
 	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
-	 * {@link #manageCpuWakeLock} useful in order to force the app/device to stay awake while attempting a reconnect.
+	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/device to stay awake while attempting a reconnect.
 	 * 
-	 * @see #manageCpuWakeLock
+	 * @see BleManagerConfig#manageCpuWakeLock
 	 * @see ReconnectRateLimiter
 	 * @see DefaultReconnectRateLimiter
 	 */
