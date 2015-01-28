@@ -695,7 +695,12 @@ public class BleDevice
 		
 		private final int m_retryCount;
 		private final int m_failCountBeforeUsingAutoConnect;
-
+		
+		public DefaultConnectionFailListener()
+		{
+			this(DEFAULT_CONNECTION_FAIL_RETRY_COUNT, DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT);
+		}
+		
 		public DefaultConnectionFailListener(int retryCount, int failCountBeforeUsingAutoConnect)
 		{
 			m_retryCount = retryCount;
@@ -740,7 +745,7 @@ public class BleDevice
 	
 	
 	
-	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener(DefaultConnectionFailListener.DEFAULT_CONNECTION_FAIL_RETRY_COUNT, DefaultConnectionFailListener.DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT);
+	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener();
 	
 	private static final UUID[]				EMPTY_UUID_ARRAY	= new UUID[0];
 	private static final ArrayList<UUID>	EMPTY_LIST			= new ArrayList<UUID>();

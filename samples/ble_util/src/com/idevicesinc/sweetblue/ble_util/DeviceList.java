@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.*;
 import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
 
 /**
  * 
