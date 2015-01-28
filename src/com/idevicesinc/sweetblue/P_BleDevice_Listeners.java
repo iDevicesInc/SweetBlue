@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
@@ -71,7 +72,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 					}
 					else
 					{
-						m_device.onConnectFail(state, connectTask.getGattStatus());
+						m_device.onConnectFail(state, connectTask.getGattStatus(), connectTask.getAutoConnectUsage());
 					}
 				}
 			}
@@ -226,7 +227,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			m_device.onConnectFail( (PE_TaskState)null, gattStatus);
+			m_device.onConnectFail( (PE_TaskState)null, gattStatus, AutoConnectUsage.UNKNOWN);
 		}
 		
 		if( gattStatus == PS_GattStatus.UNKNOWN_STATUS_FOR_IMMEDIATE_CONNECTION_FAILURE )

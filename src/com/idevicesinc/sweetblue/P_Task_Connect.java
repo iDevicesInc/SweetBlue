@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
+
 import android.bluetooth.BluetoothGatt;
 
 /**
@@ -12,6 +14,8 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
 	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	
+	private AutoConnectUsage m_autoConnectUsage = AutoConnectUsage.UNKNOWN;
 	
 	public P_Task_Connect(BleDevice device, I_StateListener listener)
 	{
@@ -48,9 +52,11 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		
 		if( m_explicit )
 		{
-			boolean autoConnect = getDevice().shouldUseAutoConnect();
+			boolean useAutoConnect = getDevice().shouldUseAutoConnect();
 			
-			BluetoothGatt gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), autoConnect, getDevice().getListeners());
+			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
+			
+			BluetoothGatt gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
 			
 			if( gatt == null )
 			{				
@@ -75,6 +81,11 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 //			this.fail();
 			this.noOp();
 		}
+	}
+	
+	public AutoConnectUsage getAutoConnectUsage()
+	{
+		return m_autoConnectUsage;
 	}
 	
 	public boolean isExplicit()

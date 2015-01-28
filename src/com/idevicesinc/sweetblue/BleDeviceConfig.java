@@ -1,19 +1,12 @@
 package com.idevicesinc.sweetblue;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
-import android.Manifest;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.app.Application;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.utils.Utils;
 
