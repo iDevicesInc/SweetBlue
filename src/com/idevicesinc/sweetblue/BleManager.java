@@ -61,15 +61,15 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *
  *          m_bleManager.startScan(new BleManager.DiscoveryListener()
  *          {
- *              {@literal @}Override public void onDeviceDiscovered(BleDevice device, AdvertisingFilter.LastDisconnect lastDisconnect)
+ *              {@literal @}Override public void onDeviceDiscovered(BleDevice device)
  *              {
  *                  m_bleManager.stopScan();
  *
  *                  device.connect(new BleDevice.StateListener()
  *                  {
- *                      {@literal @}Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
+ *                      {@literal @}Override public void onStateChange(ChangeEvent event)
  *                      {
- *                          if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
+ *                          if( event.wasEntered(BleDeviceState.INITIALIZED) )
  *                          {
  *                              String toastText = device.getDebugName() + " just initialized!";
  *                              Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
@@ -114,12 +114,10 @@ public class BleManager
 		 * calling {@link BleManager#startScan()} (or its overloads)
 		 * or {@link BleManager#startPeriodicScan(Interval, Interval)}.
 		 * <br><br>
-		 * TIP: If the {@link State.ChangeIntent} passed here is {@link State.ChangeIntent#UNINTENTIONAL}
+		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link State.ChangeIntent#UNINTENTIONAL}
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
-		 * 
-		 * @param lastDisconnectIntent See {@link AdvertisingFilter.Packet#lastDisconnectIntent}.
 		 */
-		void onDeviceDiscovered(BleDevice device, State.ChangeIntent lastDisconnectIntent);
+		void onDeviceDiscovered(BleDevice device);
 	}
 
 	/**
@@ -1526,9 +1524,7 @@ public class BleManager
 
     		if( m_discoveryListener != null )
     		{
-    			boolean hitDisk = BleDeviceConfig.conf_bool(device.conf_device().manageLastDisconnectOnDisk, device.conf_mngr().manageLastDisconnectOnDisk);
-    			State.ChangeIntent lastDisconnect = m_lastDisconnectMngr.load(device.getMacAddress(), hitDisk);
-    			m_discoveryListener.onDeviceDiscovered(device, lastDisconnect);
+    			m_discoveryListener.onDeviceDiscovered(device);
     		}
     	}
     	else

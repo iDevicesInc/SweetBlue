@@ -12,14 +12,14 @@ import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Packet;
 
 /**
- * Bitwise enum contract for representing state of devices and managers.
+ * Bitwise enum contract for representing the state of devices and managers.
  * Implementations are {@link BleDeviceState} and {@link BleState}.
  * Not intended for subclassing outside this library but go wild if you want.
  */
 public interface State
 {
 	/**
-	 * Abstract base class for 
+	 * Abstract base class for {@link BleDevice.StateListener.ChangeEvent} and {@link BleManager.StateListener.ChangeEvent}.
 	 */
 	public static abstract class ChangeEvent
 	{
@@ -30,7 +30,7 @@ public interface State
 		public final int oldStateBits;
 		
 		/**
-		 * The new and now current bitwise representation of a {@link BleDeviceState}
+		 * The new and now current bitwise representation of a {@link BleDevice}
 		 * or {@link BleManager}. Will be the same as {@link BleDevice#getStateMask()}
 		 * or {@link BleManager#getStateMask()}.
 		 */
@@ -93,28 +93,22 @@ public interface State
 	/**
 	 * Enumerates the intention behind a single state change - as comprehensively as possible, whether the
 	 * application user intended for the state change to happen or not. See {@link ChangeEvent#intentMask} for more
-	 * discussion on user intent. For now its uses are mainly {@link AdvertisingFilter.Packet#lastDisconnectIntent} and
-	 * {@link DiscoveryListener#onDeviceDiscovered(BleDevice, ChangeIntent)}.
+	 * discussion on user intent.
 	 */
 	public static enum ChangeIntent
 	{
 		/**
-		 * The last disconnect is unknown because (a) device has never been seen before, (b)
-		 * reason for disconnect was app being killed and {@link BleDeviceConfig#saveDisconnectReasonToDisk}
-		 * was <code>false</code>, (c) app user cleared app data between app sessions, (d) etc., etc.
+		 * Used instead of Java's built-in <code>null</code> wherever appropriate.
 		 */
 		NULL,
 		
 		/**
-		 * From a user experience perspective, the user may not have wanted the
-		 * disconnect to happen, and thus *probably* would want to be automatically connected again
-		 * as soon as the device is discovered.
+		 * The state change was not intentional.
 		 */
 		UNINTENTIONAL,
 		
 		/**
-		 * The last reason the device was {@link BleDeviceState#DISCONNECTED} was because {@link BleDevice#disconnect()}
-		 * was called, which most-likely means the user doesn't want to automatically connect to this device again.
+		 * The state change was intentional.
 		 */
 		INTENTIONAL;
 		
@@ -139,17 +133,19 @@ public interface State
 		
 		/**
 		 * Transforms {@link #toDiskValue()} back to the enum.
-		 * Returns {@link #UNKNOWN} if diskValue can't be resolved.
+		 * Returns {@link #NULL} if diskValue can't be resolved.
 		 */
 		public static ChangeIntent fromDiskValue(int diskValue)
 		{
-			switch(diskValue)
+			for( int i = 0; i < values().length; i++ )
 			{
-				case DISK_VALUE__INTENTIONAL:		return INTENTIONAL;
-				case DISK_VALUE__UNINTENTIONAL:		return UNINTENTIONAL;
-				case DISK_VALUE__NULL:
-				default:							return NULL;
+				if( values()[i].toDiskValue() == diskValue )
+				{
+					return values()[i];
+				}
 			}
+			
+			return NULL;
 		}
 	}
 	

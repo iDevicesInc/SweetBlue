@@ -51,7 +51,7 @@ public class DeviceList extends ScrollView implements BleManager.DiscoveryListen
 		}
 	}
  
-	@Override public void onDeviceDiscovered(BleDevice device, State.ChangeIntent lastDisconnectIntent)
+	@Override public void onDeviceDiscovered(BleDevice device)
 	{
 		DeviceListEntry entry = new DeviceListEntry(getContext(), device);
 		entry.setLayoutParams(new ScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));

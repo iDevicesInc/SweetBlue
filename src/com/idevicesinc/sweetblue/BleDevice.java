@@ -20,6 +20,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.*;
+import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
 /**
@@ -90,7 +91,7 @@ public class BleDevice
 			
 			/**
 			 * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)} or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
-			 * or etc. returned {@link Boolean#false} and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#dropTacticalNuke()}.
+			 * or etc. returned {@link Boolean#FALSE} and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#dropTacticalNuke()}.
 			 */
 			FAILED_TO_SEND_OUT,
 			
@@ -438,10 +439,6 @@ public class BleDevice
 		
 		/**
 		 * Called when a device's bitwise {@link BleDeviceState} changes. As many bits as possible are flipped at the same time.
-		 *  
-		 * @param oldStateBits 
-		 * @param newStateBits 
-		 * @param intentMask 
 		 */
 		void onStateChange(ChangeEvent event);
 	}
@@ -495,7 +492,7 @@ public class BleDevice
 			INITIALIZATION_FAILED,
 			
 			/**
-			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
+			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED_EVENTUALLY}
 			 * but only occurs after the device is {@link BleDeviceState#CONNECTED} and we're going through {@link BleDeviceState#GETTING_SERVICES},
 			 * or {@link BleDeviceState#AUTHENTICATING}, or what have you. It might from the device turning off, or going out of range, or any other
 			 * random reason.
@@ -516,7 +513,7 @@ public class BleDevice
 			BLE_TURNING_OFF;
 			
 			/**
-			 * Returns true for {@link #EXPLICIT_DISCONNECT} or {@value #BLE_TURNING_OFF}.
+			 * Returns true for {@link #EXPLICIT_DISCONNECT} or {@link #BLE_TURNING_OFF}.
 			 */
 			public boolean wasCancelled()
 			{
@@ -612,7 +609,7 @@ public class BleDevice
 		
 		/**
 		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#wasCancelled()}.
-		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleManagerConfig.ReconnectRateLimiter}.
+		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectRateLimiter}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
 		 * lets the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
 		 * <br><br>
@@ -801,6 +798,32 @@ public class BleDevice
 	}
 	
 	/**
+	 * This enum gives you an indication of the last interaction with a device across app sessions or
+	 * in-app BLE {@link BleState#OFF}->{@link BleState#ON} cycles or undiscovery->rediscovery, which basically means how it
+	 * was last {@link BleDeviceState#DISCONNECTED}.
+	 * <br><br>
+	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown because (a) device has never been seen before, (b)
+	 * reason for disconnect was app being killed and {@link BleDeviceConfig#manageLastDisconnectOnDisk}
+	 * was <code>false</code>, (c) app user cleared app data between app sessions, (d) etc., etc.
+	 * <br><br>
+	 * If {@link State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted the
+	 * disconnect to happen, and thus *probably* would want to be automatically connected again
+	 * as soon as the device is discovered.
+	 * <br><br>
+	 * If {@link State.ChangeIntent#INTENTIONAL}, then last reason the device was {@link BleDeviceState#DISCONNECTED} was because
+	 * {@link BleDevice#disconnect()} was called, which most-likely means the user doesn't want to automatically connect to this device again.
+	 * <br><br>
+	 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
+	 */
+	public State.ChangeIntent getLastDisconnectIntent()
+	{
+		boolean hitDisk = BleDeviceConfig.conf_bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
+		State.ChangeIntent lastDisconnect = m_mngr.m_lastDisconnectMngr.load(getMacAddress(), hitDisk);
+		
+		return lastDisconnect;
+	}
+	
+	/**
 	 * Set a listener here to be notified whenever this device's state changes.
 	 */
 	public void setListener_State(StateListener listener)
@@ -819,7 +842,7 @@ public class BleDevice
 	/**
 	 * Returns the connection failure retry count during a retry loop. Basic example use case is to provide a
 	 * callback to {@link #setListener_ConnectionFail(ConnectionFailListener)} and update your application's UI with this method's
-	 * return value downstream of your {@link ConnectionFailListener#onConnectionFail(BleDevice, Reason, int)} override.
+	 * return value downstream of your {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info))} override.
 	 */
 	public int getConnectionRetryCount()
 	{
@@ -1249,7 +1272,7 @@ public class BleDevice
 	 * that have been undiscovered, and this may be a bug or bad design decision in your code. This library
 	 * will (well, should) never hold references to two devices such that this method returns true for them.
 	 * 
-	 * @see BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)
+	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
 	 */
 	public boolean equals(BleDevice device)
 	{

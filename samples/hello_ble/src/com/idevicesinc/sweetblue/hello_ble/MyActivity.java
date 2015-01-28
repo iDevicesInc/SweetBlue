@@ -28,7 +28,7 @@ public class MyActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		
-		m_bleManager = BleManager.get(getApplication());
+		m_bleManager = BleManager.get(this);
 		
 		m_bleManager.startScan(new BleManager.DiscoveryListener()
 		{
@@ -38,9 +38,9 @@ public class MyActivity extends Activity
 				
 				device.connect(new BleDevice.StateListener()
 				{
-					@Override public void onStateChange(final BleDevice device, int oldStateBits, int newStateBits, int intentMask)
+					@Override public void onStateChange(ChangeEvent event)
 					{
-						if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
+						if( event.wasEntered(BleDeviceState.INITIALIZED) )
 						{
 							Log.i("SweetBlueExample", device.getName_debug() + " just initialized!");
 							

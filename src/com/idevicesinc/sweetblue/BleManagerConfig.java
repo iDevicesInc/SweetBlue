@@ -84,13 +84,9 @@ public class BleManagerConfig extends BleDeviceConfig
 			public final int rssi;
 			
 			/**
-			 * The intention behind the last time this device was disconnected. This gives you an indication of the last interaction
-			 * with a device between app sessions or in-app BLE {@link BleState#OFF}->{@link BleState#ON} cycles, which basically
-			 * means how it was last {@link BleDeviceState#DISCONNECTED}.
+			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
 			 * <br><br>
-			 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
-			 * <br><br>
-			 * TIP: If {@link Packet#lastDisconnect} isn't {@link LastDisconnect#NULL} then most likely you can early-out
+			 * TIP: If {@link Packet#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
 			 * and return <code>true</code> from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} without having to check
 			 * uuids or names matching.
 			 */

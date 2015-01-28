@@ -27,7 +27,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * If an option is ultimately <code>null</code> (<code>null</code> when passed to {@link BleDevice#setConfig(BleDeviceConfig)}
  * *and* {@link BleManager#get(Context, BleManagerConfig)}) then it is interpreted as <code>false</code>.
  * <br><br>
- * NOTE: you can use {@link Interval#DISABLED} instead of <code>null</code> to disable any time-based options, for code readability's sake.
+ * TIP: You can use {@link Interval#DISABLED} instead of <code>null</code> to disable any time-based options, for code readability's sake.
  */
 public class BleDeviceConfig implements Cloneable
 {
@@ -36,8 +36,8 @@ public class BleDeviceConfig implements Cloneable
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 	
 	/**
-	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation didn't get to a point where a
-	 * gatt status from the underlying stack is provided.
+	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation failed at a point where a
+	 * gatt status from the underlying stack isn't provided or applicable.
 	 * <br><br>
 	 * Also used for {@link BleDevice.ConnectionFailListener.Info#gattStatus} for when the failure didn't involve the gatt layer.
 	 */
@@ -51,6 +51,9 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	public static interface BondingFilter
 	{
+		/**
+		 * Return true if the characteristic requires bonding, false otherwise.
+		 */
 		boolean requiresBonding(UUID characteristicUuid);
 	}
 	
@@ -114,7 +117,7 @@ public class BleDeviceConfig implements Cloneable
 	 * Default is true - whether to automatically get services immediately after a {@link BleDevice} is
 	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
 	 */
-	public Boolean autoGetServices						= true;
+	Boolean autoGetServices						= true;
 	
 	/**
 	 * Default is true if phone is manufactured by Sony, false otherwise (sorry Sony) - Some
@@ -205,9 +208,8 @@ public class BleDeviceConfig implements Cloneable
 	 * is saved to and loaded from disk so that it can be restored across app sessions, undiscoveries, and BLE
 	 * {@link BleState#OFF}->{@link BleState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
 	 * any extra permissions. The main advantage of this is the following scenario: User connects to a device through your app,
-	 * does what they want, kills the app, then opens the app sometime later. {@link State.ChangeIntent#UNINTENTIONAL}
-	 * is sent to {@link DiscoveryListener#onDeviceDiscovered(BleDevice, State.ChangeIntent)} which lets you know
-	 * that you can probably automatically connect to this device without user confirmation.
+	 * does what they want, kills the app, then opens the app sometime later. {@link BleDevice#getLastDisconnectIntent()} returns
+	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
 	 */
 	public Boolean manageLastDisconnectOnDisk = true;
 	

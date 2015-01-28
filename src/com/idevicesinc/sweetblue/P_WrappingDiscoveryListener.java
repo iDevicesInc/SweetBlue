@@ -23,7 +23,7 @@ class P_WrappingDiscoveryListener extends PA_CallbackWrapper implements BleManag
 		m_listener_full = listener instanceof BleManager.DiscoveryListener_Full ? (BleManager.DiscoveryListener_Full)listener : null;
 	}
 	
-	@Override public void onDeviceDiscovered(final BleDevice device, final State.ChangeIntent lastDisconnectIntent)
+	@Override public void onDeviceDiscovered(final BleDevice device)
 	{
 		if( postToMain() )
 		{
@@ -31,13 +31,13 @@ class P_WrappingDiscoveryListener extends PA_CallbackWrapper implements BleManag
 			{
 				@Override public void run()
 				{
-					m_listener.onDeviceDiscovered(device, lastDisconnectIntent);
+					m_listener.onDeviceDiscovered(device);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onDeviceDiscovered(device, lastDisconnectIntent);
+			m_listener.onDeviceDiscovered(device);
 		}
 	}
 	

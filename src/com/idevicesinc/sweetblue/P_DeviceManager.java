@@ -222,9 +222,7 @@ class P_DeviceManager
 					
 					if( m_mngr.m_discoveryListener != null )
 		    		{
-						final boolean hitDisk = BleDeviceConfig.conf_bool(device.conf_device().manageLastDisconnectOnDisk, device.conf_mngr().manageLastDisconnectOnDisk);
-						final State.ChangeIntent lastDisconnectIntent = m_mngr.m_lastDisconnectMngr.load(device.getMacAddress(), hitDisk);
-						m_mngr.m_discoveryListener.onDeviceDiscovered(device, lastDisconnectIntent);
+						m_mngr.m_discoveryListener.onDeviceDiscovered(device);
 		    		}
 				}
 			}
