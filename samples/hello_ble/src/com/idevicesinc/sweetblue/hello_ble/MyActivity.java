@@ -16,10 +16,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-/**
- * 
- * @author dougkoellmer
- */
 public class MyActivity extends Activity
 {
 	private BleManager m_bleManager;
