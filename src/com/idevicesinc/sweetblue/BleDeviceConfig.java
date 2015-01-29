@@ -5,10 +5,10 @@ import java.util.UUID;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.utils.*;
-import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * Provides a number of options to (optionally) pass to {@link BleDevice#setConfig(BleDeviceConfig)}.
@@ -147,13 +147,15 @@ public class BleDeviceConfig implements Cloneable
 	Boolean autoGetServices						= true;
 	
 	/**
-	 * Default is true if phone is manufactured by Sony, false otherwise (sorry Sony) - Some
-	 * android devices have known issues when it comes to bonding. So far the worst culprits
-	 * are Xperias. To be safe this is set to true by default if we're running on a Sony device.
-	 * The problem seems to be associated with mismanagement of pairing keys by the OS and
+	 * Default is true or false based on info from {@link android.os.Build}.
+	 * Background: some android devices have issues when it comes to bonding. So far the worst culprits
+	 * are certain Sony and Motorola phones, so if it looks like {@link Build#MANUFACTURER}
+	 * is either one of those, this is set to true. Please look at the source for this member for the most
+	 * up-to-date values. The problem seems to be associated with mismanagement of pairing keys by the OS and
 	 * this brute force solution seems to be the only way to smooth things out.
 	 */
-	public Boolean removeBondOnDisconnect				= Utils.isSony();
+	public Boolean removeBondOnDisconnect				=	Utils.isManufacturer("sony")										||
+															Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
 	
 	/**
 	 * Default is same as {@link #removeBondOnDisconnect} - see {@link #removeBondOnDisconnect} for explanation.

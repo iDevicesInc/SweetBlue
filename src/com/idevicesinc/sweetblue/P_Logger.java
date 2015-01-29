@@ -9,9 +9,11 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothProfile;
+import android.os.Build;
 import android.os.Process;
 import android.util.Log;
 
+import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 
@@ -44,6 +46,21 @@ class P_Logger
 		if( m_enabled )
 		{
 			getThreadName(Process.myTid());
+		}
+	}
+	
+	public void printBuildInfo()
+	{
+		if( !m_enabled )  return;
+		
+		int level = Log.DEBUG;
+
+		for( Field field : Build.class.getFields() )
+		{
+			String fieldName = field.getName();
+			String fieldValue = Utils.fieldStringValue(field);
+			
+			this.log(level, fieldName + ": " + fieldValue);
 		}
 	}
 	

@@ -2239,6 +2239,12 @@ public class BleDevice
 	
 	void onNativeDisconnect(final boolean wasExplicit)
 	{
+		if( !wasExplicit )
+		{
+			//--- DRK > Just here so it's easy to filter out in logs.
+			m_logger.w("Disconnected Implicitly!");
+		}
+		
 		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF);
 		
 		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;

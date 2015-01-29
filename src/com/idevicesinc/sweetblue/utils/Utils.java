@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -36,12 +37,14 @@ public class Utils
 		return false;
 	}
 	
-	/**
-	 * For now returns true if and only if {@link Build#MANUFACTURER} is Sony.
-	 */
-	public static boolean isSony()
+	public static boolean isManufacturer(String manufacturer)
 	{
-		return Build.MANUFACTURER.equalsIgnoreCase("sony");
+		return Build.MANUFACTURER != null && Build.MANUFACTURER.equalsIgnoreCase(manufacturer);
+	}
+	
+	public static boolean isProduct(String product)
+	{
+		return Build.PRODUCT != null && Build.PRODUCT.contains(product);
 	}
 
 	public static boolean isOnMainThread()
@@ -428,5 +431,42 @@ public class Utils
 	public static short unsignedByte(byte value)
 	{
 		return (short) (value & 0xff);
+	}
+	
+	public static String fieldStringValue(Field field)
+	{
+		Object uuid = staticFieldValue(field);
+		
+		String uuidString = "";
+		
+		if( uuid instanceof String )
+		{
+			uuidString = (String) uuid;
+		}
+		else if( uuid instanceof UUID )
+		{
+			uuidString = uuid.toString();
+		}
+		
+		uuidString = uuidString.toLowerCase();
+		
+		return uuidString;
+	}
+	
+	public static <T extends Object> T staticFieldValue(Field field)
+	{
+		Object value = null;
+		
+		try {
+			value = field.get(null);
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		}
+		
+		return (T) value;
 	}
 }

@@ -379,7 +379,7 @@ class P_TaskQueue
 //				current += "(" + m_pendingEndingStateForCurrentTask.name() +")";
 //			}
 			
-			String queue = m_queue.size() > 0 ? m_queue.toString() : "[ empty ]";
+			String queue = m_queue.size() > 0 ? m_queue.toString() : "[ queue empty ]";
 			m_logger.i(current + " " + queue);
 		}
 	}

@@ -226,7 +226,7 @@ class P_NativeDeviceWrapper
 	{
 		synchronized (this)
 		{
-			if( !m_mngr.ASSERT(m_gatt != null) )  return;
+			if( m_gatt == null )  return;
 			
 			//--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
 			//---		Don't want to keep it here because I'm afraid it has a better chance to do bad than good.
@@ -261,7 +261,7 @@ class P_NativeDeviceWrapper
 					{
 						m_mngr.ASSERT(false, "Different gatt object set.");
 						
-						m_gatt.close();
+						closeGatt(/*disconnectAlso=*/false);
 					}
 				}
 				

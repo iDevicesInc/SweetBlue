@@ -366,6 +366,8 @@ public class BleManager
 		m_listeners = new P_BleManager_Listeners(this);
 
 		initConfigDependentMembers();
+		
+		m_logger.printBuildInfo();
 	}
 
 	private void initLogger()
