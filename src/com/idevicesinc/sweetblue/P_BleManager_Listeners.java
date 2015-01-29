@@ -279,7 +279,7 @@ class P_BleManager_Listeners
 		else if( inconsistentState )
 		{
 			m_mngr.uhOh(UhOh.INCONSISTENT_NATIVE_BLE_STATE);
-			m_logger.w("adapterState=" + m_logger.gattBondState(adapterState) + " newState=" + m_logger.gattBondState(newNativeState));
+			m_logger.w("adapterState=" + m_logger.gattBleState(adapterState) + " newState=" + m_logger.gattBleState(newNativeState));
 		}
 	}
 	

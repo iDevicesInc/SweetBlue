@@ -88,6 +88,11 @@ class P_NativeDeviceWrapper
 		}
 	}
 	
+	void updateGattInstance(BluetoothGatt gatt)
+	{
+		updateGattFromCallback(gatt);
+	}
+	
 	void updateNativeConnectionState(BluetoothGatt gatt)
 	{
 		updateNativeConnectionState(gatt, null);
@@ -251,6 +256,13 @@ class P_NativeDeviceWrapper
 					//---		so it might be a "valid" case where android sends
 					//---		back a new gatt reference for different connections.
 //					m_mngr.ASSERT(m_gatt == gatt);
+					
+					if( m_gatt != gatt )
+					{
+						m_mngr.ASSERT(false, "Different gatt object set.");
+						
+						m_gatt.close();
+					}
 				}
 				
 				m_gatt = gatt;

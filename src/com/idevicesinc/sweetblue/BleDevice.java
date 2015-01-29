@@ -712,11 +712,11 @@ public class BleDevice
 			return m_retryCount;
 		}
 		
-		@Override public Please onConnectionFail(Info moreInfo)
+		@Override public Please onConnectionFail(Info info)
 		{
-			if( moreInfo.failureCountSoFar <= m_retryCount )
+			if( info.failureCountSoFar <= m_retryCount )
 			{
-				return moreInfo.failureCountSoFar >= m_failCountBeforeUsingAutoConnect ? Please.RETRY_USING_AUTOCONNECT : Please.RETRY; 
+				return info.failureCountSoFar >= m_failCountBeforeUsingAutoConnect ? Please.RETRY_USING_AUTOCONNECT : Please.RETRY; 
 			}
 			else
 			{
@@ -2050,18 +2050,20 @@ public class BleDevice
 	
 	void onConnectFail(PE_TaskState state, int gattStatus, AutoConnectUsage autoConnectUsage)
 	{
+		m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/true);
+		
 		if( state == PE_TaskState.SOFTLY_CANCELLED )  return;
 	
 		boolean attemptingReconnect = is(ATTEMPTING_RECONNECT);
 		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 		
-		if( !m_nativeWrapper.isNativelyConnected() )
-		{
+//		if( !m_nativeWrapper.isNativelyConnected() )
+//		{
 //			if( !attemptingReconnect )
-			{
-				m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/true);
-			}
-		}
+//			{
+//				m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/true);
+//			}
+//		}
 		
 		boolean wasConnecting = is(CONNECTING_OVERALL);
 		
