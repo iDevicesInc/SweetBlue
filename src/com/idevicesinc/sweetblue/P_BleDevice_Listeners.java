@@ -72,13 +72,13 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 					}
 					else
 					{
-						m_device.onConnectFail(state, connectTask.getGattStatus(), connectTask.getAutoConnectUsage());
+						m_device.onNativeConnectFail(state, connectTask.getGattStatus(), connectTask.getAutoConnectUsage());
 					}
 				}
 			}
 			else if (task.getClass() == P_Task_Disconnect.class)
 			{
-				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT)
+				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT || state == PE_TaskState.NO_OP)
 				{
 					P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 
@@ -227,7 +227,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			m_device.onConnectFail( (PE_TaskState)null, gattStatus, AutoConnectUsage.UNKNOWN);
+			m_device.onNativeConnectFail( (PE_TaskState)null, gattStatus, AutoConnectUsage.UNKNOWN);
 		}
 		
 		if( gattStatus == PS_GattStatus.UNKNOWN_STATUS_FOR_IMMEDIATE_CONNECTION_FAILURE )

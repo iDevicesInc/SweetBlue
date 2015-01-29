@@ -2048,7 +2048,7 @@ public class BleDevice
 		}
 	}
 	
-	void onConnectFail(PE_TaskState state, int gattStatus, AutoConnectUsage autoConnectUsage)
+	void onNativeConnectFail(PE_TaskState state, int gattStatus, AutoConnectUsage autoConnectUsage)
 	{
 		m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/true);
 		
