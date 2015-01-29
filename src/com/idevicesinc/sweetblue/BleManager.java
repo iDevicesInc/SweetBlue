@@ -460,8 +460,6 @@ public class BleManager
 
 	/**
 	 * Checks the underlying stack to see if BLE is supported on the phone.
-	 * Note that this call can lie on at least one Sony Xperia model, returning
-	 * true when it should return false. Perhaps other models as well.
 	 */
 	public boolean isBleSupported()
 	{
