@@ -151,7 +151,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			{
 				// --- DRK > This assert can hit and is out of our control so commenting out for now.
 				// --- Not sure how to handle disconnect "failures" so just assuming success for now.
-				// U_Bt.ASSERT(U_Bt.isSuccess(status));
+				// U_Bt.ASSERT(U_Bt.isSuccess(gattStatus));
 	
 				if (!m_queue.succeed(P_Task_Disconnect.class, m_device))
 				{
@@ -177,7 +177,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else
 			{
-				onConnectFail(gatt, gattStatus);
+				onNativeConnectFail(gatt, gattStatus);
 			}
 		}
 		else if (newState == BluetoothProfile.STATE_CONNECTED)
@@ -195,12 +195,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else
 			{
-				onConnectFail(gatt, gattStatus);
+				onNativeConnectFail(gatt, gattStatus);
 			}
 		}
 		else if (newState == BluetoothProfile.STATE_DISCONNECTING)
 		{
-			m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
+			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 			
 			m_device.onDisconnecting();
 			
@@ -218,9 +218,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 	}
 	
-	private void onConnectFail(BluetoothGatt gatt, int gattStatus)
+	private void onNativeConnectFail(BluetoothGatt gatt, int gattStatus)
 	{
-		m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
+		//--- DRK > NOTE: Making an assumption that the underlying stack agrees that the connection state is STATE_DISCONNECTED.
+		//---				This is backed up by basic testing, but even if the underlying stack uses a different value, it can probably
+		//---				be assumed that it will eventually go to STATE_DISCONNECTED, so SweetBlue library logic is sounder "living under the lie" for a bit.
+		m_device.m_nativeWrapper.updateNativeConnectionState(gatt, BluetoothProfile.STATE_DISCONNECTED);
 		
 		P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
 		

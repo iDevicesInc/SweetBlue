@@ -155,7 +155,7 @@ class P_NativeDeviceWrapper
 		return getConnectionState() == BluetoothGatt.STATE_DISCONNECTING;
 	}
 	
-	private int getNativeConnectionState()
+	public int getNativeConnectionState()
 	{
 		return m_device.getManager().getNative().getConnectionState( m_native, BluetoothGatt.GATT_SERVER );
 	}
@@ -164,14 +164,14 @@ class P_NativeDeviceWrapper
 	{
 		synchronized (this)
 		{
-			int reportedConnectedState = getNativeConnectionState();
-			int connectedStateThatWeWillGoWith = reportedConnectedState;
+			final int reportedNativeConnectionState = getNativeConnectionState();
+			int connectedStateThatWeWillGoWith = reportedNativeConnectionState;
 			
 			if( m_nativeConnectionState != null )
 			{
-				if( m_nativeConnectionState != reportedConnectedState )
+				if( m_nativeConnectionState != reportedNativeConnectionState )
 				{
-					m_logger.e("Tracked native state "+m_logger.gattConn(m_nativeConnectionState)+" doesn't match reported state "+m_logger.gattConn(reportedConnectedState)+".");
+					m_logger.e("Tracked native state "+m_logger.gattConn(m_nativeConnectionState)+" doesn't match reported state "+m_logger.gattConn(reportedNativeConnectionState)+".");
 				}
 				
 				connectedStateThatWeWillGoWith = m_nativeConnectionState;
@@ -252,10 +252,7 @@ class P_NativeDeviceWrapper
 			{
 				if( m_gatt != null )
 				{
-					//--- DRK > No idea why this assert tripped once but it did
-					//---		so it might be a "valid" case where android sends
-					//---		back a new gatt reference for different connections.
-//					m_mngr.ASSERT(m_gatt == gatt);
+					m_mngr.ASSERT(m_gatt == gatt);
 					
 					if( m_gatt != gatt )
 					{

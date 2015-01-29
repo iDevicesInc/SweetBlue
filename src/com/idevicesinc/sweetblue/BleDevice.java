@@ -2058,10 +2058,12 @@ public class BleDevice
 		boolean attemptingReconnect = is(ATTEMPTING_RECONNECT);
 		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 		
+		
 //		if( !m_nativeWrapper.isNativelyConnected() )
 //		{
 //			if( !attemptingReconnect )
 //			{
+		//--- DRK > Now doing this at top of method...no harm really and catches fringe case logic erros upstream. 
 //				m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/true);
 //			}
 //		}
