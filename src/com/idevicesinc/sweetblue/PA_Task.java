@@ -400,7 +400,7 @@ abstract class PA_Task
 	@Override public String toString()
 	{
 		String name = this.getClass().getSimpleName();
-		name = name.replace("BtTask_", "");
+		name = name.replace("P_Task_", "");
 		
 		String deviceEntry = getDevice() != null ? " " + getDevice().getName_debug(): "";
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";

@@ -123,9 +123,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		m_queue = m_device.getTaskQueue();
 	}
 
-	@Override public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState)
+	@Override public void onConnectionStateChange(final BluetoothGatt gatt, final int gattStatus, final int newState)
 	{
-		m_logger.log_status(status, m_logger.gattConn(newState));
+		//--- DRK > NOTE: For some devices disconnecting by turning off the peripheral comes back with a status of 8, which is BluetoothGatt.GATT_SERVER.
+		//---				For that same device disconnecting from the app the status is 0. Just an FYI to future developers in case they want to distinguish
+		//---				between the two as far as user intent or something.
+		m_logger.log_status(gattStatus, m_logger.gattConn(newState));
 		
 		UpdateLoop updater = m_device.getManager().getUpdateLoop();
 		
@@ -133,7 +136,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			@Override public void run_nested()
 			{
-				onConnectionStateChange_synchronized(gatt, status, newState);
+				onConnectionStateChange_synchronized(gatt, gattStatus, newState);
 			}
 		});
 	}

@@ -144,7 +144,7 @@ public class BleDeviceConfig implements Cloneable
 	 * Default is true - whether to automatically get services immediately after a {@link BleDevice} is
 	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
 	 */
-	Boolean autoGetServices						= true;
+	Boolean autoGetServices								= true;
 	
 	/**
 	 * Default is true or false based on info from {@link android.os.Build}.
