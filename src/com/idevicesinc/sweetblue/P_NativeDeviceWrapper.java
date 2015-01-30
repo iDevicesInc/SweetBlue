@@ -244,24 +244,24 @@ class P_NativeDeviceWrapper
 	{
 		synchronized (this)
 		{
+			if( m_gatt != null )
+			{
+				m_mngr.ASSERT(m_gatt == gatt);
+				
+				if( m_gatt != gatt )
+				{
+					m_mngr.ASSERT(false, "Different gatt object set.");
+					
+					closeGatt(/*disconnectAlso=*/false);
+				}
+			}
+			
 			if( gatt == null )
 			{
 				m_gatt = null;
 			}
 			else
 			{
-				if( m_gatt != null )
-				{
-					m_mngr.ASSERT(m_gatt == gatt);
-					
-					if( m_gatt != gatt )
-					{
-						m_mngr.ASSERT(false, "Different gatt object set.");
-						
-						closeGatt(/*disconnectAlso=*/false);
-					}
-				}
-				
 				m_gatt = gatt;
 			}
 		}

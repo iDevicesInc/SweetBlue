@@ -566,12 +566,12 @@ public class BleDevice
 			 * Same as {@link #RETRY}, but <code>autoConnect=true</code> will be passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
-			RETRY_USING_AUTOCONNECT,
+			RETRY_WITH_AUTOCONNECT_TRUE,
 			
 			/**
-			 * Same as {@link #RETRY_USING_AUTOCONNECT}, but forces <code>autoConnect=false</code>.
+			 * Same as {@link #RETRY_WITH_AUTOCONNECT_TRUE}, but forces <code>autoConnect=false</code>.
 			 */
-			RETRY_WITHOUT_USING_AUTOCONNECT,
+			RETRY_WITH_AUTOCONNECT_FALSE,
 			
 			/**
 			 * Return this to stop the connection fail retry loop.
@@ -690,7 +690,7 @@ public class BleDevice
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 		
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#RETRY_USING_AUTOCONNECT}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#RETRY_WITH_AUTOCONNECT_TRUE}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 		
@@ -717,7 +717,7 @@ public class BleDevice
 		{
 			if( info.failureCountSoFar <= m_retryCount )
 			{
-				return info.failureCountSoFar >= m_failCountBeforeUsingAutoConnect ? Please.RETRY_USING_AUTOCONNECT : Please.RETRY; 
+				return info.failureCountSoFar >= m_failCountBeforeUsingAutoConnect ? Please.RETRY_WITH_AUTOCONNECT_TRUE : Please.RETRY; 
 			}
 			else
 			{
@@ -2086,11 +2086,11 @@ public class BleDevice
 
 			Please retry = m_connectionFailMngr.onConnectionFailed(reason, attemptingReconnect, gattStatus, highestState, autoConnectUsage);
 			
-			if( !attemptingReconnect && retry == Please.RETRY_USING_AUTOCONNECT )
+			if( !attemptingReconnect && retry == Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
 				m_useAutoConnect = true;
 			}
-			else if( !attemptingReconnect && retry == Please.RETRY_WITHOUT_USING_AUTOCONNECT )
+			else if( !attemptingReconnect && retry == Please.RETRY_WITH_AUTOCONNECT_FALSE )
 			{
 				m_useAutoConnect = false;
 			}
@@ -2363,7 +2363,7 @@ public class BleDevice
 	
 	void read_internal(P_Characteristic characteristic, Type type, P_WrappingReadWriteListener listener)
 	{
-		boolean requiresBonding = requiresBonding(characteristic);
+		boolean requiresBonding = bondIfNeeded(characteristic);
 		
 		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
@@ -2384,7 +2384,7 @@ public class BleDevice
 		
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		
-		boolean requiresBonding = requiresBonding(characteristic);
+		boolean requiresBonding = bondIfNeeded(characteristic);
 		
 		m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
@@ -2414,14 +2414,21 @@ public class BleDevice
 		m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /*usingNotify=*/true);
 	}
 	
-	private boolean requiresBonding(P_Characteristic characteristic)
+	private boolean bondIfNeeded(P_Characteristic characteristic)
 	{
 		BleDeviceConfig.BondingFilter bondingFilter = conf_device().bondingFilter;
 		bondingFilter = bondingFilter != null ? bondingFilter : conf_mngr().bondingFilter;
 		
 		if( bondingFilter == null )  return false;
 		
-		return bondingFilter.requiresBonding(characteristic.getUuid());
+		boolean bondingNeeded = bondingFilter.requiresBonding(characteristic.getUuid());
+		
+		if( bondingNeeded )
+		{
+			bond();
+		}
+		
+		return bondingNeeded;
 	}
 	
 	E_Intent lastConnectDisconnectIntent()

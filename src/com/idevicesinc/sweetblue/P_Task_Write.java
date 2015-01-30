@@ -26,11 +26,6 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	private final BluetoothGattCharacteristic m_char_native;
 	
-	public P_Task_Write(P_Characteristic characteristic, byte[] data, boolean requiresBonding, P_WrappingReadWriteListener writeListener)
-	{
-		this(characteristic, data, requiresBonding, writeListener, null, null);
-	}
-	
 	public P_Task_Write(P_Characteristic characteristic, byte[] data, boolean requiresBonding, P_WrappingReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
 	{
 		super(characteristic, writeListener, requiresBonding, txn, priority);

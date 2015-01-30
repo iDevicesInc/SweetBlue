@@ -131,7 +131,7 @@ class P_ConnectionFailManager
 			m_device.getManager().onConnectionFailed();
 		}
 		
-		if( retryChoice == Please.RETRY || retryChoice == Please.RETRY_USING_AUTOCONNECT )
+		if( retryChoice == Please.RETRY || retryChoice == Please.RETRY_WITH_AUTOCONNECT_TRUE )
 		{
 			m_device.attemptReconnect();
 		}

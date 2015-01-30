@@ -15,6 +15,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
 	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	private BluetoothGatt m_gatt = null;
 	
 	private AutoConnectUsage m_autoConnectUsage = AutoConnectUsage.UNKNOWN;
 	
@@ -57,17 +58,13 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			
 			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
 			
-			BluetoothGatt gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
+			m_gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
 			
-			if( gatt == null )
+			if( m_gatt == null )
 			{
 				failImmediately();
 				
 				return;
-			}
-			else
-			{
-				getDevice().m_nativeWrapper.updateGattInstance(gatt);
 			}
 		}
 		else
@@ -87,6 +84,11 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	public AutoConnectUsage getAutoConnectUsage()
 	{
 		return m_autoConnectUsage;
+	}
+	
+	public BluetoothGatt getGatt()
+	{
+		return m_gatt;
 	}
 	
 	public boolean isExplicit()

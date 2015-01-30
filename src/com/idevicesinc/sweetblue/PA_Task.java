@@ -26,9 +26,9 @@ abstract class PA_Task
 	private double m_executionDelay = 0.0;
 	
 	private double m_resettableTimeExecuting = 0.0;
-	private double m_totalTimeExecuting = 0.0;
+//	private double m_totalTimeExecuting = 0.0;
 	private double m_totalTimeArmedAndExecuting = 0.0;
-	private double m_totalTimeQueuedAndArmedAndExecuting = 0.0;
+//	private double m_totalTimeQueuedAndArmedAndExecuting = 0.0;
 	
 	private double m_addedToQueueTime = -1.0;
 	
@@ -210,9 +210,9 @@ abstract class PA_Task
 		setState(PE_TaskState.ARMED);
 		
 		m_executeHandler = executeHandler;
-		m_totalTimeQueuedAndArmedAndExecuting = m_queue.getTime() - m_addedToQueueTime;
+//		m_totalTimeQueuedAndArmedAndExecuting = m_queue.getTime() - m_addedToQueueTime;
 		m_totalTimeArmedAndExecuting = 0.0;
-		m_totalTimeExecuting = 0.0;
+//		m_totalTimeExecuting = 0.0;
 		m_resettableTimeExecuting = 0.0;
 		m_retryCount = 0;
 		m_updateCount = 0;
@@ -254,7 +254,7 @@ abstract class PA_Task
 		synchronized (this)
 		{
 			m_totalTimeArmedAndExecuting += timeStep;
-			m_totalTimeQueuedAndArmedAndExecuting += timeStep;
+//			m_totalTimeQueuedAndArmedAndExecuting += timeStep;
 			m_updateCount++;
 			
 			if( m_totalTimeArmedAndExecuting >= m_executionDelay )
@@ -312,7 +312,7 @@ abstract class PA_Task
 				else if( m_state == PE_TaskState.EXECUTING )
 				{
 					m_resettableTimeExecuting += timeStep;
-					m_totalTimeExecuting += timeStep;
+//					m_totalTimeExecuting += timeStep;
 					
 					if( m_timeout != Interval.INFINITE.seconds )
 					{

@@ -57,6 +57,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (state.isEndingState())
 				{
+					BluetoothGatt gatt = connectTask.getGatt();
+					if( gatt != null )
+					{
+						m_device.m_nativeWrapper.updateGattInstance(gatt);
+					}
+					
 					if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
 					{
 						if( state == PE_TaskState.SUCCEEDED )
