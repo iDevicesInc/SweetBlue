@@ -20,9 +20,9 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	protected final P_WrappingReadWriteListener m_readWriteListener;
 	private final Type m_type;
 	
-	public P_Task_ReadRssi(BleDevice device, P_WrappingReadWriteListener readListener, BleTransaction txn_nullable, PE_TaskPriority priority, Type type)
+	public P_Task_ReadRssi(BleDevice device, double timeout, P_WrappingReadWriteListener readListener, BleTransaction txn_nullable, PE_TaskPriority priority, Type type)
 	{
-		super(device, txn_nullable, false, priority);
+		super(device, timeout, txn_nullable, false, priority);
 		
 		m_readWriteListener = readListener;
 		m_type = type;

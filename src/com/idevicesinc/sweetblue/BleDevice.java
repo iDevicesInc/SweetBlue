@@ -263,7 +263,7 @@ public class BleDevice
 			public final Type type;
 			
 			/**
-			 * The type of GATT object this {@link Result} is for, characteristic or descriptor.
+			 * The type of GATT object this {@link Result} is for, currently, characteristic, descriptor, or rssi.
 			 */
 			public final Target target;
 			
@@ -472,14 +472,24 @@ public class BleDevice
 			
 			/**
 			 * {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)} took longer than
-			 * {@link BleManagerConfig#DEFAULT_TASK_TIMEOUT} seconds.
+			 * {@link BleDeviceConfig#timeoutForConnection}.
 			 */
 			NATIVE_CONNECTION_TIMED_OUT,
 			
 			/**
-			 * {@link BluetoothGatt#discoverServices()} did not complete successfully.
+			 * {@link BluetoothGatt#discoverServices()} returned false and thus failed immediately.
 			 */
-			GETTING_SERVICES_FAILED,
+			GETTING_SERVICES_FAILED_IMMEDIATELY,
+			
+			/**
+			 * {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)} returned with a non-zero gattStatus.
+			 */
+			GETTING_SERVICES_FAILED_EVENTUALLY,
+			
+			/**
+			 * {@link BluetoothGatt#discoverServices()} took longer than {@link BleDeviceConfig#timeoutForDiscoveringServices}.
+			 */
+			GETTING_SERVICES_TIMED_OUT,
 			
 			/**
 			 * The {@link BleTransaction} instance passed to {@link BleDevice#connectAndAuthenticate(BleTransaction)} or
@@ -569,7 +579,7 @@ public class BleDevice
 			RETRY_WITH_AUTOCONNECT_TRUE,
 			
 			/**
-			 * Same as {@link #RETRY_WITH_AUTOCONNECT_TRUE}, but forces <code>autoConnect=false</code>.
+			 * Same as {@link #RETRY_WITH_AUTOCONNECT_TRUE} but forces <code>autoConnect=false</code>.
 			 */
 			RETRY_WITH_AUTOCONNECT_FALSE,
 			
@@ -717,7 +727,32 @@ public class BleDevice
 		{
 			if( info.failureCountSoFar <= m_retryCount )
 			{
-				return info.failureCountSoFar >= m_failCountBeforeUsingAutoConnect ? Please.RETRY_WITH_AUTOCONNECT_TRUE : Please.RETRY; 
+				if( info.failureCountSoFar >= m_failCountBeforeUsingAutoConnect )
+				{
+					return Please.RETRY_WITH_AUTOCONNECT_TRUE;
+				}
+				else
+				{
+					if( info.reason == Reason.NATIVE_CONNECTION_TIMED_OUT )
+					{
+						if( info.autoConnectUsage == AutoConnectUsage.USED )
+						{
+							return Please.RETRY_WITH_AUTOCONNECT_FALSE;
+						}
+						else if( info.autoConnectUsage == AutoConnectUsage.NOT_USED )
+						{
+							return Please.RETRY_WITH_AUTOCONNECT_TRUE;
+						}
+						else
+						{
+							return Please.RETRY;
+						}
+					}
+					else
+					{
+						return Please.RETRY;
+					}
+				}
 			}
 			else
 			{
@@ -832,7 +867,7 @@ public class BleDevice
 		
 		//--- DRK > Not really sure how this config option should be interpreted, but here's a first stab for now.
 		//---		Fringe enough use case that I don't think it's really a big deal.
-		boolean alwaysUseAutoConnect = BleDeviceConfig.conf_bool(conf_device().alwaysUseAutoConnect, conf_mngr().alwaysUseAutoConnect);
+		boolean alwaysUseAutoConnect = BleDeviceConfig.bool(conf_device().alwaysUseAutoConnect, conf_mngr().alwaysUseAutoConnect);
 		if( alwaysUseAutoConnect )
 		{
 			m_alwaysUseAutoConnect = m_useAutoConnect = true;
@@ -845,10 +880,10 @@ public class BleDevice
 	
 	private void initEstimators()
 	{
-		Integer nForAverageRunningWriteTime = BleDeviceConfig.conf_int(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
+		Integer nForAverageRunningWriteTime = BleDeviceConfig.interger(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
 		m_writeTimeEstimator = nForAverageRunningWriteTime == null ? null : new TimeEstimator(nForAverageRunningWriteTime);
 		
-		Integer nForAverageRunningReadTime = BleDeviceConfig.conf_int(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
+		Integer nForAverageRunningReadTime = BleDeviceConfig.interger(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
 		m_readTimeEstimator = nForAverageRunningReadTime == null ? null : new TimeEstimator(nForAverageRunningReadTime);
 	}
 	
@@ -887,7 +922,7 @@ public class BleDevice
 	 */
 	public State.ChangeIntent getLastDisconnectIntent()
 	{
-		boolean hitDisk = BleDeviceConfig.conf_bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
+		boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
 		State.ChangeIntent lastDisconnect = m_mngr.m_lastDisconnectMngr.load(getMacAddress(), hitDisk);
 		
 		return lastDisconnect;
@@ -1502,7 +1537,8 @@ public class BleDevice
 	
 	void readRssi_internal(Type type, P_WrappingReadWriteListener listener)
 	{
-		m_queue.add(new P_Task_ReadRssi(this, listener , m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
+		double timeout = BleDeviceConfig.DEFAULT_TASK_TIMEOUT;
+		m_queue.add(new P_Task_ReadRssi(this, timeout, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
 	}
 	
 	/**
@@ -1621,7 +1657,7 @@ public class BleDevice
 	
 	private boolean shouldAddOperationTime()
 	{
-		boolean includeFirmwareUpdateReadWriteTimesInAverage = BleDeviceConfig.conf_bool(conf_device().includeFirmwareUpdateReadWriteTimesInAverage, conf_mngr().includeFirmwareUpdateReadWriteTimesInAverage);
+		boolean includeFirmwareUpdateReadWriteTimesInAverage = BleDeviceConfig.bool(conf_device().includeFirmwareUpdateReadWriteTimesInAverage, conf_mngr().includeFirmwareUpdateReadWriteTimesInAverage);
 		
 		return includeFirmwareUpdateReadWriteTimesInAverage || !is(UPDATING_FIRMWARE);
 	}
@@ -1671,7 +1707,7 @@ public class BleDevice
 	{
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 		
-		boolean removeBondOnDiscovery = BleDeviceConfig.conf_bool(conf_device().removeBondOnDiscovery, conf_mngr().removeBondOnDiscovery);
+		boolean removeBondOnDiscovery = BleDeviceConfig.bool(conf_device().removeBondOnDiscovery, conf_mngr().removeBondOnDiscovery);
 		
 		if( removeBondOnDiscovery )
 		{
@@ -1839,7 +1875,8 @@ public class BleDevice
 	
 		m_txnMngr.onConnect(authenticationTxn, initTxn);
 		
-		m_queue.add(new P_Task_Connect(this, m_taskStateListener));
+		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForConnection, conf_mngr().timeoutForConnection);
+		m_queue.add(new P_Task_Connect(this, timeout.seconds, m_taskStateListener));
 		
 		onConnecting(/*definitelyExplicit=*/true, isReconnect);
 	}
@@ -1940,7 +1977,7 @@ public class BleDevice
 		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
 		
 		
-		boolean autobond = BleDeviceConfig.conf_bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
+		boolean autobond = BleDeviceConfig.bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
 		boolean bond = autobond && !isBondingOrBonded();
 		
 		
@@ -1991,7 +2028,7 @@ public class BleDevice
 		}
 		else
 		{
-			boolean autoGetServices = BleDeviceConfig.conf_bool(conf_device().autoGetServices, conf_mngr().autoGetServices);
+			boolean autoGetServices = BleDeviceConfig.bool(conf_device().autoGetServices, conf_mngr().autoGetServices);
 			if( autoGetServices )
 			{
 				getServices(DISCONNECTED,false, CONNECTING_OVERALL,true, CONNECTING,false, CONNECTED,true, ADVERTISING,false);
@@ -2038,7 +2075,8 @@ public class BleDevice
 		}
 		
 		m_serviceMngr.clear();
-		m_queue.add(new P_Task_DiscoverServices(this, m_taskStateListener));
+		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForDiscoveringServices, conf_mngr().timeoutForDiscoveringServices);
+		m_queue.add(new P_Task_DiscoverServices(this, timeout.seconds, m_taskStateListener));
 		
 		//--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
 		//---		Even without this check the library should still be in a goodish state. Might send some weird state
@@ -2117,7 +2155,7 @@ public class BleDevice
 		
 		//--- DRK > Saving last disconnect as unintentional here in case for some
 		//---		reason app is hard killed or something and we never get a disconnect callback.
-		final boolean hitDisk = BleDeviceConfig.conf_bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
+		final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
 		m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 		
 		m_stateTracker.update
@@ -2137,7 +2175,7 @@ public class BleDevice
 		m_serviceMngr.clear();
 		m_txnMngr.clearQueueLock();
 		
-		boolean removeBondOnDisconnect = BleDeviceConfig.conf_bool(conf_device().removeBondOnDisconnect, conf_mngr().removeBondOnDisconnect);
+		boolean removeBondOnDisconnect = BleDeviceConfig.bool(conf_device().removeBondOnDisconnect, conf_mngr().removeBondOnDisconnect);
 		
 		if( fromBleCallback && removeBondOnDisconnect )
 		{
@@ -2300,7 +2338,7 @@ public class BleDevice
 			}
 		}
 		
-		final boolean hitDisk = BleDeviceConfig.conf_bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
+		final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
 		
 		if( wasExplicit )
 		{
@@ -2365,7 +2403,8 @@ public class BleDevice
 	{
 		boolean requiresBonding = bondIfNeeded(characteristic);
 		
-		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForReads, conf_mngr().timeoutForReads);
+		m_queue.add(new P_Task_Read(characteristic, timeout.seconds, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	void write_internal(UUID uuid, byte[] data, P_WrappingReadWriteListener listener)
@@ -2386,7 +2425,8 @@ public class BleDevice
 		
 		boolean requiresBonding = bondIfNeeded(characteristic);
 		
-		m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForWrites, conf_mngr().timeoutForWrites);
+		m_queue.add(new P_Task_Write(characteristic, timeout.seconds, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	private void disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)

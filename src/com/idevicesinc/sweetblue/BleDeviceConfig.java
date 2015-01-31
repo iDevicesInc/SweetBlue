@@ -8,17 +8,18 @@ import android.content.SharedPreferences;
 import android.os.Build;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.utils.*;
 
 /**
  * Provides a number of options to (optionally) pass to {@link BleDevice#setConfig(BleDeviceConfig)}.
  * This class is also the super class of {@link BleManagerConfig}, which you can pass
- * to {@link BleManager#get(Context, BleManagerConfig)} to set base options for all devices at once.
+ * to {@link BleManager#get(Context, BleManagerConfig)} to set default base options for all devices at once.
  * For all options in this class, you may set the value to <code>null</code> when passed to {@link BleDevice#setConfig(BleDeviceConfig)}
  * and the value will then be inherited from the {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)}.
  * Otherwise, if the value is not <code>null</code> it will override any option in the {@link BleManagerConfig}.
  * If an option is ultimately <code>null</code> (<code>null</code> when passed to {@link BleDevice#setConfig(BleDeviceConfig)}
- * *and* {@link BleManager#get(Context, BleManagerConfig)}) then it is interpreted as <code>false</code>.
+ * *and* {@link BleManager#get(Context, BleManagerConfig)}) then it is interpreted as <code>false</code> or {@link Interval#DISABLED}.
  * <br><br>
  * TIP: You can use {@link Interval#DISABLED} instead of <code>null</code> to disable any time-based options, for code readability's sake.
  */
@@ -27,6 +28,7 @@ public class BleDeviceConfig implements Cloneable
 	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
+	public static final double DEFAULT_TASK_TIMEOUT						= 10.0;
 	
 	/**
 	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation failed at a point where a
@@ -266,6 +268,32 @@ public class BleDeviceConfig implements Cloneable
 	public Interval	scanKeepAlive						= Interval.seconds(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
+	 * How long a {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)} is allowed to take
+	 * before {@link BleDevice.ReadWriteListener.Status#TIMED_OUT} is returned on the
+	 * {@link BleDevice.ReadWriteListener.Result#status} given to {@link BleDevice.ReadWriteListener#onResult(BleDevice.ReadWriteListener.Result)}.
+	 */
+	public Interval timeoutForReads						= Interval.seconds(DEFAULT_TASK_TIMEOUT);
+	
+	/**
+	 * Same as {@link #timeoutForReads} but for {@link BleDevice#write(UUID, BleDevice.ReadWriteListener)}.
+	 */
+	public Interval timeoutForWrites					= Interval.seconds(DEFAULT_TASK_TIMEOUT);
+	
+	/**
+	 * How long a connection (through {@link BleDevice#connect()} or overloads) is allowed to take before
+	 * {@link BleDevice.ConnectionFailListener.Reason#NATIVE_CONNECTION_TIMED_OUT} is returned on the
+	 * {@link ConnectionFailListener.Info#reason} given to {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)}.
+	 */
+	public Interval timeoutForConnection				= Interval.seconds(DEFAULT_TASK_TIMEOUT);
+	
+	/**
+	 * How long service discovery is allowed to take before 
+	 * {@link BleDevice.ConnectionFailListener.Reason#GETTING_SERVICES_TIMED_OUT} is returned on the
+	 * {@link ConnectionFailListener.Info#reason} given to {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)}.
+	 */
+	public Interval timeoutForDiscoveringServices		= Interval.seconds(DEFAULT_TASK_TIMEOUT);
+	
+	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
 	 * 
 	 * @see BleDevice#getAverageWriteTime()
@@ -301,22 +329,27 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	public ReconnectRateLimiter reconnectRateLimiter = new DefaultReconnectRateLimiter();
 	
-	static boolean bool(Boolean bool)
+	static boolean boolOrDefault(Boolean bool)
 	{
 		return bool == null ? false : bool;
 	}
 	
-	static boolean conf_bool(Boolean bool_device, Boolean bool_mngr)
+	static Interval intervalOrDefault(Interval value)
 	{
-		return bool_device != null ? bool_device : BleDeviceConfig.bool(bool_mngr);
+		return value == null ? Interval.DISABLED : value;
 	}
 	
-	static Interval conf_interval(Interval interval_device, Interval interval_mngr)
+	static boolean bool(Boolean bool_device, Boolean bool_mngr)
 	{
-		return interval_device != null ? interval_device : interval_mngr;
+		return bool_device != null ? bool_device : boolOrDefault(bool_mngr);
 	}
 	
-	static Integer conf_int(Integer int_device, Integer int_mngr)
+	static Interval interval(Interval interval_device, Interval interval_mngr)
+	{
+		return interval_device != null ? interval_device : intervalOrDefault(interval_mngr);
+	}
+	
+	static Integer interger(Integer int_device, Integer int_mngr)
 	{
 		return int_device != null ? int_device : int_mngr;
 	}

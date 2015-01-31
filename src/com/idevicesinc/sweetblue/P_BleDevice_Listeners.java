@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothProfile;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -112,7 +113,19 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				}
 				else if (state.isEndingState() )
 				{
-					m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED, discoverTask.getGattStatus());
+					if( state == PE_TaskState.FAILED_IMMEDIATELY )
+					{
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_IMMEDIATELY, discoverTask.getGattStatus());
+					}
+					else if( state == PE_TaskState.TIMED_OUT )
+					{
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_TIMED_OUT, discoverTask.getGattStatus());
+					}
+					else
+					{
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_EVENTUALLY, discoverTask.getGattStatus());
+					}
+					
 				}
 			}
 			else if (task.getClass() == P_Task_Bond.class)
@@ -175,7 +188,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (!m_queue.isCurrent(P_Task_Connect.class, m_device))
 				{
-					P_Task_Connect task = new P_Task_Connect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
+					Interval timeout = BleDeviceConfig.interval(m_device.conf_device().timeoutForConnection, m_device.conf_mngr().timeoutForConnection);
+					P_Task_Connect task = new P_Task_Connect(m_device, timeout.seconds, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
 					m_queue.add(task);
 				}
 

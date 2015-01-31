@@ -1481,7 +1481,7 @@ public class BleManager
 	    	byte[] scanRecord = scanRecord_nullable != null ? scanRecord_nullable : BleDevice.EMPTY_BYTE_ARRAY;
 	    	String deviceName = rawDeviceName;
 	    	deviceName = deviceName != null ? deviceName : "";
-	    	boolean hitDisk = BleDeviceConfig.bool(m_config.manageLastDisconnectOnDisk);
+	    	boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 	    	State.ChangeIntent lastDisconnectIntent = m_lastDisconnectMngr.load(macAddress, hitDisk);
 
 	    	if( !m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent) )  return;

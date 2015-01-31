@@ -38,7 +38,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	private P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener, PE_TaskPriority priority)
 	{
-		super(characteristic, writeListener, false, null, priority);
+		super(characteristic, BleDeviceConfig.DEFAULT_TASK_TIMEOUT, writeListener, false, null, priority);
 		
 		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
 		m_enable = enable;

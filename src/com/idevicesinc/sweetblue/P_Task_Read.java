@@ -19,9 +19,9 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {
 	private final Type m_type;
 	
-	public P_Task_Read(P_Characteristic characteristic, Type type, boolean requiresBonding, P_WrappingReadWriteListener readListener, BleTransaction txn, PE_TaskPriority priority)
+	public P_Task_Read(P_Characteristic characteristic, double timeout, Type type, boolean requiresBonding, P_WrappingReadWriteListener readListener, BleTransaction txn, PE_TaskPriority priority)
 	{
-		super(characteristic, readListener, requiresBonding, txn, priority);
+		super(characteristic, timeout, readListener, requiresBonding, txn, priority);
 		
 		m_type = type;
 	}

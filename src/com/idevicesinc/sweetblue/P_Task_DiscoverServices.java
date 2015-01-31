@@ -9,16 +9,16 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {
 	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 	
-	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener)
+	public P_Task_DiscoverServices(BleDevice bleDevice, double timeout, I_StateListener listener)
 	{
-		super(bleDevice, listener);
+		super(bleDevice, timeout, listener);
 	}
 
 	@Override public void execute()
 	{
 		if( !getDevice().getNativeGatt().discoverServices() )
 		{
-			fail();
+			failImmediately();
 			
 			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
 		}

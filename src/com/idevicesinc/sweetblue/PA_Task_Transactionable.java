@@ -18,9 +18,9 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	private final BleTransaction m_txn;
 	private final PE_TaskPriority m_priority;
 	
-	PA_Task_Transactionable(BleDevice device, BleTransaction txn_nullable, boolean requiresBonding, PE_TaskPriority priority)
+	PA_Task_Transactionable(BleDevice device, double timeout, BleTransaction txn_nullable, boolean requiresBonding, PE_TaskPriority priority)
 	{
-		super(device, null);
+		super(device, timeout, null);
 		
 		m_requiresBonding = requiresBonding;
 		m_txn = txn_nullable;

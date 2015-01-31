@@ -237,7 +237,7 @@ class P_DeviceManager
 			{
 				BleDevice device = (BleDevice) m_list.get(i);
 				
-				boolean autoReconnectDeviceWhenBleTurnsBackOn = BleDeviceConfig.conf_bool(device.conf_device().autoReconnectDeviceWhenBleTurnsBackOn, device.conf_mngr().autoReconnectDeviceWhenBleTurnsBackOn);
+				boolean autoReconnectDeviceWhenBleTurnsBackOn = BleDeviceConfig.bool(device.conf_device().autoReconnectDeviceWhenBleTurnsBackOn, device.conf_mngr().autoReconnectDeviceWhenBleTurnsBackOn);
 				
 				if( autoReconnectDeviceWhenBleTurnsBackOn && device.lastDisconnectWasBecauseOfBleTurnOff() )
 				{
@@ -257,7 +257,7 @@ class P_DeviceManager
 			{
 				BleDevice device_ith = m_list.get(i);
 				
-				boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.conf_bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);
+				boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);
 				
 				if( !retainDeviceWhenBleTurnsOff )
 				{
@@ -266,7 +266,7 @@ class P_DeviceManager
 					continue;
 				}
 				
-				boolean undiscoverDeviceWhenBleTurnsOff = BleDeviceConfig.conf_bool(device_ith.conf_device().undiscoverDeviceWhenBleTurnsOff, device_ith.conf_mngr().undiscoverDeviceWhenBleTurnsOff);
+				boolean undiscoverDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().undiscoverDeviceWhenBleTurnsOff, device_ith.conf_mngr().undiscoverDeviceWhenBleTurnsOff);
 				
 				if( undiscoverDeviceWhenBleTurnsOff)
 				{
@@ -322,10 +322,10 @@ class P_DeviceManager
 					{
 						BleDevice device = get(i);
 						
-						Interval minScanTimeToInvokeUndiscovery = BleDeviceConfig.conf_interval(device.conf_device().minScanTimeToInvokeUndiscovery, device.conf_mngr().minScanTimeToInvokeUndiscovery);
+						Interval minScanTimeToInvokeUndiscovery = BleDeviceConfig.interval(device.conf_device().minScanTimeToInvokeUndiscovery, device.conf_mngr().minScanTimeToInvokeUndiscovery);
 						if( Interval.isDisabled(minScanTimeToInvokeUndiscovery) )  continue;
 						
-						Interval scanKeepAlive_interval = BleDeviceConfig.conf_interval(device.conf_device().scanKeepAlive, device.conf_mngr().scanKeepAlive);
+						Interval scanKeepAlive_interval = BleDeviceConfig.interval(device.conf_device().scanKeepAlive, device.conf_mngr().scanKeepAlive);
 						if( Interval.isDisabled(scanKeepAlive_interval) )  continue;
 
 						if( scanTime < Interval.asDouble(minScanTimeToInvokeUndiscovery) )  continue;

@@ -231,7 +231,7 @@ class P_PollManager
 	
 	void startPoll(UUID uuid, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
 	{
-		boolean allowDuplicatePollEntries = BleDeviceConfig.conf_bool(m_device.conf_device().allowDuplicatePollEntries, m_device.conf_mngr().allowDuplicatePollEntries);
+		boolean allowDuplicatePollEntries = BleDeviceConfig.bool(m_device.conf_device().allowDuplicatePollEntries, m_device.conf_mngr().allowDuplicatePollEntries);
 		
 		if( !allowDuplicatePollEntries )
 		{

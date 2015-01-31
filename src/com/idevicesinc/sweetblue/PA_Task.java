@@ -16,9 +16,6 @@ abstract class PA_Task
 		void onStateChange(PA_Task task, PE_TaskState state);
 	}
 	
-	static final double TIMEOUT_DEFAULT = BleManagerConfig.DEFAULT_TASK_TIMEOUT;
-	static final double TIMEOUT_CONNECTION = BleManagerConfig.DEFAULT_TASK_TIMEOUT;
-	
 	private 	  BleDevice m_device; 
 	private final BleManager m_manager;
 	
@@ -64,12 +61,7 @@ abstract class PA_Task
 		}
 	};
 	
-	public PA_Task(BleDevice device, I_StateListener listener)
-	{
-		this(device, listener, TIMEOUT_DEFAULT);
-	}
-	
-	public PA_Task(BleDevice device, I_StateListener listener, double timeout)
+	public PA_Task(BleDevice device, double timeout, I_StateListener listener)
 	{
 		this(device.getManager(), listener, timeout);
 		
@@ -78,7 +70,7 @@ abstract class PA_Task
 	
 	public PA_Task(BleManager manager, I_StateListener listener)
 	{
-		this(manager, listener, TIMEOUT_DEFAULT);
+		this(manager, listener, BleDeviceConfig.DEFAULT_TASK_TIMEOUT);
 	}
 	
 	public PA_Task(BleManager manager, I_StateListener listener, double timeout)
@@ -314,7 +306,7 @@ abstract class PA_Task
 					m_resettableTimeExecuting += timeStep;
 //					m_totalTimeExecuting += timeStep;
 					
-					if( m_timeout != Interval.INFINITE.seconds )
+					if( !Interval.isDisabled(m_timeout) && m_timeout != Interval.INFINITE.seconds )
 					{
 						if( m_resettableTimeExecuting >= m_timeout )
 						{

@@ -7,14 +7,9 @@ package com.idevicesinc.sweetblue;
  */
 abstract class PA_Task_RequiresBleOn extends PA_Task
 {
-	public PA_Task_RequiresBleOn(BleDevice device, I_StateListener listener, double timeout)
+	public PA_Task_RequiresBleOn(BleDevice device, double timeout, I_StateListener listener)
 	{
-		super(device, listener, timeout);
-	}
-	
-	public PA_Task_RequiresBleOn(BleDevice device, I_StateListener listener)
-	{
-		super(device, listener);
+		super(device, timeout, listener);
 	}
 	
 	public PA_Task_RequiresBleOn(BleManager manager, I_StateListener listener)
