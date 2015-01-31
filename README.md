@@ -8,9 +8,9 @@ Android's BLE stack has some...issues...
 * http://androidcommunity.com/nike-blames-ble-for-their-shunning-of-android-20131202/
 * http://stackoverflow.com/questions/17870189/android-4-3-bluetooth-low-energy-unstable
 
-SweetBlue is a blanket abstraction that shoves all that bad behavior behind a clean interface and gracefully degrades when the underlying stack becomes too unstable for even it to handle.
+SweetBlue is a blanket abstraction that shoves all that troublesome behavior behind a clean interface and gracefully degrades when the underlying stack becomes too unstable for even it to handle.
 
-It’s built on the hard-earned experience of several commercial BLE projects and provides so many transparent workarounds to issues both annoying and fatal that it’s frankly impossible to imagine writing an app without it. It also supports higher-level constructs, things like pseudo-atomic transactions for coordinating authentication handshakes and firmware updates, flexible scanning configurations, read polling, transparent retries for transient failure conditions, and, well, the list goes on. The API is dead simple, with usage dependence on a few plain old Java objects and link dependence on standard Android classes. It offers conveniences for debugging and analytics and error handling that will save you months of work - last mile stuff you didn't even know you had to worry about.
+It’s built on the hard-earned experience of several commercial BLE projects and provides so many transparent workarounds to issues both annoying and fatal that it’s frankly impossible to imagine writing an app without it. It also supports many higher-level constructs, things like pseudo-atomic transactions for coordinating authentication handshakes and firmware updates, flexible scanning configurations, read polling, transparent retries for transient failure conditions, and, well, the list goes on. The API is dead simple, with usage dependence on a few plain old Java objects and link dependence on standard Android classes. It offers conveniences for debugging and analytics and error handling that will save you months of work - last mile stuff you didn't even know you had to worry about.
 
 Features
 ========
