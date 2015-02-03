@@ -101,27 +101,30 @@ Getting Started
     ```java
     BleManager.get(this).startScan(new BleManager.DiscoveryListener()
     {
-    	@Override public void onDeviceDiscovered(final BleDevice device)
+    	@Override public void onDiscoveryEvent(DiscoveryEvent event)
     	{
-    		device.connect(new BleDevice.StateListener()
+    		if( event.lifeCycle() == LifeCycle.DISCOVERED )
     		{
-    			@Override public void onStateChange(ChangeEvent event)
-    			{
-    				if( event.wasEntered(BleDeviceState.INITIALIZED) )
-    				{
-    					device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
-    					{
-    						@Override public void onResult(Result result)
-    						{
-    							if( result.wasSuccess() )
-    							{
-    								Log.i("SweetBlueExample", "Battery level is " + result.data[0] + "%");
-    							}
-    						}
-    					});
-    				}
-    			}
-    		});
+	    		event.device().connect(new BleDevice.StateListener()
+	    		{
+	    			@Override public void onStateChange(ChangeEvent event)
+	    			{
+	    				if( event.didEnter(BleDeviceState.INITIALIZED) )
+	    				{
+	    					device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+	    					{
+	    						@Override public void onResult(Result result)
+	    						{
+	    							if( result.wasSuccess() )
+	    							{
+	    								Log.i("SweetBlueExample", "Battery level is " + result.data[0] + "%");
+	    							}
+	    						}
+	    					});
+	    				}
+	    			}
+	    		});
+	    	}
     	}
     });
     ```
