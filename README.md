@@ -99,7 +99,7 @@ Getting Started
         
  4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
     ```java
-    BleManager.get(this).startScan(new BleManager.DiscoveryListener()
+    BleManager.get(this).startScan(new DiscoveryListener()
     {
     	@Override public void onDiscoveryEvent(DiscoveryEvent e)
     	{
@@ -111,7 +111,7 @@ Getting Started
 	    			{
 	    				if( e.didEnter(BleDeviceState.INITIALIZED) )
 	    				{
-	    					e.device().read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+	    					e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
 	    					{
 	    						@Override public void onResult(Result r)
 	    						{
