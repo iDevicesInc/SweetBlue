@@ -141,12 +141,12 @@ public enum BleDeviceState implements State
 		return 0x1 << ordinal();
 	}
 	
-	@Override public boolean wasEntered(int oldStateBits, int newStateBits)
+	@Override public boolean didEnter(int oldStateBits, int newStateBits)
 	{
 		return !this.overlaps(oldStateBits) && this.overlaps(newStateBits);
 	}
 	
-	@Override public boolean wasExited(int oldStateBits, int newStateBits)
+	@Override public boolean didExit(int oldStateBits, int newStateBits)
 	{
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}

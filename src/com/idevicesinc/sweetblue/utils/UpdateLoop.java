@@ -10,8 +10,6 @@ public class UpdateLoop
 {
 	/**
 	 * A callback where you handle the update time step.
-	 * 
-	 * 
 	 */
 	public static interface Callback
 	{

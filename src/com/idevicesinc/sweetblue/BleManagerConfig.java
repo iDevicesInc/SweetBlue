@@ -184,7 +184,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * reasons this can fail sometimes. In this case SweetBlue can revert to using classic bluetooth
 	 * discovery through {@link BluetoothAdapter#startDiscovery()}. Be aware that classic
 	 * discovery may not discover some or any advertising BLE devices, nor will it provide
-	 * a scanRecord or advertisedServices to {@link AdvertisingFilter#acknowledgeDiscovery}.
+	 * a {@link AdvertisingFilter.Packet#scanRecord} or {@link AdvertisingFilter.Packet#advertisedServices}
+	 * to {@link AdvertisingFilter#acknowledgeDiscovery(AdvertisingFilter.Packet)}.
 	 * Most likely you will be forced to filter on name only for your implementation of
 	 * {@link AdvertisingFilter#acknowledgeDiscovery(Packet)}.
 	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.

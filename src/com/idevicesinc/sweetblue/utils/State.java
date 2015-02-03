@@ -58,19 +58,19 @@ public interface State
 		}
 		
 		/**
-		 * Convenience forwarding of {@link State#wasEntered(int, int)}.
+		 * Convenience forwarding of {@link State#didEnter(int, int)}.
 		 */
 		public boolean wasEntered(State state)
 		{
-			return state.wasEntered(m_oldStateBits, m_newStateBits);
+			return state.didEnter(m_oldStateBits, m_newStateBits);
 		}
 		
 		/**
-		 * Convenience forwarding of {@link State#wasExited(int, int)}.
+		 * Convenience forwarding of {@link State#didExit(int, int)}.
 		 */
 		public boolean wasExited(State state)
 		{
-			return state.wasExited(m_oldStateBits, m_newStateBits);
+			return state.didExit(m_oldStateBits, m_newStateBits);
 		}
 		
 		/**
@@ -175,14 +175,14 @@ public interface State
 	 *  or {@link BleManager.StateListener#onStateChange(BleManager.StateListener.ChangeEvent)}, this method tells you whether the
 	 * the 'this' state was appended.
 	 * 
-	 * @see #wasExited(int, int)
+	 * @see #didExit(int, int)
 	 */
-	boolean wasEntered(int oldStateBits, int newStateBits);
+	boolean didEnter(int oldStateBits, int newStateBits);
 	
 	/**
-	 * Reverse of {@link #wasEntered(int, int)}.
+	 * Reverse of {@link #didEnter(int, int)}.
 	 * 
-	 * @see #wasEntered(int, int)
+	 * @see #didEnter(int, int)
 	 */
-	boolean wasExited(int oldStateBits, int newStateBits);
+	boolean didExit(int oldStateBits, int newStateBits);
 }

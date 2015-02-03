@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleState.*;
 
+import java.lang.reflect.Member;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -68,13 +69,13 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *              {
  *                  m_bleManager.stopScan();
  *
- *					if( event.lifeCycle() == LifeCycle.DISCOVERED )
+ *					if( event.was(LifeCycle.DISCOVERED) )
  *					{
  *                  	event.device().connect(new BleDevice.StateListener()
  *                  	{
  *                      	{@literal @}Override public void onStateChange(ChangeEvent event)
  *                      	{
- *                          	if( event.wasEntered(BleDeviceState.INITIALIZED) )
+ *                          	if( event.didEnter(BleDeviceState.INITIALIZED) )
  *                          	{
  *                              	String toastText = event.device().getDebugName() + " just initialized!";
  *                              	Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
@@ -169,6 +170,14 @@ public class BleManager
 				m_device = device_in;
 				m_lifeCycle = lifeCycle_in;
 			}
+			
+			/**
+			 * Convenience method for checking equality of given {@link LifeCycle} and {@link #lifeCycle()}.
+			 */
+			public boolean was(LifeCycle lifeCycle)
+			{
+				return lifeCycle == lifeCycle();
+			}
 		}
 		
 		/**
@@ -246,7 +255,7 @@ public class BleManager
 	public static interface UhOhListener
 	{
 		/**
-		 * Struct passed to {@link UhOhListener#onUhOh(UhOhEvent)}
+		 * Struct passed to {@link UhOhListener#onUhOh(UhOhEvent)}.
 		 */
 		public static class UhOhEvent
 		{

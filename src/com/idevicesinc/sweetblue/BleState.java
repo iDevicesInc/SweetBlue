@@ -92,12 +92,12 @@ public enum BleState implements State
 		return (bit() & mask) != 0x0;
 	}
 	
-	@Override public boolean wasEntered(int oldStateBits, int newStateBits)
+	@Override public boolean didEnter(int oldStateBits, int newStateBits)
 	{
 		return !this.overlaps(oldStateBits) && this.overlaps(newStateBits);
 	}
 
-	@Override public boolean wasExited(int oldStateBits, int newStateBits)
+	@Override public boolean didExit(int oldStateBits, int newStateBits)
 	{
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}
