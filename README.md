@@ -117,7 +117,7 @@ Getting Started
 	    						{
 	    							if( result.wasSuccess() )
 	    							{
-	    								Log.i("SweetBlueExample", "Battery level is " + result.data()[0] + "%");
+	    								Log.i("", "Battery level is " + result.data()[0] + "%");
 	    							}
 	    						}
 	    					});
