@@ -373,14 +373,7 @@ class P_TaskQueue
 	{
 		if( m_logger.isEnabled() )
 		{
-			String current = m_current != null ? m_current.toString() : "no current task";
-//			if( m_pendingEndingStateForCurrentTask != null)
-//			{
-//				current += "(" + m_pendingEndingStateForCurrentTask.name() +")";
-//			}
-			
-			String queue = m_queue.size() > 0 ? m_queue.toString() : "[queue empty]";
-			m_logger.i(current + " " + queue);
+			m_logger.i(this.toString());
 		}
 	}
 	
@@ -416,6 +409,16 @@ class P_TaskQueue
 	
 	@Override public String toString()
 	{
-		return m_queue.toString();
+		final String current = m_current != null ? m_current.toString() : "no current task";
+//		if( m_pendingEndingStateForCurrentTask != null)
+//		{
+//			current += "(" + m_pendingEndingStateForCurrentTask.name() +")";
+//		}
+		
+		final String queue = m_queue.size() > 0 ? m_queue.toString() : "[queue empty]";
+		
+		final String toReturn = current + " " + queue;
+		
+		return toReturn;
 	}
 }

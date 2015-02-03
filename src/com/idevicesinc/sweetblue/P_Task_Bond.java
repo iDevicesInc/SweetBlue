@@ -67,6 +67,21 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 		}
 	}
 	
+	@Override public boolean isMoreImportantThan(PA_Task task)
+	{
+		if( task instanceof P_Task_TxnLock )
+		{
+			P_Task_TxnLock task_cast = (P_Task_TxnLock) task;
+			
+			if( this.getDevice() == task_cast.getDevice() )
+			{
+				return true;
+			}
+		}
+		
+		return super.isMoreImportantThan(task);
+	}
+	
 	@Override public PE_TaskPriority getPriority()
 	{
 		return m_priority;

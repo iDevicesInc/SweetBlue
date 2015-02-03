@@ -44,6 +44,15 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 				return true;
 			}
 		}
+		else if( task instanceof P_Task_Bond )
+		{
+			P_Task_Bond task_cast = (P_Task_Bond) task;
+			
+			if( this.getDevice() == task_cast.getDevice() )
+			{
+				return true;
+			}
+		}
 		
 		return super.isInterruptableBy(task);
 	}
