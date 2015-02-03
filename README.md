@@ -105,7 +105,7 @@ Getting Started
     	{
     		if( e.was(LifeCycle.DISCOVERED) )
     		{
-	    		e.device().connect(new BleDevice.StateListener()
+	    		e.device().connect(new StateListener()
 	    		{
 	    			@Override public void onStateChange(ChangeEvent e)
 	    			{
