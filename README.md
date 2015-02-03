@@ -101,17 +101,17 @@ Getting Started
     ```java
     BleManager.get(this).startScan(new BleManager.DiscoveryListener()
     {
-    	@Override public void onDiscoveryEvent(DiscoveryEvent event)
+    	@Override public void onDiscoveryEvent(DiscoveryEvent e)
     	{
-    		if( event.was(LifeCycle.DISCOVERED) )
+    		if( e.was(LifeCycle.DISCOVERED) )
     		{
-	    		event.device().connect(new BleDevice.StateListener()
+	    		e.device().connect(new BleDevice.StateListener()
 	    		{
-	    			@Override public void onStateChange(ChangeEvent event)
+	    			@Override public void onStateChange(ChangeEvent e)
 	    			{
-	    				if( event.didEnter(BleDeviceState.INITIALIZED) )
+	    				if( e.didEnter(BleDeviceState.INITIALIZED) )
 	    				{
-	    					event.device().read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+	    					e.device().read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
 	    					{
 	    						@Override public void onResult(Result result)
 	    						{
