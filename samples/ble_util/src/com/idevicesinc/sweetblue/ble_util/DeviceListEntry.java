@@ -22,9 +22,7 @@ import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
  * @author dougkoellmer
  */
 public class DeviceListEntry extends FrameLayout implements BleDevice.StateListener
-{
-	private static final int CONNECTION_RETRY_COUNT = 3;
-	
+{	
 	private final BleDevice m_device;
 	private final Button m_connect;
 	private final Button m_disconnect;
