@@ -22,6 +22,7 @@ import android.os.PowerManager.WakeLock;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleManager.AssertListener.Info;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
@@ -237,10 +238,38 @@ public class BleManager
 	 */
 	public static interface AssertListener
 	{
+		public static class Info
+		{
+			/**
+			 * The {@link BleManager} instance for your application.
+			 */
+			public BleManager manager(){  return m_manager;  }
+			private final BleManager m_manager;
+			
+			/**
+			 * Message associated with the assert, or an empty string.
+			 */
+			public String message(){  return m_message;  }
+			private final String m_message;
+			
+			/**
+			 * Stack trace going up to the assert.
+			 */
+			public StackTraceElement[] stackTrace(){  return m_stackTrace;  }
+			private final StackTraceElement[] m_stackTrace;
+			
+			Info(BleManager manager_in, String message_in, StackTraceElement[] stackTrace_in)
+			{
+				m_manager = manager_in;
+				m_message = message_in;
+				m_stackTrace = stackTrace_in;
+			}
+		}
+		
 		/**
 		 * Provides the message (or empty string) along with the stack trace if an assertion fails.
 		 */
-		void onAssertFailed(BleManager manager, String message, StackTraceElement[] stackTrace);
+		void onAssertFailed(Info info);
 	}
 
 	private final UpdateLoop.Callback m_updateLoopCallback = new UpdateLoop.Callback()
@@ -791,7 +820,8 @@ public class BleManager
 
 			if( m_assertionListener != null )
 			{
-				m_assertionListener.onAssertFailed(this, message, dummyException.getStackTrace());
+				Info info = new Info(this, message, dummyException.getStackTrace());
+				m_assertionListener.onAssertFailed(info);
 			}
 
 			return false;

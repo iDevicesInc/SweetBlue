@@ -137,11 +137,12 @@ public interface State
 		 */
 		public static ChangeIntent fromDiskValue(int diskValue)
 		{
-			for( int i = 0; i < values().length; i++ )
+			ChangeIntent[] values = values();
+			for( int i = 0; i < values.length; i++ )
 			{
-				if( values()[i].toDiskValue() == diskValue )
+				if( values[i].toDiskValue() == diskValue )
 				{
-					return values()[i];
+					return values[i];
 				}
 			}
 			
