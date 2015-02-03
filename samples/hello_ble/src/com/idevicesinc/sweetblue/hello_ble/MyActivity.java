@@ -28,31 +28,34 @@ public class MyActivity extends Activity
 		
 		m_bleManager.startScan(new BleManager.DiscoveryListener()
 		{
-			@Override public void onDeviceDiscovered(final BleDevice device)
+			@Override public void onDiscoveryEvent(DiscoveryEvent event)
 			{
 				m_bleManager.stopScan();
 				
-				device.connect(new BleDevice.StateListener()
+				if( event.was(LifeCycle.DISCOVERED) )
 				{
-					@Override public void onStateChange(ChangeEvent event)
+					event.device().connect(new BleDevice.StateListener()
 					{
-						if( event.wasEntered(BleDeviceState.INITIALIZED) )
+						@Override public void onStateChange(ChangeEvent event)
 						{
-							Log.i("SweetBlueExample", device.getName_debug() + " just initialized!");
-							
-							device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+							if( event.wasEntered(BleDeviceState.INITIALIZED) )
 							{
-								@Override public void onResult(Result result)
+								Log.i("SweetBlueExample", event.device().getName_debug() + " just initialized!");
+								
+								event.device().read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
 								{
-									if( result.wasSuccess() )
+									@Override public void onResult(Result result)
 									{
-										Log.i("SweetBlueExample", "Battery level is " + result.data()[0] + "%");
+										if( result.wasSuccess() )
+										{
+											Log.i("SweetBlueExample", "Battery level is " + result.data()[0] + "%");
+										}
 									}
-								}
-							});
+								});
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		});
 	}

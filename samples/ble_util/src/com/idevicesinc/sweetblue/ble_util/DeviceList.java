@@ -17,7 +17,7 @@ import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
  * 
  * @author dougkoellmer
  */
-public class DeviceList extends ScrollView implements BleManager.DiscoveryListener_Full
+public class DeviceList extends ScrollView implements BleManager.DiscoveryListener
 {
 	private static final int BASE_COLOR = 0x00115395;
 	private static final int LIGHT_ALPHA = 0x33000000;
@@ -52,36 +52,32 @@ public class DeviceList extends ScrollView implements BleManager.DiscoveryListen
 		}
 	}
  
-	@Override public void onDeviceDiscovered(BleDevice device)
+	@Override public void onDiscoveryEvent(DiscoveryEvent event)
 	{
-		DeviceListEntry entry = new DeviceListEntry(getContext(), device);
-		entry.setLayoutParams(new ScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-		entry.setBackgroundColor(0xff00ff00);
-		
-		m_list.addView(entry);
-		
-		colorList();
-	}
-
-	@Override public void onDeviceUndiscovered(BleDevice device)
-	{
-		for( int i = 0; i < m_list.getChildCount(); i++ )
+		if( event.was(LifeCycle.DISCOVERED) )
 		{
-			DeviceListEntry entry = (DeviceListEntry) m_list.getChildAt(i);
+			DeviceListEntry entry = new DeviceListEntry(getContext(), event.device());
+			entry.setLayoutParams(new ScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+			entry.setBackgroundColor(0xff00ff00);
 			
-			if( entry.getDevice().equals(device) )
+			m_list.addView(entry);
+			
+			colorList();
+		}
+		else if( event.was(LifeCycle.UNDISCOVERED) )
+		{
+			for( int i = 0; i < m_list.getChildCount(); i++ )
 			{
-				m_list.removeViewAt(i);
-				colorList();
+				DeviceListEntry entry = (DeviceListEntry) m_list.getChildAt(i);
 				
-				return;
+				if( entry.getDevice().equals(event.device()) )
+				{
+					m_list.removeViewAt(i);
+					colorList();
+					
+					return;
+				}
 			}
 		}
-	}
-
-	@Override
-	public void onDeviceRediscovered(BleDevice device)
-	{
-		// nothing to do here for now
 	}
 }
