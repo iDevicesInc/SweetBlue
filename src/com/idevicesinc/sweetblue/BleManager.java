@@ -23,6 +23,8 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManager.AssertListener.Info;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
@@ -62,21 +64,24 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *
  *          m_bleManager.startScan(new BleManager.DiscoveryListener()
  *          {
- *              {@literal @}Override public void onDeviceDiscovered(BleDevice device)
+ *              {@literal @}Override public void onDiscoveryEvent(DiscoveryEvent event)
  *              {
  *                  m_bleManager.stopScan();
  *
- *                  device.connect(new BleDevice.StateListener()
- *                  {
- *                      {@literal @}Override public void onStateChange(ChangeEvent event)
- *                      {
- *                          if( event.wasEntered(BleDeviceState.INITIALIZED) )
- *                          {
- *                              String toastText = device.getDebugName() + " just initialized!";
- *                              Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
- *                          }
- *                      }
- *                  });
+ *					if( event.lifeCycle() == LifeCycle.DISCOVERED )
+ *					{
+ *                  	event.device().connect(new BleDevice.StateListener()
+ *                  	{
+ *                      	{@literal @}Override public void onStateChange(ChangeEvent event)
+ *                      	{
+ *                          	if( event.wasEntered(BleDeviceState.INITIALIZED) )
+ *                          	{
+ *                              	String toastText = event.device().getDebugName() + " just initialized!";
+ *                              	Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
+ *                          	}
+ *                      	}
+ *                  	});
+ *                  }
  *              }
  *          });
  *       }
@@ -106,44 +111,72 @@ public class BleManager
 	 * or {@link BleManager#startPeriodicScan(Interval, Interval)} methods. You can also provide this to various
 	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 * <br><br>
-	 * Use {@link DiscoveryListener_Full} for additional discovery lifecycle events.
 	 */
 	public static interface DiscoveryListener
 	{
 		/**
-		 * Called when a device is discovered for the first time after
-		 * calling {@link BleManager#startScan()} (or its overloads)
-		 * or {@link BleManager#startPeriodicScan(Interval, Interval)}.
-		 * <br><br>
+		 * Enumerates changes in the "discovered" state of a device.
+		 */
+		public static enum LifeCycle
+		{
+			/**
+			 * Used when a device is discovered for the first time after
+			 * calling {@link BleManager#startScan()} (or its overloads)
+			 * or {@link BleManager#startPeriodicScan(Interval, Interval)}.
+			 */
+			DISCOVERED,
+			
+			/**
+			 * Used when a device is rediscovered after already being discovered at least once.
+			 *
+			 * @see DiscoveryListener#onDeviceDiscovered(BleDevice)
+			 */
+			REDISCOVERED,
+			
+			/**
+			 * Used when a device is "undiscovered" after being discovered at least once. There is no native equivalent
+			 * for this callback. Undiscovery is approximated with a timeout based on the last time we discovered a device.
+			 * Consequently you should expect that the callback will take some amount of time to receive after an
+			 * advertising device is turned off or goes out of range or what have you. It's generally not as fast as other
+			 * state changes like {@link BleDeviceState#DISCONNECTED} or getting {@link BleDeviceState#DISCOVERED} in the first place.
+			 *
+			 * @see BleManagerConfig#minScanTimeToInvokeUndiscovery
+			 * @see BleManagerConfig#scanKeepAlive
+			 */
+			UNDISCOVERED;
+		}
+		
+		/**
+		 * Struct passed to {@link DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)}.
+		 */
+		public static class DiscoveryEvent
+		{
+			/**
+			 * The device in question.
+			 */
+			public BleDevice device(){  return m_device;  }
+			private final BleDevice m_device;
+			
+			/**
+			 * The discovery {@link LifeCycle} that the device has undergone.
+			 */
+			public LifeCycle lifeCycle(){  return m_lifeCycle;  }
+			private final LifeCycle m_lifeCycle;
+			
+			public DiscoveryEvent(BleDevice device_in, LifeCycle lifeCycle_in)
+			{
+				m_device = device_in;
+				m_lifeCycle = lifeCycle_in;
+			}
+		}
+		
+		/**
+		 * Called when the discovery lifecycle of a device is updated.
+		 * <br><br> 
 		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link State.ChangeIntent#UNINTENTIONAL}
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
-		void onDeviceDiscovered(BleDevice device);
-	}
-
-	/**
-	 * Use this listener instead of {@link DiscoveryListener} to get more info on the discovery lifecycle.
-	 */
-	public static interface DiscoveryListener_Full extends DiscoveryListener
-	{
-		/**
-		 * Called when a device is rediscovered after already being discovered at least once.
-		 *
-		 * @see DiscoveryListener#onDeviceDiscovered(BleDevice)
-		 */
-		void onDeviceRediscovered(BleDevice device);
-
-		/**
-		 * Called when a device is "undiscovered" after being discovered at least once. There is no native equivalent
-		 * for this callback. Undiscovery is approximated with a timeout based on the last time we discovered a device.
-		 * Consequently you should expect that this callback will take some amount of time to receive after an
-		 * advertising device is turned off or goes out of range or what have you. It's generally not as fast as other
-		 * state changes like {@link BleDeviceState#DISCONNECTED} or getting {@link BleDeviceState#DISCOVERED} in the first place.
-		 *
-		 * @see BleManagerConfig#minScanTimeToInvokeUndiscovery
-		 * @see BleManagerConfig#scanKeepAlive
-		 */
-		void onDeviceUndiscovered(BleDevice device);
+		void onDiscoveryEvent(DiscoveryEvent event);
 	}
 
 	/**
@@ -1555,7 +1588,8 @@ public class BleManager
 
     		if( m_discoveryListener != null )
     		{
-    			m_discoveryListener.onDeviceDiscovered(device);
+    			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+    			m_discoveryListener.onDiscoveryEvent(event);
     		}
     	}
     	else
@@ -1564,10 +1598,8 @@ public class BleManager
 
     		if( m_discoveryListener != null )
     		{
-    			if( m_discoveryListener instanceof DiscoveryListener_Full)
-    			{
-    				((DiscoveryListener_Full)m_discoveryListener).onDeviceRediscovered(device);
-    			}
+    			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
+    			m_discoveryListener.onDiscoveryEvent(event);
     		}
     	}
     }

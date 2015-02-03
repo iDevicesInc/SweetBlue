@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener_Full;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
@@ -222,7 +223,8 @@ class P_DeviceManager
 					
 					if( m_mngr.m_discoveryListener != null )
 		    		{
-						m_mngr.m_discoveryListener.onDeviceDiscovered(device);
+						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+						m_mngr.m_discoveryListener.onDiscoveryEvent(event);
 		    		}
 				}
 			}
@@ -284,10 +286,8 @@ class P_DeviceManager
 		
 		if( listener != null )
 		{
-			if( listener instanceof DiscoveryListener_Full )
-			{
-				((DiscoveryListener_Full)listener).onDeviceUndiscovered(device);
-			}
+			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.UNDISCOVERED);
+			listener.onDiscoveryEvent(event);
 		}
 	}
 	
