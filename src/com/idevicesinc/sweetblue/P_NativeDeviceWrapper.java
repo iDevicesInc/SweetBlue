@@ -236,7 +236,7 @@ class P_NativeDeviceWrapper
 //			}
 			
 			m_gatt.close();
-			setGatt(null);
+			m_gatt = null;
 		}
 	}
 	
@@ -253,6 +253,10 @@ class P_NativeDeviceWrapper
 					m_mngr.ASSERT(false, "Different gatt object set.");
 					
 					closeGatt(/*disconnectAlso=*/false);
+				}
+				else
+				{
+					return;
 				}
 			}
 			
