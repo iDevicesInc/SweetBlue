@@ -113,11 +113,11 @@ Getting Started
 	    				{
 	    					e.device().read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
 	    					{
-	    						@Override public void onResult(Result result)
+	    						@Override public void onResult(Result r)
 	    						{
-	    							if( result.wasSuccess() )
+	    							if( r.wasSuccess() )
 	    							{
-	    								Log.i("", "Battery level is " + result.data()[0] + "%");
+	    								Log.i("", "Battery level is " + r.data()[0] + "%");
 	    							}
 	    						}
 	    					});
