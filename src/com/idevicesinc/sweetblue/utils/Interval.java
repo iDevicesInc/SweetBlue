@@ -16,32 +16,41 @@ public class Interval
 	/**
 	 * Use this special value to disable options in {@link BleDeviceConfig} and {@link BleManagerConfig}.
 	 */
-	public static final Interval DISABLED = Interval.seconds(DISABLED_VALUE);
+	public static final Interval DISABLED = Interval.secs(DISABLED_VALUE);
 	
 	/**
 	 * Use this special value to signify positive infinite.
 	 */
-	public static final Interval INFINITE = Interval.seconds(Double.POSITIVE_INFINITY);
+	public static final Interval INFINITE = Interval.secs(Double.POSITIVE_INFINITY);
 	
 	/**
 	 * Convenience value for zero time.
 	 */
-	public static final Interval ZERO = Interval.seconds(0.0);
+	public static final Interval ZERO = Interval.secs(0.0);
 	
+	private final double m_secs;
+	private final long m_millis;
 	
-	public final double seconds;
-	public final long milliseconds;
-	
-	private Interval(double seconds_in, long milliseconds_in)
+	private Interval(double secs_in, long millis_in)
 	{
-		this.seconds = seconds_in;
-		this.milliseconds = milliseconds_in;
+		this.m_secs = secs_in;
+		this.m_millis = millis_in;
+	}
+	
+	public double secs()
+	{
+		return m_secs;
+	}
+	
+	public long millis()
+	{
+		return m_millis;
 	}
 
 	/**
 	 * Returns a new {@link Interval} representing the given number of seconds.
 	 */
-	public static Interval seconds(double value)
+	public static Interval secs(double value)
 	{
 		return new Interval(value, (long) (value*1000));
 	}
@@ -49,7 +58,7 @@ public class Interval
 	/**
 	 * Returns a new {@link Interval} representing the given number of milliseconds.
 	 */
-	public static Interval milliseconds(long milliseconds)
+	public static Interval millis(long milliseconds)
 	{
 		return new Interval(((double)milliseconds)/1000.0, milliseconds);
 	}
@@ -68,7 +77,7 @@ public class Interval
 	 */
 	public static Interval delta(long earlierTime_millis, long laterTime_millis)
 	{
-		return Interval.milliseconds(laterTime_millis - earlierTime_millis);
+		return Interval.millis(laterTime_millis - earlierTime_millis);
 	}
 	
 	/**
@@ -78,10 +87,10 @@ public class Interval
 	{
 		if( interval_nullable == null )
 		{
-			return Interval.DISABLED.seconds;
+			return Interval.DISABLED.m_secs;
 		}
 		
-		return interval_nullable.seconds;
+		return interval_nullable.m_secs;
 	}
 	
 	/**
@@ -112,7 +121,7 @@ public class Interval
 			return true;
 		}
 		
-		return isDisabled(interval_nullable.seconds);
+		return isDisabled(interval_nullable.m_secs);
 	}
 	
 	/**
@@ -127,7 +136,7 @@ public class Interval
 	{
 		if( object != null && object instanceof Interval )
 		{
-			return ((Interval)object).seconds == this.seconds;
+			return ((Interval)object).m_secs == this.m_secs;
 		}
 		
 		return super.equals(object);
@@ -135,6 +144,6 @@ public class Interval
 	
 	@Override public String toString()
 	{
-		return seconds+"secs/"+milliseconds+"millis"; 
+		return m_secs+"secs/"+m_millis+"millis"; 
 	}
 }

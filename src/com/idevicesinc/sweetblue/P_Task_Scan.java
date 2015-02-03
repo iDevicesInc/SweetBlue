@@ -47,7 +47,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	@Override protected void update(double timeStep)
 	{
-		if( this.getState() == PE_TaskState.EXECUTING && getTimeout() == Interval.INFINITE.seconds )
+		if( this.getState() == PE_TaskState.EXECUTING && getTimeout() == Interval.INFINITE.secs() )
 		{
 			if( getTotalTimeExecuting() >= getMinimumScanTime() && getQueue().getSize() > 0 )
 			{

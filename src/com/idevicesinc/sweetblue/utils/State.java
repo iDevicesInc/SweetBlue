@@ -24,14 +24,16 @@ public interface State
 		 * The bitwise representation of the {@link BleDevice} or {@link BleManager}
 		 * before the event took place.
 		 */
-		public final int oldStateBits;
+		public int oldStateBits(){  return m_oldStateBits;  }
+		private final int m_oldStateBits;
 		
 		/**
 		 * The new and now current bitwise representation of a {@link BleDevice}
 		 * or {@link BleManager}. Will be the same as {@link BleDevice#getStateMask()}
 		 * or {@link BleManager#getStateMask()}.
 		 */
-		public final int newStateBits;
+		public int newStateBits(){  return m_newStateBits;  }
+		private final int m_newStateBits;
 		
 		/**
 		 * For each old->new bit difference, this mask will tell you if the transition was intentional. Intentional generally means a call was made to
@@ -45,13 +47,14 @@ public interface State
 		 * perspective however the connect was unintentional. Therefore this mask is currently meant to serve an analytics or debugging role,
 		 * not to necessarily gate application logic.
 		 */
-		public final int intentMask;
+		public int intentMask(){  return m_intentMask;  }
+		private final int m_intentMask;
 		
 		protected ChangeEvent(int oldStateBits_in, int newStateBits_in, int intentMask_in)
 		{
-			this.oldStateBits = oldStateBits_in;
-			this.newStateBits = newStateBits_in;
-			this.intentMask = intentMask_in;
+			this.m_oldStateBits = oldStateBits_in;
+			this.m_newStateBits = newStateBits_in;
+			this.m_intentMask = intentMask_in;
 		}
 		
 		/**
@@ -59,7 +62,7 @@ public interface State
 		 */
 		public boolean wasEntered(State state)
 		{
-			return state.wasEntered(oldStateBits, newStateBits);
+			return state.wasEntered(m_oldStateBits, m_newStateBits);
 		}
 		
 		/**
@@ -67,7 +70,7 @@ public interface State
 		 */
 		public boolean wasExited(State state)
 		{
-			return state.wasExited(oldStateBits, newStateBits);
+			return state.wasExited(m_oldStateBits, m_newStateBits);
 		}
 		
 		/**
@@ -76,13 +79,13 @@ public interface State
 		 */
 		public ChangeIntent getIntent(State state)
 		{
-			if( (state.bit() & oldStateBits) == (state.bit() & newStateBits) )
+			if( (state.bit() & m_oldStateBits) == (state.bit() & m_newStateBits) )
 			{
 				return ChangeIntent.NULL;
 			}
 			else
 			{
-				return state.overlaps(intentMask) ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
+				return state.overlaps(m_intentMask) ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
 			}
 		}
 	}

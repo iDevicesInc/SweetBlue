@@ -159,13 +159,14 @@ public class BleManager
 			/**
 			 * The manager undergoing the state change.
 			 */
-			public final BleManager manager;
+			public BleManager manager(){  return m_manager;  }
+			private final BleManager m_manager;
 			
 			ChangeEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
 			{
 				super(oldStateBits_in, newStateBits_in, intentMask_in);
 				
-				this.manager = manager_in;
+				this.m_manager = manager_in;
 			}
 			
 		}
@@ -445,7 +446,7 @@ public class BleManager
 	 */
 	public Interval getTimeInState(BleState state)
 	{
-		return Interval.milliseconds(m_stateTracker.getTimeInState(state.ordinal()));
+		return Interval.millis(m_stateTracker.getTimeInState(state.ordinal()));
 	}
 
 	/**
@@ -455,7 +456,7 @@ public class BleManager
 	 */
 	public Interval getTimeInNativeState(BleState state)
 	{
-		return Interval.milliseconds(m_nativeStateTracker.getTimeInState(state.ordinal()));
+		return Interval.millis(m_nativeStateTracker.getTimeInState(state.ordinal()));
 	}
 
 	/**
@@ -711,7 +712,7 @@ public class BleManager
 	public void startScan(Interval scanTime, AdvertisingFilter filter, DiscoveryListener discoveryListener)
 	{
 		m_timeNotScanning = 0.0;
-		scanTime = scanTime.seconds < 0.0 ? Interval.INFINITE : scanTime;
+		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
 
 		if( !is(ON) )  return;
 
@@ -728,7 +729,7 @@ public class BleManager
 
 		if( scanTask != null )
 		{
-			scanTask.resetTimeout(scanTime.seconds);
+			scanTask.resetTimeout(scanTime.secs());
 		}
 		else
 		{
@@ -736,7 +737,7 @@ public class BleManager
 
 			m_stateTracker.append(BleState.SCANNING, E_Intent.EXPLICIT);
 
-			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.seconds));
+			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs()));
 		}
 	}
 

@@ -13,7 +13,7 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 	
 	public P_Task_TxnLock(BleDevice device, BleTransaction txn)
 	{
-		super(device, Interval.INFINITE.seconds, null);
+		super(device, Interval.INFINITE.secs(), null);
 		
 		m_txn = txn;
 	}

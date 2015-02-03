@@ -70,16 +70,16 @@ class P_ReconnectManager
 		
 		if( rateLimiter == null )
 		{
-			return BleManagerConfig.ReconnectRateLimiter.CANCEL.seconds;
+			return BleManagerConfig.ReconnectRateLimiter.CANCEL.secs();
 		}
 		else
 		{
-			ReconnectRateLimiter.Info info = new ReconnectRateLimiter.Info(m_device, m_attemptCount, Interval.seconds(m_totalTime), Interval.seconds(m_delay));
+			ReconnectRateLimiter.Info info = new ReconnectRateLimiter.Info(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay));
 			Interval delay = rateLimiter.getTimeToNextReconnect(info);
 			
 			delay = delay != null ? delay : BleManagerConfig.ReconnectRateLimiter.CANCEL;
 			
-			return delay.seconds;
+			return delay.secs();
 		}
 	}
 	

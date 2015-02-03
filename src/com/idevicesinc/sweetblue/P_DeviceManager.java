@@ -334,7 +334,7 @@ class P_DeviceManager
 						
 						if( purgeable )
 						{
-							if( device.getTimeSinceLastDiscovery() > scanKeepAlive_interval.seconds )
+							if( device.getTimeSinceLastDiscovery() > scanKeepAlive_interval.secs() )
 							{
 								undiscoverAndRemove(device, listener, E_Intent.IMPLICIT);
 							}

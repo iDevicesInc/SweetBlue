@@ -35,7 +35,7 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
  * and sent to you through {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)}.
  */
 public class BleDevice
-{	
+{
 	/**
 	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
 	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
@@ -255,61 +255,71 @@ public class BleDevice
 			/**
 			 * The {@link BleDevice} this {@link Result} is for.
 			 */
-			public final BleDevice device;
+			public BleDevice device(){  return m_device;  }
+			private final BleDevice m_device;
 			
 			/**
 			 * The type of operation, read, write, etc.
 			 */
-			public final Type type;
+			public Type type(){  return m_type;  }
+			private final Type m_type;
 			
 			/**
 			 * The type of GATT object this {@link Result} is for, currently, characteristic, descriptor, or rssi.
 			 */
-			public final Target target;
+			public Target target(){  return m_target;  }
+			private final Target m_target;
 			
 			/**
 			 * The {@link UUID} of the characteristic associated with this {@link Result}. This will always be
 			 * a valid {@link UUID}, even if {@link #target} is {@link Target#DESCRIPTOR}.
 			 */
-			public final UUID charUuid;
+			public UUID charUuid(){  return m_charUuid;  }
+			private final UUID m_charUuid;
 			
 			/**
 			 * The {@link UUID} of the descriptor associated with this {@link Result}. If {@link #target} is
 			 * {@link Target#CHARACTERISTIC} then this will be referentially equal (i.e. you can use == to compare)
 			 * to {@link #NON_APPLICABLE_UUID}.
 			 */
-			public final UUID descUuid;
+			public UUID descUuid(){  return m_descUuid;  }
+			private final UUID m_descUuid;
 			
 			/**
 			 * The data sent to the peripheral if {@link Result#type} is {@link Type#WRITE},
 			 * otherwise the data received from the peripheral if {@link Result#type} {@link Type#isRead()}.
 			 * This will never be null. For error statuses it will be a zero-length array.
 			 */
-			public final byte[] data;
+			public byte[] data(){  return m_data;  }
+			private final byte[] m_data;
 			
 			/**
 			 * This value gets updated as a result of a {@link BleDevice#readRssi(ReadWriteListener)} call.
 			 * It will always be equivalent to {@link BleDevice#getRssi()} but is included here for convenience.
 			 */
-			public final int rssi;
+			public int rssi(){  return m_rssi;  }
+			private final int m_rssi;
 			
 			/**
 			 * Indicates either success or the type of failure. Some values of {@link Status} are not
 			 * used for certain values of {@link Type}. For example a {@link Type#NOTIFICATION}
 			 * cannot fail with {@link Status#TIMED_OUT}.
 			 */
-			public final Status status;
+			public Status status(){  return m_status;  }
+			private final Status m_status;
 			
 			/**
 			 * Time spent "over the air" - so in the native stack, processing in the peripheral's embedded software, what have you.
 			 */
-			public final Interval transitTime;
+			public Interval transitTime(){  return m_transitTime;  }
+			private final Interval m_transitTime;
 			
 			/**
 			 * Total time it took for the operation to complete, whether success or failure.
 			 * This mainly includes time spent in the internal job queue plus {@link Result#transitTime}.
 			 */
-			public final Interval totalTime;
+			public Interval totalTime(){  return m_totalTime;  }
+			private final Interval m_totalTime;
 			
 			/**
 			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is,
@@ -327,38 +337,39 @@ public class BleDevice
 			 * reference list of gatt status values. This list may not be totally accurate or up-to-date, nor may it match GATT_ values
 			 * used by the bluetooth stack on your phone.
 			 */
-			public final int gattStatus;
+			public int gattStatus(){  return m_gattStatus;  }
+			private final int m_gattStatus;
 			
 			Result(BleDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, Status status_in, int gattStatus_in, double totalTime, double transitTime)
 			{
-				this.device = device;
-				this.charUuid = charUuid_in != null ? charUuid_in : NON_APPLICABLE_UUID;;
-				this.descUuid = descUuid_in != null ? descUuid_in : NON_APPLICABLE_UUID;
-				this.type = type_in;
-				this.target = target_in;
-				this.status = status_in;
-				this.gattStatus = gattStatus_in;
-				this.totalTime = Interval.seconds(totalTime);
-				this.transitTime = Interval.seconds(transitTime);
+				this.m_device = device;
+				this.m_charUuid = charUuid_in != null ? charUuid_in : NON_APPLICABLE_UUID;;
+				this.m_descUuid = descUuid_in != null ? descUuid_in : NON_APPLICABLE_UUID;
+				this.m_type = type_in;
+				this.m_target = target_in;
+				this.m_status = status_in;
+				this.m_gattStatus = gattStatus_in;
+				this.m_totalTime = Interval.secs(totalTime);
+				this.m_transitTime = Interval.secs(transitTime);
 				
-				this.data = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
-				this.rssi = device.getRssi();
+				this.m_data = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
+				this.m_rssi = device.getRssi();
 			}
 			
 			Result(BleDevice device, Type type_in, int rssi_in, Status status_in, int gattStatus_in, double totalTime, double transitTime)
 			{
-				this.device = device;
-				this.charUuid = NON_APPLICABLE_UUID;;
-				this.descUuid = NON_APPLICABLE_UUID;
-				this.type = type_in;
-				this.target = Target.RSSI;
-				this.status = status_in;
-				this.gattStatus = gattStatus_in;
-				this.totalTime = Interval.seconds(totalTime);
-				this.transitTime = Interval.seconds(transitTime);
+				this.m_device = device;
+				this.m_charUuid = NON_APPLICABLE_UUID;;
+				this.m_descUuid = NON_APPLICABLE_UUID;
+				this.m_type = type_in;
+				this.m_target = Target.RSSI;
+				this.m_status = status_in;
+				this.m_gattStatus = gattStatus_in;
+				this.m_totalTime = Interval.secs(totalTime);
+				this.m_transitTime = Interval.secs(transitTime);
 				
-				this.data = EMPTY_BYTE_ARRAY;
-				this.rssi = status_in == Status.SUCCESS ? rssi_in : device.getRssi();
+				this.m_data = EMPTY_BYTE_ARRAY;
+				this.m_rssi = status_in == Status.SUCCESS ? rssi_in : device.getRssi();
 			}
 			
 			/**
@@ -366,7 +377,7 @@ public class BleDevice
 			 */
 			public boolean wasSuccess()
 			{
-				return status == Status.SUCCESS;
+				return status() == Status.SUCCESS;
 			}
 			
 			/**
@@ -374,7 +385,7 @@ public class BleDevice
 			 */
 			public boolean wasCancelled()
 			{
-				return status.wasCancelled();
+				return status().wasCancelled();
 			}
 			
 			/**
@@ -382,7 +393,7 @@ public class BleDevice
 			 */
 			public boolean isNotification()
 			{
-				return type.isNotification();
+				return type().isNotification();
 			}
 			
 			/**
@@ -390,18 +401,18 @@ public class BleDevice
 			 */
 			public boolean isRead()
 			{
-				return type.isRead();
+				return type().isRead();
 			}
 			
 			@Override public String toString()
 			{
-				if( target == Target.RSSI )
+				if( target() == Target.RSSI )
 				{
-					return "status="+status+" type="+type+" target="+target+" rssi="+rssi;
+					return "status="+status()+" type="+type()+" target="+target()+" rssi="+rssi();
 				}
 				else
 				{
-					return "status="+status+" type="+type+" target="+target+" charUuid="+charUuid +" data="+data;
+					return "status="+status()+" type="+type()+" target="+target()+" charUuid="+charUuid() +" data="+data();
 				}
 			}
 		}
@@ -429,13 +440,14 @@ public class BleDevice
 			/**
 			 * The device undergoing the state change.
 			 */
-			public final BleDevice device;
+			public BleDevice device(){  return m_device;  }
+			private final BleDevice m_device;
 			
 			ChangeEvent(BleDevice device_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
 			{
 				super(oldStateBits_in, newStateBits_in, intentMask_in);
 				
-				this.device = device_in;
+				this.m_device = device_in;
 			}
 		}
 		
@@ -597,27 +609,32 @@ public class BleDevice
 			/**
 			 * The {@link BleDevice} this {@link Info} is for.
 			 */
-			public final BleDevice device;
+			public BleDevice device(){  return m_device;  }
+			private final BleDevice m_device;
 			
 			/**
 			 * Why the connection failed.
 			 */
-			public final Reason reason;
+			public Reason reason(){  return m_reason;  }
+			private final Reason m_reason;
 			
 			/**
 			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
 			 */
-			public final int failureCountSoFar;
+			public int failureCountSoFar(){  return m_failureCountSoFar;  }
+			private final int m_failureCountSoFar;
 			
 			/**
 			 *  How long the last connection attempt took before failing.
 			 */
-			public final Interval latestAttemptTime;
+			public Interval latestAttemptTime(){  return m_latestAttemptTime;  }
+			private final Interval m_latestAttemptTime;
 			
 			/**
 			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
 			 */
-			public final Interval totalAttemptTime;
+			public Interval totalAttemptTime(){  return m_totalAttemptTime;  }
+			private final Interval m_totalAttemptTime;
 			
 			/**
 			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
@@ -628,12 +645,14 @@ public class BleDevice
 			 * 
 			 * @see Result#gattStatus
 			 */
-			public final int gattStatus;
+			public int gattStatus(){  return m_gattStatus;  }
+			private final int m_gattStatus;
 			
 			/**
 			 * The highest state reached by the latest connection attempt.
 			 */
-			public final BleDeviceState highestStateReached_latest;
+			public BleDeviceState highestStateReached_latest(){  return m_highestStateReached_latest;  }
+			private final BleDeviceState m_highestStateReached_latest;
 			
 			/**
 			 * The highest state reached during the whole connection attempt cycle.
@@ -641,28 +660,30 @@ public class BleDevice
 			 * TIP: You can use this to keep the visual feedback in your connection progress UI "bookmarked"
 			 * 		while the connection retries and goes through previous states again.
 			 */
-			public final BleDeviceState highestStateReached_total;
+			public BleDeviceState highestStateReached_total(){  return m_highestStateReached_total;  }
+			private final BleDeviceState m_highestStateReached_total;
 			
 			/**
 			 * Whether <code>autoConnect=true</code> was passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
-			public final AutoConnectUsage autoConnectUsage;
+			public AutoConnectUsage autoConnectUsage(){  return m_autoConnectUsage;  }
+			private final AutoConnectUsage m_autoConnectUsage;
 			
 			Info(BleDevice device_in, Reason reason_in, int failureCountSoFar_in, Interval latestAttemptTime_in, Interval totalAttemptTime_in, int gattStatus_in, BleDeviceState highestStateReached_in, BleDeviceState highestStateReached_total_in, AutoConnectUsage autoConnectUsage_in)
 			{
-				this.device = device_in;
-				this.reason = reason_in;
-				this.failureCountSoFar = failureCountSoFar_in;
-				this.latestAttemptTime = latestAttemptTime_in;
-				this.totalAttemptTime = totalAttemptTime_in;
-				this.gattStatus = gattStatus_in;
-				this.highestStateReached_latest = highestStateReached_in != null ? highestStateReached_in : BleDeviceState.NULL;
-				this.highestStateReached_total = highestStateReached_total_in != null ? highestStateReached_total_in : BleDeviceState.NULL;
-				this.autoConnectUsage = autoConnectUsage_in;
+				this.m_device = device_in;
+				this.m_reason = reason_in;
+				this.m_failureCountSoFar = failureCountSoFar_in;
+				this.m_latestAttemptTime = latestAttemptTime_in;
+				this.m_totalAttemptTime = totalAttemptTime_in;
+				this.m_gattStatus = gattStatus_in;
+				this.m_highestStateReached_latest = highestStateReached_in != null ? highestStateReached_in : BleDeviceState.NULL;
+				this.m_highestStateReached_total = highestStateReached_total_in != null ? highestStateReached_total_in : BleDeviceState.NULL;
+				this.m_autoConnectUsage = autoConnectUsage_in;
 				
-				device.getManager().ASSERT(highestStateReached_in != null, "highestState_latest shouldn't be null.");
-				device.getManager().ASSERT(highestStateReached_total_in != null, "highestState_total shouldn't be null.");
+				m_device.getManager().ASSERT(highestStateReached_in != null, "highestState_latest shouldn't be null.");
+				m_device.getManager().ASSERT(highestStateReached_total_in != null, "highestState_total shouldn't be null.");
 			}
 		}
 		
@@ -725,21 +746,21 @@ public class BleDevice
 		
 		@Override public Please onConnectionFail(Info info)
 		{
-			if( info.failureCountSoFar <= m_retryCount )
+			if( info.failureCountSoFar() <= m_retryCount )
 			{
-				if( info.failureCountSoFar >= m_failCountBeforeUsingAutoConnect )
+				if( info.failureCountSoFar() >= m_failCountBeforeUsingAutoConnect )
 				{
 					return Please.RETRY_WITH_AUTOCONNECT_TRUE;
 				}
 				else
 				{
-					if( info.reason == Reason.NATIVE_CONNECTION_TIMED_OUT )
+					if( info.reason() == Reason.NATIVE_CONNECTION_TIMED_OUT )
 					{
-						if( info.autoConnectUsage == AutoConnectUsage.USED )
+						if( info.autoConnectUsage() == AutoConnectUsage.USED )
 						{
 							return Please.RETRY_WITH_AUTOCONNECT_FALSE;
 						}
-						else if( info.autoConnectUsage == AutoConnectUsage.NOT_USED )
+						else if( info.autoConnectUsage() == AutoConnectUsage.NOT_USED )
 						{
 							return Please.RETRY_WITH_AUTOCONNECT_TRUE;
 						}
@@ -1080,7 +1101,7 @@ public class BleDevice
 	 */
 	public Interval getTimeInState(BleDeviceState state)
 	{
-		return Interval.milliseconds(m_stateTracker.getTimeInState(state.ordinal()));
+		return Interval.millis(m_stateTracker.getTimeInState(state.ordinal()));
 	}
 	
 	/**
@@ -1420,7 +1441,7 @@ public class BleDevice
 	 */
 	public void startPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
-		m_pollMngr.startPoll(uuid, interval.seconds, listener, /*trackChanges=*/false, /*usingNotify=*/false);
+		m_pollMngr.startPoll(uuid, interval.secs(), listener, /*trackChanges=*/false, /*usingNotify=*/false);
 	}
 	
 	/**
@@ -1430,7 +1451,7 @@ public class BleDevice
 	 */
 	public void startChangeTrackingPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
-		m_pollMngr.startPoll(uuid, interval.seconds, listener, /*trackChanges=*/true, /*usingNotify=*/false);
+		m_pollMngr.startPoll(uuid, interval.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/false);
 	}
 	
 	/**
@@ -1451,7 +1472,7 @@ public class BleDevice
 	 */
 	public void stopPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
-		stopPoll_private(uuid, interval.seconds, listener);
+		stopPoll_private(uuid, interval.secs(), listener);
 	}
 	
 	/**
@@ -1524,7 +1545,7 @@ public class BleDevice
 	 */
 	public void startRssiPoll(Interval interval, ReadWriteListener listener)
 	{
-		m_rssiPollMngr.start(interval.seconds, listener);
+		m_rssiPollMngr.start(interval.secs(), listener);
 	}
 	
 	/**
@@ -1575,7 +1596,7 @@ public class BleDevice
 				listener.onResult(earlyOutResult);
 			}
 			
-			if( earlyOutResult.status == Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)) )
+			if( earlyOutResult.status() == Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)) )
 			{
 				//--- DRK > No need to put this notify in the poll manager because either the characteristic wasn't found
 				//---		or the notify (or indicate) property isn't supported and we're not doing a backing read poll. 		
@@ -1585,7 +1606,7 @@ public class BleDevice
 		
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		E_NotifyState notifyState = m_pollMngr.getNotifyState(uuid);
-		boolean shouldSendOutNotifyEnable = notifyState == E_NotifyState.NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status != Status.OPERATION_NOT_SUPPORTED);
+		boolean shouldSendOutNotifyEnable = notifyState == E_NotifyState.NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != Status.OPERATION_NOT_SUPPORTED);
 		
 		if( shouldSendOutNotifyEnable && characteristic != null && is(CONNECTED) )
 		{
@@ -1603,7 +1624,7 @@ public class BleDevice
 			}
 		}
 		
-		m_pollMngr.startPoll(uuid, forceReadTimeout.seconds, listener, /*trackChanges=*/true, /*usingNotify=*/true);
+		m_pollMngr.startPoll(uuid, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
 	}	
 	
 	/**
@@ -1622,7 +1643,7 @@ public class BleDevice
 	 */
 	public void disableNotify(UUID uuid, Interval forceReadTimeout, ReadWriteListener listener)
 	{
-		this.disableNotify_private(uuid, forceReadTimeout.seconds, listener);
+		this.disableNotify_private(uuid, forceReadTimeout.secs(), listener);
 	}
 	
 	/**
@@ -1876,7 +1897,7 @@ public class BleDevice
 		m_txnMngr.onConnect(authenticationTxn, initTxn);
 		
 		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForConnection, conf_mngr().timeoutForConnection);
-		m_queue.add(new P_Task_Connect(this, timeout.seconds, m_taskStateListener));
+		m_queue.add(new P_Task_Connect(this, timeout.secs(), m_taskStateListener));
 		
 		onConnecting(/*definitelyExplicit=*/true, isReconnect);
 	}
@@ -2076,7 +2097,7 @@ public class BleDevice
 		
 		m_serviceMngr.clear();
 		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForDiscoveringServices, conf_mngr().timeoutForDiscoveringServices);
-		m_queue.add(new P_Task_DiscoverServices(this, timeout.seconds, m_taskStateListener));
+		m_queue.add(new P_Task_DiscoverServices(this, timeout.secs(), m_taskStateListener));
 		
 		//--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
 		//---		Even without this check the library should still be in a goodish state. Might send some weird state
@@ -2404,7 +2425,7 @@ public class BleDevice
 		boolean requiresBonding = bondIfNeeded(characteristic);
 		
 		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForReads, conf_mngr().timeoutForReads);
-		m_queue.add(new P_Task_Read(characteristic, timeout.seconds, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Read(characteristic, timeout.secs(), type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	void write_internal(UUID uuid, byte[] data, P_WrappingReadWriteListener listener)
@@ -2426,7 +2447,7 @@ public class BleDevice
 		boolean requiresBonding = bondIfNeeded(characteristic);
 		
 		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForWrites, conf_mngr().timeoutForWrites);
-		m_queue.add(new P_Task_Write(characteristic, timeout.seconds, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Write(characteristic, timeout.secs(), data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	private void disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)

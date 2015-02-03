@@ -111,7 +111,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	@Override protected void succeed()
 	{
 		Result result = newResult(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getDefaultTarget(), m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID); 
-		getDevice().addWriteTime(result.totalTime.seconds);
+		getDevice().addWriteTime(result.totalTime().secs());
 		m_readWriteListener.onResult(result);
 		 
 		super.succeed();

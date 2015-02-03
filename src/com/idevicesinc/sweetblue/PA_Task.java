@@ -306,7 +306,7 @@ abstract class PA_Task
 					m_resettableTimeExecuting += timeStep;
 //					m_totalTimeExecuting += timeStep;
 					
-					if( !Interval.isDisabled(m_timeout) && m_timeout != Interval.INFINITE.seconds )
+					if( !Interval.isDisabled(m_timeout) && m_timeout != Interval.INFINITE.secs() )
 					{
 						if( m_resettableTimeExecuting >= m_timeout )
 						{

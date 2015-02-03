@@ -47,7 +47,7 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 				
 				if( please == Please.DO_NOT_RETRY )
 				{
-					Toast.makeText(getContext(), moreInfo.device.getName_debug() + " connection failed with " + moreInfo.failureCountSoFar + " retries - " + moreInfo.reason, Toast.LENGTH_LONG).show();
+					Toast.makeText(getContext(), moreInfo.device().getName_debug() + " connection failed with " + moreInfo.failureCountSoFar() + " retries - " + moreInfo.reason(), Toast.LENGTH_LONG).show();
 				}
 				
 				return please;
@@ -130,6 +130,6 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 
 	@Override public void onStateChange(ChangeEvent event)
 	{
-		updateStatus(event.newStateBits);
+		updateStatus(event.newStateBits());
 	}
 }

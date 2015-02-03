@@ -79,30 +79,34 @@ public class BleDeviceConfig implements Cloneable
 			/**
 			 * The device that is currently {@link BleDeviceState#ATTEMPTING_RECONNECT}.
 			 */
-			public final BleDevice device;
+			public BleDevice device(){  return m_device;  }
+			private final BleDevice m_device;
 			
 			/**
 			 * The number of times a reconnect attempt has failed so far.
 			 */
-			public final int failureCount;
+			public int failureCount(){  return m_failureCount;  }
+			private final int m_failureCount;
 			
 			/**
 			 * The total amount of time since the device went {@link BleDeviceState#DISCONNECTED} and we started the reconnect loop.
 			 */
-			public final Interval totalTimeReconnecting;
+			public Interval totalTimeReconnecting(){  return m_totalTimeReconnecting;  }
+			private final Interval m_totalTimeReconnecting;
 			
 			/**
 			 * The previous {@link Interval} returned from {@link ReconnectRateLimiter#getTimeToNextReconnect(Info)}, or {@link Interval#ZERO}
 			 * for the first invocation.
 			 */
-			public final Interval previousDelay;
+			public Interval previousDelay(){  return m_previousDelay;  }
+			private final Interval m_previousDelay;
 			
 			Info(BleDevice device_in, int failureCount_in, Interval totalTimeReconnecting_in, Interval previousDelay_in)
 			{
-				this.device = device_in;
-				this.failureCount = failureCount_in;
-				this.totalTimeReconnecting = totalTimeReconnecting_in;
-				this.previousDelay = previousDelay_in;
+				this.m_device = device_in;
+				this.m_failureCount = failureCount_in;
+				this.m_totalTimeReconnecting = totalTimeReconnecting_in;
+				this.m_previousDelay = previousDelay_in;
 			}
 		}
 		
@@ -121,11 +125,11 @@ public class BleDeviceConfig implements Cloneable
 	public static class DefaultReconnectRateLimiter implements ReconnectRateLimiter
 	{
 		public static final Interval DEFAULT_INITIAL_RECONNECT_DELAY = INSTANTLY;
-		public static final Interval DEFAULT_RECONNECT_ATTEMPT_RATE = Interval.seconds(3.0);
+		public static final Interval DEFAULT_RECONNECT_ATTEMPT_RATE = Interval.secs(3.0);
 		
 		@Override public Interval getTimeToNextReconnect(Info info)
 		{
-			if( info.failureCount == 0 )
+			if( info.failureCount() == 0 )
 			{
 				return DEFAULT_INITIAL_RECONNECT_DELAY;
 			}
@@ -253,7 +257,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
 	 * @see #scanKeepAlive
 	 */
-	public Interval	minScanTimeToInvokeUndiscovery		= Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
+	public Interval	minScanTimeToInvokeUndiscovery		= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
 	 * Default is {@link #DEFAULT_SCAN_KEEP_ALIVE} seconds - If a device exceeds this amount of time since its
@@ -265,33 +269,33 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
 	 * @see #minScanTimeToInvokeUndiscovery
 	 */
-	public Interval	scanKeepAlive						= Interval.seconds(DEFAULT_SCAN_KEEP_ALIVE);
+	public Interval	scanKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
 	 * How long a {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)} is allowed to take
 	 * before {@link BleDevice.ReadWriteListener.Status#TIMED_OUT} is returned on the
 	 * {@link BleDevice.ReadWriteListener.Result#status} given to {@link BleDevice.ReadWriteListener#onResult(BleDevice.ReadWriteListener.Result)}.
 	 */
-	public Interval timeoutForReads						= Interval.seconds(DEFAULT_TASK_TIMEOUT);
+	public Interval timeoutForReads						= Interval.secs(DEFAULT_TASK_TIMEOUT);
 	
 	/**
 	 * Same as {@link #timeoutForReads} but for {@link BleDevice#write(UUID, BleDevice.ReadWriteListener)}.
 	 */
-	public Interval timeoutForWrites					= Interval.seconds(DEFAULT_TASK_TIMEOUT);
+	public Interval timeoutForWrites					= Interval.secs(DEFAULT_TASK_TIMEOUT);
 	
 	/**
 	 * How long a connection (through {@link BleDevice#connect()} or overloads) is allowed to take before
 	 * {@link BleDevice.ConnectionFailListener.Reason#NATIVE_CONNECTION_TIMED_OUT} is returned on the
 	 * {@link ConnectionFailListener.Info#reason} given to {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)}.
 	 */
-	public Interval timeoutForConnection				= Interval.seconds(DEFAULT_TASK_TIMEOUT);
+	public Interval timeoutForConnection				= Interval.secs(DEFAULT_TASK_TIMEOUT);
 	
 	/**
 	 * How long service discovery is allowed to take before 
 	 * {@link BleDevice.ConnectionFailListener.Reason#GETTING_SERVICES_TIMED_OUT} is returned on the
 	 * {@link ConnectionFailListener.Info#reason} given to {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)}.
 	 */
-	public Interval timeoutForDiscoveringServices		= Interval.seconds(DEFAULT_TASK_TIMEOUT);
+	public Interval timeoutForDiscoveringServices		= Interval.secs(DEFAULT_TASK_TIMEOUT);
 	
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.

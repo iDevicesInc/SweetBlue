@@ -53,53 +53,60 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * Other parameters are probably enough to make a decision but this native instance is provided just in case.
 			 */
-			public final BluetoothDevice nativeInstance;
+			public BluetoothDevice nativeInstance(){  return m_nativeInstance;  }
+			private final BluetoothDevice m_nativeInstance;
 			
 			/**
-			 * A list of {@link UUID}s parsed from {@code scanRecord} as a convenience. May be empty, notably
+			 * A list of {@link UUID}s parsed from {@link #scanRecord()} as a convenience. May be empty, notably
 			 * if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
 			 */
-			public final List<UUID> advertisedServices;
+			public List<UUID> advertisedServices(){  return m_advertisedServices;  }
+			private final List<UUID> m_advertisedServices;
 			
 			/**
 			 * The unaltered device name retrieved from the native bluetooth stack.
 			 */
-			public final String rawDeviceName;
+			public String rawDeviceName(){  return m_rawDeviceName;  }
+			private final String m_rawDeviceName;
 			
 			/**
 			 * See {@link BleDevice#getName_normalized()} for an explanation.
 			 */
-			public final String normalizedDeviceName;
+			public String normalizedDeviceName(){  return m_normalizedDeviceName;  }
+			private final String m_normalizedDeviceName;
 			
 			/**
 			 * The raw scan record received when the device was discovered. May be empty, especially
 			 * if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
 			 */
-			public final byte[] scanRecord;
+			public byte[] scanRecord(){  return m_scanRecord;  }
+			private final byte[] m_scanRecord;
 			
 			/**
 			 * The RSSI received when the device was discovered.
 			 */
-			public final int rssi;
+			public int rssi(){  return m_rssi;  }
+			private final int m_rssi;
 			
 			/**
 			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
 			 * <br><br>
 			 * TIP: If {@link Packet#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
 			 * and return <code>true</code> from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} without having to check
-			 * uuids or names matching.
+			 * uuids or names matching, because obviously you've seen and connected to this device before.
 			 */
-			public final State.ChangeIntent lastDisconnectIntent;
+			public State.ChangeIntent lastDisconnectIntent(){  return m_lastDisconnectIntent;  }
+			private final State.ChangeIntent m_lastDisconnectIntent;
 			
 			Packet(BluetoothDevice nativeInstance_in, List<UUID> advertisedServices_in, String rawDeviceName_in, String normalizedDeviceName_in, byte[] scanRecord_in, int rssi_in, State.ChangeIntent lastDisconnectIntent_in)
 			{
-				this.nativeInstance = nativeInstance_in;
-				this.advertisedServices = advertisedServices_in;
-				this.rawDeviceName = rawDeviceName_in;
-				this.normalizedDeviceName = normalizedDeviceName_in;
-				this.scanRecord = scanRecord_in;
-				this.rssi = rssi_in;
-				this.lastDisconnectIntent = lastDisconnectIntent_in;
+				this.m_nativeInstance = nativeInstance_in;
+				this.m_advertisedServices = advertisedServices_in;
+				this.m_rawDeviceName = rawDeviceName_in;
+				this.m_normalizedDeviceName = normalizedDeviceName_in;
+				this.m_scanRecord = scanRecord_in;
+				this.m_rssi = rssi_in;
+				this.m_lastDisconnectIntent = lastDisconnectIntent_in;
 			}
 		}
 		
@@ -136,7 +143,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		 */
 		@Override public boolean acknowledgeDiscovery(Packet packet)
 		{
-			return Utils.haveMatchingIds(packet.advertisedServices, m_whitelist);
+			return Utils.haveMatchingIds(packet.advertisedServices(), m_whitelist);
 		}
 	}
 	
@@ -220,21 +227,21 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see BleManager.UhOhListener
 	 */
-	public Interval	uhOhCallbackThrottle				= Interval.seconds(DEFAULT_UH_OH_CALLBACK_THROTTLE);
+	public Interval	uhOhCallbackThrottle				= Interval.secs(DEFAULT_UH_OH_CALLBACK_THROTTLE);
 	
 	/**
 	 * Default is {@value #DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME} seconds - Unless {@link Interval#DISABLED},
 	 * this option will kick off a scan for {@link #autoScanTime} seconds
 	 * {@link #autoScanDelayAfterResume} seconds after {@link BleManager#onResume()} is called.
 	 */
-	public Interval autoScanDelayAfterResume			= Interval.seconds(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
+	public Interval autoScanDelayAfterResume			= Interval.secs(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
 	
 	/**
 	 * Default is {@value #DEFAULT_AUTO_UPDATE_RATE} seconds - The rate at which the library's internal update loop ticks.
 	 * Generally shouldn't need to be changed. You can set this to {@link Interval#DISABLED} and call {@link BleManager#update(double)} yourself
 	 * if you want to tie the library in to an existing update loop used in your application.
 	 */
-	public Interval autoUpdateRate						= Interval.seconds(DEFAULT_AUTO_UPDATE_RATE);
+	public Interval autoUpdateRate						= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
 	
 	/**
 	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices. Used in conjunction with {@link #autoScanInterval},
@@ -254,7 +261,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see #autoScanTime
 	 */
-	public Interval autoScanInterval					= Interval.seconds(DEFAULT_AUTO_SCAN_INTERVAL);
+	public Interval autoScanInterval					= Interval.secs(DEFAULT_AUTO_SCAN_INTERVAL);
 	
 	/**
 	 * Default is {@link Interval#DISABLED} - Same as {@link #autoScanInterval} except this value is used while the app is paused.
@@ -267,7 +274,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Minimum amount of time in seconds that the library strives to give to a scanning operation.  
 	 */
-	public Interval	idealMinScanTime					= Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
+	public Interval	idealMinScanTime					= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
 	 * Default is null, meaning no filtering - all discovered devices will

@@ -46,7 +46,7 @@ public class MyActivity extends Activity
 								{
 									if( result.wasSuccess() )
 									{
-										Log.i("SweetBlueExample", "Battery level is " + result.data[0] + "%");
+										Log.i("SweetBlueExample", "Battery level is " + result.data()[0] + "%");
 									}
 								}
 							});

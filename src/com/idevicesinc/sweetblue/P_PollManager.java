@@ -74,9 +74,9 @@ class P_PollManager
 		
 		@Override public void onResult(Result result)
 		{
-			if( result.status == Status.SUCCESS )
+			if( result.status() == Status.SUCCESS )
 			{
-				if( m_lastValue == null || !Arrays.equals(m_lastValue, result.data) )
+				if( m_lastValue == null || !Arrays.equals(m_lastValue, result.data()) )
 				{
 					super.onResult(result);
 				}
@@ -85,7 +85,7 @@ class P_PollManager
 					m_entry.onSuccessOrFailure();
 				}
 				
-				m_lastValue = result.data;
+				m_lastValue = result.data();
 			}
 			else
 			{
@@ -199,7 +199,7 @@ class P_PollManager
 		void update(double timeStep)
 		{
 			if( m_interval <= 0.0 )  return;
-			if( m_interval == Interval.INFINITE.seconds )  return;
+			if( m_interval == Interval.INFINITE.secs() )  return;
 			
 			m_timeTracker += timeStep;
 			

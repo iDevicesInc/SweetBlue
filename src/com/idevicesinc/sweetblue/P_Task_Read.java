@@ -58,7 +58,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 	private void succeed(byte[] value, Target target)
 	{
 		Result result = newResult(value, target, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID); 
-		getDevice().addReadTime(result.totalTime.seconds);
+		getDevice().addReadTime(result.totalTime().secs());
 		
 		if( m_readWriteListener != null )
 		{

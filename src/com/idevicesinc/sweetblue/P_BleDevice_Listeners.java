@@ -189,7 +189,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				if (!m_queue.isCurrent(P_Task_Connect.class, m_device))
 				{
 					Interval timeout = BleDeviceConfig.interval(m_device.conf_device().timeoutForConnection, m_device.conf_mngr().timeoutForConnection);
-					P_Task_Connect task = new P_Task_Connect(m_device, timeout.seconds, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
+					P_Task_Connect task = new P_Task_Connect(m_device, timeout.secs(), m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
 					m_queue.add(task);
 				}
 
