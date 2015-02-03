@@ -116,6 +116,7 @@ public class BleManager
 	{
 		/**
 		 * Enumerates changes in the "discovered" state of a device.
+		 * Used at {@link DiscoveryEvent#lifeCycle()}.
 		 */
 		public static enum LifeCycle
 		{
@@ -245,9 +246,27 @@ public class BleManager
 	public static interface UhOhListener
 	{
 		/**
+		 * Struct passed to {@link UhOhListener#onUhOh(UhOhEvent)}
+		 */
+		public static class UhOhEvent
+		{
+			public BleManager manager(){  return m_manager;  }
+			private final BleManager m_manager;
+			
+			public UhOh uhOh(){  return m_uhOh;  }
+			private final UhOh m_uhOh;
+			
+			UhOhEvent(BleManager manager_in, UhOh uhoh_in)
+			{
+				m_manager = manager_in;
+				m_uhOh = uhoh_in;
+			}
+		}
+		
+		/**
 		 * Run for the hills.
 		 */
-		void onUhOh(BleManager manager, UhOh reason);
+		void onUhOh(UhOhEvent event);
 	}
 
 	/**
@@ -271,6 +290,9 @@ public class BleManager
 	 */
 	public static interface AssertListener
 	{
+		/**
+		 * Struct passed to {@link AssertListener#onAssertFailed(Info)}.
+		 */
 		public static class Info
 		{
 			/**
@@ -300,7 +322,7 @@ public class BleManager
 		}
 		
 		/**
-		 * Provides the message (or empty string) along with the stack trace if an assertion fails.
+		 * Provides additional info about the circumstances surrounding the assert.
 		 */
 		void onAssertFailed(Info info);
 	}
