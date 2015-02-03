@@ -131,8 +131,6 @@ public class BleManager
 			
 			/**
 			 * Used when a device is rediscovered after already being discovered at least once.
-			 *
-			 * @see DiscoveryListener#onDeviceDiscovered(BleDevice)
 			 */
 			REDISCOVERED,
 			
@@ -1278,7 +1276,7 @@ public class BleManager
 
 	/**
 	 * Creates a new {@link BleDevice} or returns an existing one if the macAddress matches.
-	 * {@link DiscoveryListener#onDeviceDiscovered(BleDevice)} will be called if a new device
+	 * {@link DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)} will be called if a new device
 	 * is created.
 	 */
 	public BleDevice newDevice(String macAddress, String name)
@@ -1302,7 +1300,7 @@ public class BleManager
 
 	/**
 	 * Forcefully undiscovers a device, disconnecting it first if needed and removing it from this manager's internal list.
-	 * {@link BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)} will be called.
+	 * {@link BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)} with {@link LifeCycle#UNDISCOVERED} will be called.
 	 * No clear use case has been thought of but the method is here just in case anyway.
 	 *
 	 * @return	true if the device was undiscovered, false if device is already {@link BleDeviceState#UNDISCOVERED} or manager

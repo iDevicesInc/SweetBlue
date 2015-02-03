@@ -159,7 +159,7 @@ public class Utils
 	/**
 	 * Get a UUID string by transforming shorthand ids into long form ids.
 	 * 
-	 * @param shorthandIf Short of long form UUID string for a service/characteristic
+	 * @param shorthandUuid Short of long form UUID string for a service/characteristic
 	 * @return UUID string.
 	 */
 	public static String uuidStringFromShorthand(String shorthandUuid)

@@ -32,7 +32,7 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
  * <br><br>
  * Although instances of this class can be created explicitly through {@link BleManager#newDevice(String, String)}, usually
  * they're created implicitly by {@link BleManager} as a result of a scanning operation (e.g. {@link BleManager#startScan()}
- * and sent to you through {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)}.
+ * and sent to you through {@link BleManager.DiscoveryListener#onDiscoveryEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
  */
 public class BleDevice
 {
@@ -703,7 +703,7 @@ public class BleDevice
 	
 	/**
 	 * Default implementation of {@link ConnectionFailListener} that attempts a certain number of retries.
-	 * An instance of this class is set by default for all new {@link BleDevice} instances using {@link BleDevice#DEFAULT_CONNECTION_FAIL_RETRY_COUNT}.
+	 * An instance of this class is set by default for all new {@link BleDevice} instances using {@link BleDevice.DefaultConnectionFailListener#DEFAULT_CONNECTION_FAIL_RETRY_COUNT}.
 	 * Use {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)} to override the default behavior.
 	 * 
 	 * @see ConnectionFailListener

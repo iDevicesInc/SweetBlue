@@ -111,7 +111,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		
 		/**
-		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDeviceDiscovered(BleDevice)} will be called shortly.
+		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDiscoveryEvent(DiscoveryListener.DiscoveryEvent)} will be called shortly.
 		 * 
 		 * @return Whether to acknowledge the discovery.
 		 */
@@ -187,7 +187,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * a {@link AdvertisingFilter.Packet#scanRecord} or {@link AdvertisingFilter.Packet#advertisedServices}
 	 * to {@link AdvertisingFilter#acknowledgeDiscovery(AdvertisingFilter.Packet)}.
 	 * Most likely you will be forced to filter on name only for your implementation of
-	 * {@link AdvertisingFilter#acknowledgeDiscovery(Packet)}.
+	 * {@link AdvertisingFilter#acknowledgeDiscovery(AdvertisingFilter.Packet)}.
 	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.
 	 */
 	public boolean revertToClassicDiscoveryIfNeeded		= true;
