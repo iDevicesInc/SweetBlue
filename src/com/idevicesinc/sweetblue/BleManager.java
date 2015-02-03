@@ -26,6 +26,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManager.AssertListener.Info;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.BleManager.NukeListener.NukeEvent;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
@@ -279,17 +280,52 @@ public class BleManager
 	}
 
 	/**
-	 * Provide an implementation to {@link BleManager#dropTacticalNuke(NukeEndListener)}
+	 * Provide an implementation to {@link BleManager#dropTacticalNuke(NukeListener)}
 	 * to be notified when a nuke operation is complete.
 	 *
-	 * @see BleManager#dropTacticalNuke(NukeEndListener)
+	 * @see BleManager#dropTacticalNuke(NukeListener)
 	 */
-	public static interface NukeEndListener
+	public static interface NukeListener
 	{
+		/**
+		 * Enumeration of the progress of the nuke.
+		 */
+		public static enum Progress
+		{
+			/**
+			 * The nuke has completed successfully.
+			 */
+			COMPLETED;
+		}
+		
+		/**
+		 * Struct passed to {@link NukeListener#onNukeEvent(NukeEvent)}.
+		 */
+		public static class NukeEvent
+		{
+			/**
+			 * The {@link BleManager} the nuke was applied to.
+			 */
+			public BleManager manager(){  return m_manager;  }
+			private final BleManager m_manager;
+			
+			/**
+			 * The progress of the nuke.
+			 */
+			public Progress progress(){  return m_progress;  }
+			private final Progress m_progress;
+			
+			NukeEvent(BleManager manager_in, Progress progress_in)
+			{
+				m_manager = manager_in;
+				m_progress = progress_in;
+			}
+		}
+		
 		/**
 		 * The nuke completed. Hopefully the bluetooth stack is OK now.
 		 */
-		void onNukeEnded(BleManager manager);
+		void onNukeEvent(NukeEvent event);
 	}
 
 	/**
@@ -955,7 +991,7 @@ public class BleManager
 	 *
 	 * @see BleState#NUKING
 	 */
-	public void dropTacticalNuke(NukeEndListener listener)
+	public void dropTacticalNuke(NukeListener listener)
 	{
 		dropTacticalNuke_synchronized(listener);
 	}
@@ -1338,7 +1374,7 @@ public class BleManager
 		m_taskQueue.add(task);
 	}
 
-	private void dropTacticalNuke_synchronized(NukeEndListener listener)
+	private void dropTacticalNuke_synchronized(NukeListener listener)
 	{
 		if( listener != null )
 		{
@@ -1369,12 +1405,16 @@ public class BleManager
 			{
 				if( state.isEndingState() )
 				{
-					NukeEndListener nukeListeners = m_nukeListeners;
+					NukeListener nukeListeners = m_nukeListeners;
 					m_nukeListeners = null;
 					m_nativeStateTracker.remove(NUKING, E_Intent.IMPLICIT);
 					m_stateTracker.remove(NUKING, E_Intent.IMPLICIT);
 
-					if( nukeListeners != null )  nukeListeners.onNukeEnded(BleManager.this);
+					if( nukeListeners != null )
+					{
+						NukeEvent event = new NukeEvent(BleManager.this, NukeListener.Progress.COMPLETED);
+						nukeListeners.onNukeEvent(event);
+					}
 				}
 			}
 		}));
