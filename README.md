@@ -103,7 +103,7 @@ Getting Started
     {
     	@Override public void onDiscoveryEvent(DiscoveryEvent event)
     	{
-    		if( event.lifeCycle() == LifeCycle.DISCOVERED )
+    		if( event.was(LifeCycle.DISCOVERED) )
     		{
 	    		event.device().connect(new BleDevice.StateListener()
 	    		{
