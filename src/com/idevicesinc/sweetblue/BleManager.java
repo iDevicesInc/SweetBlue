@@ -211,7 +211,6 @@ public class BleManager
 				
 				this.m_manager = manager_in;
 			}
-			
 		}
 		
 		/**
@@ -287,6 +286,7 @@ public class BleManager
 	{
 		/**
 		 * Enumeration of the progress of the nuke.
+		 * More entries will be added in the future.
 		 */
 		public static enum Progress
 		{
@@ -321,7 +321,7 @@ public class BleManager
 		}
 		
 		/**
-		 * The nuke completed. Hopefully the bluetooth stack is OK now.
+		 * The nuke event, for now only fired when the nuke is completed. Hopefully the bluetooth stack is OK now.
 		 */
 		void onNukeEvent(NukeEvent event);
 	}
@@ -351,7 +351,7 @@ public class BleManager
 			private final String m_message;
 			
 			/**
-			 * Stack trace going up to the assert.
+			 * Stack trace leading up to the assert.
 			 */
 			public StackTraceElement[] stackTrace(){  return m_stackTrace;  }
 			private final StackTraceElement[] m_stackTrace;

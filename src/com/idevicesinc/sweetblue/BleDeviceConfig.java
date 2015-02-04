@@ -36,7 +36,7 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * Also used for {@link BleDevice.ConnectionFailListener.Info#gattStatus} for when the failure didn't involve the gatt layer.
 	 */
-	public static final int GATT_STATUS_NOT_APPLICABLE = -1;
+	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 	
 	/**
 	 * In at least some cases it's not possible to determine beforehand whether a given characteristic requires

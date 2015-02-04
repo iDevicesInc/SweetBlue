@@ -197,14 +197,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * some theories that since proved invalid. While the library can still sort of do so, it's now 
 	 * recommended to run on the main thread in order to avoid any possible multithreading issues.
 	 */
-	boolean runOnMainThread						= true;
+	boolean runOnMainThread								= true;
 	
 	/**
 	 * Default is true - whether all callbacks are posted to the main thread or from SweetBlue's internal
 	 * thread. If {@link #runOnMainThread}==true then this setting is meaningless because SweetBlue's
 	 * internal thread is already the main thread to begin with.
 	 */
-	boolean postCallbacksToMainThread			= true;
+	boolean postCallbacksToMainThread					= true;
 	
 	/**
 	 * Default is true - requires the {@link Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
@@ -283,7 +283,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see AdvertisingFilter
 	 */
-	public AdvertisingFilter defaultAdvertisingFilter				= null;
+	public AdvertisingFilter defaultAdvertisingFilter	= null;
 	
 	/**
 	 * Default is null - can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
@@ -291,7 +291,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see BleManager.DiscoveryListener
 	 */
-	public BleManager.DiscoveryListener defaultDiscoveryListener	= null;
+	public DiscoveryListener defaultDiscoveryListener	= null;
 	
 	/**
 	 * Used if {@link #loggingEnabled} is true. Gives threads names so they are more easily identifiable.
@@ -306,10 +306,10 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Default is null - optional, only used if {@link #loggingEnabled} is true. Provides a look-up table
 	 * so logs can show the name associated with a {@link UUID} along with its numeric string.
 	 */
-	public List<UuidNameMap> uuidNameMaps = null;
+	public List<UuidNameMap> uuidNameMaps				= null;
 	
 	//--- DRK > Not sure if this is useful so keeping it package private for now.
-	int		connectionFailUhOhCount						= 0;
+	int	connectionFailUhOhCount							= 0;
 	
 	/**
 	 * Creates a {@link BleManagerConfig} with all default options set. See each member of this class
