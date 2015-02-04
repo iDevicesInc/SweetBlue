@@ -41,20 +41,9 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		}
 	}
 	
-	
 	public BleTransaction getTxn()
 	{
 		return m_txn;
-	}
-	
-	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
-	{
-		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
-		{
-			return true;
-		}
-		
-		return super.isSoftlyCancellableBy(task);
 	}
 	
 	@Override public boolean isInterruptableBy(PA_Task task)

@@ -384,6 +384,11 @@ abstract class PA_Task
 		return false;
 	}
 	
+	protected void attemptToSoftlyCancel(PA_Task task)
+	{
+		m_softlyCancelled = true;
+	}
+	
 	protected String getToStringAddition()
 	{
 		return null;
@@ -399,10 +404,7 @@ abstract class PA_Task
 		return name + "(" + m_state.name() + deviceEntry + addition + ")";
 	}
 	
-	public void setSoftlyCancelled()
-	{
-		m_softlyCancelled = true;
-	}
+	
 	
 	public boolean executeOnSeperateThread()
 	{

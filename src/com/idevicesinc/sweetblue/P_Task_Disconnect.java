@@ -18,7 +18,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 		m_explicit = explicit;
 	}
 	
-	public boolean isExplicit()
+	@Override public boolean isExplicit()
 	{
 		return m_explicit;
 	}

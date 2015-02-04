@@ -2,8 +2,6 @@ package com.idevicesinc.sweetblue;
 
 /**
  * 
- * 
- *
  */
 class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {

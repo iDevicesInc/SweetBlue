@@ -73,10 +73,6 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 						
 						m_device.onNativeConnect(connectTask.isExplicit());
 					}
-					else if( state == PE_TaskState.NO_OP )
-					{
-						// nothing to do
-					}
 					else
 					{
 						m_device.onNativeConnectFail(state, connectTask.getGattStatus(), connectTask.getAutoConnectUsage());
@@ -113,6 +109,10 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				}
 				else if (state.isEndingState() )
 				{
+					if( state == PE_TaskState.SOFTLY_CANCELLED )
+					{
+						// pretty sure doing nothing is correct.
+					}
 					if( state == PE_TaskState.FAILED_IMMEDIATELY )
 					{
 						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_IMMEDIATELY, discoverTask.getGattStatus());
@@ -125,7 +125,6 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 					{
 						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_EVENTUALLY, discoverTask.getGattStatus());
 					}
-					
 				}
 			}
 			else if (task.getClass() == P_Task_Bond.class)
@@ -218,8 +217,11 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				onNativeConnectFail(gatt, gattStatus);
 			}
 		}
+		//--- DRK > NOTE: never seen this case happen.
 		else if (newState == BluetoothProfile.STATE_DISCONNECTING)
 		{
+			m_logger.e("Actually natively disconnecting!"); // error level just so it's noticeable.
+			
 			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 			
 			m_device.onDisconnecting();

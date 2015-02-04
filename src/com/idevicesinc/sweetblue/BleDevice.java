@@ -827,6 +827,7 @@ public class BleDevice
 	private final P_ReconnectManager m_reconnectMngr;
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
+	private final P_Task_Disconnect m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 	
 	private TimeEstimator m_writeTimeEstimator;
 	private TimeEstimator m_readTimeEstimator;
@@ -2112,7 +2113,7 @@ public class BleDevice
 	{
 		m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/true);
 		
-		if( state == PE_TaskState.SOFTLY_CANCELLED )  return;
+		if( state == PE_TaskState.SOFTLY_CANCELLED || state == PE_TaskState.NO_OP )  return;
 	
 		boolean attemptingReconnect = is(ATTEMPTING_RECONNECT);
 		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
@@ -2393,6 +2394,11 @@ public class BleDevice
 		if( retrying == Please.DO_NOT_RETRY )
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this);
+		}
+		
+		if( !wasExplicit )
+		{
+			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
 		}
 	}
 	

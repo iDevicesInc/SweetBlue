@@ -7,8 +7,6 @@ import android.bluetooth.BluetoothGatt;
 
 /**
  * 
- * 
- *
  */
 class P_Task_Connect extends PA_Task_RequiresBleOn
 {
@@ -91,7 +89,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		return m_gatt;
 	}
 	
-	public boolean isExplicit()
+	@Override public boolean isExplicit()
 	{
 		return m_explicit;
 	}

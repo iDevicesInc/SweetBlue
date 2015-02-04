@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 /**
  * 
- * 
  */
 enum PE_TaskPriority
 {

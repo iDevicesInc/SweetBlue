@@ -101,6 +101,26 @@ class P_TaskQueue
 		addAtIndex(task, -1);
 	}
 	
+	public void softlyCancelTasks(PA_Task task)
+	{
+		for( int i = 0; i < m_queue.size()-1; i++ )
+		{
+			PA_Task ithTask = m_queue.get(i);
+			if( ithTask.isSoftlyCancellableBy(task) )
+			{
+				ithTask.attemptToSoftlyCancel(task);
+			}
+		}
+		
+		if( getCurrent() != null )
+		{
+			if( getCurrent().isSoftlyCancellableBy(task) )
+			{
+				getCurrent().attemptToSoftlyCancel(task);
+			}
+		}
+	}
+	
 	private void addAtIndex(PA_Task task, int index)
 	{
 		if( index >= 0 )
@@ -114,22 +134,7 @@ class P_TaskQueue
 			index = m_queue.size()-1;
 		}
 		
-		for( int i = 0; i < m_queue.size()-1; i++ )
-		{
-			PA_Task ithTask = m_queue.get(i);
-			if( ithTask.isSoftlyCancellableBy(task) )
-			{
-				ithTask.setSoftlyCancelled();
-			}
-		}
-		
-		if( getCurrent() != null )
-		{
-			if( getCurrent().isSoftlyCancellableBy(task) )
-			{
-				getCurrent().setSoftlyCancelled();
-			}
-		}
+		softlyCancelTasks(task);
 		
 		task.onAddedToQueue(this);
 		

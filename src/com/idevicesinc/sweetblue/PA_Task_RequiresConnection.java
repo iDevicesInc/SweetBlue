@@ -33,4 +33,37 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 		
 		return false;
 	}
+	
+	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
+	{
+		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
+		{
+			return true;
+		}
+		
+		return super.isSoftlyCancellableBy(task);
+	}
+	
+	@Override protected void attemptToSoftlyCancel(PA_Task task)
+	{
+		super.attemptToSoftlyCancel(task);
+		
+		//--- DRK > The following logic became necessary due to the following situation:
+		//---		* device connected successfully.
+		//---		* getting service task started execution, sent out get services call.
+		//---		* something related to the get services call (probably, gatt status code 142/0x8E) made us disconnect, resulting in connection fail callback
+		//---		* getting services task was still executing until it timed out, prompting another connection fail callback even though we already failed from the root cause.
+		if( task instanceof P_Task_Disconnect )
+		{
+			P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
+			
+			if( !task_cast.isExplicit() )
+			{
+				if( getState() == PE_TaskState.EXECUTING && !getDevice().is(BleDeviceState.CONNECTED) )
+				{
+					softlyCancel();
+				}
+			}
+		}
+	}
 }
