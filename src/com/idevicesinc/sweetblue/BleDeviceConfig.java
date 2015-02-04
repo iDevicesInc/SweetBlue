@@ -108,6 +108,15 @@ public class BleDeviceConfig implements Cloneable
 				this.m_totalTimeReconnecting = totalTimeReconnecting_in;
 				this.m_previousDelay = previousDelay_in;
 			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"failureCount",				failureCount(),
+					"totalTimeReconnecting",	totalTimeReconnecting()
+				);
+			}
 		}
 		
 		/**

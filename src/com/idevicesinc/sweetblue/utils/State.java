@@ -88,6 +88,11 @@ public interface State
 				return state.overlaps(m_intentMask) ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
 			}
 		}
+		
+		@Override public String toString()
+		{
+			return super.toString(); // TODO
+		}
 	}
 	
 	/**

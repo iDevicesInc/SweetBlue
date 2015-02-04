@@ -469,4 +469,21 @@ public class Utils
 		
 		return (T) value;
 	}
+	
+	public static String toString(Object ... values)
+	{
+		String toReturn = "";
+		
+		for( int i = 0; i < values.length; i+=2 )
+		{
+			if( i > 0 )
+			{
+				toReturn += " ";
+			}
+			
+			toReturn += values[i] + "=" + values[i+1];
+		}
+		
+		return toReturn;
+	}
 }

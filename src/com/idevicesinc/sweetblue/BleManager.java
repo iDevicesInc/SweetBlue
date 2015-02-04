@@ -177,6 +177,15 @@ public class BleManager
 			{
 				return lifeCycle == lifeCycle();
 			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"device",			device().getName_debug(),
+					"lifeCycle",		lifeCycle().name()
+				);
+			}
 		}
 		
 		/**
@@ -268,6 +277,14 @@ public class BleManager
 				m_manager = manager_in;
 				m_uhOh = uhoh_in;
 			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"uhOh",	uhOh().name()
+				);
+			}
 		}
 		
 		/**
@@ -317,6 +334,14 @@ public class BleManager
 			{
 				m_manager = manager_in;
 				m_progress = progress_in;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"progress",	progress().name()
+				);
 			}
 		}
 		

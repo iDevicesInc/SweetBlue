@@ -408,11 +408,23 @@ public class BleDevice
 			{
 				if( target() == Target.RSSI )
 				{
-					return "status="+status()+" type="+type()+" target="+target()+" rssi="+rssi();
+					return Utils.toString
+					(
+						"status",	status(),
+						"type",		type(),
+						"target",	target(),
+						"rssi",		rssi()
+					);
 				}
 				else
 				{
-					return "status="+status()+" type="+type()+" target="+target()+" charUuid="+charUuid() +" data="+data();
+					return Utils.toString
+					(
+						"status",		status(),
+						"type",			type(),
+						"charUuid",		device().m_mngr.getLogger().charName(charUuid()),
+						"data",			data()
+					);
 				}
 			}
 		}
@@ -684,6 +696,16 @@ public class BleDevice
 				
 				m_device.getManager().ASSERT(highestStateReached_in != null, "highestState_latest shouldn't be null.");
 				m_device.getManager().ASSERT(highestStateReached_total_in != null, "highestState_total shouldn't be null.");
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"reason",				reason(),
+					"gattStatus",			gattStatus(),
+					"failureCountSoFar",	failureCountSoFar()
+				);
 			}
 		}
 		

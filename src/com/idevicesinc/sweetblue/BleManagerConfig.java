@@ -66,13 +66,13 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * The unaltered device name retrieved from the native bluetooth stack.
 			 */
-			public String rawDeviceName(){  return m_rawDeviceName;  }
+			public String name_native(){  return m_rawDeviceName;  }
 			private final String m_rawDeviceName;
 			
 			/**
 			 * See {@link BleDevice#getName_normalized()} for an explanation.
 			 */
-			public String normalizedDeviceName(){  return m_normalizedDeviceName;  }
+			public String name_normalized(){  return m_normalizedDeviceName;  }
 			private final String m_normalizedDeviceName;
 			
 			/**
@@ -107,6 +107,16 @@ public class BleManagerConfig extends BleDeviceConfig
 				this.m_scanRecord = scanRecord_in;
 				this.m_rssi = rssi_in;
 				this.m_lastDisconnectIntent = lastDisconnectIntent_in;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"mac",			nativeInstance().getAddress(),
+					"name",			name_normalized(),
+					"services",		advertisedServices()
+				);
 			}
 		}
 		
