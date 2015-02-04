@@ -113,7 +113,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 					{
 						// pretty sure doing nothing is correct.
 					}
-					if( state == PE_TaskState.FAILED_IMMEDIATELY )
+					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
 					{
 						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_IMMEDIATELY, discoverTask.getGattStatus());
 					}

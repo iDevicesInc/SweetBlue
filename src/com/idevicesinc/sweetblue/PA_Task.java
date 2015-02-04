@@ -22,7 +22,7 @@ abstract class PA_Task
 	private double m_timeout;
 	private double m_executionDelay = 0.0;
 	
-	private double m_resettableTimeExecuting = 0.0;
+	private long m_resetableExecuteStartTime = 0;
 //	private double m_totalTimeExecuting = 0.0;
 	private double m_totalTimeArmedAndExecuting = 0.0;
 //	private double m_totalTimeQueuedAndArmedAndExecuting = 0.0;
@@ -36,8 +36,8 @@ abstract class PA_Task
 	private P_TaskQueue m_queue;
 	private Handler m_executeHandler;
 	
-	private int m_maxRetries;
-	private int m_retryCount;
+//	private int m_maxRetries;
+//	private int m_retryCount;
 	
 	private int m_updateCount = 0;
 	
@@ -77,7 +77,7 @@ abstract class PA_Task
 	{
 		m_device = null;
 		m_manager = manager;
-		m_maxRetries = 0;
+//		m_maxRetries = 0;
 		m_timeout = timeout;
 		m_logger = m_manager.getLogger();
 		m_timeCreated = System.currentTimeMillis();
@@ -127,7 +127,7 @@ abstract class PA_Task
 	{
 		m_queue = queue;
 		setState(PE_TaskState.QUEUED);
-		m_retryCount = 0;
+//		m_retryCount = 0;
 		m_updateCount = 0;
 		m_addedToQueueTime = m_addedToQueueTime == -1.0 ? m_queue.getTime() : m_addedToQueueTime;
 	}
@@ -139,7 +139,7 @@ abstract class PA_Task
 		synchronized (this)
 		{
 			m_timeout = newTimeout;
-			m_resettableTimeExecuting = 0.0;
+			m_resetableExecuteStartTime = System.currentTimeMillis();
 		}
 	}
 	
@@ -187,13 +187,13 @@ abstract class PA_Task
 	
 	protected void softlyCancel()
 	{
-		m_maxRetries = 0;
+//		m_maxRetries = 0;
 		m_queue.tryEndingTask(this, PE_TaskState.SOFTLY_CANCELLED);
 	}
 	
 	protected void failWithoutRetry()
 	{
-		m_maxRetries = 0;
+//		m_maxRetries = 0;
 		fail();
 	}
 
@@ -205,8 +205,8 @@ abstract class PA_Task
 //		m_totalTimeQueuedAndArmedAndExecuting = m_queue.getTime() - m_addedToQueueTime;
 		m_totalTimeArmedAndExecuting = 0.0;
 //		m_totalTimeExecuting = 0.0;
-		m_resettableTimeExecuting = 0.0;
-		m_retryCount = 0;
+		m_resetableExecuteStartTime = System.currentTimeMillis();
+//		m_retryCount = 0;
 		m_updateCount = 0;
 	}
 	
@@ -217,6 +217,7 @@ abstract class PA_Task
 	
 	private void execute_wrapper()
 	{
+		m_resetableExecuteStartTime = System.currentTimeMillis();
 		m_timeExecuted = System.currentTimeMillis();
 		
 		execute();
@@ -302,13 +303,12 @@ abstract class PA_Task
 					}
 				}
 				else if( m_state == PE_TaskState.EXECUTING )
-				{
-					m_resettableTimeExecuting += timeStep;
-//					m_totalTimeExecuting += timeStep;
-					
+				{					
 					if( !Interval.isDisabled(m_timeout) && m_timeout != Interval.INFINITE.secs() )
 					{
-						if( m_resettableTimeExecuting >= m_timeout )
+						double timeExecuting = (System.currentTimeMillis() - m_resetableExecuteStartTime)/1000.0;
+						
+						if( timeExecuting >= m_timeout )
 						{
 							timeout();
 							
