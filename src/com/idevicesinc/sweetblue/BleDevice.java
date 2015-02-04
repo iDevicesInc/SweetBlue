@@ -827,7 +827,7 @@ public class BleDevice
 	private final P_ReconnectManager m_reconnectMngr;
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
-	private final P_Task_Disconnect m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
+	private final P_Task_Disconnect m_dummyDisconnectTask;
 	
 	private TimeEstimator m_writeTimeEstimator;
 	private TimeEstimator m_readTimeEstimator;
@@ -872,6 +872,7 @@ public class BleDevice
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
 		initEstimators();
 		m_rssiPollMngr = new P_RssiPollManager(this);
+		m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		
 		m_alwaysUseAutoConnect = m_mngr.m_config.alwaysUseAutoConnect;
 		m_useAutoConnect = m_alwaysUseAutoConnect;
