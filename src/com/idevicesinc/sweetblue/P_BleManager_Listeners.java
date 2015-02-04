@@ -202,16 +202,22 @@ class P_BleManager_Listeners
 		//--- DRK > Checking for inconsistent state at this point (instead of at bottom of function),
 		//---		simply because where this is where it was first observed. Checking at the bottom
 		//---		may not work because maybe this bug relied on a race condition.
+		//---		UPDATE: Not checking for inconsistent state anymore cause it can be legitimate due to native 
+		//---		state changing while call to this method is sitting on the main thread queue.
 		BluetoothAdapter bluetoothAdapter = m_mngr.getNative().getAdapter();
-		int adapterState = bluetoothAdapter.getState();
-		boolean inconsistentState = adapterState != newNativeState;
+		final int adapterState = bluetoothAdapter.getState();
+//		boolean inconsistentState = adapterState != newNativeState;
 		PA_StateTracker.E_Intent intent = E_Intent.EXPLICIT;
+		final boolean hitErrorState = newNativeState == BluetoothAdapter.ERROR;
 		
-		if( newNativeState == BluetoothAdapter.ERROR )
+		if( hitErrorState )
 		{
-			m_mngr.uhOh(UhOh.UNKNOWN_BLE_ERROR);
+			newNativeState = adapterState;
 			
-			return;
+			if( newNativeState /*still*/ == BluetoothAdapter.ERROR )
+			{
+				return; // really not sure what we can do better here besides bailing out.
+			}
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_OFF )
 		{
@@ -256,6 +262,13 @@ class P_BleManager_Listeners
 			m_taskQueue.fail(P_Task_TurnBleOn.class, m_mngr);
 		}
 		
+		//--- DRK > Can happen I suppose if newNativeState is an error and we revert to using the queried state and it's the same as previous state.
+		//----		Below logic should still be resilient to this, but early-outing just in case.
+		if( previousNativeState == newNativeState )
+		{
+			return;			
+		}
+		
 		BleState previousState = BleState.get(previousNativeState);
 		BleState newState = BleState.get(newNativeState);
 		
@@ -268,6 +281,11 @@ class P_BleManager_Listeners
 			m_mngr.m_deviceMngr.reconnectDevicesAfterBleTurningBackOn();
 		}
 		
+		if( hitErrorState )
+		{
+			m_mngr.uhOh(UhOh.UNKNOWN_BLE_ERROR);
+		}
+		
 		if( previousNativeState == BluetoothAdapter.STATE_TURNING_OFF && newNativeState == BluetoothAdapter.STATE_ON )
 		{
 			m_mngr.uhOh(UhOh.CANNOT_DISABLE_BLUETOOTH);
@@ -276,11 +294,11 @@ class P_BleManager_Listeners
 		{
 			m_mngr.uhOh(UhOh.CANNOT_ENABLE_BLUETOOTH);
 		}
-		else if( inconsistentState )
-		{
-			m_mngr.uhOh(UhOh.INCONSISTENT_NATIVE_BLE_STATE);
-			m_logger.w("adapterState=" + m_logger.gattBleState(adapterState) + " newState=" + m_logger.gattBleState(newNativeState));
-		}
+//		else if( inconsistentState )
+//		{
+//			m_mngr.uhOh(UhOh.INCONSISTENT_NATIVE_BLE_STATE);
+//			m_logger.w("adapterState=" + m_logger.gattBleState(adapterState) + " newState=" + m_logger.gattBleState(newNativeState));
+//		}
 	}
 	
 	private void onNativeBondStateChanged(Context context, Intent intent)
