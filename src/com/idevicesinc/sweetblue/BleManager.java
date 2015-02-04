@@ -282,7 +282,7 @@ public class BleManager
 			{
 				return Utils.toString
 				(
-					"uhOh",	uhOh().name()
+					"uhOh",	uhOh()
 				);
 			}
 		}
@@ -340,7 +340,7 @@ public class BleManager
 			{
 				return Utils.toString
 				(
-					"progress",	progress().name()
+					"progress",		progress()
 				);
 			}
 		}
