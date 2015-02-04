@@ -52,7 +52,10 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 		//---		* device connected successfully.
 		//---		* getting service task started execution, sent out get services call.
 		//---		* something related to the get services call (probably, gatt status code 142/0x8E) made us disconnect, resulting in connection fail callback
+		//---		* we get to error callback for getting services, thus...
 		//---		* getting services task was still executing until it timed out, prompting another connection fail callback even though we already failed from the root cause.
+		//---		NOTE that this was only directly observed for discovering services, but who knows, maybe it can happen for reads/writes/etc. as well. Normally, I'm pretty sure,
+		//---		reads/writes fail first then you get the disconnect callback.
 		if( task instanceof P_Task_Disconnect )
 		{
 			P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
