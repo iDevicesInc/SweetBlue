@@ -577,7 +577,9 @@ public class BleDevice
 		public static enum AutoConnectUsage
 		{
 			/**
-			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen.
+			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen,
+			 * for example after SweetBlue considers a connect timed out after {@link BleDeviceConfig#timeoutForConnection}
+			 * seconds, but then it somehow does come in (shouldn't happen but who knows).
 			 */
 			UNKNOWN,
 			
@@ -2427,6 +2429,11 @@ public class BleDevice
 //			m_txnMngr.clearFirmwareUpdateTxn();
 		}
 		
+		if( !wasExplicit )
+		{
+			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
+		}
+		
 		Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
@@ -2435,11 +2442,6 @@ public class BleDevice
 		if( retrying == Please.DO_NOT_RETRY )
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this);
-		}
-		
-		if( !wasExplicit )
-		{
-			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
 		}
 	}
 	
