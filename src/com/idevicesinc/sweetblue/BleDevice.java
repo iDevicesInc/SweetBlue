@@ -645,13 +645,13 @@ public class BleDevice
 			/**
 			 *  How long the last connection attempt took before failing.
 			 */
-			public Interval latestAttemptTime(){  return m_latestAttemptTime;  }
+			public Interval attemptTime_latest(){  return m_latestAttemptTime;  }
 			private final Interval m_latestAttemptTime;
 			
 			/**
 			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
 			 */
-			public Interval totalAttemptTime(){  return m_totalAttemptTime;  }
+			public Interval attemptTime_total(){  return m_totalAttemptTime;  }
 			private final Interval m_totalAttemptTime;
 			
 			/**
