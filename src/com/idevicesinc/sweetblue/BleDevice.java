@@ -627,6 +627,14 @@ public class BleDevice
 			 * Return this to stop the connection fail retry loop.
 			 */
 			DO_NOT_RETRY;
+			
+			/**
+			 * Returns <code>true</code> for everything except {@link #DO_NOT_RETRY}.
+			 */
+			public boolean isRetry()
+			{
+				return this != DO_NOT_RETRY;
+			}
 		}
 		
 		/**

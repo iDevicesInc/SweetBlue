@@ -5,9 +5,9 @@ import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.*;
 
 /**
- * Used to set time-based options in {@link BleManagerConfig} and for various methods of
- * {@link BleManager} and {@link BleDevice}. An {@link Interval} is a self-documenting
- * and "type-comfortable" way of representing time instead of using naked numeric primitives.
+ * Used to set time-based options in {@link BleManagerConfig} and {@link BleDeviceConfig} and
+ * for various methods and callbacks of {@link BleManager} and {@link BleDevice}. An {@link Interval} is a
+ * self-documenting and "type-comfortable" way of representing time instead of using naked numeric primitives.
  */
 public class Interval
 {
