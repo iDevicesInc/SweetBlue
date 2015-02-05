@@ -392,7 +392,7 @@ public class BleDevice
 				return status().wasCancelled();
 			}
 			
-			/**
+			/** 
 			 * Forwards {@link Type#isNotification()}.
 			 */
 			public boolean isNotification()
@@ -406,6 +406,14 @@ public class BleDevice
 			public boolean isRead()
 			{
 				return type().isRead();
+			}
+			
+			/**
+			 * Returns the first byte from {@link #data()}, or 0x0 if not available.
+			 */
+			public byte data_byte()
+			{
+				return data().length > 0 ? data()[0] : 0x0;
 			}
 			
 			@Override public String toString()
