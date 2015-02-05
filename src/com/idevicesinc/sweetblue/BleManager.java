@@ -164,10 +164,10 @@ public class BleManager
 			public LifeCycle lifeCycle(){  return m_lifeCycle;  }
 			private final LifeCycle m_lifeCycle;
 			
-			public DiscoveryEvent(BleDevice device_in, LifeCycle lifeCycle_in)
+			public DiscoveryEvent(BleDevice device, LifeCycle lifeCycle)
 			{
-				m_device = device_in;
-				m_lifeCycle = lifeCycle_in;
+				m_device = device;
+				m_lifeCycle = lifeCycle;
 			}
 			
 			/**
@@ -183,7 +183,7 @@ public class BleManager
 				return Utils.toString
 				(
 					"device",			device().getName_debug(),
-					"lifeCycle",		lifeCycle().name()
+					"lifeCycle",		lifeCycle()
 				);
 			}
 		}
@@ -214,11 +214,11 @@ public class BleManager
 			public BleManager manager(){  return m_manager;  }
 			private final BleManager m_manager;
 			
-			ChangeEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
+			ChangeEvent(BleManager manager, int oldStateBits, int newStateBits, int intentMask)
 			{
-				super(oldStateBits_in, newStateBits_in, intentMask_in);
+				super(oldStateBits, newStateBits, intentMask);
 				
-				this.m_manager = manager_in;
+				this.m_manager = manager;
 			}
 		}
 		
@@ -272,10 +272,10 @@ public class BleManager
 			public UhOh uhOh(){  return m_uhOh;  }
 			private final UhOh m_uhOh;
 			
-			UhOhEvent(BleManager manager_in, UhOh uhoh_in)
+			UhOhEvent(BleManager manager, UhOh uhoh)
 			{
-				m_manager = manager_in;
-				m_uhOh = uhoh_in;
+				m_manager = manager;
+				m_uhOh = uhoh;
 			}
 			
 			@Override public String toString()
@@ -330,10 +330,10 @@ public class BleManager
 			public Progress progress(){  return m_progress;  }
 			private final Progress m_progress;
 			
-			NukeEvent(BleManager manager_in, Progress progress_in)
+			NukeEvent(BleManager manager, Progress progress)
 			{
-				m_manager = manager_in;
-				m_progress = progress_in;
+				m_manager = manager;
+				m_progress = progress;
 			}
 			
 			@Override public String toString()
@@ -381,11 +381,11 @@ public class BleManager
 			public StackTraceElement[] stackTrace(){  return m_stackTrace;  }
 			private final StackTraceElement[] m_stackTrace;
 			
-			Info(BleManager manager_in, String message_in, StackTraceElement[] stackTrace_in)
+			Info(BleManager manager, String message, StackTraceElement[] stackTrace)
 			{
-				m_manager = manager_in;
-				m_message = message_in;
-				m_stackTrace = stackTrace_in;
+				m_manager = manager;
+				m_message = message;
+				m_stackTrace = stackTrace;
 			}
 		}
 		

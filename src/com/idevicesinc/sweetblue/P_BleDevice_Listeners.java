@@ -372,7 +372,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		});
     }
 	
-	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int status)
+	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
 	{
 		UpdateLoop updater = m_device.getManager().getUpdateLoop();
 		
@@ -380,7 +380,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			@Override public void run_nested()
 			{
-				if( Utils.isSuccess(status) )
+				if( Utils.isSuccess(gattStatus) )
 				{
 					m_device.updateRssi(rssi);
 				}
@@ -389,7 +389,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (task == null)  return;
 		
-				task.onReadRemoteRssi(gatt, rssi, status);
+				task.onReadRemoteRssi(gatt, rssi, gattStatus);
 			}
 		});
 	}

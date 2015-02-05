@@ -98,15 +98,19 @@ public class BleManagerConfig extends BleDeviceConfig
 			public State.ChangeIntent lastDisconnectIntent(){  return m_lastDisconnectIntent;  }
 			private final State.ChangeIntent m_lastDisconnectIntent;
 			
-			Packet(BluetoothDevice nativeInstance_in, List<UUID> advertisedServices_in, String rawDeviceName_in, String normalizedDeviceName_in, byte[] scanRecord_in, int rssi_in, State.ChangeIntent lastDisconnectIntent_in)
+			Packet
+			(
+				BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName,
+				String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent
+			)
 			{
-				this.m_nativeInstance = nativeInstance_in;
-				this.m_advertisedServices = advertisedServices_in;
-				this.m_rawDeviceName = rawDeviceName_in;
-				this.m_normalizedDeviceName = normalizedDeviceName_in;
-				this.m_scanRecord = scanRecord_in;
-				this.m_rssi = rssi_in;
-				this.m_lastDisconnectIntent = lastDisconnectIntent_in;
+				this.m_nativeInstance = nativeInstance;
+				this.m_advertisedServices = advertisedServices;
+				this.m_rawDeviceName = rawDeviceName;
+				this.m_normalizedDeviceName = normalizedDeviceName;
+				this.m_scanRecord = scanRecord;
+				this.m_rssi = rssi;
+				this.m_lastDisconnectIntent = lastDisconnectIntent;
 			}
 			
 			@Override public String toString()

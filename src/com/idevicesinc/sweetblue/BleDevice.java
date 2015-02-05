@@ -340,36 +340,40 @@ public class BleDevice
 			public int gattStatus(){  return m_gattStatus;  }
 			private final int m_gattStatus;
 			
-			Result(BleDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, Status status_in, int gattStatus_in, double totalTime, double transitTime)
+			Result
+			(
+				BleDevice device, UUID charUuid, UUID descUuid, Type type, Target target,
+				byte[] data, Status status, int gattStatus, double totalTime, double transitTime
+			)
 			{
 				this.m_device = device;
-				this.m_charUuid = charUuid_in != null ? charUuid_in : NON_APPLICABLE_UUID;;
-				this.m_descUuid = descUuid_in != null ? descUuid_in : NON_APPLICABLE_UUID;
-				this.m_type = type_in;
-				this.m_target = target_in;
-				this.m_status = status_in;
-				this.m_gattStatus = gattStatus_in;
+				this.m_charUuid = charUuid != null ? charUuid : NON_APPLICABLE_UUID;;
+				this.m_descUuid = descUuid != null ? descUuid : NON_APPLICABLE_UUID;
+				this.m_type = type;
+				this.m_target = target;
+				this.m_status = status;
+				this.m_gattStatus = gattStatus;
 				this.m_totalTime = Interval.secs(totalTime);
 				this.m_transitTime = Interval.secs(transitTime);
 				
-				this.m_data = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
+				this.m_data = data != null ? data : EMPTY_BYTE_ARRAY;
 				this.m_rssi = device.getRssi();
 			}
 			
-			Result(BleDevice device, Type type_in, int rssi_in, Status status_in, int gattStatus_in, double totalTime, double transitTime)
+			Result(BleDevice device, Type type, int rssi, Status status, int gattStatus, double totalTime, double transitTime)
 			{
 				this.m_device = device;
 				this.m_charUuid = NON_APPLICABLE_UUID;;
 				this.m_descUuid = NON_APPLICABLE_UUID;
-				this.m_type = type_in;
+				this.m_type = type;
 				this.m_target = Target.RSSI;
-				this.m_status = status_in;
-				this.m_gattStatus = gattStatus_in;
+				this.m_status = status;
+				this.m_gattStatus = gattStatus;
 				this.m_totalTime = Interval.secs(totalTime);
 				this.m_transitTime = Interval.secs(transitTime);
 				
 				this.m_data = EMPTY_BYTE_ARRAY;
-				this.m_rssi = status_in == Status.SUCCESS ? rssi_in : device.getRssi();
+				this.m_rssi = status == Status.SUCCESS ? rssi : device.getRssi();
 			}
 			
 			/**
@@ -410,10 +414,11 @@ public class BleDevice
 				{
 					return Utils.toString
 					(
-						"status",	status(),
-						"type",		type(),
-						"target",	target(),
-						"rssi",		rssi()
+						"status",		status(),
+						"type",			type(),
+						"target",		target(),
+						"rssi",			rssi(),
+						"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
 					);
 				}
 				else
@@ -423,7 +428,8 @@ public class BleDevice
 						"status",		status(),
 						"type",			type(),
 						"charUuid",		device().m_mngr.getLogger().charName(charUuid()),
-						"data",			data()
+						"data",			data(),
+						"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
 					);
 				}
 			}
@@ -455,11 +461,11 @@ public class BleDevice
 			public BleDevice device(){  return m_device;  }
 			private final BleDevice m_device;
 			
-			ChangeEvent(BleDevice device_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
+			ChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
 			{
-				super(oldStateBits_in, newStateBits_in, intentMask_in);
+				super(oldStateBits, newStateBits, intentMask);
 				
-				this.m_device = device_in;
+				this.m_device = device;
 			}
 		}
 		
@@ -682,20 +688,24 @@ public class BleDevice
 			public AutoConnectUsage autoConnectUsage(){  return m_autoConnectUsage;  }
 			private final AutoConnectUsage m_autoConnectUsage;
 			
-			Info(BleDevice device_in, Reason reason_in, int failureCountSoFar_in, Interval latestAttemptTime_in, Interval totalAttemptTime_in, int gattStatus_in, BleDeviceState highestStateReached_in, BleDeviceState highestStateReached_total_in, AutoConnectUsage autoConnectUsage_in)
+			Info
+			(
+				BleDevice device, Reason reason, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime,
+				int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage
+			)
 			{
-				this.m_device = device_in;
-				this.m_reason = reason_in;
-				this.m_failureCountSoFar = failureCountSoFar_in;
-				this.m_latestAttemptTime = latestAttemptTime_in;
-				this.m_totalAttemptTime = totalAttemptTime_in;
-				this.m_gattStatus = gattStatus_in;
-				this.m_highestStateReached_latest = highestStateReached_in != null ? highestStateReached_in : BleDeviceState.NULL;
-				this.m_highestStateReached_total = highestStateReached_total_in != null ? highestStateReached_total_in : BleDeviceState.NULL;
-				this.m_autoConnectUsage = autoConnectUsage_in;
+				this.m_device = device;
+				this.m_reason = reason;
+				this.m_failureCountSoFar = failureCountSoFar;
+				this.m_latestAttemptTime = latestAttemptTime;
+				this.m_totalAttemptTime = totalAttemptTime;
+				this.m_gattStatus = gattStatus;
+				this.m_highestStateReached_latest = highestStateReached != null ? highestStateReached : BleDeviceState.NULL;
+				this.m_highestStateReached_total = highestStateReached_total != null ? highestStateReached_total : BleDeviceState.NULL;
+				this.m_autoConnectUsage = autoConnectUsage;
 				
-				m_device.getManager().ASSERT(highestStateReached_in != null, "highestState_latest shouldn't be null.");
-				m_device.getManager().ASSERT(highestStateReached_total_in != null, "highestState_total shouldn't be null.");
+				m_device.getManager().ASSERT(highestStateReached != null, "highestState_latest shouldn't be null.");
+				m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
 			}
 			
 			@Override public String toString()
@@ -703,7 +713,7 @@ public class BleDevice
 				return Utils.toString
 				(
 					"reason",				reason(),
-					"gattStatus",			gattStatus(),
+					"gattStatus",			device().m_mngr.getLogger().gattStatus(gattStatus()),
 					"failureCountSoFar",	failureCountSoFar()
 				);
 			}

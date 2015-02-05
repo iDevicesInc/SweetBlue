@@ -50,11 +50,11 @@ public interface State
 		public int intentMask(){  return m_intentMask;  }
 		private final int m_intentMask;
 		
-		protected ChangeEvent(int oldStateBits_in, int newStateBits_in, int intentMask_in)
+		protected ChangeEvent(int oldStateBits, int newStateBits, int intentMask)
 		{
-			this.m_oldStateBits = oldStateBits_in;
-			this.m_newStateBits = newStateBits_in;
-			this.m_intentMask = intentMask_in;
+			this.m_oldStateBits = oldStateBits;
+			this.m_newStateBits = newStateBits;
+			this.m_intentMask = intentMask;
 		}
 		
 		/**
@@ -62,7 +62,7 @@ public interface State
 		 */
 		public boolean wasEntered(State state)
 		{
-			return state.didEnter(m_oldStateBits, m_newStateBits);
+			return state.didEnter(oldStateBits(), newStateBits());
 		}
 		
 		/**
@@ -70,7 +70,7 @@ public interface State
 		 */
 		public boolean wasExited(State state)
 		{
-			return state.didExit(m_oldStateBits, m_newStateBits);
+			return state.didExit(oldStateBits(), newStateBits());
 		}
 		
 		/**
@@ -79,13 +79,13 @@ public interface State
 		 */
 		public ChangeIntent getIntent(State state)
 		{
-			if( (state.bit() & m_oldStateBits) == (state.bit() & m_newStateBits) )
+			if( (state.bit() & oldStateBits()) == (state.bit() & newStateBits()) )
 			{
 				return ChangeIntent.NULL;
 			}
 			else
 			{
-				return state.overlaps(m_intentMask) ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
+				return state.overlaps(intentMask()) ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
 			}
 		}
 		
