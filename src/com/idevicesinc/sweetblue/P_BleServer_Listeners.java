@@ -169,7 +169,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
                                              final int offset, final byte[] value) {
     	try { 
         	final UUID uuid = characteristic.getUuid();
-        	final ReadOrWriteRequestListener listener = m_server.getReadOrWriteRequestListener();;
+        	final ReadOrWriteRequestListener listener = m_server.getReadOrWriteRequestListener();
     		m_logger.i(m_logger.charName(uuid));
     		
     		UpdateLoop updater = m_server.getManager().getUpdateLoop();
@@ -283,8 +283,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
     
     @Override
     public void onNotificationSent( final BluetoothDevice device, final int status ) {
-    	final ReadOrWriteRequestListener listener = m_server.getReadOrWriteRequestListener();
- 
+
 		UpdateLoop updater = m_server.getManager().getUpdateLoop();
 		
 		updater.postIfNeeded(new SynchronizedRunnable()
@@ -292,6 +291,8 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
 			@Override public void run_nested()
 			{
 				Status aStatus = Status.SUCCESS;
+				final P_Task_Notify task = m_server.getTaskQueue().getCurrent( P_Task_Notify.class, m_server );
+				final ReadOrWriteRequestListener listener = task.getListener(); 
 		    	if ( status != BluetoothGatt.GATT_SUCCESS ) {
 		    		aStatus = Status.FAILED_TO_SEND_OUT;
 		    	}

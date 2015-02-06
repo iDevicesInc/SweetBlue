@@ -70,4 +70,7 @@ public class P_Task_Notify extends PA_Task implements I_StateListener {
 		
 		this.fail();
 	}
+	public ReadOrWriteRequestListener getListener() {
+		return m_notifyListener;
+	}
 }
