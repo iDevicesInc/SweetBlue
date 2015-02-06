@@ -372,7 +372,7 @@ public class BleServer {
 	/**
 	 * Set a listener here to be notified whenever this device's state changes.
 	 */
-	public void setListener_State(BleStateListener listener)
+	public void setListener_State(BleServer.StateListener listener)
 	{
 		m_stateTracker.setListener(listener);
 	}
@@ -457,7 +457,7 @@ public class BleServer {
 	{
 		return m_mngr;
 	}
-	public void disconnect( BleStateListener stateListener ) {
+	public void disconnect( BleServer.StateListener stateListener ) {
 		if( stateListener != null )
 		{
 			setListener_State(stateListener);

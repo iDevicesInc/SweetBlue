@@ -2,19 +2,14 @@ package com.idevicesinc.sweetblue;
 
 import android.os.Handler;
 
-public class P_WrappingServerStateListener extends PA_CallbackWrapper implements BleStateListener {
+public class P_WrappingServerStateListener extends PA_CallbackWrapper implements BleServer.StateListener {
 
-	private final BleStateListener m_stateListener;
+	private final BleServer.StateListener m_stateListener;
 	
-	public P_WrappingServerStateListener( BleStateListener listener, Handler handler, boolean postToMain ) {
+	public P_WrappingServerStateListener( BleServer.StateListener listener, Handler handler, boolean postToMain ) {
 		super( handler, postToMain );
 		m_stateListener = listener;
 		// TODO Auto-generated constructor stub
-	}
-
-	@Override public void onStateChange(final BleDevice device, final int oldStateBits, final int newStateBits)
-	{
-
 	}
 	
 	@Override public void onStateChange(final BleServer device, final int oldStateBits, final int newStateBits)
