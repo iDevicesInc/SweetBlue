@@ -468,6 +468,7 @@ public class BleManager
 	private			P_Logger m_logger;
 			  BleManagerConfig m_config;
 		final P_DeviceManager m_deviceMngr;
+		final P_DeviceManager m_deviceMngr_cache;
 	private final P_BleManager_Listeners m_listeners;
 	private final P_BleStateTracker m_stateTracker;
 	private final P_NativeBleStateTracker m_nativeStateTracker;
@@ -516,6 +517,7 @@ public class BleManager
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
 		m_deviceMngr = new P_DeviceManager(this);
+		m_deviceMngr_cache = new P_DeviceManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
 
 		initConfigDependentMembers();
@@ -1342,7 +1344,7 @@ public class BleManager
 			device.disconnect();
 		}
 
-		m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, E_Intent.EXPLICIT);
+		m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, m_deviceMngr_cache, E_Intent.EXPLICIT);
 
 		return true;
 	}
@@ -1389,7 +1391,7 @@ public class BleManager
 						m_nativeStateTracker.append(NUKING, E_Intent.EXPLICIT);
 					}
 
-					m_deviceMngr.undiscoverAllForTurnOff(E_Intent.EXPLICIT);
+					m_deviceMngr.undiscoverAllForTurnOff(m_deviceMngr_cache, E_Intent.EXPLICIT);
 				}
 			}
 		});
@@ -1658,7 +1660,26 @@ public class BleManager
 
 	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDevice.Origin origin)
 	{
-		final BleDevice device = new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin);
+		final boolean hitCache = true; // TODO: for now always true...should it be behind a config option?
+		
+		final BleDevice device_cached;
+		
+		if( hitCache )
+		{
+			device_cached = m_deviceMngr_cache.get(device_native.getAddress());
+			
+			if( device_cached != null )
+			{
+				m_deviceMngr_cache.remove(device_cached, null);
+			}
+		}
+		else
+		{
+			device_cached = null;
+		}
+		
+		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin);
+		
 		m_deviceMngr.add(device);
 
 		return device;
@@ -1748,7 +1769,7 @@ public class BleManager
 
 	void tryPurgingStaleDevices(double scanTime)
 	{
-		m_deviceMngr.purgeStaleDevices(scanTime, m_discoveryListener);
+		m_deviceMngr.purgeStaleDevices(scanTime, m_deviceMngr_cache, m_discoveryListener);
 	}
 
 	/**

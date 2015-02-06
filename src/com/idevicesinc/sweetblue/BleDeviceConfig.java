@@ -9,6 +9,8 @@ import android.os.Build;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.utils.*;
 
 /**
@@ -217,7 +219,7 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean alwaysUseAutoConnect = false;
 	
 	/**
-	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in memory when it goes {@link BleState#OFF}.
+	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in active memory when it goes {@link BleState#OFF}.
 	 * If <code>false</code> then a device will be purged and you'll have to do {@link BleManager#startScan()} again to discover devices
 	 * if/when {@link BleManager} goes back {@link BleState#ON}.
 	 * <br><br>
@@ -259,11 +261,22 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean manageLastDisconnectOnDisk = true;
 	
 	/**
+	 * Default is <code>true</code> - controls whether a {@link BleDevice} is placed into an in-memory cache when it becomes {@link BleDeviceState#UNDISCOVERED}.
+	 * If <code>true</code>, subsequent calls to {@link BleManager.DiscoveryListener#onDiscoveryEvent(BleManager.DiscoveryListener.DiscoveryEvent)} with
+	 * {@link LifeCycle#DISCOVERED} (or calls to {@link BleManager#newDevice(String)}) will return the cached {@link BleDevice} instead of creating a new one.
+	 * <br><br>
+	 * See also {@link #minScanTimeToInvokeUndiscovery}.
+	 */
+	public Boolean cacheDeviceOnUndiscovery = true;
+	
+	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
 	 * approximated by checking when the last time was that we discovered a device,
 	 * and if this time is greater than {@link #scanKeepAlive} then the device is undiscovered. However a scan
 	 * operation must be allowed a certain amount of time to make sure it discovers all nearby devices that are
 	 * still advertising. This is that time in seconds.
+	 * <br><br>
+	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
 	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
 	 * @see #scanKeepAlive
@@ -276,6 +289,8 @@ public class BleDeviceConfig implements Cloneable
 	 * The default for this option attempts to accommodate the worst Android phones (BLE-wise), which may make it seem
 	 * like it takes a long time to undiscover a device. You may want to configure this number based on the phone or
 	 * manufacturer. For example, based on testing, in order to make undiscovery snappier the Galaxy S5 could use lower times.
+	 * <br><br>
+	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
 	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
 	 * @see #minScanTimeToInvokeUndiscovery

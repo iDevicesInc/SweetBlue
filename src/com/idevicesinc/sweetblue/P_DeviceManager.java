@@ -132,14 +132,22 @@ class P_DeviceManager
 		}
 	}
 	
-	synchronized void remove(BleDevice device)
+	synchronized void remove(BleDevice device, P_DeviceManager cache)
 	{
 		synchronized (m_list)
 		{
 			m_mngr.ASSERT(!m_updating, "Removing device while updating!");
+			m_mngr.ASSERT(m_map.containsKey(device.getMacAddress()));
 			
 			m_list.remove(device);
 			m_map.remove(device.getMacAddress());
+			
+			final boolean cacheDevice = BleDeviceConfig.bool(device.conf_device().cacheDeviceOnUndiscovery, device.conf_mngr().cacheDeviceOnUndiscovery);
+			
+			if( cacheDevice && cache != null )
+			{
+				cache.add(device);
+			}
 		}
 	}
 	
@@ -249,7 +257,7 @@ class P_DeviceManager
 		}
 	}
 
-	void undiscoverAllForTurnOff(PA_StateTracker.E_Intent intent)
+	void undiscoverAllForTurnOff(P_DeviceManager cache, PA_StateTracker.E_Intent intent)
 	{
 		synchronized (m_list)
 		{
@@ -263,7 +271,7 @@ class P_DeviceManager
 				
 				if( !retainDeviceWhenBleTurnsOff )
 				{
-					undiscoverAndRemove(device_ith, m_mngr.m_discoveryListener, intent);
+					undiscoverAndRemove(device_ith, m_mngr.m_discoveryListener, cache, intent);
 					
 					continue;
 				}
@@ -291,17 +299,17 @@ class P_DeviceManager
 		}
 	}
 	
-	void undiscoverAndRemove(BleDevice device, BleManager.DiscoveryListener discoveryListener, E_Intent intent)
+	void undiscoverAndRemove(BleDevice device, BleManager.DiscoveryListener discoveryListener, P_DeviceManager cache, E_Intent intent)
 	{
 		synchronized (m_list)
 		{
-			remove(device);
+			remove(device, cache);
 		
 			undiscoverDevice(device, discoveryListener, intent);
 		}
 	}
 	
-	void purgeStaleDevices(final double scanTime, final BleManager.DiscoveryListener listener)
+	void purgeStaleDevices(final double scanTime, final P_DeviceManager cache, final BleManager.DiscoveryListener listener)
 	{
 		//--- DRK > Band-aid fix for a potential race condition where scan is stopped from main thread (e.g. by backgrounding).
 		//---		Thus we can start going through this list but then still get some discovery callbacks at the same time.
@@ -336,7 +344,7 @@ class P_DeviceManager
 						{
 							if( device.getTimeSinceLastDiscovery() > scanKeepAlive_interval.secs() )
 							{
-								undiscoverAndRemove(device, listener, E_Intent.IMPLICIT);
+								undiscoverAndRemove(device, listener, cache, E_Intent.IMPLICIT);
 							}
 						}
 					}

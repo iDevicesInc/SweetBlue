@@ -231,7 +231,7 @@ class P_BleManager_Listeners
 			//--- DRK > Should have already been handled by the "turning off" event, but this is just to be 
 			//---		sure all devices are cleared in case something weird happens and we go straight
 			//---		from ON to OFF or something.
-			m_mngr.m_deviceMngr.undiscoverAllForTurnOff(intent);
+			m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, intent);
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_TURNING_ON )
 		{
@@ -254,7 +254,7 @@ class P_BleManager_Listeners
 		{
 			if( !m_taskQueue.isCurrent(P_Task_TurnBleOff.class, m_mngr) )
 			{
-				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(E_Intent.IMPLICIT);
+				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, E_Intent.IMPLICIT);
 				m_taskQueue.add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
 				intent = E_Intent.IMPLICIT;
 			}
