@@ -89,6 +89,11 @@ public class BleManagerConfig extends BleDeviceConfig
 			private final int m_rssi;
 			
 			/**
+			 * Returns the mac address of the discovered device.
+			 */
+			public String macAddress(){  return m_nativeInstance.getAddress();  }
+			
+			/**
 			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
 			 * <br><br>
 			 * TIP: If {@link Packet#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
