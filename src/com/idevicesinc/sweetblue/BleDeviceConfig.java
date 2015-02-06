@@ -265,6 +265,14 @@ public class BleDeviceConfig implements Cloneable
 	 * If <code>true</code>, subsequent calls to {@link BleManager.DiscoveryListener#onDiscoveryEvent(BleManager.DiscoveryListener.DiscoveryEvent)} with
 	 * {@link LifeCycle#DISCOVERED} (or calls to {@link BleManager#newDevice(String)}) will return the cached {@link BleDevice} instead of creating a new one.
 	 * <br><br>
+	 * The advantages of caching are:<br>
+	 * <ul>
+	 * <li>Slightly better performance at the cost of some retained memory, especially in situations where you're frequently discovering and undiscovering devices.
+	 * <li>Resistance to future stack failures that would otherwise mean missing data like {@link BleDevice#getAdvertisedServices()} for future discovery events.
+	 * <li>More resistant to potential "user error" of retaining devices in app-land after BleManager undiscovery.
+	 * <ul><br>
+	 * This is kept as an option in case there's some unforeseen problem with devices being cached for a certain application.
+	 * 
 	 * See also {@link #minScanTimeToInvokeUndiscovery}.
 	 */
 	public Boolean cacheDeviceOnUndiscovery = true;

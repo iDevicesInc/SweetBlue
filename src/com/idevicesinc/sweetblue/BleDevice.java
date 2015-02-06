@@ -928,6 +928,25 @@ public class BleDevice
 		m_useAutoConnect = m_alwaysUseAutoConnect;
 	}
 	
+	private void clear_discovery()
+	{
+//		clear_common();
+//		
+//		initEstimators();
+	}
+	
+	private void clear_common()
+	{
+		m_connectionFailMngr.setListener(null);
+		m_stateTracker.setListener(null);
+		m_config = null;
+	}
+	
+	private void clear_undiscovery()
+	{
+//		clear_common();
+	}
+	
 	/**
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual device. 
@@ -1778,6 +1797,8 @@ public class BleDevice
 	
 	void onNewlyDiscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
 	{
+		clear_discovery();
+		
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 		
 		boolean removeBondOnDiscovery = BleDeviceConfig.bool(conf_device().removeBondOnDiscovery, conf_mngr().removeBondOnDiscovery);
@@ -1828,6 +1849,8 @@ public class BleDevice
 	
 	void onUndiscovered(E_Intent intent)
 	{
+		clear_undiscovery();
+		
 		m_reconnectMngr.stop();
 		
 		m_stateTracker.set
