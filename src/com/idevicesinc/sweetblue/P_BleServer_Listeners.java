@@ -295,8 +295,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
 		    	if ( status != BluetoothGatt.GATT_SUCCESS ) {
 		    		aStatus = Status.FAILED_TO_SEND_OUT;
 		    	}
-				Response response = listener.onReadOrWriteRequest( new Result( m_server, device, null, null, Type.NOTIFICATION, Target.CHARACTERISTIC, null, aStatus, false, 0, 0 ) );
-				m_server.sendResponse( response );
+				listener.onNotificationSent( new Result( m_server, device, null, null, Type.NOTIFICATION, Target.CHARACTERISTIC, null, aStatus, false, 0, 0 ) );
 			}
 		});
     }
