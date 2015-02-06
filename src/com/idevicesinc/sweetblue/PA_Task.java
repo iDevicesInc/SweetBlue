@@ -19,7 +19,8 @@ abstract class PA_Task
 	static final double TIMEOUT_DEFAULT = BleManagerConfig.DEFAULT_TASK_TIMEOUT;
 	static final double TIMEOUT_CONNECTION = BleManagerConfig.DEFAULT_TASK_TIMEOUT;
 	
-	private 	  BleDevice m_device; 
+	private 	  BleDevice m_device;
+	private		  BleServer m_server;
 	private final BleManager m_manager;
 	
 	private double m_timeout;
@@ -67,6 +68,13 @@ abstract class PA_Task
 	public PA_Task(BleDevice device, I_StateListener listener)
 	{
 		this(device, listener, TIMEOUT_DEFAULT);
+	}
+	
+	public PA_Task(BleServer server, I_StateListener listener)
+	{
+		this(server.getManager(), listener);
+		
+		m_server = server;
 	}
 	
 	public PA_Task(BleDevice device, I_StateListener listener, double timeout)
@@ -342,6 +350,11 @@ abstract class PA_Task
 	public BleDevice getDevice()
 	{
 		return m_device;
+	}
+	
+	public BleServer getServer()
+	{
+		return m_server;
 	}
 	
 	public BleManager getManager()

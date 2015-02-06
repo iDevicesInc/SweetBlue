@@ -1,6 +1,11 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleState.*;
+import static com.idevicesinc.sweetblue.BleState.NUKING;
+import static com.idevicesinc.sweetblue.BleState.OFF;
+import static com.idevicesinc.sweetblue.BleState.ON;
+import static com.idevicesinc.sweetblue.BleState.SCANNING;
+import static com.idevicesinc.sweetblue.BleState.TURNING_OFF;
+import static com.idevicesinc.sweetblue.BleState.TURNING_ON;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,6 +15,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +27,7 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
+import com.idevicesinc.sweetblue.BleServer.ResponseNotifyListener;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
 import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -227,6 +234,7 @@ public class BleManager
 	private			P_Logger m_logger;
 				  BleManagerConfig m_config;
 			final P_DeviceManager m_deviceMngr;
+			final P_ServerManager m_serverMngr;
 	private final P_BleManager_Listeners m_listeners;
 	private final P_StateTracker m_stateTracker;
 	private final P_NativeStateTracker m_nativeStateTracker;
@@ -244,6 +252,8 @@ public class BleManager
 	private AssertListener m_assertionListener;
 			BleDevice.StateListener m_defaultDeviceStateListener;
 			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
+			
+			BleServer.StateListener m_defaultServerStateListener;
 
 	private double m_timeForegrounded = 0.0;
 	private double m_timeNotScanning = 0.0;
@@ -346,6 +356,7 @@ public class BleManager
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(application);
 		m_deviceMngr = new P_DeviceManager(this);
+		m_serverMngr = new P_ServerManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
 		
 		initConfigDependentMembers();
@@ -522,6 +533,18 @@ public class BleManager
 		m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 	}
 	
+	/**
+	 * Convenience method to listen for all changes in {@link BleDeviceState} for all devices.
+	 * The listener provided will get called in addition to and after the listener, if any, provided
+	 * to {@link BleDevice#setListener_State(BleDevice.StateListener)}.
+	 * 
+	 * @see BleDevice#setListener_State(BleDevice.StateListener)
+	 */
+	public void setListener_ServerState(BleServer.StateListener listener)
+	{
+		m_defaultServerStateListener = new P_WrappingServerStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+	}
+
 	/**
 	 * Convenience method to handle connection fail events at the manager level. The listener provided
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
@@ -1549,5 +1572,11 @@ public class BleManager
 	@Override public String toString()
 	{
 		return m_stateTracker.toString();
+	}
+	public BleServer openBleServer( final List<BluetoothGattService> gattServices, BleServer.ReadOrWriteRequestListener listener ) {
+		BleServer bleServer = new BleServer( this );
+		bleServer.openGattServer( m_context, gattServices, listener );
+		m_serverMngr.add( bleServer );
+		return bleServer;
 	}
 }

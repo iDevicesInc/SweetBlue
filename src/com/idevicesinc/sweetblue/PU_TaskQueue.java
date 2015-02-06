@@ -27,7 +27,7 @@ class PU_TaskQueue
 		return -1;
 	}
 	
-	static boolean isMatch(PA_Task task, Class<? extends PA_Task> taskClass, BleManager mngr_nullable, BleDevice device_nullable)
+	static boolean isMatch(PA_Task task, Class<? extends PA_Task> taskClass, BleManager mngr_nullable, BleDevice device_nullable, BleServer server_nullable )
 	{
 		if( task == null )  return false;
 		
@@ -35,7 +35,10 @@ class PU_TaskQueue
 		{
 			if( mngr_nullable == null )
 			{
-				if( device_nullable == null || device_nullable != null && device_nullable.equals(task.getDevice()) )
+				if( device_nullable == null || 
+					(device_nullable != null && device_nullable.equals(task.getDevice())) ||
+					server_nullable == null ||
+					(server_nullable != null && server_nullable.equals( task.getServer())) )
 				{
 					return true;
 				}
