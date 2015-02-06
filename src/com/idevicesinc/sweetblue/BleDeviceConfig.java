@@ -101,20 +101,22 @@ public class BleDeviceConfig implements Cloneable
 			public Interval previousDelay(){  return m_previousDelay;  }
 			private final Interval m_previousDelay;
 			
-			Info(BleDevice device_in, int failureCount_in, Interval totalTimeReconnecting_in, Interval previousDelay_in)
+			Info(BleDevice device, int failureCount, Interval totalTimeReconnecting, Interval previousDelay)
 			{
-				this.m_device = device_in;
-				this.m_failureCount = failureCount_in;
-				this.m_totalTimeReconnecting = totalTimeReconnecting_in;
-				this.m_previousDelay = previousDelay_in;
+				this.m_device = device;
+				this.m_failureCount = failureCount;
+				this.m_totalTimeReconnecting = totalTimeReconnecting;
+				this.m_previousDelay = previousDelay;
 			}
 			
 			@Override public String toString()
 			{
 				return Utils.toString
 				(
+					"device",					device().getName_debug(),
 					"failureCount",				failureCount(),
-					"totalTimeReconnecting",	totalTimeReconnecting()
+					"totalTimeReconnecting",	totalTimeReconnecting(),
+					"previousDelay",			previousDelay()
 				);
 			}
 		}

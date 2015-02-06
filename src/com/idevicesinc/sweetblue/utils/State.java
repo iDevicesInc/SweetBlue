@@ -136,6 +136,12 @@ public interface State
 			}
 		}
 		
+		public static int toDiskValue(final ChangeIntent intent)
+		{
+			if( intent == null )	return NULL.toDiskValue();
+			else					return intent.toDiskValue();
+		}
+		
 		/**
 		 * Transforms {@link #toDiskValue()} back to the enum.
 		 * Returns {@link #NULL} if diskValue can't be resolved.

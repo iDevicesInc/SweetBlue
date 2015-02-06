@@ -23,7 +23,7 @@ class P_LastDisconnectManager
 	
 	public void save(final String mac, final State.ChangeIntent changeIntent, final boolean hitDisk)
 	{
-		final int diskValue = changeIntent == null ? State.ChangeIntent.NULL.toDiskValue() : changeIntent.toDiskValue();
+		final int diskValue = State.ChangeIntent.toDiskValue(changeIntent);
 		m_inMemoryDb.put(mac, diskValue);
 		
 		if( !hitDisk )  return;

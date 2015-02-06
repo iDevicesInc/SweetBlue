@@ -136,7 +136,7 @@ public class Interval
 	{
 		if( object != null && object instanceof Interval )
 		{
-			return ((Interval)object).m_secs == this.m_secs;
+			return ((Interval)object).secs() == this.secs();
 		}
 		
 		return super.equals(object);
@@ -144,6 +144,6 @@ public class Interval
 	
 	@Override public String toString()
 	{
-		return m_secs+"secs/"+m_millis+"millis"; 
+		return secs()+"secs/"+millis()+"millis"; 
 	}
 }
