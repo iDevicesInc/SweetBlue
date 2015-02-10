@@ -2073,9 +2073,8 @@ public class BleDevice
 		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
 		
 		
-		boolean autobond = BleDeviceConfig.bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
-		boolean bond = autobond && !isBondingOrBonded();
-		
+		final boolean autobond = BleDeviceConfig.bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
+		final boolean bond = autobond && !isBondingOrBonded();
 		
 		if( bond )
 		{

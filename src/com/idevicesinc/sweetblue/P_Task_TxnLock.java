@@ -25,7 +25,7 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		//--- DRK > Nothing to do here...generally just spins infinitely until read/write comes in or txn ends.
+		//--- DRK > Nothing to do here...basically just spins infinitely until read/write comes in or txn ends.
 	}
 	
 	@Override public PE_TaskPriority getPriority()

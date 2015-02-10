@@ -95,7 +95,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		}
 		
 		//--- DRK > This allows the plain old reads/writes during auth/initialization to have
-		//---		higher priority than registration notification. Otherwise we don't care.
+		//---		higher priority than notification enabling. Otherwise we don't care.
 		else if( task instanceof P_Task_ToggleNotify )
 		{
 			if( !(this instanceof P_Task_ToggleNotify) )
