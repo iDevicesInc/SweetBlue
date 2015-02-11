@@ -17,9 +17,9 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 	protected final P_Characteristic m_characteristic;
 	protected final P_WrappingReadWriteListener m_readWriteListener;
 	
-	PA_Task_ReadOrWrite(P_Characteristic characteristic, P_WrappingReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+	PA_Task_ReadOrWrite(P_Characteristic characteristic, double timeout, P_WrappingReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
 	{
-		super(characteristic.getDevice(), txn_nullable, requiresBonding, priority);
+		super(characteristic.getDevice(), timeout, txn_nullable, requiresBonding, priority);
 		
 		m_characteristic = characteristic;
 		m_readWriteListener = readWriteListener;
@@ -43,7 +43,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 	{
 		if( m_readWriteListener != null )
 		{
-			m_readWriteListener.onReadOrWriteComplete(newResult(status, gattStatus, target, charUuid, descUuid));
+			m_readWriteListener.onResult(newResult(status, gattStatus, target, charUuid, descUuid));
 		}
 		
 		this.fail();
@@ -57,7 +57,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		{
 			if( m_readWriteListener != null )
 			{
-				m_readWriteListener.onReadOrWriteComplete(newResult(Status.NOT_CONNECTED, Result.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
+				m_readWriteListener.onResult(newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
 			}
 		}
 		

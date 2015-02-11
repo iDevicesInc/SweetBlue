@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -36,12 +37,14 @@ public class Utils
 		return false;
 	}
 	
-	/**
-	 * For now returns true if and only if {@link Build#MANUFACTURER} is Sony.
-	 */
-	public static boolean isSony()
+	public static boolean isManufacturer(String manufacturer)
 	{
-		return Build.MANUFACTURER.equalsIgnoreCase("sony");
+		return Build.MANUFACTURER != null && Build.MANUFACTURER.equalsIgnoreCase(manufacturer);
+	}
+	
+	public static boolean isProduct(String product)
+	{
+		return Build.PRODUCT != null && Build.PRODUCT.contains(product);
 	}
 
 	public static boolean isOnMainThread()
@@ -56,7 +59,7 @@ public class Utils
 	
 	public static String normalizeDeviceName(String deviceName)
 	{
-		if( deviceName == null )  return "";
+		if( deviceName == null || deviceName.length() == 0 )  return "";
 		
 		String[] nameParts = deviceName.split("-");
 		String consistentName = nameParts[0];
@@ -156,7 +159,7 @@ public class Utils
 	/**
 	 * Get a UUID string by transforming shorthand ids into long form ids.
 	 * 
-	 * @param shorthandIf Short of long form UUID string for a service/characteristic
+	 * @param shorthandUuid Short of long form UUID string for a service/characteristic
 	 * @return UUID string.
 	 */
 	public static String uuidStringFromShorthand(String shorthandUuid)
@@ -385,7 +388,7 @@ public class Utils
 		}
 	}
 
-	public static SpannableString makeStateString(BitwiseEnum[] states, int stateMask)
+	public static SpannableString makeStateString(State[] states, int stateMask)
 	{
 		String rawString = "";
 		String spacer = "  ";
@@ -423,5 +426,64 @@ public class Utils
 		int res = context.checkCallingOrSelfPermission(permission);
 		
 	    return (res == PackageManager.PERMISSION_GRANTED);
+	}
+	
+	public static short unsignedByte(byte value)
+	{
+		return (short) (value & 0xff);
+	}
+	
+	public static String fieldStringValue(Field field)
+	{
+		Object uuid = staticFieldValue(field);
+		
+		String uuidString = "";
+		
+		if( uuid instanceof String )
+		{
+			uuidString = (String) uuid;
+		}
+		else if( uuid instanceof UUID )
+		{
+			uuidString = uuid.toString();
+		}
+		
+		uuidString = uuidString.toLowerCase();
+		
+		return uuidString;
+	}
+	
+	public static <T extends Object> T staticFieldValue(Field field)
+	{
+		Object value = null;
+		
+		try {
+			value = field.get(null);
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		}
+		
+		return (T) value;
+	}
+	
+	public static String toString(Object ... values)
+	{
+		String toReturn = "";
+		
+		for( int i = 0; i < values.length; i+=2 )
+		{
+			if( i > 0 )
+			{
+				toReturn += " ";
+			}
+			
+			toReturn += values[i] + "=" + values[i+1];
+		}
+		
+		return toReturn;
 	}
 }

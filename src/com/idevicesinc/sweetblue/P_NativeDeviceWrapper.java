@@ -21,13 +21,12 @@ class P_NativeDeviceWrapper
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
 	private	Integer m_nativeConnectionState = null;
 	
-	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String normalizedName)
+	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String normalizedName, String nativeName)
 	{
 		m_device = device;
 		m_native = device_native;
 		m_address = m_native.getAddress() == null ? "" : m_native.getAddress();
 		
-		String nativeName = m_native.getName();
 		nativeName = nativeName != null ? nativeName : "";
 		m_nativeName = nativeName;
 		
@@ -87,6 +86,11 @@ class P_NativeDeviceWrapper
 		{
 			setGatt(gatt);
 		}
+	}
+	
+	void updateGattInstance(BluetoothGatt gatt)
+	{
+		updateGattFromCallback(gatt);
 	}
 	
 	void updateNativeConnectionState(BluetoothGatt gatt)
@@ -151,7 +155,7 @@ class P_NativeDeviceWrapper
 		return getConnectionState() == BluetoothGatt.STATE_DISCONNECTING;
 	}
 	
-	private int getNativeConnectionState()
+	public int getNativeConnectionState()
 	{
 		return m_device.getManager().getNative().getConnectionState( m_native, BluetoothGatt.GATT_SERVER );
 	}
@@ -160,14 +164,14 @@ class P_NativeDeviceWrapper
 	{
 		synchronized (this)
 		{
-			int reportedConnectedState = getNativeConnectionState();
-			int connectedStateThatWeWillGoWith = reportedConnectedState;
+			final int reportedNativeConnectionState = getNativeConnectionState();
+			int connectedStateThatWeWillGoWith = reportedNativeConnectionState;
 			
 			if( m_nativeConnectionState != null )
 			{
-				if( m_nativeConnectionState != reportedConnectedState )
+				if( m_nativeConnectionState != reportedNativeConnectionState )
 				{
-					m_logger.e("Tracked native state "+m_logger.gattConn(m_nativeConnectionState)+" doesn't match reported state "+m_logger.gattConn(reportedConnectedState)+".");
+					m_logger.e("Tracked native state "+m_logger.gattConn(m_nativeConnectionState)+" doesn't match reported state "+m_logger.gattConn(reportedNativeConnectionState)+".");
 				}
 				
 				connectedStateThatWeWillGoWith = m_nativeConnectionState;
@@ -222,7 +226,7 @@ class P_NativeDeviceWrapper
 	{
 		synchronized (this)
 		{
-			if( !m_mngr.ASSERT(m_gatt != null) )  return;
+			if( m_gatt == null )  return;
 			
 			//--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
 			//---		Don't want to keep it here because I'm afraid it has a better chance to do bad than good.
@@ -232,7 +236,7 @@ class P_NativeDeviceWrapper
 //			}
 			
 			m_gatt.close();
-			setGatt(null);
+			m_gatt = null;
 		}
 	}
 	
@@ -240,20 +244,28 @@ class P_NativeDeviceWrapper
 	{
 		synchronized (this)
 		{
+			if( m_gatt != null )
+			{
+				m_mngr.ASSERT(m_gatt == gatt);
+				
+				if( m_gatt != gatt )
+				{
+					m_mngr.ASSERT(false, "Different gatt object set.");
+					
+					closeGatt(/*disconnectAlso=*/false);
+				}
+				else
+				{
+					return;
+				}
+			}
+			
 			if( gatt == null )
 			{
 				m_gatt = null;
 			}
 			else
 			{
-				if( m_gatt != null )
-				{
-					//--- DRK > No idea why this assert tripped once but it did
-					//---		so it might be a "valid" case where android sends
-					//---		back a new gatt reference for different connections.
-//					m_mngr.ASSERT(m_gatt == gatt);
-				}
-				
 				m_gatt = gatt;
 			}
 		}

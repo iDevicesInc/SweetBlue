@@ -23,7 +23,7 @@ class P_RssiPollManager
 			m_thisMngr = thisMngr;
 		}
 		
-		@Override public void onReadOrWriteComplete(final Result result)
+		@Override public void onResult(final Result result)
 		{
 			m_thisMngr.m_waitingOnResponse = false;
 			
@@ -32,7 +32,7 @@ class P_RssiPollManager
 				m_thisMngr.m_timeTracker = ENABLE_TIMER;
 			}
 			
-			super.onReadOrWriteComplete(result);
+			super.onResult(result);
 		}
 	}
 	

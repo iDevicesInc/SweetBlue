@@ -1,19 +1,23 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleManager.StateListener.ChangeEvent;
+
+import android.transition.ChangeBounds;
+
 
 /**
  * 
  * 
  *
  */
-class P_StateTracker extends PA_StateTracker
+class P_BleStateTracker extends PA_StateTracker
 {
 	private BleManager.StateListener m_stateListener;
 	private final BleManager m_mngr;
 	
-	P_StateTracker(BleManager mngr)
+	P_BleStateTracker(BleManager mngr)
 	{
-		super(mngr.getLogger());
+		super(mngr.getLogger(), BleState.values());
 		
 		m_mngr = mngr;
 	}
@@ -30,11 +34,12 @@ class P_StateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
 	{
 		if( m_stateListener != null )
 		{
-			m_stateListener.onBleStateChange(m_mngr, oldStateBits, newStateBits);
+			final ChangeEvent event = new ChangeEvent(m_mngr, oldStateBits, newStateBits, intentMask);
+			m_stateListener.onStateChange(event);
 		}
 	}
 	

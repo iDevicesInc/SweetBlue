@@ -7,6 +7,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.UPDATING_FIRMWARE;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
 /**
  * 
@@ -53,7 +54,11 @@ class P_TransactionManager
 					
 					if ( m_initTxn != null)
 					{
-						m_device.getStateTracker().update(AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, true);
+						m_device.getStateTracker().update
+						(
+							E_Intent.EXPLICIT,
+							AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, true
+						);
 
 						start(m_initTxn);
 					}
@@ -64,7 +69,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED);
+					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 			else if (txn == m_initTxn )
@@ -75,15 +80,16 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED);
+					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 			else if (txn == m_device.getFirmwareUpdateTxn())
 			{
 //				m_device.m_txnMngr.clearFirmwareUpdateTxn();
-				m_device.getStateTracker().remove(UPDATING_FIRMWARE);
+				E_Intent intent = E_Intent.IMPLICIT;
+				m_device.getStateTracker().remove(UPDATING_FIRMWARE, intent);
 
-				//--- DRK > Not sure if we really care if this succeeded or not.
+				//--- DRK > As of now don't care whether this succeeded or failed.
 				if (reason == EndReason.SUCCEEDED)
 				{
 				}
@@ -266,7 +272,7 @@ class P_TransactionManager
 			m_firmwareUpdateTxn = txn;
 			m_firmwareUpdateTxn.init(m_device, m_txnEndListener);
 			
-			m_device.getStateTracker().append(UPDATING_FIRMWARE);
+			m_device.getStateTracker().append(UPDATING_FIRMWARE, E_Intent.EXPLICIT);
 			
 			start(m_firmwareUpdateTxn);
 		}
@@ -276,6 +282,7 @@ class P_TransactionManager
 	{
 		synchronized (m_threadLock)
 		{
+			E_Intent intent = m_device.lastConnectDisconnectIntent();
 			if( m_authTxn == null && m_initTxn == null )
 			{
 				m_device.getPollManager().enableNotifications();
@@ -284,7 +291,7 @@ class P_TransactionManager
 			}
 			else if( m_authTxn != null )
 			{
-				m_device.getStateTracker().update(extraFlags, AUTHENTICATING, true);
+				m_device.getStateTracker().update(intent, extraFlags, AUTHENTICATING, true);
 				
 				start(m_authTxn);
 			}
@@ -292,7 +299,7 @@ class P_TransactionManager
 			{
 				m_device.getPollManager().enableNotifications();
 				
-				m_device.getStateTracker().update(extraFlags, AUTHENTICATED, true, INITIALIZING, true);
+				m_device.getStateTracker().update(intent, extraFlags, AUTHENTICATED, true, INITIALIZING, true);
 				
 				start(m_initTxn);
 			}

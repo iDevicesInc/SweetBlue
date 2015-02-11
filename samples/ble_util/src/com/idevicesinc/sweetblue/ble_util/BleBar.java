@@ -22,7 +22,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
  */
 public class BleBar extends LinearLayout
 {
-	private static final Interval SCAN_TIMEOUT = Interval.seconds(5.0);
+	private static final Interval SCAN_TIMEOUT = Interval.secs(5.0);
 	
 	private final Button m_enable;
 	private final Button m_disable;
@@ -58,7 +58,7 @@ public class BleBar extends LinearLayout
 		{	
 			@Override public void onClick(View v)
 			{
-				m_bleMngr.enableBle();
+				m_bleMngr.turnOn();
 			}
 		});
 		
@@ -66,7 +66,7 @@ public class BleBar extends LinearLayout
 		{	
 			@Override public void onClick(View v)
 			{
-				m_bleMngr.disableBle();
+				m_bleMngr.turnOff();
 			}
 		});
 		
@@ -125,7 +125,7 @@ public class BleBar extends LinearLayout
 			}
 		});
 		
-		int timeout = (int) SCAN_TIMEOUT.seconds;
+		int timeout = (int) SCAN_TIMEOUT.secs();
 				
 		m_xSec.setText(m_xSec.getText().toString().replace("{{seconds}}", timeout+""));
 		String repeatedText = m_xSecRepeated.getText().toString().replace("{{seconds}}", timeout+"");

@@ -24,7 +24,7 @@ import android.view.Window;
  */
 public class MainActivity extends Activity
 {
-	private static final int BLE_ENABLE_REQUEST_CODE = 2;
+	private static final int BLE_TURN_ON_REQUEST_CODE = 2;
 	
 	private BleManager m_bleMngr;
 	private ViewController m_viewController;
@@ -44,7 +44,6 @@ public class MainActivity extends Activity
 	
 	public MainActivity()
 	{
-		
 	}
 	
 	@Override protected void onCreate(Bundle savedInstanceState)
@@ -71,7 +70,7 @@ public class MainActivity extends Activity
 		}
 		else if( !m_bleMngr.is(BleState.ON) )
 		{
-			m_bleMngr.enableBleWithIntent(this, BLE_ENABLE_REQUEST_CODE);
+			m_bleMngr.turnOnWithIntent(this, BLE_TURN_ON_REQUEST_CODE);
 		}
     }
 	

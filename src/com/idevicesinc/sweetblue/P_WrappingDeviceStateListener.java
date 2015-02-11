@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.utils.Interval;
+
 import android.os.Handler;
 
 /**
@@ -28,7 +30,7 @@ class P_WrappingDeviceStateListener extends PA_CallbackWrapper implements BleDev
 		m_connectionFailListener = listener;
 	}
 	
-	@Override public void onStateChange(final BleDevice device, final int oldStateBits, final int newStateBits)
+	@Override public void onStateChange(final ChangeEvent event)
 	{
 		if( postToMain() )
 		{
@@ -36,17 +38,17 @@ class P_WrappingDeviceStateListener extends PA_CallbackWrapper implements BleDev
 			{
 				@Override public void run()
 				{
-					m_stateListener.onStateChange(device, oldStateBits, newStateBits);
+					m_stateListener.onStateChange(event);
 				}
 			});
 		}
 		else
 		{
-			m_stateListener.onStateChange(device, oldStateBits, newStateBits);
+			m_stateListener.onStateChange(event);
 		}
 	}
 
-	@Override public Please onConnectionFail(final BleDevice device, final Reason cause, final int failureCount)
+	@Override public Please onConnectionFail(final Info moreInfo)
 	{
 //		if( postToMain() )
 //		{
@@ -60,7 +62,7 @@ class P_WrappingDeviceStateListener extends PA_CallbackWrapper implements BleDev
 //		}
 //		else
 //		{
-			return m_connectionFailListener.onConnectionFail(device, cause, failureCount);
+			return m_connectionFailListener.onConnectionFail(moreInfo);
 //		}
 	}
 }

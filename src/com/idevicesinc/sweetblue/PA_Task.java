@@ -21,15 +21,16 @@ abstract class PA_Task
 	
 	private 	  BleDevice m_device;
 	private		  BleServer m_server;
+	private 	  BleDevice m_device;
 	private final BleManager m_manager;
 	
 	private double m_timeout;
 	private double m_executionDelay = 0.0;
 	
-	private double m_resettableTimeExecuting = 0.0;
-	private double m_totalTimeExecuting = 0.0;
+	private long m_resetableExecuteStartTime = 0;
+//	private double m_totalTimeExecuting = 0.0;
 	private double m_totalTimeArmedAndExecuting = 0.0;
-	private double m_totalTimeQueuedAndArmedAndExecuting = 0.0;
+//	private double m_totalTimeQueuedAndArmedAndExecuting = 0.0;
 	
 	private double m_addedToQueueTime = -1.0;
 	
@@ -40,8 +41,8 @@ abstract class PA_Task
 	private P_TaskQueue m_queue;
 	private Handler m_executeHandler;
 	
-	private int m_maxRetries;
-	private int m_retryCount;
+//	private int m_maxRetries;
+//	private int m_retryCount;
 	
 	private int m_updateCount = 0;
 	
@@ -64,20 +65,15 @@ abstract class PA_Task
 			}
 		}
 	};
-	
-	public PA_Task(BleDevice device, I_StateListener listener)
-	{
-		this(device, listener, TIMEOUT_DEFAULT);
-	}
-	
-	public PA_Task(BleServer server, I_StateListener listener)
-	{
-		this(server.getManager(), listener);
-		
-		m_server = server;
-	}
-	
-	public PA_Task(BleDevice device, I_StateListener listener, double timeout)
+
+    public PA_Task(BleServer server, I_StateListener listener)
+    {
+        this(server.getManager(), listener);
+
+        m_server = server;
+    }
+
+	public PA_Task(BleDevice device, double timeout, I_StateListener listener)
 	{
 		this(device.getManager(), listener, timeout);
 		
@@ -86,14 +82,14 @@ abstract class PA_Task
 	
 	public PA_Task(BleManager manager, I_StateListener listener)
 	{
-		this(manager, listener, TIMEOUT_DEFAULT);
+		this(manager, listener, BleDeviceConfig.DEFAULT_TASK_TIMEOUT);
 	}
 	
 	public PA_Task(BleManager manager, I_StateListener listener, double timeout)
 	{
 		m_device = null;
 		m_manager = manager;
-		m_maxRetries = 0;
+//		m_maxRetries = 0;
 		m_timeout = timeout;
 		m_logger = m_manager.getLogger();
 		m_timeCreated = System.currentTimeMillis();
@@ -143,7 +139,7 @@ abstract class PA_Task
 	{
 		m_queue = queue;
 		setState(PE_TaskState.QUEUED);
-		m_retryCount = 0;
+//		m_retryCount = 0;
 		m_updateCount = 0;
 		m_addedToQueueTime = m_addedToQueueTime == -1.0 ? m_queue.getTime() : m_addedToQueueTime;
 	}
@@ -155,7 +151,7 @@ abstract class PA_Task
 		synchronized (this)
 		{
 			m_timeout = newTimeout;
-			m_resettableTimeExecuting = 0.0;
+			m_resetableExecuteStartTime = System.currentTimeMillis();
 		}
 	}
 	
@@ -179,6 +175,11 @@ abstract class PA_Task
 		m_queue.tryEndingTask(this, PE_TaskState.FAILED);
 	}
 	
+	protected void failImmediately()
+	{
+		m_queue.tryEndingTask(this, PE_TaskState.FAILED_IMMEDIATELY);
+	}
+	
 	protected void noOp()
 	{
 		m_queue.tryEndingTask(this, PE_TaskState.NO_OP);
@@ -198,13 +199,13 @@ abstract class PA_Task
 	
 	protected void softlyCancel()
 	{
-		m_maxRetries = 0;
+//		m_maxRetries = 0;
 		m_queue.tryEndingTask(this, PE_TaskState.SOFTLY_CANCELLED);
 	}
 	
 	protected void failWithoutRetry()
 	{
-		m_maxRetries = 0;
+//		m_maxRetries = 0;
 		fail();
 	}
 
@@ -213,11 +214,11 @@ abstract class PA_Task
 		setState(PE_TaskState.ARMED);
 		
 		m_executeHandler = executeHandler;
-		m_totalTimeQueuedAndArmedAndExecuting = m_queue.getTime() - m_addedToQueueTime;
+//		m_totalTimeQueuedAndArmedAndExecuting = m_queue.getTime() - m_addedToQueueTime;
 		m_totalTimeArmedAndExecuting = 0.0;
-		m_totalTimeExecuting = 0.0;
-		m_resettableTimeExecuting = 0.0;
-		m_retryCount = 0;
+//		m_totalTimeExecuting = 0.0;
+		m_resetableExecuteStartTime = System.currentTimeMillis();
+//		m_retryCount = 0;
 		m_updateCount = 0;
 	}
 	
@@ -228,6 +229,7 @@ abstract class PA_Task
 	
 	private void execute_wrapper()
 	{
+		m_resetableExecuteStartTime = System.currentTimeMillis();
 		m_timeExecuted = System.currentTimeMillis();
 		
 		execute();
@@ -257,7 +259,7 @@ abstract class PA_Task
 		synchronized (this)
 		{
 			m_totalTimeArmedAndExecuting += timeStep;
-			m_totalTimeQueuedAndArmedAndExecuting += timeStep;
+//			m_totalTimeQueuedAndArmedAndExecuting += timeStep;
 			m_updateCount++;
 			
 			if( m_totalTimeArmedAndExecuting >= m_executionDelay )
@@ -279,32 +281,30 @@ abstract class PA_Task
 	//						}
 	//					}
 						
+						if( m_softlyCancelled )
+						{
+							softlyCancel();
+							
+							return;
+						}
+						
 						if( isExecutable() )
 						{
-							if( m_softlyCancelled )
+							setState(PE_TaskState.EXECUTING);
+							
+							if( executeOnSeperateThread() )
 							{
-								softlyCancel();
-								
-								return;
+								//--- DRK > Executing on separate thread in case this method is called on the main thread,
+								//---		or a synchronization block in BtTaskQueue indirectly blocks the main thread.
+								//---		Some things like a failing scan call can block its thread for several seconds.
+								m_executeHandler.post(m_executeRunnable);
 							}
 							else
 							{
-								setState(PE_TaskState.EXECUTING);
-								
-								if( executeOnSeperateThread() )
-								{
-									//--- DRK > Executing on separate thread in case this method is called on the main thread,
-									//---		or a synchronization block in BtTaskQueue indirectly blocks the main thread.
-									//---		Some things like a failing scan call can block its thread for several seconds.
-									m_executeHandler.post(m_executeRunnable);
-								}
-								else
-								{
-									execute_wrapper();
-								}
-								
-								return;
+								execute_wrapper();
 							}
+							
+							return;
 						}
 						else
 						{
@@ -315,13 +315,12 @@ abstract class PA_Task
 					}
 				}
 				else if( m_state == PE_TaskState.EXECUTING )
-				{
-					m_resettableTimeExecuting += timeStep;
-					m_totalTimeExecuting += timeStep;
-					
-					if( m_timeout != Interval.INFINITE.seconds )
+				{					
+					if( !Interval.isDisabled(m_timeout) && m_timeout != Interval.INFINITE.secs() )
 					{
-						if( m_resettableTimeExecuting >= m_timeout )
+						double timeExecuting = (System.currentTimeMillis() - m_resetableExecuteStartTime)/1000.0;
+						
+						if( timeExecuting >= m_timeout )
 						{
 							timeout();
 							
@@ -402,6 +401,11 @@ abstract class PA_Task
 		return false;
 	}
 	
+	protected void attemptToSoftlyCancel(PA_Task task)
+	{
+		m_softlyCancelled = true;
+	}
+	
 	protected String getToStringAddition()
 	{
 		return null;
@@ -410,19 +414,21 @@ abstract class PA_Task
 	@Override public String toString()
 	{
 		String name = this.getClass().getSimpleName();
-		name = name.replace("BtTask_", "");
+		name = name.replace("P_Task_", "");
 		
-		String deviceEntry = getDevice() != null ? " " + getDevice().getDebugName(): "";
+		String deviceEntry = getDevice() != null ? " " + getDevice().getName_debug(): "";
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
 		return name + "(" + m_state.name() + deviceEntry + addition + ")";
 	}
 	
-	public void setSoftlyCancelled()
-	{
-		m_softlyCancelled = true;
-	}
+	
 	
 	public boolean executeOnSeperateThread()
+	{
+		return false;
+	}
+	
+	public boolean isExplicit()
 	{
 		return false;
 	}

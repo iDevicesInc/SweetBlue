@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 
-import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.State;
 
 /**
  * An enumeration of the various states that a {@link BleManager} can be in.
@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.BitwiseEnum;
  * @see BleManager#is(BleState)
  * @see BleManager#getStateMask()
  */
-public enum BleState implements BitwiseEnum
+public enum BleState implements State
 {
 	/**
 	 * Analogous to {@link BluetoothAdapter#STATE_OFF}.
@@ -92,24 +92,12 @@ public enum BleState implements BitwiseEnum
 		return (bit() & mask) != 0x0;
 	}
 	
-	/**
-	 * Given an old and new state mask from {@link BleManager.StateListener#onBleStateChange(BleManager, int, int)}
-	 * or {@link BleManager.NativeStateListener#onNativeBleStateChange(BleManager, int, int)} this method tells you whether
-	 * the 'this' state was appended.
-	 * 
-	 * @see #wasExited(int, int)
-	 */
-	public boolean wasEntered(int oldStateBits, int newStateBits)
+	@Override public boolean didEnter(int oldStateBits, int newStateBits)
 	{
 		return !this.overlaps(oldStateBits) && this.overlaps(newStateBits);
 	}
-	
-	/**
-	 * Reverse of {@link #wasEntered(int, int)}.
-	 * 
-	 * @see #wasEntered(int, int)
-	 */
-	public boolean wasExited(int oldStateBits, int newStateBits)
+
+	@Override public boolean didExit(int oldStateBits, int newStateBits)
 	{
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}

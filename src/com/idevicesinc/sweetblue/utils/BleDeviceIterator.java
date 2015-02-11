@@ -8,6 +8,7 @@ import com.idevicesinc.sweetblue.BleManager;
 
 /**
  * Implementation of {@link Iterator} for {@link BleDevice} instances, returned from {@link BleManager#getDevices()} and its overloads.
+ * {@link #remove()} has no effect, for now at least.
  */
 public class BleDeviceIterator implements Iterator<BleDevice>
 {
@@ -85,7 +86,7 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 	}
 
 	/**
-	 * Doesn't do anything.
+	 * For now doesn't do anything.
 	 */
 	@Override public void remove()
 	{		

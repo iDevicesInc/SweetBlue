@@ -22,6 +22,16 @@ class P_Task_TurnBleOn extends PA_Task
 		
 		m_implicit = implicit;
 	}
+	
+	public boolean isImplicit()
+	{
+		return m_implicit;
+	}
+	
+	@Override public boolean isExplicit()
+	{
+		return !m_implicit;
+	}
 
 	@Override public void execute()
 	{

@@ -9,31 +9,26 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.app.Application;
 
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
+import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
- * Provides a number of options to pass to the {@link BleManager#BleManager(Application, BleManagerConfig)}
+ * Provides a number of options to pass to the {@link BleManager#get(Context, BleManagerConfig)}
  * constructor. Use {@link Interval#DISABLED} or <code>null</code> to disable any time-based options.
  */
-public class BleManagerConfig implements Cloneable
+public class BleManagerConfig extends BleDeviceConfig
 {
-	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
 	public static final double DEFAULT_AUTO_SCAN_INTERVAL				= 3.0;
 	public static final double DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME 	= 0.5;
-	public static final double DEFAULT_TASK_TIMEOUT						= 10.0;
 	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/30.0;
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
-	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
-	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	
 	/**
 	 * Maximum amount of time for a classic scan to run. This was determined based on experimentation.
@@ -43,40 +38,103 @@ public class BleManagerConfig implements Cloneable
 	static final double MAX_CLASSIC_SCAN_TIME							= 7.0;
 	
 	/**
-	 * In at least some cases it's not possible to determine beforehand whether a given characteristic requires
-	 * bonding, so implementing this interface on {@link BleManagerConfig#bondingFilter} lets the app give
-	 * a hint to the library so it can bond before attempting to read or write an encrypted characteristic.
-	 * Providing these hints lets the library handle things in a more deterministic and optimized fashion, but is not required.
-	 */
-	public static interface BondingFilter
-	{
-		boolean requiresBonding(UUID characteristicUuid);
-	}
-	
-	/**
 	 * An optional whitelisting mechanism for scanning. Provide an implementation at
 	 * {@link BleManagerConfig#defaultAdvertisingFilter} or one of the various {@link BleManager#startScan()}
-	 * oveloads, i.e. {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter)},
+	 * overloads, i.e. {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter)},
 	 * {@link BleManager#startScan(Interval, BleManagerConfig.AdvertisingFilter)}, etc.
 	 */
 	public static interface AdvertisingFilter
 	{
 		/**
-		 * Return true to acknowledge the discovery, in which case
-		 * {@link DiscoveryListener#onDeviceDiscovered(BleDevice)} will be called shortly.
-		 * 
-		 * @param nativeInstance		Other parameters are probably enough to make a decision but this native instance is provided just in case.
-		 * @param advertisedServices	A list of {@link UUID}s parsed from {@code scanRecord} as a convenience. May be empty, notably
-		 * 								if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
-		 * @param rawDeviceName			The unaltered device name retrieved from the native bluetooth stack.
-		 * @param normalizedDeviceName	See {@link BleDevice#getNormalizedName()} for an explanation.
-		 * @param scanRecord			The raw scan record received when the device was discovered. May be empty, especially
-		 * 								if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
-		 * @param rssi					The RSSI received when the device was discovered.
-		 * 
-		 * @return						Whether to acknowledge the discovery.
+		 * Instances of this class are passed to {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} to aid in making a decision.
 		 */
-		boolean acknowledgeDiscovery(BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName, String normalizedDeviceName, byte[] scanRecord, int rssi);
+		public static class Packet
+		{
+			/**
+			 * Other parameters are probably enough to make a decision but this native instance is provided just in case.
+			 */
+			public BluetoothDevice nativeInstance(){  return m_nativeInstance;  }
+			private final BluetoothDevice m_nativeInstance;
+			
+			/**
+			 * A list of {@link UUID}s parsed from {@link #scanRecord()} as a convenience. May be empty, notably
+			 * if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
+			 */
+			public List<UUID> advertisedServices(){  return m_advertisedServices;  }
+			private final List<UUID> m_advertisedServices;
+			
+			/**
+			 * The unaltered device name retrieved from the native bluetooth stack.
+			 */
+			public String name_native(){  return m_rawDeviceName;  }
+			private final String m_rawDeviceName;
+			
+			/**
+			 * See {@link BleDevice#getName_normalized()} for an explanation.
+			 */
+			public String name_normalized(){  return m_normalizedDeviceName;  }
+			private final String m_normalizedDeviceName;
+			
+			/**
+			 * The raw scan record received when the device was discovered. May be empty, especially
+			 * if {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is invoked.
+			 */
+			public byte[] scanRecord(){  return m_scanRecord;  }
+			private final byte[] m_scanRecord;
+			
+			/**
+			 * The RSSI received when the device was discovered.
+			 */
+			public int rssi(){  return m_rssi;  }
+			private final int m_rssi;
+			
+			/**
+			 * Returns the mac address of the discovered device.
+			 */
+			public String macAddress(){  return m_nativeInstance.getAddress();  }
+			
+			/**
+			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
+			 * <br><br>
+			 * TIP: If {@link Packet#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
+			 * and return <code>true</code> from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} without having to check
+			 * uuids or names matching, because obviously you've seen and connected to this device before.
+			 */
+			public State.ChangeIntent lastDisconnectIntent(){  return m_lastDisconnectIntent;  }
+			private final State.ChangeIntent m_lastDisconnectIntent;
+			
+			Packet
+			(
+				BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName,
+				String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent
+			)
+			{
+				this.m_nativeInstance = nativeInstance;
+				this.m_advertisedServices = advertisedServices;
+				this.m_rawDeviceName = rawDeviceName;
+				this.m_normalizedDeviceName = normalizedDeviceName;
+				this.m_scanRecord = scanRecord;
+				this.m_rssi = rssi;
+				this.m_lastDisconnectIntent = lastDisconnectIntent;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"macAddress",	macAddress(),
+					"name",			name_normalized(),
+					"services",		advertisedServices()
+				);
+			}
+		}
+		
+		/**
+		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDiscoveryEvent(DiscoveryListener.DiscoveryEvent)} will be called shortly.
+		 * 
+		 * @return Whether to acknowledge the discovery.
+		 */
+		boolean acknowledgeDiscovery(Packet packet);
 	}
 	
 	/**
@@ -102,59 +160,9 @@ public class BleManagerConfig implements Cloneable
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
 		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultAdvertisingFilter#DefaultAdvertisingFilter(Collection)}.
 		 */
-		@Override public boolean acknowledgeDiscovery(BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName, String normalizedDeviceName, byte[] scanRecord, int rssi)
+		@Override public boolean acknowledgeDiscovery(Packet packet)
 		{
-			return Utils.haveMatchingIds(advertisedServices, m_whitelist);
-		}
-	}
-	
-	/**
-	 * An optional interface you can implement on {@link BleManagerConfig#reconnectRateLimiter } to control reconnection behavior.
-	 * Note that {@link BleDevice#disconnect()} will also cancel any ongoing reconnect loop.
-	 * 
-	 * @see #reconnectRateLimiter
-	 * @see DefaultReconnectRateLimiter
-	 */
-	public static interface ReconnectRateLimiter
-	{
-		/**
-		 * Return this from {@link #getTimeToNextReconnect(BleDevice, int, Interval, Interval)} to instantly reconnect.
-		 */
-		public static final Interval INSTANTLY = Interval.seconds(0.0);
-		
-		/**
-		 * Return this from {@link #getTimeToNextReconnect(BleDevice, int, Interval, Interval)} to stop a reconnect attempt loop.
-		 */
-		public static final Interval CANCEL = Interval.seconds(-1.0);
-		
-		/**
-		 * Called for every connection failure while device is {@link BleDeviceState#ATTEMPTING_RECONNECT}.
-		 * Use the static members of this interface to create return values to stop reconnection ({@link #CANCEL}) or try again
-		 * instantly ({@link #INSTANTLY}). Use static methods of {@link Interval} to try again after some amount of time. Numeric parameters
-		 * are provided in order to give the app a variety of ways to calculate the next delay. Use all, some, or none of them.
-		 */
-		Interval getTimeToNextReconnect(BleDevice device, int connectFailureCount, Interval totalTimeReconnecting, Interval previousDelay);
-	}
-	
-	/**
-	 * Default implementation of {@link ReconnectRateLimiter} that uses {@link #DEFAULT_INITIAL_RECONNECT_DELAY}
-	 * and {@link #DEFAULT_RECONNECT_ATTEMPT_RATE} to infinitely try to reconnect.
-	 */
-	public static class DefaultReconnectRateLimiter implements ReconnectRateLimiter
-	{
-		public static final Interval DEFAULT_INITIAL_RECONNECT_DELAY = INSTANTLY;
-		public static final Interval DEFAULT_RECONNECT_ATTEMPT_RATE = Interval.seconds(3.0);
-		
-		@Override public Interval getTimeToNextReconnect(BleDevice device, int connectFailureCount, Interval totalTimeReconnecting, Interval previousDelay)
-		{
-			if( connectFailureCount == 0 )
-			{
-				return DEFAULT_INITIAL_RECONNECT_DELAY;
-			}
-			else
-			{
-				return DEFAULT_RECONNECT_ATTEMPT_RATE;
-			}
+			return Utils.haveMatchingIds(packet.advertisedServices(), m_whitelist);
 		}
 	}
 	
@@ -165,17 +173,10 @@ public class BleManagerConfig implements Cloneable
 	public boolean loggingEnabled						= false;
 	
 	/**
-	 * Default is true - whether all callbacks are posted to the main thread or from SweetBlue's internal
-	 * thread. If {@link #runOnMainThread}==true then this setting is meaningless because SweetBlue's
-	 * internal thread is already the main thread to begin with.
-	 */
-	boolean postCallbacksToMainThread			= true;
-	
-	/**
 	 * Default is false - this option may help mitigate crashes with "Unfortunately,
 	 * Bluetooth Share has stopped" error messages. See https://github.com/RadiusNetworks/bluetooth-crash-resolver or
 	 * http://developer.radiusnetworks.com/2014/04/02/a-solution-for-android-bluetooth-crashes.html or
-	 * Google "Bluetooth Crash Resolver".
+	 * Google "Bluetooth Crash Resolver" for more information.
 	 */
 	public boolean enableCrashResolver					= false;
 	
@@ -189,32 +190,6 @@ public class BleManagerConfig implements Cloneable
 	public boolean stopScanOnPause						= true;
 	
 	/**
-	 * Default is false - use this option to globally force bonding after a
-	 * {@link BleDevice} is {@link BleDeviceState#CONNECTED} if it is not {@link BleDeviceState#BONDED} already.
-	 */
-	public boolean autoBondAfterConnect					= false;
-	
-	/**
-	 * Default is true - whether to automatically get services immediately after a {@link BleDevice} is
-	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
-	 */
-	public boolean autoGetServices						= true;
-	
-	/**
-	 * Default is true if phone is manufactured by Sony, false otherwise (sorry Sony) - Some
-	 * android devices have known issues when it comes to bonding. So far the worst culprits
-	 * are Xperias. To be safe this is set to true by default if we're running on a Sony device.
-	 * The problem seems to be associated with mismanagement of pairing keys by the OS and
-	 * this brute force solution seems to be the only way to smooth things out.
-	 */
-	public boolean removeBondOnDisconnect				= Utils.isSony();
-	
-	/**
-	 * Default is same as {@link #removeBondOnDisconnect} - see {@link #removeBondOnDisconnect} for explanation.
-	 */
-	public boolean removeBondOnDiscovery				= removeBondOnDisconnect;
-	
-	/**
 	 * Default is false - set this to allow or disallow autoscanning while any
 	 * {@link BleDevice} is {@link BleDeviceState#UPDATING_FIRMWARE}. If false,
 	 * then firmware updates may complete faster if you're periodically scanning
@@ -224,20 +199,15 @@ public class BleManagerConfig implements Cloneable
 	public boolean autoScanDuringFirmwareUpdates		= false;
 	
 	/**
-	 * Default is false - if true and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
-	 * or {@link BleDevice#startChangeTrackingPoll(UUID, Interval, BleDevice.ReadWriteListener)()} with identical
-	 * parameters then two identical polls would run which would probably be wasteful and unintentional.
-	 * This option provides a defense against that situation.
-	 */
-	public boolean allowDuplicatePollEntries			= false;
-	
-	/**
 	 * Default is true - SweetBlue uses {@link BluetoothAdapter#startLeScan()} by default but for unknown
 	 * reasons this can fail sometimes. In this case SweetBlue can revert to using classic bluetooth
 	 * discovery through {@link BluetoothAdapter#startDiscovery()}. Be aware that classic
 	 * discovery may not discover some or any advertising BLE devices, nor will it provide
-	 * a scanRecord or advertisedServices to {@link AdvertisingFilter#acknowledgeDiscovery}.
-	 * As such this is meant as a back-up solution for BLE scanning, not something to be relied on.
+	 * a {@link AdvertisingFilter.Packet#scanRecord} or {@link AdvertisingFilter.Packet#advertisedServices}
+	 * to {@link AdvertisingFilter#acknowledgeDiscovery(AdvertisingFilter.Packet)}.
+	 * Most likely you will be forced to filter on name only for your implementation of
+	 * {@link AdvertisingFilter#acknowledgeDiscovery(AdvertisingFilter.Packet)}.
+	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.
 	 */
 	public boolean revertToClassicDiscoveryIfNeeded		= true;
 	
@@ -246,7 +216,14 @@ public class BleManagerConfig implements Cloneable
 	 * some theories that since proved invalid. While the library can still sort of do so, it's now 
 	 * recommended to run on the main thread in order to avoid any possible multithreading issues.
 	 */
-	boolean runOnMainThread						= true;
+	boolean runOnMainThread								= true;
+	
+	/**
+	 * Default is true - whether all callbacks are posted to the main thread or from SweetBlue's internal
+	 * thread. If {@link #runOnMainThread}==true then this setting is meaningless because SweetBlue's
+	 * internal thread is already the main thread to begin with.
+	 */
+	boolean postCallbacksToMainThread					= true;
 	
 	/**
 	 * Default is true - requires the {@link Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
@@ -256,42 +233,12 @@ public class BleManagerConfig implements Cloneable
 	 * connected but one or more devices are {@link BleDeviceState#ATTEMPTING_RECONNECT}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link ReconnectRateLimiter#CANCEL} from {@link ReconnectRateLimiter#getTimeToNextReconnect(BleDevice, int, Interval, Interval)}.
+	 * {@link BleDeviceConfig.ReconnectRateLimiter#CANCEL} from {@link BleDeviceConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDeviceConfig.ReconnectRateLimiter.Info)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  
 	 */
 	public boolean manageCpuWakeLock					= true;
-	
-	/**
-	 * Default is false - {@link BleDevice#getAverageReadTime()} and {@link BleDevice#getAverageWriteTime()} can be 
-	 * skewed if the peripheral you are connecting to adjusts its maximum throughput for OTA firmware updates.
-	 * Use this option to let the library know whether you want firmware update read/writes to factor in.
-	 * 
-	 * @see BleDevice#getAverageReadTime()
-	 * @see BleDevice#getAverageWriteTime() 
-	 */
-	public boolean includeFirmwareUpdateReadWriteTimesInAverage = false;
-	
-	/**
-	 * Default is false - see the <code>boolean autoConnect</code> parameter of
-	 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}. 
-	 * 
-	 * This parameter is one of Android's deepest mysteries. By default we keep it false, but it has been observed that a
-	 * connection can fail or time out, but then if you try again with autoConnect set to true it works! One would think,
-	 * why not always set it to true? Well, while true is anecdotally more stable, it also (anecdotally) makes for longer
-	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
-	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
-	 * <br><br>
-	 * HOWEVER, it's important to note that the library WILL automatically revert to autoConnect==true after a first failed
-	 * connection if you do a retry by returning {@link BleDevice.ConnectionFailListener.Please#RETRY} from
-	 * {@link ConnectionFailListener#onConnectionFail(BleDevice, BleDevice.ConnectionFailListener.Reason, int)}.
-	 * <br><br>
-	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
-	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
-	 * failed connection for the library to internally start using autoConnect==true).
-	 */
-	public boolean alwaysUseAutoConnect = false;
 	
 	/**
 	 * Default is {@value #DEFAULT_UH_OH_CALLBACK_THROTTLE} seconds - {@link UhOh} callbacks from {@link UhOhListener}
@@ -300,21 +247,21 @@ public class BleManagerConfig implements Cloneable
 	 * 
 	 * @see BleManager.UhOhListener
 	 */
-	public Interval	uhOhCallbackThrottle				= Interval.seconds(DEFAULT_UH_OH_CALLBACK_THROTTLE);
+	public Interval	uhOhCallbackThrottle				= Interval.secs(DEFAULT_UH_OH_CALLBACK_THROTTLE);
 	
 	/**
 	 * Default is {@value #DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME} seconds - Unless {@link Interval#DISABLED},
 	 * this option will kick off a scan for {@link #autoScanTime} seconds
 	 * {@link #autoScanDelayAfterResume} seconds after {@link BleManager#onResume()} is called.
 	 */
-	public Interval autoScanDelayAfterResume			= Interval.seconds(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
+	public Interval autoScanDelayAfterResume			= Interval.secs(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
 	
 	/**
 	 * Default is {@value #DEFAULT_AUTO_UPDATE_RATE} seconds - The rate at which the library's internal update loop ticks.
 	 * Generally shouldn't need to be changed. You can set this to {@link Interval#DISABLED} and call {@link BleManager#update(double)} yourself
 	 * if you want to tie the library in to an existing update loop used in your application.
 	 */
-	public Interval autoUpdateRate						= Interval.seconds(DEFAULT_AUTO_UPDATE_RATE);
+	public Interval autoUpdateRate						= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
 	
 	/**
 	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices. Used in conjunction with {@link #autoScanInterval},
@@ -334,7 +281,7 @@ public class BleManagerConfig implements Cloneable
 	 * 
 	 * @see #autoScanTime
 	 */
-	public Interval autoScanInterval					= Interval.seconds(DEFAULT_AUTO_SCAN_INTERVAL);
+	public Interval autoScanInterval					= Interval.secs(DEFAULT_AUTO_SCAN_INTERVAL);
 	
 	/**
 	 * Default is {@link Interval#DISABLED} - Same as {@link #autoScanInterval} except this value is used while the app is paused.
@@ -347,47 +294,7 @@ public class BleManagerConfig implements Cloneable
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Minimum amount of time in seconds that the library strives to give to a scanning operation.  
 	 */
-	public Interval	idealMinScanTime					= Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
-	
-	/**
-	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
-	 * approximated by checking when the last time was that we discovered a device,
-	 * and if this time is greater than {@link #scanKeepAlive} then the device is undiscovered. However a scan
-	 * operation must be allowed a certain amount of time to make sure it discovers all nearby devices that are
-	 * still advertising. This is that time in seconds.
-	 * 
-	 * @see BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)
-	 * @see #scanKeepAlive
-	 */
-	public Interval	minScanTimeToInvokeUndiscovery		= Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
-	
-	/**
-	 * Default is {@link #DEFAULT_SCAN_KEEP_ALIVE} seconds - If a device exceeds this amount of time since its
-	 * last discovery then it is a candidate for being undiscovered.
-	 * The default for this option attempts to accommodate the worst Android phones (BLE-wise), which may make it seem
-	 * like it takes a long time to undiscover a device. You may want to configure this number based on the phone or
-	 * manufacturer. For example, based on testing, in order to make undiscovery snappier the Galaxy S5 could use lower times.
-	 * 
-	 * @see BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)
-	 * @see #minScanTimeToInvokeUndiscovery
-	 */
-	public Interval	scanKeepAlive						= Interval.seconds(DEFAULT_SCAN_KEEP_ALIVE);
-	
-	/**
-	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
-	 * 
-	 * @see BleDevice#getAverageWriteTime()
-	 * @see #nForAverageRunningReadTime
-	 */
-	public int		nForAverageRunningWriteTime			= DEFAULT_RUNNING_AVERAGE_N;
-	
-	/**
-	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - Same thing as {@link #nForAverageRunningWriteTime} but for reads.
-	 * 
-	 * @see BleDevice#getAverageWriteTime()
-	 * @see #nForAverageRunningWriteTime
-	 */
-	public int		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
+	public Interval	idealMinScanTime					= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
 	 * Default is null, meaning no filtering - all discovered devices will
@@ -395,35 +302,15 @@ public class BleManagerConfig implements Cloneable
 	 * 
 	 * @see AdvertisingFilter
 	 */
-	public AdvertisingFilter defaultAdvertisingFilter;
+	public AdvertisingFilter defaultAdvertisingFilter	= null;
 	
 	/**
-	 * Default is null, meaning the library won't preemptively attempt to bond for any characteristic operations.
-	 * 
-	 * @see BondingFilter
-	 */
-	public BondingFilter bondingFilter;
-	
-	/**
-	 * Default is null - Can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
+	 * Default is null - can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
 	 * which will override the implementation provided here.
 	 * 
 	 * @see BleManager.DiscoveryListener
 	 */
-	public BleManager.DiscoveryListener defaultDiscoveryListener = null;
-	
-	/**
-	 * Default is an instance of {@link DefaultReconnectRateLimiter} - set an implementation here to
-	 * have fine control over reconnect behavior. This is basically how often and how long
-	 * the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
-	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
-	 * {@link #manageCpuWakeLock} useful in order to force the app/device to stay awake while attempting a reconnect.
-	 * 
-	 * @see #manageCpuWakeLock
-	 * @see ReconnectRateLimiter
-	 * @see DefaultReconnectRateLimiter
-	 */
-	public ReconnectRateLimiter reconnectRateLimiter = new DefaultReconnectRateLimiter();
+	public DiscoveryListener defaultDiscoveryListener	= null;
 	
 	/**
 	 * Used if {@link #loggingEnabled} is true. Gives threads names so they are more easily identifiable.
@@ -438,10 +325,10 @@ public class BleManagerConfig implements Cloneable
 	 * Default is null - optional, only used if {@link #loggingEnabled} is true. Provides a look-up table
 	 * so logs can show the name associated with a {@link UUID} along with its numeric string.
 	 */
-	public List<UuidNameMap> uuidNameMaps = null;
+	public List<UuidNameMap> uuidNameMaps				= null;
 	
 	//--- DRK > Not sure if this is useful so keeping it package private for now.
-	int		connectionFailUhOhCount						= 0;
+	int	connectionFailUhOhCount							= 0;
 	
 	/**
 	 * Creates a {@link BleManagerConfig} with all default options set. See each member of this class
@@ -471,14 +358,6 @@ public class BleManagerConfig implements Cloneable
 	
 	@Override protected BleManagerConfig clone()
 	{
-		try
-		{
-			return (BleManagerConfig) super.clone();
-		}
-		catch (CloneNotSupportedException e)
-		{
-		}
-		
-		return null;
+		return (BleManagerConfig) super.clone();
 	}
 }

@@ -1,25 +1,30 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
+
 import android.bluetooth.BluetoothGatt;
 
 /**
  * 
- * 
- *
  */
 class P_Task_Connect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
+	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	private BluetoothGatt m_gatt = null;
 	
-	public P_Task_Connect(BleDevice device, I_StateListener listener)
+	private AutoConnectUsage m_autoConnectUsage = AutoConnectUsage.UNKNOWN;
+	
+	public P_Task_Connect(BleDevice device, double timeout, I_StateListener listener)
 	{
-		this(device, listener, true, null);
+		this(device, timeout, listener, true, null);
 	}
 	
-	public P_Task_Connect(BleDevice device, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
+	public P_Task_Connect(BleDevice device, double timeout, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
 	{
-		super(device, listener, TIMEOUT_CONNECTION);
+		super(device, timeout, listener);
 		
 		m_explicit = explicit;
 		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
@@ -47,19 +52,17 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		
 		if( m_explicit )
 		{
-			boolean autoConnect = getDevice().shouldUseAutoConnect();
+			boolean useAutoConnect = getDevice().shouldUseAutoConnect();
 			
-			BluetoothGatt gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplication(), autoConnect, getDevice().getListeners());
+			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
 			
-			if( gatt == null )
+			m_gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
+			
+			if( m_gatt == null )
 			{
-				fail();
+				failImmediately();
 				
 				return;
-			}
-			else
-			{
-//				getDevice().m_nativeWrapper.updateNativeConnectionState(gatt);
 			}
 		}
 		else
@@ -76,7 +79,17 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		}
 	}
 	
-	public boolean isExplicit()
+	public AutoConnectUsage getAutoConnectUsage()
+	{
+		return m_autoConnectUsage;
+	}
+	
+	public BluetoothGatt getGatt()
+	{
+		return m_gatt;
+	}
+	
+	@Override public boolean isExplicit()
 	{
 		return m_explicit;
 	}
@@ -84,6 +97,18 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	@Override public PE_TaskPriority getPriority()
 	{
 		return m_priority;
+	}
+	
+	public void onNativeFail(int gattStatus)
+	{
+		m_gattStatus = gattStatus;
+		
+		this.fail();
+	}
+	
+	public int getGattStatus()
+	{
+		return m_gattStatus;
 	}
 	
 	@Override public boolean isCancellableBy(PA_Task task)

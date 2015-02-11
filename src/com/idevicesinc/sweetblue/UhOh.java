@@ -118,13 +118,13 @@ public enum UhOh
 	
 	
 	/**
-	 * {@link BluetoothAdapter#disable()}, through {@link BleManager#disableBle()}, is failing to complete.
+	 * {@link BluetoothAdapter#disable()}, through {@link BleManager#turnOff()}, is failing to complete.
 	 * We always end up back at {@link BluetoothAdapter#STATE_ON}.
 	 */
 	CANNOT_DISABLE_BLUETOOTH,
 	
 	/**
-	 * {@link BluetoothAdapter#enable()}, through {@link BleManager#enableBle()}, is failing to complete.
+	 * {@link BluetoothAdapter#enable()}, through {@link BleManager#turnOn()}, is failing to complete.
 	 * We always end up back at {@link BluetoothAdapter#STATE_OFF}. Opposite problem of {@link #CANNOT_DISABLE_BLUETOOTH}
 	 */
 	CANNOT_ENABLE_BLUETOOTH,

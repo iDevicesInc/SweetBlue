@@ -1,19 +1,21 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleManager.NativeStateListener.ChangeEvent;
+
 
 /**
  * 
  * 
  *
  */
-class P_NativeStateTracker extends PA_StateTracker
+class P_NativeBleStateTracker extends PA_StateTracker
 {
 	private BleManager.NativeStateListener m_stateListener;
 	private final BleManager m_mngr;
 	
-	P_NativeStateTracker(BleManager mngr)
+	P_NativeBleStateTracker(BleManager mngr)
 	{
-		super(mngr.getLogger());
+		super(mngr.getLogger(), BleState.values());
 		
 		m_mngr = mngr;
 	}
@@ -30,11 +32,12 @@ class P_NativeStateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
 	{
 		if( m_stateListener != null )
 		{
-			m_stateListener.onNativeBleStateChange(m_mngr, oldStateBits, newStateBits);
+			final ChangeEvent event = new ChangeEvent(m_mngr, oldStateBits, newStateBits, intentMask);
+			m_stateListener.onNativeStateChange(event);
 		}
 	}
 }

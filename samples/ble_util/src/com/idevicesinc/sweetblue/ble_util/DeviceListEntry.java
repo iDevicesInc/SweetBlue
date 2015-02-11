@@ -11,16 +11,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.*;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
 
 /**
  * 
  * @author dougkoellmer
  */
-public class DeviceListEntry extends FrameLayout implements BleDevice.StateListener, BleDevice.ConnectionFailListener
-{
-	private static final int CONNECTION_RETRY_COUNT = 3;
-	
+public class DeviceListEntry extends FrameLayout implements BleDevice.StateListener
+{	
 	private final BleDevice m_device;
 	private final Button m_connect;
 	private final Button m_disconnect;
@@ -35,7 +37,20 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 		
 		m_device = device;
 		m_device.setListener_State(this);
-		m_device.setListener_ConnectionFail(this);
+		m_device.setListener_ConnectionFail(new BleDevice.DefaultConnectionFailListener()
+		{
+			@Override public Please onConnectionFail(Info moreInfo)
+			{
+				Please please = super.onConnectionFail(moreInfo);
+				
+				if( please == Please.DO_NOT_RETRY )
+				{
+					Toast.makeText(getContext(), moreInfo.device().getName_debug() + " connection failed with " + moreInfo.failureCountSoFar() + " retries - " + moreInfo.reason(), Toast.LENGTH_LONG).show();
+				}
+				
+				return please;
+			}
+		});
 		
 		LayoutInflater li = LayoutInflater.from(context);
 		View inner = li.inflate(R.layout.device_entry, null);
@@ -81,7 +96,7 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 
 		updateStatus(m_device.getStateMask());
 		
-		String name = m_device.getNormalizedName();
+		String name = m_device.getName_normalized();
 		if( name.length() == 0 )
 		{
 			name = m_device.getMacAddress();
@@ -93,6 +108,11 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 		m_name.setText(name);
 		
 		this.addView(inner);
+		
+		if( device.getLastDisconnectIntent() == ChangeIntent.UNINTENTIONAL )
+		{
+			device.connect();
+		}
 	}
 	
 	public BleDevice getDevice()
@@ -106,22 +126,8 @@ public class DeviceListEntry extends FrameLayout implements BleDevice.StateListe
 		m_status.setText(status);
 	}
 
-	@Override public void onStateChange(BleDevice device, int oldStateBits, int newStateBits)
+	@Override public void onStateChange(ChangeEvent event)
 	{
-		updateStatus(newStateBits);
-	}
-
-	@Override public Please onConnectionFail(BleDevice device, Reason reason, int failureCountSoFar)
-	{
-		if( failureCountSoFar < CONNECTION_RETRY_COUNT )
-		{
-			return Please.RETRY;
-		}
-		else
-		{
-			Toast.makeText(getContext(), device.getDebugName() + " connection failed with " + failureCountSoFar + " retries - " + reason, Toast.LENGTH_LONG).show();
-			
-			return Please.DO_NOT_RETRY;
-		}
+		updateStatus(event.newStateBits());
 	}
 }

@@ -16,10 +16,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-/**
- * 
- * @author dougkoellmer
- */
 public class MyActivity extends Activity
 {
 	private BleManager m_bleManager;
@@ -28,35 +24,38 @@ public class MyActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		
-		m_bleManager = BleManager.get(getApplication());
+		m_bleManager = BleManager.get(this);
 		
 		m_bleManager.startScan(new BleManager.DiscoveryListener()
 		{
-			@Override public void onDeviceDiscovered(final BleDevice device)
+			@Override public void onDiscoveryEvent(DiscoveryEvent event)
 			{
 				m_bleManager.stopScan();
 				
-				device.connect(new BleDevice.StateListener()
+				if( event.was(LifeCycle.DISCOVERED) )
 				{
-					@Override public void onStateChange(final BleDevice device, int oldStateBits, int newStateBits)
+					event.device().connect(new BleDevice.StateListener()
 					{
-						if( BleDeviceState.INITIALIZED.wasEntered(oldStateBits, newStateBits) )
+						@Override public void onStateChange(ChangeEvent event)
 						{
-							Log.i("SweetBlueExample", device.getDebugName() + " just initialized!");
-							
-							device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+							if( event.wasEntered(BleDeviceState.INITIALIZED) )
 							{
-								@Override public void onReadOrWriteComplete(Result result)
+								Log.i("SweetBlueExample", event.device().getName_debug() + " just initialized!");
+								
+								event.device().read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
 								{
-									if( result.wasSuccess() )
+									@Override public void onResult(Result result)
 									{
-										Log.i("SweetBlueExample", "Battery level is " + result.data[0] + "%");
+										if( result.wasSuccess() )
+										{
+											Log.i("SweetBlueExample", "Battery level is " + result.data()[0] + "%");
+										}
 									}
-								}
-							});
+								});
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		});
 	}

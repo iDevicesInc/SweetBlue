@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener_Full;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.State;
 
 /**
  * 
@@ -32,6 +37,21 @@ class P_DeviceManager
 		return m_list;
 	}
 	
+	public boolean has(BleDevice device)
+	{
+		synchronized (m_list)
+		{
+			for( int i = 0; i < m_list.size(); i++ )
+			{
+				BleDevice device_ith = m_list.get(i);
+				
+				if( device_ith == device )  return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public BleDevice get(int i)
 	{
 		synchronized (m_list)
@@ -40,7 +60,47 @@ class P_DeviceManager
 		}
 	}
 	
-	public int getCount()
+	int getCount(Object[] query)
+	{
+		int count = 0;
+		
+		synchronized (m_list)
+		{
+			for( int i = 0; i < m_list.size(); i++ )
+			{
+				BleDevice device_ith = m_list.get(i);
+				
+				if( device_ith.is(query) )
+				{
+					count++;
+				}
+			}
+		}
+		
+		return count;
+	}
+	
+	int getCount(BleDeviceState state)
+	{
+		int count = 0;
+		
+		synchronized (m_list)
+		{
+			for( int i = 0; i < m_list.size(); i++ )
+			{
+				BleDevice device_ith = m_list.get(i);
+				
+				if( device_ith.is(state) )
+				{
+					count++;
+				}
+			}
+		}
+		
+		return count;
+	}
+	
+	int getCount()
 	{
 		synchronized (m_list)
 		{
@@ -72,14 +132,22 @@ class P_DeviceManager
 		}
 	}
 	
-	synchronized void remove(BleDevice device)
+	synchronized void remove(BleDevice device, P_DeviceManager cache)
 	{
 		synchronized (m_list)
 		{
 			m_mngr.ASSERT(!m_updating, "Removing device while updating!");
+			m_mngr.ASSERT(m_map.containsKey(device.getMacAddress()));
 			
 			m_list.remove(device);
 			m_map.remove(device.getMacAddress());
+			
+			final boolean cacheDevice = BleDeviceConfig.bool(device.conf_device().cacheDeviceOnUndiscovery, device.conf_mngr().cacheDeviceOnUndiscovery);
+			
+			if( cacheDevice && cache != null )
+			{
+				cache.add(device);
+			}
 		}
 	}
 	
@@ -132,7 +200,7 @@ class P_DeviceManager
 		}
 	}
 	
-	void disconnectAll(PE_TaskPriority priority)
+	void disconnectAllForTurnOff(PE_TaskPriority priority)
 	{
 		synchronized (m_list)
 		{
@@ -143,45 +211,105 @@ class P_DeviceManager
 				//--- DRK > Just an early-out performance check here.
 				if( device.is(BleDeviceState.CONNECTED) )
 				{
-					device.disconnectExplicitly(priority);
+					device.disconnectWithReason(priority, Reason.BLE_TURNING_OFF, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+				}
+			}
+		}
+	}
+	
+	void rediscoverDevicesAfterBleTurningBackOn()
+	{
+		synchronized (m_list)
+		{
+			for( int i = m_list.size()-1; i >= 0; i-- )
+			{
+				BleDevice device = (BleDevice) m_list.get(i);
+				
+				if( !device.is(BleDeviceState.DISCOVERED) )
+				{
+					device.onNewlyDiscovered(null, device.getRssi(), null);
+					
+					if( m_mngr.m_discoveryListener != null )
+		    		{
+						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+						m_mngr.m_discoveryListener.onDiscoveryEvent(event);
+		    		}
+				}
+			}
+		}
+	}
+	
+	void reconnectDevicesAfterBleTurningBackOn()
+	{
+		synchronized (m_list)
+		{
+			for( int i = m_list.size()-1; i >= 0; i-- )
+			{
+				BleDevice device = (BleDevice) m_list.get(i);
+				
+				boolean autoReconnectDeviceWhenBleTurnsBackOn = BleDeviceConfig.bool(device.conf_device().autoReconnectDeviceWhenBleTurnsBackOn, device.conf_mngr().autoReconnectDeviceWhenBleTurnsBackOn);
+				
+				if( autoReconnectDeviceWhenBleTurnsBackOn && device.lastDisconnectWasBecauseOfBleTurnOff() )
+				{
+					device.connect();
 				}
 			}
 		}
 	}
 
-	void undiscoverAll()
+	void undiscoverAllForTurnOff(P_DeviceManager cache, PA_StateTracker.E_Intent intent)
 	{
 		synchronized (m_list)
 		{
 			m_mngr.ASSERT(!m_updating, "Undiscovering devices while updating!");
-			
-			Object[] rawList = m_list.toArray();
-			m_map.clear();
-			m_list.clear();
-			
-			for( int i = rawList.length-1; i >= 0; i-- )
+	
+			for( int i = m_list.size()-1; i >= 0; i-- )
 			{
-				BleDevice device = (BleDevice) rawList[i];
+				BleDevice device_ith = m_list.get(i);
 				
-				undiscoverDevice(device, m_mngr.m_discoveryListener);
+				boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);
+				
+				if( !retainDeviceWhenBleTurnsOff )
+				{
+					undiscoverAndRemove(device_ith, m_mngr.m_discoveryListener, cache, intent);
+					
+					continue;
+				}
+				
+				boolean undiscoverDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().undiscoverDeviceWhenBleTurnsOff, device_ith.conf_mngr().undiscoverDeviceWhenBleTurnsOff);
+				
+				if( undiscoverDeviceWhenBleTurnsOff)
+				{
+					undiscoverDevice(device_ith, m_mngr.m_discoveryListener, intent);
+				}
 			}
 		}
 	}
 	
-	private static void undiscoverDevice(BleDevice device, BleManager.DiscoveryListener listener)
+	private static void undiscoverDevice(BleDevice device, BleManager.DiscoveryListener listener, PA_StateTracker.E_Intent intent)
 	{
-		device.onUndiscovered();
+		if( !device.is(BleDeviceState.DISCOVERED) )  return;
+		
+		device.onUndiscovered(intent);
 		
 		if( listener != null )
 		{
-			if( listener instanceof DiscoveryListener_Full )
-			{
-				((DiscoveryListener_Full)listener).onDeviceUndiscovered(device);
-			}
+			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.UNDISCOVERED);
+			listener.onDiscoveryEvent(event);
 		}
 	}
 	
-	void purgeStaleDevices(final double scanKeepAlive, final BleManager.DiscoveryListener listener)
+	void undiscoverAndRemove(BleDevice device, BleManager.DiscoveryListener discoveryListener, P_DeviceManager cache, E_Intent intent)
+	{
+		synchronized (m_list)
+		{
+			remove(device, cache);
+		
+			undiscoverDevice(device, discoveryListener, intent);
+		}
+	}
+	
+	void purgeStaleDevices(final double scanTime, final P_DeviceManager cache, final BleManager.DiscoveryListener listener)
 	{
 		//--- DRK > Band-aid fix for a potential race condition where scan is stopped from main thread (e.g. by backgrounding).
 		//---		Thus we can start going through this list but then still get some discovery callbacks at the same time.
@@ -201,15 +329,22 @@ class P_DeviceManager
 					for( int i = m_list.size()-1; i >= 0; i-- )
 					{
 						BleDevice device = get(i);
-						boolean purgeable = (device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0;
+						
+						Interval minScanTimeToInvokeUndiscovery = BleDeviceConfig.interval(device.conf_device().minScanTimeToInvokeUndiscovery, device.conf_mngr().minScanTimeToInvokeUndiscovery);
+						if( Interval.isDisabled(minScanTimeToInvokeUndiscovery) )  continue;
+						
+						Interval scanKeepAlive_interval = BleDeviceConfig.interval(device.conf_device().scanKeepAlive, device.conf_mngr().scanKeepAlive);
+						if( Interval.isDisabled(scanKeepAlive_interval) )  continue;
+
+						if( scanTime < Interval.asDouble(minScanTimeToInvokeUndiscovery) )  continue;
+						
+						boolean purgeable = device.getOrigin() != BleDevice.Origin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
 						
 						if( purgeable )
 						{
-							if( device.getTimeSinceLastDiscovery() > scanKeepAlive )
+							if( device.getTimeSinceLastDiscovery() > scanKeepAlive_interval.secs() )
 							{
-								remove(device);
-								
-								undiscoverDevice(device, listener);
+								undiscoverAndRemove(device, listener, cache, E_Intent.IMPLICIT);
 							}
 						}
 					}

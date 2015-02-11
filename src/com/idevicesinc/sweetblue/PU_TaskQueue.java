@@ -34,11 +34,9 @@ class PU_TaskQueue
 		if( task.getClass() == taskClass )
 		{
 			if( mngr_nullable == null )
-			{
-				if( device_nullable == null || 
-					(device_nullable != null && device_nullable.equals(task.getDevice())) ||
-					server_nullable == null ||
-					(server_nullable != null && server_nullable.equals( task.getServer())) )
+            {
+				if( (device_nullable == null || (device_nullable != null && device_nullable.equals(task.getDevice())))    ||
+					(server_nullable == null || (server_nullable != null && server_nullable.equals( task.getServer())))       )
 				{
 					return true;
 				}

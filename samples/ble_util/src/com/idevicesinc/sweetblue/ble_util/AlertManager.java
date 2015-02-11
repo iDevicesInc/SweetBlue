@@ -49,7 +49,7 @@ public class AlertManager implements BleManager.UhOhListener
 		dialog.show();
 	}
 
-	@Override public void onUhOh(BleManager manager, UhOh reason)
+	@Override public void onUhOh(UhOhEvent event)
 	{
 		AlertDialog.Builder builder = new AlertDialog.Builder(m_context);
 		final AlertDialog dialog = builder.create();
@@ -69,21 +69,21 @@ public class AlertManager implements BleManager.UhOhListener
 		};
 		
 		String title = m_context.getResources().getString(R.string.uhoh_title);
-		title = title.replace("{{reason}}", reason.name());
+		title = title.replace("{{reason}}", event.uhOh().name());
 		dialog.setTitle(title);
 		
-		if( reason.getRemedy() == UhOh.Remedy.NUKE )
+		if( event.uhOh().getRemedy() == UhOh.Remedy.NUKE )
 		{
 			dialog.setMessage(m_context.getResources().getString(R.string.uhoh_message_nuke));
 			dialog.setButton(DialogInterface.BUTTON_POSITIVE, m_context.getResources().getString(R.string.uhoh_message_nuke_drop), clickListener);
 			dialog.setButton(DialogInterface.BUTTON_NEGATIVE, m_context.getResources().getString(R.string.uhoh_message_nuke_cancel), clickListener);
 		}
-		else if( reason.getRemedy() == UhOh.Remedy.RESTART_PHONE )
+		else if( event.uhOh().getRemedy() == UhOh.Remedy.RESTART_PHONE )
 		{
 			dialog.setMessage(m_context.getResources().getString(R.string.uhoh_message_phone_restart));
 			dialog.setButton(DialogInterface.BUTTON_NEUTRAL, m_context.getResources().getString(R.string.uhoh_message_phone_restart_ok), clickListener);
 		}
-		else if( reason.getRemedy() == UhOh.Remedy.WAIT_AND_SEE )
+		else if( event.uhOh().getRemedy() == UhOh.Remedy.WAIT_AND_SEE )
 		{
 			dialog.setMessage(m_context.getResources().getString(R.string.uhoh_message_weirdness));
 			dialog.setButton(DialogInterface.BUTTON_NEUTRAL, m_context.getResources().getString(R.string.uhoh_message_weirdness_ok), clickListener);

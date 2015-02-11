@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.State;
 
 /**
  * 
@@ -13,10 +13,22 @@ abstract class PA_StateTracker
 	private final P_Logger m_logger;
 	
 	private final Object m_lock = new Object();
+	private final long[] m_timesInState;
 	
-	PA_StateTracker(P_Logger logger)
+	static enum E_Intent
+	{
+		EXPLICIT, IMPLICIT;
+		
+		public int getMask()
+		{
+			return this == EXPLICIT ? 0xFFFFFFFF : 0x0;
+		}
+	}
+	
+	PA_StateTracker(P_Logger logger, State[] enums)
 	{
 		m_logger = logger;
+		m_timesInState = new long[enums.length];
 	}
 	
 	public int getState()
@@ -24,7 +36,7 @@ abstract class PA_StateTracker
 		return m_stateMask;
 	}
 	
-	boolean checkBitMatch(BitwiseEnum flag, boolean value)
+	boolean checkBitMatch(State flag, boolean value)
 	{
 		synchronized ( m_lock )
 		{
@@ -48,7 +60,7 @@ abstract class PA_StateTracker
 			}
 			
 			
-			BitwiseEnum state = (BitwiseEnum) statesAndValues[i];
+			State state = (State) statesAndValues[i];
 			boolean append = true;
 			
 			if( statesAndValues[i+1] instanceof Boolean )
@@ -72,17 +84,11 @@ abstract class PA_StateTracker
 		return newStateBits;
 	}
 	
-	void update(Object ... statesAndValues)
-	{
-		synchronized ( m_lock )
-		{
-			int newStateBits = getMask(m_stateMask, statesAndValues);
-		
-			setStateMask(newStateBits);
-		}
-	}
 	
-	void append(BitwiseEnum newState)
+	
+	
+	
+	void append(State newState, E_Intent intent)
 	{
 		synchronized ( m_lock )
 		{
@@ -95,19 +101,19 @@ abstract class PA_StateTracker
 			
 			append_assert(newState);
 			
-			setStateMask(m_stateMask | newState.bit());
+			setStateMask(m_stateMask | newState.bit(), intent == E_Intent.EXPLICIT ? newState.bit() : 0x0);
 		}
 	}
 	
-	void remove(BitwiseEnum state)
+	void remove(State state, E_Intent intent)
 	{
 		synchronized ( m_lock )
 		{
-			setStateMask(m_stateMask & ~state.bit() );
+			setStateMask(m_stateMask & ~state.bit(), intent == E_Intent.EXPLICIT ? state.bit() : 0x0);
 		}
 	}
 	
-	protected void append_assert(BitwiseEnum newState){}
+	protected void append_assert(State newState){}
 	
 //	void appendMultiple(I_BitwiseEnum ... states)
 //	{
@@ -124,27 +130,88 @@ abstract class PA_StateTracker
 //		setStateMask(newStateBits);
 //	}
 	
-	void set(Object ... statesAndValues)
+	void set(E_Intent intent, Object ... statesAndValues)
+	{
+		set(intent.getMask(), statesAndValues);
+	}
+	
+	private void set(int intentMask, Object ... statesAndValues)
 	{
 		synchronized ( m_lock )
 		{
 			int newStateBits = getMask(0x0, statesAndValues);
 			
-			setStateMask(newStateBits);
+			setStateMask(newStateBits, intentMask);
 		}
 	}
 	
-	private void setStateMask(int newStateBits)
+	void update(E_Intent intent, Object ... statesAndValues)
+	{
+		update(intent.getMask(), statesAndValues);
+	}
+	
+	private void update(int intentMask, Object ... statesAndValues)
+	{
+		synchronized ( m_lock )
+		{
+			int newStateBits = getMask(m_stateMask, statesAndValues);
+		
+			setStateMask(newStateBits, intentMask);
+		}
+	}
+	
+	long getTimeInState(int stateOrdinal)
+	{
+		int bit = (0x1 << stateOrdinal);
+		
+		if( (bit & m_stateMask) != 0x0 )
+		{
+			return System.currentTimeMillis() - m_timesInState[stateOrdinal];
+		}
+		else
+		{
+			return m_timesInState[stateOrdinal];
+		}
+	}
+	
+	private void setStateMask(int newStateBits, int intentMask)
 	{
 		int oldStateBits = m_stateMask;
 		m_stateMask = newStateBits;
 		
-		fireStateChange(oldStateBits, newStateBits);
+		//--- DRK > Minor skip optimization...shouldn't actually skip (too much) in practice
+		//---		if other parts of the library are handling their state tracking sanely.
+		if( oldStateBits != newStateBits )
+		{
+			for( int i = 0, bit = 0x1; i < m_timesInState.length; i++, bit <<= 0x1 )
+			{
+				//--- DRK > State exited...
+				if( (oldStateBits & bit) != 0x0 && (newStateBits & bit) == 0x0 )
+				{
+					m_timesInState[i] = System.currentTimeMillis() - m_timesInState[i];
+				}
+				//--- DRK > State entered...
+				else if( (oldStateBits & bit) == 0x0 && (newStateBits & bit) != 0x0 )
+				{
+					m_timesInState[i] = System.currentTimeMillis();
+				}
+				else
+				{
+					intentMask &= ~bit;
+				}
+			}
+		}
+		else
+		{
+			intentMask = 0x0;
+		}
+		
+		fireStateChange(oldStateBits, newStateBits, intentMask);
 	}
 	
-	protected abstract void onStateChange(int oldStateBits, int newStateBits);
+	protected abstract void onStateChange(int oldStateBits, int newStateBits, int intentMask);
 	
-	private void fireStateChange(int oldStateBits, int newStateBits)
+	private void fireStateChange(int oldStateBits, int newStateBits, int intentMask)
 	{
 		if( oldStateBits == newStateBits )
 		{
@@ -155,10 +222,10 @@ abstract class PA_StateTracker
 			return;
 		}
 		
-		onStateChange(oldStateBits, newStateBits);
+		onStateChange(oldStateBits, newStateBits, intentMask);
 	}
 	
-	protected String toString(BitwiseEnum[] enums)
+	protected String toString(State[] enums)
 	{
 		synchronized ( m_lock )
 		{

@@ -101,6 +101,26 @@ class P_TaskQueue
 		addAtIndex(task, -1);
 	}
 	
+	public void softlyCancelTasks(PA_Task task)
+	{
+		for( int i = 0; i < m_queue.size()-1; i++ )
+		{
+			PA_Task ithTask = m_queue.get(i);
+			if( ithTask.isSoftlyCancellableBy(task) )
+			{
+				ithTask.attemptToSoftlyCancel(task);
+			}
+		}
+		
+		if( getCurrent() != null )
+		{
+			if( getCurrent().isSoftlyCancellableBy(task) )
+			{
+				getCurrent().attemptToSoftlyCancel(task);
+			}
+		}
+	}
+	
 	private void addAtIndex(PA_Task task, int index)
 	{
 		if( index >= 0 )
@@ -114,22 +134,7 @@ class P_TaskQueue
 			index = m_queue.size()-1;
 		}
 		
-		for( int i = 0; i < m_queue.size()-1; i++ )
-		{
-			PA_Task ithTask = m_queue.get(i);
-			if( ithTask.isSoftlyCancellableBy(task) )
-			{
-				ithTask.setSoftlyCancelled();
-			}
-		}
-		
-		if( getCurrent() != null )
-		{
-			if( getCurrent().isSoftlyCancellableBy(task) )
-			{
-				getCurrent().setSoftlyCancelled();
-			}
-		}
+		softlyCancelTasks(task);
 		
 		task.onAddedToQueue(this);
 		
@@ -144,10 +149,10 @@ class P_TaskQueue
 		{
 			@Override public void run()
 			{
-				if(			tryCancellingCurrentTask(newTask)		){}
-				else if(	tryInterruptingCurrentTask(newTask) 	){}
-				else if(	tryInsertingIntoQueue(newTask) 			){}
-				else		addToBack(newTask)						;;;
+						if	(	tryCancellingCurrentTask	(newTask)	){}
+				else	if	(	tryInterruptingCurrentTask	(newTask) 	){}
+				else	if	(	tryInsertingIntoQueue		(newTask) 	){}
+				else		{	addToBack					(newTask);	};;
 			}
 		});
 		
@@ -397,14 +402,7 @@ class P_TaskQueue
 	{
 		if( m_logger.isEnabled() )
 		{
-			String current = m_current != null ? m_current.toString() : "null";
-//			if( m_pendingEndingStateForCurrentTask != null)
-//			{
-//				current += "(" + m_pendingEndingStateForCurrentTask.name() +")";
-//			}
-			
-			String queue = m_queue.size() > 0 ? m_queue.toString() : "[ empty ]";
-			m_logger.i(current + " " + queue);
+			m_logger.i(this.toString());
 		}
 	}
 	
@@ -450,6 +448,16 @@ class P_TaskQueue
 	}
 	@Override public String toString()
 	{
-		return m_queue.toString();
+		final String current = m_current != null ? m_current.toString() : "no current task";
+//		if( m_pendingEndingStateForCurrentTask != null)
+//		{
+//			current += "(" + m_pendingEndingStateForCurrentTask.name() +")";
+//		}
+		
+		final String queue = m_queue.size() > 0 ? m_queue.toString() : "[queue empty]";
+		
+		final String toReturn = current + " " + queue;
+		
+		return toReturn;
 	}
 }

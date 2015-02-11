@@ -24,47 +24,10 @@ public class ReflectionUuidNameMap implements UuidNameMap
 	{
 		for( Field field : classWithStaticUuids.getFields() )
 		{
-			String uuid = uuidFieldValue(field);
+			String uuid = Utils.fieldStringValue(field);
 			
 			m_dict.put(uuid, field.getName());
 		}
-	}
-	
-	private static String uuidFieldValue(Field field)
-	{
-		Object uuid = staticFieldValue(field);
-		
-		String uuidString = "";
-		
-		if( uuid instanceof String )
-		{
-			uuidString = (String) uuid;
-		}
-		else if( uuid instanceof UUID )
-		{
-			uuidString = uuid.toString();
-		}
-		
-		uuidString = uuidString.toLowerCase();
-		
-		return uuidString;
-	}
-	
-	private static <T extends Object> T staticFieldValue(Field field)
-	{
-		Object value = null;
-		
-		try {
-			value = field.get(null);
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-//			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-//			e.printStackTrace();
-		}
-		
-		return (T) value;
 	}
 
 	@Override

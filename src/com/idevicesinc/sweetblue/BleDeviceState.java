@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
-import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
@@ -14,18 +14,24 @@ import com.idevicesinc.sweetblue.utils.Interval;
  * 
  * @see BleDevice.StateListener
  */
-public enum BleDeviceState implements BitwiseEnum
-{
+public enum BleDeviceState implements State
+{	
 	/**
-	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onDeviceUndiscovered(BleDevice)}.
+	 * Dummy value returned from any method that would otherwise return Java's built-in <code>null</code>.
+	 * A {@link BleDevice} will never be in this state.
+	 */
+	NULL,
+	
+	/**
+	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)}.
 	 * This means the object is effectively dead. {@link BleManager} has removed all references to it and you should do the same.
 	 */
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleManagerConfig#reconnectRateLimiter} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleDeviceConfig#reconnectRateLimiter} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
-	 * {@link BleManagerConfig.ReconnectRateLimiter#CANCEL} from {@link BleManagerConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDevice, int, Interval, Interval)}
+	 * {@link BleDeviceConfig.ReconnectRateLimiter#CANCEL} from {@link BleDeviceConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDeviceConfig.ReconnectRateLimiter.Info)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
 	 */
@@ -135,23 +141,12 @@ public enum BleDeviceState implements BitwiseEnum
 		return 0x1 << ordinal();
 	}
 	
-	/**
-	 * Given an old and new state mask from {@link StateListener#onStateChange(BleDevice, int, int)}, this
-	 * method tells you whether the 'this' state was appended.
-	 * 
-	 * @see #wasExited(int, int)
-	 */
-	public boolean wasEntered(int oldStateBits, int newStateBits)
+	@Override public boolean didEnter(int oldStateBits, int newStateBits)
 	{
 		return !this.overlaps(oldStateBits) && this.overlaps(newStateBits);
 	}
 	
-	/**
-	 * Reverse of {@link #wasEntered(int, int)}.
-	 * 
-	 * @see #wasEntered(int, int)
-	 */
-	public boolean wasExited(int oldStateBits, int newStateBits)
+	@Override public boolean didExit(int oldStateBits, int newStateBits)
 	{
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}
@@ -181,6 +176,19 @@ public enum BleDeviceState implements BitwiseEnum
 			if( CONNECTING.overlaps(stateMask) )		return CONNECTING;
 		}
 		
-		return null;
+		return NULL;
+	}
+	
+	int getConnectionOrdinal()
+	{
+		switch(this)
+		{
+			case CONNECTING:			return  0;
+			case GETTING_SERVICES:		return  1;
+			case AUTHENTICATING:		return  2;
+			case BONDING:				return  3;
+			case INITIALIZING:			return  4;
+			default:					return -1;
+		}
 	}
 }

@@ -15,7 +15,7 @@ class P_Task_Unbond extends PA_Task_RequiresBleOn
 	
 	public P_Task_Unbond(BleDevice device, I_StateListener listener, PE_TaskPriority priority)
 	{
-		super(device, listener);
+		super(device, BleDeviceConfig.DEFAULT_TASK_TIMEOUT, listener);
 		
 		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
 	}
@@ -51,6 +51,11 @@ class P_Task_Unbond extends PA_Task_RequiresBleOn
 		{
 			fail();
 	    }
+	}
+	
+	@Override public boolean isExplicit()
+	{
+		return true; //TODO
 	}
 	
 	@Override public PE_TaskPriority getPriority()

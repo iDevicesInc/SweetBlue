@@ -1,7 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
-import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.BleDevice.StateListener.ChangeEvent;
+import com.idevicesinc.sweetblue.utils.State;
 
 /**
  * 
@@ -15,11 +16,11 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	P_DeviceStateTracker(BleDevice device)
 	{
-		super(device.getManager().getLogger());
+		super(device.getManager().getLogger(), BleDeviceState.values());
 		
 		m_device = device;
 		
-		set(BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
+		set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 	}
 	
 	public void setListener(StateListener listener)
@@ -34,22 +35,26 @@ class P_DeviceStateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
 	{
+		ChangeEvent event = null;
+		
 		if( m_stateListener != null )
 		{
-			m_stateListener.onStateChange(m_device, oldStateBits, newStateBits);
+			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask);
+			m_stateListener.onStateChange(event);
 		}
 		
 		if( m_device.getManager().m_defaultDeviceStateListener != null )
 		{
-			m_device.getManager().m_defaultDeviceStateListener.onStateChange(m_device, oldStateBits, newStateBits);
+			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask);
+			m_device.getManager().m_defaultDeviceStateListener.onStateChange(event);
 		}
 		
 //		m_device.getManager().getLogger().e(this.toString());
 	}
 
-	@Override protected void append_assert(BitwiseEnum newState)
+	@Override protected void append_assert(State newState)
 	{
 		if( newState.ordinal() > BleDeviceState.CONNECTING.ordinal() )
 		{

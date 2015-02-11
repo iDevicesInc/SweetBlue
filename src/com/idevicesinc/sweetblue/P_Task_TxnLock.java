@@ -13,7 +13,7 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 	
 	public P_Task_TxnLock(BleDevice device, BleTransaction txn)
 	{
-		super(device, null, Interval.INFINITE.seconds);
+		super(device, Interval.INFINITE.secs(), null);
 		
 		m_txn = txn;
 	}
@@ -40,6 +40,15 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 			PA_Task_Transactionable task_cast = (PA_Task_Transactionable) task;
 			
 			if( this.getDevice() == task_cast.getDevice() && this.getTxn() == task_cast.getTxn() )
+			{
+				return true;
+			}
+		}
+		else if( task instanceof P_Task_Bond )
+		{
+			P_Task_Bond task_cast = (P_Task_Bond) task;
+			
+			if( this.getDevice() == task_cast.getDevice() )
 			{
 				return true;
 			}

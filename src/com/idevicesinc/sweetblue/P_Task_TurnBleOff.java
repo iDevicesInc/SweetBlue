@@ -23,6 +23,11 @@ class P_Task_TurnBleOff extends PA_Task
 		m_implicit = implicit;
 	}
 	
+	public boolean isImplicit()
+	{
+		return m_implicit;
+	}
+	
 	@Override public void execute()
 	{
 		if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_OFF )

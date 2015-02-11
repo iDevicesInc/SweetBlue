@@ -15,7 +15,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 	
 	public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener, PE_TaskPriority priority)
 	{
-		super(device, listener);
+		super(device, BleDeviceConfig.DEFAULT_TASK_TIMEOUT, listener);
 		
 		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
 		m_explicit = explicit;
@@ -27,7 +27,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 		this(device, explicit, partOfConnection, listener, null);
 	}
 	
-	public boolean isExplicit()
+	@Override public boolean isExplicit()
 	{
 		return m_explicit;
 	}
@@ -65,6 +65,21 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 			
 			m_logger.w("Bond failed immediately.");
 		}
+	}
+	
+	@Override public boolean isMoreImportantThan(PA_Task task)
+	{
+		if( task instanceof P_Task_TxnLock )
+		{
+			P_Task_TxnLock task_cast = (P_Task_TxnLock) task;
+			
+			if( this.getDevice() == task_cast.getDevice() )
+			{
+				return true;
+			}
+		}
+		
+		return super.isMoreImportantThan(task);
 	}
 	
 	@Override public PE_TaskPriority getPriority()

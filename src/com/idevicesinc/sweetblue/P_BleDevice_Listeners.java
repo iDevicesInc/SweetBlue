@@ -9,7 +9,10 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -55,6 +58,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (state.isEndingState())
 				{
+					BluetoothGatt gatt = connectTask.getGatt();
+					if( gatt != null )
+					{
+						m_device.m_nativeWrapper.updateGattInstance(gatt);
+					}
+					
 					if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
 					{
 						if( state == PE_TaskState.SUCCEEDED )
@@ -62,21 +71,17 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 							m_device.setToAlwaysUseAutoConnectIfItWorked();
 						}
 						
-						m_device.onNativeConnect();
-					}
-					else if( state == PE_TaskState.NO_OP )
-					{
-						// nothing to do
+						m_device.onNativeConnect(connectTask.isExplicit());
 					}
 					else
 					{
-						m_device.onConnectFail(state);
+						m_device.onNativeConnectFail(state, connectTask.getGattStatus(), connectTask.getAutoConnectUsage());
 					}
 				}
 			}
 			else if (task.getClass() == P_Task_Disconnect.class)
 			{
-				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT)
+				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT || state == PE_TaskState.NO_OP)
 				{
 					P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 
@@ -85,6 +90,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else if (task.getClass() == P_Task_DiscoverServices.class)
 			{
+				P_Task_DiscoverServices discoverTask = (P_Task_DiscoverServices) task;
 				if (state == PE_TaskState.EXECUTING)
 				{
 					// m_stateTracker.append(GETTING_SERVICES);
@@ -103,7 +109,22 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				}
 				else if (state.isEndingState() )
 				{
-					m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED);
+					if( state == PE_TaskState.SOFTLY_CANCELLED )
+					{
+						// pretty sure doing nothing is correct.
+					}
+					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
+					{
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_IMMEDIATELY, discoverTask.getGattStatus());
+					}
+					else if( state == PE_TaskState.TIMED_OUT )
+					{
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_TIMED_OUT, discoverTask.getGattStatus());
+					}
+					else
+					{
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_EVENTUALLY, discoverTask.getGattStatus());
+					}
 				}
 			}
 			else if (task.getClass() == P_Task_Bond.class)
@@ -120,9 +141,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		m_queue = m_device.getTaskQueue();
 	}
 
-	@Override public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState)
+	@Override public void onConnectionStateChange(final BluetoothGatt gatt, final int gattStatus, final int newState)
 	{
-		m_logger.log_status(status, m_logger.gattConn(newState));
+		//--- DRK > NOTE: For some devices disconnecting by turning off the peripheral comes back with a status of 8, which is BluetoothGatt.GATT_SERVER.
+		//---				For that same device disconnecting from the app the status is 0. Just an FYI to future developers in case they want to distinguish
+		//---				between the two as far as user intent or something.
+		m_logger.log_status(gattStatus, m_logger.gattConn(newState));
 		
 		UpdateLoop updater = m_device.getManager().getUpdateLoop();
 		
@@ -130,12 +154,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			@Override public void run_nested()
 			{
-				onConnectionStateChange_synchronized(gatt, status, newState);
+				onConnectionStateChange_synchronized(gatt, gattStatus, newState);
 			}
 		});
 	}
 	
-	private void onConnectionStateChange_synchronized(BluetoothGatt gatt, int status, int newState)
+	private void onConnectionStateChange_synchronized(BluetoothGatt gatt, int gattStatus, int newState)
 	{
 		if (newState == BluetoothProfile.STATE_DISCONNECTED )
 		{
@@ -145,7 +169,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			{
 				// --- DRK > This assert can hit and is out of our control so commenting out for now.
 				// --- Not sure how to handle disconnect "failures" so just assuming success for now.
-				// U_Bt.ASSERT(U_Bt.isSuccess(status));
+				// U_Bt.ASSERT(U_Bt.isSuccess(gattStatus));
 	
 				if (!m_queue.succeed(P_Task_Disconnect.class, m_device))
 				{
@@ -155,7 +179,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else if (newState == BluetoothProfile.STATE_CONNECTING)
 		{
-			if (Utils.isSuccess(status))
+			if (Utils.isSuccess(gattStatus))
 			{
 				m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 
@@ -163,7 +187,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (!m_queue.isCurrent(P_Task_Connect.class, m_device))
 				{
-					P_Task_Connect task = new P_Task_Connect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
+					Interval timeout = BleDeviceConfig.interval(m_device.conf_device().timeoutForConnection, m_device.conf_mngr().timeoutForConnection);
+					P_Task_Connect task = new P_Task_Connect(m_device, timeout.secs(), m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
 					m_queue.add(task);
 				}
 
@@ -171,14 +196,12 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else
 			{
-				m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
-
-				m_queue.fail(P_Task_Connect.class, m_device);
+				onNativeConnectFail(gatt, gattStatus);
 			}
 		}
 		else if (newState == BluetoothProfile.STATE_CONNECTED)
 		{
-			if (Utils.isSuccess(status))
+			if (Utils.isSuccess(gattStatus))
 			{
 				m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 				
@@ -186,27 +209,20 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (!m_queue.succeed(P_Task_Connect.class, m_device))
 				{
-					m_device.onNativeConnect();
+					m_device.onNativeConnect(/*explicit=*/false);
 				}
 			}
 			else
 			{
-				m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
-				
-				if (!m_queue.fail(P_Task_Connect.class, m_device))
-				{
-					m_device.onConnectFail( (PE_TaskState)null );
-				}
-				
-				if( status == PS_GattStatus.UNKNOWN_STATUS_FOR_IMMEDIATE_CONNECTION_FAILURE )
-				{
-//					m_device.getManager().uhOh(UhOhReason.UNKNOWN_CONNECTION_ERROR);
-				}
+				onNativeConnectFail(gatt, gattStatus);
 			}
 		}
+		//--- DRK > NOTE: never seen this case happen.
 		else if (newState == BluetoothProfile.STATE_DISCONNECTING)
 		{
-			m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
+			m_logger.e("Actually natively disconnecting!"); // error level just so it's noticeable.
+			
+			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 			
 			m_device.onDisconnecting();
 			
@@ -224,6 +240,30 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 	}
 	
+	private void onNativeConnectFail(BluetoothGatt gatt, int gattStatus)
+	{
+		//--- DRK > NOTE: Making an assumption that the underlying stack agrees that the connection state is STATE_DISCONNECTED.
+		//---				This is backed up by basic testing, but even if the underlying stack uses a different value, it can probably
+		//---				be assumed that it will eventually go to STATE_DISCONNECTED, so SweetBlue library logic is sounder "living under the lie" for a bit.
+		m_device.m_nativeWrapper.updateNativeConnectionState(gatt, BluetoothProfile.STATE_DISCONNECTED);
+		
+		P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
+		
+		if( connectTask != null )
+		{
+			connectTask.onNativeFail(gattStatus);
+		}
+		else
+		{
+			m_device.onNativeConnectFail( (PE_TaskState)null, gattStatus, AutoConnectUsage.UNKNOWN);
+		}
+		
+		if( gattStatus == PS_GattStatus.UNKNOWN_STATUS_FOR_IMMEDIATE_CONNECTION_FAILURE )
+		{
+//			m_device.getManager().uhOh(UhOhReason.UNKNOWN_CONNECTION_ERROR);
+		}
+	}
+	
 	private final Runnable m_servicesDiscoveredSuccessRunnable = new SynchronizedRunnable()
 	{
 		@Override public void run_nested()
@@ -236,23 +276,37 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		@Override public void run_nested()
 		{
-			m_queue.fail(P_Task_DiscoverServices.class, m_device);
+			
 		}
 	};
 
-	@Override public void onServicesDiscovered(BluetoothGatt gatt, int status)
+	@Override public void onServicesDiscovered(BluetoothGatt gatt, final int gattStatus)
 	{
-		m_logger.log_status(status);
+		m_logger.log_status(gattStatus);
 		
 		UpdateLoop updater = m_device.getManager().getUpdateLoop();
 
-		if( Utils.isSuccess(status) )
+		if( Utils.isSuccess(gattStatus) )
 		{
 			updater.postIfNeeded(m_servicesDiscoveredSuccessRunnable);
 		}
 		else
 		{
-			updater.postIfNeeded(m_servicesDiscoveredFailRunnable);
+			updater.postIfNeeded(new Runnable()
+			{
+				@Override public void run()
+				{
+					synchronized (m_device.m_threadLock)
+					{
+						P_Task_DiscoverServices task = m_queue.getCurrent(P_Task_DiscoverServices.class, m_device);
+						
+						if( task != null )
+						{
+							task.onNativeFail(gattStatus);
+						}
+					}
+				}
+			});
 		}
 	}
 	
@@ -318,7 +372,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		});
     }
 	
-	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int status)
+	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
 	{
 		UpdateLoop updater = m_device.getManager().getUpdateLoop();
 		
@@ -326,7 +380,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			@Override public void run_nested()
 			{
-				if( Utils.isSuccess(status) )
+				if( Utils.isSuccess(gattStatus) )
 				{
 					m_device.updateRssi(rssi);
 				}
@@ -335,7 +389,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (task == null)  return;
 		
-				task.onReadRemoteRssi(gatt, rssi, status);
+				task.onReadRemoteRssi(gatt, rssi, gattStatus);
 			}
 		});
 	}
@@ -394,14 +448,17 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			
 			if (!m_queue.succeed(P_Task_Unbond.class, m_device))
 			{
-				m_device.onNativeUnbond();
+				m_device.onNativeUnbond(E_Intent.IMPLICIT);
 			}
 		}
 		else if (newState == BluetoothDevice.BOND_BONDING)
 		{
-			m_device.onNativeBonding();
+			P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
+			E_Intent intent = task != null && task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+			boolean isCurrent = task != null; // avoiding erroneous dead code warning from putting this directly in if-clause below.
+			m_device.onNativeBonding(intent);
 
-			if (!m_queue.isCurrent(P_Task_Bond.class, m_device))
+			if ( !isCurrent )
 			{
 				m_queue.add(new P_Task_Bond(m_device, /*explicit=*/false, /*partOfConnection=*/false, m_taskStateListener, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING));
 			}
@@ -414,7 +471,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 			if (!m_queue.succeed(P_Task_Bond.class, m_device))
 			{
-				m_device.onNativeBond();
+				m_device.onNativeBond(E_Intent.IMPLICIT);
 			}
 		}
 	}

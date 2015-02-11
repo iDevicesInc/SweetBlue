@@ -55,11 +55,11 @@ class P_PollManager
 			m_entry = entry;
 		}
 		
-		@Override public void onReadOrWriteComplete(Result result)
+		@Override public void onResult(Result result)
 		{
 			m_entry.onSuccessOrFailure();
 
-			super.onReadOrWriteComplete(m_overrideListener, result);
+			super.onResult(m_overrideListener, result);
 		}
 	}
 	
@@ -72,26 +72,26 @@ class P_PollManager
 			super(readWriteListener, handler, postToMain);
 		}
 		
-		@Override public void onReadOrWriteComplete(Result result)
+		@Override public void onResult(Result result)
 		{
-			if( result.status == Status.SUCCESS )
+			if( result.status() == Status.SUCCESS )
 			{
-				if( m_lastValue == null || !Arrays.equals(m_lastValue, result.data) )
+				if( m_lastValue == null || !Arrays.equals(m_lastValue, result.data()) )
 				{
-					super.onReadOrWriteComplete(result);
+					super.onResult(result);
 				}
 				else
 				{
 					m_entry.onSuccessOrFailure();
 				}
 				
-				m_lastValue = result.data;
+				m_lastValue = result.data();
 			}
 			else
 			{
 				m_lastValue = null;
 				
-				super.onReadOrWriteComplete(result);
+				super.onResult(result);
 			}
 		}
 	}
@@ -166,24 +166,24 @@ class P_PollManager
 			
 			BluetoothGattCharacteristic char_native = m_device.getServiceManager().getCharacteristic(m_uuid).getGuaranteedNative(); 
 			Type type = m_device.getServiceManager().modifyResultType(char_native, Type.NOTIFICATION);
-			int gattStatus = Result.GATT_STATUS_NOT_APPLICABLE;
+			int gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 			
 			if( value == null )
 			{
 				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0);
-				m_pollingReadListener.onReadOrWriteComplete(result);
+				m_pollingReadListener.onResult(result);
 			}
 			else
 			{
 				if( value.length == 0 )
 				{
 					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
-					m_pollingReadListener.onReadOrWriteComplete(result);
+					m_pollingReadListener.onResult(result);
 				}
 				else
 				{
 					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0);
-					m_pollingReadListener.onReadOrWriteComplete(result);
+					m_pollingReadListener.onResult(result);
 				}
 			}
 			
@@ -199,7 +199,7 @@ class P_PollManager
 		void update(double timeStep)
 		{
 			if( m_interval <= 0.0 )  return;
-			if( m_interval == Interval.INFINITE.seconds )  return;
+			if( m_interval == Interval.INFINITE.secs() )  return;
 			
 			m_timeTracker += timeStep;
 			
@@ -231,7 +231,9 @@ class P_PollManager
 	
 	void startPoll(UUID uuid, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
 	{
-		if( !m_device.getManager().m_config.allowDuplicatePollEntries )
+		boolean allowDuplicatePollEntries = BleDeviceConfig.bool(m_device.conf_device().allowDuplicatePollEntries, m_device.conf_mngr().allowDuplicatePollEntries);
+		
+		if( !allowDuplicatePollEntries )
 		{
 			for( int i = m_entries.size()-1; i >= 0; i-- )
 			{
@@ -363,7 +365,7 @@ class P_PollManager
 					
 					if( earlyOutResult != null )
 					{
-						ithEntry.m_pollingReadListener.onReadOrWriteComplete(earlyOutResult);
+						ithEntry.m_pollingReadListener.onResult(earlyOutResult);
 					}
 					else
 					{
@@ -377,7 +379,7 @@ class P_PollManager
 				if( notifyState == E_NotifyState.ENABLED && ithEntry.m_notifyState != E_NotifyState.ENABLED )
 				{
 					Result result = newAlreadyEnabledResult(characteristic);
-					ithEntry.m_pollingReadListener.onReadOrWriteComplete(result);
+					ithEntry.m_pollingReadListener.onResult(result);
 				}
 				
 				ithEntry.m_notifyState = notifyState;

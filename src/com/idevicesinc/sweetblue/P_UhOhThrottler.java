@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import java.util.HashMap;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
+import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOhEvent;
 
 
 /**
@@ -61,7 +62,8 @@ class P_UhOhThrottler
 		if( m_uhOhListener != null ) 
 		{
 			m_lastTimesCalled.put(reason, m_timeTracker);
-			m_uhOhListener.onUhOh(m_mngr, reason);
+			UhOhEvent event = new UhOhEvent(m_mngr, reason);
+			m_uhOhListener.onUhOh(event);
 		}
 	}
 	

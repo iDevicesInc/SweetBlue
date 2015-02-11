@@ -18,7 +18,7 @@ class P_WrappingAssertionListener extends PA_CallbackWrapper implements BleManag
 		m_listener = listener;
 	}
 
-	@Override public void onAssertFailed(final BleManager manager, final String message, final StackTraceElement[] stackTrace)
+	@Override public void onAssertFailed(final Info info)
 	{
 		if( postToMain() )
 		{
@@ -26,13 +26,13 @@ class P_WrappingAssertionListener extends PA_CallbackWrapper implements BleManag
 			{
 				@Override public void run()
 				{
-					m_listener.onAssertFailed(manager, message, stackTrace);
+					m_listener.onAssertFailed(info);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onAssertFailed(manager, message, stackTrace);
+			m_listener.onAssertFailed(info);
 		}
 	}
 }

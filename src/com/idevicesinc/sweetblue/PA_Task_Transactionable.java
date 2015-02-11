@@ -18,29 +18,32 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	private final BleTransaction m_txn;
 	private final PE_TaskPriority m_priority;
 	
-	PA_Task_Transactionable(BleDevice device, BleTransaction txn_nullable, boolean requiresBonding, PE_TaskPriority priority)
+	PA_Task_Transactionable(BleDevice device, double timeout, BleTransaction txn_nullable, boolean requiresBonding, PE_TaskPriority priority)
 	{
-		super(device, null);
+		super(device, timeout, null);
 		
 		m_requiresBonding = requiresBonding;
 		m_txn = txn_nullable;
 		m_priority = priority != null ? priority : PE_TaskPriority.FOR_NORMAL_READS_WRITES;
 	}
 	
+	protected final BleDevice.ReadWriteListener.Status getCancelType()
+	{
+		BleManager mngr = this.getManager();
+		
+		if( mngr.is(BleState.TURNING_OFF) )
+		{
+			return BleDevice.ReadWriteListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
+		}
+		else
+		{
+			return BleDevice.ReadWriteListener.Status.CANCELLED_FROM_DISCONNECT;
+		}
+	}
 	
 	public BleTransaction getTxn()
 	{
 		return m_txn;
-	}
-	
-	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
-	{
-		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
-		{
-			return true;
-		}
-		
-		return super.isSoftlyCancellableBy(task);
 	}
 	
 	@Override public boolean isInterruptableBy(PA_Task task)
