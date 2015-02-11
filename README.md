@@ -117,7 +117,7 @@ Getting Started
 	    						{
 	    							if( r.wasSuccess() )
 	    							{
-	    								Log.i("", "Battery level is " + r.data()[0] + "%");
+	    								Log.i("", "Battery level is " + r.data_byte() + "%");
 	    							}
 	    						}
 	    					});
