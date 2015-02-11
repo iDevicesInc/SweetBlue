@@ -796,6 +796,12 @@ public class BleDevice
 		
 		@Override public Please onConnectionFail(Info info)
 		{
+			//--- DRK > Not necessary to check this ourselves, just being explicit.
+			if( info.reason().wasCancelled() || info.device().is(ATTEMPTING_RECONNECT) )
+			{
+				return Please.DO_NOT_RETRY;
+			}
+			
 			if( info.failureCountSoFar() <= m_retryCount )
 			{
 				if( info.failureCountSoFar() >= m_failCountBeforeUsingAutoConnect )
