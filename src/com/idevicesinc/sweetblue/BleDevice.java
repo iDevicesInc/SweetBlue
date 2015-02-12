@@ -930,9 +930,6 @@ public class BleDevice
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
 		m_rssiPollMngr = new P_RssiPollManager(this);
 		m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-		
-		m_alwaysUseAutoConnect = m_mngr.m_config.alwaysUseAutoConnect;
-		m_useAutoConnect = m_alwaysUseAutoConnect;
 	}
 	
 	private void clear_discovery()

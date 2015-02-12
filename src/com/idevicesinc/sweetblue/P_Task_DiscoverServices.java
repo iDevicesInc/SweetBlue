@@ -29,16 +29,6 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 		return PE_TaskPriority.MEDIUM;
 	}
 	
-	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
-	{
-		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
-		{
-			return true;
-		}
-		
-		return super.isSoftlyCancellableBy(task);
-	}
-	
 	public void onNativeFail(int gattStatus)
 	{
 		m_gattStatus = gattStatus;
