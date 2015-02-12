@@ -17,14 +17,14 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	
 	private AutoConnectUsage m_autoConnectUsage = AutoConnectUsage.UNKNOWN;
 	
-	public P_Task_Connect(BleDevice device, double timeout, I_StateListener listener)
+	public P_Task_Connect(BleDevice device, I_StateListener listener)
 	{
-		this(device, timeout, listener, true, null);
+		this(device, listener, true, null);
 	}
 	
-	public P_Task_Connect(BleDevice device, double timeout, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
+	public P_Task_Connect(BleDevice device, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
 	{
-		super(device, timeout, listener);
+		super(device, listener);
 		
 		m_explicit = explicit;
 		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
@@ -52,18 +52,18 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		
 		if( m_explicit )
 		{
-			boolean useAutoConnect = getDevice().shouldUseAutoConnect();
-			
-			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
-			
-			m_gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
-			
-			if( m_gatt == null )
-			{
-				failImmediately();
-				
-				return;
-			}
+//			boolean useAutoConnect = getDevice().shouldUseAutoConnect();
+//			
+//			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
+//			
+//			m_gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
+//			
+//			if( m_gatt == null )
+//			{
+//				failImmediately();
+//				
+//				return;
+//			}
 		}
 		else
 		{
@@ -144,5 +144,10 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		}
 		
 		return super.isSoftlyCancellableBy(task);
+	}
+	
+	@Override protected BleTask getTaskType()
+	{
+		return BleTask.CONNECT;
 	}
 }

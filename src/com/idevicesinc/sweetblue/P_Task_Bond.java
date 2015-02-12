@@ -15,7 +15,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 	
 	public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener, PE_TaskPriority priority)
 	{
-		super(device, BleDeviceConfig.DEFAULT_TASK_TIMEOUT, listener);
+		super(device, listener);
 		
 		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
 		m_explicit = explicit;
@@ -98,5 +98,10 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 		}
 		
 		return super.isSoftlyCancellableBy(task);
+	}
+
+	@Override protected BleTask getTaskType()
+	{
+		return BleTask.BOND;
 	}
 }

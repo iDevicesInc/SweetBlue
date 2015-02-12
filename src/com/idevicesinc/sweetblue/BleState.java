@@ -101,4 +101,9 @@ public enum BleState implements State
 	{
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}
+	
+	@Override public int or(State state)
+	{
+		return this.bit() | state.bit();
+	}
 }

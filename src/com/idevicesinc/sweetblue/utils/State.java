@@ -196,4 +196,9 @@ public interface State
 	 * @see #didEnter(int, int)
 	 */
 	boolean didExit(int oldStateBits, int newStateBits);
+	
+	/**
+	 * Does a bitwise OR for this state and the given state.
+	 */
+	int or(State state);
 }

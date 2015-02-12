@@ -154,32 +154,10 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Default is false - use this option to force bonding after a
-	 * {@link BleDevice} is {@link BleDeviceState#CONNECTED} if it is not {@link BleDeviceState#BONDED} already.
-	 */
-	public Boolean autoBondAfterConnect					= false;
-	
-	/**
 	 * Default is true - whether to automatically get services immediately after a {@link BleDevice} is
 	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
 	 */
 	Boolean autoGetServices								= true;
-	
-	/**
-	 * Default is true or false based on info from {@link android.os.Build}.
-	 * Background: some android devices have issues when it comes to bonding. So far the worst culprits
-	 * are certain Sony and Motorola phones, so if it looks like {@link Build#MANUFACTURER}
-	 * is either one of those, this is set to true. Please look at the source for this member for the most
-	 * up-to-date values. The problem seems to be associated with mismanagement of pairing keys by the OS and
-	 * this brute force solution seems to be the only way to smooth things out.
-	 */
-	public Boolean removeBondOnDisconnect				=	Utils.isManufacturer("sony")										||
-															Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
-	
-	/**
-	 * Default is same as {@link #removeBondOnDisconnect} - see {@link #removeBondOnDisconnect} for explanation.
-	 */
-	public Boolean removeBondOnDiscovery				= removeBondOnDisconnect;
 	
 	/**
 	 * Default is false - if true and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
@@ -306,30 +284,22 @@ public class BleDeviceConfig implements Cloneable
 	public Interval	scanKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
-	 * How long a {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)} is allowed to take
-	 * before {@link BleDevice.ReadWriteListener.Status#TIMED_OUT} is returned on the
-	 * {@link BleDevice.ReadWriteListener.Result#status} given to {@link BleDevice.ReadWriteListener#onResult(BleDevice.ReadWriteListener.Result)}.
+	 * Default is an array of {@link Interval} instances created using {@link Interval#secs()} with {@link #DEFAULT_TASK_TIMEOUT}.
+	 * This is an array of timeouts whose indices are meant to map to {@link BleTask} ordinals and provide a
+	 * way to control how long a given task is allowed to run before being "cut loose". If no option is provided for a given {@link BleTask},
+	 * either by setting this array null, or by providing <code>null</code> or {@link Interval#DISABLED} for a given {@link BleTask} then
+	 * no timeout is observed.
+	 * <br><br>
+	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
 	 */
-	public Interval timeoutForReads						= Interval.secs(DEFAULT_TASK_TIMEOUT);
-	
-	/**
-	 * Same as {@link #timeoutForReads} but for {@link BleDevice#write(UUID, BleDevice.ReadWriteListener)}.
-	 */
-	public Interval timeoutForWrites					= Interval.secs(DEFAULT_TASK_TIMEOUT);
-	
-	/**
-	 * How long a connection (through {@link BleDevice#connect()} or overloads) is allowed to take before
-	 * {@link BleDevice.ConnectionFailListener.Reason#NATIVE_CONNECTION_TIMED_OUT} is returned on the
-	 * {@link ConnectionFailListener.Info#reason} given to {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)}.
-	 */
-	public Interval timeoutForConnection				= Interval.secs(DEFAULT_TASK_TIMEOUT);
-	
-	/**
-	 * How long service discovery is allowed to take before 
-	 * {@link BleDevice.ConnectionFailListener.Reason#GETTING_SERVICES_TIMED_OUT} is returned on the
-	 * {@link ConnectionFailListener.Info#reason} given to {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)}.
-	 */
-	public Interval timeoutForDiscoveringServices		= Interval.secs(DEFAULT_TASK_TIMEOUT);
+	public Interval[] timeouts							= newTaskTimeArray();
+	{
+		final Interval defaultTimeout = Interval.secs(DEFAULT_TASK_TIMEOUT);
+		for( int i = 0; i < timeouts.length; i++ )
+		{
+			timeouts[i] = defaultTimeout;
+		}
+	}
 	
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
@@ -346,6 +316,32 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #nForAverageRunningWriteTime
 	 */
 	public Integer		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
+	
+	/**
+	 * Default is <code>0x0</code> - controls which {@link BleDeviceState} enter events will invoke an automatic attempt at {@link BleDevice#bond()}.
+	 */
+	public Integer		autoBond_stateEnter					= 0x0;
+	
+	/**
+	 * Default is <code>0x0</code> - controls which {@link BleDeviceState} exit events will invoke an automatic attempt at {@link BleDevice#bond()}.
+	 */
+	public Integer		autoBond_stateExit					= 0x0;
+	
+	/**
+	 * Default is set to bitwise OR of {@link BleDeviceState#DISCONNECTED} and {@link BleDeviceState#UNDISCOVERED}
+	 * based on info from {@link android.os.Build}.
+	 * Background: some android devices have issues when it comes to bonding. So far the worst culprits
+	 * are certain Sony and Motorola phones, so if it looks like {@link Build#MANUFACTURER}
+	 * is either one of those, this is set to true. Please look at the source for this member for the most
+	 * up-to-date values. The problem seems to be associated with mismanagement of pairing keys by the OS and
+	 * this brute force solution seems to be the only way to smooth things out.
+	 */
+	public Integer		autoUnbond_stateEnter				= phoneHasBondingIssues() ? BleDeviceState.DISCONNECTED.or(BleDeviceState.UNDISCOVERED) : 0x0;
+	
+	/**
+	 * Default is <code>0x0</code> - controls which {@link BleDeviceState} exit events will invoke an automatic attempt at {@link BleDevice#unbond()}.
+	 */
+	public Integer		autoUnbond_stateExit				= 0x0;
 	
 	/**
 	 * Default is null, meaning the library won't preemptively attempt to bond for any characteristic operations.
@@ -367,33 +363,169 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	public ReconnectRateLimiter reconnectRateLimiter = new DefaultReconnectRateLimiter();
 	
-	static boolean boolOrDefault(Boolean bool)
+	static boolean boolOrDefault(Boolean bool_nullable)
 	{
-		return bool == null ? false : bool;
+		return bool_nullable == null ? false : bool_nullable;
 	}
 	
-	static Interval intervalOrDefault(Interval value)
+	static Interval intervalOrDefault(Interval value_nullable)
 	{
-		return value == null ? Interval.DISABLED : value;
+		return value_nullable == null ? Interval.DISABLED : value_nullable;
 	}
 	
-	static boolean bool(Boolean bool_device, Boolean bool_mngr)
+	static boolean bool(Boolean bool_device_nullable, Boolean bool_mngr_nullable)
 	{
-		return bool_device != null ? bool_device : boolOrDefault(bool_mngr);
+		return bool_device_nullable != null ? bool_device_nullable : boolOrDefault(bool_mngr_nullable);
 	}
 	
-	static Interval interval(Interval interval_device, Interval interval_mngr)
+	static Interval interval(Interval interval_device_nullable, Interval interval_mngr_nullable)
 	{
-		return interval_device != null ? interval_device : intervalOrDefault(interval_mngr);
+		return interval_device_nullable != null ? interval_device_nullable : intervalOrDefault(interval_mngr_nullable);
 	}
 	
-	static Integer interger(Integer int_device, Integer int_mngr)
+	static Integer integer(Integer int_device_nullable, Integer int_mngr)
 	{
-		return int_device != null ? int_device : int_mngr;
+		return int_device_nullable != null ? int_device_nullable : int_mngr;
+	}
+	
+	static int integer(Integer value_nullable)
+	{
+		return value_nullable != null ? value_nullable : 0x0;
 	}
 	
 	public BleDeviceConfig()
 	{
+	}
+	
+	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr)
+	{
+		final int ordinal = task.ordinal();
+		final Interval interval_device = intervals_device_nullable != null && intervals_device_nullable.length > ordinal ? intervals_device_nullable[ordinal] : null;
+		final Interval interval_mngr = intervals_mngr != null && intervals_mngr.length > ordinal ? intervals_mngr[ordinal] : null;
+		
+		return interval(interval_device, interval_mngr);
+	}
+	
+	static Interval getTimeout(final BleTask task, final BleDeviceConfig conf_device_nullable, final BleManagerConfig conf_mngr)
+	{
+		final Interval[] timeouts_device = conf_device_nullable != null ? conf_device_nullable.timeouts : null;
+		final Interval[] timeouts_mngr = conf_mngr.timeouts;
+		
+		return getTaskInterval(task, timeouts_device, timeouts_mngr);
+	}
+	
+	/**
+	 * Convenience member to add entries to {@link #timeouts} for you.
+	 */
+	public void setTimeout(final Interval interval_nullable, final BleTask ... tasks)
+	{
+		this.timeouts = this.timeouts != null ? this.timeouts : newTaskTimeArray();
+		
+		if( this.timeouts.length < BleTask.values().length )
+		{
+			Interval[] timeouts_new = newTaskTimeArray();
+			
+			for( int i = 0; i < this.timeouts.length; i++ )
+			{
+				timeouts_new[i] = this.timeouts[i];
+			}
+			
+			this.timeouts = timeouts_new;
+		}
+		
+		for( int i = 0; i < tasks.length; i++ )
+		{
+			this.timeouts[tasks[i].ordinal()] = interval_nullable;
+		}
+	}
+	
+	private static Interval[] newTaskTimeArray()
+	{
+		return new Interval[BleTask.values().length];
+	}
+	
+	/**
+	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
+	 * and so this method is used to set {@link #autoUnbond_stateEnter}.
+	 */
+	public boolean phoneHasBondingIssues()
+	{
+		return Utils.isManufacturer("sony") || Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
+	}
+	
+	/**
+	 * Convenience method that does a bitwise OR of the given states to {@link #autoBond_stateEnter}.
+	 */
+	public void autoBondWhenEntering(BleDeviceState ... states)
+	{
+		autoBond_stateEnter = autoBond_stateEnter != null ? autoBond_stateEnter : 0x0;
+		
+		for( int i = 0; i < states.length; i++ )
+		{
+			autoBond_stateEnter |= states[i].bit();
+		}
+	}
+	
+	/**
+	 * Convenience method that does a bitwise OR of the given states to {@link #autoBond_stateExit}.
+	 */
+	public void autoBondWhenExiting(BleDeviceState ... states)
+	{
+		autoBond_stateExit = autoBond_stateExit != null ? autoBond_stateExit : 0x0;
+		
+		for( int i = 0; i < states.length; i++ )
+		{
+			autoBond_stateExit |= states[i].bit();
+		}
+	}
+	
+	/**
+	 * Convenience method that does a bitwise OR of the given states to {@link #autoUnbond_stateEnter}.
+	 */
+	public void autoUnbondWhenEntering(BleDeviceState ... states)
+	{
+		autoUnbond_stateEnter = autoUnbond_stateEnter != null ? autoUnbond_stateEnter : 0x0;
+		
+		for( int i = 0; i < states.length; i++ )
+		{
+			autoUnbond_stateEnter |= states[i].bit();
+		}
+	}
+	
+	/**
+	 * Convenience method that does a bitwise OR of the given states to {@link #autoUnbond_stateExit}.
+	 */
+	public void autoUnbondWhenExiting(BleDeviceState ... states)
+	{
+		autoUnbond_stateExit = autoUnbond_stateExit != null ? autoUnbond_stateExit : 0x0;
+		
+		for( int i = 0; i < states.length; i++ )
+		{
+			autoUnbond_stateExit |= states[i].bit();
+		}
+	}
+	
+	private static boolean autoBondOrUnbond(final int oldStateBits, final int newStateBits, final int autoEnterMask, final int autoExitMask)
+	{
+		final int enterMask = newStateBits & ~oldStateBits;
+		
+		if( (enterMask & autoEnterMask) != 0x0 )  return true;
+		
+		final int exitMask = oldStateBits & ~newStateBits;
+		
+		if( (exitMask & autoExitMask) != 0x0 )  return true;
+		
+		return false;
+	}
+	
+	boolean autoBond(final int oldStateBits, final int newStateBits)
+	{
+		return autoBondOrUnbond(oldStateBits, newStateBits, integer(autoBond_stateEnter), integer(autoBond_stateExit));
+	}
+	
+	boolean autoUnbond(final int oldStateBits, final int newStateBits)
+	{
+		return autoBondOrUnbond(oldStateBits, newStateBits, integer(autoUnbond_stateEnter), integer(autoUnbond_stateExit));
 	}
 	
 	@Override protected BleDeviceConfig clone()

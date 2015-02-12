@@ -48,4 +48,9 @@ class P_Task_CrashResolver extends PA_Task_RequiresBleOn
 			succeed();
 		}
 	}
+	
+	@Override protected BleTask getTaskType()
+	{
+		return BleTask.RESOLVE_CRASHES;
+	}
 }

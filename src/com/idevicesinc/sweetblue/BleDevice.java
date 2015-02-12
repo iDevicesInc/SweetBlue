@@ -978,10 +978,10 @@ public class BleDevice
 	
 	private void initEstimators()
 	{
-		Integer nForAverageRunningWriteTime = BleDeviceConfig.interger(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
+		Integer nForAverageRunningWriteTime = BleDeviceConfig.integer(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
 		m_writeTimeEstimator = nForAverageRunningWriteTime == null ? null : new TimeEstimator(nForAverageRunningWriteTime);
 		
-		Integer nForAverageRunningReadTime = BleDeviceConfig.interger(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
+		Integer nForAverageRunningReadTime = BleDeviceConfig.integer(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
 		m_readTimeEstimator = nForAverageRunningReadTime == null ? null : new TimeEstimator(nForAverageRunningReadTime);
 	}
 	
@@ -1305,7 +1305,7 @@ public class BleDevice
 	 */
 	public void unbond()
 	{
-		removeBond(null);
+		unbond_private(null);
 	}
 	
 	/**
@@ -1635,8 +1635,7 @@ public class BleDevice
 	
 	void readRssi_internal(Type type, P_WrappingReadWriteListener listener)
 	{
-		double timeout = BleDeviceConfig.DEFAULT_TASK_TIMEOUT;
-		m_queue.add(new P_Task_ReadRssi(this, timeout, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
+		m_queue.add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
 	}
 	
 	/**
@@ -1745,6 +1744,11 @@ public class BleDevice
 		return true;
 	}
 	
+	Interval getTaskTimeout(final BleTask task)
+	{
+		return BleDeviceConfig.getTimeout(task, conf_device(), conf_mngr());
+	}
+	
 	/**
 	 * Returns the device's name and current state for logging and debugging purposes.
 	 */
@@ -1806,39 +1810,18 @@ public class BleDevice
 		clear_discovery();
 		
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
-		
-		boolean removeBondOnDiscovery = BleDeviceConfig.bool(conf_device().removeBondOnDiscovery, conf_mngr().removeBondOnDiscovery);
-		
-		if( removeBondOnDiscovery )
-		{
-			m_stateTracker.update
-			(
-				E_Intent.IMPLICIT,
-				BONDING,		false,
-				BONDED,			false,
-				UNBONDED,		true,
-				UNDISCOVERED,	false,
-				DISCOVERED,		true,
-				ADVERTISING,	true,
-				DISCONNECTED,	true
-			);
-			
-			m_queue.add(new P_Task_Unbond(this, m_taskStateListener));
-		}
-		else
-		{
-			m_stateTracker.update
-			(
-				E_Intent.IMPLICIT,
-				BONDING,		m_nativeWrapper.isNativelyBonding(),
-				BONDED,			m_nativeWrapper.isNativelyBonded(),
-				UNBONDED,		m_nativeWrapper.isNativelyUnbonded(),
-				UNDISCOVERED,	false,
-				DISCOVERED,		true,
-				ADVERTISING,	true,
-				DISCONNECTED,	true
-			);
-		}
+
+		m_stateTracker.update
+		(
+			E_Intent.IMPLICIT,
+			BONDING,		m_nativeWrapper.isNativelyBonding(),
+			BONDED,			m_nativeWrapper.isNativelyBonded(),
+			UNBONDED,		m_nativeWrapper.isNativelyUnbonded(),
+			UNDISCOVERED,	false,
+			DISCOVERED,		true,
+			ADVERTISING,	true,
+			DISCONNECTED,	true
+		);
 	}
 	
 	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
@@ -1899,7 +1882,7 @@ public class BleDevice
 		m_rssiPollMngr.update(timeStep);
 	}
 	
-	void removeBond(PE_TaskPriority priority)
+	void unbond_private(PE_TaskPriority priority)
 	{
 		m_queue.add(new P_Task_Unbond(this, m_taskStateListener, priority));
 		
@@ -1977,8 +1960,7 @@ public class BleDevice
 	
 		m_txnMngr.onConnect(authenticationTxn, initTxn);
 		
-		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForConnection, conf_mngr().timeoutForConnection);
-		m_queue.add(new P_Task_Connect(this, timeout.secs(), m_taskStateListener));
+		m_queue.add(new P_Task_Connect(this, m_taskStateListener));
 		
 		onConnecting(/*definitelyExplicit=*/true, isReconnect);
 	}
@@ -2079,8 +2061,8 @@ public class BleDevice
 		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
 		
 		
-		final boolean autobond = BleDeviceConfig.bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
-		final boolean bond = autobond && !isBondingOrBonded();
+		//final boolean autobond = BleDeviceConfig.bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
+		final boolean bond = false;//autobond && !isBondingOrBonded();
 		
 		if( bond )
 		{
@@ -2176,8 +2158,7 @@ public class BleDevice
 		}
 		
 		m_serviceMngr.clear();
-		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForDiscoveringServices, conf_mngr().timeoutForDiscoveringServices);
-		m_queue.add(new P_Task_DiscoverServices(this, timeout.secs(), m_taskStateListener));
+		m_queue.add(new P_Task_DiscoverServices(this, m_taskStateListener));
 		
 		//--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
 		//---		Even without this check the library should still be in a goodish state. Might send some weird state
@@ -2276,38 +2257,17 @@ public class BleDevice
 		m_serviceMngr.clear();
 		m_txnMngr.clearQueueLock();
 		
-		boolean removeBondOnDisconnect = BleDeviceConfig.bool(conf_device().removeBondOnDisconnect, conf_mngr().removeBondOnDisconnect);
-		
-		if( fromBleCallback && removeBondOnDisconnect )
-		{
-			m_stateTracker.set
-			(
-				intent,
-				DISCOVERED, true,
-				DISCONNECTED, true,
-				BONDING, false,
-				BONDED, false,
-				UNBONDED, true,
-				ATTEMPTING_RECONNECT, attemptingReconnect,
-				ADVERTISING, !attemptingReconnect
-			);
-			
-			m_queue.add(new P_Task_Unbond(this, m_taskStateListener));
-		}
-		else
-		{
-			m_stateTracker.set
-			(
-				intent,
-				DISCOVERED, true,
-				DISCONNECTED, true,
-				BONDING, m_nativeWrapper.isNativelyBonding(),
-				BONDED, m_nativeWrapper.isNativelyBonded(),
-				UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
-				ATTEMPTING_RECONNECT, attemptingReconnect,
-				ADVERTISING, !attemptingReconnect
-			);
-		}
+		m_stateTracker.set
+		(
+			intent,
+			DISCOVERED, true,
+			DISCONNECTED, true,
+			BONDING, m_nativeWrapper.isNativelyBonding(),
+			BONDED, m_nativeWrapper.isNativelyBonded(),
+			UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+			ATTEMPTING_RECONNECT, attemptingReconnect,
+			ADVERTISING, !attemptingReconnect
+		);
 	}
 	
 	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, int gattStatus)
@@ -2509,8 +2469,7 @@ public class BleDevice
 	{
 		boolean requiresBonding = bondIfNeeded(characteristic);
 		
-		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForReads, conf_mngr().timeoutForReads);
-		m_queue.add(new P_Task_Read(characteristic, timeout.secs(), type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	void write_internal(UUID uuid, byte[] data, P_WrappingReadWriteListener listener)
@@ -2531,8 +2490,7 @@ public class BleDevice
 		
 		boolean requiresBonding = bondIfNeeded(characteristic);
 		
-		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForWrites, conf_mngr().timeoutForWrites);
-		m_queue.add(new P_Task_Write(characteristic, timeout.secs(), data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	private void disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)

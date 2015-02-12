@@ -58,4 +58,9 @@ class P_Task_TurnBleOff extends PA_Task
 	{
 		return PE_TaskPriority.CRITICAL;
 	}
+	
+	@Override protected BleTask getTaskType()
+	{
+		return BleTask.TURN_BLE_OFF;
+	}
 }

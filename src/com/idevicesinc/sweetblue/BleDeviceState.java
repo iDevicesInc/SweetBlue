@@ -151,6 +151,11 @@ public enum BleDeviceState implements State
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}
 	
+	@Override public int or(State state)
+	{
+		return this.bit() | state.bit();
+	}
+	
 	/**
 	 * A convenience for UI purposes, this returns the "highest" connection state representing
 	 * a transition from one state to another, so something with "ING" in the name (except {@link #UPDATING_FIRMWARE}).
