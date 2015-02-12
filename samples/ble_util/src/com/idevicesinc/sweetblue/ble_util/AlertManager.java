@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue.ble_util;
 
 import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.UhOh;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -72,18 +71,18 @@ public class AlertManager implements BleManager.UhOhListener
 		title = title.replace("{{reason}}", event.uhOh().name());
 		dialog.setTitle(title);
 		
-		if( event.uhOh().getRemedy() == UhOh.Remedy.NUKE )
+		if( event.uhOh().getRemedy() == Remedy.NUKE )
 		{
 			dialog.setMessage(m_context.getResources().getString(R.string.uhoh_message_nuke));
 			dialog.setButton(DialogInterface.BUTTON_POSITIVE, m_context.getResources().getString(R.string.uhoh_message_nuke_drop), clickListener);
 			dialog.setButton(DialogInterface.BUTTON_NEGATIVE, m_context.getResources().getString(R.string.uhoh_message_nuke_cancel), clickListener);
 		}
-		else if( event.uhOh().getRemedy() == UhOh.Remedy.RESTART_PHONE )
+		else if( event.uhOh().getRemedy() == Remedy.RESTART_PHONE )
 		{
 			dialog.setMessage(m_context.getResources().getString(R.string.uhoh_message_phone_restart));
 			dialog.setButton(DialogInterface.BUTTON_NEUTRAL, m_context.getResources().getString(R.string.uhoh_message_phone_restart_ok), clickListener);
 		}
-		else if( event.uhOh().getRemedy() == UhOh.Remedy.WAIT_AND_SEE )
+		else if( event.uhOh().getRemedy() == Remedy.WAIT_AND_SEE )
 		{
 			dialog.setMessage(m_context.getResources().getString(R.string.uhoh_message_weirdness));
 			dialog.setButton(DialogInterface.BUTTON_NEUTRAL, m_context.getResources().getString(R.string.uhoh_message_weirdness_ok), clickListener);

@@ -30,7 +30,7 @@ public class BleDeviceConfig implements Cloneable
 	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
-	public static final double DEFAULT_TASK_TIMEOUT						= 10.0;
+	public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
 	
 	/**
 	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation failed at a point where a
@@ -397,11 +397,11 @@ public class BleDeviceConfig implements Cloneable
 	{
 	}
 	
-	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr)
+	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr_nullable)
 	{
 		final int ordinal = task.ordinal();
 		final Interval interval_device = intervals_device_nullable != null && intervals_device_nullable.length > ordinal ? intervals_device_nullable[ordinal] : null;
-		final Interval interval_mngr = intervals_mngr != null && intervals_mngr.length > ordinal ? intervals_mngr[ordinal] : null;
+		final Interval interval_mngr = intervals_mngr_nullable != null && intervals_mngr_nullable.length > ordinal ? intervals_mngr_nullable[ordinal] : null;
 		
 		return interval(interval_device, interval_mngr);
 	}
