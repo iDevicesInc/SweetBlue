@@ -130,11 +130,63 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		
 		/**
-		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDiscoveryEvent(DiscoveryListener.DiscoveryEvent)} will be called shortly.
+		 * Small struct passed back from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)}.
+		 * Use static constructor methods to create an instance.
+		 */
+		public static class Ack
+		{
+			private final boolean m_ack;
+			private final BleDeviceConfig m_config;
+			
+			private Ack(boolean ack, BleDeviceConfig config_nullable)
+			{
+				m_ack = ack;
+				m_config = config_nullable;
+			}
+			
+			boolean ack()
+			{
+				return m_ack;
+			}
+			
+			BleDeviceConfig getConfig()
+			{
+				return m_config;
+			}
+			
+			/**
+			 * Return this from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} to say yes to the discovery.
+			 */
+			public static Ack yes()
+			{
+				return new Ack(true, null);
+			}
+			
+			/**
+			 * Return this from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} to say yes to the discovery
+			 * and pass a {@link BleDeviceConfig} instance to the {@link BleDevice} that's about to be created.
+			 */
+			public static Ack yes(BleDeviceConfig config)
+			{
+				return new Ack(true, config);
+			}
+			
+			/**
+			 * Return this from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} to say no to the discovery.
+			 */
+			public static Ack no()
+			{
+				return new Ack(false, null);
+			}
+		}
+		
+		/**
+		 * Return {@link Ack#yes()} to acknowledge the discovery, in which case {@link DiscoveryListener#onDiscoveryEvent(DiscoveryListener.DiscoveryEvent)}
+		 * will be called shortly. Otherwise return {@link Ack#no()} to ignore the discovered device.
 		 * 
 		 * @return Whether to acknowledge the discovery.
 		 */
-		boolean acknowledgeDiscovery(Packet packet);
+		Ack acknowledgeDiscovery(Packet packet);
 	}
 	
 	/**
@@ -160,9 +212,16 @@ public class BleManagerConfig extends BleDeviceConfig
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
 		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultAdvertisingFilter#DefaultAdvertisingFilter(Collection)}.
 		 */
-		@Override public boolean acknowledgeDiscovery(Packet packet)
+		@Override public Ack acknowledgeDiscovery(Packet packet)
 		{
-			return Utils.haveMatchingIds(packet.advertisedServices(), m_whitelist);
+			if( Utils.haveMatchingIds(packet.advertisedServices(), m_whitelist) )
+			{
+				return Ack.yes();
+			}
+			else
+			{
+				return Ack.no();
+			}
 		}
 	}
 	

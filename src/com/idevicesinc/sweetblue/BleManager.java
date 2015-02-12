@@ -31,6 +31,7 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleManager.NukeListener.NukeEvent;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
+import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Ack;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
 import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
@@ -1463,23 +1464,43 @@ public class BleManager
 	}
 
 	/**
-	 * Same as {@link #newDevice(String, String)} but uses an empty string for the name.
+	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name.
 	 */
 	public BleDevice newDevice(String macAddress)
 	{
-		return newDevice(macAddress, "");
+		return newDevice(macAddress, null);
+	}
+	
+	/**
+	 * Same as {@link #newDevice(String)} but passes a {@link BleDeviceConfig} to be used as well.
+	 */
+	public BleDevice newDevice(String macAddress, BleDeviceConfig config)
+	{
+		return newDevice(macAddress, "", config);
 	}
 
 	/**
 	 * Creates a new {@link BleDevice} or returns an existing one if the macAddress matches.
 	 * {@link DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)} will be called if a new device
 	 * is created.
+	 * <br><br>
+	 * NOTE: You should always do a null check on this method's return value just in case. Android
+	 * documentation says that underlying stack will always return a valid {@link BluetoothDevice}
+	 * instance (which is required to create a {@link BleDevice} instance), but you really never know.
 	 */
-	public BleDevice newDevice(String macAddress, String name)
+	public BleDevice newDevice(String macAddress, String name, BleDeviceConfig config)
 	{
 		final BleDevice existingDevice = this.getDevice(macAddress);
 
-		if( existingDevice != null )  return existingDevice;
+		if( existingDevice != null )
+		{
+			if( config != null )
+			{
+				existingDevice.setConfig(config);
+			}
+			
+			return existingDevice;
+		}
 
 		final BluetoothDevice device_native = getNative().getAdapter().getRemoteDevice(macAddress);
 
@@ -1487,7 +1508,7 @@ public class BleManager
 
 		final String name_normalized = Utils.normalizeDeviceName(name);
 
-		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDevice.Origin.EXPLICIT);
+		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDevice.Origin.EXPLICIT, config);
 		
 		onDiscovered_wrapItUp(newDevice, /*newlyDiscovered=*/true, null, null, 0);
 
@@ -1519,7 +1540,7 @@ public class BleManager
 	}
 
 	//--- DRK > Smooshing together a bunch of package-private accessors here.
-	P_BleStateTracker				getStateTracker(){				return m_stateTracker;				}
+	P_BleStateTracker			getStateTracker(){				return m_stateTracker;				}
 	P_NativeBleStateTracker		getNativeStateTracker(){		return m_nativeStateTracker;		}
 	UpdateLoop					getUpdateLoop(){				return m_updateLoop;				}
 	P_BluetoothCrashResolver	getCrashResolver(){				return m_crashResolver;				}
@@ -1802,6 +1823,8 @@ public class BleManager
 		List<UUID> services_nullable = null;
 
 		String normalizedDeviceName = "";
+		
+		final Ack ack;
 
 		if( device == null )
 		{
@@ -1812,22 +1835,28 @@ public class BleManager
 	    	deviceName = deviceName != null ? deviceName : "";
 	    	boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 	    	State.ChangeIntent lastDisconnectIntent = m_lastDisconnectMngr.load(macAddress, hitDisk);
+	    	ack = m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 
-	    	if( !m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent) )  return;
+	    	if( !ack.ack() )  return;
+		}
+		else
+		{
+			ack = null;
 		}
 
     	boolean newlyDiscovered = false;
 
     	if ( device == null )
     	{
-    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDevice.Origin.FROM_DISCOVERY);
+    		final BleDeviceConfig config_nullable = ack != null ? ack.getConfig() : null;
+    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDevice.Origin.FROM_DISCOVERY, config_nullable);
     		newlyDiscovered = true;
     	}
 
     	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
 	}
 
-	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDevice.Origin origin)
+	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDevice.Origin origin, BleDeviceConfig config_nullable)
 	{
 		final boolean hitCache = true; // TODO: for now always true...should it be behind a config option?
 		
@@ -1840,6 +1869,7 @@ public class BleManager
 			if( device_cached != null )
 			{
 				m_deviceMngr_cache.remove(device_cached, null);
+				device_cached.setConfig(config_nullable);
 			}
 		}
 		else
@@ -1847,7 +1877,7 @@ public class BleManager
 			device_cached = null;
 		}
 		
-		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin);
+		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin, config_nullable);
 		
 		m_deviceMngr.add(device);
 

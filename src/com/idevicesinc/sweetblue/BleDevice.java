@@ -911,10 +911,11 @@ public class BleDevice
 	public Object appData;
 	
 	
-	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName, String nativeName, Origin origin)
+	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName, String nativeName, Origin origin, BleDeviceConfig config_nullable)
 	{
 		m_mngr = mngr;
-		m_origin = origin; 
+		m_origin = origin;
+		setConfig(config_nullable);
 		m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName, nativeName);
 		m_queue = m_mngr.getTaskQueue();
 		m_listeners = new P_BleDevice_Listeners(this);
@@ -927,7 +928,6 @@ public class BleDevice
 		m_taskStateListener = m_listeners.m_taskStateListener;
 		m_reconnectMngr = new P_ReconnectManager(this);
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
-		initEstimators();
 		m_rssiPollMngr = new P_RssiPollManager(this);
 		m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		
@@ -958,9 +958,9 @@ public class BleDevice
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual device. 
 	 */
-	public void setConfig(BleDeviceConfig config)
+	public void setConfig(BleDeviceConfig config_nullable)
 	{
-		m_config = config == null ? null : config.clone();
+		m_config = config_nullable == null ? null : config_nullable.clone();
 		
 		initEstimators();
 		
