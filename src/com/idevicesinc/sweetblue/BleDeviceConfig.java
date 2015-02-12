@@ -388,7 +388,7 @@ public class BleDeviceConfig implements Cloneable
 		return int_device_nullable != null ? int_device_nullable : int_mngr;
 	}
 	
-	static int integer(Integer value_nullable)
+	static int integerOrZero(Integer value_nullable)
 	{
 		return value_nullable != null ? value_nullable : 0x0;
 	}
@@ -518,14 +518,20 @@ public class BleDeviceConfig implements Cloneable
 		return false;
 	}
 	
-	boolean autoBond(final int oldStateBits, final int newStateBits)
+	static boolean autoBond(final int oldStateBits, final int newStateBits, final BleDeviceConfig conf_device, final BleManagerConfig conf_mngr)
 	{
-		return autoBondOrUnbond(oldStateBits, newStateBits, integer(autoBond_stateEnter), integer(autoBond_stateExit));
+		final int autoBond_stateEnter = integerOrZero(integer(conf_device.autoBond_stateEnter, conf_mngr.autoBond_stateEnter));
+		final int autoBond_stateExit = integerOrZero(integer(conf_device.autoBond_stateExit, conf_mngr.autoBond_stateExit));
+		
+		return autoBondOrUnbond(oldStateBits, newStateBits, autoBond_stateEnter, autoBond_stateExit);
 	}
 	
-	boolean autoUnbond(final int oldStateBits, final int newStateBits)
+	static boolean autoUnbond(final int oldStateBits, final int newStateBits, final BleDeviceConfig conf_device, final BleManagerConfig conf_mngr)
 	{
-		return autoBondOrUnbond(oldStateBits, newStateBits, integer(autoUnbond_stateEnter), integer(autoUnbond_stateExit));
+		final int autoUnbond_stateEnter = integerOrZero(integer(conf_device.autoUnbond_stateEnter, conf_mngr.autoUnbond_stateEnter));
+		final int autoUnbond_stateExit = integerOrZero(integer(conf_device.autoUnbond_stateExit, conf_mngr.autoUnbond_stateExit));
+		
+		return autoBondOrUnbond(oldStateBits, newStateBits, autoUnbond_stateEnter, autoUnbond_stateExit);
 	}
 	
 	@Override protected BleDeviceConfig clone()

@@ -51,6 +51,23 @@ class P_DeviceStateTracker extends PA_StateTracker
 			m_device.getManager().m_defaultDeviceStateListener.onStateChange(event);
 		}
 		
+		final BleDeviceConfig conf_device = m_device.conf_device();
+		final BleManagerConfig conf_mngr = m_device.conf_mngr();
+		final boolean autoBond = BleDeviceConfig.autoBond(oldStateBits, newStateBits, conf_device, conf_mngr);
+		final boolean autoUnbond = BleDeviceConfig.autoUnbond(oldStateBits, newStateBits, conf_device, conf_mngr);
+		
+		if( autoBond != autoUnbond )
+		{
+			if( autoBond )
+			{
+				m_device.bond();
+			}
+			else if( autoUnbond )
+			{
+				m_device.unbond();
+			}
+		}
+		
 //		m_device.getManager().getLogger().e(this.toString());
 	}
 
