@@ -5,9 +5,6 @@ import com.idevicesinc.sweetblue.BleDevice.StateListener.ChangeEvent;
 import com.idevicesinc.sweetblue.utils.State;
 
 /**
- * 
- * 
- *
  */
 class P_DeviceStateTracker extends PA_StateTracker
 {
@@ -19,8 +16,6 @@ class P_DeviceStateTracker extends PA_StateTracker
 		super(device.getManager().getLogger(), BleDeviceState.values());
 		
 		m_device = device;
-		
-		set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 	}
 	
 	public void setListener(StateListener listener)

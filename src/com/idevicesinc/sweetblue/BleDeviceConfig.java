@@ -450,7 +450,8 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	public boolean phoneHasBondingIssues()
 	{
-		return Utils.isManufacturer("sony") || Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
+//		return Utils.isManufacturer("sony") || Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
+		return true;
 	}
 	
 	/**

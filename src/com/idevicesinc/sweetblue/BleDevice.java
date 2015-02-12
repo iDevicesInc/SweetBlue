@@ -921,6 +921,7 @@ public class BleDevice
 		m_logger = m_mngr.getLogger();
 		m_serviceMngr = new P_ServiceManager(this);
 		m_stateTracker = new P_DeviceStateTracker(this);
+		m_stateTracker.set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 		m_pollMngr = new P_PollManager(this);
 		m_txnMngr = new P_TransactionManager(this);
 		m_taskStateListener = m_listeners.m_taskStateListener;
