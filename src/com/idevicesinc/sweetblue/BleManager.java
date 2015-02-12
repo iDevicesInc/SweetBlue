@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleState.*;
+import static com.idevicesinc.sweetblue.BleManagerState.*;
 
 import java.lang.reflect.Member;
 import java.util.Iterator;
@@ -202,7 +202,7 @@ public class BleManager
 
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_State(StateListener)} to receive callbacks
-	 * when the {@link BleManager} undergoes a {@link BleState} change.
+	 * when the {@link BleManager} undergoes a {@link BleManagerState} change.
 	 */
 	public static interface StateListener
 	{
@@ -226,14 +226,14 @@ public class BleManager
 		}
 		
 		/**
-		 * Called when the manager's abstracted {@link BleState} changes.
+		 * Called when the manager's abstracted {@link BleManagerState} changes.
 		 */
 		void onStateChange(ChangeEvent event);
 	}
 
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_NativeState(NativeStateListener)} to receive callbacks
-	 * when the {@link BleManager} undergoes a *native* {@link BleState} change. This is similar to {@link StateListener}
+	 * when the {@link BleManager} undergoes a *native* {@link BleManagerState} change. This is similar to {@link StateListener}
 	 * but reflects what is going on in the actual underlying stack, which may lag slightly behind the
 	 * abstracted state reflected by {@link StateListener}. Most apps will not find this callback useful.
 	 */
@@ -251,7 +251,7 @@ public class BleManager
 		}
 		
 		/**
-		 * Called when the manager's native bitwise {@link BleState} changes. As many bits as possible are flipped at the same time.
+		 * Called when the manager's native bitwise {@link BleManagerState} changes. As many bits as possible are flipped at the same time.
 		 */
 		void onNativeStateChange(ChangeEvent event);
 	}
@@ -450,7 +450,8 @@ public class BleManager
 			{
 				return Utils.toString
 				(
-					"uhOh",	uhOh()
+					"uhOh",		uhOh(),
+					"remedy",	remedy()
 				);
 			}
 		}
@@ -676,7 +677,7 @@ public class BleManager
 		m_lastDisconnectMngr = new P_LastDisconnectManager(m_context);
 		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultAdvertisingFilter);
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
-		BleState nativeState = BleState.get(m_btMngr.getAdapter().getState());
+		BleManagerState nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_BleStateTracker(this);
 		m_stateTracker.append(nativeState, E_Intent.IMPLICIT);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
@@ -741,7 +742,7 @@ public class BleManager
 	/**
 	 * Returns whether the manager is in any of the provided states.
 	 */
-	public boolean isAny(BleState ... states)
+	public boolean isAny(BleManagerState ... states)
 	{
 		for( int i = 0; i < states.length; i++ )
 		{
@@ -754,9 +755,9 @@ public class BleManager
 	/**
 	 * Returns whether the manager is in the provided state.
 	 *
-	 * @see #isAny(BleState...)
+	 * @see #isAny(BleManagerState...)
 	 */
-	public boolean is(BleState state)
+	public boolean is(BleManagerState state)
 	{
 		return state.overlaps(getStateMask());
 	}
@@ -766,7 +767,7 @@ public class BleManager
 	 *
 	 * @see BleDevice#getTimeInState(BleDeviceState)
 	 */
-	public Interval getTimeInState(BleState state)
+	public Interval getTimeInState(BleManagerState state)
 	{
 		return Interval.millis(m_stateTracker.getTimeInState(state.ordinal()));
 	}
@@ -776,7 +777,7 @@ public class BleManager
 	 *
 	 * @see BleDevice#getTimeInState(BleDeviceState)
 	 */
-	public Interval getTimeInNativeState(BleState state)
+	public Interval getTimeInNativeState(BleManagerState state)
 	{
 		return Interval.millis(m_nativeStateTracker.getTimeInState(state.ordinal()));
 	}
@@ -793,7 +794,7 @@ public class BleManager
 	}
 
 	/**
-	 * Disables BLE if manager is {@link BleState#ON}. This disconnects all current
+	 * Disables BLE if manager is {@link BleManagerState#ON}. This disconnects all current
 	 * connections, stops scanning, and forgets all discovered devices.
 	 */
 	public void turnOff()
@@ -863,7 +864,7 @@ public class BleManager
 	}
 
 	/**
-	 * Set a listener here to be notified whenever this manager's {@link BleState} changes.
+	 * Set a listener here to be notified whenever this manager's {@link BleManagerState} changes.
 	 */
 	public void setListener_State(StateListener listener)
 	{
@@ -897,7 +898,7 @@ public class BleManager
 	}
 
 	/**
-	 * Set a listener here to be notified whenever this manager's native {@link BleState} changes.
+	 * Set a listener here to be notified whenever this manager's native {@link BleManagerState} changes.
 	 */
 	public void setListener_NativeState(NativeStateListener listener)
 	{
@@ -1057,7 +1058,7 @@ public class BleManager
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
-			m_stateTracker.append(BleState.SCANNING, E_Intent.EXPLICIT);
+			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.EXPLICIT);
 
 			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs()));
 		}
@@ -1124,9 +1125,9 @@ public class BleManager
 	}
 
 	/**
-	 * Returns the abstracted bitwise state mask representation of {@link BleState} for this device.
+	 * Returns the abstracted bitwise state mask representation of {@link BleManagerState} for this device.
 	 *
-	 * @see BleState
+	 * @see BleManagerState
 	 */
 	public int getStateMask()
 	{
@@ -1134,10 +1135,10 @@ public class BleManager
 	}
 
 	/**
-	 * Returns the native bitwise state mask representation of {@link BleState} for this device.
+	 * Returns the native bitwise state mask representation of {@link BleManagerState} for this device.
 	 * Similar to calling {@link BluetoothAdapter#getState()}
 	 *
-	 * @see BleState
+	 * @see BleManagerState
 	 */
 	public int getNativeStateMask()
 	{
@@ -1145,7 +1146,7 @@ public class BleManager
 	}
 
 	/**
-	 * Enables BLE if manager is currently {@link BleState#OFF} or {@link BleState#TURNING_OFF}, otherwise does nothing.
+	 * Enables BLE if manager is currently {@link BleManagerState#OFF} or {@link BleManagerState#TURNING_OFF}, otherwise does nothing.
 	 * For a convenient way to ask your user first see {@link #turnOnWithIntent(Activity, int)}.
 	 */
 	public void turnOn()
@@ -1171,7 +1172,7 @@ public class BleManager
 	 * It's good app etiquette to first prompt the user to get permission to drop a nuke because
 	 * it will affect Bluetooth system-wide and in other apps.
 	 *
-	 *  @see BleState#NUKING
+	 *  @see BleManagerState#NUKING
 	 */
 	public void dropTacticalNuke()
 	{
@@ -1182,7 +1183,7 @@ public class BleManager
 	 * Same as {@link #dropTacticalNuke()} but with a convenience callback for when the nuke is
 	 * completed and the native BLE stack is (should be) back to normal.
 	 *
-	 * @see BleState#NUKING
+	 * @see BleManagerState#NUKING
 	 */
 	public void dropTacticalNuke(NukeListener listener)
 	{
@@ -1203,7 +1204,7 @@ public class BleManager
 	 * Convenience method to request your user to enable ble in a "standard" way
 	 * with an {@link Intent} instead of using {@link #turnOn()} directly.
 	 * Result will be posted as normal to {@link Activity#onActivityResult()}.
-	 * If current state is {@link BleState#ON} or {@link BleState#TURNING_ON}
+	 * If current state is {@link BleManagerState#ON} or {@link BleManagerState#TURNING_ON}
 	 * this method early outs and does nothing.
 	 */
 	public void turnOnWithIntent(Activity callingActivity, int requestCode)
@@ -1308,7 +1309,7 @@ public class BleManager
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
 
-		m_stateTracker.remove(BleState.SCANNING, intent);
+		m_stateTracker.remove(BleManagerState.SCANNING, intent);
 	}
 
 	/**
@@ -1581,7 +1582,7 @@ public class BleManager
 			}
 		}
 
-		if( is(BleState.NUKING) )
+		if( is(BleManagerState.NUKING) )
 		{
 			return;
 		}
@@ -1700,7 +1701,7 @@ public class BleManager
 				}
 				else
 				{
-					m_nativeStateTracker.append(BleState.SCANNING, intent);
+					m_nativeStateTracker.append(BleManagerState.SCANNING, intent);
 
 					uhOh(UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
 
@@ -1724,7 +1725,7 @@ public class BleManager
 				m_crashResolver.start();
 			}
 
-			m_nativeStateTracker.append(BleState.SCANNING, intent);
+			m_nativeStateTracker.append(BleManagerState.SCANNING, intent);
 
 			return E_Mode.BLE;
 		}
@@ -1923,7 +1924,7 @@ public class BleManager
 			m_crashResolver.stop();
 		}
 
-		m_nativeStateTracker.remove(BleState.SCANNING, scanTask.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
+		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
 	}
 
 	void clearScanningRelatedMembers(E_Intent intent)
@@ -1932,7 +1933,7 @@ public class BleManager
 
 		m_timeNotScanning = 0.0;
 
-		m_stateTracker.remove(BleState.SCANNING, intent);
+		m_stateTracker.remove(BleManagerState.SCANNING, intent);
 	}
 
 	void tryPurgingStaleDevices(double scanTime)

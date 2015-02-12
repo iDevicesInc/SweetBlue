@@ -19,7 +19,7 @@ abstract class PA_Task_RequiresBleOn extends PA_Task
 
 	@Override protected boolean isExecutable()
 	{
-		return super.isExecutable() && BleState.ON.overlaps(getManager().getNativeStateMask());
+		return super.isExecutable() && BleManagerState.ON.overlaps(getManager().getNativeStateMask());
 	}
 	
 	@Override public boolean isCancellableBy(PA_Task task)

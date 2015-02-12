@@ -10,10 +10,10 @@ import com.idevicesinc.sweetblue.utils.State;
  * 
  * @see BleManager.StateListener
  * @see BleManager.NativeStateListener
- * @see BleManager#is(BleState)
+ * @see BleManager#is(BleManagerState)
  * @see BleManager#getStateMask()
  */
-public enum BleState implements State
+public enum BleManagerState implements State
 {
 	/**
 	 * Analogous to {@link BluetoothAdapter#STATE_OFF}.
@@ -49,12 +49,12 @@ public enum BleState implements State
 	
 	private final int m_nativeCode;
 	
-	private BleState()
+	private BleManagerState()
 	{
 		m_nativeCode = 0;
 	}
 	
-	private BleState(int nativeCode)
+	private BleManagerState(int nativeCode)
 	{
 		m_nativeCode = nativeCode;
 	}
@@ -69,7 +69,7 @@ public enum BleState implements State
 		return m_nativeCode;
 	}
 	
-	static BleState get(int nativeCode)
+	static BleManagerState get(int nativeCode)
 	{
 		for( int i = 0; i < values().length; i++ )
 		{

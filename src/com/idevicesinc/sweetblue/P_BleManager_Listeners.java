@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleState.SCANNING;
+import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
@@ -270,8 +270,8 @@ class P_BleManager_Listeners
 			return;			
 		}
 		
-		BleState previousState = BleState.get(previousNativeState);
-		BleState newState = BleState.get(newNativeState);
+		BleManagerState previousState = BleManagerState.get(previousNativeState);
+		BleManagerState newState = BleManagerState.get(newNativeState);
 		
 		m_mngr.getNativeStateTracker().update(intent, previousState, false, newState, true);
 		m_mngr.getStateTracker().update(intent, previousState, false, newState, true);

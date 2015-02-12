@@ -1002,7 +1002,7 @@ public class BleDevice
 	
 	/**
 	 * This enum gives you an indication of the last interaction with a device across app sessions or
-	 * in-app BLE {@link BleState#OFF}->{@link BleState#ON} cycles or undiscovery->rediscovery, which basically means how it
+	 * in-app BLE {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles or undiscovery->rediscovery, which basically means how it
 	 * was last {@link BleDeviceState#DISCONNECTED}.
 	 * <br><br>
 	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown because (a) device has never been seen before, (b)
@@ -2347,7 +2347,7 @@ public class BleDevice
 			m_logger.w("Disconnected Implicitly!");
 		}
 		
-		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF);
+		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF);
 		
 		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;
 		
@@ -2388,7 +2388,7 @@ public class BleDevice
 		{
 			if( m_mngr.ASSERT(!wasExplicit) )
 			{
-				if( m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF) )
+				if( m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
 				{
 					connectionFailReason_nullable = ConnectionFailListener.Reason.BLE_TURNING_OFF;
 				}

@@ -7,7 +7,7 @@ import java.util.UUID;
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
-import com.idevicesinc.sweetblue.BleState;
+import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 import android.app.Activity;
@@ -68,7 +68,7 @@ public class MainActivity extends Activity
 		{
 			m_alertMngr.showBleNotSupported();
 		}
-		else if( !m_bleMngr.is(BleState.ON) )
+		else if( !m_bleMngr.is(BleManagerState.ON) )
 		{
 			m_bleMngr.turnOnWithIntent(this, BLE_TURN_ON_REQUEST_CODE);
 		}

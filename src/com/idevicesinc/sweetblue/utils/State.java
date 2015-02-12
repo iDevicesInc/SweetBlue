@@ -6,11 +6,11 @@ import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleManagerConfig;
-import com.idevicesinc.sweetblue.BleState;
+import com.idevicesinc.sweetblue.BleManagerState;
 
 /**
  * Bitwise enum contract for representing the state of devices and managers.
- * Implementations are {@link BleDeviceState} and {@link BleState}.
+ * Implementations are {@link BleDeviceState} and {@link BleManagerState}.
  * Not intended for subclassing outside this library but go wild if you want.
  */
 public interface State

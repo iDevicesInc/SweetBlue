@@ -18,8 +18,6 @@ public abstract class BleTransaction
 {
 	/**
 	 * Values are passed to {@link BleTransaction#onEnd(BleDevice, EndReason)}.
-	 * 
-	 * 
 	 */
 	protected static enum EndReason
 	{

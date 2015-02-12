@@ -48,10 +48,10 @@ public class BleStatusBar extends FrameLayout implements BleManager.StateListene
 	
 	private void updateStatus()
 	{
-		SpannableString status = Utils.makeStateString(BleState.values(), m_bleMngr.getStateMask());
+		SpannableString status = Utils.makeStateString(BleManagerState.values(), m_bleMngr.getStateMask());
 		m_status.setText(status);
 		
-		status = Utils.makeStateString(BleState.values(), m_bleMngr.getNativeStateMask());
+		status = Utils.makeStateString(BleManagerState.values(), m_bleMngr.getNativeStateMask());
 		m_nativeStatus.setText(status);
 	}
 	

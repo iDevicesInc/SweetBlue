@@ -197,9 +197,9 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean alwaysUseAutoConnect = false;
 	
 	/**
-	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in active memory when it goes {@link BleState#OFF}.
+	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in active memory when it goes {@link BleManagerState#OFF}.
 	 * If <code>false</code> then a device will be purged and you'll have to do {@link BleManager#startScan()} again to discover devices
-	 * if/when {@link BleManager} goes back {@link BleState#ON}.
+	 * if/when {@link BleManager} goes back {@link BleManagerState#ON}.
 	 * <br><br>
 	 * NOTE: if this flag is true for {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)} then this
 	 * applies to all devices.
@@ -208,7 +208,7 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Default is <code>true</code> - only applicable if {@link #retainDeviceWhenBleTurnsOff} is also true. If {@link #retainDeviceWhenBleTurnsOff}
-	 * is false then devices will be undiscovered when {@link BleManager} goes {@link BleState#OFF} regardless.
+	 * is false then devices will be undiscovered when {@link BleManager} goes {@link BleManagerState#OFF} regardless.
 	 * <br><br>
 	 * NOTE: See NOTE for {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}. 
 	 * 
@@ -231,7 +231,7 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Default is <code>true</code> - controls whether the {@link State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
 	 * is saved to and loaded from disk so that it can be restored across app sessions, undiscoveries, and BLE
-	 * {@link BleState#OFF}->{@link BleState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
+	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
 	 * any extra permissions. The main advantage of this is the following scenario: User connects to a device through your app,
 	 * does what they want, kills the app, then opens the app sometime later. {@link BleDevice#getLastDisconnectIntent()} returns
 	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
@@ -284,10 +284,10 @@ public class BleDeviceConfig implements Cloneable
 	public Interval	scanKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
-	 * Default is an array of {@link Interval} instances created using {@link Interval#secs()} with {@link #DEFAULT_TASK_TIMEOUT}.
+	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs()} with {@link #DEFAULT_TASK_TIMEOUT}.
 	 * This is an array of timeouts whose indices are meant to map to {@link BleTask} ordinals and provide a
 	 * way to control how long a given task is allowed to run before being "cut loose". If no option is provided for a given {@link BleTask},
-	 * either by setting this array null, or by providing <code>null</code> or {@link Interval#DISABLED} for a given {@link BleTask} then
+	 * either by setting this array null, or by providing <code>null</code> or {@link Interval#DISABLED} for a given {@link BleTask}, then
 	 * no timeout is observed.
 	 * <br><br>
 	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
