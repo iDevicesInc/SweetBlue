@@ -638,7 +638,7 @@ public class BleDevice
 			 */
 			public static Please doNotRetry()
 			{
-				return new Please(PE_Please.RETRY);
+				return new Please(PE_Please.DO_NOT_RETRY);
 			}
 			
 			/**
@@ -647,7 +647,7 @@ public class BleDevice
 			 */
 			public static Please retryWithAutoConnectTrue()
 			{
-				return new Please(PE_Please.RETRY);
+				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_TRUE);
 			}
 			
 			/**
@@ -655,7 +655,7 @@ public class BleDevice
 			 */
 			public static Please retryWithAutoConnectFalse()
 			{
-				return new Please(PE_Please.RETRY);
+				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_FALSE);
 			}
 			
 			/**
