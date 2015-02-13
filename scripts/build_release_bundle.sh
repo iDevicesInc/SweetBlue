@@ -1,12 +1,13 @@
 #!/bin/sh
 
-sh build_then_upload_docs.sh
+sh build_docs.sh
 
 source config.sh
 
 ANDROID_JAR=$ANDROID_HOME/platforms/android-$ANDROID_API_LEVEL/android.jar
 JAR_DIR=$BUNDLE_FOLDER/jars
 CP_TARGET=$BUNDLE_FOLDER/src_temp
+NO_ZIP=$1
 
 echo "${GLITZ}COPYING FILES${GLITZ}"
 
@@ -46,6 +47,10 @@ jar cf $SOURCES_JAR_NAME.jar com/*
 cd -
 mv $BUNDLE_FOLDER/src/$SOURCES_JAR_NAME.jar $JAR_DIR/$SOURCES_JAR_NAME.jar
 
+if [ "$NO_ZIP" = "no_zip" ]
+then
+    exit 0
+fi
 
 echo "${GLITZ}ZIPPING UP${GLITZ}"
 rm -rf $CP_TARGET
