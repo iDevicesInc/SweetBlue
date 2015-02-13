@@ -284,7 +284,7 @@ public class BleDeviceConfig implements Cloneable
 	public Interval	scanKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
-	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs()} with {@link #DEFAULT_TASK_TIMEOUT}.
+	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs(double)} with {@link #DEFAULT_TASK_TIMEOUT}.
 	 * This is an array of timeouts whose indices are meant to map to {@link BleTask} ordinals and provide a
 	 * way to control how long a given task is allowed to run before being "cut loose". If no option is provided for a given {@link BleTask},
 	 * either by setting this array null, or by providing <code>null</code> or {@link Interval#DISABLED} for a given {@link BleTask}, then
@@ -320,12 +320,12 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Default is <code>0x0</code> - controls which {@link BleDeviceState} enter events will invoke an automatic attempt at {@link BleDevice#bond()}.
 	 */
-	public Integer		autoBond_stateEnter					= 0x0;
+	public Integer		autoBond_onStateEnter					= 0x0;
 	
 	/**
 	 * Default is <code>0x0</code> - controls which {@link BleDeviceState} exit events will invoke an automatic attempt at {@link BleDevice#bond()}.
 	 */
-	public Integer		autoBond_stateExit					= 0x0;
+	public Integer		autoBond_onStateExit					= 0x0;
 	
 	/**
 	 * Default is set to bitwise OR of {@link BleDeviceState#DISCONNECTED} and {@link BleDeviceState#UNDISCOVERED}
@@ -336,12 +336,12 @@ public class BleDeviceConfig implements Cloneable
 	 * up-to-date values. The problem seems to be associated with mismanagement of pairing keys by the OS and
 	 * this brute force solution seems to be the only way to smooth things out.
 	 */
-	public Integer		autoUnbond_stateEnter				= phoneHasBondingIssues() ? BleDeviceState.DISCONNECTED.or(BleDeviceState.UNDISCOVERED) : 0x0;
+	public Integer		autoUnbond_onStateEnter				= phoneHasBondingIssues() ? BleDeviceState.DISCONNECTED.or(BleDeviceState.UNDISCOVERED) : 0x0;
 	
 	/**
 	 * Default is <code>0x0</code> - controls which {@link BleDeviceState} exit events will invoke an automatic attempt at {@link BleDevice#unbond()}.
 	 */
-	public Integer		autoUnbond_stateExit				= 0x0;
+	public Integer		autoUnbond_onStateExit				= 0x0;
 	
 	/**
 	 * Default is null, meaning the library won't preemptively attempt to bond for any characteristic operations.
@@ -446,7 +446,7 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
-	 * and so this method is used to set {@link #autoUnbond_stateEnter}.
+	 * and so this method is used to set {@link #autoUnbond_onStateEnter}.
 	 */
 	public boolean phoneHasBondingIssues()
 	{
@@ -454,54 +454,54 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Convenience method that does a bitwise OR of the given states to {@link #autoBond_stateEnter}.
+	 * Convenience method that does a bitwise OR of the given states to {@link #autoBond_onStateEnter}.
 	 */
 	public void autoBondWhenEntering(BleDeviceState ... states)
 	{
-		autoBond_stateEnter = autoBond_stateEnter != null ? autoBond_stateEnter : 0x0;
+		autoBond_onStateEnter = autoBond_onStateEnter != null ? autoBond_onStateEnter : 0x0;
 		
 		for( int i = 0; i < states.length; i++ )
 		{
-			autoBond_stateEnter |= states[i].bit();
+			autoBond_onStateEnter |= states[i].bit();
 		}
 	}
 	
 	/**
-	 * Convenience method that does a bitwise OR of the given states to {@link #autoBond_stateExit}.
+	 * Convenience method that does a bitwise OR of the given states to {@link #autoBond_onStateExit}.
 	 */
 	public void autoBondWhenExiting(BleDeviceState ... states)
 	{
-		autoBond_stateExit = autoBond_stateExit != null ? autoBond_stateExit : 0x0;
+		autoBond_onStateExit = autoBond_onStateExit != null ? autoBond_onStateExit : 0x0;
 		
 		for( int i = 0; i < states.length; i++ )
 		{
-			autoBond_stateExit |= states[i].bit();
+			autoBond_onStateExit |= states[i].bit();
 		}
 	}
 	
 	/**
-	 * Convenience method that does a bitwise OR of the given states to {@link #autoUnbond_stateEnter}.
+	 * Convenience method that does a bitwise OR of the given states to {@link #autoUnbond_onStateEnter}.
 	 */
 	public void autoUnbondWhenEntering(BleDeviceState ... states)
 	{
-		autoUnbond_stateEnter = autoUnbond_stateEnter != null ? autoUnbond_stateEnter : 0x0;
+		autoUnbond_onStateEnter = autoUnbond_onStateEnter != null ? autoUnbond_onStateEnter : 0x0;
 		
 		for( int i = 0; i < states.length; i++ )
 		{
-			autoUnbond_stateEnter |= states[i].bit();
+			autoUnbond_onStateEnter |= states[i].bit();
 		}
 	}
 	
 	/**
-	 * Convenience method that does a bitwise OR of the given states to {@link #autoUnbond_stateExit}.
+	 * Convenience method that does a bitwise OR of the given states to {@link #autoUnbond_onStateExit}.
 	 */
 	public void autoUnbondWhenExiting(BleDeviceState ... states)
 	{
-		autoUnbond_stateExit = autoUnbond_stateExit != null ? autoUnbond_stateExit : 0x0;
+		autoUnbond_onStateExit = autoUnbond_onStateExit != null ? autoUnbond_onStateExit : 0x0;
 		
 		for( int i = 0; i < states.length; i++ )
 		{
-			autoUnbond_stateExit |= states[i].bit();
+			autoUnbond_onStateExit |= states[i].bit();
 		}
 	}
 	
@@ -520,16 +520,16 @@ public class BleDeviceConfig implements Cloneable
 	
 	static boolean autoBond(final int oldStateBits, final int newStateBits, final BleDeviceConfig conf_device, final BleManagerConfig conf_mngr)
 	{
-		final int autoBond_stateEnter = integerOrZero(integer(conf_device.autoBond_stateEnter, conf_mngr.autoBond_stateEnter));
-		final int autoBond_stateExit = integerOrZero(integer(conf_device.autoBond_stateExit, conf_mngr.autoBond_stateExit));
+		final int autoBond_stateEnter = integerOrZero(integer(conf_device.autoBond_onStateEnter, conf_mngr.autoBond_onStateEnter));
+		final int autoBond_stateExit = integerOrZero(integer(conf_device.autoBond_onStateExit, conf_mngr.autoBond_onStateExit));
 		
 		return autoBondOrUnbond(oldStateBits, newStateBits, autoBond_stateEnter, autoBond_stateExit);
 	}
 	
 	static boolean autoUnbond(final int oldStateBits, final int newStateBits, final BleDeviceConfig conf_device, final BleManagerConfig conf_mngr)
 	{
-		final int autoUnbond_stateEnter = integerOrZero(integer(conf_device.autoUnbond_stateEnter, conf_mngr.autoUnbond_stateEnter));
-		final int autoUnbond_stateExit = integerOrZero(integer(conf_device.autoUnbond_stateExit, conf_mngr.autoUnbond_stateExit));
+		final int autoUnbond_stateEnter = integerOrZero(integer(conf_device.autoUnbond_onStateEnter, conf_mngr.autoUnbond_onStateEnter));
+		final int autoUnbond_stateExit = integerOrZero(integer(conf_device.autoUnbond_onStateExit, conf_mngr.autoUnbond_onStateExit));
 		
 		return autoBondOrUnbond(oldStateBits, newStateBits, autoUnbond_stateEnter, autoUnbond_stateExit);
 	}
