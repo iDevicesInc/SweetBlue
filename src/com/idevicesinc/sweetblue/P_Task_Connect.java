@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
 
 import android.bluetooth.BluetoothGatt;
 

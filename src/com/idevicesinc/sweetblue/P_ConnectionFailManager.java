@@ -5,6 +5,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -65,9 +66,9 @@ class P_ConnectionFailManager
 		return retryCount;
 	}
 	
-	Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, boolean isAttemptingReconnect, int gattStatus, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage)
+	PE_Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, boolean isAttemptingReconnect, int gattStatus, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage)
 	{
-		if( reason_nullable == null )  return Please.DO_NOT_RETRY;
+		if( reason_nullable == null )  return PE_Please.DO_NOT_RETRY;
 		
 		long currentTime = System.currentTimeMillis();
 		
@@ -88,7 +89,7 @@ class P_ConnectionFailManager
 			m_failCount++;
 		}
 		
-		Please retryChoice = null;
+		PE_Please retryChoice = null;
 		
 		if( m_highestStateReached_total == null )
 		{
@@ -106,19 +107,21 @@ class P_ConnectionFailManager
 		
 		if( m_connectionFailListener != null )
 		{
-			retryChoice = m_connectionFailListener.onConnectionFail(moreInfo);
+			Please please = m_connectionFailListener.onConnectionFail(moreInfo);
+			retryChoice = please != null ? please.please() : null;
 		}
 		else if( m_device.getManager().m_defaultConnectionFailListener != null )
 		{
-			retryChoice = m_device.getManager().m_defaultConnectionFailListener.onConnectionFail(moreInfo);
+			Please please = m_device.getManager().m_defaultConnectionFailListener.onConnectionFail(moreInfo);
+			retryChoice = please != null ? please.please() : null;
 		}
 		
-		retryChoice = retryChoice != null ? retryChoice : Please.DO_NOT_RETRY;
-		retryChoice = !isAttemptingReconnect ? retryChoice : Please.DO_NOT_RETRY;
+		retryChoice = retryChoice != null ? retryChoice : PE_Please.DO_NOT_RETRY;
+		retryChoice = !isAttemptingReconnect ? retryChoice : PE_Please.DO_NOT_RETRY;
 		
 		if( reason_nullable != null && reason_nullable.wasCancelled() )
 		{
-			retryChoice = Please.DO_NOT_RETRY;
+			retryChoice = PE_Please.DO_NOT_RETRY;
 		}
 		else
 		{
@@ -131,7 +134,7 @@ class P_ConnectionFailManager
 			m_device.getManager().onConnectionFailed();
 		}
 		
-		if( retryChoice == Please.RETRY || retryChoice == Please.RETRY_WITH_AUTOCONNECT_TRUE )
+		if( retryChoice == PE_Please.RETRY || retryChoice == PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 		{
 			m_device.attemptReconnect();
 		}

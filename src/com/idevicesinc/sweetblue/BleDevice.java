@@ -15,7 +15,7 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
@@ -599,41 +599,71 @@ public class BleDevice
 			NOT_USED;
 		}
 
-		/**
-		 * Return value for {@link ConnectionFailListener#onConnectionFail(Info)}. Generally you will only return {@link #RETRY}
-		 * or {@link #DO_NOT_RETRY}, but there are more advanced options as well.
-		 */
-		public static enum Please
+		
+		static enum PE_Please
 		{
+			RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
+		}
+		
+		/**
+		 * Return value for {@link ConnectionFailListener#onConnectionFail(Info)}. Generally you will only return {@link #retry()}
+		 * or {@link #doNotRetry()}, but there are more advanced options as well.
+		 */
+		public static class Please
+		{
+			private final PE_Please m_please;
+			
+			private Please(PE_Please please)
+			{
+				m_please = please;
+			}
+			
+			PE_Please please()
+			{
+				return m_please;
+			}
+			
 			/**
 			 * Return this to retry the connection, continuing the connection fail retry loop.
 			 * <code>autoConnect</code> passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
 			 * will be false or true based on what has worked in the past, or on {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
-			RETRY,
+			public static Please retry()
+			{
+				return new Please(PE_Please.RETRY);
+			}
+			
+			/**
+			 * Return this to stop the connection fail retry loop.
+			 */
+			public static Please doNotRetry()
+			{
+				return new Please(PE_Please.RETRY);
+			}
 			
 			/**
 			 * Same as {@link #RETRY}, but <code>autoConnect=true</code> will be passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
-			RETRY_WITH_AUTOCONNECT_TRUE,
+			public static Please retryWithAutoConnectTrue()
+			{
+				return new Please(PE_Please.RETRY);
+			}
 			
 			/**
 			 * Same as {@link #RETRY_WITH_AUTOCONNECT_TRUE} but forces <code>autoConnect=false</code>.
 			 */
-			RETRY_WITH_AUTOCONNECT_FALSE,
+			public static Please retryWithAutoConnectFalse()
+			{
+				return new Please(PE_Please.RETRY);
+			}
 			
 			/**
-			 * Return this to stop the connection fail retry loop.
-			 */
-			DO_NOT_RETRY;
-			
-			/**
-			 * Returns <code>true</code> for everything except {@link #DO_NOT_RETRY}.
+			 * Returns <code>true</code> for everything except {@link #doNotRetry()}.
 			 */
 			public boolean isRetry()
 			{
-				return this != DO_NOT_RETRY;
+				return m_please != PE_Please.DO_NOT_RETRY;
 			}
 		}
 		
@@ -771,7 +801,7 @@ public class BleDevice
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 		
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#RETRY_WITH_AUTOCONNECT_TRUE}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link PE_Please#RETRY_WITH_AUTOCONNECT_TRUE}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 		
@@ -799,14 +829,14 @@ public class BleDevice
 			//--- DRK > Not necessary to check this ourselves, just being explicit.
 			if( info.reason().wasCancelled() || info.device().is(ATTEMPTING_RECONNECT) )
 			{
-				return Please.DO_NOT_RETRY;
+				return Please.doNotRetry();
 			}
 			
 			if( info.failureCountSoFar() <= m_retryCount )
 			{
 				if( info.failureCountSoFar() >= m_failCountBeforeUsingAutoConnect )
 				{
-					return Please.RETRY_WITH_AUTOCONNECT_TRUE;
+					return Please.retryWithAutoConnectTrue();
 				}
 				else
 				{
@@ -814,26 +844,26 @@ public class BleDevice
 					{
 						if( info.autoConnectUsage() == AutoConnectUsage.USED )
 						{
-							return Please.RETRY_WITH_AUTOCONNECT_FALSE;
+							return Please.retryWithAutoConnectFalse();
 						}
 						else if( info.autoConnectUsage() == AutoConnectUsage.NOT_USED )
 						{
-							return Please.RETRY_WITH_AUTOCONNECT_TRUE;
+							return Please.retryWithAutoConnectTrue();
 						}
 						else
 						{
-							return Please.RETRY;
+							return Please.retry();
 						}
 					}
 					else
 					{
-						return Please.RETRY;
+						return Please.retry();
 					}
 				}
 			}
 			else
 			{
-				return Please.DO_NOT_RETRY;
+				return Please.doNotRetry();
 			}
 		}
 	}
@@ -2202,13 +2232,13 @@ public class BleDevice
 				reason = Reason.NATIVE_CONNECTION_TIMED_OUT;
 			}
 
-			Please retry = m_connectionFailMngr.onConnectionFailed(reason, attemptingReconnect, gattStatus, highestState, autoConnectUsage);
+			PE_Please retry = m_connectionFailMngr.onConnectionFailed(reason, attemptingReconnect, gattStatus, highestState, autoConnectUsage);
 			
-			if( !attemptingReconnect && retry == Please.RETRY_WITH_AUTOCONNECT_TRUE )
+			if( !attemptingReconnect && retry == PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
 				m_useAutoConnect = true;
 			}
-			else if( !attemptingReconnect && retry == Please.RETRY_WITH_AUTOCONNECT_FALSE )
+			else if( !attemptingReconnect && retry == PE_Please.RETRY_WITH_AUTOCONNECT_FALSE )
 			{
 				m_useAutoConnect = false;
 			}
@@ -2428,12 +2458,12 @@ public class BleDevice
 			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
 		}
 		
-		Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
+		PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.
 		//---		TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
-		if( retrying == Please.DO_NOT_RETRY )
+		if( retrying == PE_Please.DO_NOT_RETRY )
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this);
 		}

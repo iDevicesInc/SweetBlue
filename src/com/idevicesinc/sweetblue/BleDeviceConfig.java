@@ -62,19 +62,51 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	public static interface ReconnectRateLimiter
 	{
-		/**
-		 * Return this from {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to instantly reconnect.
-		 */
-		public static final Interval INSTANTLY = Interval.ZERO;
+		public static class Please
+		{
+			static final Interval INSTANTLY = Interval.ZERO;
+			static final Interval CANCEL = Interval.DISABLED;
+			
+			private final Interval m_interval;
+			
+			private Please(Interval interval)
+			{
+				m_interval = interval;
+			}
+			
+			Interval getInterval()
+			{
+				return m_interval;
+			}
+			
+			/**
+			 * Return this from {@link ReconnectRateLimiter#onReconnectionFail(ReconnectRateLimiter.Info)} to instantly reconnect.
+			 */
+			public static Please retryInstantly()
+			{
+				return new Please(INSTANTLY);
+			}
+			
+			/**
+			 * Return this from {@link ReconnectRateLimiter#onReconnectionFail(ReconnectRateLimiter.Info)} to stop a reconnect attempt loop.
+			 * Note that {@link BleDevice#disconnect()} will also cancel any ongoing reconnect loop.
+			 */
+			public static Please cancel()
+			{
+				return new Please(CANCEL);
+			}
+			
+			/**
+			 * Return this from {@link ReconnectRateLimiter#onReconnectionFail(ReconnectRateLimiter.Info)} to retry after the given amount of time.
+			 */
+			public static Please retryIn(Interval interval)
+			{
+				return new Please(interval != null ? interval : INSTANTLY);
+			}
+		}
 		
 		/**
-		 * Return this from {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to stop a reconnect attempt loop.
-		 * Note that {@link BleDevice#disconnect()} will also cancel any ongoing reconnect loop.
-		 */
-		public static final Interval CANCEL = Interval.DISABLED;
-		
-		/**
-		 * Struct passed to {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to aid in making a decision.
+		 * Struct passed to {@link ReconnectRateLimiter#onReconnectionFail(ReconnectRateLimiter.Info)} to aid in making a decision.
 		 */
 		public static class Info
 		{
@@ -97,7 +129,7 @@ public class BleDeviceConfig implements Cloneable
 			private final Interval m_totalTimeReconnecting;
 			
 			/**
-			 * The previous {@link Interval} returned from {@link ReconnectRateLimiter#getTimeToNextReconnect(Info)}, or {@link Interval#ZERO}
+			 * The previous {@link Interval} returned from {@link ReconnectRateLimiter#onReconnectionFail(Info)}, or {@link Interval#ZERO}
 			 * for the first invocation.
 			 */
 			public Interval previousDelay(){  return m_previousDelay;  }
@@ -128,7 +160,7 @@ public class BleDeviceConfig implements Cloneable
 		 * Use the static {@link Interval} members of this interface as return values to stop reconnection ({@link #CANCEL}) or try again
 		 * instantly ({@link #INSTANTLY}). Use static construction methods of {@link Interval} to try again after some amount of time.
 		 */
-		Interval getTimeToNextReconnect(Info info);
+		Please onReconnectionFail(Info info);
 	}
 	
 	/**
@@ -137,10 +169,10 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	public static class DefaultReconnectRateLimiter implements ReconnectRateLimiter
 	{
-		public static final Interval DEFAULT_INITIAL_RECONNECT_DELAY = INSTANTLY;
-		public static final Interval DEFAULT_RECONNECT_ATTEMPT_RATE = Interval.secs(3.0);
+		public static final Please DEFAULT_INITIAL_RECONNECT_DELAY = Please.retryInstantly();
+		public static final Please DEFAULT_RECONNECT_ATTEMPT_RATE = Please.retryIn(Interval.secs(3.0));
 		
-		@Override public Interval getTimeToNextReconnect(Info info)
+		@Override public Please onReconnectionFail(Info info)
 		{
 			if( info.failureCount() == 0 )
 			{
@@ -187,7 +219,7 @@ public class BleDeviceConfig implements Cloneable
 	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
-	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ConnectionFailListener.Please}
+	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ConnectionFailListener.PE_Please}
 	 * returned from {@link ConnectionFailListener#onConnectionFail(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info)}.
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
