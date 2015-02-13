@@ -31,6 +31,11 @@ public class BleDeviceConfig implements Cloneable
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 	public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
+
+	/**
+	 * Default value for {@link #defaultTxPower}.
+	 */
+	public static final int DEFAULT_TX_POWER							= 4;
 	
 	/**
 	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation failed at a point where a
@@ -374,6 +379,14 @@ public class BleDeviceConfig implements Cloneable
 	 * Default is <code>0x0</code> - controls which {@link BleDeviceState} exit events will invoke an automatic attempt at {@link BleDevice#unbond()}.
 	 */
 	public Integer		autoUnbond_onStateExit				= 0x0;
+	
+	/**
+	 * This value is used if we can't establish a device's TxPower from the device itself,
+	 * either through its scan record or by reading the standard characteristic.
+	 * 
+	 * @see BleDevice#getTxPower()
+	 */
+	public Integer		defaultTxPower						= DEFAULT_TX_POWER;
 	
 	/**
 	 * Default is null, meaning the library won't preemptively attempt to bond for any characteristic operations.

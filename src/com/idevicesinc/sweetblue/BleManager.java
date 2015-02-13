@@ -187,7 +187,8 @@ public class BleManager
 				return Utils.toString
 				(
 					"device",			device().getName_debug(),
-					"lifeCycle",		lifeCycle()
+					"lifeCycle",		lifeCycle(),
+					"rssi",				device().getRssi()
 				);
 			}
 		}

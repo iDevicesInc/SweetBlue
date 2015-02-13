@@ -68,6 +68,27 @@ public class Utils
 		
 		return consistentName;
 	}
+	
+	public static double calcDistance(final int txPower, final int rssi)
+	{
+		if (rssi == 0)
+		{
+			return -1.0;
+		}
+
+		final double ratio = ((double)rssi) * 1.0 / ((double)txPower);
+		
+		if (ratio < 1.0)
+		{
+			return Math.pow(ratio, 10);
+		}
+		else
+		{
+			final double accuracy = (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
+			
+			return accuracy;
+		}
+	}
 
 	public static boolean haveMatchingIds(List<UUID> advertisedIds, Collection<UUID> lookedForIds)
 	{

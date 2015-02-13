@@ -37,11 +37,17 @@ public class Interval
 		this.m_millis = millis_in;
 	}
 	
+	/**
+	 * Returns the value of this interval in seconds.
+	 */
 	public double secs()
 	{
 		return m_secs;
 	}
 	
+	/**
+	 * Returns the value of this interval in milliseconds.
+	 */
 	public long millis()
 	{
 		return m_millis;

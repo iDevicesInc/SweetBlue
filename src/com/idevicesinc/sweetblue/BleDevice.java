@@ -923,6 +923,7 @@ public class BleDevice
 	private final Origin m_origin;
 	
 	private int m_rssi = 0;
+	private Integer m_knownTxPower = null;
 	private List<UUID> m_advertisedServices = EMPTY_LIST;
 	private byte[] m_scanRecord = EMPTY_BYTE_ARRAY;
 	
@@ -1115,11 +1116,41 @@ public class BleDevice
 	
 	/**
 	 * Returns the raw RSSI retrieved from when the device was discovered or rediscovered.
-	 * 
+	 * This value will also be updated when you call {@link #readRssi()} or {@link #startRssiPoll(Interval)}.
 	 */
 	public int getRssi()
 	{
 		return m_rssi;
+	}
+	
+	/**
+	 * Returns the approximate distance in meters based on {@link #getRssi()} and {@link #getTxPower()}.
+	 * The higher the distance, the less the accuracy.
+	 */
+	public Distance getDistance()
+	{
+		return Distance.meters(Utils.calcDistance(getTxPower(), getRssi()));
+	}
+	
+	/**
+	 * Returns the calibrated transmitter power of the device. If this can't be figured out from the device itself
+	 * then it backs up to the value provided in {@link BleDeviceConfig#defaultTxPower} or {@link BleManagerConfig#defaultTxPower}.
+	 * 
+	 * @see BleDeviceConfig#defaultTxPower;
+	 */
+	public int getTxPower()
+	{
+		if( m_knownTxPower != null )
+		{
+			return m_knownTxPower;
+		}
+		else
+		{
+			final Integer defaultTxPower = BleDeviceConfig.integer(conf_device().defaultTxPower, conf_mngr().defaultTxPower);
+			final int toReturn = defaultTxPower == null ? BleDeviceConfig.DEFAULT_TX_POWER : defaultTxPower;
+			
+			return toReturn;
+		}
 	}
 	
 	/**
