@@ -8,7 +8,7 @@ public class P_Task_ReadWriteResponse extends PA_Task_RequiresConnection impleme
 	private final BleServer m_server;
 	private final Response m_response;
 	public P_Task_ReadWriteResponse( BleServer server, I_StateListener listener, Response response ) {
-		super( server.getDevice(), listener );
+		super( server.getDevice(), BleDeviceConfig.DEFAULT_TASK_TIMEOUT, listener);
 		m_server = server;
 		m_response = response;
 	}

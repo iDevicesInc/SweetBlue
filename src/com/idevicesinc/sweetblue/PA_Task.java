@@ -21,7 +21,6 @@ abstract class PA_Task
 	
 	private 	  BleDevice m_device;
 	private		  BleServer m_server;
-	private 	  BleDevice m_device;
 	private final BleManager m_manager;
 	
 	private double m_timeout;

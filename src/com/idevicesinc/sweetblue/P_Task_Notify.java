@@ -46,7 +46,7 @@ public class P_Task_Notify extends PA_Task implements I_StateListener {
 	void execute() {
 		if( !m_characteristic.setValue(m_data) )
 		{
-			fail(Status.FAILED_TO_WRITE_VALUE_TO_TARGET, Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
 			
 			return;
 		}

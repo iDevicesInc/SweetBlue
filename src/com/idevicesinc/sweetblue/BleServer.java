@@ -472,7 +472,7 @@ public class BleServer {
 		m_serverNative.close();
 	}
 	void setNativeDevice( BluetoothDevice device ) {
-		m_device = new BleDevice( m_mngr, device, device.getName() );
+		m_device = m_mngr.newDevice(device.getAddress());
 	}
 	
 }

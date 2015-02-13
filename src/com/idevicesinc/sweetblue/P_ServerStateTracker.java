@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.State;
 
 public class P_ServerStateTracker extends PA_StateTracker {
 
@@ -9,11 +9,11 @@ public class P_ServerStateTracker extends PA_StateTracker {
 	
 	P_ServerStateTracker(BleServer server)
 	{
-		super(server.getManager().getLogger());
+		super(server.getManager().getLogger(), BleDeviceState.values());
 		
 		m_server = server;
 		
-		set(BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
+		set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 	}
 	
 	public void setListener(BleServer.StateListener listener)
@@ -28,7 +28,7 @@ public class P_ServerStateTracker extends PA_StateTracker {
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
 	{
 		if( m_stateListener != null )
 		{
@@ -43,7 +43,7 @@ public class P_ServerStateTracker extends PA_StateTracker {
 //		m_device.getManager().getLogger().e(this.toString());
 	}
 
-	@Override protected void append_assert(BitwiseEnum newState)
+	@Override protected void append_assert(State newState)
 	{
 		if( newState.ordinal() > BleDeviceState.CONNECTING.ordinal() )
 		{
