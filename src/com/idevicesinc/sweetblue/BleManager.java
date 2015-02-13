@@ -74,19 +74,19 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *              {
  *                  m_bleManager.stopScan();
  *
- *					if( event.was(LifeCycle.DISCOVERED) )
- *					{
- *                  	event.device().connect(new BleDevice.StateListener()
- *                  	{
- *                      	{@literal @}Override public void onStateChange(ChangeEvent event)
- *                      	{
- *                          	if( event.didEnter(BleDeviceState.INITIALIZED) )
- *                          	{
- *                              	String toastText = event.device().getDebugName() + " just initialized!";
- *                              	Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
- *                          	}
- *                      	}
- *                  	});
+ *                  if( event.was(LifeCycle.DISCOVERED) )
+ *                  {
+ *                      event.device().connect(new BleDevice.StateListener()
+ *                      {
+ *                          {@literal @}Override public void onStateChange(ChangeEvent event)
+ *                          {
+ *                              if( event.didEnter(BleDeviceState.INITIALIZED) )
+ *                              {
+ *                                  String toastText = event.device().getDebugName() + " just initialized!";
+ *                                  Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
+ *                              }
+ *                          }
+ *                      });
  *                  }
  *              }
  *          });
