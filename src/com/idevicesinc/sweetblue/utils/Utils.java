@@ -37,6 +37,15 @@ public class Utils
 		return false;
 	}
 	
+	/**
+	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
+	 * and so this method is used to set {@link #autoUnbond_onStateEnter}.
+	 */
+	public static boolean phoneHasBondingIssues()
+	{
+		return Utils.isManufacturer("sony") || Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
+	}
+	
 	public static boolean isManufacturer(String manufacturer)
 	{
 		return Build.MANUFACTURER != null && Build.MANUFACTURER.equalsIgnoreCase(manufacturer);

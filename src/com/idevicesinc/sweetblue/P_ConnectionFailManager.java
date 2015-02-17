@@ -103,7 +103,7 @@ class P_ConnectionFailManager
 			}
 		}
 		
-		Info moreInfo = new Info(m_device, reason_nullable, m_failCount, attemptTime_latest, attemptTime_total, gattStatus, highestStateReached, m_highestStateReached_total, autoConnectUsage);
+		final Info moreInfo = new Info(m_device, reason_nullable, m_failCount, attemptTime_latest, attemptTime_total, gattStatus, highestStateReached, m_highestStateReached_total, autoConnectUsage);
 		
 		if( m_connectionFailListener != null )
 		{
@@ -125,7 +125,7 @@ class P_ConnectionFailManager
 		}
 		else
 		{
-			if( !m_reconnectMngr.onConnectionFailed() )
+			if( !m_reconnectMngr.onConnectionFailed(moreInfo) )
 			{
 				//--- DRK > State change may be redundant.
 				m_device.getStateTracker().update(E_Intent.IMPLICIT, ATTEMPTING_RECONNECT, false);

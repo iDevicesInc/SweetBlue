@@ -276,6 +276,7 @@ class P_Logger
 		m_gattStatusCodes = new HashMap<Integer, String>();
 
 		initFromReflection(BluetoothGatt.class, "GATT_", m_gattStatusCodes);
+		initFromReflection(BleDeviceConfig.class, "GATT_", m_gattStatusCodes);
 	}
 	
 	

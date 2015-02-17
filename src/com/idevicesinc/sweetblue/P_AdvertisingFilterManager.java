@@ -6,9 +6,9 @@ import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
 
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Ack;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Packet;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Result;
 import com.idevicesinc.sweetblue.utils.State;
 
 /**
@@ -18,10 +18,10 @@ import com.idevicesinc.sweetblue.utils.State;
  */
 class P_AdvertisingFilterManager
 {
-	private final ArrayList<BleManagerConfig.AdvertisingFilter> m_filters = new ArrayList<BleManagerConfig.AdvertisingFilter>();
-	private final AdvertisingFilter m_default;
+	private final ArrayList<BleManagerConfig.ScanFilter> m_filters = new ArrayList<BleManagerConfig.ScanFilter>();
+	private final ScanFilter m_default;
 	
-	P_AdvertisingFilterManager(AdvertisingFilter defaultFilter)
+	P_AdvertisingFilterManager(ScanFilter defaultFilter)
 	{
 		m_default = defaultFilter;
 	}
@@ -31,12 +31,12 @@ class P_AdvertisingFilterManager
 		m_filters.clear();
 	}
 	
-	void remove(AdvertisingFilter filter)
+	void remove(ScanFilter filter)
 	{
 		while( m_filters.remove(filter) ){};
 	}
 	
-	void add(AdvertisingFilter filter)
+	void add(ScanFilter filter)
 	{
 		if( filter == null )  return;
 		
@@ -48,19 +48,19 @@ class P_AdvertisingFilterManager
 		m_filters.add(filter);
 	}
 	
-	BleManagerConfig.AdvertisingFilter.Ack allow(BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent)
+	BleManagerConfig.ScanFilter.Please allow(BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent)
 	{
-		if( m_filters.size() == 0 && m_default == null )  return Ack.yes();
+		if( m_filters.size() == 0 && m_default == null )  return Please.acknowledge();
 		
-		Packet packet = null;
+		Result packet = null;
 		
 		if( m_default != null )
 		{
-			packet = new Packet(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			packet = new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
-			Ack ack = m_default.acknowledgeDiscovery(packet);
+			Please ack = m_default.onScanResult(packet);
 			
-			if( ack.ack() )
+			if( ack != null && ack.ack() )
 			{
 				return ack;
 			}
@@ -68,18 +68,18 @@ class P_AdvertisingFilterManager
 		
 		for( int i = 0; i < m_filters.size(); i++ )
 		{
-			packet = packet != null ? packet : new Packet(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			packet = packet != null ? packet : new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
-			AdvertisingFilter ithFilter = m_filters.get(i);
+			ScanFilter ithFilter = m_filters.get(i);
 			
-			Ack ack = ithFilter.acknowledgeDiscovery(packet);
+			Please ack = ithFilter.onScanResult(packet);
 			
-			if( ack.ack() )
+			if( ack != null && ack.ack() )
 			{
 				return ack;
 			}
 		}
 		
-		return BleManagerConfig.AdvertisingFilter.Ack.no();
+		return BleManagerConfig.ScanFilter.Please.ignore();
 	}
 }

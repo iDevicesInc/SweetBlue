@@ -36,13 +36,13 @@ public interface State
 		private final int m_newStateBits;
 		
 		/**
-		 * For each old->new bit difference, this mask will tell you if the transition was intentional. Intentional generally means a call was made to
+		 * For each old->new bit difference, this mask will tell you if the transition was intentional. "Intentional" generally means a call was made to
 		 * a public method of the library from app-code to trigger the state change, and so usually the stacktrace started from a user input event upstream.
 		 * Otherwise the given bit will be 0x0 and so the state change was "unintentional". An example of intentional is if you call
 		 * {@link BleDevice#disconnect()} in response to a button click, whereas unintentional would be if the device disconnected because it
 		 * went out of range. As much as possible these flags are meant to represent the actual app <i>user's</i> intent through the app, not
 		 * the intent of you the programmer, nor the intent of the user outside the bounds of the app, like disconnecting by turning the peripheral off.
-		 * For example after a disconnect you might be using {@link BleManagerConfig#reconnectRateLimiter} to try periodically
+		 * For example after a disconnect you might be using {@link BleManagerConfig#reconnectLoop} to try periodically
 		 * reconnecting. From you the programmer's perspective a connect, if/when it happens, is arguably an intentional action. From the user's
 		 * perspective however the connect was unintentional. Therefore this mask is currently meant to serve an analytics or debugging role,
 		 * not to necessarily gate application logic.
@@ -60,7 +60,7 @@ public interface State
 		/**
 		 * Convenience forwarding of {@link State#didEnter(int, int)}.
 		 */
-		public boolean wasEntered(State state)
+		public boolean didEnter(State state)
 		{
 			return state.didEnter(oldStateBits(), newStateBits());
 		}
@@ -68,14 +68,40 @@ public interface State
 		/**
 		 * Convenience forwarding of {@link State#didExit(int, int)}.
 		 */
-		public boolean wasExited(State state)
+		public boolean didExit(State state)
 		{
 			return state.didExit(oldStateBits(), newStateBits());
 		}
 		
 		/**
+		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns true on any of the {@link State} instances given.
+		 */
+		public boolean didEnterAny(State ... states)
+		{
+			for( int i = 0; i < states.length; i++ )
+			{
+				if( didEnter(states[i]) )  return true;
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns true on any of the {@link State} instances given.
+		 */
+		public boolean didExitAny(State ... states)
+		{
+			for( int i = 0; i < states.length; i++ )
+			{
+				if( didExit(states[i]) )  return true;
+			}
+			
+			return false;
+		}
+		
+		/**
 		 * Returns the intention behind the state change, or {@link ChangeIntent#NULL} if no state
-		 * change for the given state occured.
+		 * change for the given state occurred.
 		 */
 		public ChangeIntent getIntent(State state)
 		{
@@ -97,7 +123,7 @@ public interface State
 	
 	/**
 	 * Enumerates the intention behind a single state change - as comprehensively as possible, whether the
-	 * application user intended for the state change to happen or not. See {@link ChangeEvent#intentMask} for more
+	 * application user intended for the state change to happen or not. See {@link ChangeEvent#intentMask()} for more
 	 * discussion on user intent.
 	 */
 	public static enum ChangeIntent

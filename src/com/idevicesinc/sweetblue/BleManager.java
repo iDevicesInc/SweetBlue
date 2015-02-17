@@ -30,11 +30,10 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleManager.NukeListener.NukeEvent;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter.Ack;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
-import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
@@ -677,7 +676,7 @@ public class BleManager
 		m_config = config.clone();
 		initLogger();
 		m_lastDisconnectMngr = new P_LastDisconnectManager(m_context);
-		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultAdvertisingFilter);
+		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultScanFilter);
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleManagerState nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_BleStateTracker(this);
@@ -918,7 +917,7 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime)
 	{
-		startPeriodicScan(scanActiveTime, scanPauseTime, (AdvertisingFilter)null, (DiscoveryListener)null);
+		startPeriodicScan(scanActiveTime, scanPauseTime, (ScanFilter)null, (DiscoveryListener)null);
 	}
 
 	/**
@@ -926,13 +925,13 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, DiscoveryListener discoveryListener)
 	{
-		startPeriodicScan(scanActiveTime, scanPauseTime, (AdvertisingFilter)null, discoveryListener);
+		startPeriodicScan(scanActiveTime, scanPauseTime, (ScanFilter)null, discoveryListener);
 	}
 
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but adds a filter too.
 	 */
-	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.AdvertisingFilter filter)
+	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter)
 	{
 		startPeriodicScan(scanActiveTime, scanPauseTime, filter, (DiscoveryListener)null);
 	}
@@ -940,7 +939,7 @@ public class BleManager
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(DiscoveryListener)} for you too and adds a filter.
 	 */
-	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.AdvertisingFilter filter, DiscoveryListener discoveryListener)
+	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter, DiscoveryListener discoveryListener)
 	{
 		if( discoveryListener != null )
 		{
@@ -984,9 +983,9 @@ public class BleManager
 	}
 
 	/**
-	 * Calls {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter)} with {@link Interval#INFINITE}.
+	 * Calls {@link #startScan(Interval, BleManagerConfig.ScanFilter)} with {@link Interval#INFINITE}.
 	 */
-	public void startScan(AdvertisingFilter filter)
+	public void startScan(ScanFilter filter)
 	{
 		startScan(Interval.INFINITE, filter, (DiscoveryListener)null);
 	}
@@ -996,29 +995,29 @@ public class BleManager
 	 */
 	public void startScan(DiscoveryListener discoveryListener)
 	{
-		startScan(Interval.INFINITE, (AdvertisingFilter)null, discoveryListener);
+		startScan(Interval.INFINITE, (ScanFilter)null, discoveryListener);
 	}
 
 	/**
-	 * Overload of {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter, DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)}
 	 */
-	public void startScan(Interval scanTime, AdvertisingFilter filter)
+	public void startScan(Interval scanTime, ScanFilter filter)
 	{
 		startScan(scanTime, filter, (DiscoveryListener)null);
 	}
 
 	/**
-	 * Overload of {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter, DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)}
 	 */
 	public void startScan(Interval scanTime, DiscoveryListener discoveryListener)
 	{
-		startScan(scanTime, (AdvertisingFilter)null, discoveryListener);
+		startScan(scanTime, (ScanFilter)null, discoveryListener);
 	}
 
 	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 */
-	public void startScan(AdvertisingFilter filter, DiscoveryListener discoveryListener)
+	public void startScan(ScanFilter filter, DiscoveryListener discoveryListener)
 	{
 		startScan(Interval.INFINITE, filter, discoveryListener);
 	}
@@ -1028,13 +1027,13 @@ public class BleManager
 	 */
 	public void startScan(Interval scanTime)
 	{
-		startScan(scanTime, (AdvertisingFilter)null, (DiscoveryListener) null);
+		startScan(scanTime, (ScanFilter)null, (DiscoveryListener) null);
 	}
 
 	/**
 	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 */
-	public void startScan(Interval scanTime, AdvertisingFilter filter, DiscoveryListener discoveryListener)
+	public void startScan(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener)
 	{
 		m_timeNotScanning = 0.0;
 		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
@@ -1292,10 +1291,10 @@ public class BleManager
 
 	/**
 	 * Same as {@link #stopScan()} but also unregisters any filter supplied to various overloads of
-	 * {@link #startScan()} or {@link #startPeriodicScan(Interval, Interval)} that take an {@link BleManagerConfig.AdvertisingFilter}.
+	 * {@link #startScan()} or {@link #startPeriodicScan(Interval, Interval)} that take an {@link BleManagerConfig.ScanFilter}.
 	 * Calling {@link #stopScan()} alone will keep any previously registered filters active.
 	 */
-	public void stopScan(AdvertisingFilter filter)
+	public void stopScan(ScanFilter filter)
 	{
 		m_filterMngr.remove(filter);
 
@@ -1465,11 +1464,20 @@ public class BleManager
 	}
 
 	/**
-	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name.
+	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
+	 * and passed a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
 	public BleDevice newDevice(String macAddress)
 	{
-		return newDevice(macAddress, null);
+		return newDevice(macAddress, null, null);
+	}
+	
+	/**
+	 * Same as {@link #newDevice(String)} but allows a custom name also.
+	 */
+	public BleDevice newDevice(String macAddress, String name)
+	{
+		return newDevice(macAddress, name, null);
 	}
 	
 	/**
@@ -1509,7 +1517,7 @@ public class BleManager
 
 		final String name_normalized = Utils.normalizeDeviceName(name);
 
-		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDevice.Origin.EXPLICIT, config);
+		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDeviceOrigin.EXPLICIT, config);
 		
 		onDiscovered_wrapItUp(newDevice, /*newlyDiscovered=*/true, null, null, 0);
 
@@ -1825,7 +1833,7 @@ public class BleManager
 
 		String normalizedDeviceName = "";
 		
-		final Ack ack;
+		final Please please;
 
 		if( device == null )
 		{
@@ -1836,28 +1844,28 @@ public class BleManager
 	    	deviceName = deviceName != null ? deviceName : "";
 	    	boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 	    	State.ChangeIntent lastDisconnectIntent = m_lastDisconnectMngr.load(macAddress, hitDisk);
-	    	ack = m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+	    	please = m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 
-	    	if( !ack.ack() )  return;
+	    	if( please != null && !please.ack() )  return;
 		}
 		else
 		{
-			ack = null;
+			please = null;
 		}
 
     	boolean newlyDiscovered = false;
 
     	if ( device == null )
     	{
-    		final BleDeviceConfig config_nullable = ack != null ? ack.getConfig() : null;
-    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDevice.Origin.FROM_DISCOVERY, config_nullable);
+    		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
+    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
     		newlyDiscovered = true;
     	}
 
     	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
 	}
 
-	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDevice.Origin origin, BleDeviceConfig config_nullable)
+	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDeviceOrigin origin, BleDeviceConfig config_nullable)
 	{
 		final boolean hitCache = true; // TODO: for now always true...should it be behind a config option?
 		
@@ -2048,7 +2056,7 @@ public class BleManager
 
 	private boolean doAutoScan()
 	{
-		return m_config.autoScanDuringFirmwareUpdates || !m_deviceMngr.hasDevice(BleDeviceState.UPDATING_FIRMWARE);
+		return m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA);
 	}
 
 	void uhOh(UhOh reason)
