@@ -14,6 +14,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -369,6 +370,8 @@ class P_PollManager
 					}
 					else
 					{
+						m_device.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
+						
 						P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(ithEntry.m_pollingReadListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
 						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
 						

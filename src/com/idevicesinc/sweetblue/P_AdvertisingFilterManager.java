@@ -52,13 +52,13 @@ class P_AdvertisingFilterManager
 	{
 		if( m_filters.size() == 0 && m_default == null )  return Please.acknowledge();
 		
-		Result packet = null;
+		Result result = null;
 		
 		if( m_default != null )
 		{
-			packet = new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			result = new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
-			Please ack = m_default.onScanResult(packet);
+			Please ack = m_default.onScanResult(result);
 			
 			if( ack != null && ack.ack() )
 			{
@@ -68,11 +68,11 @@ class P_AdvertisingFilterManager
 		
 		for( int i = 0; i < m_filters.size(); i++ )
 		{
-			packet = packet != null ? packet : new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			result = result != null ? result : new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
 			ScanFilter ithFilter = m_filters.get(i);
 			
-			Please ack = ithFilter.onScanResult(packet);
+			Please ack = ithFilter.onScanResult(result);
 			
 			if( ack != null && ack.ack() )
 			{

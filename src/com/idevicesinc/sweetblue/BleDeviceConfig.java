@@ -123,6 +123,16 @@ public class BleDeviceConfig implements Cloneable
 				m_uuid = uuid;
 				m_type = type;
 			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"device",		device().getName_debug(),
+					"charUuid",		device().getManager().getLogger().charName(charUuid()),
+					"type",			type()
+				);
+			}
 		}
 		
 		/**

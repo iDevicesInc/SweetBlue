@@ -21,6 +21,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
+import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -1761,6 +1762,8 @@ public class BleDevice
 		
 		if( shouldSendOutNotifyEnable && characteristic != null && is(CONNECTED) )
 		{
+			bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
+			
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
 			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
 			
@@ -2593,7 +2596,7 @@ public class BleDevice
 		m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /*usingNotify=*/true);
 	}
 	
-	private boolean bondIfNeeded(final P_Characteristic characteristic, final BondFilter.CharacteristicEventType type)
+	boolean bondIfNeeded(final P_Characteristic characteristic, final BondFilter.CharacteristicEventType type)
 	{
 		final BleDeviceConfig.BondFilter bondFilter = conf_device().bondFilter != null ? conf_device().bondFilter : conf_mngr().bondFilter;
 		
