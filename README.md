@@ -21,7 +21,7 @@ Features
 *	Plain old Java with zero API-level dependencies.
 *	Rich, queryable state tracking that makes UI integration a breeze.
 *	Automatic service discovery.
-*	Easy RSSI tracking with built-in polling and caching.
+*	Easy RSSI tracking with built-in polling and caching, including distance and friendly signal strength calculations.
 *	Highly configurable scanning with min/max time limits, periodic bursts, advanced filtering, and more.
 *	Continuous scanning mode that saves battery and defers to more important operations by stopping and starting as needed under the hood.
 *	Atomic transactions for easily coordinating authentication handshakes, initialization, and firmware updates.
