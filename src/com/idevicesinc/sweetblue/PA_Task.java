@@ -73,7 +73,6 @@ abstract class PA_Task
 		m_device = null;
 		m_manager = manager;
 //		m_maxRetries = 0;
-		m_timeout = getInitialTimeout();
 		m_logger = m_manager.getLogger();
 		m_timeCreated = System.currentTimeMillis();
 		
@@ -226,6 +225,7 @@ abstract class PA_Task
 		m_resetableExecuteStartTime = System.currentTimeMillis();
 //		m_retryCount = 0;
 		m_updateCount = 0;
+		m_timeout = getInitialTimeout();
 	}
 	
 	protected boolean isExecutable()
