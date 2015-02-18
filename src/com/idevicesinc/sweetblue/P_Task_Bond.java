@@ -2,11 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import android.annotation.SuppressLint;
 
-/**
- * 
- * 
- *
- */
 class P_Task_Bond extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
@@ -61,7 +56,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 		}
 		else if( !getDevice().getNative().createBond() )
 		{
-			fail();
+			failImmediately();
 			
 			m_logger.w("Bond failed immediately.");
 		}

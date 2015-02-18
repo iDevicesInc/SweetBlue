@@ -339,6 +339,7 @@ class P_Logger
 		m_unbondReasonCodes = new HashMap<Integer, String>();
 		
 		initFromReflection(BluetoothDevice.class, "UNBOND_REASON_", m_unbondReasonCodes);
+		initFromReflection(BleDeviceConfig.class, "BOND_FAIL_REASON", m_unbondReasonCodes);
 	}
 	
 	

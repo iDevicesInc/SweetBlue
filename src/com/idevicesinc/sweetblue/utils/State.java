@@ -122,7 +122,7 @@ public interface State
 	}
 	
 	/**
-	 * Enumerates the intention behind a single state change - as comprehensively as possible, whether the
+	 * Enumerates the intention behind a state change - as comprehensively as possible, whether the
 	 * application user intended for the state change to happen or not. See {@link ChangeEvent#intentMask()} for more
 	 * discussion on user intent.
 	 */
@@ -162,10 +162,10 @@ public interface State
 			}
 		}
 		
-		public static int toDiskValue(final ChangeIntent intent)
+		public static int toDiskValue(final ChangeIntent intent_nullable)
 		{
-			if( intent == null )	return NULL.toDiskValue();
-			else					return intent.toDiskValue();
+			if( intent_nullable == null )	return NULL.toDiskValue();
+			else					return intent_nullable.toDiskValue();
 		}
 		
 		/**

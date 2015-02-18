@@ -16,12 +16,12 @@ import com.idevicesinc.sweetblue.utils.State;
  * 
  *
  */
-class P_AdvertisingFilterManager
+class P_ScanFilterManager
 {
 	private final ArrayList<BleManagerConfig.ScanFilter> m_filters = new ArrayList<BleManagerConfig.ScanFilter>();
 	private final ScanFilter m_default;
 	
-	P_AdvertisingFilterManager(ScanFilter defaultFilter)
+	P_ScanFilterManager(ScanFilter defaultFilter)
 	{
 		m_default = defaultFilter;
 	}

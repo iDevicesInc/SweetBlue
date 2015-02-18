@@ -305,8 +305,9 @@ public class BleManager
 			
 			/**
 			 * A {@link BleDevice} went from {@link BleDeviceState#BONDING} to {@link BleDeviceState#UNBONDED}.
+			 * UPDATE: This can happen under normal circumstances, so not listing it as an uh oh for now.
 			 */
-			WENT_FROM_BONDING_TO_UNBONDED,
+//			WENT_FROM_BONDING_TO_UNBONDED,
 			
 			/**
 			 * A {@link BluetoothGatt#discoverServices()} operation returned two duplicate services. Not the same instance
@@ -633,7 +634,7 @@ public class BleManager
 	private final Context m_context;
 	final Handler m_mainThreadHandler;
 	private final BluetoothManager m_btMngr;
-	private final P_AdvertisingFilterManager m_filterMngr;
+	private final P_ScanFilterManager m_filterMngr;
 	private final P_BluetoothCrashResolver m_crashResolver;
 	private			P_Logger m_logger;
 			  BleManagerConfig m_config;
@@ -656,6 +657,7 @@ public class BleManager
 	private AssertListener m_assertionListener;
 			BleDevice.StateListener m_defaultDeviceStateListener;
 			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
+			BleDevice.BondListener m_defaultBondListener;
 	final P_LastDisconnectManager m_lastDisconnectMngr;
 	
 	private double m_timeForegrounded = 0.0;
@@ -676,7 +678,7 @@ public class BleManager
 		m_config = config.clone();
 		initLogger();
 		m_lastDisconnectMngr = new P_LastDisconnectManager(m_context);
-		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultScanFilter);
+		m_filterMngr = new P_ScanFilterManager(m_config.defaultScanFilter);
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleManagerState nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_BleStateTracker(this);
@@ -881,7 +883,14 @@ public class BleManager
 	 */
 	public void setListener_DeviceState(BleDevice.StateListener listener)
 	{
-		m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		if( listener != null )
+		{
+			m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_defaultDeviceStateListener = null;
+		}
 	}
 
 	/**
@@ -895,7 +904,27 @@ public class BleManager
 	 */
 	public void setListener_ConnectionFail(BleDevice.ConnectionFailListener listener)
 	{
-		m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		if( listener != null )
+		{
+			m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_defaultConnectionFailListener = null;
+		}
+		
+	}
+	
+	public void setListener_Bond(BleDevice.BondListener listener)
+	{
+		if( listener != null )
+		{
+			m_defaultBondListener = new P_WrappingBondListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_defaultBondListener = null;
+		}
 	}
 
 	/**

@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
@@ -88,13 +89,13 @@ public class BleDevice
 			
 			/**
 			 * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of its overloads) or
-			 * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its overloads) returned false.
+			 * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its overloads) returned <code>false</code>.
 			 */
 			FAILED_TO_SET_VALUE_ON_TARGET,
 			
 			/**
 			 * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)} or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
-			 * or etc. returned {@link Boolean#FALSE} and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#dropTacticalNuke()}.
+			 * or etc. returned <code>false</code> and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#dropTacticalNuke()}.
 			 */
 			FAILED_TO_SEND_OUT,
 			
@@ -114,7 +115,7 @@ public class BleDevice
 			CANCELLED_FROM_BLE_TURNING_OFF,
 			
 			/**
-			 * Used either when {@link Result#type} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
+			 * Used either when {@link Result#type()} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
 			 * the operation being otherwise "successful", <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter.
 			 * For the read case, the library will throw an {@link UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch.
 			 * If the problem persists try {@link BleManager#dropTacticalNuke()}.
@@ -138,12 +139,12 @@ public class BleDevice
 			REMOTE_GATT_FAILURE,
 			
 			/**
-			 * Operation took longer than {@link BleManagerConfig#DEFAULT_TASK_TIMEOUT} seconds so we cut it loose.
+			 * Operation took longer than time specified in {@link BleDeviceConfig#timeouts} so we cut it loose.
 			 */
 			TIMED_OUT;
 			
 			/**
-			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
+			 * Returns <code>true</code> for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
 			 */
 			public boolean wasCancelled()
 			{
@@ -514,6 +515,12 @@ public class BleDevice
 			NULL,
 			
 			/**
+			 * A call was made to {@link BleDevice#connect()} or its overloads but {@link Info#device()} 
+			 * is already {@link BleDeviceState#CONNECTING} or {@link BleDeviceState#CONNECTED}.
+			 */
+			ALREADY_CONNECTING_OR_CONNECTED,
+			
+			/**
 			 * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
 			 * because it returned <code>null</code>.
 			 */
@@ -527,7 +534,7 @@ public class BleDevice
 			
 			/**
 			 * {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)} took longer than
-			 * {@link BleDeviceConfig#timeoutForConnection}.
+			 * time specified in {@link BleDeviceConfig#timeouts}.
 			 */
 			NATIVE_CONNECTION_TIMED_OUT,
 			
@@ -542,7 +549,7 @@ public class BleDevice
 			GETTING_SERVICES_FAILED_EVENTUALLY,
 			
 			/**
-			 * {@link BluetoothGatt#discoverServices()} took longer than {@link BleDeviceConfig#timeoutForDiscoveringServices}.
+			 * {@link BluetoothGatt#discoverServices()} took longer than time specified in {@link BleDeviceConfig#timeouts}.
 			 */
 			GETTING_SERVICES_TIMED_OUT,
 			
@@ -905,6 +912,94 @@ public class BleDevice
 		}
 	}
 	
+	/**
+	 * Pass an instance of this listener to {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
+	 */
+	public static interface BondListener
+	{
+		/**
+		 * Used on {@link BondEvent#status()} to roughly enumerate success or failure.
+		 */
+		public static enum Status
+		{
+			/**
+			 * The {@link BleDevice#bond()} call succeeded.
+			 */
+			SUCCESS,
+			
+			/**
+			 * Already {@link BleDeviceState#BONDED} or in the process of {@value BleDeviceState#BONDING}.
+			 */
+			ALREADY_BONDING_OR_BONDED,
+			
+			/**
+			 * The call to {@link BluetoothDevice#createBond()} returned <code>false</code> and thus failed immediately.
+			 */
+			FAILED_IMMEDIATELY,
+			
+			/**
+			 * We received a {@link BluetoothDevice#ACTION_BOND_STATE_CHANGED} through our internal {@link BroadcastReceiver}
+			 * that we went from {@value BleDeviceState#BONDING} back to {@link BleDeviceState#UNBONDED}, which means the attempt failed.
+			 * See {@link BondEvent#failReason()} for more information.
+			 */
+			FAILED_EVENTUALLY,
+			
+			/**
+			 * The bond operation took longer than the time set in {@link BleDeviceConfig#timeouts} so we cut it loose.
+			 */
+			TIMED_OUT;
+		}
+		
+		/**
+		 * Struct passed to {@link BondListener#onBondEvent(BondEvent)} to provide more information about a {@link BleDevice#bond()} attempt.
+		 */
+		public static class BondEvent
+		{
+			/**
+			 * The {@link BleDevice} that attempted to {@link BleDevice#bond()}.
+			 */
+			public BleDevice device(){  return m_device;  }
+			private final BleDevice m_device;
+			
+			/**
+			 * The {@link Status} associated with this event.
+			 */
+			public Status status(){  return m_status;  }
+			private final Status m_status;
+			
+			/**
+			 * If {@link #status()} is {@link Status#FAILED_EVENTUALLY}, this integer will be one of the values enumerated in {@link BluetoothDevice} that
+			 * start with <code>UNBOND_REASON</code> such as {@link BluetoothDevice#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to
+			 * {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
+			 */
+			public int failReason(){  return m_failReason;  }
+			private final int m_failReason;
+			
+			BondEvent(BleDevice device, Status status, int failReason)
+			{
+				m_device = device;
+				m_status = status;
+				m_failReason = failReason;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"device",			device().getName_debug(),
+					"status",			status(),
+					"failReason",		device().m_mngr.getLogger().gattUnbondReason(failReason())
+				);
+			}
+		}
+		
+		/**
+		 * Called after a call to {@link BleDevice#bond(BondListener)} (or overloads), or when bonding through
+		 * another app or the operating system settings.
+		 */
+		void onBondEvent(BondEvent event);
+	}
+	
 	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener();
 	
 	private static final UUID[]				EMPTY_UUID_ARRAY	= new UUID[0];
@@ -931,6 +1026,7 @@ public class BleDevice
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
 	private final P_Task_Disconnect m_dummyDisconnectTask;
+			final P_BondManager m_bondMngr;
 	
 	private TimeEstimator m_writeTimeEstimator;
 	private TimeEstimator m_readTimeEstimator;
@@ -977,6 +1073,7 @@ public class BleDevice
 		m_reconnectMngr = new P_ReconnectManager(this);
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
 		m_rssiPollMngr = new P_RssiPollManager(this);
+		m_bondMngr = new P_BondManager(this);
 		m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 	}
 	
@@ -1086,6 +1183,15 @@ public class BleDevice
 	public void setListener_ConnectionFail(ConnectionFailListener listener)
 	{
 		m_connectionFailMngr.setListener(listener);
+	}
+	
+	/**
+	 * Set a listener here to be notified whenever a bond attempt succeeds. This will catch attempts to bond both through {@link #bond()}
+	 * and when bonding through the operating system settings or from other apps.
+	 */
+	public void setListener_Bond(BondListener listener)
+	{
+		m_bondMngr.setListener(listener);
 	}
 	
 	/**
@@ -1355,6 +1461,20 @@ public class BleDevice
 	}
 	
 	/**
+	 * Same as {@link #bond()} but you can pass a listener to be notified of the details behind success or failure.
+	 */
+	public void bond(BondListener listener)
+	{
+		setListener_Bond(listener);
+		
+		if( isAny(BONDING, BONDED) )  return;
+		
+		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
+		
+		m_stateTracker.append(BONDING, E_Intent.EXPLICIT);
+	}
+	
+	/**
 	 * Attempts to create a bond. Analogous to {@link BluetoothDevice#createBond()}
 	 * This is also sometimes called pairing, but while pairing and bonding are closely
 	 * related, they are technically different from each other.
@@ -1367,11 +1487,7 @@ public class BleDevice
 	 */
 	public void bond()
 	{
-		if( isAny(BONDING, BONDED) )  return;
-	
-		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
-		
-		m_stateTracker.append(BONDING, E_Intent.EXPLICIT);
+		this.bond(null);
 	}
 	
 	/**
@@ -1965,57 +2081,6 @@ public class BleDevice
 		m_queue.add(new P_Task_Unbond(this, m_taskStateListener, priority));
 		
 		m_stateTracker.update(E_Intent.EXPLICIT, BONDED, false, BONDING, false, UNBONDED, true);
-	}
-	
-	void onBondTaskStateChange(PA_Task task, PE_TaskState state)
-	{
-		E_Intent intent = task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
-		
-		if( task.getClass() == P_Task_Bond.class )
-		{
-			if( state.isEndingState() )
-			{
-				if( state == PE_TaskState.SUCCEEDED )
-				{
-					this.onNativeBond(intent);
-				}
-				else
-				{
-					this.onNativeBondFailed(intent);
-				}
-			}
-		}
-		else if( task.getClass() == P_Task_Unbond.class )
-		{
-			if( state == PE_TaskState.SUCCEEDED )
-			{
-				this.onNativeUnbond(intent);
-			}
-			else
-			{
-				// not sure what to do here, if anything
-			}
-		}
-	}
-	
-	void onNativeUnbond(E_Intent intent)
-	{
-		m_stateTracker.update(intent, BONDED, false, BONDING, false, UNBONDED, true);
-	}
-	
-	void onNativeBonding(E_Intent intent)
-	{
-		m_stateTracker.update(intent, BONDED, false, BONDING, true, UNBONDED, false);
-	}
-	
-	void onNativeBond(E_Intent intent)
-	{
-		m_stateTracker.update(intent, BONDED, true, BONDING, false, UNBONDED, false);
-	}
-	
-	void onNativeBondFailed(E_Intent intent)
-	{
-		m_stateTracker.update(intent, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
 	void attemptReconnect()

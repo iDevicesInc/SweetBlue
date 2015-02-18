@@ -129,7 +129,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else if (task.getClass() == P_Task_Bond.class)
 			{
-				m_device.onBondTaskStateChange(task, state);
+				m_device.m_bondMngr.onBondTaskStateChange(task, state);
 			}
 		}
 	};
@@ -428,26 +428,31 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		});
 	}
 
-	void onNativeBondStateChanged(int previousState, int newState)
+	void onNativeBondStateChanged(int previousState, int newState, int failReason)
 	{
-		onNativeBondStateChanged_private(previousState, newState);
+		onNativeBondStateChanged_private(previousState, newState, failReason);
 	}
 	
-	private void onNativeBondStateChanged_private(int previousState, int newState)
+	private void onNativeBondStateChanged_private(int previousState, int newState, int failReason)
 	{
 		if (newState == BluetoothDevice.ERROR)
 		{
 			P_TaskQueue queue = m_device.getTaskQueue();
 			queue.fail(P_Task_Bond.class, m_device);
 			queue.fail(P_Task_Unbond.class, m_device);
+			
+			m_logger.e("newState for bond is BluetoothDevice.ERROR!(?)");
 		}
 		else if (newState == BluetoothDevice.BOND_NONE)
 		{
-			m_queue.fail(P_Task_Bond.class, m_device);
+			if( !m_queue.fail(P_Task_Bond.class, m_device) )
+			{
+				
+			}
 			
 			if (!m_queue.succeed(P_Task_Unbond.class, m_device))
 			{
-				m_device.onNativeUnbond(E_Intent.IMPLICIT);
+				m_device.m_bondMngr.onNativeUnbond(E_Intent.IMPLICIT);
 			}
 		}
 		else if (newState == BluetoothDevice.BOND_BONDING)
@@ -455,7 +460,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
 			E_Intent intent = task != null && task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
 			boolean isCurrent = task != null; // avoiding erroneous dead code warning from putting this directly in if-clause below.
-			m_device.onNativeBonding(intent);
+			m_device.m_bondMngr.onNativeBonding(intent);
 
 			if ( !isCurrent )
 			{
@@ -470,7 +475,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 			if (!m_queue.succeed(P_Task_Bond.class, m_device))
 			{
-				m_device.onNativeBond(E_Intent.IMPLICIT);
+				m_device.m_bondMngr.onNativeBond(E_Intent.IMPLICIT);
 			}
 		}
 	}

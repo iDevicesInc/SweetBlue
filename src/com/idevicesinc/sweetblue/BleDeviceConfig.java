@@ -46,6 +46,12 @@ public class BleDeviceConfig implements Cloneable
 	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 	
 	/**
+	 * Used on {@link BleDevice.BondListener.BondEvent#failReason()} when {@link BleDevice.BondListener.BondEvent#status()}
+	 * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.
+	 */
+	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= GATT_STATUS_NOT_APPLICABLE;
+	
+	/**
 	 * As of now there are two main default uses for this class...
 	 * <br><br>
 	 * The first is that in at least some cases it's not possible to determine beforehand whether a given characteristic requires
