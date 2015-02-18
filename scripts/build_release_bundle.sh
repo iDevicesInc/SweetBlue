@@ -39,7 +39,9 @@ if [ $(contains "${ARGS[@]}" "no_samples") == "n" ];
 then
     echo "${GLITZ}BUILDING SAMPLES${GLITZ}"
     git clone https://github.com/iDevicesInc/SweetBlue_Samples.git $STAGE/samples
-    sh $STAGE/samples/scripts/update_sweetblue.sh
+    cd $STAGE/samples/scripts/
+    sh update_sweetblue.sh
+    cd -
     rsync -a $STAGE/samples/samples $BUNDLE_FOLDER --exclude scripts --exclude scripts
 fi
 
