@@ -87,9 +87,7 @@ class P_ConnectionFailManager
 		else
 		{
 			m_failCount++;
-		}
-		
-		PE_Please retryChoice = null;
+		}		
 		
 		if( m_highestStateReached_total == null )
 		{
@@ -105,18 +103,7 @@ class P_ConnectionFailManager
 		
 		final Info moreInfo = new Info(m_device, reason_nullable, m_failCount, attemptTime_latest, attemptTime_total, gattStatus, highestStateReached, m_highestStateReached_total, autoConnectUsage);
 		
-		if( m_connectionFailListener != null )
-		{
-			Please please = m_connectionFailListener.onConnectionFail(moreInfo);
-			retryChoice = please != null ? please.please() : null;
-		}
-		else if( m_device.getManager().m_defaultConnectionFailListener != null )
-		{
-			Please please = m_device.getManager().m_defaultConnectionFailListener.onConnectionFail(moreInfo);
-			retryChoice = please != null ? please.please() : null;
-		}
-		
-		retryChoice = retryChoice != null ? retryChoice : PE_Please.DO_NOT_RETRY;
+		PE_Please retryChoice = invokeCallback(moreInfo);
 		retryChoice = !isAttemptingReconnect ? retryChoice : PE_Please.DO_NOT_RETRY;
 		
 		if( reason_nullable != null && reason_nullable.wasCancelled() )
@@ -142,6 +129,26 @@ class P_ConnectionFailManager
 		{
 			m_failCount = 0;
 		}
+		
+		return retryChoice;
+	}
+	
+	PE_Please invokeCallback(final Info moreInfo)
+	{
+		PE_Please retryChoice = null;
+		
+		if( m_connectionFailListener != null )
+		{
+			Please please = m_connectionFailListener.onConnectionFail(moreInfo);
+			retryChoice = please != null ? please.please() : null;
+		}
+		else if( m_device.getManager().m_defaultConnectionFailListener != null )
+		{
+			Please please = m_device.getManager().m_defaultConnectionFailListener.onConnectionFail(moreInfo);
+			retryChoice = please != null ? please.please() : null;
+		}
+		
+		retryChoice = retryChoice != null ? retryChoice : PE_Please.DO_NOT_RETRY;
 		
 		return retryChoice;
 	}

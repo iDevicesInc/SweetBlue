@@ -370,7 +370,7 @@ class P_PollManager
 					}
 					else
 					{
-						m_device.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
+						m_device.m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 						
 						P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(ithEntry.m_pollingReadListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
 						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));

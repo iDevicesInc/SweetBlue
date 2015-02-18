@@ -28,7 +28,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleManager.AssertListener.Info;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
-import com.idevicesinc.sweetblue.BleManager.NukeListener.NukeEvent;
+import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
@@ -38,6 +38,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 
 /**
  * The entry point to the library. Get a singleton instance using {@link #get(Context, BleManagerConfig)} or its overloads. Make sure
@@ -393,7 +394,7 @@ public class BleManager
 				}
 				else if( this.ordinal() >= START_BLE_SCAN_FAILED.ordinal() )
 				{
-					return Remedy.NUKE;
+					return Remedy.RESET_BLE;
 				}
 				else
 				{
@@ -414,11 +415,11 @@ public class BleManager
 			WAIT_AND_SEE,
 			
 			/**
-			 * Calling {@link BleManager#dropTacticalNuke()} is probably in order.
+			 * Calling {@link BleManager#reset()} is probably in order.
 			 * 
-			 * @see BleManager#dropTacticalNuke()
+			 * @see BleManager#reset()
 			 */
-			NUKE,
+			RESET_BLE,
 			
 			/**
 			 * Might want to notify your user that a phone restart is in order.
@@ -465,43 +466,43 @@ public class BleManager
 	}
 
 	/**
-	 * Provide an implementation to {@link BleManager#dropTacticalNuke(NukeListener)}
-	 * to be notified when a nuke operation is complete.
+	 * Provide an implementation to {@link BleManager#reset(ResetListener)}
+	 * to be notified when a reset operation is complete.
 	 *
-	 * @see BleManager#dropTacticalNuke(NukeListener)
+	 * @see BleManager#reset(ResetListener)
 	 */
-	public static interface NukeListener
+	public static interface ResetListener
 	{
 		/**
-		 * Enumeration of the progress of the nuke.
+		 * Enumeration of the progress of the reset.
 		 * More entries will be added in the future.
 		 */
 		public static enum Progress
 		{
 			/**
-			 * The nuke has completed successfully.
+			 * The reset has completed successfully.
 			 */
 			COMPLETED;
 		}
 		
 		/**
-		 * Struct passed to {@link NukeListener#onNukeEvent(NukeEvent)}.
+		 * Struct passed to {@link ResetListener#onResetEvent(ResetEvent)}.
 		 */
-		public static class NukeEvent
+		public static class ResetEvent
 		{
 			/**
-			 * The {@link BleManager} the nuke was applied to.
+			 * The {@link BleManager} the reset was applied to.
 			 */
 			public BleManager manager(){  return m_manager;  }
 			private final BleManager m_manager;
 			
 			/**
-			 * The progress of the nuke.
+			 * The progress of the reset.
 			 */
 			public Progress progress(){  return m_progress;  }
 			private final Progress m_progress;
 			
-			NukeEvent(BleManager manager, Progress progress)
+			ResetEvent(BleManager manager, Progress progress)
 			{
 				m_manager = manager;
 				m_progress = progress;
@@ -517,9 +518,9 @@ public class BleManager
 		}
 		
 		/**
-		 * The nuke event, for now only fired when the nuke is completed. Hopefully the bluetooth stack is OK now.
+		 * The reset event, for now only fired when the reset is completed. Hopefully the bluetooth stack is OK now.
 		 */
-		void onNukeEvent(NukeEvent event);
+		void onResetEvent(ResetEvent event);
 	}
 
 	/**
@@ -653,7 +654,7 @@ public class BleManager
 		final Object m_threadLock = new Object();
 	
 			DiscoveryListener m_discoveryListener;
-	private P_WrappingNukeListener m_nukeListeners;
+	private P_WrappingResetListener m_resetListeners;
 	private AssertListener m_assertionListener;
 			BleDevice.StateListener m_defaultDeviceStateListener;
 			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
@@ -1199,25 +1200,25 @@ public class BleManager
 	 * other "special sauce" such that you should use this method instead of trying to reset the
 	 * stack manually with component calls.
 	 * <br><br>
-	 * It's good app etiquette to first prompt the user to get permission to drop a nuke because
+	 * It's good app etiquette to first prompt the user to get permission to reset because
 	 * it will affect Bluetooth system-wide and in other apps.
 	 *
-	 *  @see BleManagerState#NUKING
+	 *  @see BleManagerState#RESETTING
 	 */
-	public void dropTacticalNuke()
+	public void reset()
 	{
-		dropTacticalNuke(null);
+		reset(null);
 	}
 
 	/**
-	 * Same as {@link #dropTacticalNuke()} but with a convenience callback for when the nuke is
+	 * Same as {@link #reset()} but with a convenience callback for when the reset is
 	 * completed and the native BLE stack is (should be) back to normal.
 	 *
-	 * @see BleManagerState#NUKING
+	 * @see BleManagerState#RESETTING
 	 */
-	public void dropTacticalNuke(NukeListener listener)
+	public void reset(ResetListener listener)
 	{
-		dropTacticalNuke_synchronized(listener);
+		reset_synchronized(listener);
 	}
 
 	/**
@@ -1614,9 +1615,9 @@ public class BleManager
 			{
 				if( state == PE_TaskState.EXECUTING )
 				{
-					if( is(NUKING) )
+					if( is(RESETTING) )
 					{
-						m_nativeStateTracker.append(NUKING, E_Intent.EXPLICIT);
+						m_nativeStateTracker.append(RESETTING, E_Intent.EXPLICIT);
 					}
 
 					m_deviceMngr.undiscoverAllForTurnOff(m_deviceMngr_cache, E_Intent.EXPLICIT);
@@ -1627,26 +1628,26 @@ public class BleManager
 		m_taskQueue.add(task);
 	}
 
-	private void dropTacticalNuke_synchronized(NukeListener listener)
+	private void reset_synchronized(ResetListener listener)
 	{
 		if( listener != null )
 		{
-			if( m_nukeListeners != null )
+			if( m_resetListeners != null )
 			{
-				m_nukeListeners.addListener(listener);
+				m_resetListeners.addListener(listener);
 			}
 			else
 			{
-				m_nukeListeners = new P_WrappingNukeListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+				m_resetListeners = new P_WrappingResetListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 			}
 		}
 
-		if( is(BleManagerState.NUKING) )
+		if( is(BleManagerState.RESETTING) )
 		{
 			return;
 		}
 
-		m_stateTracker.append(NUKING, E_Intent.EXPLICIT);
+		m_stateTracker.append(RESETTING, E_Intent.EXPLICIT);
 
 		m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
 
@@ -1658,15 +1659,15 @@ public class BleManager
 			{
 				if( state.isEndingState() )
 				{
-					NukeListener nukeListeners = m_nukeListeners;
-					m_nukeListeners = null;
-					m_nativeStateTracker.remove(NUKING, E_Intent.IMPLICIT);
-					m_stateTracker.remove(NUKING, E_Intent.IMPLICIT);
+					ResetListener nukeListeners = m_resetListeners;
+					m_resetListeners = null;
+					m_nativeStateTracker.remove(RESETTING, E_Intent.IMPLICIT);
+					m_stateTracker.remove(RESETTING, E_Intent.IMPLICIT);
 
 					if( nukeListeners != null )
 					{
-						NukeEvent event = new NukeEvent(BleManager.this, NukeListener.Progress.COMPLETED);
-						nukeListeners.onNukeEvent(event);
+						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
+						nukeListeners.onResetEvent(event);
 					}
 				}
 			}
@@ -1867,7 +1868,7 @@ public class BleManager
 		if( device == null )
 		{
 			normalizedDeviceName = Utils.normalizeDeviceName(rawDeviceName);
-	    	services_nullable = Utils.parseServiceUuids(scanRecord_nullable);
+	    	services_nullable = Utils_ScanRecord.parseServiceUuids(scanRecord_nullable);
 	    	byte[] scanRecord = scanRecord_nullable != null ? scanRecord_nullable : BleDevice.EMPTY_BYTE_ARRAY;
 	    	String deviceName = rawDeviceName;
 	    	deviceName = deviceName != null ? deviceName : "";

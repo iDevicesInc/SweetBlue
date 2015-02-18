@@ -43,9 +43,9 @@ public enum BleManagerState implements State
 	SCANNING,
 	
 	/**
-	 * This is the state that {@link BleManager} is in after calling {@link BleManager#dropTacticalNuke()}.
+	 * This is the state that {@link BleManager} is in after calling {@link BleManager#reset()}.
 	 */
-	NUKING;
+	RESETTING;
 	
 	private final int m_nativeCode;
 	
@@ -61,7 +61,7 @@ public enum BleManagerState implements State
 	
 	/**
 	 * Returns the analogous native code, if applicable. For example {@link BluetoothAdapter#STATE_OFF},
-	 * {@link BluetoothAdapter#STATE_ON}, etc. {@link #NUKING} and {@link #SCANNING} do not have a native
+	 * {@link BluetoothAdapter#STATE_ON}, etc. {@link #RESETTING} and {@link #SCANNING} do not have a native
 	 * code equivalent and will return 0.
 	 */
 	public int getNativeCode()

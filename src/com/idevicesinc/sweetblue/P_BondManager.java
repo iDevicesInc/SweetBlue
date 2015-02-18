@@ -42,7 +42,7 @@ class P_BondManager
 		{
 			if( state.isEndingState() )
 			{
-				if( state == PE_TaskState.SUCCEEDED )
+				if( state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
 				{
 					this.onNativeBond(intent);
 				}
@@ -83,5 +83,64 @@ class P_BondManager
 	void onNativeBondFailed(E_Intent intent)
 	{
 		m_device.getStateTracker().update(intent, BONDED, false, BONDING, false, UNBONDED, true);
+	}
+	
+	boolean bondIfNeeded(final P_Characteristic characteristic, final BondFilter.CharacteristicEventType type)
+	{
+		final BleDeviceConfig.BondFilter bondFilter = m_device.conf_device().bondFilter != null ? m_device.conf_device().bondFilter : m_device.conf_mngr().bondFilter;
+		
+		if( bondFilter == null )  return false;
+		
+		final BondFilter.CharacteristicEvent event = new BleDeviceConfig.BondFilter.CharacteristicEvent(m_device, characteristic.getUuid(), type);
+		
+		final BondFilter.Please please = bondFilter.onCharacteristicEvent(event);
+		
+		return applyPlease_BondFilter(please);
+	}
+	
+	boolean applyPlease_BondFilter(BondFilter.Please please_nullable)
+	{
+		if( please_nullable == null )
+		{
+			return false;
+		}
+		
+		final Boolean bond = please_nullable.bond_private();
+		
+		if( bond == null )
+		{
+			return false;
+		}
+		
+		if( bond )
+		{
+			m_device.bond(please_nullable.listener());
+		}
+		else if( !bond )
+		{
+			m_device.unbond();
+		}
+		
+		return bond;
+	}
+	
+	private boolean isBondingOrBonded()
+	{
+		//--- DRK > These asserts are here because, as far as I could discern from logs, the abstracted
+		//---		state for bonding/bonded was true, but when we did an encrypted write, it kicked
+		//---		off a bonding operation, implying that natively the bonding state silently changed
+		//---		since we discovered the device. I really don't know.
+		//---		UPDATE: Nevermind, the reason bonding wasn't happening after connection was because
+		//---				it was using the default config option of false. Leaving asserts here anywway
+		//---				cause they can't hurt.
+		//---		UPDATE AGAIN: Actually, these asserts can hit if you're connected to a device, you go
+		//---		into OS settings, unbond, which kicks off an implicit disconnect which then kicks off
+		//---		an implicit reconnect...race condition makes it so that you can query the bond state
+		//---		and get its updated value before the bond state callback gets sent
+		//---		UPDATE AGAIN AGAIN: Nevermind, it seems getBondState *can* actually lie, so original comment sorta stands...wow.
+//		m_mngr.ASSERT(m_stateTracker.checkBitMatch(BONDED, isNativelyBonded()));
+//		m_mngr.ASSERT(m_stateTracker.checkBitMatch(BONDING, isNativelyBonding()));
+		
+		return m_device.m_nativeWrapper.isNativelyBonded() || m_device.m_nativeWrapper.isNativelyBonding();
 	}
 }

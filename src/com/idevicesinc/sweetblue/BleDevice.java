@@ -16,6 +16,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
@@ -221,7 +222,7 @@ public class BleDevice
 			
 			/**
 			 * Subset of {@link #isNotification()}, returns <code>true</code> only for {@link #NOTIFICATION} and {@link #INDICATION},
-			 * i.e. only notifications who origin is an *actual* notification from the native stack.
+			 * i.e. only notifications who origin is an *actual* notification (or indication) sent from the remote BLE device.
 			 */
 			public boolean isNativeNotification()
 			{
@@ -593,6 +594,15 @@ public class BleDevice
 			{
 				return this == EXPLICIT_DISCONNECT || this == BLE_TURNING_OFF;
 			}
+			
+			/**
+			 * Whether this reason honors a {@link Please#isRetry()}.
+			 * Returns false if {@link #wasCancelled()} or <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
+			 */
+			public boolean allowsRetry()
+			{
+				return !this.wasCancelled() && this != ALREADY_CONNECTING_OR_CONNECTED;
+			}
 		}
 		
 		/**
@@ -812,7 +822,7 @@ public class BleDevice
 		}
 		
 		/**
-		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#wasCancelled()}.
+		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#allowsRetry()} is <code>false</code>.
 		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectLoop}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
 		 * lets the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
@@ -871,7 +881,7 @@ public class BleDevice
 		@Override public Please onConnectionFail(Info info)
 		{
 			//--- DRK > Not necessary to check this ourselves, just being explicit.
-			if( info.reason().wasCancelled() || info.device().is(ATTEMPTING_RECONNECT) )
+			if( !info.reason().allowsRetry() || info.device().is(ATTEMPTING_RECONNECT) )
 			{
 				return Please.doNotRetry();
 			}
@@ -947,7 +957,12 @@ public class BleDevice
 			/**
 			 * The bond operation took longer than the time set in {@link BleDeviceConfig#timeouts} so we cut it loose.
 			 */
-			TIMED_OUT;
+			TIMED_OUT,
+			
+			/**
+			 * A call was made to {@link BleDevice#unbond()} at some point during the bonding process.
+			 */
+			CANCELLED;
 		}
 		
 		/**
@@ -1252,7 +1267,7 @@ public class BleDevice
 	 */
 	public Distance getDistance()
 	{
-		return Distance.meters(Utils.calcDistance(getTxPower(), getRssi()));
+		return Distance.meters(Utils_Rssi.calcDistance(getTxPower(), getRssi()));
 	}
 	
 	/**
@@ -1878,7 +1893,7 @@ public class BleDevice
 		
 		if( shouldSendOutNotifyEnable && characteristic != null && is(CONNECTED) )
 		{
-			bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
+			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 			
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
 			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
@@ -2092,7 +2107,13 @@ public class BleDevice
 	{
 		m_lastConnectOrDisconnectWasUserExplicit = true;
 		
-		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))  return;
+		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+		{
+			ConnectionFailListener.Info info = new ConnectionFailListener.Info(this, Reason.ALREADY_CONNECTING_OR_CONNECTED, 0, Interval.ZERO, Interval.ZERO, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE);
+			m_connectionFailMngr.invokeCallback(info);
+			
+			return;
+		}
 		
 		if( is(INITIALIZED) )
 		{
@@ -2135,26 +2156,6 @@ public class BleDevice
 				m_stateTracker.update(lastConnectDisconnectIntent(), CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
 			}
 		}
-	}
-	
-	private boolean isBondingOrBonded()
-	{
-		//--- DRK > These asserts are here because, as far as I could discern from logs, the abstracted
-		//---		state for bonding/bonded was true, but when we did an encrypted write, it kicked
-		//---		off a bonding operation, implying that natively the bonding state silently changed
-		//---		since we discovered the device. I really don't know.
-		//---		UPDATE: Nevermind, the reason bonding wasn't happening after connection was because
-		//---				it was using the default config option of false. Leaving asserts here anywway
-		//---				cause they can't hurt.
-		//---		UPDATE AGAIN: Actually, these asserts can hit if you're connected to a device, you go
-		//---		into OS settings, unbond, which kicks off an implicit disconnect which then kicks off
-		//---		an implicit reconnect...race condition makes it so that you can query the bond state
-		//---		and get its updated value before the bond state callback gets sent
-		//---		UPDATE AGAIN AGAIN: Nevermind, it seems getBondState *can* actually lie, so original comment sorta stands...wow.
-//		m_mngr.ASSERT(m_stateTracker.checkBitMatch(BONDED, isNativelyBonded()));
-//		m_mngr.ASSERT(m_stateTracker.checkBitMatch(BONDING, isNativelyBonding()));
-		
-		return m_nativeWrapper.isNativelyBonded() || m_nativeWrapper.isNativelyBonding();
 	}
 	
 	void onNativeConnect(boolean explicit)
@@ -2610,7 +2611,7 @@ public class BleDevice
 	
 	void read_internal(P_Characteristic characteristic, Type type, P_WrappingReadWriteListener listener)
 	{
-		boolean requiresBonding = bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
+		boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
 		
 		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
@@ -2631,7 +2632,7 @@ public class BleDevice
 		
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		
-		boolean requiresBonding = bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.WRITE);
+		boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.WRITE);
 		
 		m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
@@ -2659,45 +2660,6 @@ public class BleDevice
 		}
 		
 		m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /*usingNotify=*/true);
-	}
-	
-	boolean bondIfNeeded(final P_Characteristic characteristic, final BondFilter.CharacteristicEventType type)
-	{
-		final BleDeviceConfig.BondFilter bondFilter = conf_device().bondFilter != null ? conf_device().bondFilter : conf_mngr().bondFilter;
-		
-		if( bondFilter == null )  return false;
-		
-		final BondFilter.CharacteristicEvent event = new BondFilter.CharacteristicEvent(this, characteristic.getUuid(), type);
-		
-		final BondFilter.Please please = bondFilter.onCharacteristicEvent(event);
-		
-		return applyPlease_BondFilter(please);
-	}
-	
-	boolean applyPlease_BondFilter(BondFilter.Please please_nullable)
-	{
-		if( please_nullable == null )
-		{
-			return false;
-		}
-		
-		final Boolean bond = please_nullable.bond_private();
-		
-		if( bond == null )
-		{
-			return false;
-		}
-		
-		if( bond )
-		{
-			bond();
-		}
-		else if( !bond )
-		{
-			unbond();
-		}
-		
-		return bond;
 	}
 	
 	E_Intent lastConnectDisconnectIntent()

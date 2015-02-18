@@ -247,6 +247,8 @@ class P_NativeDeviceWrapper
 		{
 			if( m_gatt != null )
 			{
+				//--- DRK > This tripped with an S5 and iGrillv2 with low battery (not sure that matters).
+				//---		AV was able to replicate twice but was not attached to debugger and now can't replicate.
 				m_mngr.ASSERT(m_gatt == gatt);
 				
 				if( m_gatt != gatt )

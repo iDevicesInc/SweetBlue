@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
@@ -148,10 +149,12 @@ public class BleDeviceConfig implements Cloneable
 		public static class Please
 		{
 			private final Boolean m_bond;
+			private final BondListener m_bondListener;
 			
-			Please(Boolean bond)
+			Please(Boolean bond, BondListener listener)
 			{
 				m_bond = bond;
+				m_bondListener = listener;
 			}
 			
 			Boolean bond_private()
@@ -159,12 +162,25 @@ public class BleDeviceConfig implements Cloneable
 				return m_bond;
 			}
 			
+			BondListener listener()
+			{
+				return m_bondListener;
+			}
+			
 			/**
 			 * Device should be bonded if it isn't already.
 			 */
 			public static Please bond()
 			{
-				return new Please(true);
+				return new Please(true, null);
+			}
+			
+			/**
+			 * Same as {@link #bond()} but lets you pass a {@link BondListener} as well.
+			 */
+			public static Please bond(BondListener listener)
+			{
+				return new Please(true, listener);
 			}
 			
 			/**
@@ -172,7 +188,7 @@ public class BleDeviceConfig implements Cloneable
 			 */
 			public static Please unbond()
 			{
-				return new Please(false);
+				return new Please(false, null);
 			}
 			
 			/**
@@ -180,7 +196,7 @@ public class BleDeviceConfig implements Cloneable
 			 */
 			public static Please doNothing()
 			{
-				return new Please(null);
+				return new Please(null, null);
 			}
 		}
 		
@@ -437,7 +453,7 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Default is <code>true</code> - if devices are kept in memory for a {@link BleManager#turnOff()}/{@link BleManager#turnOn()} cycle
-	 * (or a {@link BleManager#dropTacticalNuke()}) because {@link #retainDeviceWhenBleTurnsOff} is <code>true</code>, then a {@link BleDevice#connect()}
+	 * (or a {@link BleManager#reset()}) because {@link #retainDeviceWhenBleTurnsOff} is <code>true</code>, then a {@link BleDevice#connect()}
 	 * will be attempted for any devices that were previously {@link BleDeviceState#CONNECTED}.
 	 * <br><br>
 	 * NOTE: See NOTE for {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}.

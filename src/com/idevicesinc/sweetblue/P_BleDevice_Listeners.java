@@ -16,11 +16,6 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
-/**
- * 
- * 
- * 
- */
 class P_BleDevice_Listeners extends BluetoothGattCallback
 {
 	private final BleDevice m_device;
@@ -219,7 +214,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		//--- DRK > NOTE: never seen this case happen.
 		else if (newState == BluetoothProfile.STATE_DISCONNECTING)
 		{
-			m_logger.e("Actually natively disconnecting!"); // error level just so it's noticeable.
+			m_logger.e("Actually natively disconnecting!"); // DRK > error level just so it's noticeable...never seen this.
 			
 			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 			
