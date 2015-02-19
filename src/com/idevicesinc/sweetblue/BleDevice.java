@@ -1081,6 +1081,7 @@ public class BleDevice
 		m_logger = m_mngr.getLogger();
 		m_serviceMngr = new P_ServiceManager(this);
 		m_stateTracker = new P_DeviceStateTracker(this);
+		m_bondMngr = new P_BondManager(this);
 		m_stateTracker.set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 		m_pollMngr = new P_PollManager(this);
 		m_txnMngr = new P_TransactionManager(this);
@@ -1088,7 +1089,6 @@ public class BleDevice
 		m_reconnectMngr = new P_ReconnectManager(this);
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
 		m_rssiPollMngr = new P_RssiPollManager(this);
-		m_bondMngr = new P_BondManager(this);
 		m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 	}
 	
