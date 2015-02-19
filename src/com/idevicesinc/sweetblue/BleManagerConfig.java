@@ -39,16 +39,16 @@ public class BleManagerConfig extends BleDeviceConfig
 	
 	/**
 	 * An optional whitelisting mechanism for scanning. Provide an implementation at
-	 * {@link BleManagerConfig#defaultAdvertisingFilter} or one of the various {@link BleManager#startScan()}
-	 * overloads, i.e. {@link BleManager#startScan(BleManagerConfig.AdvertisingFilter)},
-	 * {@link BleManager#startScan(Interval, BleManagerConfig.AdvertisingFilter)}, etc.
+	 * {@link BleManagerConfig#defaultScanFilter} or one of the various {@link BleManager#startScan()}
+	 * overloads, i.e. {@link BleManager#startScan(BleManagerConfig.ScanFilter)},
+	 * {@link BleManager#startScan(Interval, BleManagerConfig.ScanFilter)}, etc.
 	 */
-	public static interface AdvertisingFilter
+	public static interface ScanFilter
 	{
 		/**
-		 * Instances of this class are passed to {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} to aid in making a decision.
+		 * Instances of this class are passed to {@link ScanFilter#onScanResult(Result)} to aid in making a decision.
 		 */
-		public static class Packet
+		public static class Result
 		{
 			/**
 			 * Other parameters are probably enough to make a decision but this native instance is provided just in case.
@@ -96,14 +96,14 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
 			 * <br><br>
-			 * TIP: If {@link Packet#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
-			 * and return <code>true</code> from {@link AdvertisingFilter#acknowledgeDiscovery(Packet)} without having to check
+			 * TIP: If {@link Result#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
+			 * and return <code>true</code> from {@link ScanFilter#onScanResult(Result)} without having to check
 			 * uuids or names matching, because obviously you've seen and connected to this device before.
 			 */
 			public State.ChangeIntent lastDisconnectIntent(){  return m_lastDisconnectIntent;  }
 			private final State.ChangeIntent m_lastDisconnectIntent;
 			
-			Packet
+			Result
 			(
 				BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName,
 				String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent
@@ -130,27 +130,81 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		
 		/**
-		 * Return true to acknowledge the discovery, in which case {@link DiscoveryListener#onDiscoveryEvent(DiscoveryListener.DiscoveryEvent)} will be called shortly.
-		 * 
-		 * @return Whether to acknowledge the discovery.
+		 * Small struct passed back from {@link ScanFilter#onScanResult(Result)}.
+		 * Use static constructor methods to create an instance.
 		 */
-		boolean acknowledgeDiscovery(Packet packet);
+		public static class Please
+		{
+			private final boolean m_ack;
+			private final BleDeviceConfig m_config;
+			
+			private Please(boolean ack, BleDeviceConfig config_nullable)
+			{
+				m_ack = ack;
+				m_config = config_nullable;
+			}
+			
+			boolean ack()
+			{
+				return m_ack;
+			}
+			
+			BleDeviceConfig getConfig()
+			{
+				return m_config;
+			}
+			
+			/**
+			 * Return this from {@link ScanFilter#onScanResult(Result)} to acknowledge the discovery.
+			 * {@link BleManager.DiscoveryListener#onDiscoveryEvent(com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent)}
+			 * will be called presently with a newly created {@link BleDevice}.
+			 */
+			public static Please acknowledge()
+			{
+				return new Please(true, null);
+			}
+			
+			/**
+			 * Same as {@link #acknowledge()} but allows you to pass a {@link BleDeviceConfig}
+			 * instance to the {@link BleDevice} that's about to be created.
+			 */
+			public static Please acknowledge(BleDeviceConfig config)
+			{
+				return new Please(true, config);
+			}
+			
+			/**
+			 * Return this from {@link ScanFilter#onScanResult(Result)} to say no to the discovery.
+			 */
+			public static Please ignore()
+			{
+				return new Please(false, null);
+			}
+		}
+		
+		/**
+		 * Return {@link Please#acknowledge()} to acknowledge the discovery, in which case {@link DiscoveryListener#onDiscoveryEvent(DiscoveryListener.DiscoveryEvent)}
+		 * will be called shortly. Otherwise return {@link Please#ignore()} to ignore the discovered device.
+		 * 
+		 * @return {@link Please#acknowledge()}, {@link Please#ignore()}, or {@link Please#acknowledge(BleDeviceConfig)} (or other static constructor methods that may be added in the future).
+		 */
+		Please onScanResult(Result result);
 	}
 	
 	/**
-	 * Convenience implementation of {@link AdvertisingFilter} which filters using
+	 * Convenience implementation of {@link ScanFilter} which filters using
 	 * a whitelist of known primary advertising {@link UUID}s passed in to the constructor.
 	 */
-	public static class DefaultAdvertisingFilter implements AdvertisingFilter
+	public static class DefaultScanFilter implements ScanFilter
 	{
 		private final ArrayList<UUID> m_whitelist;
 		
-		public DefaultAdvertisingFilter(Collection<UUID> whitelist)
+		public DefaultScanFilter(Collection<UUID> whitelist)
 		{
 			m_whitelist = new ArrayList<UUID>(whitelist);
 		}
 		
-		public DefaultAdvertisingFilter(UUID whitelist)
+		public DefaultScanFilter(UUID whitelist)
 		{
 			m_whitelist = new ArrayList<UUID>();
 			m_whitelist.add(whitelist);
@@ -158,22 +212,29 @@ public class BleManagerConfig extends BleDeviceConfig
 		
 		/**
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
-		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultAdvertisingFilter#DefaultAdvertisingFilter(Collection)}.
+		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#DefaultAdvertisingFilter(Collection)}.
 		 */
-		@Override public boolean acknowledgeDiscovery(Packet packet)
+		@Override public Please onScanResult(Result result)
 		{
-			return Utils.haveMatchingIds(packet.advertisedServices(), m_whitelist);
+			if( Utils.haveMatchingIds(result.advertisedServices(), m_whitelist) )
+			{
+				return Please.acknowledge();
+			}
+			else
+			{
+				return Please.ignore();
+			}
 		}
 	}
 	
 	/**
-	 * Default is false - basically only useful for developers working on the library itself.
+	 * Default is <code>false</code> - basically only useful for developers working on the library itself.
 	 * May also be useful for providing context when reporting bugs.
 	 */
 	public boolean loggingEnabled						= false;
 	
 	/**
-	 * Default is false - this option may help mitigate crashes with "Unfortunately,
+	 * Default is <code>false</code> - this option may help mitigate crashes with "Unfortunately,
 	 * Bluetooth Share has stopped" error messages. See https://github.com/RadiusNetworks/bluetooth-crash-resolver or
 	 * http://developer.radiusnetworks.com/2014/04/02/a-solution-for-android-bluetooth-crashes.html or
 	 * Google "Bluetooth Crash Resolver" for more information.
@@ -181,7 +242,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	public boolean enableCrashResolver					= false;
 	
 	/**
-	 * Default is true - makes it so {@link BleManager#stopScan()} is called automatically after {@link BleManager#onPause()}.
+	 * Default is <code>true</code> - makes it so {@link BleManager#stopScan()} is called automatically after {@link BleManager#onPause()}.
 	 * If you're doing an infinite scan (e.g. by calling {@link BleManager#startScan()}, i.e. no timeout), then the scan
 	 * will automatically continue after {@link BleManager#onResume()} is called.
 	 * 
@@ -190,50 +251,50 @@ public class BleManagerConfig extends BleDeviceConfig
 	public boolean stopScanOnPause						= true;
 	
 	/**
-	 * Default is false - set this to allow or disallow autoscanning while any
-	 * {@link BleDevice} is {@link BleDeviceState#UPDATING_FIRMWARE}. If false,
-	 * then firmware updates may complete faster if you're periodically scanning
+	 * Default is <code>false</code> - set this to allow or disallow autoscanning while any
+	 * {@link BleDevice} is {@link BleDeviceState#PERFORMING_OTA}. If false,
+	 * then OTAs may complete faster if you're periodically scanning
 	 * through {@link #autoScanTime} or {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 * {@link BleManager#startScan()} will still start a scan regardless.
 	 */
-	public boolean autoScanDuringFirmwareUpdates		= false;
+	public boolean autoScanDuringOta					= false;
 	
 	/**
-	 * Default is true - SweetBlue uses {@link BluetoothAdapter#startLeScan()} by default but for unknown
+	 * Default is <code>true</code> - SweetBlue uses {@link BluetoothAdapter#startLeScan()} by default but for unknown
 	 * reasons this can fail sometimes. In this case SweetBlue can revert to using classic bluetooth
 	 * discovery through {@link BluetoothAdapter#startDiscovery()}. Be aware that classic
 	 * discovery may not discover some or any advertising BLE devices, nor will it provide
-	 * a {@link AdvertisingFilter.Packet#scanRecord} or {@link AdvertisingFilter.Packet#advertisedServices}
-	 * to {@link AdvertisingFilter#acknowledgeDiscovery(AdvertisingFilter.Packet)}.
+	 * a {@link ScanFilter.Result#scanRecord} or {@link ScanFilter.Result#advertisedServices}
+	 * to {@link ScanFilter#onScanResult(ScanFilter.Result)}.
 	 * Most likely you will be forced to filter on name only for your implementation of
-	 * {@link AdvertisingFilter#acknowledgeDiscovery(AdvertisingFilter.Packet)}.
+	 * {@link ScanFilter#onScanResult(ScanFilter.Result)}.
 	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.
 	 */
 	public boolean revertToClassicDiscoveryIfNeeded		= true;
 	
 	/**
-	 * Default is true - SweetBlue originally ran most operations on its own internal thread based on
+	 * Default is <code>true</code> - SweetBlue originally ran most operations on its own internal thread based on
 	 * some theories that since proved invalid. While the library can still sort of do so, it's now 
 	 * recommended to run on the main thread in order to avoid any possible multithreading issues.
 	 */
 	boolean runOnMainThread								= true;
 	
 	/**
-	 * Default is true - whether all callbacks are posted to the main thread or from SweetBlue's internal
+	 * Default is <code>true</code> - whether all callbacks are posted to the main thread or from SweetBlue's internal
 	 * thread. If {@link #runOnMainThread}==true then this setting is meaningless because SweetBlue's
 	 * internal thread is already the main thread to begin with.
 	 */
 	boolean postCallbacksToMainThread					= true;
 	
 	/**
-	 * Default is true - requires the {@link Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
+	 * Default is <code>true</code> - requires the {@link Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
 	 * It should look like this: {@code <uses-permission android:name="android.permission.WAKE_LOCK" />}
 	 * Sets whether the library will attempt to obtain a wake lock in certain situations.
 	 * For now the only situation is when there are no remote bluetooth devices
 	 * connected but one or more devices are {@link BleDeviceState#ATTEMPTING_RECONNECT}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link BleDeviceConfig.ReconnectRateLimiter#CANCEL} from {@link BleDeviceConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDeviceConfig.ReconnectRateLimiter.Info)}.
+	 * {@link BleDeviceConfig.ReconnectLoop#STOP} from {@link BleDeviceConfig.ReconnectLoop#onReconnectRequest(BleDeviceConfig.ReconnectLoop.Info)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  
@@ -297,15 +358,16 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval	idealMinScanTime					= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
-	 * Default is null, meaning no filtering - all discovered devices will
-	 * be piped through your {@link BleManager.DiscoveryListener} instance.
+	 * Default is <code>null</code>, meaning no filtering - all discovered devices will
+	 * be piped through your {@link BleManager.DiscoveryListener} instance
+	 * and added to the internal list of {@link BleManager}.
 	 * 
-	 * @see AdvertisingFilter
+	 * @see ScanFilter
 	 */
-	public AdvertisingFilter defaultAdvertisingFilter	= null;
+	public ScanFilter defaultScanFilter	= null;
 	
 	/**
-	 * Default is null - can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
+	 * Default is <code>null</code> - can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
 	 * which will override the implementation provided here.
 	 * 
 	 * @see BleManager.DiscoveryListener
@@ -313,7 +375,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	public DiscoveryListener defaultDiscoveryListener	= null;
 	
 	/**
-	 * Used if {@link #loggingEnabled} is true. Gives threads names so they are more easily identifiable.
+	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
 	 */
 	final String[] debugThreadNames =
 	{

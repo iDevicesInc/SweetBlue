@@ -1,12 +1,26 @@
 #!/bin/sh
 
-sh build_then_upload_docs.sh
+sh build_docs.sh
 
 source config.sh
 
 ANDROID_JAR=$ANDROID_HOME/platforms/android-$ANDROID_API_LEVEL/android.jar
 JAR_DIR=$BUNDLE_FOLDER/jars
 CP_TARGET=$BUNDLE_FOLDER/src_temp
+ARGS=( "$@" )
+
+function contains() {
+local n=$#
+local value=${!n}
+for ((i=1;i < $#;i++)) {
+if [ "${!i}" == "${value}" ]; then
+echo "y"
+return 0
+fi
+}
+echo "n"
+return 1
+}
 
 echo "${GLITZ}COPYING FILES${GLITZ}"
 
@@ -19,6 +33,17 @@ rm -rf $BUNDLE_FOLDER/scripts
 rm -rf $BUNDLE_FOLDER/.git
 rm -rf $BUNDLE_FOLDER/.gitignore
 rm -rf $BUNDLE_FOLDER/test
+
+
+if [ $(contains "${ARGS[@]}" "no_samples") == "n" ];
+then
+    echo "${GLITZ}BUILDING SAMPLES${GLITZ}"
+    git clone https://github.com/iDevicesInc/SweetBlue_Samples.git $STAGE/samples
+    cd $STAGE/samples/scripts/
+    sh update_sweetblue.sh
+    cd -
+    rsync -a $STAGE/samples/samples $BUNDLE_FOLDER --exclude scripts --exclude scripts
+fi
 
 echo "${GLITZ}COMPILING${GLITZ}"
 
@@ -46,12 +71,18 @@ jar cf $SOURCES_JAR_NAME.jar com/*
 cd -
 mv $BUNDLE_FOLDER/src/$SOURCES_JAR_NAME.jar $JAR_DIR/$SOURCES_JAR_NAME.jar
 
-
-echo "${GLITZ}ZIPPING UP${GLITZ}"
-rm -rf $CP_TARGET
-cd $STAGE
+if [ $(contains "${ARGS[@]}" "no_zip") == "n" ];
+then
+    echo "${GLITZ}ZIPPING UP${GLITZ}"
+    rm -rf $CP_TARGET
+    cd $STAGE
     zip -r $JAR_NAME.zip $JAR_NAME/*
-cd -
+    cd -
+fi
 
-echo "${GLITZ}CLEANING UP${GLITZ}"
-rm -rf $BUNDLE_FOLDER
+if [ $(contains "${ARGS[@]}" "no_clean") == "n" ];
+then
+    echo "${GLITZ}CLEANING UP${GLITZ}"
+    rm -rf $BUNDLE_FOLDER
+    rm -rf $STAGE/samples
+fi

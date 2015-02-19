@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATED;
 import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATING;
 import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
-import static com.idevicesinc.sweetblue.BleDeviceState.UPDATING_FIRMWARE;
+import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
@@ -87,7 +87,7 @@ class P_TransactionManager
 			{
 //				m_device.m_txnMngr.clearFirmwareUpdateTxn();
 				E_Intent intent = E_Intent.IMPLICIT;
-				m_device.getStateTracker().remove(UPDATING_FIRMWARE, intent);
+				m_device.getStateTracker().remove(PERFORMING_OTA, intent);
 
 				//--- DRK > As of now don't care whether this succeeded or failed.
 				if (reason == EndReason.SUCCEEDED)
@@ -104,9 +104,9 @@ class P_TransactionManager
 	private final BleDevice m_device;
 	private final BleManager m_mngr;
 	
-	BleTransaction m_authTxn;
-	BleTransaction m_initTxn;
-	BleTransaction m_firmwareUpdateTxn;
+	BleTransaction.Auth m_authTxn;
+	BleTransaction.Init m_initTxn;
+	BleTransaction.Ota m_firmwareUpdateTxn;
 	
 	BleTransaction m_current;
 	
@@ -244,7 +244,7 @@ class P_TransactionManager
 		}
 	}
 	
-	void onConnect(BleTransaction authenticationTxn, BleTransaction initTxn)
+	void onConnect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn)
 	{
 		synchronized (m_threadLock)
 		{
@@ -263,7 +263,7 @@ class P_TransactionManager
 		}
 	}
 	
-	void onFirmwareUpdate(BleTransaction txn)
+	void onOta(BleTransaction.Ota txn)
 	{
 		synchronized (m_threadLock)
 		{
@@ -272,7 +272,7 @@ class P_TransactionManager
 			m_firmwareUpdateTxn = txn;
 			m_firmwareUpdateTxn.init(m_device, m_txnEndListener);
 			
-			m_device.getStateTracker().append(UPDATING_FIRMWARE, E_Intent.EXPLICIT);
+			m_device.getStateTracker().append(PERFORMING_OTA, E_Intent.EXPLICIT);
 			
 			start(m_firmwareUpdateTxn);
 		}

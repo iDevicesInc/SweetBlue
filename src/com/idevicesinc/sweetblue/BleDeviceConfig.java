@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
@@ -30,7 +31,12 @@ public class BleDeviceConfig implements Cloneable
 	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
-	public static final double DEFAULT_TASK_TIMEOUT						= 10.0;
+	public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
+
+	/**
+	 * Default value for {@link #defaultTxPower}.
+	 */
+	public static final int DEFAULT_TX_POWER							= 4;
 	
 	/**
 	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation failed at a point where a
@@ -41,40 +47,213 @@ public class BleDeviceConfig implements Cloneable
 	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 	
 	/**
-	 * In at least some cases it's not possible to determine beforehand whether a given characteristic requires
-	 * bonding, so implementing this interface on {@link BleManagerConfig#bondingFilter} lets the app give
+	 * Used on {@link BleDevice.BondListener.BondEvent#failReason()} when {@link BleDevice.BondListener.BondEvent#status()}
+	 * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.
+	 */
+	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= GATT_STATUS_NOT_APPLICABLE;
+	
+	/**
+	 * As of now there are two main default uses for this class...
+	 * <br><br>
+	 * The first is that in at least some cases it's not possible to determine beforehand whether a given characteristic requires
+	 * bonding, so implementing this interface on {@link BleManagerConfig#bondFilter} lets the app give
 	 * a hint to the library so it can bond before attempting to read or write an encrypted characteristic.
 	 * Providing these hints lets the library handle things in a more deterministic and optimized fashion, but is not required.
+	 * <br><br>
+	 * The second is that some android devices have issues when it comes to bonding. So far the worst culprits
+	 * are certain Sony and Motorola phones, so if it looks like {@link Build#MANUFACTURER}
+	 * is either one of those, {@link DefaultBondFilter} is set to unbond upon discoveries and disconnects.
+	 * Please look at the source of {@link DefaultBondFilter} for the most up-to-date spec.
+	 * The problem seems to be associated with mismanagement of pairing keys by the OS and
+	 * this brute force solution seems to be the only way to smooth things out.
 	 */
-	public static interface BondingFilter
+	public static interface BondFilter
 	{
 		/**
-		 * Return true if the characteristic requires bonding, false otherwise.
+		 * Just a dummy subclass of {@link BleDevice.StateListener.ChangeEvent} so that this gets auto-imported for implementations of {@link BondFilter}. 
 		 */
-		boolean requiresBonding(UUID characteristicUuid);
+		public static class StateChangeEvent extends BleDevice.StateListener.ChangeEvent
+		{
+			StateChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
+			{
+				super(device, oldStateBits, newStateBits, intentMask);
+			}
+		}
+		
+		/**
+		 * An enumeration of the type of characteristic operation for a {@link CharacteristicEvent}.
+		 */
+		public static enum CharacteristicEventType
+		{
+			/**
+			 * Started from {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)}, etc.
+			 */
+			READ,
+			
+			/**
+			 * Started from {@link BleDevice#write(UUID, byte[], ReadWriteListener)} or overloads.
+			 */
+			WRITE,
+			
+			/**
+			 * Started from {@link BleDevice#enableNotify(UUID, ReadWriteListener)} or overloads.
+			 */
+			ENABLE_NOTIFY;
+		}
+		
+		/**
+		 * Struct passed to {@link BondFilter#onCharacteristicEvent(CharacteristicEvent)}.
+		 */
+		public static class CharacteristicEvent
+		{
+			/**
+			 * Returns the {@link BleDevice} in question.
+			 */
+			public BleDevice device(){  return m_device;  }
+			private final BleDevice m_device;
+			
+			/**
+			 * Returns the {@link UUID} of the characteristic in question.
+			 */
+			public UUID charUuid(){  return m_uuid;  }
+			private final UUID m_uuid;
+			
+			/**
+			 * Returns the type of characteristic operation, read, write, etc.
+			 */
+			public CharacteristicEventType type(){  return m_type;  }
+			private final CharacteristicEventType m_type;
+			
+			CharacteristicEvent(BleDevice device, UUID uuid, CharacteristicEventType type)
+			{
+				m_device = device;
+				m_uuid = uuid;
+				m_type = type;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"device",		device().getName_debug(),
+					"charUuid",		device().getManager().getLogger().charName(charUuid()),
+					"type",			type()
+				);
+			}
+		}
+		
+		/**
+		 * Return value for the various interface methods of {@link BondFilter}.
+		 * Use static constructor methods to create instances.
+		 */
+		public static class Please
+		{
+			private final Boolean m_bond;
+			private final BondListener m_bondListener;
+			
+			Please(Boolean bond, BondListener listener)
+			{
+				m_bond = bond;
+				m_bondListener = listener;
+			}
+			
+			Boolean bond_private()
+			{
+				return m_bond;
+			}
+			
+			BondListener listener()
+			{
+				return m_bondListener;
+			}
+			
+			/**
+			 * Device should be bonded if it isn't already.
+			 */
+			public static Please bond()
+			{
+				return new Please(true, null);
+			}
+			
+			/**
+			 * Same as {@link #bond()} but lets you pass a {@link BondListener} as well.
+			 */
+			public static Please bond(BondListener listener)
+			{
+				return new Please(true, listener);
+			}
+			
+			/**
+			 * Device should be unbonded if it isn't already.
+			 */
+			public static Please unbond()
+			{
+				return new Please(false, null);
+			}
+			
+			/**
+			 * Device's bond state should not be affected.
+			 */
+			public static Please doNothing()
+			{
+				return new Please(null, null);
+			}
+		}
+		
+		/**
+		 * Called after a device undergoes a change in its {@link BleDeviceState}.
+		 */
+		Please onStateChange(StateChangeEvent event);
+		
+		/**
+		 * Called immediately before reading, writing, or enabling notification on a characteristic.
+		 */
+		Please onCharacteristicEvent(CharacteristicEvent event);
 	}
 	
 	/**
-	 * An optional interface you can implement on {@link BleManagerConfig#reconnectRateLimiter } to control reconnection behavior.
-	 * 
-	 * @see #reconnectRateLimiter
-	 * @see DefaultReconnectRateLimiter
+	 * Default implementation of {@link BondFilter} that unbonds for certain phone models upon discovery and disconnects.
+	 * See further explanation in documentation for {@link BondFilter}.
 	 */
-	public static interface ReconnectRateLimiter
+	public static class DefaultBondFilter implements BondFilter
 	{
 		/**
-		 * Return this from {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to instantly reconnect.
+		 * Forwards {@link Utils#phoneHasBondingIssues()}. Override to make this <code>true</code> for more (or fewer) phones.
 		 */
-		public static final Interval INSTANTLY = Interval.ZERO;
-		
+		public boolean phoneHasBondingIssues()
+		{
+			return Utils.phoneHasBondingIssues();
+		}
+
+		@Override public Please onStateChange(StateChangeEvent event)
+		{
+			if( phoneHasBondingIssues() )
+			{
+				if( event.didEnterAny(BleDeviceState.DISCOVERED, BleDeviceState.DISCONNECTED) )
+				{
+					return Please.unbond();
+				}
+			}
+			
+			return Please.doNothing();
+		}
+
+		@Override public Please onCharacteristicEvent(CharacteristicEvent event)
+		{
+			return Please.doNothing();
+		}
+	}
+	
+	/**
+	 * An optional interface you can implement on {@link BleManagerConfig#reconnectLoop } to control reconnection behavior.
+	 * 
+	 * @see #reconnectLoop
+	 * @see DefaultReconnectLoop
+	 */
+	public static interface ReconnectLoop
+	{		
 		/**
-		 * Return this from {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to stop a reconnect attempt loop.
-		 * Note that {@link BleDevice#disconnect()} will also cancel any ongoing reconnect loop.
-		 */
-		public static final Interval CANCEL = Interval.DISABLED;
-		
-		/**
-		 * Struct passed to {@link ReconnectRateLimiter#getTimeToNextReconnect(ReconnectRateLimiter.Info)} to aid in making a decision.
+		 * Struct passed to {@link ReconnectLoop#onReconnectRequest(ReconnectLoop.Info)} to aid in making a decision.
 		 */
 		public static class Info
 		{
@@ -97,18 +276,27 @@ public class BleDeviceConfig implements Cloneable
 			private final Interval m_totalTimeReconnecting;
 			
 			/**
-			 * The previous {@link Interval} returned from {@link ReconnectRateLimiter#getTimeToNextReconnect(Info)}, or {@link Interval#ZERO}
+			 * The previous {@link Interval} returned from {@link ReconnectLoop#onReconnectRequest(Info)}, or {@link Interval#ZERO}
 			 * for the first invocation.
 			 */
 			public Interval previousDelay(){  return m_previousDelay;  }
 			private final Interval m_previousDelay;
 			
-			Info(BleDevice device, int failureCount, Interval totalTimeReconnecting, Interval previousDelay)
+			/**
+			 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onConnectionFail(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info)}
+			 * before the call is made to {@link ReconnectLoop#onReconnectRequest(Info)}. For the first call to {@link ReconnectLoop#onReconnectRequest(Info)},
+			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ConnectionFailListener.Info#isNull()} will return <code>true</code>.
+			 */
+			public ConnectionFailListener.Info connectionFailInfo(){  return m_connectionFailInfo;  }
+			private final ConnectionFailListener.Info m_connectionFailInfo;
+			
+			Info(BleDevice device, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, ConnectionFailListener.Info connectionFailInfo)
 			{
 				this.m_device = device;
 				this.m_failureCount = failureCount;
 				this.m_totalTimeReconnecting = totalTimeReconnecting;
 				this.m_previousDelay = previousDelay;
+				this.m_connectionFailInfo = connectionFailInfo;
 			}
 			
 			@Override public String toString()
@@ -124,23 +312,69 @@ public class BleDeviceConfig implements Cloneable
 		}
 		
 		/**
-		 * Called for every connection failure while device is {@link BleDeviceState#ATTEMPTING_RECONNECT}.
-		 * Use the static {@link Interval} members of this interface as return values to stop reconnection ({@link #CANCEL}) or try again
-		 * instantly ({@link #INSTANTLY}). Use static construction methods of {@link Interval} to try again after some amount of time.
+		 * Return value for {@link ReconnectLoop#onReconnectRequest(Info)}. Use static constructor methods to create instances.
 		 */
-		Interval getTimeToNextReconnect(Info info);
+		public static class Please
+		{
+			static final Interval INSTANTLY = Interval.ZERO;
+			static final Interval STOP = Interval.DISABLED;
+			
+			private final Interval m_interval;
+			
+			private Please(Interval interval)
+			{
+				m_interval = interval;
+			}
+			
+			Interval getInterval()
+			{
+				return m_interval;
+			}
+			
+			/**
+			 * Return this from {@link ReconnectLoop#onReconnectRequest(ReconnectLoop.Info)} to instantly reconnect.
+			 */
+			public static Please retryInstantly()
+			{
+				return new Please(INSTANTLY);
+			}
+			
+			/**
+			 * Return this from {@link ReconnectLoop#onReconnectRequest(ReconnectLoop.Info)} to stop a reconnect attempt loop.
+			 * Note that {@link BleDevice#disconnect()} will also stop any ongoing reconnect loop.
+			 */
+			public static Please stopRetrying()
+			{
+				return new Please(STOP);
+			}
+			
+			/**
+			 * Return this from {@link ReconnectLoop#onReconnectRequest(ReconnectLoop.Info)} to retry after the given amount of time.
+			 */
+			public static Please retryIn(Interval interval)
+			{
+				return new Please(interval != null ? interval : INSTANTLY);
+			}
+		}
+		
+		/**
+		 * Called for every connection failure while device is {@link BleDeviceState#ATTEMPTING_RECONNECT}.
+		 * Use the static methods of {@link Please} as return values to stop reconnection ({@link Please#stopRetrying()}), try again
+		 * instantly ({@link Please#retryInstantly()}), or after some amount of time {@link Please#retryIn(Interval)}.
+		 */
+		Please onReconnectRequest(Info info);
 	}
 	
 	/**
-	 * Default implementation of {@link ReconnectRateLimiter} that uses {@link #DEFAULT_INITIAL_RECONNECT_DELAY}
+	 * Default implementation of {@link ReconnectLoop} that uses {@link #DEFAULT_INITIAL_RECONNECT_DELAY}
 	 * and {@link #DEFAULT_RECONNECT_ATTEMPT_RATE} to infinitely try to reconnect.
 	 */
-	public static class DefaultReconnectRateLimiter implements ReconnectRateLimiter
+	public static class DefaultReconnectLoop implements ReconnectLoop
 	{
-		public static final Interval DEFAULT_INITIAL_RECONNECT_DELAY = INSTANTLY;
-		public static final Interval DEFAULT_RECONNECT_ATTEMPT_RATE = Interval.secs(3.0);
+		public static final Please DEFAULT_INITIAL_RECONNECT_DELAY = Please.retryInstantly();
+		public static final Please DEFAULT_RECONNECT_ATTEMPT_RATE = Please.retryIn(Interval.secs(3.0));
 		
-		@Override public Interval getTimeToNextReconnect(Info info)
+		@Override public Please onReconnectRequest(Info info)
 		{
 			if( info.failureCount() == 0 )
 			{
@@ -154,35 +388,13 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Default is false - use this option to force bonding after a
-	 * {@link BleDevice} is {@link BleDeviceState#CONNECTED} if it is not {@link BleDeviceState#BONDED} already.
-	 */
-	public Boolean autoBondAfterConnect					= false;
-	
-	/**
-	 * Default is true - whether to automatically get services immediately after a {@link BleDevice} is
+	 * Default is <code>true</code> - whether to automatically get services immediately after a {@link BleDevice} is
 	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
 	 */
 	Boolean autoGetServices								= true;
 	
 	/**
-	 * Default is true or false based on info from {@link android.os.Build}.
-	 * Background: some android devices have issues when it comes to bonding. So far the worst culprits
-	 * are certain Sony and Motorola phones, so if it looks like {@link Build#MANUFACTURER}
-	 * is either one of those, this is set to true. Please look at the source for this member for the most
-	 * up-to-date values. The problem seems to be associated with mismanagement of pairing keys by the OS and
-	 * this brute force solution seems to be the only way to smooth things out.
-	 */
-	public Boolean removeBondOnDisconnect				=	Utils.isManufacturer("sony")										||
-															Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
-	
-	/**
-	 * Default is same as {@link #removeBondOnDisconnect} - see {@link #removeBondOnDisconnect} for explanation.
-	 */
-	public Boolean removeBondOnDiscovery				= removeBondOnDisconnect;
-	
-	/**
-	 * Default is false - if true and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
+	 * Default is <code>false</code>se - if true and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
 	 * or {@link BleDevice#startChangeTrackingPoll(UUID, Interval, BleDevice.ReadWriteListener)()} with identical
 	 * parameters then two identical polls would run which would probably be wasteful and unintentional.
 	 * This option provides a defense against that situation.
@@ -190,17 +402,17 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean allowDuplicatePollEntries			= false;
 	
 	/**
-	 * Default is false - {@link BleDevice#getAverageReadTime()} and {@link BleDevice#getAverageWriteTime()} can be 
-	 * skewed if the peripheral you are connecting to adjusts its maximum throughput for OTA firmware updates.
-	 * Use this option to let the library know whether you want firmware update read/writes to factor in.
+	 * Default is <code>false</code>se - {@link BleDevice#getAverageReadTime()} and {@link BleDevice#getAverageWriteTime()} can be 
+	 * skewed if the peripheral you are connecting to adjusts its maximum throughput for OTA firmware updates and the like.
+	 * Use this option to let the library know whether you want read/writes to factor in while {@link BleDeviceState#UPDATING_FIRMWARE}.
 	 * 
 	 * @see BleDevice#getAverageReadTime()
 	 * @see BleDevice#getAverageWriteTime() 
 	 */
-	public Boolean includeFirmwareUpdateReadWriteTimesInAverage = false;
+	public Boolean includeOtaReadWriteTimesInAverage		= false;
 	
 	/**
-	 * Default is false - see the <code>boolean autoConnect</code> parameter of
+	 * Default is <code>false</code> - see the <code>boolean autoConnect</code> parameter of
 	 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}. 
 	 * 
 	 * This parameter is one of Android's deepest mysteries. By default we keep it false, but it has been observed that a
@@ -209,56 +421,56 @@ public class BleDeviceConfig implements Cloneable
 	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
-	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ConnectionFailListener.Please}
+	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ConnectionFailListener.PE_Please}
 	 * returned from {@link ConnectionFailListener#onConnectionFail(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info)}.
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
 	 * failed connection for the library to internally start using autoConnect==true).
 	 */
-	public Boolean alwaysUseAutoConnect = false;
+	public Boolean alwaysUseAutoConnect						= false;
 	
 	/**
-	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in active memory when it goes {@link BleState#OFF}.
+	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in active memory when it goes {@link BleManagerState#OFF}.
 	 * If <code>false</code> then a device will be purged and you'll have to do {@link BleManager#startScan()} again to discover devices
-	 * if/when {@link BleManager} goes back {@link BleState#ON}.
+	 * if/when {@link BleManager} goes back {@link BleManagerState#ON}.
 	 * <br><br>
 	 * NOTE: if this flag is true for {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)} then this
 	 * applies to all devices.
 	 */
-	public Boolean retainDeviceWhenBleTurnsOff = true;
+	public Boolean retainDeviceWhenBleTurnsOff				= true;
 	
 	/**
 	 * Default is <code>true</code> - only applicable if {@link #retainDeviceWhenBleTurnsOff} is also true. If {@link #retainDeviceWhenBleTurnsOff}
-	 * is false then devices will be undiscovered when {@link BleManager} goes {@link BleState#OFF} regardless.
+	 * is false then devices will be undiscovered when {@link BleManager} goes {@link BleManagerState#OFF} regardless.
 	 * <br><br>
 	 * NOTE: See NOTE for {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}. 
 	 * 
 	 * @see #retainDeviceWhenBleTurnsOff
 	 * @see #autoReconnectDeviceWhenBleTurnsBackOn
 	 */
-	public Boolean undiscoverDeviceWhenBleTurnsOff = true;
+	public Boolean undiscoverDeviceWhenBleTurnsOff			= true;
 	
 	/**
 	 * Default is <code>true</code> - if devices are kept in memory for a {@link BleManager#turnOff()}/{@link BleManager#turnOn()} cycle
-	 * (or a {@link BleManager#dropTacticalNuke()}) because {@link #retainDeviceWhenBleTurnsOff} is <code>true</code>, then a {@link BleDevice#connect()}
+	 * (or a {@link BleManager#reset()}) because {@link #retainDeviceWhenBleTurnsOff} is <code>true</code>, then a {@link BleDevice#connect()}
 	 * will be attempted for any devices that were previously {@link BleDeviceState#CONNECTED}.
 	 * <br><br>
 	 * NOTE: See NOTE for {@link #retainDeviceWhenBleTurnsOff} for how this applies to {@link BleManagerConfig}.
 	 * 
 	 * @see #retainDeviceWhenBleTurnsOff
 	 */
-	public Boolean autoReconnectDeviceWhenBleTurnsBackOn = true;
+	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 	= true;
 	
 	/**
 	 * Default is <code>true</code> - controls whether the {@link State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
 	 * is saved to and loaded from disk so that it can be restored across app sessions, undiscoveries, and BLE
-	 * {@link BleState#OFF}->{@link BleState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
+	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
 	 * any extra permissions. The main advantage of this is the following scenario: User connects to a device through your app,
 	 * does what they want, kills the app, then opens the app sometime later. {@link BleDevice#getLastDisconnectIntent()} returns
 	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
 	 */
-	public Boolean manageLastDisconnectOnDisk = true;
+	public Boolean manageLastDisconnectOnDisk				= true;
 	
 	/**
 	 * Default is <code>true</code> - controls whether a {@link BleDevice} is placed into an in-memory cache when it becomes {@link BleDeviceState#UNDISCOVERED}.
@@ -275,7 +487,7 @@ public class BleDeviceConfig implements Cloneable
 	 * 
 	 * See also {@link #minScanTimeToInvokeUndiscovery}.
 	 */
-	public Boolean cacheDeviceOnUndiscovery = true;
+	public Boolean cacheDeviceOnUndiscovery					= true;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
@@ -306,30 +518,22 @@ public class BleDeviceConfig implements Cloneable
 	public Interval	scanKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
-	 * How long a {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)} is allowed to take
-	 * before {@link BleDevice.ReadWriteListener.Status#TIMED_OUT} is returned on the
-	 * {@link BleDevice.ReadWriteListener.Result#status} given to {@link BleDevice.ReadWriteListener#onResult(BleDevice.ReadWriteListener.Result)}.
+	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs(double)} with {@link #DEFAULT_TASK_TIMEOUT}.
+	 * This is an array of timeouts whose indices are meant to map to {@link BleTask} ordinals and provide a
+	 * way to control how long a given task is allowed to run before being "cut loose". If no option is provided for a given {@link BleTask},
+	 * either by setting this array null, or by providing <code>null</code> or {@link Interval#DISABLED} for a given {@link BleTask}, then
+	 * no timeout is observed.
+	 * <br><br>
+	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
 	 */
-	public Interval timeoutForReads						= Interval.secs(DEFAULT_TASK_TIMEOUT);
-	
-	/**
-	 * Same as {@link #timeoutForReads} but for {@link BleDevice#write(UUID, BleDevice.ReadWriteListener)}.
-	 */
-	public Interval timeoutForWrites					= Interval.secs(DEFAULT_TASK_TIMEOUT);
-	
-	/**
-	 * How long a connection (through {@link BleDevice#connect()} or overloads) is allowed to take before
-	 * {@link BleDevice.ConnectionFailListener.Reason#NATIVE_CONNECTION_TIMED_OUT} is returned on the
-	 * {@link ConnectionFailListener.Info#reason} given to {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)}.
-	 */
-	public Interval timeoutForConnection				= Interval.secs(DEFAULT_TASK_TIMEOUT);
-	
-	/**
-	 * How long service discovery is allowed to take before 
-	 * {@link BleDevice.ConnectionFailListener.Reason#GETTING_SERVICES_TIMED_OUT} is returned on the
-	 * {@link ConnectionFailListener.Info#reason} given to {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)}.
-	 */
-	public Interval timeoutForDiscoveringServices		= Interval.secs(DEFAULT_TASK_TIMEOUT);
+	public Interval[] timeouts							= newTaskTimeArray();
+	{
+		final Interval defaultTimeout = Interval.secs(DEFAULT_TASK_TIMEOUT);
+		for( int i = 0; i < timeouts.length; i++ )
+		{
+			timeouts[i] = defaultTimeout;
+		}
+	}
 	
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
@@ -348,52 +552,112 @@ public class BleDeviceConfig implements Cloneable
 	public Integer		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
-	 * Default is null, meaning the library won't preemptively attempt to bond for any characteristic operations.
+	 * Default is {@link #DEFAULT_TX_POWER} - this value is used if we can't establish a device's TxPower from the device itself,
+	 * either through its scan record or by reading the standard characteristic.
 	 * 
-	 * @see BondingFilter
+	 * @see BleDevice#getTxPower()
 	 */
-	public BondingFilter bondingFilter						= null;
+	public Integer		defaultTxPower						= DEFAULT_TX_POWER;
 	
 	/**
-	 * Default is an instance of {@link DefaultReconnectRateLimiter} - set an implementation here to
+	 * Default is instance of {@link DefaultBondFilter}.
+	 * 
+	 * @see BondFilter
+	 */
+	public BondFilter bondFilter							= new DefaultBondFilter();
+	
+	/**
+	 * Default is an instance of {@link DefaultReconnectLoop} - set an implementation here to
 	 * have fine control over reconnect behavior. This is basically how often and how long
 	 * the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
 	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
 	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/device to stay awake while attempting a reconnect.
 	 * 
 	 * @see BleManagerConfig#manageCpuWakeLock
-	 * @see ReconnectRateLimiter
-	 * @see DefaultReconnectRateLimiter
+	 * @see ReconnectLoop
+	 * @see DefaultReconnectLoop
 	 */
-	public ReconnectRateLimiter reconnectRateLimiter = new DefaultReconnectRateLimiter();
+	public ReconnectLoop reconnectLoop = new DefaultReconnectLoop();
 	
-	static boolean boolOrDefault(Boolean bool)
+	static boolean boolOrDefault(Boolean bool_nullable)
 	{
-		return bool == null ? false : bool;
+		return bool_nullable == null ? false : bool_nullable;
 	}
 	
-	static Interval intervalOrDefault(Interval value)
+	static Interval intervalOrDefault(Interval value_nullable)
 	{
-		return value == null ? Interval.DISABLED : value;
+		return value_nullable == null ? Interval.DISABLED : value_nullable;
 	}
 	
-	static boolean bool(Boolean bool_device, Boolean bool_mngr)
+	static boolean bool(Boolean bool_device_nullable, Boolean bool_mngr_nullable)
 	{
-		return bool_device != null ? bool_device : boolOrDefault(bool_mngr);
+		return bool_device_nullable != null ? bool_device_nullable : boolOrDefault(bool_mngr_nullable);
 	}
 	
-	static Interval interval(Interval interval_device, Interval interval_mngr)
+	static Interval interval(Interval interval_device_nullable, Interval interval_mngr_nullable)
 	{
-		return interval_device != null ? interval_device : intervalOrDefault(interval_mngr);
+		return interval_device_nullable != null ? interval_device_nullable : intervalOrDefault(interval_mngr_nullable);
 	}
 	
-	static Integer interger(Integer int_device, Integer int_mngr)
+	static Integer integer(Integer int_device_nullable, Integer int_mngr)
 	{
-		return int_device != null ? int_device : int_mngr;
+		return int_device_nullable != null ? int_device_nullable : int_mngr;
+	}
+	
+	static int integerOrZero(Integer value_nullable)
+	{
+		return value_nullable != null ? value_nullable : 0x0;
 	}
 	
 	public BleDeviceConfig()
 	{
+	}
+	
+	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr_nullable)
+	{
+		final int ordinal = task.ordinal();
+		final Interval interval_device = intervals_device_nullable != null && intervals_device_nullable.length > ordinal ? intervals_device_nullable[ordinal] : null;
+		final Interval interval_mngr = intervals_mngr_nullable != null && intervals_mngr_nullable.length > ordinal ? intervals_mngr_nullable[ordinal] : null;
+		
+		return interval(interval_device, interval_mngr);
+	}
+	
+	static Interval getTimeout(final BleTask task, final BleDeviceConfig conf_device_nullable, final BleManagerConfig conf_mngr)
+	{
+		final Interval[] timeouts_device = conf_device_nullable != null ? conf_device_nullable.timeouts : null;
+		final Interval[] timeouts_mngr = conf_mngr.timeouts;
+		
+		return getTaskInterval(task, timeouts_device, timeouts_mngr);
+	}
+	
+	/**
+	 * Convenience member to add entries to {@link #timeouts} for you.
+	 */
+	public void setTimeout(final Interval interval_nullable, final BleTask ... tasks)
+	{
+		this.timeouts = this.timeouts != null ? this.timeouts : newTaskTimeArray();
+		
+		if( this.timeouts.length < BleTask.values().length )
+		{
+			Interval[] timeouts_new = newTaskTimeArray();
+			
+			for( int i = 0; i < this.timeouts.length; i++ )
+			{
+				timeouts_new[i] = this.timeouts[i];
+			}
+			
+			this.timeouts = timeouts_new;
+		}
+		
+		for( int i = 0; i < tasks.length; i++ )
+		{
+			this.timeouts[tasks[i].ordinal()] = interval_nullable;
+		}
+	}
+	
+	private static Interval[] newTaskTimeArray()
+	{
+		return new Interval[BleTask.values().length];
 	}
 	
 	@Override protected BleDeviceConfig clone()

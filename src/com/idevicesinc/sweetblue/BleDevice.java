@@ -12,14 +12,18 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
+import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -86,13 +90,13 @@ public class BleDevice
 			
 			/**
 			 * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of its overloads) or
-			 * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its overloads) returned false.
+			 * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its overloads) returned <code>false</code>.
 			 */
 			FAILED_TO_SET_VALUE_ON_TARGET,
 			
 			/**
 			 * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)} or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
-			 * or etc. returned {@link Boolean#FALSE} and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#dropTacticalNuke()}.
+			 * or etc. returned <code>false</code> and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#dropTacticalNuke()}.
 			 */
 			FAILED_TO_SEND_OUT,
 			
@@ -112,7 +116,7 @@ public class BleDevice
 			CANCELLED_FROM_BLE_TURNING_OFF,
 			
 			/**
-			 * Used either when {@link Result#type} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
+			 * Used either when {@link Result#type()} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
 			 * the operation being otherwise "successful", <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter.
 			 * For the read case, the library will throw an {@link UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch.
 			 * If the problem persists try {@link BleManager#dropTacticalNuke()}.
@@ -136,12 +140,12 @@ public class BleDevice
 			REMOTE_GATT_FAILURE,
 			
 			/**
-			 * Operation took longer than {@link BleManagerConfig#DEFAULT_TASK_TIMEOUT} seconds so we cut it loose.
+			 * Operation took longer than time specified in {@link BleDeviceConfig#timeouts} so we cut it loose.
 			 */
 			TIMED_OUT;
 			
 			/**
-			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
+			 * Returns <code>true</code> for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
 			 */
 			public boolean wasCancelled()
 			{
@@ -213,7 +217,16 @@ public class BleDevice
 			 */
 			public boolean isNotification()
 			{
-				return this == NOTIFICATION || this == PSUEDO_NOTIFICATION || this == INDICATION;
+				return this.isNativeNotification() || this == PSUEDO_NOTIFICATION;
+			}
+			
+			/**
+			 * Subset of {@link #isNotification()}, returns <code>true</code> only for {@link #NOTIFICATION} and {@link #INDICATION},
+			 * i.e. only notifications who origin is an *actual* notification (or indication) sent from the remote BLE device.
+			 */
+			public boolean isNativeNotification()
+			{
+				return this == NOTIFICATION || this == INDICATION;
 			}
 		}
 		
@@ -497,6 +510,18 @@ public class BleDevice
 		public static enum Reason
 		{
 			/**
+			 * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link Info#reason()} given to
+			 * {@link ConnectionFailListener#onConnectionFail(Info)} will *never* be {@link Reason#NULL}.
+			 */
+			NULL,
+			
+			/**
+			 * A call was made to {@link BleDevice#connect()} or its overloads but {@link Info#device()} 
+			 * is already {@link BleDeviceState#CONNECTING} or {@link BleDeviceState#CONNECTED}.
+			 */
+			ALREADY_CONNECTING_OR_CONNECTED,
+			
+			/**
 			 * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
 			 * because it returned <code>null</code>.
 			 */
@@ -510,7 +535,7 @@ public class BleDevice
 			
 			/**
 			 * {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)} took longer than
-			 * {@link BleDeviceConfig#timeoutForConnection}.
+			 * time specified in {@link BleDeviceConfig#timeouts}.
 			 */
 			NATIVE_CONNECTION_TIMED_OUT,
 			
@@ -525,19 +550,19 @@ public class BleDevice
 			GETTING_SERVICES_FAILED_EVENTUALLY,
 			
 			/**
-			 * {@link BluetoothGatt#discoverServices()} took longer than {@link BleDeviceConfig#timeoutForDiscoveringServices}.
+			 * {@link BluetoothGatt#discoverServices()} took longer than time specified in {@link BleDeviceConfig#timeouts}.
 			 */
 			GETTING_SERVICES_TIMED_OUT,
 			
 			/**
-			 * The {@link BleTransaction} instance passed to {@link BleDevice#connectAndAuthenticate(BleTransaction)} or
-			 * {@link BleDevice#connect(BleTransaction, BleTransaction)} failed through {@link BleTransaction#fail()}.
+			 * The {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Auth)} or
+			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} failed through {@link BleTransaction#fail()}.
 			 */
 			AUTHENTICATION_FAILED,
 			
 			/**
-			 * {@link BleTransaction} instance passed to {@link BleDevice#connectAndInitialize(BleTransaction)} or
-			 * {@link BleDevice#connect(BleTransaction, BleTransaction)} failed through {@link BleTransaction#fail()}.
+			 * {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Init)} or
+			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} failed through {@link BleTransaction#fail()}.
 			 */
 			INITIALIZATION_FAILED,
 			
@@ -569,6 +594,15 @@ public class BleDevice
 			{
 				return this == EXPLICIT_DISCONNECT || this == BLE_TURNING_OFF;
 			}
+			
+			/**
+			 * Whether this reason honors a {@link Please#isRetry()}.
+			 * Returns false if {@link #wasCancelled()} or <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
+			 */
+			public boolean allowsRetry()
+			{
+				return !this.wasCancelled() && this != ALREADY_CONNECTING_OR_CONNECTED;
+			}
 		}
 		
 		/**
@@ -599,41 +633,70 @@ public class BleDevice
 			NOT_USED;
 		}
 
-		/**
-		 * Return value for {@link ConnectionFailListener#onConnectionFail(Info)}. Generally you will only return {@link #RETRY}
-		 * or {@link #DO_NOT_RETRY}, but there are more advanced options as well.
-		 */
-		public static enum Please
+		static enum PE_Please
 		{
+			RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
+		}
+		
+		/**
+		 * Return value for {@link ConnectionFailListener#onConnectionFail(Info)}. Generally you will only return {@link #retry()}
+		 * or {@link #doNotRetry()}, but there are more advanced options as well.
+		 */
+		public static class Please
+		{
+			private final PE_Please m_please;
+			
+			private Please(PE_Please please)
+			{
+				m_please = please;
+			}
+			
+			PE_Please please()
+			{
+				return m_please;
+			}
+			
 			/**
 			 * Return this to retry the connection, continuing the connection fail retry loop.
 			 * <code>autoConnect</code> passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
 			 * will be false or true based on what has worked in the past, or on {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
-			RETRY,
+			public static Please retry()
+			{
+				return new Please(PE_Please.RETRY);
+			}
+			
+			/**
+			 * Return this to stop the connection fail retry loop.
+			 */
+			public static Please doNotRetry()
+			{
+				return new Please(PE_Please.DO_NOT_RETRY);
+			}
 			
 			/**
 			 * Same as {@link #RETRY}, but <code>autoConnect=true</code> will be passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
-			RETRY_WITH_AUTOCONNECT_TRUE,
+			public static Please retryWithAutoConnectTrue()
+			{
+				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_TRUE);
+			}
 			
 			/**
 			 * Same as {@link #RETRY_WITH_AUTOCONNECT_TRUE} but forces <code>autoConnect=false</code>.
 			 */
-			RETRY_WITH_AUTOCONNECT_FALSE,
+			public static Please retryWithAutoConnectFalse()
+			{
+				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_FALSE);
+			}
 			
 			/**
-			 * Return this to stop the connection fail retry loop.
-			 */
-			DO_NOT_RETRY;
-			
-			/**
-			 * Returns <code>true</code> for everything except {@link #DO_NOT_RETRY}.
+			 * Returns <code>true</code> for everything except {@link #doNotRetry()}.
 			 */
 			public boolean isRetry()
 			{
-				return this != DO_NOT_RETRY;
+				return m_please != PE_Please.DO_NOT_RETRY;
 			}
 		}
 		
@@ -641,7 +704,7 @@ public class BleDevice
 		 * Structure passed to {@link ConnectionFailListener#onConnectionFail(Info)} to provide more info about how/why the connection failed.
 		 */
 		public static class Info
-		{
+		{			
 			/**
 			 * The {@link BleDevice} this {@link Info} is for.
 			 */
@@ -726,20 +789,41 @@ public class BleDevice
 				m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
 			}
 			
+			static Info NULL(BleDevice device)
+			{
+				return new Info(device, Reason.NULL, 0, Interval.DISABLED, Interval.DISABLED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN);
+			}
+			
+			/**
+			 * Returns whether this {@link Info} instance is a "dummy" value. For now used for {@link BleDeviceConfig.ReconnectLoop.Info#connectionFailInfo()}
+			 * in certain situations.
+			 */
+			public boolean isNull()
+			{
+				return reason() == Reason.NULL;
+			}
+			
 			@Override public String toString()
 			{
-				return Utils.toString
-				(
-					"reason",				reason(),
-					"gattStatus",			device().m_mngr.getLogger().gattStatus(gattStatus()),
-					"failureCountSoFar",	failureCountSoFar()
-				);
+				if( isNull() )
+				{
+					return Reason.NULL.name();
+				}
+				else
+				{
+					return Utils.toString
+					(
+						"reason",				reason(),
+						"gattStatus",			device().m_mngr.getLogger().gattStatus(gattStatus()),
+						"failureCountSoFar",	failureCountSoFar()
+					);
+				}
 			}
 		}
 		
 		/**
-		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#wasCancelled()}.
-		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectRateLimiter}.
+		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#allowsRetry()} is <code>false</code>.
+		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectLoop}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
 		 * lets the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
 		 * <br><br>
@@ -771,7 +855,7 @@ public class BleDevice
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 		
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#RETRY_WITH_AUTOCONNECT_TRUE}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link PE_Please#RETRY_WITH_AUTOCONNECT_TRUE}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 		
@@ -796,11 +880,17 @@ public class BleDevice
 		
 		@Override public Please onConnectionFail(Info info)
 		{
+			//--- DRK > Not necessary to check this ourselves, just being explicit.
+			if( !info.reason().allowsRetry() || info.device().is(ATTEMPTING_RECONNECT) )
+			{
+				return Please.doNotRetry();
+			}
+			
 			if( info.failureCountSoFar() <= m_retryCount )
 			{
 				if( info.failureCountSoFar() >= m_failCountBeforeUsingAutoConnect )
 				{
-					return Please.RETRY_WITH_AUTOCONNECT_TRUE;
+					return Please.retryWithAutoConnectTrue();
 				}
 				else
 				{
@@ -808,49 +898,122 @@ public class BleDevice
 					{
 						if( info.autoConnectUsage() == AutoConnectUsage.USED )
 						{
-							return Please.RETRY_WITH_AUTOCONNECT_FALSE;
+							return Please.retryWithAutoConnectFalse();
 						}
 						else if( info.autoConnectUsage() == AutoConnectUsage.NOT_USED )
 						{
-							return Please.RETRY_WITH_AUTOCONNECT_TRUE;
+							return Please.retryWithAutoConnectTrue();
 						}
 						else
 						{
-							return Please.RETRY;
+							return Please.retry();
 						}
 					}
 					else
 					{
-						return Please.RETRY;
+						return Please.retry();
 					}
 				}
 			}
 			else
 			{
-				return Please.DO_NOT_RETRY;
+				return Please.doNotRetry();
 			}
 		}
 	}
 	
 	/**
-	 * Enumeration signifying how a {@link BleDevice} instance was created.
+	 * Pass an instance of this listener to {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
 	 */
-	public static enum Origin
+	public static interface BondListener
 	{
 		/**
-		 * Created from {@link BleManager#newDevice(String, String)} or overloads.
-		 * This type of device can only be {@link BleDeviceState#UNDISCOVERED} by using
-		 * {@link BleManager#undiscover(BleDevice)}.
+		 * Used on {@link BondEvent#status()} to roughly enumerate success or failure.
 		 */
-		EXPLICIT,
+		public static enum Status
+		{
+			/**
+			 * The {@link BleDevice#bond()} call succeeded.
+			 */
+			SUCCESS,
+			
+			/**
+			 * Already {@link BleDeviceState#BONDED} or in the process of {@value BleDeviceState#BONDING}.
+			 */
+			ALREADY_BONDING_OR_BONDED,
+			
+			/**
+			 * The call to {@link BluetoothDevice#createBond()} returned <code>false</code> and thus failed immediately.
+			 */
+			FAILED_IMMEDIATELY,
+			
+			/**
+			 * We received a {@link BluetoothDevice#ACTION_BOND_STATE_CHANGED} through our internal {@link BroadcastReceiver}
+			 * that we went from {@value BleDeviceState#BONDING} back to {@link BleDeviceState#UNBONDED}, which means the attempt failed.
+			 * See {@link BondEvent#failReason()} for more information.
+			 */
+			FAILED_EVENTUALLY,
+			
+			/**
+			 * The bond operation took longer than the time set in {@link BleDeviceConfig#timeouts} so we cut it loose.
+			 */
+			TIMED_OUT,
+			
+			/**
+			 * A call was made to {@link BleDevice#unbond()} at some point during the bonding process.
+			 */
+			CANCELLED;
+		}
 		
 		/**
-		 * Created from an advertising discovery right before {@link BleManager.DiscoveryListener#onDeviceDiscovered(BleDevice)} is called.
+		 * Struct passed to {@link BondListener#onBondEvent(BondEvent)} to provide more information about a {@link BleDevice#bond()} attempt.
 		 */
-		FROM_DISCOVERY;
+		public static class BondEvent
+		{
+			/**
+			 * The {@link BleDevice} that attempted to {@link BleDevice#bond()}.
+			 */
+			public BleDevice device(){  return m_device;  }
+			private final BleDevice m_device;
+			
+			/**
+			 * The {@link Status} associated with this event.
+			 */
+			public Status status(){  return m_status;  }
+			private final Status m_status;
+			
+			/**
+			 * If {@link #status()} is {@link Status#FAILED_EVENTUALLY}, this integer will be one of the values enumerated in {@link BluetoothDevice} that
+			 * start with <code>UNBOND_REASON</code> such as {@link BluetoothDevice#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to
+			 * {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
+			 */
+			public int failReason(){  return m_failReason;  }
+			private final int m_failReason;
+			
+			BondEvent(BleDevice device, Status status, int failReason)
+			{
+				m_device = device;
+				m_status = status;
+				m_failReason = failReason;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"device",			device().getName_debug(),
+					"status",			status(),
+					"failReason",		device().m_mngr.getLogger().gattUnbondReason(failReason())
+				);
+			}
+		}
+		
+		/**
+		 * Called after a call to {@link BleDevice#bond(BondListener)} (or overloads), or when bonding through
+		 * another app or the operating system settings.
+		 */
+		void onBondEvent(BondEvent event);
 	}
-	
-	
 	
 	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener();
 	
@@ -878,15 +1041,17 @@ public class BleDevice
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
 	private final P_Task_Disconnect m_dummyDisconnectTask;
+			final P_BondManager m_bondMngr;
 	
 	private TimeEstimator m_writeTimeEstimator;
 	private TimeEstimator m_readTimeEstimator;
 	
 	private final PA_Task.I_StateListener m_taskStateListener;
 	
-	private final Origin m_origin;
+	private final BleDeviceOrigin m_origin;
 	
 	private int m_rssi = 0;
+	private Integer m_knownTxPower = null;
 	private List<UUID> m_advertisedServices = EMPTY_LIST;
 	private byte[] m_scanRecord = EMPTY_BYTE_ARRAY;
 	
@@ -905,27 +1070,26 @@ public class BleDevice
 	public Object appData;
 	
 	
-	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName, String nativeName, Origin origin)
+	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName, String nativeName, BleDeviceOrigin origin, BleDeviceConfig config_nullable)
 	{
 		m_mngr = mngr;
-		m_origin = origin; 
+		m_origin = origin;
+		setConfig(config_nullable);
 		m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName, nativeName);
 		m_queue = m_mngr.getTaskQueue();
 		m_listeners = new P_BleDevice_Listeners(this);
 		m_logger = m_mngr.getLogger();
 		m_serviceMngr = new P_ServiceManager(this);
 		m_stateTracker = new P_DeviceStateTracker(this);
+		m_stateTracker.set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 		m_pollMngr = new P_PollManager(this);
 		m_txnMngr = new P_TransactionManager(this);
 		m_taskStateListener = m_listeners.m_taskStateListener;
 		m_reconnectMngr = new P_ReconnectManager(this);
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
-		initEstimators();
 		m_rssiPollMngr = new P_RssiPollManager(this);
+		m_bondMngr = new P_BondManager(this);
 		m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-		
-		m_alwaysUseAutoConnect = m_mngr.m_config.alwaysUseAutoConnect;
-		m_useAutoConnect = m_alwaysUseAutoConnect;
 	}
 	
 	private void clear_discovery()
@@ -951,9 +1115,9 @@ public class BleDevice
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual device. 
 	 */
-	public void setConfig(BleDeviceConfig config)
+	public void setConfig(BleDeviceConfig config_nullable)
 	{
-		m_config = config == null ? null : config.clone();
+		m_config = config_nullable == null ? null : config_nullable.clone();
 		
 		initEstimators();
 		
@@ -972,10 +1136,10 @@ public class BleDevice
 	
 	private void initEstimators()
 	{
-		Integer nForAverageRunningWriteTime = BleDeviceConfig.interger(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
+		Integer nForAverageRunningWriteTime = BleDeviceConfig.integer(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
 		m_writeTimeEstimator = nForAverageRunningWriteTime == null ? null : new TimeEstimator(nForAverageRunningWriteTime);
 		
-		Integer nForAverageRunningReadTime = BleDeviceConfig.interger(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
+		Integer nForAverageRunningReadTime = BleDeviceConfig.integer(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
 		m_readTimeEstimator = nForAverageRunningReadTime == null ? null : new TimeEstimator(nForAverageRunningReadTime);
 	}
 	
@@ -989,14 +1153,14 @@ public class BleDevice
 		return m_mngr.m_config;
 	}
 	
-	public Origin getOrigin()
+	public BleDeviceOrigin getOrigin()
 	{
 		return m_origin;
 	}
 	
 	/**
 	 * This enum gives you an indication of the last interaction with a device across app sessions or
-	 * in-app BLE {@link BleState#OFF}->{@link BleState#ON} cycles or undiscovery->rediscovery, which basically means how it
+	 * in-app BLE {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles or undiscovery->rediscovery, which basically means how it
 	 * was last {@link BleDeviceState#DISCONNECTED}.
 	 * <br><br>
 	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown because (a) device has never been seen before, (b)
@@ -1034,6 +1198,15 @@ public class BleDevice
 	public void setListener_ConnectionFail(ConnectionFailListener listener)
 	{
 		m_connectionFailMngr.setListener(listener);
+	}
+	
+	/**
+	 * Set a listener here to be notified whenever a bond attempt succeeds. This will catch attempts to bond both through {@link #bond()}
+	 * and when bonding through the operating system settings or from other apps.
+	 */
+	public void setListener_Bond(BondListener listener)
+	{
+		m_bondMngr.setListener(listener);
 	}
 	
 	/**
@@ -1081,11 +1254,41 @@ public class BleDevice
 	
 	/**
 	 * Returns the raw RSSI retrieved from when the device was discovered or rediscovered.
-	 * 
+	 * This value will also be updated when you call {@link #readRssi()} or {@link #startRssiPoll(Interval)}.
 	 */
 	public int getRssi()
 	{
 		return m_rssi;
+	}
+	
+	/**
+	 * Returns the approximate distance in meters based on {@link #getRssi()} and {@link #getTxPower()}.
+	 * The higher the distance, the less the accuracy.
+	 */
+	public Distance getDistance()
+	{
+		return Distance.meters(Utils_Rssi.calcDistance(getTxPower(), getRssi()));
+	}
+	
+	/**
+	 * Returns the calibrated transmitter power of the device. If this can't be figured out from the device itself
+	 * then it backs up to the value provided in {@link BleDeviceConfig#defaultTxPower} or {@link BleManagerConfig#defaultTxPower}.
+	 * 
+	 * @see BleDeviceConfig#defaultTxPower;
+	 */
+	public int getTxPower()
+	{
+		if( m_knownTxPower != null )
+		{
+			return m_knownTxPower;
+		}
+		else
+		{
+			final Integer defaultTxPower = BleDeviceConfig.integer(conf_device().defaultTxPower, conf_mngr().defaultTxPower);
+			final int toReturn = defaultTxPower == null ? BleDeviceConfig.DEFAULT_TX_POWER : defaultTxPower;
+			
+			return toReturn;
+		}
 	}
 	
 	/**
@@ -1273,6 +1476,20 @@ public class BleDevice
 	}
 	
 	/**
+	 * Same as {@link #bond()} but you can pass a listener to be notified of the details behind success or failure.
+	 */
+	public void bond(BondListener listener)
+	{
+		setListener_Bond(listener);
+		
+		if( isAny(BONDING, BONDED) )  return;
+		
+		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
+		
+		m_stateTracker.append(BONDING, E_Intent.EXPLICIT);
+	}
+	
+	/**
 	 * Attempts to create a bond. Analogous to {@link BluetoothDevice#createBond()}
 	 * This is also sometimes called pairing, but while pairing and bonding are closely
 	 * related, they are technically different from each other.
@@ -1285,11 +1502,7 @@ public class BleDevice
 	 */
 	public void bond()
 	{
-		if( isAny(BONDING, BONDED) )  return;
-	
-		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
-		
-		m_stateTracker.append(BONDING, E_Intent.EXPLICIT);
+		this.bond(null);
 	}
 	
 	/**
@@ -1299,7 +1512,7 @@ public class BleDevice
 	 */
 	public void unbond()
 	{
-		removeBond(null);
+		unbond_private(null);
 	}
 	
 	/**
@@ -1341,24 +1554,24 @@ public class BleDevice
 	 * @see BleDeviceState#AUTHENTICATING
 	 * @see BleDeviceState#AUTHENTICATED
 	 */
-	public void connectAndAuthenticate(BleTransaction authenticationTxn)
+	public void connect(BleTransaction.Auth authenticationTxn)
 	{
-		connectAndAuthenticate(authenticationTxn, null);
+		connect(authenticationTxn, (StateListener)null);
 	}
 	
 	/**
-	 * Same as {@link #connectAndAuthenticate(BleTransaction)} but calls {@link #setListener_State(StateListener)} for you.
+	 * Same as {@link #connect(BleTransaction.Auth)} but calls {@link #setListener_State(StateListener)} for you.
 	 */
-	public void connectAndAuthenticate(BleTransaction authenticationTxn, StateListener stateListener)
+	public void connect(BleTransaction.Auth authenticationTxn, StateListener stateListener)
 	{
-		connectAndAuthenticate(authenticationTxn, stateListener, (ConnectionFailListener) null);
+		connect(authenticationTxn, stateListener, (ConnectionFailListener) null);
 	}
 	
 	/**
-	 * Same as {@link #connectAndAuthenticate(BleTransaction)} but calls {@link #setListener_State(StateListener)}
+	 * Same as {@link #connect(BleTransaction.Auth)} but calls {@link #setListener_State(StateListener)}
 	 * and {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
 	 */
-	public void connectAndAuthenticate(BleTransaction authenticationTxn, StateListener stateListener, ConnectionFailListener failListener)
+	public void connect(BleTransaction.Auth authenticationTxn, StateListener stateListener, ConnectionFailListener failListener)
 	{
 		connect(authenticationTxn, null, stateListener, failListener);
 	}
@@ -1373,38 +1586,38 @@ public class BleDevice
 	 * @see BleDeviceState#INITIALIZING
 	 * @see BleDeviceState#INITIALIZED
 	 */
-	public void connectAndInitialize(BleTransaction initTxn)
+	public void connect(BleTransaction.Init initTxn)
 	{
-		connectAndInitialize(initTxn, null);
+		connect(initTxn, (StateListener)null);
 	}
 	
 	/**
-	 * Same as {@link #connectAndInitialize(BleTransaction)} but calls {@link #setListener_State(StateListener)} for you.
+	 * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} for you.
 	 */
-	public void connectAndInitialize(BleTransaction initTxn, StateListener stateListener)
+	public void connect(BleTransaction.Init initTxn, StateListener stateListener)
 	{
-		connectAndInitialize(initTxn, stateListener, (ConnectionFailListener)null);
+		connect(initTxn, stateListener, (ConnectionFailListener)null);
 	}
 	
 	
 	/**
-	 * Same as {@link #connectAndInitialize(BleTransaction)} but calls 
+	 * Same as {@link #connect(BleTransaction.Init)} but calls 
 	 * {@link #setListener_State(StateListener)} and {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
 	 */
-	public void connectAndInitialize(BleTransaction initTxn, StateListener stateListener, ConnectionFailListener failListener)
+	public void connect(BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
 	{
 		connect(null, initTxn, stateListener, failListener);
 	}
 	
 	/**
-	 * Combination of {@link #connectAndAuthenticate(BleTransaction)} and {@link #connectAndInitialize(BleTransaction)}.
+	 * Combination of {@link #connect(BleTransaction.Auth)} and {@link #connect(BleTransaction.Init)}.
 	 * See those two methods for explanation.
 	 * 
 	 * @see #connect()
-	 * @see #connectAndAuthenticate(BleTransaction)
-	 * @see #connectAndInitialize(BleTransaction)
+	 * @see #connect(BleTransaction.Auth)
+	 * @see #connect(BleTransaction.Init)
 	 */
-	public void connect(BleTransaction authenticationTxn, BleTransaction initTxn)
+	public void connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn)
 	{
 		connect(authenticationTxn, initTxn, (StateListener)null, (ConnectionFailListener)null);
 	}
@@ -1412,16 +1625,16 @@ public class BleDevice
 	/**
 	 * Same as {@link #connect(BleTransaction, BleTransaction)} but calls {@link #setListener_State(StateListener)} for you.
 	 */
-	public void connect(BleTransaction authenticationTxn, BleTransaction initTxn, StateListener stateListener)
+	public void connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener)
 	{
 		connect(authenticationTxn, initTxn, stateListener, (ConnectionFailListener)null);
 	}
 	
 	/**
-	 * Same as {@link #connect(BleTransaction, BleTransaction)} but calls
+	 * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls
 	 * {@link #setListener_State(StateListener)} and {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
 	 */
-	public void connect(BleTransaction authenticationTxn, BleTransaction initTxn, StateListener stateListener, ConnectionFailListener failListener)
+	public void connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
 	{
 		if( stateListener != null )
 		{
@@ -1629,8 +1842,7 @@ public class BleDevice
 	
 	void readRssi_internal(Type type, P_WrappingReadWriteListener listener)
 	{
-		double timeout = BleDeviceConfig.DEFAULT_TASK_TIMEOUT;
-		m_queue.add(new P_Task_ReadRssi(this, timeout, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
+		m_queue.add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
 	}
 	
 	/**
@@ -1681,6 +1893,8 @@ public class BleDevice
 		
 		if( shouldSendOutNotifyEnable && characteristic != null && is(CONNECTED) )
 		{
+			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
+			
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
 			m_queue.add(new P_Task_ToggleNotify(characteristic, /*enable=*/true, wrappingListener));
 			
@@ -1718,25 +1932,30 @@ public class BleDevice
 	}
 	
 	/**
-	 * Kicks off a firmware update transaction if it's not already taking place and the device is {@link BleDeviceState#INITIALIZED}.
-	 * This will put the device into the {@link BleDeviceState#UPDATING_FIRMWARE} state.
+	 * Kicks off an OTA transaction if it's not already taking place and the device is {@link BleDeviceState#INITIALIZED}.
+	 * This will put the device into the {@link BleDeviceState#PERFORMING_OTA} state.
 	 * <br><br>
-	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly how much time it will take for the firmware update to complete.
+	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly how much time it will take for the ota to complete.
 	 * 
 	 * @return	{@link Boolean#TRUE} if firmware update has started, otherwise {@link Boolean#FALSE} if device is either already
-	 * 			{@link BleDeviceState#UPDATING_FIRMWARE} or is not {@link BleDeviceState#INITIALIZED}.
+	 * 			{@link BleDeviceState#PERFORMING_OTA} or is not {@link BleDeviceState#INITIALIZED}.
 	 * 	
-	 * @see BleManagerConfig#includeFirmwareUpdateReadWriteTimesInAverage
-	 * @see BleManagerConfig#autoScanDuringFirmwareUpdates
+	 * @see BleManagerConfig#includeOtaReadWriteTimesInAverage
+	 * @see BleManagerConfig#autoScanDuringOta
 	 */
-	public boolean updateFirmware(BleTransaction txn)
+	public boolean performOta(BleTransaction.Ota txn)
 	{
-		if( is(UPDATING_FIRMWARE) )  return false;
+		if( is(PERFORMING_OTA) )  return false;
 		if( !is(INITIALIZED) )  return false;
 		
-		m_txnMngr.onFirmwareUpdate(txn);
+		m_txnMngr.onOta(txn);
 		
 		return true;
+	}
+	
+	Interval getTaskTimeout(final BleTask task)
+	{
+		return BleDeviceConfig.getTimeout(task, conf_device(), conf_mngr());
 	}
 	
 	/**
@@ -1749,9 +1968,9 @@ public class BleDevice
 	
 	private boolean shouldAddOperationTime()
 	{
-		boolean includeFirmwareUpdateReadWriteTimesInAverage = BleDeviceConfig.bool(conf_device().includeFirmwareUpdateReadWriteTimesInAverage, conf_mngr().includeFirmwareUpdateReadWriteTimesInAverage);
+		boolean includeFirmwareUpdateReadWriteTimesInAverage = BleDeviceConfig.bool(conf_device().includeOtaReadWriteTimesInAverage, conf_mngr().includeOtaReadWriteTimesInAverage);
 		
-		return includeFirmwareUpdateReadWriteTimesInAverage || !is(UPDATING_FIRMWARE);
+		return includeFirmwareUpdateReadWriteTimesInAverage || !is(PERFORMING_OTA);
 	}
 	
 	void addReadTime(double timeStep)
@@ -1800,39 +2019,18 @@ public class BleDevice
 		clear_discovery();
 		
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
-		
-		boolean removeBondOnDiscovery = BleDeviceConfig.bool(conf_device().removeBondOnDiscovery, conf_mngr().removeBondOnDiscovery);
-		
-		if( removeBondOnDiscovery )
-		{
-			m_stateTracker.update
-			(
-				E_Intent.IMPLICIT,
-				BONDING,		false,
-				BONDED,			false,
-				UNBONDED,		true,
-				UNDISCOVERED,	false,
-				DISCOVERED,		true,
-				ADVERTISING,	true,
-				DISCONNECTED,	true
-			);
-			
-			m_queue.add(new P_Task_Unbond(this, m_taskStateListener));
-		}
-		else
-		{
-			m_stateTracker.update
-			(
-				E_Intent.IMPLICIT,
-				BONDING,		m_nativeWrapper.isNativelyBonding(),
-				BONDED,			m_nativeWrapper.isNativelyBonded(),
-				UNBONDED,		m_nativeWrapper.isNativelyUnbonded(),
-				UNDISCOVERED,	false,
-				DISCOVERED,		true,
-				ADVERTISING,	true,
-				DISCONNECTED,	true
-			);
-		}
+
+		m_stateTracker.update
+		(
+			E_Intent.IMPLICIT,
+			BONDING,		m_nativeWrapper.isNativelyBonding(),
+			BONDED,			m_nativeWrapper.isNativelyBonded(),
+			UNBONDED,		m_nativeWrapper.isNativelyUnbonded(),
+			UNDISCOVERED,	false,
+			DISCOVERED,		true,
+			ADVERTISING,	true,
+			DISCONNECTED,	true
+		);
 	}
 	
 	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
@@ -1893,62 +2091,11 @@ public class BleDevice
 		m_rssiPollMngr.update(timeStep);
 	}
 	
-	void removeBond(PE_TaskPriority priority)
+	void unbond_private(PE_TaskPriority priority)
 	{
 		m_queue.add(new P_Task_Unbond(this, m_taskStateListener, priority));
 		
 		m_stateTracker.update(E_Intent.EXPLICIT, BONDED, false, BONDING, false, UNBONDED, true);
-	}
-	
-	void onBondTaskStateChange(PA_Task task, PE_TaskState state)
-	{
-		E_Intent intent = task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
-		
-		if( task.getClass() == P_Task_Bond.class )
-		{
-			if( state.isEndingState() )
-			{
-				if( state == PE_TaskState.SUCCEEDED )
-				{
-					this.onNativeBond(intent);
-				}
-				else
-				{
-					this.onNativeBondFailed(intent);
-				}
-			}
-		}
-		else if( task.getClass() == P_Task_Unbond.class )
-		{
-			if( state == PE_TaskState.SUCCEEDED )
-			{
-				this.onNativeUnbond(intent);
-			}
-			else
-			{
-				// not sure what to do here, if anything
-			}
-		}
-	}
-	
-	void onNativeUnbond(E_Intent intent)
-	{
-		m_stateTracker.update(intent, BONDED, false, BONDING, false, UNBONDED, true);
-	}
-	
-	void onNativeBonding(E_Intent intent)
-	{
-		m_stateTracker.update(intent, BONDED, false, BONDING, true, UNBONDED, false);
-	}
-	
-	void onNativeBond(E_Intent intent)
-	{
-		m_stateTracker.update(intent, BONDED, true, BONDING, false, UNBONDED, false);
-	}
-	
-	void onNativeBondFailed(E_Intent intent)
-	{
-		m_stateTracker.update(intent, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
 	void attemptReconnect()
@@ -1956,11 +2103,17 @@ public class BleDevice
 		connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /*isReconnect=*/true);
 	}
 	
-	private void connect_private(BleTransaction authenticationTxn, BleTransaction initTxn, boolean isReconnect)
+	private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, boolean isReconnect)
 	{
 		m_lastConnectOrDisconnectWasUserExplicit = true;
 		
-		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))  return;
+		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+		{
+			ConnectionFailListener.Info info = new ConnectionFailListener.Info(this, Reason.ALREADY_CONNECTING_OR_CONNECTED, 0, Interval.ZERO, Interval.ZERO, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE);
+			m_connectionFailMngr.invokeCallback(info);
+			
+			return;
+		}
 		
 		if( is(INITIALIZED) )
 		{
@@ -1971,8 +2124,7 @@ public class BleDevice
 	
 		m_txnMngr.onConnect(authenticationTxn, initTxn);
 		
-		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForConnection, conf_mngr().timeoutForConnection);
-		m_queue.add(new P_Task_Connect(this, timeout.secs(), m_taskStateListener));
+		m_queue.add(new P_Task_Connect(this, m_taskStateListener));
 		
 		onConnecting(/*definitelyExplicit=*/true, isReconnect);
 	}
@@ -2004,26 +2156,6 @@ public class BleDevice
 				m_stateTracker.update(lastConnectDisconnectIntent(), CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
 			}
 		}
-	}
-	
-	private boolean isBondingOrBonded()
-	{
-		//--- DRK > These asserts are here because, as far as I could discern from logs, the abstracted
-		//---		state for bonding/bonded was true, but when we did an encrypted write, it kicked
-		//---		off a bonding operation, implying that natively the bonding state silently changed
-		//---		since we discovered the device. I really don't know.
-		//---		UPDATE: Nevermind, the reason bonding wasn't happening after connection was because
-		//---				it was using the default config option of false. Leaving asserts here anywway
-		//---				cause they can't hurt.
-		//---		UPDATE AGAIN: Actually, these asserts can hit if you're connected to a device, you go
-		//---		into OS settings, unbond, which kicks off an implicit disconnect which then kicks off
-		//---		an implicit reconnect...race condition makes it so that you can query the bond state
-		//---		and get its updated value before the bond state callback gets sent
-		//---		UPDATE AGAIN AGAIN: Nevermind, it seems getBondState *can* actually lie, so original comment sorta stands...wow.
-//		m_mngr.ASSERT(m_stateTracker.checkBitMatch(BONDED, isNativelyBonded()));
-//		m_mngr.ASSERT(m_stateTracker.checkBitMatch(BONDING, isNativelyBonding()));
-		
-		return m_nativeWrapper.isNativelyBonded() || m_nativeWrapper.isNativelyBonding();
 	}
 	
 	void onNativeConnect(boolean explicit)
@@ -2073,9 +2205,8 @@ public class BleDevice
 		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
 		
 		
-		boolean autobond = BleDeviceConfig.bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
-		boolean bond = autobond && !isBondingOrBonded();
-		
+		//final boolean autobond = BleDeviceConfig.bool(conf_device().autoBondAfterConnect, conf_mngr().autoBondAfterConnect);
+		final boolean bond = false;//autobond && !isBondingOrBonded();
 		
 		if( bond )
 		{
@@ -2171,8 +2302,7 @@ public class BleDevice
 		}
 		
 		m_serviceMngr.clear();
-		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForDiscoveringServices, conf_mngr().timeoutForDiscoveringServices);
-		m_queue.add(new P_Task_DiscoverServices(this, timeout.secs(), m_taskStateListener));
+		m_queue.add(new P_Task_DiscoverServices(this, m_taskStateListener));
 		
 		//--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
 		//---		Even without this check the library should still be in a goodish state. Might send some weird state
@@ -2218,13 +2348,13 @@ public class BleDevice
 				reason = Reason.NATIVE_CONNECTION_TIMED_OUT;
 			}
 
-			Please retry = m_connectionFailMngr.onConnectionFailed(reason, attemptingReconnect, gattStatus, highestState, autoConnectUsage);
+			PE_Please retry = m_connectionFailMngr.onConnectionFailed(reason, attemptingReconnect, gattStatus, highestState, autoConnectUsage);
 			
-			if( !attemptingReconnect && retry == Please.RETRY_WITH_AUTOCONNECT_TRUE )
+			if( !attemptingReconnect && retry == PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
 				m_useAutoConnect = true;
 			}
-			else if( !attemptingReconnect && retry == Please.RETRY_WITH_AUTOCONNECT_FALSE )
+			else if( !attemptingReconnect && retry == PE_Please.RETRY_WITH_AUTOCONNECT_FALSE )
 			{
 				m_useAutoConnect = false;
 			}
@@ -2271,38 +2401,17 @@ public class BleDevice
 		m_serviceMngr.clear();
 		m_txnMngr.clearQueueLock();
 		
-		boolean removeBondOnDisconnect = BleDeviceConfig.bool(conf_device().removeBondOnDisconnect, conf_mngr().removeBondOnDisconnect);
-		
-		if( fromBleCallback && removeBondOnDisconnect )
-		{
-			m_stateTracker.set
-			(
-				intent,
-				DISCOVERED, true,
-				DISCONNECTED, true,
-				BONDING, false,
-				BONDED, false,
-				UNBONDED, true,
-				ATTEMPTING_RECONNECT, attemptingReconnect,
-				ADVERTISING, !attemptingReconnect
-			);
-			
-			m_queue.add(new P_Task_Unbond(this, m_taskStateListener));
-		}
-		else
-		{
-			m_stateTracker.set
-			(
-				intent,
-				DISCOVERED, true,
-				DISCONNECTED, true,
-				BONDING, m_nativeWrapper.isNativelyBonding(),
-				BONDED, m_nativeWrapper.isNativelyBonded(),
-				UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
-				ATTEMPTING_RECONNECT, attemptingReconnect,
-				ADVERTISING, !attemptingReconnect
-			);
-		}
+		m_stateTracker.set
+		(
+			intent,
+			DISCOVERED, true,
+			DISCONNECTED, true,
+			BONDING, m_nativeWrapper.isNativelyBonding(),
+			BONDED, m_nativeWrapper.isNativelyBonded(),
+			UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+			ATTEMPTING_RECONNECT, attemptingReconnect,
+			ADVERTISING, !attemptingReconnect
+		);
 	}
 	
 	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, int gattStatus)
@@ -2382,7 +2491,7 @@ public class BleDevice
 			m_logger.w("Disconnected Implicitly!");
 		}
 		
-		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF);
+		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF);
 		
 		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;
 		
@@ -2423,7 +2532,7 @@ public class BleDevice
 		{
 			if( m_mngr.ASSERT(!wasExplicit) )
 			{
-				if( m_mngr.isAny(BleState.TURNING_OFF, BleState.OFF) )
+				if( m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
 				{
 					connectionFailReason_nullable = ConnectionFailListener.Reason.BLE_TURNING_OFF;
 				}
@@ -2465,12 +2574,12 @@ public class BleDevice
 			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
 		}
 		
-		Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
+		PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.
 		//---		TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
-		if( retrying == Please.DO_NOT_RETRY )
+		if( retrying == PE_Please.DO_NOT_RETRY )
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this);
 		}
@@ -2502,10 +2611,9 @@ public class BleDevice
 	
 	void read_internal(P_Characteristic characteristic, Type type, P_WrappingReadWriteListener listener)
 	{
-		boolean requiresBonding = bondIfNeeded(characteristic);
+		boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
 		
-		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForReads, conf_mngr().timeoutForReads);
-		m_queue.add(new P_Task_Read(characteristic, timeout.secs(), type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	void write_internal(UUID uuid, byte[] data, P_WrappingReadWriteListener listener)
@@ -2524,10 +2632,9 @@ public class BleDevice
 		
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		
-		boolean requiresBonding = bondIfNeeded(characteristic);
+		boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.WRITE);
 		
-		Interval timeout = BleDeviceConfig.interval(conf_device().timeoutForWrites, conf_mngr().timeoutForWrites);
-		m_queue.add(new P_Task_Write(characteristic, timeout.secs(), data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	private void disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)
@@ -2553,23 +2660,6 @@ public class BleDevice
 		}
 		
 		m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /*usingNotify=*/true);
-	}
-	
-	private boolean bondIfNeeded(P_Characteristic characteristic)
-	{
-		BleDeviceConfig.BondingFilter bondingFilter = conf_device().bondingFilter;
-		bondingFilter = bondingFilter != null ? bondingFilter : conf_mngr().bondingFilter;
-		
-		if( bondingFilter == null )  return false;
-		
-		boolean bondingNeeded = bondingFilter.requiresBonding(characteristic.getUuid());
-		
-		if( bondingNeeded )
-		{
-			bond();
-		}
-		
-		return bondingNeeded;
 	}
 	
 	E_Intent lastConnectDisconnectIntent()

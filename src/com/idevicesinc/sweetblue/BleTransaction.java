@@ -8,18 +8,33 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * to encapsulate a series of reads and writes for things like authentication handshakes, firmware updates, etc. You optionally
  * provide subclass instances to the various overloads of {@link BleDevice#connect()}. Normally in your {@link #start(BleDevice)}
  * method you then do some reads/writes and call {@link #succeed()} or {@link #fail()} depending on the {@link Status} returned.
+ * <br><br>
+ * NOTE: Nested subclasses here are only tagging and don't yet provide any differing contracts or implementations. 
  * 
- * @see BleDevice#updateFirmware(BleTransaction)
- * @see BleDevice#connectAndAuthenticate(BleTransaction)
- * @see BleDevice#connectAndInitialize(BleTransaction)
- * @see BleDevice#connect(BleTransaction, BleTransaction)
+ * @see BleDevice#BleDevice(BleTransaction)
+ * @see BleDevice#connect(BleTransaction.Auth)
+ * @see BleDevice#connect(BleTransaction.Init)
+ * @see BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)
  */
 public abstract class BleTransaction
 {
 	/**
+	 * Tagging subclass to force type-correctness on various {@link BleDevice#connect()} overloads.
+	 */
+	public abstract static class Init extends BleTransaction{}
+	
+	/**
+	 * Tagging subclass to force type-correctness on various {@link BleDevice#connect()} overloads.
+	 */
+	public abstract static class Auth extends BleTransaction{}
+	
+	/**
+	 * Tagging subclass to force type-correctness on {@link BleDevice#performOta(BleTransaction.Ota)}.
+	 */
+	public abstract static class Ota extends BleTransaction{}
+	
+	/**
 	 * Values are passed to {@link BleTransaction#onEnd(BleDevice, EndReason)}.
-	 * 
-	 * 
 	 */
 	protected static enum EndReason
 	{

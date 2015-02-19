@@ -12,6 +12,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
+import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 /**
  * 
@@ -38,7 +39,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	private P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener, PE_TaskPriority priority)
 	{
-		super(characteristic, BleDeviceConfig.DEFAULT_TASK_TIMEOUT, writeListener, false, null, priority);
+		super(characteristic, writeListener, false, null, priority);
 		
 		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
 		m_enable = enable;
@@ -194,5 +195,10 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	@Override protected Result newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
 		return new Result(getDevice(), charUuid, descUuid, getReadWriteType(), target, getWriteValue(), status, gattStatus, getTotalTime(), getTotalTimeExecuting());
+	}
+	
+	@Override protected BleTask getTaskType()
+	{
+		return BleTask.TOGGLE_NOTIFY;
 	}
 }

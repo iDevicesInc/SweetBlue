@@ -194,7 +194,7 @@ class P_DeviceManager
 				
 				if( device.m_nativeWrapper.isNativelyBonded() || device.m_nativeWrapper.isNativelyBonding() )
 				{
-					device.removeBond(priority);
+					device.unbond_private(priority);
 				}
 			}
 		}
@@ -338,7 +338,7 @@ class P_DeviceManager
 
 						if( scanTime < Interval.asDouble(minScanTimeToInvokeUndiscovery) )  continue;
 						
-						boolean purgeable = device.getOrigin() != BleDevice.Origin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
+						boolean purgeable = device.getOrigin() != BleDeviceOrigin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
 						
 						if( purgeable )
 						{

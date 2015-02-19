@@ -72,24 +72,18 @@ abstract class PA_Task
         m_server = server;
     }
 
-	public PA_Task(BleDevice device, double timeout, I_StateListener listener)
+	public PA_Task(BleDevice device, I_StateListener listener)
 	{
-		this(device.getManager(), listener, timeout);
+		this(device.getManager(), listener);
 		
 		m_device = device;
 	}
 	
 	public PA_Task(BleManager manager, I_StateListener listener)
 	{
-		this(manager, listener, BleDeviceConfig.DEFAULT_TASK_TIMEOUT);
-	}
-	
-	public PA_Task(BleManager manager, I_StateListener listener, double timeout)
-	{
 		m_device = null;
 		m_manager = manager;
 //		m_maxRetries = 0;
-		m_timeout = timeout;
 		m_logger = m_manager.getLogger();
 		m_timeCreated = System.currentTimeMillis();
 		
@@ -101,6 +95,29 @@ abstract class PA_Task
 		else
 		{
 			m_stateListener = listener;
+		}
+	}
+	
+	protected abstract BleTask getTaskType();
+	
+	protected double getInitialTimeout()
+	{
+		final BleTask taskType = getTaskType();
+		
+		if( taskType != null )
+		{
+			if( getDevice() != null )
+			{
+				return getDevice().getTaskTimeout(taskType).secs();
+			}
+			else
+			{
+				return getManager().getTaskTimeout(taskType).secs();
+			}
+		}
+		else
+		{
+			return Interval.DISABLED.secs();
 		}
 	}
 	
@@ -219,6 +236,7 @@ abstract class PA_Task
 		m_resetableExecuteStartTime = System.currentTimeMillis();
 //		m_retryCount = 0;
 		m_updateCount = 0;
+		m_timeout = getInitialTimeout();
 	}
 	
 	protected boolean isExecutable()

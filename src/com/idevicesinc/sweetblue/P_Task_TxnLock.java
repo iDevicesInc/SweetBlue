@@ -13,9 +13,14 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 	
 	public P_Task_TxnLock(BleDevice device, BleTransaction txn)
 	{
-		super(device, Interval.INFINITE.secs(), null);
+		super(device, null);
 		
 		m_txn = txn;
+	}
+	
+	@Override protected double getInitialTimeout()
+	{
+		return Interval.DISABLED.secs();
 	}
 	
 	public BleTransaction getTxn()
@@ -25,7 +30,7 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		//--- DRK > Nothing to do here...generally just spins infinitely until read/write comes in or txn ends.
+		//--- DRK > Nothing to do here...basically just spins infinitely until read/write comes in or txn ends.
 	}
 	
 	@Override public PE_TaskPriority getPriority()
@@ -55,5 +60,10 @@ class P_Task_TxnLock extends PA_Task_RequiresBleOn
 		}
 		
 		return super.isInterruptableBy(task);
+	}
+
+	@Override protected BleTask getTaskType()
+	{
+		return null;
 	}
 }

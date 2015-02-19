@@ -2,12 +2,10 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleDevice.StateListener.ChangeEvent;
+import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.utils.State;
 
 /**
- * 
- * 
- *
  */
 class P_DeviceStateTracker extends PA_StateTracker
 {
@@ -19,8 +17,6 @@ class P_DeviceStateTracker extends PA_StateTracker
 		super(device.getManager().getLogger(), BleDeviceState.values());
 		
 		m_device = device;
-		
-		set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 	}
 	
 	public void setListener(StateListener listener)
@@ -50,6 +46,16 @@ class P_DeviceStateTracker extends PA_StateTracker
 			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask);
 			m_device.getManager().m_defaultDeviceStateListener.onStateChange(event);
 		}
+
+		final BleDeviceConfig.BondFilter bondFilter = m_device.conf_device().bondFilter != null ? m_device.conf_device().bondFilter : m_device.conf_mngr().bondFilter;
+		
+		if( bondFilter == null )  return;
+		
+		final BondFilter.StateChangeEvent bondStateChangeEvent = new BondFilter.StateChangeEvent(m_device, oldStateBits, newStateBits, intentMask);
+		
+		final BondFilter.Please please = bondFilter.onStateChange(bondStateChangeEvent);
+		
+		m_device.m_bondMngr.applyPlease_BondFilter(please);
 		
 //		m_device.getManager().getLogger().e(this.toString());
 	}

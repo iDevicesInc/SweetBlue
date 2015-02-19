@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+
 /**
  * 
  */
@@ -7,9 +9,9 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {
 	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 	
-	public P_Task_DiscoverServices(BleDevice bleDevice, double timeout, I_StateListener listener)
+	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener)
 	{
-		super(bleDevice, timeout, listener);
+		super(bleDevice, listener);
 	}
 
 	@Override public void execute()
@@ -27,16 +29,6 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 		return PE_TaskPriority.MEDIUM;
 	}
 	
-	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
-	{
-		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
-		{
-			return true;
-		}
-		
-		return super.isSoftlyCancellableBy(task);
-	}
-	
 	public void onNativeFail(int gattStatus)
 	{
 		m_gattStatus = gattStatus;
@@ -47,5 +39,10 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 	public int getGattStatus()
 	{
 		return m_gattStatus;
+	}
+	
+	@Override protected BleTask getTaskType()
+	{
+		return BleTask.DISCOVER_SERVICES;
 	}
 }

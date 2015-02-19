@@ -18,9 +18,9 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	private final BleTransaction m_txn;
 	private final PE_TaskPriority m_priority;
 	
-	PA_Task_Transactionable(BleDevice device, double timeout, BleTransaction txn_nullable, boolean requiresBonding, PE_TaskPriority priority)
+	PA_Task_Transactionable(BleDevice device, BleTransaction txn_nullable, boolean requiresBonding, PE_TaskPriority priority)
 	{
-		super(device, timeout, null);
+		super(device, null);
 		
 		m_requiresBonding = requiresBonding;
 		m_txn = txn_nullable;
@@ -31,7 +31,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	{
 		BleManager mngr = this.getManager();
 		
-		if( mngr.is(BleState.TURNING_OFF) )
+		if( mngr.is(BleManagerState.TURNING_OFF) )
 		{
 			return BleDevice.ReadWriteListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
 		}
@@ -95,7 +95,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		}
 		
 		//--- DRK > This allows the plain old reads/writes during auth/initialization to have
-		//---		higher priority than registration notification. Otherwise we don't care.
+		//---		higher priority than notification enabling. Otherwise we don't care.
 		else if( task instanceof P_Task_ToggleNotify )
 		{
 			if( !(this instanceof P_Task_ToggleNotify) )

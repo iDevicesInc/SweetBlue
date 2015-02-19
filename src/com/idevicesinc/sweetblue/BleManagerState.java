@@ -10,10 +10,10 @@ import com.idevicesinc.sweetblue.utils.State;
  * 
  * @see BleManager.StateListener
  * @see BleManager.NativeStateListener
- * @see BleManager#is(BleState)
+ * @see BleManager#is(BleManagerState)
  * @see BleManager#getStateMask()
  */
-public enum BleState implements State
+public enum BleManagerState implements State
 {
 	/**
 	 * Analogous to {@link BluetoothAdapter#STATE_OFF}.
@@ -43,25 +43,25 @@ public enum BleState implements State
 	SCANNING,
 	
 	/**
-	 * This is the state that {@link BleManager} is in after calling {@link BleManager#dropTacticalNuke()}.
+	 * This is the state that {@link BleManager} is in after calling {@link BleManager#reset()}.
 	 */
-	NUKING;
+	RESETTING;
 	
 	private final int m_nativeCode;
 	
-	private BleState()
+	private BleManagerState()
 	{
 		m_nativeCode = 0;
 	}
 	
-	private BleState(int nativeCode)
+	private BleManagerState(int nativeCode)
 	{
 		m_nativeCode = nativeCode;
 	}
 	
 	/**
 	 * Returns the analogous native code, if applicable. For example {@link BluetoothAdapter#STATE_OFF},
-	 * {@link BluetoothAdapter#STATE_ON}, etc. {@link #NUKING} and {@link #SCANNING} do not have a native
+	 * {@link BluetoothAdapter#STATE_ON}, etc. {@link #RESETTING} and {@link #SCANNING} do not have a native
 	 * code equivalent and will return 0.
 	 */
 	public int getNativeCode()
@@ -69,7 +69,7 @@ public enum BleState implements State
 		return m_nativeCode;
 	}
 	
-	static BleState get(int nativeCode)
+	static BleManagerState get(int nativeCode)
 	{
 		for( int i = 0; i < values().length; i++ )
 		{
@@ -100,5 +100,10 @@ public enum BleState implements State
 	@Override public boolean didExit(int oldStateBits, int newStateBits)
 	{
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
+	}
+	
+	@Override public int or(State state)
+	{
+		return this.bit() | state.bit();
 	}
 }

@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleState.SCANNING;
+import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
+import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 /**
  * 
@@ -269,8 +270,8 @@ class P_BleManager_Listeners
 			return;			
 		}
 		
-		BleState previousState = BleState.get(previousNativeState);
-		BleState newState = BleState.get(newNativeState);
+		BleManagerState previousState = BleManagerState.get(previousNativeState);
+		BleManagerState newState = BleManagerState.get(newNativeState);
 		
 		m_mngr.getNativeStateTracker().update(intent, previousState, false, newState, true);
 		m_mngr.getStateTracker().update(intent, previousState, false, newState, true);
@@ -308,14 +309,20 @@ class P_BleManager_Listeners
 		int logLevel = newState == BluetoothDevice.ERROR || previousState == BluetoothDevice.ERROR ? Log.WARN : Log.INFO;
 		m_logger.log(logLevel, "previous=" + m_logger.gattBondState(previousState) + " new=" + m_logger.gattBondState(newState));
 		
+		final int failReason;
+		
 		if( newState == BluetoothDevice.BOND_NONE )
 		{
 			//--- DRK > Can't access BluetoothDevice.EXTRA_REASON cause of stupid @hide annotation, so hardcoding string here.
-			int reason = intent.getIntExtra(PS_GattStatus.BluetoothDevice_EXTRA_REASON, BluetoothDevice.ERROR);
-			if( reason != PS_GattStatus.BluetoothDevice_BOND_SUCCESS )
+			failReason = intent.getIntExtra(PS_GattStatus.BluetoothDevice_EXTRA_REASON, BluetoothDevice.ERROR);
+			if( failReason != PS_GattStatus.BluetoothDevice_BOND_SUCCESS )
 			{
-				m_logger.w(m_logger.gattUnbondReason(reason));
+				m_logger.w(m_logger.gattUnbondReason(failReason));
 			}
+		}
+		else
+		{
+			failReason = BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE;
 		}
 		
 		final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -324,12 +331,12 @@ class P_BleManager_Listeners
 		{
 			@Override public void run()
 			{
-				onNativeBondStateChanged(device_native, previousState, newState);
+				onNativeBondStateChanged(device_native, previousState, newState, failReason);
 			}
 		});
 	}
 	
-	private void onNativeBondStateChanged(BluetoothDevice device_native, int previousState, int newState)
+	private void onNativeBondStateChanged(BluetoothDevice device_native, int previousState, int newState, int failReason)
 	{
 		BleDevice device = m_mngr.getDevice(device_native.getAddress());
 			
@@ -361,12 +368,12 @@ class P_BleManager_Listeners
 		
 		if( device != null )
 		{
-			device.getListeners().onNativeBondStateChanged(previousState, newState);
+			device.getListeners().onNativeBondStateChanged(previousState, newState, failReason);
 		}
 		
-		if( previousState == BluetoothDevice.BOND_BONDING && newState == BluetoothDevice.BOND_NONE )
-		{
-			m_mngr.uhOh(UhOh.WENT_FROM_BONDING_TO_UNBONDED);
-		}
+//		if( previousState == BluetoothDevice.BOND_BONDING && newState == BluetoothDevice.BOND_NONE )
+//		{
+//			m_mngr.uhOh(UhOh.WENT_FROM_BONDING_TO_UNBONDED);
+//		}
 	}
 }

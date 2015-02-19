@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRateLimiter;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectLoop;
+import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectLoop.Please;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
@@ -36,7 +38,7 @@ class P_ReconnectManager
 		m_delay = 0.0;
 		m_timeTracker = 0.0;
 		
-		m_delay = getNextTime();
+		m_delay = getNextTime(ConnectionFailListener.Info.NULL(m_device));
 		
 		if( m_delay < 0.0 )
 		{
@@ -63,27 +65,28 @@ class P_ReconnectManager
 		}
 	}
 	
-	private double getNextTime()
+	private double getNextTime(ConnectionFailListener.Info connectionFailInfo)
 	{
-		BleDeviceConfig.ReconnectRateLimiter rateLimiter = m_device.conf_device().reconnectRateLimiter;
-		rateLimiter = rateLimiter != null ? rateLimiter : m_device.conf_mngr().reconnectRateLimiter;
+		BleDeviceConfig.ReconnectLoop rateLimiter = m_device.conf_device().reconnectLoop;
+		rateLimiter = rateLimiter != null ? rateLimiter : m_device.conf_mngr().reconnectLoop;
 		
 		if( rateLimiter == null )
 		{
-			return BleManagerConfig.ReconnectRateLimiter.CANCEL.secs();
+			return BleManagerConfig.ReconnectLoop.Please.STOP.secs();
 		}
 		else
 		{
-			ReconnectRateLimiter.Info info = new ReconnectRateLimiter.Info(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay));
-			Interval delay = rateLimiter.getTimeToNextReconnect(info);
+			ReconnectLoop.Info info = new ReconnectLoop.Info(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo);
+			Please please = rateLimiter.onReconnectRequest(info);
 			
-			delay = delay != null ? delay : BleManagerConfig.ReconnectRateLimiter.CANCEL;
+			Interval delay = please != null ? please.getInterval() : null;
+			delay = delay != null ? delay : BleManagerConfig.ReconnectLoop.Please.STOP;
 			
 			return delay.secs();
 		}
 	}
 	
-	boolean onConnectionFailed()
+	boolean onConnectionFailed(ConnectionFailListener.Info connectionFailInfo)
 	{
 		if( !isRunning() )
 		{
@@ -94,7 +97,7 @@ class P_ReconnectManager
 
 		m_timeTracker = 0.0;
 		
-		double delay = getNextTime();
+		double delay = getNextTime(connectionFailInfo);
 		
 		if( delay < 0.0 )
 		{

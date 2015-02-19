@@ -27,14 +27,22 @@ import android.util.Log;
 
 /**
  * Some static utility methods that are probably not very useful outside the library.
+ * See subclasses for more specific groups of utility methods.
  */
 public class Utils
 {
-	private static final String TAG = Utils.class.getName();
-
 	static boolean requiresBonding(BluetoothGattCharacteristic characteristic)
 	{
 		return false;
+	}
+	
+	/**
+	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
+	 * and so this method is used to set {@link #autoUnbond_onStateEnter}.
+	 */
+	public static boolean phoneHasBondingIssues()
+	{
+		return Utils.isManufacturer("sony") || Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
 	}
 	
 	public static boolean isManufacturer(String manufacturer)
@@ -91,67 +99,7 @@ public class Utils
 		return true;
 	}
 
-	public static List<UUID> parseServiceUuids(final byte[] advertisedData)
-	{
-		List<UUID> uuids = new ArrayList<UUID>();
-		 
-		 if( advertisedData == null )  return uuids;
-
-		int offset = 0;
-		while(offset < (advertisedData.length - 2))
-		{
-			int len = advertisedData[offset++];
-			if(len == 0)
-				break;
-
-			int type = advertisedData[offset++];
-			switch(type)
-			{
-				case 0x02: // Partial list of 16-bit UUIDs
-				case 0x03: // Complete list of 16-bit UUIDs
-					while(len > 1)
-					{
-						int uuid16 = advertisedData[offset++];
-						uuid16 += (advertisedData[offset++] << 8);
-						len -= 2;
-						uuids.add(UUID.fromString(String.format("%08x-0000-1000-8000-00805f9b34fb", uuid16)));
-					}
-					break;
-				case 0x06:// Partial list of 128-bit UUIDs
-				case 0x07:// Complete list of 128-bit UUIDs
-					  // Loop through the advertised 128-bit UUID's.
-					while(len >= 16)
-					{
-						try
-						{
-							// Wrap the advertised bits and order them.
-							ByteBuffer buffer = ByteBuffer.wrap(advertisedData, offset++, 16).order(ByteOrder.LITTLE_ENDIAN);
-							long mostSignificantBit = buffer.getLong();
-							long leastSignificantBit = buffer.getLong();
-							uuids.add(new UUID(leastSignificantBit, mostSignificantBit));
-						}
-						catch(IndexOutOfBoundsException e)
-						{
-							// Defensive programming.
-							Log.e(TAG, e.toString());
-							continue;
-						}
-						finally
-						{
-							// Move the offset to read the next uuid.
-							offset += 15;
-							len -= 16;
-						}
-					}
-					break;
-				default:
-					offset += (len - 1);
-					break;
-			}
-		}
-
-		return uuids;
-	}
+	
 
 	private static final String SHORTHAND_UUID_TEMPLATE = "00000000-0000-1000-8000-00805f9b34fb";
 	private static final int SHORTHAND_LENGTH = 8;

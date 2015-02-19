@@ -16,11 +16,6 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
-/**
- * 
- * 
- * 
- */
 class P_BleDevice_Listeners extends BluetoothGattCallback
 {
 	private final BleDevice m_device;
@@ -129,7 +124,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else if (task.getClass() == P_Task_Bond.class)
 			{
-				m_device.onBondTaskStateChange(task, state);
+				m_device.m_bondMngr.onBondTaskStateChange(task, state);
 			}
 		}
 	};
@@ -187,8 +182,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				
 				if (!m_queue.isCurrent(P_Task_Connect.class, m_device))
 				{
-					Interval timeout = BleDeviceConfig.interval(m_device.conf_device().timeoutForConnection, m_device.conf_mngr().timeoutForConnection);
-					P_Task_Connect task = new P_Task_Connect(m_device, timeout.secs(), m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
+					P_Task_Connect task = new P_Task_Connect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
 					m_queue.add(task);
 				}
 
@@ -220,7 +214,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		//--- DRK > NOTE: never seen this case happen.
 		else if (newState == BluetoothProfile.STATE_DISCONNECTING)
 		{
-			m_logger.e("Actually natively disconnecting!"); // error level just so it's noticeable.
+			m_logger.e("Actually natively disconnecting!"); // DRK > error level just so it's noticeable...never seen this.
 			
 			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 			
@@ -429,26 +423,31 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		});
 	}
 
-	void onNativeBondStateChanged(int previousState, int newState)
+	void onNativeBondStateChanged(int previousState, int newState, int failReason)
 	{
-		onNativeBondStateChanged_private(previousState, newState);
+		onNativeBondStateChanged_private(previousState, newState, failReason);
 	}
 	
-	private void onNativeBondStateChanged_private(int previousState, int newState)
+	private void onNativeBondStateChanged_private(int previousState, int newState, int failReason)
 	{
 		if (newState == BluetoothDevice.ERROR)
 		{
 			P_TaskQueue queue = m_device.getTaskQueue();
 			queue.fail(P_Task_Bond.class, m_device);
 			queue.fail(P_Task_Unbond.class, m_device);
+			
+			m_logger.e("newState for bond is BluetoothDevice.ERROR!(?)");
 		}
 		else if (newState == BluetoothDevice.BOND_NONE)
 		{
-			m_queue.fail(P_Task_Bond.class, m_device);
+			if( !m_queue.fail(P_Task_Bond.class, m_device) )
+			{
+				
+			}
 			
 			if (!m_queue.succeed(P_Task_Unbond.class, m_device))
 			{
-				m_device.onNativeUnbond(E_Intent.IMPLICIT);
+				m_device.m_bondMngr.onNativeUnbond(E_Intent.IMPLICIT);
 			}
 		}
 		else if (newState == BluetoothDevice.BOND_BONDING)
@@ -456,7 +455,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
 			E_Intent intent = task != null && task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
 			boolean isCurrent = task != null; // avoiding erroneous dead code warning from putting this directly in if-clause below.
-			m_device.onNativeBonding(intent);
+			m_device.m_bondMngr.onNativeBonding(intent);
 
 			if ( !isCurrent )
 			{
@@ -471,7 +470,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 			if (!m_queue.succeed(P_Task_Bond.class, m_device))
 			{
-				m_device.onNativeBond(E_Intent.IMPLICIT);
+				m_device.m_bondMngr.onNativeBond(E_Intent.IMPLICIT);
 			}
 		}
 	}

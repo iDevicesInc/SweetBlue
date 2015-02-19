@@ -3,11 +3,6 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
-/**
- * 
- * 
- *
- */
 class P_Task_Scan extends PA_Task_RequiresBleOn
 {	
 	static enum E_Mode
@@ -19,15 +14,18 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	//TODO
 	private final boolean m_explicit = true;
+	private final double m_scanTime;
 	
-	public P_Task_Scan(BleManager manager, I_StateListener listener)
+	public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime)
 	{
 		super(manager, listener);
+		
+		m_scanTime = scanTime;
 	}
 	
-	public P_Task_Scan(BleManager manager, I_StateListener listener, double timeout)
+	@Override protected double getInitialTimeout()
 	{
-		super(manager, listener, timeout);
+		return m_scanTime;
 	}
 	
 	@Override public void execute()
@@ -101,5 +99,10 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	@Override public boolean isExplicit()
 	{
 		return m_explicit;
+	}
+	
+	@Override protected BleTask getTaskType()
+	{
+		return null;
 	}
 }

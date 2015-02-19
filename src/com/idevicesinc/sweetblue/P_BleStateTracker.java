@@ -17,7 +17,7 @@ class P_BleStateTracker extends PA_StateTracker
 	
 	P_BleStateTracker(BleManager mngr)
 	{
-		super(mngr.getLogger(), BleState.values());
+		super(mngr.getLogger(), BleManagerState.values());
 		
 		m_mngr = mngr;
 	}
@@ -45,6 +45,6 @@ class P_BleStateTracker extends PA_StateTracker
 	
 	@Override public String toString()
 	{
-		return super.toString(BleState.values());
+		return super.toString(BleManagerState.values());
 	}
 }

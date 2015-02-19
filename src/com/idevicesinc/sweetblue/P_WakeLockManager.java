@@ -73,8 +73,8 @@ class P_WakeLockManager
 		}
 		
 		//--- DRK > Just looking at the source for release(), it can throw a RuntimeException if it's somehow
-		//---		overreleased, like maybe app mismanages it. Just future-proofing against all exceptions here.
-		catch(Exception e)
+		//---		overreleased, like maybe app mismanages it. Just being defensive here.
+		catch(RuntimeException e)
 		{
 			m_mngr.ASSERT(false, e.getMessage());
 		}

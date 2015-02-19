@@ -1,11 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleState.NUKING;
-import static com.idevicesinc.sweetblue.BleState.OFF;
-import static com.idevicesinc.sweetblue.BleState.ON;
-import static com.idevicesinc.sweetblue.BleState.SCANNING;
-import static com.idevicesinc.sweetblue.BleState.TURNING_OFF;
-import static com.idevicesinc.sweetblue.BleState.TURNING_ON;
+import static com.idevicesinc.sweetblue.BleManagerState.*;
 
 import java.lang.reflect.Member;
 import java.util.Iterator;
@@ -19,6 +14,7 @@ import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
@@ -29,19 +25,23 @@ import android.os.PowerManager.WakeLock;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleManager.AssertListener.Info;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
-import com.idevicesinc.sweetblue.BleManager.NukeListener.NukeEvent;
-import com.idevicesinc.sweetblue.BleManagerConfig.AdvertisingFilter;
+
 import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener;
+import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
+import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
-import com.idevicesinc.sweetblue.utils.BleDeviceIterator;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 
 /**
  * The entry point to the library. Get a singleton instance using {@link #get(Context, BleManagerConfig)} or its overloads. Make sure
@@ -77,19 +77,19 @@ import com.idevicesinc.sweetblue.utils.Utils;
  *              {
  *                  m_bleManager.stopScan();
  *
- *					if( event.was(LifeCycle.DISCOVERED) )
- *					{
- *                  	event.device().connect(new BleDevice.StateListener()
- *                  	{
- *                      	{@literal @}Override public void onStateChange(ChangeEvent event)
- *                      	{
- *                          	if( event.didEnter(BleDeviceState.INITIALIZED) )
- *                          	{
- *                              	String toastText = event.device().getDebugName() + " just initialized!";
- *                              	Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
- *                          	}
- *                      	}
- *                  	});
+ *                  if( event.was(LifeCycle.DISCOVERED) )
+ *                  {
+ *                      event.device().connect(new BleDevice.StateListener()
+ *                      {
+ *                          {@literal @}Override public void onStateChange(ChangeEvent event)
+ *                          {
+ *                              if( event.didEnter(BleDeviceState.INITIALIZED) )
+ *                              {
+ *                                  String toastText = event.device().getDebugName() + " just initialized!";
+ *                                  Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
+ *                              }
+ *                          }
+ *                      });
  *                  }
  *              }
  *          });
@@ -190,7 +190,8 @@ public class BleManager
 				return Utils.toString
 				(
 					"device",			device().getName_debug(),
-					"lifeCycle",		lifeCycle()
+					"lifeCycle",		lifeCycle(),
+					"rssi",				device().getRssi()
 				);
 			}
 		}
@@ -206,7 +207,7 @@ public class BleManager
 
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_State(StateListener)} to receive callbacks
-	 * when the {@link BleManager} undergoes a {@link BleState} change.
+	 * when the {@link BleManager} undergoes a {@link BleManagerState} change.
 	 */
 	public static interface StateListener
 	{
@@ -230,14 +231,14 @@ public class BleManager
 		}
 		
 		/**
-		 * Called when the manager's abstracted {@link BleState} changes.
+		 * Called when the manager's abstracted {@link BleManagerState} changes.
 		 */
 		void onStateChange(ChangeEvent event);
 	}
 
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_NativeState(NativeStateListener)} to receive callbacks
-	 * when the {@link BleManager} undergoes a *native* {@link BleState} change. This is similar to {@link StateListener}
+	 * when the {@link BleManager} undergoes a *native* {@link BleManagerState} change. This is similar to {@link StateListener}
 	 * but reflects what is going on in the actual underlying stack, which may lag slightly behind the
 	 * abstracted state reflected by {@link StateListener}. Most apps will not find this callback useful.
 	 */
@@ -255,7 +256,7 @@ public class BleManager
 		}
 		
 		/**
-		 * Called when the manager's native bitwise {@link BleState} changes. As many bits as possible are flipped at the same time.
+		 * Called when the manager's native bitwise {@link BleManagerState} changes. As many bits as possible are flipped at the same time.
 		 */
 		void onNativeStateChange(ChangeEvent event);
 	}
@@ -269,6 +270,167 @@ public class BleManager
 	public static interface UhOhListener
 	{
 		/**
+		 * An UhOh is a warning about an exceptional (in the bad sense) and unfixable problem with the underlying stack that
+		 * the app can warn its user about. It's kind of like an {@link Exception} but they can be so common
+		 * that using {@link Exception} would render this library unusable without a rat's nest of try/catches.
+		 * Instead you implement {@link BleManager.UhOhListener} to receive them. Each {@link UhOh} has a {@link UhOh#getRemedy()}
+		 * that suggests what might be done about it.
+		 * 
+		 * @see UhOhListener
+		 * @see BleManager#setListener_UhOh(UhOhListener)
+		 */
+		public enum UhOh
+		{
+			/**
+			 * A {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)}
+			 * took longer than {@link BleManagerConfig#DEFAULT_TASK_TIMEOUT} seconds.
+			 * You will also get a {@link BleDevice.ReadWriteListener.Result} with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}
+			 * but a timeout is a sort of fringe case that should not regularly happen.
+			 */
+			READ_TIMED_OUT,
+			
+			/**
+			 * A {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)} returned with a <code>null</code>
+			 * characteristic value. The <code>null</code> value will end up as an empty array in {@link Result#data}
+			 * so app-land doesn't have to do any special <code>null</code> handling.
+			 */
+			READ_RETURNED_NULL,
+			
+			/**
+			 * Similar to {@link #READ_TIMED_OUT} but for {@link BleDevice#write(UUID, byte[])}.
+			 */
+			WRITE_TIMED_OUT,
+			
+			/**
+			 * When the underlying stack meets a race condition where {@link BluetoothAdapter#getState()} does not
+			 * match the value provided through {@link BluetoothAdapter#ACTION_STATE_CHANGED} with {@link BluetoothAdapter#EXTRA_STATE}.
+			 */
+			INCONSISTENT_NATIVE_BLE_STATE,
+			
+			/**
+			 * A {@link BleDevice} went from {@link BleDeviceState#BONDING} to {@link BleDeviceState#UNBONDED}.
+			 * UPDATE: This can happen under normal circumstances, so not listing it as an uh oh for now.
+			 */
+//			WENT_FROM_BONDING_TO_UNBONDED,
+			
+			/**
+			 * A {@link BluetoothGatt#discoverServices()} operation returned two duplicate services. Not the same instance
+			 * necessarily but the same UUID.
+			 */
+			DUPLICATE_SERVICE_FOUND,
+			
+			/**
+			 * A {@link BluetoothGatt#discoverServices()} operation returned a service instance that we already received before
+			 * after disconnecting and reconnecting.
+			 */
+			OLD_DUPLICATE_SERVICE_FOUND,
+			
+			/**
+			 * {@link BluetoothAdapter#startLeScan()} failed for an unknown reason. The library is now using
+			 * {@link BluetoothAdapter#startDiscovery()} instead.
+			 * 
+			 * @see BleManagerConfig#revertToClassicDiscoveryIfNeeded
+			 */
+			START_BLE_SCAN_FAILED__USING_CLASSIC,
+			
+			/**
+			 * {@link BluetoothGatt#getConnectionState()} says we're connected but we never tried to connect in the first place.
+			 * My theory is that this can happen on some phones when you quickly restart the app and the stack doesn't have 
+			 * a chance to disconnect from the device entirely. 
+			 */
+			CONNECTED_WITHOUT_EVER_CONNECTING,
+			
+			/**
+			 * Similar in concept to {@link UhOh#RANDOM_EXCEPTION} but used when {@link DeadObjectException} is thrown.
+			 */
+			DEAD_OBJECT_EXCEPTION,
+			
+			/**
+			 * The underlying native BLE stack enjoys surprising you with random exceptions. Every time a new one is discovered
+			 * it is wrapped in a try/catch and this {@link UhOh} is dispatched.
+			 */
+			RANDOM_EXCEPTION,
+			
+			/**
+			 * {@link BluetoothAdapter#startLeScan()} failed and {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is <code>false</code>.
+			 * 
+			 * @see BleManagerConfig#revertToClassicDiscoveryIfNeeded
+			 */
+			START_BLE_SCAN_FAILED,
+			
+			/**
+			 * {@link BluetoothAdapter#startLeScan()} failed and {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is <code>true</code>
+			 * so we try {@link BluetoothAdapter#startDiscovery()} but that also fails...fun!
+			 */
+			CLASSIC_DISCOVERY_FAILED,
+			
+			/**
+			 * {@link BluetoothGatt#discoverServices()} failed right off the bat and returned false.
+			 */
+			SERVICE_DISCOVERY_IMMEDIATELY_FAILED,
+			
+			/**
+			 * {@link BluetoothAdapter#disable()}, through {@link BleManager#turnOff()}, is failing to complete.
+			 * We always end up back at {@link BluetoothAdapter#STATE_ON}.
+			 */
+			CANNOT_DISABLE_BLUETOOTH,
+			
+			/**
+			 * {@link BluetoothAdapter#enable()}, through {@link BleManager#turnOn()}, is failing to complete.
+			 * We always end up back at {@link BluetoothAdapter#STATE_OFF}. Opposite problem of {@link #CANNOT_DISABLE_BLUETOOTH}
+			 */
+			CANNOT_ENABLE_BLUETOOTH,
+			
+			/**
+			 * Just a blanket case for when the library has to completely shrug its shoulders.
+			 */
+			UNKNOWN_BLE_ERROR;
+			
+			/**
+			 * Returns the {@link Remedy} for this {@link UhOh}.
+			 */
+			public Remedy getRemedy()
+			{
+				if( this.ordinal() >= CANNOT_DISABLE_BLUETOOTH.ordinal() )
+				{
+					return Remedy.RESTART_PHONE;
+				}
+				else if( this.ordinal() >= START_BLE_SCAN_FAILED.ordinal() )
+				{
+					return Remedy.RESET_BLE;
+				}
+				else
+				{
+					return Remedy.WAIT_AND_SEE;
+				}
+			}
+		}
+		
+		/**
+		 * The suggested remedy for each {@link UhOh}. This can be used as a proxy for the severity
+		 * of the issue.
+		 */
+		public static enum Remedy
+		{
+			/**
+			 * Nothing you can really do, hopefully the library can soldier on.
+			 */
+			WAIT_AND_SEE,
+			
+			/**
+			 * Calling {@link BleManager#reset()} is probably in order.
+			 * 
+			 * @see BleManager#reset()
+			 */
+			RESET_BLE,
+			
+			/**
+			 * Might want to notify your user that a phone restart is in order.
+			 */
+			RESTART_PHONE;
+		}
+		
+		/**
 		 * Struct passed to {@link UhOhListener#onUhOh(UhOhEvent)}.
 		 */
 		public static class UhOhEvent
@@ -278,6 +440,11 @@ public class BleManager
 			
 			public UhOh uhOh(){  return m_uhOh;  }
 			private final UhOh m_uhOh;
+			
+			/**
+			 * Forwards {@link UhOh#getRemedy()}.
+			 */
+			public Remedy remedy(){  return uhOh().getRemedy();  };
 			
 			UhOhEvent(BleManager manager, UhOh uhoh)
 			{
@@ -289,7 +456,8 @@ public class BleManager
 			{
 				return Utils.toString
 				(
-					"uhOh",	uhOh()
+					"uhOh",		uhOh(),
+					"remedy",	remedy()
 				);
 			}
 		}
@@ -301,43 +469,43 @@ public class BleManager
 	}
 
 	/**
-	 * Provide an implementation to {@link BleManager#dropTacticalNuke(NukeListener)}
-	 * to be notified when a nuke operation is complete.
+	 * Provide an implementation to {@link BleManager#reset(ResetListener)}
+	 * to be notified when a reset operation is complete.
 	 *
-	 * @see BleManager#dropTacticalNuke(NukeListener)
+	 * @see BleManager#reset(ResetListener)
 	 */
-	public static interface NukeListener
+	public static interface ResetListener
 	{
 		/**
-		 * Enumeration of the progress of the nuke.
+		 * Enumeration of the progress of the reset.
 		 * More entries will be added in the future.
 		 */
 		public static enum Progress
 		{
 			/**
-			 * The nuke has completed successfully.
+			 * The reset has completed successfully.
 			 */
 			COMPLETED;
 		}
 		
 		/**
-		 * Struct passed to {@link NukeListener#onNukeEvent(NukeEvent)}.
+		 * Struct passed to {@link ResetListener#onResetEvent(ResetEvent)}.
 		 */
-		public static class NukeEvent
+		public static class ResetEvent
 		{
 			/**
-			 * The {@link BleManager} the nuke was applied to.
+			 * The {@link BleManager} the reset was applied to.
 			 */
 			public BleManager manager(){  return m_manager;  }
 			private final BleManager m_manager;
 			
 			/**
-			 * The progress of the nuke.
+			 * The progress of the reset.
 			 */
 			public Progress progress(){  return m_progress;  }
 			private final Progress m_progress;
 			
-			NukeEvent(BleManager manager, Progress progress)
+			ResetEvent(BleManager manager, Progress progress)
 			{
 				m_manager = manager;
 				m_progress = progress;
@@ -353,9 +521,9 @@ public class BleManager
 		}
 		
 		/**
-		 * The nuke event, for now only fired when the nuke is completed. Hopefully the bluetooth stack is OK now.
+		 * The reset event, for now only fired when the reset is completed. Hopefully the bluetooth stack is OK now.
 		 */
-		void onNukeEvent(NukeEvent event);
+		void onResetEvent(ResetEvent event);
 	}
 
 	/**
@@ -470,7 +638,7 @@ public class BleManager
 	private final Context m_context;
 	final Handler m_mainThreadHandler;
 	private final BluetoothManager m_btMngr;
-	private final P_AdvertisingFilterManager m_filterMngr;
+	private final P_ScanFilterManager m_filterMngr;
 	private final P_BluetoothCrashResolver m_crashResolver;
 	private			P_Logger m_logger;
 			  BleManagerConfig m_config;
@@ -489,10 +657,11 @@ public class BleManager
 		final Object m_threadLock = new Object();
 	
 			DiscoveryListener m_discoveryListener;
-	private P_WrappingNukeListener m_nukeListeners;
+	private P_WrappingResetListener m_resetListeners;
 	private AssertListener m_assertionListener;
 			BleDevice.StateListener m_defaultDeviceStateListener;
 			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
+			BleDevice.BondListener m_defaultBondListener;
 	final P_LastDisconnectManager m_lastDisconnectMngr;
 	
 	private double m_timeForegrounded = 0.0;
@@ -516,9 +685,9 @@ public class BleManager
 		m_config = config.clone();
 		initLogger();
 		m_lastDisconnectMngr = new P_LastDisconnectManager(m_context);
-		m_filterMngr = new P_AdvertisingFilterManager(m_config.defaultAdvertisingFilter);
+		m_filterMngr = new P_ScanFilterManager(m_config.defaultScanFilter);
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
-		BleState nativeState = BleState.get(m_btMngr.getAdapter().getState());
+		BleManagerState nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_BleStateTracker(this);
 		m_stateTracker.append(nativeState, E_Intent.IMPLICIT);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
@@ -584,7 +753,7 @@ public class BleManager
 	/**
 	 * Returns whether the manager is in any of the provided states.
 	 */
-	public boolean isAny(BleState ... states)
+	public boolean isAny(BleManagerState ... states)
 	{
 		for( int i = 0; i < states.length; i++ )
 		{
@@ -597,9 +766,9 @@ public class BleManager
 	/**
 	 * Returns whether the manager is in the provided state.
 	 *
-	 * @see #isAny(BleState...)
+	 * @see #isAny(BleManagerState...)
 	 */
-	public boolean is(BleState state)
+	public boolean is(BleManagerState state)
 	{
 		return state.overlaps(getStateMask());
 	}
@@ -609,7 +778,7 @@ public class BleManager
 	 *
 	 * @see BleDevice#getTimeInState(BleDeviceState)
 	 */
-	public Interval getTimeInState(BleState state)
+	public Interval getTimeInState(BleManagerState state)
 	{
 		return Interval.millis(m_stateTracker.getTimeInState(state.ordinal()));
 	}
@@ -619,7 +788,7 @@ public class BleManager
 	 *
 	 * @see BleDevice#getTimeInState(BleDeviceState)
 	 */
-	public Interval getTimeInNativeState(BleState state)
+	public Interval getTimeInNativeState(BleManagerState state)
 	{
 		return Interval.millis(m_nativeStateTracker.getTimeInState(state.ordinal()));
 	}
@@ -636,7 +805,7 @@ public class BleManager
 	}
 
 	/**
-	 * Disables BLE if manager is {@link BleState#ON}. This disconnects all current
+	 * Disables BLE if manager is {@link BleManagerState#ON}. This disconnects all current
 	 * connections, stops scanning, and forgets all discovered devices.
 	 */
 	public void turnOff()
@@ -706,7 +875,7 @@ public class BleManager
 	}
 
 	/**
-	 * Set a listener here to be notified whenever this manager's {@link BleState} changes.
+	 * Set a listener here to be notified whenever this manager's {@link BleManagerState} changes.
 	 */
 	public void setListener_State(StateListener listener)
 	{
@@ -722,7 +891,14 @@ public class BleManager
 	 */
 	public void setListener_DeviceState(BleDevice.StateListener listener)
 	{
-		m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		if( listener != null )
+		{
+			m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_defaultDeviceStateListener = null;
+		}
 	}
 
 	/**
@@ -748,11 +924,31 @@ public class BleManager
 	 */
 	public void setListener_ConnectionFail(BleDevice.ConnectionFailListener listener)
 	{
-		m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		if( listener != null )
+		{
+			m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_defaultConnectionFailListener = null;
+		}
+		
+	}
+	
+	public void setListener_Bond(BleDevice.BondListener listener)
+	{
+		if( listener != null )
+		{
+			m_defaultBondListener = new P_WrappingBondListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_defaultBondListener = null;
+		}
 	}
 
 	/**
-	 * Set a listener here to be notified whenever this manager's native {@link BleState} changes.
+	 * Set a listener here to be notified whenever this manager's native {@link BleManagerState} changes.
 	 */
 	public void setListener_NativeState(NativeStateListener listener)
 	{
@@ -770,7 +966,7 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime)
 	{
-		startPeriodicScan(scanActiveTime, scanPauseTime, (AdvertisingFilter)null, (DiscoveryListener)null);
+		startPeriodicScan(scanActiveTime, scanPauseTime, (ScanFilter)null, (DiscoveryListener)null);
 	}
 
 	/**
@@ -778,13 +974,13 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, DiscoveryListener discoveryListener)
 	{
-		startPeriodicScan(scanActiveTime, scanPauseTime, (AdvertisingFilter)null, discoveryListener);
+		startPeriodicScan(scanActiveTime, scanPauseTime, (ScanFilter)null, discoveryListener);
 	}
 
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but adds a filter too.
 	 */
-	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.AdvertisingFilter filter)
+	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter)
 	{
 		startPeriodicScan(scanActiveTime, scanPauseTime, filter, (DiscoveryListener)null);
 	}
@@ -792,7 +988,7 @@ public class BleManager
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(DiscoveryListener)} for you too and adds a filter.
 	 */
-	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.AdvertisingFilter filter, DiscoveryListener discoveryListener)
+	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter, DiscoveryListener discoveryListener)
 	{
 		if( discoveryListener != null )
 		{
@@ -836,9 +1032,9 @@ public class BleManager
 	}
 
 	/**
-	 * Calls {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter)} with {@link Interval#INFINITE}.
+	 * Calls {@link #startScan(Interval, BleManagerConfig.ScanFilter)} with {@link Interval#INFINITE}.
 	 */
-	public void startScan(AdvertisingFilter filter)
+	public void startScan(ScanFilter filter)
 	{
 		startScan(Interval.INFINITE, filter, (DiscoveryListener)null);
 	}
@@ -848,29 +1044,29 @@ public class BleManager
 	 */
 	public void startScan(DiscoveryListener discoveryListener)
 	{
-		startScan(Interval.INFINITE, (AdvertisingFilter)null, discoveryListener);
+		startScan(Interval.INFINITE, (ScanFilter)null, discoveryListener);
 	}
 
 	/**
-	 * Overload of {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter, DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)}
 	 */
-	public void startScan(Interval scanTime, AdvertisingFilter filter)
+	public void startScan(Interval scanTime, ScanFilter filter)
 	{
 		startScan(scanTime, filter, (DiscoveryListener)null);
 	}
 
 	/**
-	 * Overload of {@link #startScan(Interval, BleManagerConfig.AdvertisingFilter, DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)}
 	 */
 	public void startScan(Interval scanTime, DiscoveryListener discoveryListener)
 	{
-		startScan(scanTime, (AdvertisingFilter)null, discoveryListener);
+		startScan(scanTime, (ScanFilter)null, discoveryListener);
 	}
 
 	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 */
-	public void startScan(AdvertisingFilter filter, DiscoveryListener discoveryListener)
+	public void startScan(ScanFilter filter, DiscoveryListener discoveryListener)
 	{
 		startScan(Interval.INFINITE, filter, discoveryListener);
 	}
@@ -880,13 +1076,13 @@ public class BleManager
 	 */
 	public void startScan(Interval scanTime)
 	{
-		startScan(scanTime, (AdvertisingFilter)null, (DiscoveryListener) null);
+		startScan(scanTime, (ScanFilter)null, (DiscoveryListener) null);
 	}
 
 	/**
 	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 */
-	public void startScan(Interval scanTime, AdvertisingFilter filter, DiscoveryListener discoveryListener)
+	public void startScan(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener)
 	{
 		m_timeNotScanning = 0.0;
 		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
@@ -912,7 +1108,7 @@ public class BleManager
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
-			m_stateTracker.append(BleState.SCANNING, E_Intent.EXPLICIT);
+			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.EXPLICIT);
 
 			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs()));
 		}
@@ -979,9 +1175,9 @@ public class BleManager
 	}
 
 	/**
-	 * Returns the abstracted bitwise state mask representation of {@link BleState} for this device.
+	 * Returns the abstracted bitwise state mask representation of {@link BleManagerState} for this device.
 	 *
-	 * @see BleState
+	 * @see BleManagerState
 	 */
 	public int getStateMask()
 	{
@@ -989,10 +1185,10 @@ public class BleManager
 	}
 
 	/**
-	 * Returns the native bitwise state mask representation of {@link BleState} for this device.
+	 * Returns the native bitwise state mask representation of {@link BleManagerState} for this device.
 	 * Similar to calling {@link BluetoothAdapter#getState()}
 	 *
-	 * @see BleState
+	 * @see BleManagerState
 	 */
 	public int getNativeStateMask()
 	{
@@ -1000,7 +1196,7 @@ public class BleManager
 	}
 
 	/**
-	 * Enables BLE if manager is currently {@link BleState#OFF} or {@link BleState#TURNING_OFF}, otherwise does nothing.
+	 * Enables BLE if manager is currently {@link BleManagerState#OFF} or {@link BleManagerState#TURNING_OFF}, otherwise does nothing.
 	 * For a convenient way to ask your user first see {@link #turnOnWithIntent(Activity, int)}.
 	 */
 	public void turnOn()
@@ -1023,25 +1219,25 @@ public class BleManager
 	 * other "special sauce" such that you should use this method instead of trying to reset the
 	 * stack manually with component calls.
 	 * <br><br>
-	 * It's good app etiquette to first prompt the user to get permission to drop a nuke because
+	 * It's good app etiquette to first prompt the user to get permission to reset because
 	 * it will affect Bluetooth system-wide and in other apps.
 	 *
-	 *  @see BleState#NUKING
+	 *  @see BleManagerState#RESETTING
 	 */
-	public void dropTacticalNuke()
+	public void reset()
 	{
-		dropTacticalNuke(null);
+		reset(null);
 	}
 
 	/**
-	 * Same as {@link #dropTacticalNuke()} but with a convenience callback for when the nuke is
+	 * Same as {@link #reset()} but with a convenience callback for when the reset is
 	 * completed and the native BLE stack is (should be) back to normal.
 	 *
-	 * @see BleState#NUKING
+	 * @see BleManagerState#RESETTING
 	 */
-	public void dropTacticalNuke(NukeListener listener)
+	public void reset(ResetListener listener)
 	{
-		dropTacticalNuke_synchronized(listener);
+		reset_synchronized(listener);
 	}
 
 	/**
@@ -1058,7 +1254,7 @@ public class BleManager
 	 * Convenience method to request your user to enable ble in a "standard" way
 	 * with an {@link Intent} instead of using {@link #turnOn()} directly.
 	 * Result will be posted as normal to {@link Activity#onActivityResult()}.
-	 * If current state is {@link BleState#ON} or {@link BleState#TURNING_ON}
+	 * If current state is {@link BleManagerState#ON} or {@link BleManagerState#TURNING_ON}
 	 * this method early outs and does nothing.
 	 */
 	public void turnOnWithIntent(Activity callingActivity, int requestCode)
@@ -1144,10 +1340,10 @@ public class BleManager
 
 	/**
 	 * Same as {@link #stopScan()} but also unregisters any filter supplied to various overloads of
-	 * {@link #startScan()} or {@link #startPeriodicScan(Interval, Interval)} that take an {@link BleManagerConfig.AdvertisingFilter}.
+	 * {@link #startScan()} or {@link #startPeriodicScan(Interval, Interval)} that take an {@link BleManagerConfig.ScanFilter}.
 	 * Calling {@link #stopScan()} alone will keep any previously registered filters active.
 	 */
-	public void stopScan(AdvertisingFilter filter)
+	public void stopScan(ScanFilter filter)
 	{
 		m_filterMngr.remove(filter);
 
@@ -1163,7 +1359,7 @@ public class BleManager
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
 
-		m_stateTracker.remove(BleState.SCANNING, intent);
+		m_stateTracker.remove(BleManagerState.SCANNING, intent);
 	}
 
 	/**
@@ -1317,23 +1513,52 @@ public class BleManager
 	}
 
 	/**
-	 * Same as {@link #newDevice(String, String)} but uses an empty string for the name.
+	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
+	 * and passed a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
 	public BleDevice newDevice(String macAddress)
 	{
-		return newDevice(macAddress, "");
+		return newDevice(macAddress, null, null);
+	}
+	
+	/**
+	 * Same as {@link #newDevice(String)} but allows a custom name also.
+	 */
+	public BleDevice newDevice(String macAddress, String name)
+	{
+		return newDevice(macAddress, name, null);
+	}
+	
+	/**
+	 * Same as {@link #newDevice(String)} but passes a {@link BleDeviceConfig} to be used as well.
+	 */
+	public BleDevice newDevice(String macAddress, BleDeviceConfig config)
+	{
+		return newDevice(macAddress, "", config);
 	}
 
 	/**
 	 * Creates a new {@link BleDevice} or returns an existing one if the macAddress matches.
 	 * {@link DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)} will be called if a new device
 	 * is created.
+	 * <br><br>
+	 * NOTE: You should always do a null check on this method's return value just in case. Android
+	 * documentation says that underlying stack will always return a valid {@link BluetoothDevice}
+	 * instance (which is required to create a {@link BleDevice} instance), but you really never know.
 	 */
-	public BleDevice newDevice(String macAddress, String name)
+	public BleDevice newDevice(String macAddress, String name, BleDeviceConfig config)
 	{
 		final BleDevice existingDevice = this.getDevice(macAddress);
 
-		if( existingDevice != null )  return existingDevice;
+		if( existingDevice != null )
+		{
+			if( config != null )
+			{
+				existingDevice.setConfig(config);
+			}
+			
+			return existingDevice;
+		}
 
 		final BluetoothDevice device_native = getNative().getAdapter().getRemoteDevice(macAddress);
 
@@ -1341,7 +1566,7 @@ public class BleManager
 
 		final String name_normalized = Utils.normalizeDeviceName(name);
 
-		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDevice.Origin.EXPLICIT);
+		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDeviceOrigin.EXPLICIT, config);
 		
 		onDiscovered_wrapItUp(newDevice, /*newlyDiscovered=*/true, null, null, 0);
 
@@ -1373,7 +1598,7 @@ public class BleManager
 	}
 
 	//--- DRK > Smooshing together a bunch of package-private accessors here.
-	P_BleStateTracker				getStateTracker(){				return m_stateTracker;				}
+	P_BleStateTracker			getStateTracker(){				return m_stateTracker;				}
 	P_NativeBleStateTracker		getNativeStateTracker(){		return m_nativeStateTracker;		}
 	UpdateLoop					getUpdateLoop(){				return m_updateLoop;				}
 	P_BluetoothCrashResolver	getCrashResolver(){				return m_crashResolver;				}
@@ -1409,9 +1634,9 @@ public class BleManager
 			{
 				if( state == PE_TaskState.EXECUTING )
 				{
-					if( is(NUKING) )
+					if( is(RESETTING) )
 					{
-						m_nativeStateTracker.append(NUKING, E_Intent.EXPLICIT);
+						m_nativeStateTracker.append(RESETTING, E_Intent.EXPLICIT);
 					}
 
 					m_deviceMngr.undiscoverAllForTurnOff(m_deviceMngr_cache, E_Intent.EXPLICIT);
@@ -1422,26 +1647,26 @@ public class BleManager
 		m_taskQueue.add(task);
 	}
 
-	private void dropTacticalNuke_synchronized(NukeListener listener)
+	private void reset_synchronized(ResetListener listener)
 	{
 		if( listener != null )
 		{
-			if( m_nukeListeners != null )
+			if( m_resetListeners != null )
 			{
-				m_nukeListeners.addListener(listener);
+				m_resetListeners.addListener(listener);
 			}
 			else
 			{
-				m_nukeListeners = new P_WrappingNukeListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+				m_resetListeners = new P_WrappingResetListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 			}
 		}
 
-		if( is(BleState.NUKING) )
+		if( is(BleManagerState.RESETTING) )
 		{
 			return;
 		}
 
-		m_stateTracker.append(NUKING, E_Intent.EXPLICIT);
+		m_stateTracker.append(RESETTING, E_Intent.EXPLICIT);
 
 		m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
 
@@ -1453,15 +1678,15 @@ public class BleManager
 			{
 				if( state.isEndingState() )
 				{
-					NukeListener nukeListeners = m_nukeListeners;
-					m_nukeListeners = null;
-					m_nativeStateTracker.remove(NUKING, E_Intent.IMPLICIT);
-					m_stateTracker.remove(NUKING, E_Intent.IMPLICIT);
+					ResetListener nukeListeners = m_resetListeners;
+					m_resetListeners = null;
+					m_nativeStateTracker.remove(RESETTING, E_Intent.IMPLICIT);
+					m_stateTracker.remove(RESETTING, E_Intent.IMPLICIT);
 
 					if( nukeListeners != null )
 					{
-						NukeEvent event = new NukeEvent(BleManager.this, NukeListener.Progress.COMPLETED);
-						nukeListeners.onNukeEvent(event);
+						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
+						nukeListeners.onResetEvent(event);
 					}
 				}
 			}
@@ -1555,7 +1780,7 @@ public class BleManager
 				}
 				else
 				{
-					m_nativeStateTracker.append(BleState.SCANNING, intent);
+					m_nativeStateTracker.append(BleManagerState.SCANNING, intent);
 
 					uhOh(UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
 
@@ -1579,7 +1804,7 @@ public class BleManager
 				m_crashResolver.start();
 			}
 
-			m_nativeStateTracker.append(BleState.SCANNING, intent);
+			m_nativeStateTracker.append(BleManagerState.SCANNING, intent);
 
 			return E_Mode.BLE;
 		}
@@ -1656,32 +1881,40 @@ public class BleManager
 		List<UUID> services_nullable = null;
 
 		String normalizedDeviceName = "";
+		
+		final Please please;
 
 		if( device == null )
 		{
 			normalizedDeviceName = Utils.normalizeDeviceName(rawDeviceName);
-	    	services_nullable = Utils.parseServiceUuids(scanRecord_nullable);
+	    	services_nullable = Utils_ScanRecord.parseServiceUuids(scanRecord_nullable);
 	    	byte[] scanRecord = scanRecord_nullable != null ? scanRecord_nullable : BleDevice.EMPTY_BYTE_ARRAY;
 	    	String deviceName = rawDeviceName;
 	    	deviceName = deviceName != null ? deviceName : "";
 	    	boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 	    	State.ChangeIntent lastDisconnectIntent = m_lastDisconnectMngr.load(macAddress, hitDisk);
+	    	please = m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 
-	    	if( !m_filterMngr.allow(device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent) )  return;
+	    	if( please != null && !please.ack() )  return;
+		}
+		else
+		{
+			please = null;
 		}
 
     	boolean newlyDiscovered = false;
 
     	if ( device == null )
     	{
-    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDevice.Origin.FROM_DISCOVERY);
+    		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
+    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
     		newlyDiscovered = true;
     	}
 
     	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
 	}
 
-	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDevice.Origin origin)
+	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDeviceOrigin origin, BleDeviceConfig config_nullable)
 	{
 		final boolean hitCache = true; // TODO: for now always true...should it be behind a config option?
 		
@@ -1694,6 +1927,7 @@ public class BleManager
 			if( device_cached != null )
 			{
 				m_deviceMngr_cache.remove(device_cached, null);
+				device_cached.setConfig(config_nullable);
 			}
 		}
 		else
@@ -1701,7 +1935,7 @@ public class BleManager
 			device_cached = null;
 		}
 		
-		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin);
+		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin, config_nullable);
 		
 		m_deviceMngr.add(device);
 
@@ -1778,7 +2012,7 @@ public class BleManager
 			m_crashResolver.stop();
 		}
 
-		m_nativeStateTracker.remove(BleState.SCANNING, scanTask.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
+		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
 	}
 
 	void clearScanningRelatedMembers(E_Intent intent)
@@ -1787,7 +2021,7 @@ public class BleManager
 
 		m_timeNotScanning = 0.0;
 
-		m_stateTracker.remove(BleState.SCANNING, intent);
+		m_stateTracker.remove(BleManagerState.SCANNING, intent);
 	}
 
 	void tryPurgingStaleDevices(double scanTime)
@@ -1871,7 +2105,7 @@ public class BleManager
 
 	private boolean doAutoScan()
 	{
-		return m_config.autoScanDuringFirmwareUpdates || !m_deviceMngr.hasDevice(BleDeviceState.UPDATING_FIRMWARE);
+		return m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA);
 	}
 
 	void uhOh(UhOh reason)
@@ -1901,6 +2135,11 @@ public class BleManager
 	void onConnectionSucceeded()
 	{
 		m_connectionFailTracker = 0;
+	}
+	
+	Interval getTaskTimeout(final BleTask task)
+	{
+		return BleDeviceConfig.getTimeout(task, null, m_config);
 	}
 
 	@Override public String toString()

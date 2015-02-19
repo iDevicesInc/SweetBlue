@@ -1,14 +1,17 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
+
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 /**
  * 
@@ -26,9 +29,9 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	private final BluetoothGattCharacteristic m_char_native;
 	
-	public P_Task_Write(P_Characteristic characteristic, double timeout, byte[] data, boolean requiresBonding, P_WrappingReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
+	public P_Task_Write(P_Characteristic characteristic, byte[] data, boolean requiresBonding, P_WrappingReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
 	{
-		super(characteristic, timeout, writeListener, requiresBonding, txn, priority);
+		super(characteristic, writeListener, requiresBonding, txn, priority);
 		
 		m_allDataToSend = data;
 		
@@ -230,5 +233,10 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 				m_readWriteListener.onResult(newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 			}
 		}
+	}
+	
+	@Override protected BleTask getTaskType()
+	{
+		return BleTask.WRITE;
 	}
 }

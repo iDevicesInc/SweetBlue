@@ -9,23 +9,23 @@ import android.os.Handler;
  * 
  *
  */
-class P_WrappingNukeListener extends PA_CallbackWrapper implements BleManager.NukeListener
+class P_WrappingResetListener extends PA_CallbackWrapper implements BleManager.ResetListener
 {
-	private final ArrayList<BleManager.NukeListener> m_listeners = new ArrayList<BleManager.NukeListener>();
+	private final ArrayList<BleManager.ResetListener> m_listeners = new ArrayList<BleManager.ResetListener>();
 	
-	P_WrappingNukeListener(BleManager.NukeListener listener, Handler handler, boolean postToMain)
+	P_WrappingResetListener(BleManager.ResetListener listener, Handler handler, boolean postToMain)
 	{
 		super(handler, postToMain);
 
 		m_listeners.add(listener);
 	}
 	
-	public void addListener(BleManager.NukeListener listener)
+	public void addListener(BleManager.ResetListener listener)
 	{
 		m_listeners.add(listener);
 	}
 
-	@Override public void onNukeEvent(final NukeEvent event)
+	@Override public void onResetEvent(final ResetEvent event)
 	{
 		final Runnable runnable = new Runnable()
 		{
@@ -33,7 +33,7 @@ class P_WrappingNukeListener extends PA_CallbackWrapper implements BleManager.Nu
 			{
 				for( int i = 0; i < m_listeners.size(); i++ )
 				{
-					m_listeners.get(i).onNukeEvent(event);
+					m_listeners.get(i).onResetEvent(event);
 				}
 			}
 		};
