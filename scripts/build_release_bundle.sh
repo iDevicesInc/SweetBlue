@@ -48,7 +48,7 @@ fi
 echo "${GLITZ}COMPILING${GLITZ}"
 
 cd $CP_TARGET
-javac -cp $ANDROID_JAR com/idevicesinc/sweetblue/*.java com/idevicesinc/sweetblue/utils/*.java
+javac -cp $ANDROID_JAR com/idevicesinc/sweetblue/*.java com/idevicesinc/sweetblue/utils/*.java com/idevicesinc/sweetblue/annotations/*.java
 find ./com -name "*.java" -type f|xargs rm -f
 find ./com -name "*.DS_Store" -type f|xargs rm -f
 cd -
