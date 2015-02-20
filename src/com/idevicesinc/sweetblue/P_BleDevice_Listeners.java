@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -238,7 +239,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		//--- DRK > NOTE: Making an assumption that the underlying stack agrees that the connection state is STATE_DISCONNECTED.
 		//---				This is backed up by basic testing, but even if the underlying stack uses a different value, it can probably
-		//---				be assumed that it will eventually go to STATE_DISCONNECTED, so SweetBlue library logic is sounder "living under the lie" for a bit.
+		//---				be assumed that it will eventually go to STATE_DISCONNECTED, so SweetBlue library logic is sounder "living under the lie" for a bit regardless.
 		m_device.m_nativeWrapper.updateNativeConnectionState(gatt, BluetoothProfile.STATE_DISCONNECTED);
 		
 		P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
@@ -428,7 +429,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		onNativeBondStateChanged_private(previousState, newState, failReason);
 	}
 	
-	private void onNativeBondStateChanged_private(int previousState, int newState, int failReason)
+	private void onNativeBondStateChanged_private(final int previousState, final int newState, final int failReason)
 	{
 		if (newState == BluetoothDevice.ERROR)
 		{
@@ -440,20 +441,28 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else if (newState == BluetoothDevice.BOND_NONE)
 		{
-			if( !m_queue.fail(P_Task_Bond.class, m_device) )
-			{
-				
-			}
+			final P_Task_Bond bondTask = m_queue.getCurrent(P_Task_Bond.class, m_device);
 			
-			if (!m_queue.succeed(P_Task_Unbond.class, m_device))
+			if( bondTask != null )
 			{
-				m_device.m_bondMngr.onNativeUnbond(E_Intent.IMPLICIT);
+				bondTask.onNativeFail(failReason);
+			}
+			else if (!m_queue.succeed(P_Task_Unbond.class, m_device))
+			{
+				if( previousState == BluetoothDevice.BOND_BONDING || previousState == BluetoothDevice.BOND_NONE )
+				{
+					m_device.m_bondMngr.onNativeBondFailed(E_Intent.UNINTENTIONAL, Status.FAILED_EVENTUALLY, failReason);
+				}
+				else
+				{
+					m_device.m_bondMngr.onNativeUnbond(E_Intent.UNINTENTIONAL);
+				}
 			}
 		}
 		else if (newState == BluetoothDevice.BOND_BONDING)
 		{
-			P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
-			E_Intent intent = task != null && task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+			final P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
+			E_Intent intent = task != null && task.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 			boolean isCurrent = task != null; // avoiding erroneous dead code warning from putting this directly in if-clause below.
 			m_device.m_bondMngr.onNativeBonding(intent);
 
@@ -470,7 +479,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 			if (!m_queue.succeed(P_Task_Bond.class, m_device))
 			{
-				m_device.m_bondMngr.onNativeBond(E_Intent.IMPLICIT);
+				m_device.m_bondMngr.onNativeBond(E_Intent.UNINTENTIONAL);
 			}
 		}
 	}

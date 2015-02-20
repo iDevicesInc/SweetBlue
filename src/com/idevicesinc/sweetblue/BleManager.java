@@ -23,6 +23,8 @@ import android.os.Handler;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
+import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleManager.AssertListener.Info;
@@ -34,6 +36,9 @@ import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
+import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
@@ -157,6 +162,12 @@ public class BleManager
 		public static class DiscoveryEvent
 		{
 			/**
+			 * The {@link BleManager} which is currently {@link BleManagerState#SCANNING}.
+			 */
+			public BleManager manager(){  return m_manager;  }
+			private final BleManager m_manager;
+			
+			/**
 			 * The device in question.
 			 */
 			public BleDevice device(){  return m_device;  }
@@ -168,8 +179,9 @@ public class BleManager
 			public LifeCycle lifeCycle(){  return m_lifeCycle;  }
 			private final LifeCycle m_lifeCycle;
 			
-			public DiscoveryEvent(BleDevice device, LifeCycle lifeCycle)
+			public DiscoveryEvent(BleManager manager, BleDevice device, LifeCycle lifeCycle)
 			{
+				m_manager = manager;
 				m_device = device;
 				m_lifeCycle = lifeCycle;
 			}
@@ -239,11 +251,13 @@ public class BleManager
 	 * but reflects what is going on in the actual underlying stack, which may lag slightly behind the
 	 * abstracted state reflected by {@link StateListener}. Most apps will not find this callback useful.
 	 */
+	@Advanced
 	public static interface NativeStateListener
 	{
 		/**
 		 * Class declared here to be make it implicitly imported for overrides.
 		 */
+		@Advanced
 		public static class ChangeEvent extends StateListener.ChangeEvent
 		{
 			ChangeEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
@@ -255,6 +269,7 @@ public class BleManager
 		/**
 		 * Called when the manager's native bitwise {@link BleManagerState} changes. As many bits as possible are flipped at the same time.
 		 */
+		@Advanced
 		void onNativeStateChange(ChangeEvent event);
 	}
 
@@ -528,6 +543,7 @@ public class BleManager
 	 * {@link BleManager#setListener_Assert(AssertListener)} to be notified whenever
 	 * an assertion fails through {@link BleManager#ASSERT(boolean, String)}.
 	 */
+	@Advanced
 	public static interface AssertListener
 	{
 		/**
@@ -683,9 +699,9 @@ public class BleManager
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleManagerState nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_BleStateTracker(this);
-		m_stateTracker.append(nativeState, E_Intent.IMPLICIT);
+		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
-		m_nativeStateTracker.append(nativeState, E_Intent.IMPLICIT);
+		m_nativeStateTracker.append(nativeState, E_Intent.UNINTENTIONAL);
 		m_mainThreadHandler = new Handler(m_context.getMainLooper());
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
@@ -809,6 +825,7 @@ public class BleManager
 	/**
 	 * Returns the native manager.
 	 */
+	@Advanced
 	public BluetoothManager getNative()
 	{
 		return m_btMngr;
@@ -1089,7 +1106,7 @@ public class BleManager
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
-			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.EXPLICIT);
+			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.INTENTIONAL);
 
 			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs()));
 		}
@@ -1101,6 +1118,7 @@ public class BleManager
 	 *
 	 * @see BleManagerConfig#manageCpuWakeLock
 	 */
+	@Advanced
 	public void pushWakeLock()
 	{
 		m_wakeLockMngr.push();
@@ -1109,6 +1127,7 @@ public class BleManager
 	/**
 	 * Opposite of {@link #pushWakeLock()}, eventually calls {@link WakeLock#release()}.
 	 */
+	@Advanced
 	public void popWakeLock()
 	{
 		m_wakeLockMngr.pop();
@@ -1118,6 +1137,7 @@ public class BleManager
 	 * Fires a callback to {@link AssertListener} if condition is false. Will post a {@link Log#ERROR}-level
 	 * message with a stack trace to the console as well if {@link BleManagerConfig#loggingEnabled} is true.
 	 */
+	@Advanced
 	public boolean ASSERT(boolean condition)
 	{
 		return ASSERT(condition, "");
@@ -1126,6 +1146,7 @@ public class BleManager
 	/**
 	 * Same as {@link #ASSERT(boolean)} but with an added message.
 	 */
+	@Advanced
 	public boolean ASSERT(boolean condition, String message)
 	{
 		if( !condition )
@@ -1186,7 +1207,7 @@ public class BleManager
 
 		if( is(OFF) )
 		{
-			m_stateTracker.update(E_Intent.EXPLICIT, TURNING_ON, true, OFF, false);
+			m_stateTracker.update(E_Intent.INTENTIONAL, TURNING_ON, true, OFF, false);
 		}
 
 		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
@@ -1228,7 +1249,7 @@ public class BleManager
 	 */
 	public void unbondAll()
 	{
-		m_deviceMngr.unbondAll(null);
+		m_deviceMngr.unbondAll(null, Status.CANCELLED_FROM_UNBOND);
 	}
 
 	/**
@@ -1283,7 +1304,7 @@ public class BleManager
 
 		if( m_config.stopScanOnPause && is(SCANNING) )
 		{
-			stopScan_private(E_Intent.IMPLICIT);
+			stopScan_private(E_Intent.UNINTENTIONAL);
 		}
 	}
 
@@ -1316,7 +1337,7 @@ public class BleManager
 	{
 		m_doingInfiniteScan = false;
 
-		stopScan_private(E_Intent.EXPLICIT);
+		stopScan_private(E_Intent.INTENTIONAL);
 	}
 
 	/**
@@ -1346,7 +1367,7 @@ public class BleManager
 	/**
 	 * Gets a known {@link BleDeviceState#DISCOVERED} device by MAC address, or <code>null</code> if there is no such device.
 	 */
-	public BleDevice getDevice(String macAddress)
+	public @Nullable(Prevalence.NORMAL) BleDevice getDevice(String macAddress)
 	{
 		return m_deviceMngr.get(macAddress);
 	}
@@ -1371,7 +1392,7 @@ public class BleManager
 	/**
 	 * Returns the first device that is in the given state, or null if no match is found.
 	 */
-	public BleDevice getDevice(BleDeviceState state)
+	public @Nullable(Prevalence.NORMAL) BleDevice getDevice(BleDeviceState state)
 	{
 		for( int i = 0; i < m_deviceMngr.getCount(); i++ )
 		{
@@ -1398,7 +1419,7 @@ public class BleManager
 	 * Returns the first device that matches the query, or null if no match is found.
 	 * See {@link BleDevice#is(Object...)} for the query format.
 	 */
-	public BleDevice getDevice(Object ... query)
+	public @Nullable(Prevalence.NORMAL) BleDevice getDevice(Object ... query)
 	{
 		for( int i = 0; i < m_deviceMngr.getCount(); i++ )
 		{
@@ -1462,7 +1483,7 @@ public class BleManager
 	 * Combine with {@link #getDeviceCount()} to iterate, or you may want to use the
 	 * {@link Iterator} returned from {@link #getDevices()} and its various overloads instead.
 	 */
-	public BleDevice getDeviceAt(int index)
+	public @Nullable(Prevalence.NEVER) BleDevice getDeviceAt(int index)
 	{
 		return m_deviceMngr.get(index);
 	}
@@ -1497,7 +1518,7 @@ public class BleManager
 	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
 	 * and passed a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
-	public BleDevice newDevice(String macAddress)
+	public @Nullable(Prevalence.RARE) BleDevice newDevice(String macAddress)
 	{
 		return newDevice(macAddress, null, null);
 	}
@@ -1505,7 +1526,7 @@ public class BleManager
 	/**
 	 * Same as {@link #newDevice(String)} but allows a custom name also.
 	 */
-	public BleDevice newDevice(String macAddress, String name)
+	public @Nullable(Prevalence.RARE) BleDevice newDevice(String macAddress, String name)
 	{
 		return newDevice(macAddress, name, null);
 	}
@@ -1513,7 +1534,8 @@ public class BleManager
 	/**
 	 * Same as {@link #newDevice(String)} but passes a {@link BleDeviceConfig} to be used as well.
 	 */
-	public BleDevice newDevice(String macAddress, BleDeviceConfig config)
+	
+	public @Nullable(Prevalence.RARE) BleDevice newDevice(String macAddress, BleDeviceConfig config)
 	{
 		return newDevice(macAddress, "", config);
 	}
@@ -1527,7 +1549,7 @@ public class BleManager
 	 * documentation says that underlying stack will always return a valid {@link BluetoothDevice}
 	 * instance (which is required to create a {@link BleDevice} instance), but you really never know.
 	 */
-	public BleDevice newDevice(String macAddress, String name, BleDeviceConfig config)
+	public @Nullable(Prevalence.RARE) BleDevice newDevice(String macAddress, String name, BleDeviceConfig config)
 	{
 		final BleDevice existingDevice = this.getDevice(macAddress);
 
@@ -1573,7 +1595,7 @@ public class BleManager
 			device.disconnect();
 		}
 
-		m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, m_deviceMngr_cache, E_Intent.EXPLICIT);
+		m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, m_deviceMngr_cache, E_Intent.INTENTIONAL);
 
 		return true;
 	}
@@ -1598,14 +1620,14 @@ public class BleManager
 
 		if( is(ON) )
 		{
-			m_stateTracker.update(E_Intent.EXPLICIT, TURNING_OFF, true, ON, false);
+			m_stateTracker.update(E_Intent.INTENTIONAL, TURNING_OFF, true, ON, false);
 		}
 
 		m_deviceMngr.disconnectAllForTurnOff(PE_TaskPriority.CRITICAL);
 
 		if( removeAllBonds )
 		{
-			m_deviceMngr.unbondAll(PE_TaskPriority.CRITICAL);
+			m_deviceMngr.unbondAll(PE_TaskPriority.CRITICAL, BondListener.Status.CANCELLED_FROM_BLE_TURNING_OFF);
 		}
 
 		P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()
@@ -1617,10 +1639,10 @@ public class BleManager
 				{
 					if( is(RESETTING) )
 					{
-						m_nativeStateTracker.append(RESETTING, E_Intent.EXPLICIT);
+						m_nativeStateTracker.append(RESETTING, E_Intent.INTENTIONAL);
 					}
 
-					m_deviceMngr.undiscoverAllForTurnOff(m_deviceMngr_cache, E_Intent.EXPLICIT);
+					m_deviceMngr.undiscoverAllForTurnOff(m_deviceMngr_cache, E_Intent.INTENTIONAL);
 				}
 			}
 		});
@@ -1647,7 +1669,7 @@ public class BleManager
 			return;
 		}
 
-		m_stateTracker.append(RESETTING, E_Intent.EXPLICIT);
+		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL);
 
 		m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
 
@@ -1661,8 +1683,8 @@ public class BleManager
 				{
 					ResetListener nukeListeners = m_resetListeners;
 					m_resetListeners = null;
-					m_nativeStateTracker.remove(RESETTING, E_Intent.IMPLICIT);
-					m_stateTracker.remove(RESETTING, E_Intent.IMPLICIT);
+					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL);
+					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL);
 
 					if( nukeListeners != null )
 					{
@@ -1941,7 +1963,7 @@ public class BleManager
 
     		if( m_discoveryListener != null )
     		{
-    			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+    			DiscoveryEvent event = new DiscoveryEvent(this, device, LifeCycle.DISCOVERED);
     			m_discoveryListener.onDiscoveryEvent(event);
     		}
     	}
@@ -1951,7 +1973,7 @@ public class BleManager
 
     		if( m_discoveryListener != null )
     		{
-    			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
+    			DiscoveryEvent event = new DiscoveryEvent(this, device, LifeCycle.REDISCOVERED);
     			m_discoveryListener.onDiscoveryEvent(event);
     		}
     	}
@@ -1993,7 +2015,7 @@ public class BleManager
 			m_crashResolver.stop();
 		}
 
-		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
+		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
 	}
 
 	void clearScanningRelatedMembers(E_Intent intent)
@@ -2015,6 +2037,7 @@ public class BleManager
 	 * from another codebase. Generally you should leave {@link BleManagerConfig#autoUpdateRate}
 	 * alone and let the library handle the calling of this method.
 	 */
+	@Advanced
 	public void update(double timeStep)
 	{
 		update_synchronized(timeStep);

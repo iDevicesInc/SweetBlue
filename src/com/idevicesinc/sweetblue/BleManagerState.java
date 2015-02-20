@@ -106,4 +106,9 @@ public enum BleManagerState implements State
 	{
 		return this.bit() | state.bit();
 	}
+
+	@Override public boolean isNull()
+	{
+		return false;
+	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
@@ -11,11 +12,6 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 
-/**
- * 
- * 
- *
- */
 class P_DeviceManager
 {
 	private final HashMap<String, BleDevice> m_map = new HashMap<String, BleDevice>();
@@ -184,7 +180,7 @@ class P_DeviceManager
 		}
 	}
 	
-	void unbondAll(PE_TaskPriority priority)
+	void unbondAll(PE_TaskPriority priority, BondListener.Status status)
 	{
 		synchronized (m_list)
 		{
@@ -194,7 +190,7 @@ class P_DeviceManager
 				
 				if( device.m_nativeWrapper.isNativelyBonded() || device.m_nativeWrapper.isNativelyBonding() )
 				{
-					device.unbond_private(priority);
+					device.unbond_private(priority, status);
 				}
 			}
 		}
@@ -231,7 +227,7 @@ class P_DeviceManager
 					
 					if( m_mngr.m_discoveryListener != null )
 		    		{
-						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+						DiscoveryEvent event = new DiscoveryEvent(m_mngr, device, LifeCycle.DISCOVERED);
 						m_mngr.m_discoveryListener.onDiscoveryEvent(event);
 		    		}
 				}
@@ -294,7 +290,7 @@ class P_DeviceManager
 		
 		if( listener != null )
 		{
-			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.UNDISCOVERED);
+			DiscoveryEvent event = new DiscoveryEvent(device.getManager(), device, LifeCycle.UNDISCOVERED);
 			listener.onDiscoveryEvent(event);
 		}
 	}
@@ -330,10 +326,10 @@ class P_DeviceManager
 					{
 						BleDevice device = get(i);
 						
-						Interval minScanTimeToInvokeUndiscovery = BleDeviceConfig.interval(device.conf_device().minScanTimeToInvokeUndiscovery, device.conf_mngr().minScanTimeToInvokeUndiscovery);
+						Interval minScanTimeToInvokeUndiscovery = BleDeviceConfig.interval(device.conf_device().minScanTimeNeededForUndiscovery, device.conf_mngr().minScanTimeNeededForUndiscovery);
 						if( Interval.isDisabled(minScanTimeToInvokeUndiscovery) )  continue;
 						
-						Interval scanKeepAlive_interval = BleDeviceConfig.interval(device.conf_device().scanKeepAlive, device.conf_mngr().scanKeepAlive);
+						Interval scanKeepAlive_interval = BleDeviceConfig.interval(device.conf_device().undiscoveryKeepAlive, device.conf_mngr().undiscoveryKeepAlive);
 						if( Interval.isDisabled(scanKeepAlive_interval) )  continue;
 
 						if( scanTime < Interval.asDouble(minScanTimeToInvokeUndiscovery) )  continue;
@@ -344,7 +340,7 @@ class P_DeviceManager
 						{
 							if( device.getTimeSinceLastDiscovery() > scanKeepAlive_interval.secs() )
 							{
-								undiscoverAndRemove(device, listener, cache, E_Intent.IMPLICIT);
+								undiscoverAndRemove(device, listener, cache, E_Intent.UNINTENTIONAL);
 							}
 						}
 					}

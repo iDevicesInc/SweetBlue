@@ -8,6 +8,8 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 	private final boolean m_explicit;
 	private final boolean m_partOfConnection;
 	
+	private int m_failReason = BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE;
+	
 	public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener, PE_TaskPriority priority)
 	{
 		super(device, listener);
@@ -77,6 +79,18 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 		return super.isMoreImportantThan(task);
 	}
 	
+	public void onNativeFail(int failReason)
+	{
+		m_failReason = failReason;
+		
+		fail();
+	}
+	
+	public int getFailReason()
+	{
+		return m_failReason;
+	}
+	
 	@Override public PE_TaskPriority getPriority()
 	{
 		return m_priority;
@@ -84,9 +98,16 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 	
 	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
 	{
-		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
+		if( this.getDevice().equals(task.getDevice()) )
 		{
-			if( this.m_partOfConnection && this.getState() == PE_TaskState.EXECUTING )
+			if( task.getClass() == P_Task_Disconnect.class )
+			{
+				if( this.m_partOfConnection && this.getState() == PE_TaskState.EXECUTING )
+				{
+					return true;
+				}
+			}
+			else if( task.getClass() == P_Task_Unbond.class )
 			{
 				return true;
 			}

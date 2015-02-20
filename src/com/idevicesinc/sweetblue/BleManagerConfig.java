@@ -12,6 +12,7 @@ import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
@@ -231,6 +232,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Default is <code>false</code> - basically only useful for developers working on the library itself.
 	 * May also be useful for providing context when reporting bugs.
 	 */
+	@Advanced
 	public boolean loggingEnabled						= false;
 	
 	/**
@@ -239,6 +241,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * http://developer.radiusnetworks.com/2014/04/02/a-solution-for-android-bluetooth-crashes.html or
 	 * Google "Bluetooth Crash Resolver" for more information.
 	 */
+	@Advanced
 	public boolean enableCrashResolver					= false;
 	
 	/**
@@ -270,6 +273,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * {@link ScanFilter#onScanResult(ScanFilter.Result)}.
 	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.
 	 */
+	@Advanced
 	public boolean revertToClassicDiscoveryIfNeeded		= true;
 	
 	/**
@@ -299,6 +303,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  
 	 */
+	@Advanced
 	public boolean manageCpuWakeLock					= true;
 	
 	/**
@@ -308,6 +313,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see BleManager.UhOhListener
 	 */
+	@Advanced
 	public Interval	uhOhCallbackThrottle				= Interval.secs(DEFAULT_UH_OH_CALLBACK_THROTTLE);
 	
 	/**
@@ -322,6 +328,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Generally shouldn't need to be changed. You can set this to {@link Interval#DISABLED} and call {@link BleManager#update(double)} yourself
 	 * if you want to tie the library in to an existing update loop used in your application.
 	 */
+	@Advanced
 	public Interval autoUpdateRate						= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
 	
 	/**
@@ -355,6 +362,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Minimum amount of time in seconds that the library strives to give to a scanning operation.  
 	 */
+	@Advanced
 	public Interval	idealMinScanTime					= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
@@ -377,6 +385,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
 	 */
+	@Advanced
 	final String[] debugThreadNames =
 	{
 		"AMY", "BEN", "CAM", "DON", "ELI", "FAY", "GUS", "HAL", "IAN", "JAY", "LEO",

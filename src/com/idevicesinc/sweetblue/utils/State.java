@@ -227,4 +227,9 @@ public interface State
 	 * Does a bitwise OR for this state and the given state.
 	 */
 	int or(State state);
+	
+	/**
+	 * Returns <code>true</code> if this state is meant to stand in for Java's built-in <code>null</code>.
+	 */
+	boolean isNull();
 }

@@ -196,4 +196,9 @@ public enum BleDeviceState implements State
 			default:					return -1;
 		}
 	}
+
+	@Override public boolean isNull()
+	{
+		return this == NULL;
+	}
 }

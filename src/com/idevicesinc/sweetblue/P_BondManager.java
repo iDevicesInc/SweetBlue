@@ -4,9 +4,13 @@ import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
+import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.utils.State;
 
 class P_BondManager
 {
@@ -34,21 +38,43 @@ class P_BondManager
 		}
 	}
 	
-	void onBondTaskStateChange(PA_Task task, PE_TaskState state)
+	void onBondTaskStateChange(final PA_Task task, final PE_TaskState state)
 	{
-		E_Intent intent = task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+		final E_Intent intent = task.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		
 		if( task.getClass() == P_Task_Bond.class )
 		{
+			final P_Task_Bond bondTask = (P_Task_Bond) task;
+			
 			if( state.isEndingState() )
 			{
 				if( state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
 				{
 					this.onNativeBond(intent);
 				}
+				else if( state == PE_TaskState.SOFTLY_CANCELLED )
+				{
+					
+				}
 				else
 				{
-					this.onNativeBondFailed(intent);
+					final int failReason = bondTask.getFailReason();
+					final BondListener.Status status;
+					
+					if( state == PE_TaskState.TIMED_OUT )
+					{
+						status = Status.TIMED_OUT;
+					}
+					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
+					{
+						status = Status.FAILED_IMMEDIATELY;
+					}
+					else
+					{
+						status = Status.FAILED_EVENTUALLY;
+					}
+					
+					this.onNativeBondFailed(intent, status, failReason);
 				}
 			}
 		}
@@ -65,24 +91,33 @@ class P_BondManager
 		}
 	}
 	
-	void onNativeUnbond(E_Intent intent)
+	void onNativeUnbond(final E_Intent intent)
 	{
 		m_device.getStateTracker().update(intent, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
-	void onNativeBonding(E_Intent intent)
+	void onNativeBonding(final E_Intent intent)
 	{
 		m_device.getStateTracker().update(intent, BONDED, false, BONDING, true, UNBONDED, false);
 	}
 	
-	void onNativeBond(E_Intent intent)
+	void onNativeBond(final E_Intent intent)
 	{
+		final boolean wasAlreadyBonded = m_device.is(BONDED);
+		
 		m_device.getStateTracker().update(intent, BONDED, true, BONDING, false, UNBONDED, false);
+		
+		if( !wasAlreadyBonded )
+		{
+			invokeCallback(Status.SUCCESS, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, intent.convert());
+		}
 	}
 	
-	void onNativeBondFailed(E_Intent intent)
+	void onNativeBondFailed(final E_Intent intent, final BondListener.Status status, final int failReason)
 	{
 		m_device.getStateTracker().update(intent, BONDED, false, BONDING, false, UNBONDED, true);
+		
+		invokeCallback(status, failReason, intent.convert());
 	}
 	
 	boolean bondIfNeeded(final P_Characteristic characteristic, final BondFilter.CharacteristicEventType type)
@@ -122,6 +157,14 @@ class P_BondManager
 		}
 		
 		return bond;
+	}
+	
+	void invokeCallback(Status status, int failReason, State.ChangeIntent intent)
+	{
+		if( m_listener == null )  return;
+		
+		final BondEvent event = new BondEvent(m_device, status, failReason, intent);
+		m_listener.onBondEvent(event);
 	}
 	
 	private boolean isBondingOrBonded()

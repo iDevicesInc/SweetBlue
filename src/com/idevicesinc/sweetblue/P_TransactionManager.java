@@ -56,7 +56,7 @@ class P_TransactionManager
 					{
 						m_device.getStateTracker().update
 						(
-							E_Intent.EXPLICIT,
+							E_Intent.INTENTIONAL,
 							AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, true
 						);
 
@@ -86,7 +86,7 @@ class P_TransactionManager
 			else if (txn == m_device.getFirmwareUpdateTxn())
 			{
 //				m_device.m_txnMngr.clearFirmwareUpdateTxn();
-				E_Intent intent = E_Intent.IMPLICIT;
+				E_Intent intent = E_Intent.UNINTENTIONAL;
 				m_device.getStateTracker().remove(PERFORMING_OTA, intent);
 
 				//--- DRK > As of now don't care whether this succeeded or failed.
@@ -272,7 +272,7 @@ class P_TransactionManager
 			m_firmwareUpdateTxn = txn;
 			m_firmwareUpdateTxn.init(m_device, m_txnEndListener);
 			
-			m_device.getStateTracker().append(PERFORMING_OTA, E_Intent.EXPLICIT);
+			m_device.getStateTracker().append(PERFORMING_OTA, E_Intent.INTENTIONAL);
 			
 			start(m_firmwareUpdateTxn);
 		}

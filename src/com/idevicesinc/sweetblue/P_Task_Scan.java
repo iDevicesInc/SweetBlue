@@ -30,7 +30,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		m_mode = getManager().startNativeScan(m_explicit ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
+		m_mode = getManager().startNativeScan(m_explicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
 		
 		if( m_mode == null )
 		{

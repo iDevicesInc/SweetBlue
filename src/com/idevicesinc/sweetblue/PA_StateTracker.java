@@ -17,11 +17,22 @@ abstract class PA_StateTracker
 	
 	static enum E_Intent
 	{
-		EXPLICIT, IMPLICIT;
+		INTENTIONAL, UNINTENTIONAL;
 		
 		public int getMask()
 		{
-			return this == EXPLICIT ? 0xFFFFFFFF : 0x0;
+			return this == INTENTIONAL ? 0xFFFFFFFF : 0x0;
+		}
+		
+		public State.ChangeIntent convert()
+		{
+			switch(this)
+			{
+				case INTENTIONAL:	  return State.ChangeIntent.INTENTIONAL;
+				case UNINTENTIONAL:	  return State.ChangeIntent.UNINTENTIONAL;
+			}
+			
+			return State.ChangeIntent.NULL;
 		}
 	}
 	
@@ -101,7 +112,7 @@ abstract class PA_StateTracker
 			
 			append_assert(newState);
 			
-			setStateMask(m_stateMask | newState.bit(), intent == E_Intent.EXPLICIT ? newState.bit() : 0x0);
+			setStateMask(m_stateMask | newState.bit(), intent == E_Intent.INTENTIONAL ? newState.bit() : 0x0);
 		}
 	}
 	
@@ -109,7 +120,7 @@ abstract class PA_StateTracker
 	{
 		synchronized ( m_lock )
 		{
-			setStateMask(m_stateMask & ~state.bit(), intent == E_Intent.EXPLICIT ? state.bit() : 0x0);
+			setStateMask(m_stateMask & ~state.bit(), intent == E_Intent.INTENTIONAL ? state.bit() : 0x0);
 		}
 	}
 	

@@ -53,7 +53,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 		
 		final BondFilter.StateChangeEvent bondStateChangeEvent = new BondFilter.StateChangeEvent(m_device, oldStateBits, newStateBits, intentMask);
 		
-		final BondFilter.Please please = bondFilter.onStateChange(bondStateChangeEvent);
+		final BondFilter.Please please = bondFilter.onStateChangeEvent(bondStateChangeEvent);
 		
 		m_device.m_bondMngr.applyPlease_BondFilter(please);
 		

@@ -245,7 +245,7 @@ abstract class PA_Task
 	
 	void setEndingState(PE_TaskState endingState)
 	{
-		if( m_softlyCancelled && endingState == PE_TaskState.SUCCEEDED )
+		if( m_softlyCancelled )
 		{
 			endingState = PE_TaskState.SOFTLY_CANCELLED;
 		}

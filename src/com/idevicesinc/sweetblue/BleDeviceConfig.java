@@ -6,12 +6,15 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.test.FlakyTest;
+import android.webkit.JavascriptInterface;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.*;
 
 /**
@@ -67,6 +70,7 @@ public class BleDeviceConfig implements Cloneable
 	 * The problem seems to be associated with mismanagement of pairing keys by the OS and
 	 * this brute force solution seems to be the only way to smooth things out.
 	 */
+	@Advanced
 	public static interface BondFilter
 	{
 		/**
@@ -203,7 +207,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Called after a device undergoes a change in its {@link BleDeviceState}.
 		 */
-		Please onStateChange(StateChangeEvent event);
+		Please onStateChangeEvent(StateChangeEvent event);
 		
 		/**
 		 * Called immediately before reading, writing, or enabling notification on a characteristic.
@@ -215,6 +219,7 @@ public class BleDeviceConfig implements Cloneable
 	 * Default implementation of {@link BondFilter} that unbonds for certain phone models upon discovery and disconnects.
 	 * See further explanation in documentation for {@link BondFilter}.
 	 */
+	@Advanced
 	public static class DefaultBondFilter implements BondFilter
 	{
 		/**
@@ -225,7 +230,7 @@ public class BleDeviceConfig implements Cloneable
 			return Utils.phoneHasBondingIssues();
 		}
 
-		@Override public Please onStateChange(StateChangeEvent event)
+		@Override public Please onStateChangeEvent(StateChangeEvent event)
 		{
 			if( phoneHasBondingIssues() )
 			{
@@ -245,7 +250,7 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * An optional interface you can implement on {@link BleManagerConfig#reconnectLoop } to control reconnection behavior.
+	 * An optional interface you can implement on {@link BleDeviceConfig#reconnectLoop } to control reconnection behavior.
 	 * 
 	 * @see #reconnectLoop
 	 * @see DefaultReconnectLoop
@@ -402,9 +407,9 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean allowDuplicatePollEntries			= false;
 	
 	/**
-	 * Default is <code>false</code>se - {@link BleDevice#getAverageReadTime()} and {@link BleDevice#getAverageWriteTime()} can be 
+	 * Default is <code>false</code> - {@link BleDevice#getAverageReadTime()} and {@link BleDevice#getAverageWriteTime()} can be 
 	 * skewed if the peripheral you are connecting to adjusts its maximum throughput for OTA firmware updates and the like.
-	 * Use this option to let the library know whether you want read/writes to factor in while {@link BleDeviceState#UPDATING_FIRMWARE}.
+	 * Use this option to let the library know whether you want read/writes to factor in while {@link BleDeviceState#PERFORMING_OTA}.
 	 * 
 	 * @see BleDevice#getAverageReadTime()
 	 * @see BleDevice#getAverageWriteTime() 
@@ -421,13 +426,14 @@ public class BleDeviceConfig implements Cloneable
 	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
-	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ConnectionFailListener.PE_Please}
+	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ConnectionFailListener.Please}
 	 * returned from {@link ConnectionFailListener#onConnectionFail(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info)}.
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
 	 * failed connection for the library to internally start using autoConnect==true).
 	 */
+	@Advanced
 	public Boolean alwaysUseAutoConnect						= false;
 	
 	/**
@@ -438,6 +444,7 @@ public class BleDeviceConfig implements Cloneable
 	 * NOTE: if this flag is true for {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)} then this
 	 * applies to all devices.
 	 */
+	@Advanced
 	public Boolean retainDeviceWhenBleTurnsOff				= true;
 	
 	/**
@@ -449,6 +456,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #retainDeviceWhenBleTurnsOff
 	 * @see #autoReconnectDeviceWhenBleTurnsBackOn
 	 */
+	@Advanced
 	public Boolean undiscoverDeviceWhenBleTurnsOff			= true;
 	
 	/**
@@ -460,6 +468,7 @@ public class BleDeviceConfig implements Cloneable
 	 * 
 	 * @see #retainDeviceWhenBleTurnsOff
 	 */
+	@Advanced
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 	= true;
 	
 	/**
@@ -470,6 +479,7 @@ public class BleDeviceConfig implements Cloneable
 	 * does what they want, kills the app, then opens the app sometime later. {@link BleDevice#getLastDisconnectIntent()} returns
 	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
 	 */
+	@Advanced
 	public Boolean manageLastDisconnectOnDisk				= true;
 	
 	/**
@@ -485,23 +495,24 @@ public class BleDeviceConfig implements Cloneable
 	 * <ul><br>
 	 * This is kept as an option in case there's some unforeseen problem with devices being cached for a certain application.
 	 * 
-	 * See also {@link #minScanTimeToInvokeUndiscovery}.
+	 * See also {@link #minScanTimeNeededForUndiscovery}.
 	 */
+	@Advanced
 	public Boolean cacheDeviceOnUndiscovery					= true;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
 	 * approximated by checking when the last time was that we discovered a device,
-	 * and if this time is greater than {@link #scanKeepAlive} then the device is undiscovered. However a scan
+	 * and if this time is greater than {@link #undiscoveryKeepAlive} then the device is undiscovered. However a scan
 	 * operation must be allowed a certain amount of time to make sure it discovers all nearby devices that are
 	 * still advertising. This is that time in seconds.
 	 * <br><br>
 	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
-	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
-	 * @see #scanKeepAlive
+	 * @see BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)
+	 * @see #undiscoveryKeepAlive
 	 */
-	public Interval	minScanTimeToInvokeUndiscovery		= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
+	public Interval	minScanTimeNeededForUndiscovery		= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
 	 * Default is {@link #DEFAULT_SCAN_KEEP_ALIVE} seconds - If a device exceeds this amount of time since its
@@ -512,10 +523,10 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
-	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
-	 * @see #minScanTimeToInvokeUndiscovery
+	 * @see BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)
+	 * @see #minScanTimeNeededForUndiscovery
 	 */
-	public Interval	scanKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
+	public Interval	undiscoveryKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
 	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs(double)} with {@link #DEFAULT_TASK_TIMEOUT}.
@@ -526,6 +537,7 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
 	 */
+	@Advanced
 	public Interval[] timeouts							= newTaskTimeArray();
 	{
 		final Interval defaultTimeout = Interval.secs(DEFAULT_TASK_TIMEOUT);
@@ -541,6 +553,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageWriteTime()
 	 * @see #nForAverageRunningReadTime
 	 */
+	@Advanced
 	public Integer		nForAverageRunningWriteTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
@@ -549,6 +562,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageWriteTime()
 	 * @see #nForAverageRunningWriteTime
 	 */
+	@Advanced
 	public Integer		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
@@ -557,6 +571,7 @@ public class BleDeviceConfig implements Cloneable
 	 * 
 	 * @see BleDevice#getTxPower()
 	 */
+	@Advanced
 	public Integer		defaultTxPower						= DEFAULT_TX_POWER;
 	
 	/**
@@ -633,6 +648,7 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Convenience member to add entries to {@link #timeouts} for you.
 	 */
+	@Advanced
 	public void setTimeout(final Interval interval_nullable, final BleTask ... tasks)
 	{
 		this.timeouts = this.timeouts != null ? this.timeouts : newTaskTimeArray();

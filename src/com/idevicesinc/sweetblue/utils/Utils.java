@@ -343,6 +343,8 @@ public class Utils
 
 		for(int i = 0; i < states.length; i++)
 		{
+			if( states[i].isNull() )  continue;
+			
 			String name = ((Enum) states[i]).name();
 			rawString += name + spacer;
 		}
@@ -352,6 +354,8 @@ public class Utils
 		int position = 0;
 		for(int i = 0; i < states.length; i++)
 		{
+			if( states[i].isNull() )  continue;
+			
 			String name = ((Enum) states[i]).name();
 
 			if(states[i].overlaps(stateMask))
