@@ -23,9 +23,11 @@ import android.os.Handler;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleManager.AssertListener.Info;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
@@ -629,9 +631,7 @@ public class BleManager
 		{
 			verifySingleton(context);
 
-			s_instance.m_config = config.clone();
-			s_instance.initLogger();
-			s_instance.initConfigDependentMembers();
+			s_instance.setConfig(config);
 
 			return s_instance;
 		}
@@ -675,6 +675,7 @@ public class BleManager
 			BleDevice.StateListener m_defaultDeviceStateListener;
 			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
 			BleDevice.BondListener m_defaultBondListener;
+			BleDevice.ReadWriteListener m_defaultReadWriteListener;
 	final P_LastDisconnectManager m_lastDisconnectMngr;
 	
 	private double m_timeForegrounded = 0.0;
@@ -712,6 +713,17 @@ public class BleManager
 		initConfigDependentMembers();
 		
 		m_logger.printBuildInfo();
+	}
+	
+	/**
+	 * Updates the config options for this instance after calling {@link #get(Context)} or {@link #get(Context, BleManagerConfig)}.
+	 * Providing a <code>null</code> value will set everything back to default values.
+	 */
+	public void setConfig(@Nullable(Prevalence.RARE) BleManagerConfig config_nullable)
+	{
+		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
+		this.initLogger();
+		this.initConfigDependentMembers();
 	}
 
 	private void initLogger()
@@ -834,20 +846,20 @@ public class BleManager
 	/**
 	 * Set a listener here to be notified whenever we encounter an {@link UhOh}.
 	 */
-	public void setListener_UhOh(UhOhListener listener)
+	public void setListener_UhOh(@Nullable(Prevalence.NORMAL) UhOhListener listener_nullable)
 	{
-		m_uhOhThrottler.setListener(listener);
+		m_uhOhThrottler.setListener(listener_nullable);
 	}
 
 	/**
 	 * Set a listener here to be notified whenever {@link #ASSERT(boolean)} fails.
 	 * Mostly for use by internal library developers.
 	 */
-	public void setListener_Assert(AssertListener listener)
+	public void setListener_Assert(@Nullable(Prevalence.NORMAL) AssertListener listener_nullable)
 	{
-		if( listener != null )
+		if( listener_nullable != null )
 		{
-			m_assertionListener = new P_WrappingAssertionListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+			m_assertionListener = new P_WrappingAssertionListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 		}
 		else
 		{
@@ -858,11 +870,11 @@ public class BleManager
 	/**
 	 * Set a listener here to be notified whenever a {@link BleDevice} is discovered, rediscovered, or undiscovered.
 	 */
-	public void setListener_Discovery(DiscoveryListener listener)
+	public void setListener_Discovery(@Nullable(Prevalence.NORMAL) DiscoveryListener listener_nullable)
 	{
-		if( listener != null )
+		if( listener_nullable != null )
 		{
-			m_discoveryListener = new P_WrappingDiscoveryListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+			m_discoveryListener = new P_WrappingDiscoveryListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 		}
 		else
 		{
@@ -887,9 +899,9 @@ public class BleManager
 	/**
 	 * Set a listener here to be notified whenever this manager's {@link BleManagerState} changes.
 	 */
-	public void setListener_State(StateListener listener)
+	public void setListener_State(@Nullable(Prevalence.NORMAL) StateListener listener_nullable)
 	{
-		m_stateTracker.setListener(listener);
+		m_stateTracker.setListener(listener_nullable);
 	}
 
 	/**
@@ -899,11 +911,11 @@ public class BleManager
 	 *
 	 * @see BleDevice#setListener_State(BleDevice.StateListener)
 	 */
-	public void setListener_DeviceState(BleDevice.StateListener listener)
+	public void setListener_DeviceState(@Nullable(Prevalence.NORMAL) BleDevice.StateListener listener_nullable)
 	{
-		if( listener != null )
+		if( listener_nullable != null )
 		{
-			m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+			m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 		}
 		else
 		{
@@ -920,11 +932,11 @@ public class BleManager
 	 *
 	 * @see BleDevice#setListener_ConnectionFail(BleDevice.ConnectionFailListener)
 	 */
-	public void setListener_ConnectionFail(BleDevice.ConnectionFailListener listener)
+	public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) BleDevice.ConnectionFailListener listener_nullable)
 	{
-		if( listener != null )
+		if( listener_nullable != null )
 		{
-			m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+			m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 		}
 		else
 		{
@@ -933,15 +945,35 @@ public class BleManager
 		
 	}
 	
-	public void setListener_Bond(BleDevice.BondListener listener)
+	/**
+	 * Convenience method to set a default back up listener for all {@link BondEvent}s across all {@link BleDevice} instances.
+	 */
+	public void setListener_Bond(@Nullable(Prevalence.NORMAL) BleDevice.BondListener listener_nullable)
 	{
-		if( listener != null )
+		if( listener_nullable != null )
 		{
-			m_defaultBondListener = new P_WrappingBondListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+			m_defaultBondListener = new P_WrappingBondListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
 		}
 		else
 		{
 			m_defaultBondListener = null;
+		}
+	}
+	
+	/**
+	 * Sets a default backup {@link ReadWriteListener} that will be called for all {@link BleDevice} instances.
+	 * <br><br>
+	 * TIP: Place some analytics code in the listener here. 
+	 */
+	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) ReadWriteListener listener_nullable)
+	{
+		if( listener_nullable != null )
+		{
+			m_defaultReadWriteListener = new P_WrappingReadWriteListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_defaultReadWriteListener = null;
 		}
 	}
 

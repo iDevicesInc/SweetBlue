@@ -6,10 +6,6 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 
-/**
- * 
- * 
- */
 class P_RssiPollManager
 {
 	private static class CustomListener extends P_WrappingReadWriteListener
@@ -63,6 +59,11 @@ class P_RssiPollManager
 		m_timeTracker = ENABLE_TIMER;
 		m_interval = interval;
 		m_listener = new CustomListener(this, listener_nullable, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+	}
+	
+	boolean isRunning()
+	{
+		return m_timeTracker != DISABLE_TIMER;
 	}
 	
 	void stop()

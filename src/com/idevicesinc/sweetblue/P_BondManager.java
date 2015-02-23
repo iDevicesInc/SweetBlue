@@ -161,10 +161,25 @@ class P_BondManager
 	
 	void invokeCallback(Status status, int failReason, State.ChangeIntent intent)
 	{
-		if( m_listener == null )  return;
+		final BondEvent event;
+		if( m_listener != null || m_device.getManager().m_defaultBondListener != null )
+		{
+			event = new BondEvent(m_device, status, failReason, intent);
+		}
+		else
+		{
+			event = null;
+		}
 		
-		final BondEvent event = new BondEvent(m_device, status, failReason, intent);
-		m_listener.onBondEvent(event);
+		if( m_listener != null )
+		{
+			m_listener.onBondEvent(event);
+		}
+		
+		if( m_device.getManager().m_defaultBondListener != null )
+		{
+			m_device.getManager().m_defaultBondListener.onBondEvent(event);
+		}
 	}
 	
 	private boolean isBondingOrBonded()

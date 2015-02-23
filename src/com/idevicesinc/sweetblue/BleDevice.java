@@ -28,6 +28,8 @@ import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 
 /**
  * This is the one other class you will use the most besides {@link BleManager}. It acts as a
@@ -324,15 +326,17 @@ public class BleDevice
 			
 			/**
 			 * Time spent "over the air" - so in the native stack, processing in the peripheral's embedded software, what have you.
+			 * This will always be slightly less than {@link #time_total()}. 
 			 */
-			public Interval transitTime(){  return m_transitTime;  }
+			public Interval time_ota(){  return m_transitTime;  }
 			private final Interval m_transitTime;
 			
 			/**
 			 * Total time it took for the operation to complete, whether success or failure.
-			 * This mainly includes time spent in the internal job queue plus {@link Result#transitTime}.
+			 * This mainly includes time spent in the internal job queue plus {@link Result#time_ota()}.
+			 * This will always be longer than {@link #time_ota()}, though usually only slightly so.
 			 */
-			public Interval totalTime(){  return m_totalTime;  }
+			public Interval time_total(){  return m_totalTime;  }
 			private final Interval m_totalTime;
 			
 			/**
@@ -439,7 +443,7 @@ public class BleDevice
 						"status",		status(),
 						"type",			type(),
 						"target",		target(),
-						"rssi",			rssi(),
+						"rssi",			device().getRssiPercent(),
 						"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
 					);
 				}
@@ -1061,8 +1065,11 @@ public class BleDevice
 	private final P_ReconnectManager m_reconnectMngr;
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
+	private final P_RssiPollManager m_rssiPollMngr_auto;
 	private final P_Task_Disconnect m_dummyDisconnectTask;
 			final P_BondManager m_bondMngr;
+			
+	private ReadWriteListener m_defaultReadWriteListener = null;
 	
 	private TimeEstimator m_writeTimeEstimator;
 	private TimeEstimator m_readTimeEstimator;
@@ -1095,6 +1102,8 @@ public class BleDevice
 	{
 		m_mngr = mngr;
 		m_origin = origin;
+		m_rssiPollMngr = new P_RssiPollManager(this);
+		m_rssiPollMngr_auto = new P_RssiPollManager(this);
 		setConfig(config_nullable);
 		m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName, nativeName);
 		m_queue = m_mngr.getTaskQueue();
@@ -1109,7 +1118,6 @@ public class BleDevice
 		m_taskStateListener = m_listeners.m_taskStateListener;
 		m_reconnectMngr = new P_ReconnectManager(this);
 		m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
-		m_rssiPollMngr = new P_RssiPollManager(this);
 		m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 	}
 	
@@ -1136,7 +1144,7 @@ public class BleDevice
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual device. 
 	 */
-	public void setConfig(BleDeviceConfig config_nullable)
+	public void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
 	{
 		m_config = config_nullable == null ? null : config_nullable.clone();
 		
@@ -1152,6 +1160,17 @@ public class BleDevice
 		else
 		{
 			m_alwaysUseAutoConnect = false;
+		}
+		
+		final Interval autoRssiPollRate = BleDeviceConfig.interval(conf_device().rssiAutoPollRate, conf_mngr().rssiAutoPollRate);
+		
+		if( !m_rssiPollMngr.isRunning() && !Interval.isDisabled(autoRssiPollRate) )
+		{
+			m_rssiPollMngr_auto.start(autoRssiPollRate.secs(), null);
+		}
+		else
+		{
+			m_rssiPollMngr_auto.stop();
 		}
 	}
 	
@@ -1209,26 +1228,43 @@ public class BleDevice
 	/**
 	 * Set a listener here to be notified whenever this device's state changes.
 	 */
-	public void setListener_State(StateListener listener)
+	public void setListener_State(@Nullable(Prevalence.NORMAL)StateListener listener_nullable)
 	{
-		m_stateTracker.setListener(listener);
+		m_stateTracker.setListener(listener_nullable);
 	}
 	
 	/**
 	 * Set a listener here to be notified whenever a connection fails and to have control over retry behavior.
 	 */
-	public void setListener_ConnectionFail(ConnectionFailListener listener)
+	public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL)ConnectionFailListener listener_nullable)
 	{
-		m_connectionFailMngr.setListener(listener);
+		m_connectionFailMngr.setListener(listener_nullable);
 	}
 	
 	/**
 	 * Set a listener here to be notified whenever a bond attempt succeeds. This will catch attempts to bond both through {@link #bond()}
 	 * and when bonding through the operating system settings or from other apps.
 	 */
-	public void setListener_Bond(BondListener listener)
+	public void setListener_Bond(@Nullable(Prevalence.NORMAL)BondListener listener_nullable)
 	{
-		m_bondMngr.setListener(listener);
+		m_bondMngr.setListener(listener_nullable);
+	}
+	
+	/**
+	 * Sets a default backup {@link ReadWriteListener} that will be called for all calls to {@link #read(UUID, ReadWriteListener)},
+	 * {@link #write(UUID, byte[], ReadWriteListener)}, {@link #enableNotify(UUID, ReadWriteListener)}, etc.<br><br>
+	 * NOTE: This will be called after the {@link ReadWriteListener} provided directly through the method params.
+	 */
+	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) ReadWriteListener listener_nullable)
+	{
+		if( listener_nullable != null )
+		{
+			m_defaultReadWriteListener = new P_WrappingReadWriteListener(listener_nullable, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
+		}
+		else
+		{
+			m_defaultReadWriteListener = null;
+		}
 	}
 	
 	/**
@@ -1280,6 +1316,9 @@ public class BleDevice
 	/**
 	 * Returns the raw RSSI retrieved from when the device was discovered, rediscovered,
 	 * or when you call {@link #readRssi()} or {@link #startRssiPoll(Interval)}.
+	 * 
+	 * @see #getDistance()
+	 * 
 	 */
 	public int getRssi()
 	{
@@ -1287,17 +1326,29 @@ public class BleDevice
 	}
 	
 	/**
-	 * Returns the approximate distance in meters based on {@link #getRssi()} and {@link #getTxPower()}.
-	 * The higher the distance, the less the accuracy.
+	 * Raw RSSI from {@link #getRssi()} is a little cryptic, so this gives you a friendly 0%-100% value for signal strength.
 	 */
-	public Distance getDistance()
+	public Percent getRssiPercent()
 	{
-		return Distance.meters(Utils_Rssi.calcDistance(getTxPower(), getRssi()));
+		final int rssi_min = BleDeviceConfig.integer(conf_device().rssi_min, conf_mngr().rssi_min, BleDeviceConfig.DEFAULT_RSSI_MIN);
+		final int rssi_max = BleDeviceConfig.integer(conf_device().rssi_max, conf_mngr().rssi_max, BleDeviceConfig.DEFAULT_RSSI_MAX);
+		final double percent = Utils_Rssi.percent(getRssi(), rssi_min, rssi_max);
+		
+		return Percent.fromDouble_clamped(percent);
 	}
 	
 	/**
-	 * Returns the calibrated transmitter power of the device. If this can't be figured out from the device itself
-	 * then it backs up to the value provided in {@link BleDeviceConfig#defaultTxPower} or {@link BleManagerConfig#defaultTxPower}.
+	 * Returns the approximate distance in meters based on {@link #getRssi()} and {@link #getTxPower()}.
+	 * NOTE: the higher the distance, the less the accuracy.
+	 */
+	public Distance getDistance()
+	{
+		return Distance.meters(Utils_Rssi.distance(getTxPower(), getRssi()));
+	}
+	
+	/**
+	 * Returns the calibrated transmission power of the device. If this can't be figured out from the device itself
+	 * then it backs up to the value provided in {@link BleDeviceConfig#defaultTxPower}.
 	 * 
 	 * @see BleDeviceConfig#defaultTxPower;
 	 */
@@ -1837,14 +1888,11 @@ public class BleDevice
 	 */
 	public void readRssi(ReadWriteListener listener)
 	{
-		Result earlyOut = m_serviceMngr.getEarlyOutResult(Uuids.INVALID, EMPTY_BYTE_ARRAY, Type.READ);
+		final Result earlyOutResult = m_serviceMngr.getEarlyOutResult(Uuids.INVALID, EMPTY_BYTE_ARRAY, Type.READ);
 		
-		if( earlyOut != null )
+		if( earlyOutResult != null )
 		{
-			if( listener != null )
-			{
-				listener.onResult(earlyOut);
-			}
+			invokeReadWriteCallback(listener, earlyOutResult);
 			
 			return;
 		}
@@ -1870,6 +1918,8 @@ public class BleDevice
 	public void startRssiPoll(Interval interval, ReadWriteListener listener)
 	{
 		m_rssiPollMngr.start(interval.secs(), listener);
+		
+		m_rssiPollMngr_auto.stop();
 	}
 	
 	/**
@@ -1878,6 +1928,13 @@ public class BleDevice
 	public void stopRssiPoll()
 	{
 		m_rssiPollMngr.stop();
+		
+		final Interval autoPollRate = BleDeviceConfig.interval(conf_device().rssiAutoPollRate, conf_mngr().rssiAutoPollRate);
+		
+		if( !Interval.isDisabled(autoPollRate) )
+		{
+			m_rssiPollMngr_auto.start(autoPollRate.secs(), null);
+		}
 	}
 	
 	void readRssi_internal(Type type, P_WrappingReadWriteListener listener)
@@ -1914,10 +1971,7 @@ public class BleDevice
 		
 		if( earlyOutResult != null )
 		{
-			if( listener != null )
-			{
-				listener.onResult(earlyOutResult);
-			}
+			invokeReadWriteCallback(listener, earlyOutResult);
 			
 			if( earlyOutResult.status() == Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)) )
 			{
@@ -1945,7 +1999,7 @@ public class BleDevice
 			if( listener != null )
 			{
 				Result result = m_pollMngr.newAlreadyEnabledResult(characteristic);
-				listener.onResult(result);
+				invokeReadWriteCallback(listener, earlyOutResult);
 			}
 		}
 		
@@ -2108,7 +2162,7 @@ public class BleDevice
 		return m_timeSinceLastDiscovery;
 	}
 	
-	private void onDiscovered_private(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
+	private void onDiscovered_private(List<UUID> advertisedServices_nullable, final int rssi, byte[] scanRecord_nullable)
 	{
 		m_timeSinceLastDiscovery = 0.0;
 		updateRssi(rssi);
@@ -2116,7 +2170,7 @@ public class BleDevice
 		m_scanRecord = scanRecord_nullable != null ? scanRecord_nullable : m_scanRecord;
 	}
 	
-	void updateRssi(int rssi)
+	void updateRssi(final int rssi)
 	{
 		m_rssi = rssi;
 	}
@@ -2639,14 +2693,11 @@ public class BleDevice
 	
 	void read_internal(UUID uuid, Type type, P_WrappingReadWriteListener listener)
 	{
-		Result earlyOut = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, type);
+		final Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, type);
 		
-		if( earlyOut != null )
+		if( earlyOutResult != null )
 		{
-			if( listener != null )
-			{
-				listener.onResult(earlyOut);
-			}
+			invokeReadWriteCallback(listener, earlyOutResult);
 			
 			return;
 		}
@@ -2669,10 +2720,7 @@ public class BleDevice
 		
 		if( earlyOutResult != null )
 		{
-			if( listener != null )
-			{
-				listener.onResult(earlyOutResult);
-			}
+			invokeReadWriteCallback(listener, earlyOutResult);
 			
 			return;
 		}
@@ -2690,10 +2738,7 @@ public class BleDevice
 		
 		if( earlyOutResult != null )
 		{
-			if( listener != null )
-			{
-				listener.onResult(earlyOutResult);
-			}
+			invokeReadWriteCallback(listener, earlyOutResult);
 			
 			return;
 		}
@@ -2732,6 +2777,24 @@ public class BleDevice
 		else
 		{
 			return PE_TaskPriority.FOR_NORMAL_READS_WRITES;
+		}
+	}
+	
+	void invokeReadWriteCallback(ReadWriteListener listener_nullable, ReadWriteListener.Result result)
+	{
+		if( listener_nullable != null )
+		{
+			listener_nullable.onResult(result);
+		}
+		
+		if( m_defaultReadWriteListener != null )
+		{
+			m_defaultReadWriteListener.onResult(result);
+		}
+		
+		if( m_mngr.m_defaultReadWriteListener != null )
+		{
+			m_mngr.m_defaultReadWriteListener.onResult(result);
 		}
 	}
 }

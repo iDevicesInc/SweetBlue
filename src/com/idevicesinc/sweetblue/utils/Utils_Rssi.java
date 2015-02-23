@@ -28,12 +28,17 @@ package com.idevicesinc.sweetblue.utils;
  */
 public class Utils_Rssi extends Utils
 {
-	public static double calcDistance(final int txPower, final int rssi)
+	public static double percent(final int rssi, final int rssi_min, final int rssi_max)
 	{
-		return calcDistance(txPower, rssi, 0.89976, 7.7095, 0.111);
+		return (((double)(rssi-rssi_min)) / ((double)(rssi_max-rssi_min))) * 100.0;
 	}
 	
-	public static double calcDistance(final int txPower, final int rssi, double a, double b, double c)
+	public static double distance(final int txPower, final int rssi)
+	{
+		return distance(txPower, rssi, 0.89976, 7.7095, 0.111);
+	}
+	
+	public static double distance(final int txPower, final int rssi, double a, double b, double c)
 	{
 		if (rssi == 0)
 		{

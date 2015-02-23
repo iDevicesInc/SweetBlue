@@ -49,6 +49,16 @@ public class Distance
 		return meters(feet/FEET_PER_METER);
 	}
 	
+	@Override public boolean equals(Object object)
+	{
+		if( object instanceof Distance )
+		{
+			return ((Distance)object).meters() == this.meters();
+		}
+		
+		return super.equals(object);
+	}
+	
 	@Override public String toString()
 	{
 		return meters()+"meters/"+feet()+"feet"; 

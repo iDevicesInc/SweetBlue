@@ -140,10 +140,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			getDevice().getPollManager().onNotifyStateChange(m_characteristic.getUuid(), E_NotifyState.NOT_ENABLED);
 		}
 		
-		if( m_readWriteListener != null )
-		{
-			m_readWriteListener.onResult(result);
-		}
+		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
 		 
 		super.succeed();
 	}
@@ -170,7 +167,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		{
 			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " descriptor write timed out!");
 			
-			m_readWriteListener.onResult(newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid));
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
@@ -178,7 +175,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		{
 			Target target = this.getState() == PE_TaskState.EXECUTING ? Target.DESCRIPTOR : Target.CHARACTERISTIC;
 			UUID descUuid = target == Target.DESCRIPTOR ? m_descUuid : Result.NON_APPLICABLE_UUID;
-			m_readWriteListener.onResult(newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, target, m_characteristic.getUuid(), descUuid));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, target, m_characteristic.getUuid(), descUuid));
 		}
 	}
 	

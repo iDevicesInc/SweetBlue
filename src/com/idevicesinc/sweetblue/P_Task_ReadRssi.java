@@ -39,10 +39,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		
 		if( !super_isExecutable )
 		{
-			if( m_readWriteListener != null )
-			{
-				m_readWriteListener.onResult(newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
-			}
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 		
 		return super_isExecutable;
@@ -50,10 +47,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	private void fail(Status status, int gattStatus)
 	{
-		if( m_readWriteListener != null )
-		{
-			m_readWriteListener.onResult(newResult(status, gattStatus, 0));
-		}
+		getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(status, gattStatus, 0));
 		
 		this.fail();
 	}
@@ -70,10 +64,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		Result result = newResult(Status.SUCCESS, gattStatus, rssi);
 		
-		if( m_readWriteListener != null )
-		{
-			m_readWriteListener.onResult(result);
-		}
+		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
 		 
 		super.succeed();
 	}
@@ -96,17 +87,11 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		if( state == PE_TaskState.TIMED_OUT )
 		{
-			if( m_readWriteListener != null )
-			{
-				m_readWriteListener.onResult(newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
-			}
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			if( m_readWriteListener != null )
-			{
-				m_readWriteListener.onResult(newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
-			}
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 	}
 	

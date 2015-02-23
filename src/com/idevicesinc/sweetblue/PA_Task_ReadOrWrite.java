@@ -41,10 +41,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 	
 	protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
-		if( m_readWriteListener != null )
-		{
-			m_readWriteListener.onResult(newResult(status, gattStatus, target, charUuid, descUuid));
-		}
+		getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(status, gattStatus, target, charUuid, descUuid));
 		
 		this.fail();
 	}
@@ -55,10 +52,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		
 		if( !super_isExecutable )
 		{
-			if( m_readWriteListener != null )
-			{
-				m_readWriteListener.onResult(newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
-			}
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
 		}
 		
 		return super_isExecutable;

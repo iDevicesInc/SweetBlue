@@ -35,6 +35,22 @@ public class BleDeviceConfig implements Cloneable
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 	public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
+	
+	
+	/**
+	 * Default value for {@link #rssiAutoPollRate}.
+	 */
+	public static final double DEFAULT_RSSI_AUTO_POLL_RATE				= 10.0;
+	
+	/**
+	 * Default fallback value for {@link #rssi_min}.
+	 */
+	public static final int DEFAULT_RSSI_MIN							= -120;
+	
+	/**
+	 * Default fallback value for {@link #rssi_max}.
+	 */
+	public static final int DEFAULT_RSSI_MAX							= -30;
 
 	/**
 	 * Default value for {@link #defaultTxPower}.
@@ -396,7 +412,7 @@ public class BleDeviceConfig implements Cloneable
 	 * Default is <code>true</code> - whether to automatically get services immediately after a {@link BleDevice} is
 	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
 	 */
-	Boolean autoGetServices								= true;
+	public Boolean autoGetServices								= true;
 	
 	/**
 	 * Default is <code>false</code>se - if true and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
@@ -529,6 +545,12 @@ public class BleDeviceConfig implements Cloneable
 	public Interval	undiscoveryKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
+	 * Default is {@link #DEFAULT_RSSI_AUTO_POLL_RATE} - The rate at which a {@link BleDevice} will automatically poll for its {@link BleDevice#getRssi()} value
+	 * after it's {@link BleDeviceState#CONNECTED}. You may also use {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)} for more control and feedback.
+	 */
+	public Interval rssiAutoPollRate							= Interval.secs(DEFAULT_RSSI_AUTO_POLL_RATE);
+	
+	/**
 	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs(double)} with {@link #DEFAULT_TASK_TIMEOUT}.
 	 * This is an array of timeouts whose indices are meant to map to {@link BleTask} ordinals and provide a
 	 * way to control how long a given task is allowed to run before being "cut loose". If no option is provided for a given {@link BleTask},
@@ -575,6 +597,16 @@ public class BleDeviceConfig implements Cloneable
 	public Integer		defaultTxPower						= DEFAULT_TX_POWER;
 	
 	/**
+	 * Default is {@link #DEFAULT_RSSI_MIN} - the estimated minimum value for {@link BleDevice#getRssi()}.
+	 */
+	public Integer		rssi_min							= DEFAULT_RSSI_MIN;
+	
+	/**
+	 * Default is {@link #DEFAULT_RSSI_MAX} - the estimated maximum value for {@link BleDevice#getRssi()}.
+	 */
+	public Integer		rssi_max							= DEFAULT_RSSI_MAX;
+	
+	/**
 	 * Default is instance of {@link DefaultBondFilter}.
 	 * 
 	 * @see BondFilter
@@ -614,14 +646,24 @@ public class BleDeviceConfig implements Cloneable
 		return interval_device_nullable != null ? interval_device_nullable : intervalOrDefault(interval_mngr_nullable);
 	}
 	
-	static Integer integer(Integer int_device_nullable, Integer int_mngr)
+	static Integer integer(Integer int_device_nullable, Integer int_mngr_nullable)
 	{
-		return int_device_nullable != null ? int_device_nullable : int_mngr;
+		return int_device_nullable != null ? int_device_nullable : int_mngr_nullable;
+	}
+	
+	static Integer integer(Integer int_device_nullable, Integer int_mngr_nullable, int defaultValue)
+	{
+		return integerOrDefault(integer(int_device_nullable, int_mngr_nullable), defaultValue);
 	}
 	
 	static int integerOrZero(Integer value_nullable)
 	{
-		return value_nullable != null ? value_nullable : 0x0;
+		return integerOrDefault(value_nullable, 0);
+	}
+	
+	static int integerOrDefault(Integer value_nullable, int defaultValue)
+	{
+		return value_nullable != null ? value_nullable : defaultValue;
 	}
 	
 	public BleDeviceConfig()

@@ -59,12 +59,9 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 	private void succeed(byte[] value, Target target)
 	{
 		Result result = newResult(value, target, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID); 
-		getDevice().addReadTime(result.totalTime().secs());
+		getDevice().addReadTime(result.time_total().secs());
 		
-		if( m_readWriteListener != null )
-		{
-			m_readWriteListener.onResult(result);
-		}
+		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
 		 
 		super.succeed();
 	}
@@ -109,19 +106,13 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		{
 			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " read timed out!");
 			
-			if( m_readWriteListener != null )
-			{
-				m_readWriteListener.onResult(newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
-			}
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 			
 			getManager().uhOh(UhOh.READ_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			if( m_readWriteListener != null )
-			{
-				m_readWriteListener.onResult(newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
-			}
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
 		}
 	}
 	
