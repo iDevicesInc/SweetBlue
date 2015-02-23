@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -452,9 +453,9 @@ public class BleDevice
 					return Utils.toString
 					(
 						"status",		status(),
+						"data",			Arrays.toString(data()),
 						"type",			type(),
 						"charUuid",		device().m_mngr.getLogger().charName(charUuid()),
-						"data",			data(),
 						"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
 					);
 				}
