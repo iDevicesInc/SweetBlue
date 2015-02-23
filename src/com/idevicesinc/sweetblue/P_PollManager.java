@@ -360,6 +360,14 @@ class P_PollManager
 				
 				P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(ithEntry.m_uuid);
 				
+				//--- DRK > This was observed to happen while doing iterative testing on a dev board that was changing
+				//---		its gatt database again and again...I guess service discovery "succeeded" but the service
+				//---		wasn't actually found, so downstream we got an NPE.
+				if( characteristic == null )
+				{
+					continue;
+				}
+				
 				if( notifyState == E_NotifyState.NOT_ENABLED )
 				{
 					BleDevice.ReadWriteListener.Result earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION);
