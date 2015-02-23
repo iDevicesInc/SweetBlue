@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -23,15 +24,15 @@ public enum BleDeviceState implements State
 	NULL,
 	
 	/**
-	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)}.
+	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)}.
 	 * This means the object is effectively dead. {@link BleManager} has removed all references to it and you should do the same.
 	 */
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleDeviceConfig#reconnectRateLimiter} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleDeviceConfig#reconnectLoop} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
-	 * {@link BleDeviceConfig.ReconnectRateLimiter#CANCEL} from {@link BleDeviceConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDeviceConfig.ReconnectRateLimiter.Info)}
+	 * {@link BleDeviceConfig.ReconnectLoop.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectLoop#onReconnectRequest(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectLoop.Info)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
 	 */
@@ -92,21 +93,21 @@ public enum BleDeviceState implements State
 	GETTING_SERVICES,
 	
 	/**
-	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Auth)} or {@link BleDevice#connect(BleTransaction, BleTransaction)}
+	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Auth)} or {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)}
 	 * to start a connection with an authentication transaction.
 	 */
 	AUTHENTICATING,
 	
 	/**
 	 * This state becomes active either if the {@link BleTransaction} provided to {@link BleDevice#connect(BleTransaction.Auth)} or
-	 * {@link BleDevice#connect(BleTransaction, BleTransaction)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
+	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
 	 * {@link BleDevice#connect()} or {@link BleDevice#connect(BleTransaction.Init)} - i.e. you connect without authentication.
 	 * In the latter case the {@link #AUTHENTICATING} state is skipped and we go straight to being implicitly {@link #AUTHENTICATED}.
 	 */
 	AUTHENTICATED,
 	
 	/**
-	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Init)} or {@link BleDevice#connect(BleTransaction, BleTransaction)}
+	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Init)} or {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)}
 	 * to start a connection with an initialization transaction.
 	 */
 	INITIALIZING,
@@ -116,7 +117,7 @@ public enum BleDeviceState implements State
 	 * basing it off of just {@link #CONNECTED}.
 	 * <br><br>
 	 * This state becomes active either if the {@link BleTransaction} provided to {@link BleDevice#connect(BleTransaction.Init)} or
-	 * {@link BleDevice#connect(BleTransaction, BleTransaction)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
+	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
 	 * {@link BleDevice#connect()} or {@link BleDevice#connect(BleTransaction.Auth)} or etc.- i.e. you connect without an initialization
 	 * transaction. In the latter case the {@link #INITIALIZING} state is skipped and we go straight to being implicitly {@link #INITIALIZED}.
 	 */

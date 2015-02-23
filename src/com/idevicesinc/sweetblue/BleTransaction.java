@@ -11,7 +11,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * <br><br>
  * NOTE: Nested subclasses here are only tagging and don't yet provide any differing contracts or implementations. 
  * 
- * @see BleDevice#BleDevice(BleTransaction)
+ * @see BleDevice#performOta(BleTransaction.Ota)
  * @see BleDevice#connect(BleTransaction.Auth)
  * @see BleDevice#connect(BleTransaction.Init)
  * @see BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)
@@ -45,7 +45,7 @@ public abstract class BleTransaction
 		
 		/**
 		 * The transaction's {@link BleDevice} became {@link BleDeviceState#DISCONNECTED}
-		 * or/and {@link BleManager} went {@link BleState#OFF}.
+		 * or/and {@link BleManager} went {@link BleManagerState#OFF}.
 		 */
 		CANCELLED,
 		

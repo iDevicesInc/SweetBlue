@@ -29,7 +29,6 @@ import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
-import com.idevicesinc.sweetblue.BleManager.AssertListener.Info;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
@@ -152,8 +151,8 @@ public class BleManager
 			 * advertising device is turned off or goes out of range or what have you. It's generally not as fast as other
 			 * state changes like {@link BleDeviceState#DISCONNECTED} or getting {@link BleDeviceState#DISCOVERED} in the first place.
 			 *
-			 * @see BleManagerConfig#minScanTimeToInvokeUndiscovery
-			 * @see BleManagerConfig#scanKeepAlive
+			 * @see BleDeviceConfig#minScanTimeNeededForUndiscovery
+			 * @see BleDeviceConfig#undiscoveryKeepAlive
 			 */
 			UNDISCOVERED;
 		}
@@ -1198,7 +1197,7 @@ public class BleManager
 
 			if( m_assertionListener != null )
 			{
-				Info info = new Info(this, message, dummyException.getStackTrace());
+				AssertListener.Info info = new AssertListener.Info(this, message, dummyException.getStackTrace());
 				m_assertionListener.onAssertFailed(info);
 			}
 

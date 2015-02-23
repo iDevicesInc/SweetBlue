@@ -263,7 +263,7 @@ class P_TransactionManager
 		}
 	}
 	
-	void onOta(BleTransaction.Ota txn)
+	void startOta(BleTransaction.Ota txn)
 	{
 		synchronized (m_threadLock)
 		{

@@ -15,6 +15,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import com.idevicesinc.sweetblue.BleDeviceConfig;
+
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -38,8 +40,8 @@ public class Utils
 	
 	/**
 	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
-	 * and so this method is used to set {@link #autoUnbond_onStateEnter}.
-	 */
+	 * and so this method is used in {@link BleDeviceConfig.DefaultBondFilter}. 
+	 */ 
 	public static boolean phoneHasBondingIssues()
 	{
 		return Utils.isManufacturer("sony") || Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
@@ -104,40 +106,40 @@ public class Utils
 	private static final String SHORTHAND_UUID_TEMPLATE = "00000000-0000-1000-8000-00805f9b34fb";
 	private static final int SHORTHAND_LENGTH = 8;
 
-	/**
-	 * Get a UUID string by transforming shorthand ids into long form ids.
-	 * 
-	 * @param shorthandUuid Short of long form UUID string for a service/characteristic
-	 * @return UUID string.
-	 */
-	public static String uuidStringFromShorthand(String shorthandUuid)
-	{
-		// Check for shorthand form
-		if(shorthandUuid.length() <= SHORTHAND_LENGTH)
-		{
-			// Pad with any missing zeros
-			long l = Long.parseLong(shorthandUuid, 16);
-			shorthandUuid = String.format("%0" + SHORTHAND_LENGTH + "x", l);
-			// Overwrite the shorthand places in the template with those provided
-			String result = shorthandUuid + SHORTHAND_UUID_TEMPLATE.substring(SHORTHAND_LENGTH);
-			return result;
-		}
-		else
-		{
-			return shorthandUuid;
-		}
-	}
-
-	/**
-	 * Get a UUID by transforming shorthand ids into long form ids.
-	 * 
-	 * @param id Short of long form UUID string for a service/characteristic
-	 * @return UUID.
-	 */
-	static public UUID uuidFromShorthand(String shorthandUuid)
-	{
-		return UUID.fromString(uuidStringFromShorthand(shorthandUuid));
-	}
+//	/**
+//	 * Get a UUID string by transforming shorthand ids into long form ids.
+//	 * 
+//	 * @param shorthandUuid Short of long form UUID string for a service/characteristic
+//	 * @return UUID string.
+//	 */
+//	public static String uuidStringFromShorthand(String shorthandUuid)
+//	{
+//		// Check for shorthand form
+//		if(shorthandUuid.length() <= SHORTHAND_LENGTH)
+//		{
+//			// Pad with any missing zeros
+//			long l = Long.parseLong(shorthandUuid, 16);
+//			shorthandUuid = String.format("%0" + SHORTHAND_LENGTH + "x", l);
+//			// Overwrite the shorthand places in the template with those provided
+//			String result = shorthandUuid + SHORTHAND_UUID_TEMPLATE.substring(SHORTHAND_LENGTH);
+//			return result;
+//		}
+//		else
+//		{
+//			return shorthandUuid;
+//		}
+//	}
+//
+//	/**
+//	 * Get a UUID by transforming shorthand ids into long form ids.
+//	 * 
+//	 * @param shorthandUuid Short of long form UUID string for a service/characteristic
+//	 * @return UUID.
+//	 */
+//	static public UUID uuidFromShorthand(String shorthandUuid)
+//	{
+//		return UUID.fromString(uuidStringFromShorthand(shorthandUuid));
+//	}
 
 	public static byte[] hexStringToBytes(String string)
 	{

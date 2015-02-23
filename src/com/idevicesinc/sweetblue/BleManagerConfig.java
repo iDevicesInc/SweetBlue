@@ -213,7 +213,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		
 		/**
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
-		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#DefaultAdvertisingFilter(Collection)}.
+		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#DefaultScanFilter(Collection)}.
 		 */
 		@Override public Please onScanResult(Result result)
 		{
@@ -298,7 +298,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * connected but one or more devices are {@link BleDeviceState#ATTEMPTING_RECONNECT}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link BleDeviceConfig.ReconnectLoop#STOP} from {@link BleDeviceConfig.ReconnectLoop#onReconnectRequest(BleDeviceConfig.ReconnectLoop.Info)}.
+	 * {@link BleDeviceConfig.ReconnectLoop.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectLoop#onReconnectRequest(BleDeviceConfig.ReconnectLoop.Info)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  

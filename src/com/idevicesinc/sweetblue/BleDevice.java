@@ -99,7 +99,7 @@ public class BleDevice
 			
 			/**
 			 * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)} or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
-			 * or etc. returned <code>false</code> and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#dropTacticalNuke()}.
+			 * or etc. returned <code>false</code> and thus failed immediately for unknown reasons. No good remedy for this...perhaps try {@link BleManager#reset()}.
 			 */
 			FAILED_TO_SEND_OUT,
 			
@@ -109,7 +109,7 @@ public class BleDevice
 			CANCELLED_FROM_DISCONNECT,
 			
 			/**
-			 * The operation was cancelled because {@link BleManager} went {@link BleState#TURNING_OFF} and/or {@link BleState#OFF}.
+			 * The operation was cancelled because {@link BleManager} went {@link BleManagerState#TURNING_OFF} and/or {@link BleManagerState#OFF}.
 			 * Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then {@link Result#status} could potentially
 			 * be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get the disconnect callback before the turning off callback.
 			 * Basic testing has revealed that this is *not* the case, but you never know.
@@ -122,7 +122,7 @@ public class BleDevice
 			 * Used either when {@link Result#type()} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
 			 * the operation being otherwise "successful", <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter.
 			 * For the read case, the library will throw an {@link UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch.
-			 * If the problem persists try {@link BleManager#dropTacticalNuke()}.
+			 * If the problem persists try {@link BleManager#reset()}.
 			 */
 			NULL_DATA,
 			
@@ -585,7 +585,7 @@ public class BleDevice
 			EXPLICIT_DISCONNECT,
 			
 			/**
-			 * {@link BleManager#dropTacticalNuke()} or {@link BleManager#turnOff()} (or overloads) were called sometime during the connection process.
+			 * {@link BleManager#reset()} or {@link BleManager#turnOff()} (or overloads) were called sometime during the connection process.
 			 * Basic testing reveals that this value will also be used when a user turns off BLE by going through their OS settings, airplane mode, etc.,
 			 * but it's not absolutely *certain* that this behavior is consistent across phones. For example there might be a phone that kills all
 			 * connections before going through the ble turn-off process, in which case SweetBlue doesn't know the difference and {@link #ROGUE_DISCONNECT} will be used.
@@ -618,13 +618,13 @@ public class BleDevice
 		{
 			/**
 			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen,
-			 * for example after SweetBlue considers a connect timed out after {@link BleDeviceConfig#timeoutForConnection}
-			 * seconds, but then it somehow does come in (shouldn't happen but who knows).
+			 * for example after SweetBlue considers a connect timed out based on {@link BleDeviceConfig#timeouts}
+			 * but then it somehow does come in (shouldn't happen but who knows).
 			 */
 			UNKNOWN,
 			
 			/**
-			 * Usage is not applicable to the {@link Info#reason} given.
+			 * Usage is not applicable to the {@link Info#reason()} given.
 			 */
 			NOT_APPLICABLE,
 			
@@ -681,7 +681,7 @@ public class BleDevice
 			}
 			
 			/**
-			 * Same as {@link #RETRY}, but <code>autoConnect=true</code> will be passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
+			 * Same as {@link #retry()}, but <code>autoConnect=true</code> will be passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
 			@Advanced
@@ -691,7 +691,7 @@ public class BleDevice
 			}
 			
 			/**
-			 * Same as {@link #RETRY_WITH_AUTOCONNECT_TRUE} but forces <code>autoConnect=false</code>.
+			 * Opposite of{@link #retryWithAutoConnectTrue()}.
 			 */
 			@Advanced
 			public static Please retryWithAutoConnectFalse()
@@ -864,7 +864,7 @@ public class BleDevice
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 		
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link PE_Please#RETRY_WITH_AUTOCONNECT_TRUE}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#retryWithAutoConnectTrue()}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 		
@@ -975,7 +975,7 @@ public class BleDevice
 			
 			/**
 			 * Cancelled from {@link BleManager} going {@link BleManagerState#TURNING_OFF} or {@link BleManagerState#OFF},
-			 * probably from calling {@link BleManager#reset()} or {@link BleManager#turnOff()}.
+			 * probably from calling {@link BleManager#reset()}.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF;
 		}
@@ -2042,7 +2042,7 @@ public class BleDevice
 		if( is(PERFORMING_OTA) )  return false;
 		if( !is(INITIALIZED) )  return false;
 		
-		m_txnMngr.onOta(txn);
+		m_txnMngr.startOta(txn);
 		
 		return true;
 	}
