@@ -136,7 +136,7 @@ class P_BondManager
 	{
 		if( failConnection(status) )
 		{
-			m_device.disconnectWithReason(Reason.BONDING_FAILED, status.timing(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+			m_device.disconnectWithReason(Reason.BONDING_FAILED, status.timing(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, failReason);
 		}
 		else
 		{

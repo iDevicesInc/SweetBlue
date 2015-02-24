@@ -64,7 +64,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE);
 				}
 			}
 			else if (txn == m_initTxn )
@@ -75,7 +75,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE);
 				}
 			}
 			else if (txn == m_device.getFirmwareUpdateTxn())

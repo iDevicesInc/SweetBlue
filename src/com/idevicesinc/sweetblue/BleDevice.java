@@ -16,6 +16,7 @@ import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
@@ -542,8 +543,8 @@ public class BleDevice
 			DISCOVERING_SERVICES_FAILED,
 			
 			/**
-			 * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
-			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link Info#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
+			 * {@link BluetoothDevice#createBond()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
+			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link Info#bondFailReason()}, or (c) {@link Timing#TIMED_OUT}.
 			 * <br><br>
 			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Reason} to be applicable.
 			 */
@@ -746,7 +747,7 @@ public class BleDevice
 		 * Structure passed to {@link ConnectionFailListener#onConnectionFail(Info)} to provide more info about how/why the connection failed.
 		 */
 		public static class Info
-		{			
+		{
 			/**
 			 * The {@link BleDevice} this {@link Info} is for.
 			 */
@@ -790,6 +791,12 @@ public class BleDevice
 			private final int m_gattStatus;
 			
 			/**
+			 * See {@link BondEvent#failReason()}.
+			 */
+			public int bondFailReason(){  return m_bondFailReason;  }
+			private final int m_bondFailReason;
+			
+			/**
 			 * The highest state reached by the latest connection attempt.
 			 */
 			public BleDeviceState highestStateReached_latest(){  return m_highestStateReached_latest;  }
@@ -821,7 +828,8 @@ public class BleDevice
 			Info
 			(
 				BleDevice device, Reason reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime,
-				int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage
+				int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage,
+				int bondFailReason
 			)
 			{
 				this.m_device = device;
@@ -834,6 +842,7 @@ public class BleDevice
 				this.m_highestStateReached_latest = highestStateReached != null ? highestStateReached : BleDeviceState.NULL;
 				this.m_highestStateReached_total = highestStateReached_total != null ? highestStateReached_total : BleDeviceState.NULL;
 				this.m_autoConnectUsage = autoConnectUsage;
+				this.m_bondFailReason = bondFailReason; 
 				
 				m_device.getManager().ASSERT(highestStateReached != null, "highestState_latest shouldn't be null.");
 				m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
@@ -844,7 +853,8 @@ public class BleDevice
 				return new Info
 				(
 					device, Reason.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED,
-					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN
+					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN,
+					BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE
 				);
 			}
 			
@@ -1815,7 +1825,7 @@ public class BleDevice
 	 */
 	public void disconnect()
 	{
-		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE);
 	}
 	
 	/**
@@ -2272,7 +2282,7 @@ public class BleDevice
 		
 		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
-			ConnectionFailListener.Info info = new ConnectionFailListener.Info(this, Reason.ALREADY_CONNECTING_OR_CONNECTED, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE);
+			ConnectionFailListener.Info info = new ConnectionFailListener.Info(this, Reason.ALREADY_CONNECTING_OR_CONNECTED, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE);
 			m_connectionFailMngr.invokeCallback(info);
 			
 			return;
@@ -2511,7 +2521,7 @@ public class BleDevice
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, highestState, autoConnectUsage);
+			PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage);
 			
 			if( !attemptingReconnect && retry == PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
@@ -2577,12 +2587,12 @@ public class BleDevice
 		);
 	}
 	
-	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus)
+	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason)
 	{
-		disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus);
+		disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus, bondFailReason);
 	}
 	
-	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus)
+	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason)
 	{
 		boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
 		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
@@ -2632,7 +2642,7 @@ public class BleDevice
 		{
 			if( m_mngr.ASSERT(connectionFailReasonIfConnecting != null ) )
 			{
-				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect, gattStatus, highestState, AutoConnectUsage.NOT_APPLICABLE);
+				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect, gattStatus, bondFailReason, highestState, AutoConnectUsage.NOT_APPLICABLE);
 			}
 		}
 	}
@@ -2738,7 +2748,7 @@ public class BleDevice
 //			m_txnMngr.clearFirmwareUpdateTxn();
 		}
 		
-		PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
+		PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.
@@ -2749,12 +2759,12 @@ public class BleDevice
 		}
 	}
 	
-	private void stopPoll_private(UUID uuid, Double interval, ReadWriteListener listener)
+	private void stopPoll_private(final UUID uuid, final Double interval, final ReadWriteListener listener)
 	{
 		m_pollMngr.stopPoll(uuid, interval, listener, /*usingNotify=*/false);
 	}
 	
-	void read_internal(UUID uuid, Type type, P_WrappingReadWriteListener listener)
+	void read_internal(final UUID uuid, final Type type, final P_WrappingReadWriteListener listener)
 	{
 		final Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, type);
 		
@@ -2765,21 +2775,21 @@ public class BleDevice
 			return;
 		}
 		
-		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		
 		read_internal(characteristic, type, listener);
 	}
 	
 	void read_internal(P_Characteristic characteristic, Type type, P_WrappingReadWriteListener listener)
 	{
-		boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
+		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
 		
 		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 	
 	void write_internal(UUID uuid, byte[] data, P_WrappingReadWriteListener listener)
 	{
-		Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, data, Type.WRITE);
+		final Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, data, Type.WRITE);
 		
 		if( earlyOutResult != null )
 		{
@@ -2797,7 +2807,7 @@ public class BleDevice
 	
 	private void disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)
 	{
-		Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.DISABLING_NOTIFICATION);
+		final Result earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.DISABLING_NOTIFICATION);
 		
 		if( earlyOutResult != null )
 		{
