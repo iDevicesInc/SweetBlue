@@ -71,7 +71,7 @@ public enum BleDeviceState implements State
 	
 	/**
 	 * A convenience flag for checking if the device is connecting in an overall sense. This state is active if any one of {@link #CONNECTING},
-	 * {@link #GETTING_SERVICES}, {@link #AUTHENTICATING}, or {@link #INITIALIZING} is also active.
+	 * {@link #DISCOVERING_SERVICES}, {@link #AUTHENTICATING}, or {@link #INITIALIZING} is also active.
 	 */
 	CONNECTING_OVERALL,
 	
@@ -90,7 +90,7 @@ public enum BleDeviceState implements State
 	/**
 	 * This state is active while we request a list of services from the native stack after becoming {@link #CONNECTED}.
 	 */
-	GETTING_SERVICES,
+	DISCOVERING_SERVICES,
 	
 	/**
 	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Auth)} or {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)}
@@ -160,7 +160,7 @@ public enum BleDeviceState implements State
 	/**
 	 * A convenience for UI purposes, this returns the "highest" connection state representing
 	 * a transition from one state to another, so something with "ING" in the name (except {@link #PERFORMING_OTA}).
-	 * Chronologically this method returns {@link #CONNECTING}, {@link #GETTING_SERVICES},
+	 * Chronologically this method returns {@link #CONNECTING}, {@link #DISCOVERING_SERVICES},
 	 * {@link #AUTHENTICATING} (if {@link BleDevice#connect(BleTransaction.Auth)} or 
 	 * {@link BleDevice#connect(BleTransaction, BleTransaction)} is called), {@link #BONDING} (if relevant),
 	 * and {@link #INITIALIZING}  (if {@link BleDevice#connect(BleTransaction.Init)} or 
@@ -175,7 +175,7 @@ public enum BleDeviceState implements State
 			if( INITIALIZING.overlaps(stateMask) )		return INITIALIZING;
 			if( BONDING.overlaps(stateMask) )			return BONDING;
 			if( AUTHENTICATING.overlaps(stateMask) )	return AUTHENTICATING;
-			if( GETTING_SERVICES.overlaps(stateMask) )	return GETTING_SERVICES;
+			if( DISCOVERING_SERVICES.overlaps(stateMask) )	return DISCOVERING_SERVICES;
 		}
 		else
 		{
@@ -190,7 +190,7 @@ public enum BleDeviceState implements State
 		switch(this)
 		{
 			case CONNECTING:			return  0;
-			case GETTING_SERVICES:		return  1;
+			case DISCOVERING_SERVICES:		return  1;
 			case AUTHENTICATING:		return  2;
 			case BONDING:				return  3;
 			case INITIALIZING:			return  4;

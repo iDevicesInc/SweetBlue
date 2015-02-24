@@ -2,9 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-/**
- * 
- */
 class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {
 	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
@@ -16,6 +13,8 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 
 	@Override public void execute()
 	{
+//		getDevice().getNativeGatt().refresh();
+		
 		if( !getDevice().getNativeGatt().discoverServices() )
 		{
 			failImmediately();

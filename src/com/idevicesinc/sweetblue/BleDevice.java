@@ -539,7 +539,7 @@ public class BleDevice
 			 * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
 			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link Info#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
 			 */
-			GETTING_SERVICES_FAILED,
+			DISCOVERING_SERVICES_FAILED,
 			
 			/**
 			 * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
@@ -601,7 +601,7 @@ public class BleDevice
 		}
 		
 		/**
-		 * For {@link Reason#NATIVE_CONNECTION_FAILED}, {@link Reason#GETTING_SERVICES_FAILED}, and {@link Reason#BONDING_FAILED},
+		 * For {@link Reason#NATIVE_CONNECTION_FAILED}, {@link Reason#DISCOVERING_SERVICES_FAILED}, and {@link Reason#BONDING_FAILED},
 		 * gives further timing information on when the failure took place. For all other reasons, {@link Info#timing()} will
 		 * be {@link #NOT_APPLICABLE}.
 		 */
@@ -613,7 +613,7 @@ public class BleDevice
 			NOT_APPLICABLE,
 			
 			/**
-			 * The operation failed immediately, for example by the native stack method returning <code>false</code>.
+			 * The operation failed immediately, for example by the native stack method returning <code>false</code> from a method call.
 			 */
 			IMMEDIATELY,
 			
@@ -813,7 +813,7 @@ public class BleDevice
 			private final AutoConnectUsage m_autoConnectUsage;
 			
 			/**
-			 * Further timing information for {@link Reason#NATIVE_CONNECTION_FAILED}, {@link Reason#BONDING_FAILED}, and {@link Reason#GETTING_SERVICES_FAILED}.
+			 * Further timing information for {@link Reason#NATIVE_CONNECTION_FAILED}, {@link Reason#BONDING_FAILED}, and {@link Reason#DISCOVERING_SERVICES_FAILED}.
 			 */
 			public Timing timing(){  return m_timing;  }
 			private final Timing m_timing;
@@ -1566,7 +1566,7 @@ public class BleDevice
 	
 	/**
 	 * Returns the native characteristic for the given UUID in case you need lower-level access.
-	 * You should only call this after {@link BleDeviceState#GETTING_SERVICES} has completed.
+	 * You should only call this after {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
 	 * Please see the warning for {@link #getNative()}.
 	 */
 	@Advanced
@@ -1581,7 +1581,7 @@ public class BleDevice
 	
 	/**
 	 * Returns the native service for the given UUID in case you need lower-level access.
-	 * You should only call this after {@link BleDeviceState#GETTING_SERVICES} has completed.
+	 * You should only call this after {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
 	 * Please see the warning for {@link #getNative()}.
 	 */
 	@Advanced
@@ -2472,7 +2472,7 @@ public class BleDevice
 		//---		callbacks to the app but eventually things settle down and we're good again.
 		if( m_nativeWrapper.isNativelyConnected() )
 		{
-			m_stateTracker.update(lastConnectDisconnectIntent(), extraFlags, GETTING_SERVICES, true);
+			m_stateTracker.update(lastConnectDisconnectIntent(), extraFlags, DISCOVERING_SERVICES, true);
 		}
 	}
 	
@@ -2533,7 +2533,7 @@ public class BleDevice
 		m_serviceMngr.clear();
 		m_serviceMngr.loadDiscoveredServices();
 		
-		m_txnMngr.runAuthOrInitTxnIfNeeded(GETTING_SERVICES, false);
+		m_txnMngr.runAuthOrInitTxnIfNeeded(DISCOVERING_SERVICES, false);
 	}
 	
 	void onFullyInitialized(Object ... extraFlags)

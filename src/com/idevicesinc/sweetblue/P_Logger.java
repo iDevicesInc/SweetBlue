@@ -277,6 +277,7 @@ class P_Logger
 
 		initFromReflection(BluetoothGatt.class, "GATT_", m_gattStatusCodes);
 		initFromReflection(BleDeviceConfig.class, "GATT_", m_gattStatusCodes);
+		initFromReflection(PS_GattStatus.class, "GATT_", m_gattStatusCodes);
 	}
 	
 	
@@ -395,7 +396,10 @@ class P_Logger
 //				e.printStackTrace();
 			}
 			
-			map.put(fieldValue, fieldName);
+			if( !map.containsKey(fieldValue) )
+			{
+				map.put(fieldValue, fieldName);
+			}
 		}
 	}
 	
