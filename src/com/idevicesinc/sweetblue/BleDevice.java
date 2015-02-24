@@ -2594,7 +2594,7 @@ public class BleDevice
 			m_connectionFailMngr.onExplicitDisconnect();
 		}
 		
-		boolean wasConnecting = is(CONNECTING_OVERALL);
+		final boolean wasConnecting = is(CONNECTING_OVERALL);
 		boolean attemptingReconnect = is(ATTEMPTING_RECONNECT);
 		
 		if( cancelled )

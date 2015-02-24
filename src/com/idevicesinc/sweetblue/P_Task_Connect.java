@@ -64,6 +64,12 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 				
 				return;
 			}
+			else
+			{
+				//--- DRK > TODO: Don't really like this here...better would be if task listener handled this but I always
+				//---				want this gatt instance registered as soon as possible.
+				getDevice().m_nativeWrapper.updateGattInstance(getGatt());
+			}
 		}
 		else
 		{

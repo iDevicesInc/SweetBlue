@@ -249,6 +249,9 @@ class P_NativeDeviceWrapper
 			{
 				//--- DRK > This tripped with an S5 and iGrillv2 with low battery (not sure that matters).
 				//---		AV was able to replicate twice but was not attached to debugger and now can't replicate.
+				//---		As a result of a brief audit, moved gatt object setting from the ending state
+				//---		handler of the connect task in P_BleDevice_Listeners to the execute method of the connect task itself.
+				//---		Doesn't solve any particular issue found, but seems more logical.
 				m_mngr.ASSERT(m_gatt == gatt);
 				
 				if( m_gatt != gatt )
