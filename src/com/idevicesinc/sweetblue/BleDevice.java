@@ -20,6 +20,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsa
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
@@ -120,7 +121,7 @@ public class BleDevice
 			CANCELLED_FROM_BLE_TURNING_OFF,
 			
 			/**
-			 * Used either when {@link Result#type()} {@link Type#isRead()} and the stack returned a null value for {@link BluetoothGattCharacteristic#getValue()} despite
+			 * Used either when {@link Result#type()} {@link Type#isRead()} and the stack returned a <code>null</code> value for {@link BluetoothGattCharacteristic#getValue()} despite
 			 * the operation being otherwise "successful", <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter.
 			 * For the read case, the library will throw an {@link UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch.
 			 * If the problem persists try {@link BleManager#reset()}.
@@ -529,36 +530,24 @@ public class BleDevice
 			
 			/**
 			 * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
-			 * because it returned <code>null</code>.
+			 * because it (a) {@link Timing#IMMEDIATELY} returned <code>null</code>, (b) {@link Timing#EVENTUALLY} returned a bad {@link Info#gattStatus()},
+			 * or (c) {@link Timing#TIMED_OUT}.
 			 */
-			NATIVE_CONNECTION_FAILED_IMMEDIATELY,
+			NATIVE_CONNECTION_FAILED,
 			
 			/**
-			 * Eventually got a callback to {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)} but {@link Info#gattStatus}
-			 * did not indicate success.
+			 * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
+			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link Info#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
 			 */
-			NATIVE_CONNECTION_FAILED_EVENTUALLY,
+			GETTING_SERVICES_FAILED,
 			
 			/**
-			 * {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)} took longer than
-			 * time specified in {@link BleDeviceConfig#timeouts}.
+			 * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
+			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link Info#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
+			 * <br><br>
+			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Reason} to be applicable.
 			 */
-			NATIVE_CONNECTION_TIMED_OUT,
-			
-			/**
-			 * {@link BluetoothGatt#discoverServices()} returned false and thus failed immediately.
-			 */
-			GETTING_SERVICES_FAILED_IMMEDIATELY,
-			
-			/**
-			 * {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)} returned with a non-zero gattStatus.
-			 */
-			GETTING_SERVICES_FAILED_EVENTUALLY,
-			
-			/**
-			 * {@link BluetoothGatt#discoverServices()} took longer than time specified in {@link BleDeviceConfig#timeouts}.
-			 */
-			GETTING_SERVICES_TIMED_OUT,
+			BONDING_FAILED,
 			
 			/**
 			 * The {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Auth)} or
@@ -609,6 +598,34 @@ public class BleDevice
 			{
 				return !this.wasCancelled() && this != ALREADY_CONNECTING_OR_CONNECTED;
 			}
+		}
+		
+		/**
+		 * For {@link Reason#NATIVE_CONNECTION_FAILED}, {@link Reason#GETTING_SERVICES_FAILED}, and {@link Reason#BONDING_FAILED},
+		 * gives further timing information on when the failure took place. For all other reasons, {@link Info#timing()} will
+		 * be {@link #NOT_APPLICABLE}.
+		 */
+		public static enum Timing
+		{
+			/**
+			 * For reasons like {@link Reason#BLE_TURNING_OFF}, {@link Reason#AUTHENTICATION_FAILED}, etc.
+			 */
+			NOT_APPLICABLE,
+			
+			/**
+			 * The operation failed immediately, for example by the native stack method returning <code>false</code>.
+			 */
+			IMMEDIATELY,
+			
+			/**
+			 * The operation failed in the native stack. {@link ConnectionFailListener.Info#gattStatus()} will probably be a positive number.
+			 */
+			EVENTUALLY,
+			
+			/**
+			 * The operation took longer than the time specified in {@link BleDeviceConfig#timeouts}.
+			 */
+			TIMED_OUT;
 		}
 		
 		/**
@@ -674,11 +691,27 @@ public class BleDevice
 			}
 			
 			/**
+			 * Returns {@link #retry()} if the given condition holds <code>true</code>, {@link #doNotRetry()} otherwise.
+			 */
+			public static Please retryIf(boolean condition)
+			{
+				return condition ? retry() : doNotRetry();
+			}
+			
+			/**
 			 * Return this to stop the connection fail retry loop.
 			 */
 			public static Please doNotRetry()
 			{
 				return new Please(PE_Please.DO_NOT_RETRY);
+			}
+			
+			/**
+			 * Returns {@link #doNotRetry()} if the given condition holds <code>true</code>, {@link #retry()} otherwise.
+			 */
+			public static Please doNotRetryIf(boolean condition)
+			{
+				return condition ? doNotRetry() : retry();
 			}
 			
 			/**
@@ -779,14 +812,21 @@ public class BleDevice
 			public AutoConnectUsage autoConnectUsage(){  return m_autoConnectUsage;  }
 			private final AutoConnectUsage m_autoConnectUsage;
 			
+			/**
+			 * Further timing information for {@link Reason#NATIVE_CONNECTION_FAILED}, {@link Reason#BONDING_FAILED}, and {@link Reason#GETTING_SERVICES_FAILED}.
+			 */
+			public Timing timing(){  return m_timing;  }
+			private final Timing m_timing;
+			
 			Info
 			(
-				BleDevice device, Reason reason, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime,
+				BleDevice device, Reason reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime,
 				int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage
 			)
 			{
 				this.m_device = device;
 				this.m_reason = reason;
+				this.m_timing = timing;
 				this.m_failureCountSoFar = failureCountSoFar;
 				this.m_latestAttemptTime = latestAttemptTime;
 				this.m_totalAttemptTime = totalAttemptTime;
@@ -801,7 +841,11 @@ public class BleDevice
 			
 			static Info NULL(BleDevice device)
 			{
-				return new Info(device, Reason.NULL, 0, Interval.DISABLED, Interval.DISABLED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN);
+				return new Info
+				(
+					device, Reason.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED,
+					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN
+				);
 			}
 			
 			/**
@@ -904,7 +948,7 @@ public class BleDevice
 				}
 				else
 				{
-					if( info.reason() == Reason.NATIVE_CONNECTION_TIMED_OUT )
+					if( info.reason() == Reason.NATIVE_CONNECTION_FAILED && info.timing() == Timing.TIMED_OUT )
 					{
 						if( info.autoConnectUsage() == AutoConnectUsage.USED )
 						{
@@ -979,6 +1023,23 @@ public class BleDevice
 			 * probably from calling {@link BleManager#reset()}.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF;
+			
+			boolean isRealStatus()
+			{
+				return this == FAILED_IMMEDIATELY || this == FAILED_EVENTUALLY || this == TIMED_OUT;
+			}
+			
+			ConnectionFailListener.Timing timing()
+			{
+				switch(this)
+				{
+					case FAILED_IMMEDIATELY:		return Timing.IMMEDIATELY;
+					case FAILED_EVENTUALLY:			return Timing.EVENTUALLY;
+					case TIMED_OUT:					return Timing.TIMED_OUT;
+				}
+				
+				return Timing.NOT_APPLICABLE;
+			}
 		}
 		
 		/**
@@ -1754,7 +1815,7 @@ public class BleDevice
 	 */
 	public void disconnect()
 	{
-		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 	
 	/**
@@ -2211,7 +2272,7 @@ public class BleDevice
 		
 		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
-			ConnectionFailListener.Info info = new ConnectionFailListener.Info(this, Reason.ALREADY_CONNECTING_OR_CONNECTED, 0, Interval.ZERO, Interval.ZERO, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE);
+			ConnectionFailListener.Info info = new ConnectionFailListener.Info(this, Reason.ALREADY_CONNECTING_OR_CONNECTED, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE);
 			m_connectionFailMngr.invokeCallback(info);
 			
 			return;
@@ -2443,14 +2504,14 @@ public class BleDevice
 		
 		if( wasConnecting )
 		{
-			ConnectionFailListener.Reason reason = state == PE_TaskState.FAILED_IMMEDIATELY ? ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED_IMMEDIATELY : ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED_EVENTUALLY;
+			ConnectionFailListener.Timing timing = state == PE_TaskState.FAILED_IMMEDIATELY ? ConnectionFailListener.Timing.IMMEDIATELY : ConnectionFailListener.Timing.EVENTUALLY;
 			
 			if( state == PE_TaskState.TIMED_OUT )
 			{
-				reason = Reason.NATIVE_CONNECTION_TIMED_OUT;
+				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			PE_Please retry = m_connectionFailMngr.onConnectionFailed(reason, attemptingReconnect, gattStatus, highestState, autoConnectUsage);
+			PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, highestState, autoConnectUsage);
 			
 			if( !attemptingReconnect && retry == PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
@@ -2516,12 +2577,12 @@ public class BleDevice
 		);
 	}
 	
-	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, int gattStatus)
+	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus)
 	{
-		disconnectWithReason(null, connectionFailReasonIfConnecting, gattStatus);
+		disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus);
 	}
 	
-	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting, int gattStatus)
+	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus)
 	{
 		boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
 		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
@@ -2544,6 +2605,8 @@ public class BleDevice
 		E_Intent intent = cancelled ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
 		
+		m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable));
+		
 		if( isAny(CONNECTED, CONNECTING_OVERALL, INITIALIZED) )
 		{
 			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false, intent);
@@ -2565,13 +2628,11 @@ public class BleDevice
 			}
 		}
 		
-		m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable));
-		
 		if( wasConnecting )
 		{
 			if( m_mngr.ASSERT(connectionFailReasonIfConnecting != null ) )
 			{
-				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, attemptingReconnect, gattStatus, highestState, AutoConnectUsage.NOT_APPLICABLE);
+				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect, gattStatus, highestState, AutoConnectUsage.NOT_APPLICABLE);
 			}
 		}
 	}
@@ -2657,6 +2718,12 @@ public class BleDevice
 		}
 		
 		attemptingReconnect = attemptingReconnect || is(ATTEMPTING_RECONNECT);
+		
+		if( !wasExplicit )
+		{
+			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
+		}
+		
 		setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/true, wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
 		
 		if( !attemptingReconnect )
@@ -2671,12 +2738,7 @@ public class BleDevice
 //			m_txnMngr.clearFirmwareUpdateTxn();
 		}
 		
-		if( !wasExplicit )
-		{
-			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
-		}
-		
-		PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
+		PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.

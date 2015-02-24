@@ -111,15 +111,15 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 					}
 					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
 					{
-						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_IMMEDIATELY, discoverTask.getGattStatus());
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.IMMEDIATELY, discoverTask.getGattStatus());
 					}
 					else if( state == PE_TaskState.TIMED_OUT )
 					{
-						m_device.disconnectWithReason(Reason.GETTING_SERVICES_TIMED_OUT, discoverTask.getGattStatus());
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.TIMED_OUT, discoverTask.getGattStatus());
 					}
 					else
 					{
-						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED_EVENTUALLY, discoverTask.getGattStatus());
+						m_device.disconnectWithReason(Reason.GETTING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus());
 					}
 				}
 			}

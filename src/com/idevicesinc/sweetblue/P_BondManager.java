@@ -8,6 +8,7 @@ import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.State;
@@ -113,9 +114,34 @@ class P_BondManager
 		}
 	}
 	
+	private boolean failConnection(final BondListener.Status status)
+	{
+		if( status.isRealStatus() )
+		{
+			if( m_device.is(BleDeviceState.CONNECTING_OVERALL) )
+			{
+				final boolean bondingFailFailsConnection = BleDeviceConfig.bool(m_device.conf_device().bondingFailFailsConnection, m_device.conf_mngr().bondingFailFailsConnection);
+				
+				if( bondingFailFailsConnection )
+				{
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
 	void onNativeBondFailed(final E_Intent intent, final BondListener.Status status, final int failReason)
 	{
-		m_device.getStateTracker().update(intent, BONDED, false, BONDING, false, UNBONDED, true);
+		if( failConnection(status) )
+		{
+			m_device.disconnectWithReason(Reason.BONDING_FAILED, status.timing(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+		}
+		else
+		{
+			m_device.getStateTracker().update(intent, BONDED, false, BONDING, false, UNBONDED, true);
+		}
 		
 		invokeCallback(status, failReason, intent.convert());
 	}

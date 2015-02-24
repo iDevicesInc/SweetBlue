@@ -9,11 +9,6 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
-/**
- * 
- * 
- *
- */
 class P_TransactionManager
 {
 	final BleTransaction.PI_EndListener m_txnEndListener = new BleTransaction.PI_EndListener()
@@ -69,7 +64,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 			else if (txn == m_initTxn )
@@ -80,7 +75,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 			else if (txn == m_device.getFirmwareUpdateTxn())

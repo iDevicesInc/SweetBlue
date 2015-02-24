@@ -92,6 +92,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Just a dummy subclass of {@link BleDevice.StateListener.ChangeEvent} so that this gets auto-imported for implementations of {@link BondFilter}. 
 		 */
+		@Advanced
 		public static class StateChangeEvent extends BleDevice.StateListener.ChangeEvent
 		{
 			StateChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
@@ -103,6 +104,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * An enumeration of the type of characteristic operation for a {@link CharacteristicEvent}.
 		 */
+		@Advanced
 		public static enum CharacteristicEventType
 		{
 			/**
@@ -124,6 +126,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Struct passed to {@link BondFilter#onCharacteristicEvent(CharacteristicEvent)}.
 		 */
+		@Advanced
 		public static class CharacteristicEvent
 		{
 			/**
@@ -166,6 +169,7 @@ public class BleDeviceConfig implements Cloneable
 		 * Return value for the various interface methods of {@link BondFilter}.
 		 * Use static constructor methods to create instances.
 		 */
+		@Advanced
 		public static class Please
 		{
 			private final Boolean m_bond;
@@ -196,6 +200,22 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
+			 * Returns {@link #bond()} if the given condition holds <code>true</code>, {@link #doNothing()} otherwise.
+			 */
+			public static Please bondIf(boolean condition)
+			{
+				return condition ? bond() : doNothing();
+			}
+			
+			/**
+			 * Same as {@link #bondIf(boolean)} but lets you pass a {@link BondListener} as well.
+			 */
+			public static Please bondIf(boolean condition, BondListener listener)
+			{
+				return condition ? bond(listener) : doNothing();
+			}
+			
+			/**
 			 * Same as {@link #bond()} but lets you pass a {@link BondListener} as well.
 			 */
 			public static Please bond(BondListener listener)
@@ -209,6 +229,14 @@ public class BleDeviceConfig implements Cloneable
 			public static Please unbond()
 			{
 				return new Please(false, null);
+			}
+			
+			/**
+			 * Returns {@link #bond()} if the given condition holds <code>true</code>, {@link #doNothing()} otherwise.
+			 */
+			public static Please unbondIf(boolean condition)
+			{
+				return condition ? unbond() : doNothing();
 			}
 			
 			/**
@@ -517,6 +545,12 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean cacheDeviceOnUndiscovery					= true;
 	
 	/**
+	 * Default is <code>true</code> - controls whether {@link ConnectionFailListener.Reason#BONDING_FAILED} is capable of
+	 * failing a {@link BleDevice#connect()}.
+	 */
+	public Boolean bondingFailFailsConnection				= true;
+	
+	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
 	 * approximated by checking when the last time was that we discovered a device,
 	 * and if this time is greater than {@link #undiscoveryKeepAlive} then the device is undiscovered. However a scan
@@ -528,7 +562,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)
 	 * @see #undiscoveryKeepAlive
 	 */
-	public Interval	minScanTimeNeededForUndiscovery		= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
+	public Interval	minScanTimeNeededForUndiscovery				= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
 	 * Default is {@link #DEFAULT_SCAN_KEEP_ALIVE} seconds - If a device exceeds this amount of time since its
@@ -554,8 +588,8 @@ public class BleDeviceConfig implements Cloneable
 	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs(double)} with {@link #DEFAULT_TASK_TIMEOUT}.
 	 * This is an array of timeouts whose indices are meant to map to {@link BleTask} ordinals and provide a
 	 * way to control how long a given task is allowed to run before being "cut loose". If no option is provided for a given {@link BleTask},
-	 * either by setting this array null, or by providing <code>null</code> or {@link Interval#DISABLED} for a given {@link BleTask}, then
-	 * no timeout is observed.
+	 * either by setting this array null, or by providing <code>null</code> or {@link Interval#DISABLED} or {@link Interval#INFINITE} 
+	 * for a given {@link BleTask}, then no timeout is observed.
 	 * <br><br>
 	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
 	 */
@@ -618,7 +652,7 @@ public class BleDeviceConfig implements Cloneable
 	 * have fine control over reconnect behavior. This is basically how often and how long
 	 * the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
 	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
-	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/device to stay awake while attempting a reconnect.
+	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/phone to stay awake while attempting a reconnect.
 	 * 
 	 * @see BleManagerConfig#manageCpuWakeLock
 	 * @see ReconnectLoop

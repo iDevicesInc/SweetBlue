@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
+import com.google.android.gms.internal.ig;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 import com.idevicesinc.sweetblue.annotations.Advanced;
@@ -163,6 +164,22 @@ public class BleManagerConfig extends BleDeviceConfig
 			public static Please acknowledge()
 			{
 				return new Please(true, null);
+			}
+			
+			/**
+			 * Returns {@link #acknowledge()} if the given condition holds <code>true</code>, {@link #ignore()} otherwise.
+			 */
+			public static Please acknowledgeIf(boolean condition)
+			{
+				return condition ? acknowledge() : ignore();
+			}
+			
+			/**
+			 * Same as {@link #acknowledgeIf(boolean)} but lets you pass a {@link BleDeviceConfig} as well.
+			 */
+			public static Please acknowledgeIf(boolean condition, BleDeviceConfig config)
+			{
+				return condition ? acknowledge(config) : ignore();
 			}
 			
 			/**

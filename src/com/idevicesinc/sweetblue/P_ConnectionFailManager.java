@@ -66,7 +66,7 @@ class P_ConnectionFailManager
 		return retryCount;
 	}
 	
-	PE_Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, boolean isAttemptingReconnect, int gattStatus, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage)
+	PE_Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect, int gattStatus, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage)
 	{
 		if( reason_nullable == null )  return PE_Please.DO_NOT_RETRY;
 		
@@ -101,7 +101,7 @@ class P_ConnectionFailManager
 			}
 		}
 		
-		final Info moreInfo = new Info(m_device, reason_nullable, m_failCount, attemptTime_latest, attemptTime_total, gattStatus, highestStateReached, m_highestStateReached_total, autoConnectUsage);
+		final Info moreInfo = new Info(m_device, reason_nullable, timing, m_failCount, attemptTime_latest, attemptTime_total, gattStatus, highestStateReached, m_highestStateReached_total, autoConnectUsage);
 		
 		PE_Please retryChoice = invokeCallback(moreInfo);
 		retryChoice = !isAttemptingReconnect ? retryChoice : PE_Please.DO_NOT_RETRY;
