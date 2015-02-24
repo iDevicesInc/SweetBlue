@@ -42,9 +42,9 @@ class P_Task_Unbond extends PA_Task_RequiresBleOn
 	        Method method = getDevice().getNative().getClass().getMethod("removeBond", (Class[]) null);
 	        Boolean result = (Boolean) method.invoke(getDevice().getNative(), (Object[]) null);
 	        
-	        if( !result )
+	        if( result == null || !result )
 	        {
-	        	fail();
+	        	failImmediately();
 	        }
 	    }
 		catch (Exception e)

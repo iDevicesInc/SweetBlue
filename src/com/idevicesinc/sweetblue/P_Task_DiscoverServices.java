@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import java.lang.reflect.Method;
+
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 class P_Task_DiscoverServices extends PA_Task_RequiresConnection
@@ -13,7 +15,15 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 
 	@Override public void execute()
 	{
-//		getDevice().getNativeGatt().refresh();
+//		if( !getDevice().getNativeGatt().getServices().isEmpty() )
+		{
+			final boolean useRefresh = BleDeviceConfig.bool(getDevice().conf_device().useGattRefresh, getDevice().conf_mngr().useGattRefresh);
+			
+			if( useRefresh )
+			{
+				refresh();
+			}
+		}
 		
 		if( !getDevice().getNativeGatt().discoverServices() )
 		{
@@ -21,6 +31,24 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			
 			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
 		}
+	}
+	
+	private void refresh()
+	{
+		try
+		{
+	        Method method = getDevice().getNativeGatt().getClass().getMethod("refresh", (Class[]) null);
+	        Boolean result = (Boolean) method.invoke(getDevice().getNativeGatt(), (Object[]) null);
+	        
+	        if( result == null || !result )
+	        {
+//	        	failImmediately();
+	        }
+	    }
+		catch (Exception e)
+		{
+//			fail();
+	    }
 	}
 	
 	@Override public PE_TaskPriority getPriority()

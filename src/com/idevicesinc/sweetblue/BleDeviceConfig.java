@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -34,7 +35,7 @@ public class BleDeviceConfig implements Cloneable
 	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
-	public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
+	public static final double DEFAULT_TASK_TIMEOUT						= 1000.0;//12.5;
 	
 	
 	/**
@@ -549,6 +550,15 @@ public class BleDeviceConfig implements Cloneable
 	 * failing a {@link BleDevice#connect()}.
 	 */
 	public Boolean bondingFailFailsConnection				= true;
+	
+	/**
+	 * Default is <code>true</code> - whether to use {@link BluetoothGatt#refresh()} right before service discovery.
+	 * This method is not in the public Android API, so its use is disabled by default. You may find it useful to enable
+	 * if your remote device is routinely changing its gatt service profile. This method call supposedly clears a cache
+	 * that would otherwise prevent changes from being discovered.
+	 */
+	@Advanced
+	public Boolean useGattRefresh							= false;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
