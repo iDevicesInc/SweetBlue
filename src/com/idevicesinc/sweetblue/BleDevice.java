@@ -2061,7 +2061,7 @@ public class BleDevice
 			if( listener != null )
 			{
 				Result result = m_pollMngr.newAlreadyEnabledResult(characteristic);
-				invokeReadWriteCallback(listener, earlyOutResult);
+				invokeReadWriteCallback(listener, result);
 			}
 		}
 		
