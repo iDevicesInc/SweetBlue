@@ -547,6 +547,8 @@ public class BleDevice
 			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link Info#bondFailReason()}, or (c) {@link Timing#TIMED_OUT}.
 			 * <br><br>
 			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Reason} to be applicable.
+			 * 
+			 * @see BondListener 
 			 */
 			BONDING_FAILED,
 			
