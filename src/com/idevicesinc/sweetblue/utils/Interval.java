@@ -31,6 +31,22 @@ public class Interval
 	 */
 	public static final Interval ZERO = Interval.secs(0.0);
 	
+	/**
+	 * Convenience value representing one second.
+	 */
+	public static final Interval ONE_SEC = Interval.secs(1.0);
+	
+	/**
+	 * Convenience value representing five seconds.
+	 */
+	public static final Interval FIVE_SECS = Interval.secs(5.0);
+	
+	/**
+	 * Convenience value representing ten seconds.
+	 */
+	public static final Interval TEN_SECS = Interval.secs(10.0);
+	
+	
 	private final double m_secs;
 	private final long m_millis;
 	
@@ -153,6 +169,6 @@ public class Interval
 	
 	@Override public String toString()
 	{
-		return secs()+"secs/"+millis()+"millis"; 
+		return Utils.toFixed(secs())+"secs/"+millis()+"millis"; 
 	}
 }

@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue.utils;
 
+import java.text.DecimalFormat;
+
 import com.idevicesinc.sweetblue.annotations.*;
 
 /**
@@ -71,6 +73,6 @@ public class Distance
 	
 	@Override public String toString()
 	{
-		return meters()+"meters/"+feet()+"feet"; 
+		return Utils.toFixed(meters())+"meters/"+Utils.toFixed(feet())+"feet"; 
 	}
 }

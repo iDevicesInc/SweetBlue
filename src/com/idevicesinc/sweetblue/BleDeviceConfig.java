@@ -56,7 +56,7 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Default value for {@link #defaultTxPower}.
 	 */
-	public static final int DEFAULT_TX_POWER							= 4;
+	public static final int DEFAULT_TX_POWER							= -50;
 	
 	/**
 	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation failed at a point where a
@@ -632,8 +632,10 @@ public class BleDeviceConfig implements Cloneable
 	public Integer		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
-	 * Default is {@link #DEFAULT_TX_POWER} - this value is used if we can't establish a device's TxPower from the device itself,
-	 * either through its scan record or by reading the standard characteristic.
+	 * Default is {@link #DEFAULT_TX_POWER} - this value is used if we can't establish a device's calibrated transmission power from the device itself,
+	 * either through its scan record or by reading the standard characteristic. To get a good value for this on a per-remote-device basis
+	 * experimentally, simply run a sample app and use {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)} and spit {@link BleDevice#getRssi()}
+	 * to your log. The average value of {@link BleDevice#getRssi()} at one meter away is the value you should use for this config option.
 	 * 
 	 * @see BleDevice#getTxPower()
 	 */

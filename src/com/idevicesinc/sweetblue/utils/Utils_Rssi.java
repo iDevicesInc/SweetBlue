@@ -45,7 +45,7 @@ public class Utils_Rssi extends Utils
 			return -1.0;
 		}
 
-		final double ratio = ((double)rssi) * 1.0 / ((double)txPower);
+		final double ratio = ((double)rssi) * (1.0 / ((double)txPower));
 		
 		if (ratio < 1.0)
 		{

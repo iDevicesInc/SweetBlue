@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,6 +37,16 @@ public class Utils
 	static boolean requiresBonding(BluetoothGattCharacteristic characteristic)
 	{
 		return false;
+	}
+	
+	private static final DecimalFormat s_toFixedFormat = new DecimalFormat();
+	{
+		s_toFixedFormat.setMaximumIntegerDigits(2);
+	}
+	
+	public static String toFixed(final double value)
+	{
+		return s_toFixedFormat.format(value);
 	}
 	
 	/**
