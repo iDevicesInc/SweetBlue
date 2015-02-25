@@ -18,7 +18,7 @@ public interface State
 	/**
 	 * Abstract base class for {@link BleDevice.StateListener.ChangeEvent} and {@link BleManager.StateListener.ChangeEvent}.
 	 */
-	public static abstract class ChangeEvent
+	public static abstract class ChangeEvent<T_State extends State>
 	{
 		/**
 		 * The bitwise representation of the {@link BleDevice} or {@link BleManager}
@@ -58,9 +58,25 @@ public interface State
 		}
 		
 		/**
+		 * Returns all the states that were entered as a bit mask.
+		 */
+		public int enterMask()
+		{
+			return newStateBits() & ~oldStateBits();
+		}
+		
+		/**
+		 * Returns all the states that were exited as a bit mask.
+		 */
+		public int exitMask()
+		{
+			return oldStateBits() & ~newStateBits();
+		}
+		
+		/**
 		 * Convenience forwarding of {@link State#didEnter(int, int)}.
 		 */
-		public boolean didEnter(State state)
+		public boolean didEnter(T_State state)
 		{
 			return state.didEnter(oldStateBits(), newStateBits());
 		}
@@ -68,7 +84,7 @@ public interface State
 		/**
 		 * Convenience forwarding of {@link State#didExit(int, int)}.
 		 */
-		public boolean didExit(State state)
+		public boolean didExit(T_State state)
 		{
 			return state.didExit(oldStateBits(), newStateBits());
 		}
@@ -76,7 +92,7 @@ public interface State
 		/**
 		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns true on any of the {@link State} instances given.
 		 */
-		public boolean didEnterAny(State ... states)
+		public boolean didEnterAny(T_State ... states)
 		{
 			for( int i = 0; i < states.length; i++ )
 			{
@@ -89,7 +105,7 @@ public interface State
 		/**
 		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns true on any of the {@link State} instances given.
 		 */
-		public boolean didExitAny(State ... states)
+		public boolean didExitAny(T_State ... states)
 		{
 			for( int i = 0; i < states.length; i++ )
 			{
@@ -103,7 +119,7 @@ public interface State
 		 * Returns the intention behind the state change, or {@link ChangeIntent#NULL} if no state
 		 * change for the given state occurred.
 		 */
-		public ChangeIntent getIntent(State state)
+		public ChangeIntent getIntent(T_State state)
 		{
 			if( (state.bit() & oldStateBits()) == (state.bit() & newStateBits()) )
 			{
@@ -113,11 +129,6 @@ public interface State
 			{
 				return state.overlaps(intentMask()) ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
 			}
-		}
-		
-		@Override public String toString()
-		{
-			return super.toString(); // TODO
 		}
 	}
 	

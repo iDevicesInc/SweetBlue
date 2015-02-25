@@ -273,8 +273,8 @@ class P_BleManager_Listeners
 		BleManagerState previousState = BleManagerState.get(previousNativeState);
 		BleManagerState newState = BleManagerState.get(newNativeState);
 		
-		m_mngr.getNativeStateTracker().update(intent, previousState, false, newState, true);
-		m_mngr.getStateTracker().update(intent, previousState, false, newState, true);
+		m_mngr.getNativeStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
+		m_mngr.getStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
 		
 		if( previousNativeState != BluetoothAdapter.STATE_ON && newNativeState == BluetoothAdapter.STATE_ON )
 		{

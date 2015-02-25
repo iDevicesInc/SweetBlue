@@ -3,11 +3,6 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.BleManager.NativeStateListener.ChangeEvent;
 
 
-/**
- * 
- * 
- *
- */
 class P_NativeBleStateTracker extends PA_StateTracker
 {
 	private BleManager.NativeStateListener m_stateListener;
@@ -32,7 +27,7 @@ class P_NativeBleStateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
 	{
 		if( m_stateListener != null )
 		{

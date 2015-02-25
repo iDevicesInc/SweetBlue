@@ -224,7 +224,7 @@ public class BleManager
 		/**
 		 * Subclass that adds the manager field.
 		 */
-		public static class ChangeEvent extends State.ChangeEvent
+		public static class ChangeEvent extends State.ChangeEvent<BleManagerState>
 		{
 			/**
 			 * The manager undergoing the state change.
@@ -237,6 +237,15 @@ public class BleManager
 				super(oldStateBits, newStateBits, intentMask);
 				
 				this.m_manager = manager;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"entered",			Utils.toString(enterMask(), BleDeviceState.values()),
+					"exited",			Utils.toString(exitMask(), BleDeviceState.values())
+				);
 			}
 		}
 		
@@ -699,9 +708,9 @@ public class BleManager
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
 		BleManagerState nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
 		m_stateTracker = new P_BleStateTracker(this);
-		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL);
+		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
-		m_nativeStateTracker.append(nativeState, E_Intent.UNINTENTIONAL);
+		m_nativeStateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 		m_mainThreadHandler = new Handler(m_context.getMainLooper());
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
@@ -1137,7 +1146,7 @@ public class BleManager
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
-			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.INTENTIONAL);
+			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 
 			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs()));
 		}
@@ -1238,7 +1247,7 @@ public class BleManager
 
 		if( is(OFF) )
 		{
-			m_stateTracker.update(E_Intent.INTENTIONAL, TURNING_ON, true, OFF, false);
+			m_stateTracker.update(E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, TURNING_ON, true, OFF, false);
 		}
 
 		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
@@ -1392,7 +1401,7 @@ public class BleManager
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
 
-		m_stateTracker.remove(BleManagerState.SCANNING, intent);
+		m_stateTracker.remove(BleManagerState.SCANNING, intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	/**
@@ -1651,7 +1660,7 @@ public class BleManager
 
 		if( is(ON) )
 		{
-			m_stateTracker.update(E_Intent.INTENTIONAL, TURNING_OFF, true, ON, false);
+			m_stateTracker.update(E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, TURNING_OFF, true, ON, false);
 		}
 
 		m_deviceMngr.disconnectAllForTurnOff(PE_TaskPriority.CRITICAL);
@@ -1670,7 +1679,7 @@ public class BleManager
 				{
 					if( is(RESETTING) )
 					{
-						m_nativeStateTracker.append(RESETTING, E_Intent.INTENTIONAL);
+						m_nativeStateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 					}
 
 					m_deviceMngr.undiscoverAllForTurnOff(m_deviceMngr_cache, E_Intent.INTENTIONAL);
@@ -1700,7 +1709,7 @@ public class BleManager
 			return;
 		}
 
-		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL);
+		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 
 		m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
 
@@ -1714,8 +1723,8 @@ public class BleManager
 				{
 					ResetListener nukeListeners = m_resetListeners;
 					m_resetListeners = null;
-					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL);
-					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL);
+					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 
 					if( nukeListeners != null )
 					{
@@ -1814,7 +1823,7 @@ public class BleManager
 				}
 				else
 				{
-					m_nativeStateTracker.append(BleManagerState.SCANNING, intent);
+					m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 
 					uhOh(UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
 
@@ -1838,7 +1847,7 @@ public class BleManager
 				m_crashResolver.start();
 			}
 
-			m_nativeStateTracker.append(BleManagerState.SCANNING, intent);
+			m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 
 			return E_Mode.BLE;
 		}
@@ -2046,7 +2055,7 @@ public class BleManager
 			m_crashResolver.stop();
 		}
 
-		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
+		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	void clearScanningRelatedMembers(E_Intent intent)
@@ -2055,7 +2064,7 @@ public class BleManager
 
 		m_timeNotScanning = 0.0;
 
-		m_stateTracker.remove(BleManagerState.SCANNING, intent);
+		m_stateTracker.remove(BleManagerState.SCANNING, intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	void tryPurgingStaleDevices(double scanTime)

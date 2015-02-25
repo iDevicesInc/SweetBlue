@@ -435,6 +435,35 @@ public class Utils
 		return (T) value;
 	}
 	
+	public static String toString(int mask, State[] values)
+	{
+		StringBuilder builder = new StringBuilder();
+		builder.append("[");
+		
+		boolean foundFirst = false;
+		
+		for( int i = 0; i < values.length; i++ )
+		{
+			if( values[i].overlaps(mask) )
+			{
+				if( foundFirst )
+				{
+					builder.append(", ");
+				}
+				else
+				{
+					foundFirst = true;
+				}
+				
+				builder.append(values[i]);
+			}
+		}
+		
+		builder.append("]");
+		
+		return builder.toString();
+	}
+	
 	public static String toString(Object ... values)
 	{
 		String toReturn = "";

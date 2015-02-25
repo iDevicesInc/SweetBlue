@@ -9,6 +9,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
+	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 	
 	public P_Task_Disconnect(BleDevice device, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
 	{
@@ -58,6 +59,18 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 		{
 			this.noOp();
 		}
+	}
+	
+	public int getGattStatus()
+	{
+		return m_gattStatus;
+	}
+	
+	public void onNativeSuccess(int gattStatus)
+	{
+		m_gattStatus = gattStatus;
+		
+		succeed();
 	}
 	
 	@Override public PE_TaskPriority getPriority()

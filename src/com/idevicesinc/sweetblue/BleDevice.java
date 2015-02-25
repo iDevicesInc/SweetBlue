@@ -315,6 +315,10 @@ public class BleDevice
 			/**
 			 * This value gets updated as a result of a {@link BleDevice#readRssi(ReadWriteListener)} call.
 			 * It will always be equivalent to {@link BleDevice#getRssi()} but is included here for convenience.
+			 * 
+			 * @see BleDevice#getRssi()
+			 * @see BleDevice#getRssiPercent()
+			 * @see BleDevice#getDistance()
 			 */
 			public int rssi(){  return m_rssi;  }
 			private final int m_rssi;
@@ -446,7 +450,7 @@ public class BleDevice
 						"status",		status(),
 						"type",			type(),
 						"target",		target(),
-						"rssi",			device().getRssiPercent(),
+						"rssi",			rssi(),
 						"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
 					);
 				}
@@ -482,7 +486,7 @@ public class BleDevice
 		/**
 		 * Subclass that adds the device field.
 		 */
-		public static class ChangeEvent extends State.ChangeEvent
+		public static class ChangeEvent extends State.ChangeEvent<BleDeviceState>
 		{
 			/**
 			 * The device undergoing the state change.
@@ -490,11 +494,35 @@ public class BleDevice
 			public BleDevice device(){  return m_device;  }
 			private final BleDevice m_device;
 			
-			ChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
+			/**
+			 * The change in gattStatus that may have precipitated the state change, or {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
+			 * For example if {@link #didEnter(State)} with {@link BleDeviceState#DISCONNECTED} is <code>true</code> and {@link #didExit(State)}
+			 * with {@link BleDeviceState#CONNECTING} is also <code>true</code> then {@link #gattStatus()} may be greater than zero and give
+			 * some further hint as to why the connection failed.
+			 * <br><br>
+			 * See {@link ConnectionFailListener.Info#gattStatus()} for more information.
+			 */
+			public int gattStatus(){  return m_gattStatus;  }
+			private final int m_gattStatus;
+			
+			
+			ChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 			{
 				super(oldStateBits, newStateBits, intentMask);
 				
 				this.m_device = device;
+				this.m_gattStatus = gattStatus;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					"device",			device().getName_debug(),
+					"entered",			Utils.toString(enterMask(), BleDeviceState.values()),
+					"exited",			Utils.toString(exitMask(), BleDeviceState.values()),
+					"gattStatus",		device().m_logger.gattStatus(gattStatus())
+				);
 			}
 		}
 		
@@ -672,6 +700,11 @@ public class BleDevice
 			static enum PE_Please
 			{
 				RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
+				
+				boolean isRetry()
+				{
+					return this != DO_NOT_RETRY;
+				}
 			}
 			
 			private final PE_Please m_please;
@@ -744,7 +777,7 @@ public class BleDevice
 			 */
 			public boolean isRetry()
 			{
-				return m_please != PE_Please.DO_NOT_RETRY;
+				return m_please != null && m_please.isRetry();
 			}
 		}
 		
@@ -1189,7 +1222,7 @@ public class BleDevice
 		m_serviceMngr = new P_ServiceManager(this);
 		m_stateTracker = new P_DeviceStateTracker(this);
 		m_bondMngr = new P_BondManager(this);
-		m_stateTracker.set(E_Intent.UNINTENTIONAL, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
+		m_stateTracker.set(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 		m_pollMngr = new P_PollManager(this);
 		m_txnMngr = new P_TransactionManager(this);
 		m_taskStateListener = m_listeners.m_taskStateListener;
@@ -1450,7 +1483,7 @@ public class BleDevice
 	 * May be empty but never null.
 	 */
 	@Advanced
-	public byte[] getScanRecord()
+	public @Nullable(Prevalence.NEVER) byte[] getScanRecord()
 	{
 		return m_scanRecord;
 	}
@@ -1459,7 +1492,7 @@ public class BleDevice
 	 * Returns the advertised services, if any, parsed from {@link #getScanRecord()}.
 	 * May be empty but never null.
 	 */
-	public UUID[] getAdvertisedServices()
+	public @Nullable(Prevalence.NEVER) UUID[] getAdvertisedServices()
 	{
 		UUID[] toReturn = m_advertisedServices.size() > 0 ? new UUID[m_advertisedServices.size()] : EMPTY_UUID_ARRAY;
 		return m_advertisedServices.toArray(toReturn);
@@ -1653,7 +1686,7 @@ public class BleDevice
 		
 		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
 		
-		m_stateTracker.append(BONDING, E_Intent.INTENTIONAL);
+		m_stateTracker.append(BONDING, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 	
 	/**
@@ -2194,6 +2227,7 @@ public class BleDevice
 		m_stateTracker.update
 		(
 			E_Intent.UNINTENTIONAL,
+			BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE,
 			BONDING,		m_nativeWrapper.isNativelyBonding(),
 			BONDED,			m_nativeWrapper.isNativelyBonded(),
 			UNBONDED,		m_nativeWrapper.isNativelyUnbonded(),
@@ -2211,6 +2245,7 @@ public class BleDevice
 		m_stateTracker.update
 		(
 			PA_StateTracker.E_Intent.UNINTENTIONAL,
+			BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE,
 			BONDING,		m_nativeWrapper.isNativelyBonding(),
 			BONDED,			m_nativeWrapper.isNativelyBonded()
 		);
@@ -2225,6 +2260,7 @@ public class BleDevice
 		m_stateTracker.set
 		(
 			intent,
+			BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE,
 			UNDISCOVERED,	true,
 			DISCOVERED,		false,
 			ADVERTISING,	false,
@@ -2262,13 +2298,13 @@ public class BleDevice
 		m_rssiPollMngr.update(timeStep);
 	}
 	
-	void unbond_private(PE_TaskPriority priority, BondListener.Status status)
+	void unbond_private(final PE_TaskPriority priority, final BondListener.Status status)
 	{
 		m_queue.add(new P_Task_Unbond(this, m_taskStateListener, priority));
 		
 		final boolean wasBonding = is(BONDING);
 		
-		m_stateTracker.update(E_Intent.INTENTIONAL, BONDED, false, BONDING, false, UNBONDED, true);
+		m_stateTracker.update(E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
 		
 		if( wasBonding )
 		{
@@ -2327,11 +2363,11 @@ public class BleDevice
 				//---		for whatever reason. Making a judgement call that the user would then expect reconnect to stop.
 				//---		In other words it's not stopped for any hard technical reasons...it could go on.
 				m_reconnectMngr.stop();
-				m_stateTracker.update(E_Intent.INTENTIONAL, ATTEMPTING_RECONNECT, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
+				m_stateTracker.update(E_Intent.INTENTIONAL, BluetoothGatt.GATT_SUCCESS, ATTEMPTING_RECONNECT, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
 			}
 			else
 			{
-				m_stateTracker.update(lastConnectDisconnectIntent(), CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
+				m_stateTracker.update(lastConnectDisconnectIntent(), BluetoothGatt.GATT_SUCCESS, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
 			}
 		}
 	}
@@ -2428,7 +2464,7 @@ public class BleDevice
 
 			m_stateTracker.update
 			(
-				intent,  DISCONNECTED,false,  CONNECTING_OVERALL,true,  CONNECTING,false,  CONNECTED,true,  BONDING,true,  ADVERTISING,false
+				intent, BluetoothGatt.GATT_SUCCESS, DISCONNECTED,false,  CONNECTING_OVERALL,true,  CONNECTING,false,  CONNECTED,true,  BONDING,true,  ADVERTISING,false
 			);
 		}
 		else
@@ -2487,7 +2523,7 @@ public class BleDevice
 		//---		callbacks to the app but eventually things settle down and we're good again.
 		if( m_nativeWrapper.isNativelyConnected() )
 		{
-			m_stateTracker.update(lastConnectDisconnectIntent(), extraFlags, DISCOVERING_SERVICES, true);
+			m_stateTracker.update(lastConnectDisconnectIntent(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, extraFlags, DISCOVERING_SERVICES, true);
 		}
 	}
 	
@@ -2514,7 +2550,7 @@ public class BleDevice
 		
 		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL) )
 		{
-			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false, E_Intent.UNINTENTIONAL);
+			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false, E_Intent.UNINTENTIONAL, gattStatus);
 		}
 		
 		if( wasConnecting )
@@ -2565,12 +2601,13 @@ public class BleDevice
 		m_stateTracker.update
 		(
 			lastConnectDisconnectIntent(),
+			BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE,
 			extraFlags, ATTEMPTING_RECONNECT, false, CONNECTING_OVERALL, false,
 			AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true
 		);
 	}
 	
-	private void setStateToDisconnected(boolean attemptingReconnect, boolean fromBleCallback, E_Intent intent)
+	private void setStateToDisconnected(boolean attemptingReconnect, boolean fromBleCallback, E_Intent intent, int gattStatus)
 	{
 		//--- DRK > Device probably wasn't advertising while connected so here we reset the timer to keep
 		//---		it from being immediately undiscovered after disconnection.
@@ -2582,6 +2619,7 @@ public class BleDevice
 		m_stateTracker.set
 		(
 			intent,
+			gattStatus,
 			DISCOVERED, true,
 			DISCONNECTED, true,
 			BONDING, m_nativeWrapper.isNativelyBonding(),
@@ -2624,7 +2662,7 @@ public class BleDevice
 		
 		if( isAny(CONNECTED, CONNECTING_OVERALL, INITIALIZED) )
 		{
-			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false, intent);
+			setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/false, intent, gattStatus);
 			
 			m_txnMngr.cancelAllTransactions();
 //				m_txnMngr.clearAllTxns();
@@ -2638,7 +2676,8 @@ public class BleDevice
 		{
 			if( !attemptingReconnect )
 			{
-				m_stateTracker.update(intent, ATTEMPTING_RECONNECT, false);
+				m_stateTracker.update(intent, gattStatus, ATTEMPTING_RECONNECT, false);
+				
 				m_reconnectMngr.stop();
 			}
 		}
@@ -2661,7 +2700,7 @@ public class BleDevice
 		return m_lastDisconnectWasBecauseOfBleTurnOff;
 	}
 	
-	void onNativeDisconnect(final boolean wasExplicit)
+	void onNativeDisconnect(final boolean wasExplicit, final int gattStatus)
 	{
 		if( !wasExplicit )
 		{
@@ -2739,7 +2778,7 @@ public class BleDevice
 			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
 		}
 		
-		setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/true, wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
+		setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/true, wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL, gattStatus);
 		
 		if( !attemptingReconnect )
 		{
@@ -2753,7 +2792,7 @@ public class BleDevice
 //			m_txnMngr.clearFirmwareUpdateTxn();
 		}
 		
-		Please.PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
+		Please.PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.

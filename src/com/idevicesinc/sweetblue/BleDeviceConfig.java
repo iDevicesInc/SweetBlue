@@ -96,9 +96,9 @@ public class BleDeviceConfig implements Cloneable
 		@Advanced
 		public static class StateChangeEvent extends BleDevice.StateListener.ChangeEvent
 		{
-			StateChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask)
+			StateChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 			{
-				super(device, oldStateBits, newStateBits, intentMask);
+				super(device, oldStateBits, newStateBits, intentMask, gattStatus);
 			}
 		}
 		

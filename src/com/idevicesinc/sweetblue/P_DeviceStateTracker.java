@@ -31,19 +31,19 @@ class P_DeviceStateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 	{
 		ChangeEvent event = null;
 		
 		if( m_stateListener != null )
 		{
-			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask);
+			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
 			m_stateListener.onStateChange(event);
 		}
 		
 		if( m_device.getManager().m_defaultDeviceStateListener != null )
 		{
-			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask);
+			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
 			m_device.getManager().m_defaultDeviceStateListener.onStateChange(event);
 		}
 
@@ -51,7 +51,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 		
 		if( bondFilter == null )  return;
 		
-		final BondFilter.StateChangeEvent bondStateChangeEvent = new BondFilter.StateChangeEvent(m_device, oldStateBits, newStateBits, intentMask);
+		final BondFilter.StateChangeEvent bondStateChangeEvent = new BondFilter.StateChangeEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
 		
 		final BondFilter.Please please = bondFilter.onStateChangeEvent(bondStateChangeEvent);
 		

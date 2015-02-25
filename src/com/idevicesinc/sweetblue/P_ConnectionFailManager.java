@@ -115,13 +115,13 @@ class P_ConnectionFailManager
 			if( !m_reconnectMngr.onConnectionFailed(moreInfo) )
 			{
 				//--- DRK > State change may be redundant.
-				m_device.getStateTracker().update(E_Intent.UNINTENTIONAL, ATTEMPTING_RECONNECT, false);
+				m_device.getStateTracker().update(E_Intent.UNINTENTIONAL, gattStatus, ATTEMPTING_RECONNECT, false);
 			}
 			
 			m_device.getManager().onConnectionFailed();
 		}
 		
-		if( retryChoice == PE_Please.RETRY || retryChoice == PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
+		if( retryChoice != null && retryChoice.isRetry() )
 		{
 			m_device.attemptReconnect();
 		}

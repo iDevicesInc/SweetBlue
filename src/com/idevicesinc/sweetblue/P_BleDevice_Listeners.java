@@ -75,7 +75,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				{
 					P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 
-					m_device.onNativeDisconnect(task_cast.isExplicit());
+					m_device.onNativeDisconnect(task_cast.isExplicit(), task_cast.getGattStatus());
 				}
 			}
 			else if (task.getClass() == P_Task_DiscoverServices.class)
@@ -149,21 +149,29 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		});
 	}
 	
-	private void onConnectionStateChange_synchronized(BluetoothGatt gatt, int gattStatus, int newState)
+	private void onConnectionStateChange_synchronized(final BluetoothGatt gatt, final int gattStatus, final int newState)
 	{
 		if (newState == BluetoothProfile.STATE_DISCONNECTED )
 		{
 			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 			
-			if( !m_queue.fail(P_Task_Connect.class, m_device) )
+			final P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
+			
+			if( connectTask != null )
 			{
-				// --- DRK > This assert can hit and is out of our control so commenting out for now.
-				// --- Not sure how to handle disconnect "failures" so just assuming success for now.
-				// U_Bt.ASSERT(U_Bt.isSuccess(gattStatus));
-	
-				if (!m_queue.succeed(P_Task_Disconnect.class, m_device))
+				connectTask.onNativeFail(gattStatus);
+			}
+			else
+			{
+				final P_Task_Disconnect disconnectTask = m_queue.getCurrent(P_Task_Disconnect.class, m_device);
+				
+				if( disconnectTask != null )
 				{
-					m_device.onNativeDisconnect(/*explicit=*/false);
+					disconnectTask.onNativeSuccess(gattStatus);
+				}
+				else
+				{
+					m_device.onNativeDisconnect(/*explicit=*/false, gattStatus);
 				}
 			}
 		}

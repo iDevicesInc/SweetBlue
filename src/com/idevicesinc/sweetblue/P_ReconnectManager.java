@@ -5,12 +5,6 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectLoop;
 import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectLoop.Please;
 import com.idevicesinc.sweetblue.utils.Interval;
 
-
-/**
- * 
- * 
- *
- */
 class P_ReconnectManager
 {
 	private static final double NOT_RUNNING = -1.0;

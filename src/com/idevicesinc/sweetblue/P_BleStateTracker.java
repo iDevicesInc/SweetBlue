@@ -34,7 +34,7 @@ class P_BleStateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
 	{
 		if( m_stateListener != null )
 		{
