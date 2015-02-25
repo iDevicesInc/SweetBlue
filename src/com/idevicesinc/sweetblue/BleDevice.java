@@ -956,7 +956,7 @@ public class BleDevice
 				(
 					device, Reason.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED,
 					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN,
-					BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_RESULT
+					BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, ReadWriteListener.Result.NULL(device)
 				);
 			}
 			
@@ -966,7 +966,7 @@ public class BleDevice
 			 */
 			@Override public boolean isNull()
 			{
-				return reason() == Reason.NULL;
+				return reason().isNull();
 			}
 			
 			@Override public String toString()
