@@ -19,32 +19,32 @@ public class Interval
 	/**
 	 * Use this special value to disable options in {@link BleDeviceConfig} and {@link BleManagerConfig}.
 	 */
-	public static final Interval DISABLED = Interval.secs(DISABLED_VALUE);
+	public static final Interval DISABLED		= Interval.secs(DISABLED_VALUE);
 	
 	/**
 	 * Use this special value to signify positive infinite.
 	 */
-	public static final Interval INFINITE = Interval.secs(Double.POSITIVE_INFINITY);
+	public static final Interval INFINITE		= Interval.secs(Double.POSITIVE_INFINITY);
 	
 	/**
 	 * Convenience value for zero time.
 	 */
-	public static final Interval ZERO = Interval.secs(0.0);
+	public static final Interval ZERO			= Interval.secs(0.0);
 	
 	/**
 	 * Convenience value representing one second.
 	 */
-	public static final Interval ONE_SEC = Interval.secs(1.0);
+	public static final Interval ONE_SEC		= Interval.secs(1.0);
 	
 	/**
 	 * Convenience value representing five seconds.
 	 */
-	public static final Interval FIVE_SECS = Interval.secs(5.0);
+	public static final Interval FIVE_SECS		= Interval.secs(5.0);
 	
 	/**
 	 * Convenience value representing ten seconds.
 	 */
-	public static final Interval TEN_SECS = Interval.secs(10.0);
+	public static final Interval TEN_SECS		= Interval.secs(10.0);
 	
 	
 	private final double m_secs;
