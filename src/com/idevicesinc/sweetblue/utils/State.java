@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.BleManagerState;
  * Implementations are {@link BleDeviceState} and {@link BleManagerState}.
  * Not intended for subclassing outside this library but go wild if you want.
  */
-public interface State
+public interface State extends NullableObject
 {
 	/**
 	 * Abstract base class for {@link BleDevice.StateListener.ChangeEvent} and {@link BleManager.StateListener.ChangeEvent}.

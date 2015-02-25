@@ -32,7 +32,7 @@ class P_ReconnectManager
 		m_delay = 0.0;
 		m_timeTracker = 0.0;
 		
-		m_delay = getNextTime(ConnectionFailListener.Info.NULL(m_device));
+		m_delay = getNextTime(m_device.NULL_CONNECTIONFAIL_INFO);
 		
 		if( m_delay < 0.0 )
 		{

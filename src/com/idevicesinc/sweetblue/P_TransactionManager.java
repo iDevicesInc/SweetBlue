@@ -7,6 +7,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
 import android.bluetooth.BluetoothGatt;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
@@ -14,15 +15,15 @@ class P_TransactionManager
 {
 	final BleTransaction.PI_EndListener m_txnEndListener = new BleTransaction.PI_EndListener()
 	{
-		@Override public void onTransactionEnd(BleTransaction txn, EndReason reason)
+		@Override public void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.Result txnFailReason)
 		{
 			synchronized (m_device.m_threadLock)
 			{
-				onTransactionEnd_private(txn, reason);
+				onTransactionEnd_private(txn, reason, txnFailReason);
 			}
 		}
 		
-		private void onTransactionEnd_private(BleTransaction txn, EndReason reason)
+		private void onTransactionEnd_private(BleTransaction txn, EndReason reason, ReadWriteListener.Result txnFailReason)
 		{
 			clearQueueLock();
 
@@ -66,7 +67,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE);
+					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
 			else if (txn == m_initTxn )
@@ -77,7 +78,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE);
+					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
 			else if (txn == m_device.getFirmwareUpdateTxn())

@@ -7,6 +7,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsa
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please.PE_Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -66,7 +67,7 @@ class P_ConnectionFailManager
 		return retryCount;
 	}
 	
-	PE_Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage)
+	PE_Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage, ReadWriteListener.Result txnFailReason)
 	{
 		if( reason_nullable == null )  return PE_Please.DO_NOT_RETRY;
 		
@@ -101,7 +102,11 @@ class P_ConnectionFailManager
 			}
 		}
 		
-		final Info moreInfo = new Info(m_device, reason_nullable, timing, m_failCount, attemptTime_latest, attemptTime_total, gattStatus, highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason);
+		final Info moreInfo = new Info
+		(
+			m_device, reason_nullable, timing, m_failCount, attemptTime_latest, attemptTime_total, gattStatus,
+			highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason, txnFailReason
+		);
 		
 		PE_Please retryChoice = invokeCallback(moreInfo);
 		retryChoice = !isAttemptingReconnect ? retryChoice : PE_Please.DO_NOT_RETRY;

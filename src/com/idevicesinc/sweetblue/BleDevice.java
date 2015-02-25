@@ -60,8 +60,13 @@ public class BleDevice
 		 * 
 		 * @see Result#status
 		 */
-		public static enum Status
+		public static enum Status implements NullableObject
 		{
+			/**
+			 * As of now, only used for {@link ConnectionFailListener.Info#txnFailReason()} in some cases.
+			 */
+			NULL,
+			
 			/**
 			 * If {@link Result#type} {@link Type#isRead()} then {@link Result#data} will contain
 			 * some data returned from the device. If type is {@link Type#WRITE} then {@link Result#data}
@@ -157,13 +162,23 @@ public class BleDevice
 			{
 				return this == CANCELLED_FROM_DISCONNECT || this == Status.CANCELLED_FROM_BLE_TURNING_OFF;
 			}
+			
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
 		}
 		
 		/**
 		 * The type of operation for a {@link Result} - read, write, poll, etc.
 		 */
-		public static enum Type
+		public static enum Type implements NullableObject
 		{
+			/**
+			 * As of now, only used for {@link ConnectionFailListener.Info#txnFailReason()} in some cases.
+			 */
+			NULL,
+			
 			/**
 			 * Associated with {@link BleDevice#read(UUID, ReadWriteListener)} or {@link BleDevice#readRssi(ReadWriteListener)}.
 			 */
@@ -234,13 +249,23 @@ public class BleDevice
 			{
 				return this == NOTIFICATION || this == INDICATION;
 			}
+			
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
 		}
 		
 		/**
 		 * The type of GATT object, provided by {@link Result#target}.
 		 */
-		public static enum Target
+		public static enum Target implements NullableObject
 		{
+			/**
+			 * As of now, only used for {@link ConnectionFailListener.Info#txnFailReason()} in some cases.
+			 */
+			NULL,
+			
 			/**
 			 * The {@link Result} returned has to do with a {@link BluetoothGattCharacteristic} under the hood.
 			 */
@@ -255,13 +280,18 @@ public class BleDevice
 			 * The {@link Result} is coming in from using {@link BleDevice#readRssi(ReadWriteListener)}
 			 * or {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
 			 */
-			RSSI
+			RSSI;
+			
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
 		}
 		
 		/**
 		 * Provides a bunch of information about a completed read, write, or notification.
 		 */
-		public static class Result
+		public static class Result implements NullableObject
 		{
 			/**
 			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid}
@@ -401,6 +431,11 @@ public class BleDevice
 				this.m_rssi = status == Status.SUCCESS ? rssi : device.getRssi();
 			}
 			
+			static Result NULL(BleDevice device)
+			{
+				return new Result(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs());
+			}
+			
 			/**
 			 * Convenience method for checking if {@link Result#status} equals {@link Status#SUCCESS}.
 			 */
@@ -441,29 +476,44 @@ public class BleDevice
 				return data().length > 0 ? data()[0] : 0x0;
 			}
 			
+			/**
+			 * Forwards {@link Type#isNull()}.
+			 */
+			@Override public boolean isNull()
+			{
+				return type().isNull();
+			}
+			
 			@Override public String toString()
 			{
-				if( target() == Target.RSSI )
+				if( isNull() )
 				{
-					return Utils.toString
-					(
-						"status",		status(),
-						"type",			type(),
-						"target",		target(),
-						"rssi",			rssi(),
-						"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
-					);
+					return Type.NULL.toString();
 				}
 				else
 				{
-					return Utils.toString
-					(
-						"status",		status(),
-						"data",			Arrays.toString(data()),
-						"type",			type(),
-						"charUuid",		device().m_mngr.getLogger().uuidName(charUuid()),
-						"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
-					);
+					if( target() == Target.RSSI )
+					{
+						return Utils.toString
+						(
+							"status",		status(),
+							"type",			type(),
+							"target",		target(),
+							"rssi",			rssi(),
+							"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
+						);
+					}
+					else
+					{
+						return Utils.toString
+						(
+							"status",		status(),
+							"data",			Arrays.toString(data()),
+							"type",			type(),
+							"charUuid",		device().m_mngr.getLogger().uuidName(charUuid()),
+							"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
+						);
+					}
 				}
 			}
 		}
@@ -543,7 +593,7 @@ public class BleDevice
 		/**
 		 * The reason for the connection failure.
 		 */
-		public static enum Reason
+		public static enum Reason implements NullableObject
 		{
 			/**
 			 * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link Info#reason()} given to
@@ -628,6 +678,11 @@ public class BleDevice
 			public boolean allowsRetry()
 			{
 				return !this.wasCancelled() && this != ALREADY_CONNECTING_OR_CONNECTED;
+			}
+
+			@Override public boolean isNull()
+			{
+				return this == NULL;
 			}
 		}
 		
@@ -784,7 +839,7 @@ public class BleDevice
 		/**
 		 * Structure passed to {@link ConnectionFailListener#onConnectionFail(Info)} to provide more info about how/why the connection failed.
 		 */
-		public static class Info
+		public static class Info implements NullableObject
 		{
 			/**
 			 * The {@link BleDevice} this {@link Info} is for.
@@ -863,11 +918,19 @@ public class BleDevice
 			public Timing timing(){  return m_timing;  }
 			private final Timing m_timing;
 			
+			/**
+			 * If {@link Info#reason()} is {@link Reason#AUTHENTICATION_FAILED} or {@link Reason#INITIALIZATION_FAILED} and {@link BleTransaction#fail(Result)}
+			 * was called to fail the transaction, the {@link Result} passed to {@link BleTransaction#fail(Result)} will appear here. Otherwise, this will return a
+			 * {@link Result} for which {@link Result#isNull()} returns <code>true</code>.
+			 */
+			public ReadWriteListener.Result txnFailReason(){  return m_txnFailReason;  }
+			private final ReadWriteListener.Result m_txnFailReason;
+			
 			Info
 			(
 				BleDevice device, Reason reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime,
 				int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage,
-				int bondFailReason
+				int bondFailReason, ReadWriteListener.Result txnFailReason
 			)
 			{
 				this.m_device = device;
@@ -880,7 +943,8 @@ public class BleDevice
 				this.m_highestStateReached_latest = highestStateReached != null ? highestStateReached : BleDeviceState.NULL;
 				this.m_highestStateReached_total = highestStateReached_total != null ? highestStateReached_total : BleDeviceState.NULL;
 				this.m_autoConnectUsage = autoConnectUsage;
-				this.m_bondFailReason = bondFailReason; 
+				this.m_bondFailReason = bondFailReason;
+				this.m_txnFailReason = txnFailReason;
 				
 				m_device.getManager().ASSERT(highestStateReached != null, "highestState_latest shouldn't be null.");
 				m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
@@ -892,7 +956,7 @@ public class BleDevice
 				(
 					device, Reason.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED,
 					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN,
-					BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE
+					BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_RESULT
 				);
 			}
 			
@@ -900,7 +964,7 @@ public class BleDevice
 			 * Returns whether this {@link Info} instance is a "dummy" value. For now used for {@link BleDeviceConfig.ReconnectFilter.Info#connectionFailInfo()}
 			 * in certain situations.
 			 */
-			public boolean isNull()
+			@Override public boolean isNull()
 			{
 				return reason() == Reason.NULL;
 			}
@@ -1200,6 +1264,9 @@ public class BleDevice
 	private boolean m_lastDisconnectWasBecauseOfBleTurnOff = false; 
 	
 	private BleDeviceConfig m_config = null;
+	
+	final ReadWriteListener.Result NULL_READWRITE_RESULT = Result.NULL(this);
+	final ConnectionFailListener.Info NULL_CONNECTIONFAIL_INFO = Info.NULL(this);
 	
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -1863,7 +1930,7 @@ public class BleDevice
 	 */
 	public void disconnect()
 	{
-		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE);
+		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT);
 	}
 	
 	/**
@@ -2323,7 +2390,13 @@ public class BleDevice
 		
 		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
-			ConnectionFailListener.Info info = new ConnectionFailListener.Info(this, Reason.ALREADY_CONNECTING_OR_CONNECTED, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE);
+			ConnectionFailListener.Info info = new ConnectionFailListener.Info
+			(
+				this, Reason.ALREADY_CONNECTING_OR_CONNECTED, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO,
+				BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL,
+				AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT
+			);
+			
 			m_connectionFailMngr.invokeCallback(info);
 			
 			return;
@@ -2562,7 +2635,7 @@ public class BleDevice
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage);
+			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_RESULT);
 			
 			if( !attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
@@ -2630,12 +2703,12 @@ public class BleDevice
 		);
 	}
 	
-	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason)
+	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.Result txnFailReason)
 	{
-		disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus, bondFailReason);
+		disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus, bondFailReason, txnFailReason);
 	}
 	
-	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason)
+	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.Result txnFailReason)
 	{
 		boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
 		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
@@ -2686,7 +2759,7 @@ public class BleDevice
 		{
 			if( m_mngr.ASSERT(connectionFailReasonIfConnecting != null ) )
 			{
-				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect, gattStatus, bondFailReason, highestState, AutoConnectUsage.NOT_APPLICABLE);
+				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect, gattStatus, bondFailReason, highestState, AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
 			}
 		}
 	}
@@ -2792,7 +2865,7 @@ public class BleDevice
 //			m_txnMngr.clearFirmwareUpdateTxn();
 		}
 		
-		Please.PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
+		Please.PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_RESULT);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.

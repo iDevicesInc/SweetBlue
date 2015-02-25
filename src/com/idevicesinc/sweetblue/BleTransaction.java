@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -57,7 +58,7 @@ public abstract class BleTransaction
 	
 	static interface PI_EndListener
 	{
-		void onTransactionEnd(BleTransaction txn, EndReason reason);
+		void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.Result failReason);
 	}
 	
 	private final double m_timeout;
@@ -136,7 +137,7 @@ public abstract class BleTransaction
 		start(m_device);
 	}
 	
-	private boolean end(final EndReason reason)
+	private boolean end(final EndReason reason, ReadWriteListener.Result failReason)
 	{
 		synchronized (m_device.m_threadLock )
 		{
@@ -154,7 +155,7 @@ public abstract class BleTransaction
 			
 			if( m_listener != null )
 			{
-				m_listener.onTransactionEnd(this, reason);
+				m_listener.onTransactionEnd(this, reason, failReason);
 			}
 			
 			if( m_device.getManager().m_config.postCallbacksToMainThread && !Utils.isOnMainThread() )
@@ -178,7 +179,7 @@ public abstract class BleTransaction
 	
 	final void cancel()
 	{
-		end(EndReason.CANCELLED);
+		end(EndReason.CANCELLED, m_device.NULL_READWRITE_RESULT);
 	}
 	
 	/**
@@ -190,7 +191,17 @@ public abstract class BleTransaction
 	 */
 	protected final boolean fail()
 	{
-		return end(EndReason.FAILED);
+		return fail(m_device.NULL_READWRITE_RESULT);
+	}
+	
+	/**
+	 * Same as {@link #fail()} but allows you to pass the reason for the failure, if that reason happens
+	 * to be a {@link BleDevice#read(java.util.UUID, ReadWriteListener)}, {@link BleDevice#write(java.util.UUID, byte[])}, etc.
+	 * failure. This reason is propagated to {@link BleDevice.ConnectionFailListener.Info#txnFailReason()}.
+	 */
+	protected final boolean fail(ReadWriteListener.Result reason)
+	{
+		return this.end(EndReason.FAILED, reason);
 	}
 	
 	/**
@@ -200,7 +211,7 @@ public abstract class BleTransaction
 	 */
 	protected final boolean succeed()
 	{
-		return end(EndReason.SUCCEEDED);
+		return end(EndReason.SUCCEEDED, m_device.NULL_READWRITE_RESULT);
 	}
 	
 	void update_internal(double timeStep)
