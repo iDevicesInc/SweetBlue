@@ -4,6 +4,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATED;
 import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATING;
 import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
 import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
+import android.bluetooth.BluetoothGatt;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
@@ -287,7 +288,7 @@ class P_TransactionManager
 			}
 			else if( m_authTxn != null )
 			{
-				m_device.getStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, extraFlags, AUTHENTICATING, true);
+				m_device.getStateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATING, true);
 				
 				start(m_authTxn);
 			}
@@ -295,7 +296,7 @@ class P_TransactionManager
 			{
 				m_device.getPollManager().enableNotifications();
 				
-				m_device.getStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, extraFlags, AUTHENTICATED, true, INITIALIZING, true);
+				m_device.getStateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATED, true, INITIALIZING, true);
 				
 				start(m_initTxn);
 			}

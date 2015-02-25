@@ -466,18 +466,39 @@ public class Utils
 	
 	public static String toString(Object ... values)
 	{
-		String toReturn = "";
+		StringBuilder builder = new StringBuilder();
+		
+		int length_highest = 0;
+		for( int i = 0; i < values.length; i+=2 )
+		{
+			int length_ith = values[i].toString().length();
+			
+			if( length_ith > length_highest )
+			{
+				length_highest = length_ith;
+			}
+		}
 		
 		for( int i = 0; i < values.length; i+=2 )
 		{
 			if( i > 0 )
 			{
-				toReturn += " ";
+				builder.append("\n");
 			}
 			
-			toReturn += values[i] + "=" + values[i+1];
+			final int length_ith = values[i].toString().length();
+			final int spaceCount = length_highest - length_ith;
+			
+			builder.append(values[i]);
+			
+			for( int j = 0; j < spaceCount; j++ )
+			{
+				builder.append(" ");
+			}
+			builder.append(" = ");
+			builder.append(values[i+1]);
 		}
 		
-		return toReturn;
+		return builder.toString();
 	}
 }

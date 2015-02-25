@@ -446,6 +446,6 @@ class P_Logger
 			}
 		}
 		
-		return type == null ? debugName : type+"="+debugName+"("+uuid+")";
+		return (type == null ? debugName : type+"="+debugName)+"("+uuid+")";
 	}
 }

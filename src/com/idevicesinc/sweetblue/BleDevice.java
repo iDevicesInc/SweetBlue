@@ -461,7 +461,7 @@ public class BleDevice
 						"status",		status(),
 						"data",			Arrays.toString(data()),
 						"type",			type(),
-						"charUuid",		device().m_mngr.getLogger().charName(charUuid()),
+						"charUuid",		device().m_mngr.getLogger().uuidName(charUuid()),
 						"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
 					);
 				}
@@ -2523,7 +2523,7 @@ public class BleDevice
 		//---		callbacks to the app but eventually things settle down and we're good again.
 		if( m_nativeWrapper.isNativelyConnected() )
 		{
-			m_stateTracker.update(lastConnectDisconnectIntent(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, extraFlags, DISCOVERING_SERVICES, true);
+			m_stateTracker.update(lastConnectDisconnectIntent(), BluetoothGatt.GATT_SUCCESS, extraFlags, DISCOVERING_SERVICES, true);
 		}
 	}
 	
