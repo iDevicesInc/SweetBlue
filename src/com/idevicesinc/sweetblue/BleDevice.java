@@ -19,7 +19,7 @@ import android.content.Context;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
@@ -565,8 +565,8 @@ public class BleDevice
 			INITIALIZATION_FAILED,
 			
 			/**
-			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED_EVENTUALLY}
-			 * but only occurs after the device is {@link BleDeviceState#CONNECTED} and we're going through {@link BleDeviceState#GETTING_SERVICES},
+			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
+			 * but only occurs after the device is {@link BleDeviceState#CONNECTED} and we're going through {@link BleDeviceState#DISCOVERING_SERVICES},
 			 * or {@link BleDeviceState#AUTHENTICATING}, or what have you. It might from the device turning off, or going out of range, or any other
 			 * random reason.
 			 */
@@ -621,7 +621,10 @@ public class BleDevice
 			IMMEDIATELY,
 			
 			/**
-			 * The operation failed in the native stack. {@link ConnectionFailListener.Info#gattStatus()} will probably be a positive number.
+			 * The operation failed in the native stack. {@link ConnectionFailListener.Info#gattStatus()} will probably be a positive number
+			 * if {@link ConnectionFailListener.Info#reason()} is {@link ConnectionFailListener.Reason#NATIVE_CONNECTION_FAILED} or
+			 * {@link ConnectionFailListener.Reason#DISCOVERING_SERVICES_FAILED}. {@link ConnectionFailListener.Info#bondFailReason()}
+			 * will probably be a positive number if {@link ConnectionFailListener.Info#reason()} is {@link ConnectionFailListener.Reason#BONDING_FAILED}.
 			 */
 			EVENTUALLY,
 			
@@ -659,11 +662,6 @@ public class BleDevice
 			 */
 			NOT_USED;
 		}
-
-		static enum PE_Please
-		{
-			RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
-		}
 		
 		/**
 		 * Return value for {@link ConnectionFailListener#onConnectionFail(Info)}. Generally you will only return {@link #retry()}
@@ -671,6 +669,11 @@ public class BleDevice
 		 */
 		public static class Please
 		{
+			static enum PE_Please
+			{
+				RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
+			}
+			
 			private final PE_Please m_please;
 			
 			private Please(PE_Please please)
@@ -1004,7 +1007,7 @@ public class BleDevice
 			SUCCESS,
 			
 			/**
-			 * Already {@link BleDeviceState#BONDED} or in the process of {@value BleDeviceState#BONDING}.
+			 * Already {@link BleDeviceState#BONDED} or in the process of {@link BleDeviceState#BONDING}.
 			 */
 			ALREADY_BONDING_OR_BONDED,
 			
@@ -1015,7 +1018,7 @@ public class BleDevice
 			
 			/**
 			 * We received a {@link BluetoothDevice#ACTION_BOND_STATE_CHANGED} through our internal {@link BroadcastReceiver}
-			 * that we went from {@value BleDeviceState#BONDING} back to {@link BleDeviceState#UNBONDED}, which means the attempt failed.
+			 * that we went from {@link BleDeviceState#BONDING} back to {@link BleDeviceState#UNBONDED}, which means the attempt failed.
 			 * See {@link BondEvent#failReason()} for more information.
 			 */
 			FAILED_EVENTUALLY,
@@ -1072,7 +1075,7 @@ public class BleDevice
 			private final Status m_status;
 			
 			/**
-			 * If {@link #status()} is {@link Status#FAILED_EVENTUALLY}, this integer will be one of the values enumerated in {@link BluetoothDevice} that
+			 * If {@link #status()} is {@link BondListener.Status#FAILED_EVENTUALLY}, this integer will be one of the values enumerated in {@link BluetoothDevice} that
 			 * start with <code>UNBOND_REASON</code> such as {@link BluetoothDevice#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to
 			 * {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
 			 */
@@ -1344,7 +1347,7 @@ public class BleDevice
 	/**
 	 * Returns the connection failure retry count during a retry loop. Basic example use case is to provide a
 	 * callback to {@link #setListener_ConnectionFail(ConnectionFailListener)} and update your application's UI with this method's
-	 * return value downstream of your {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info))} override.
+	 * return value downstream of your {@link ConnectionFailListener#onConnectionFail(BleDevice.ConnectionFailListener.Info)} override.
 	 */
 	public int getConnectionRetryCount()
 	{
@@ -1424,7 +1427,7 @@ public class BleDevice
 	 * Returns the calibrated transmission power of the device. If this can't be figured out from the device itself
 	 * then it backs up to the value provided in {@link BleDeviceConfig#defaultTxPower}.
 	 * 
-	 * @see BleDeviceConfig#defaultTxPower;
+	 * @see BleDeviceConfig#defaultTxPower
 	 */
 	@Advanced
 	public int getTxPower()
@@ -1788,7 +1791,7 @@ public class BleDevice
 	}
 	
 	/**
-	 * Same as {@link #connect(BleTransaction, BleTransaction)} but calls {@link #setListener_State(StateListener)} for you.
+	 * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} for you.
 	 */
 	public void connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener)
 	{
@@ -2523,13 +2526,13 @@ public class BleDevice
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage);
+			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage);
 			
-			if( !attemptingReconnect && retry == PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
+			if( !attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
 				m_useAutoConnect = true;
 			}
-			else if( !attemptingReconnect && retry == PE_Please.RETRY_WITH_AUTOCONNECT_FALSE )
+			else if( !attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_FALSE )
 			{
 				m_useAutoConnect = false;
 			}
@@ -2750,12 +2753,12 @@ public class BleDevice
 //			m_txnMngr.clearFirmwareUpdateTxn();
 		}
 		
-		PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
+		Please.PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE);
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.
 		//---		TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
-		if( retrying == PE_Please.DO_NOT_RETRY )
+		if( retrying == Please.PE_Please.DO_NOT_RETRY )
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this);
 		}

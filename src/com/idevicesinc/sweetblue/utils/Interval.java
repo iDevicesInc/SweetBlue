@@ -1,14 +1,17 @@
 package com.idevicesinc.sweetblue.utils;
 
-import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.*;
+
+
+import com.idevicesinc.sweetblue.annotations.*;
+import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 
 /**
  * Used to set time-based options in {@link BleManagerConfig} and {@link BleDeviceConfig} and
  * for various methods and callbacks of {@link BleManager} and {@link BleDevice}. An {@link Interval} is a
  * self-documenting and "type-comfortable" way of representing time instead of using naked numeric primitives.
  */
+@Immutable
 public class Interval
 {
 	private static final double DISABLED_VALUE = -1.0;
@@ -89,7 +92,7 @@ public class Interval
 	/**
 	 * Returns the double values as seconds from a given nullable {@link Interval}.
 	 */
-	public static double asDouble(Interval interval_nullable)
+	public static double asDouble(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
 		if( interval_nullable == null )
 		{
@@ -103,7 +106,7 @@ public class Interval
 	 * Returns true if the given {@link Interval} is not <code>null</code>
 	 * and its value is greater than zero.
 	 */
-	public static boolean isEnabled(Interval interval_nullable)
+	public static boolean isEnabled(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
 		return !isDisabled(interval_nullable);
 	}
@@ -120,7 +123,7 @@ public class Interval
 	 * Returns true if the given {@link Interval} is either <code>null</code>
 	 * or its value is less than or equal to zero.
 	 */
-	public static boolean isDisabled(Interval interval_nullable)
+	public static boolean isDisabled(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
 		if( interval_nullable == null )
 		{

@@ -5,7 +5,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please.PE_Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;

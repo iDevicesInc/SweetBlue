@@ -1,8 +1,11 @@
 package com.idevicesinc.sweetblue.utils;
 
+import com.idevicesinc.sweetblue.annotations.*;
+
 /**
  * Wrapper for a percentage value, generally from 0-100%;
  */
+@Immutable
 public class Percent
 {
 	/**
@@ -21,6 +24,14 @@ public class Percent
 	private Percent(final double doubleValue)
 	{
 		m_doubleValue = doubleValue;
+	}
+	
+	/**
+	 * Returns a new instance clamped between 0% and 100%.
+	 */
+	public Percent clamp()
+	{
+		return Percent.fromDouble_clamped(this.toDouble());
 	}
 	
 	/**
@@ -76,7 +87,12 @@ public class Percent
 	 */
 	public static Percent fromDouble_clamped(final double value)
 	{
-		return new Percent(value < 0.0 ? 0.0 : (value > 100.0 ? 100.0 : value));
+		return new Percent(clamp(value));
+	}
+	
+	private static double clamp(final double rawValue)
+	{
+		return rawValue < 0.0 ? 0.0 : (rawValue > 100.0 ? 100.0 : rawValue);
 	}
 	
 	/**

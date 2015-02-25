@@ -1,13 +1,23 @@
 package com.idevicesinc.sweetblue.utils;
 
+import com.idevicesinc.sweetblue.annotations.*;
+
 /**
  * Wrapper for a positive-only physical distance supporting various units of measurement.
  */
+@Immutable
 public class Distance
 {
 	public static final double FEET_PER_METER = 3.28084;
 	
+	/**
+	 * Convenience value for zero meters.
+	 */
 	public static final Distance ZERO		= meters(0.0);
+	
+	/**
+	 * Convenience value representing in invalid/impossible distance, arbitrarily chosen to be negative one meter.
+	 */
 	public static final Distance INVALID	= meters(-1.0);
 	
 	private final double m_meters;
