@@ -897,7 +897,7 @@ public class BleDevice
 			}
 			
 			/**
-			 * Returns whether this {@link Info} instance is a "dummy" value. For now used for {@link BleDeviceConfig.ReconnectLoop.Info#connectionFailInfo()}
+			 * Returns whether this {@link Info} instance is a "dummy" value. For now used for {@link BleDeviceConfig.ReconnectFilter.Info#connectionFailInfo()}
 			 * in certain situations.
 			 */
 			public boolean isNull()
@@ -925,7 +925,7 @@ public class BleDevice
 		
 		/**
 		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#allowsRetry()} is <code>false</code>.
-		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectLoop}.
+		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectFilter}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
 		 * lets the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
 		 * <br><br>

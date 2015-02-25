@@ -295,15 +295,15 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * An optional interface you can implement on {@link BleDeviceConfig#reconnectLoop } to control reconnection behavior.
+	 * An optional interface you can implement on {@link BleDeviceConfig#reconnectFilter } to control reconnection behavior.
 	 * 
-	 * @see #reconnectLoop
-	 * @see DefaultReconnectLoop
+	 * @see #reconnectFilter
+	 * @see DefaultReconnectFilter
 	 */
-	public static interface ReconnectLoop
+	public static interface ReconnectFilter
 	{		
 		/**
-		 * Struct passed to {@link ReconnectLoop#onReconnectRequest(ReconnectLoop.Info)} to aid in making a decision.
+		 * Struct passed to {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to aid in making a decision.
 		 */
 		public static class Info
 		{
@@ -326,7 +326,7 @@ public class BleDeviceConfig implements Cloneable
 			private final Interval m_totalTimeReconnecting;
 			
 			/**
-			 * The previous {@link Interval} returned from {@link ReconnectLoop#onReconnectRequest(Info)}, or {@link Interval#ZERO}
+			 * The previous {@link Interval} returned from {@link ReconnectFilter#onReconnectRequest(Info)}, or {@link Interval#ZERO}
 			 * for the first invocation.
 			 */
 			public Interval previousDelay(){  return m_previousDelay;  }
@@ -334,7 +334,7 @@ public class BleDeviceConfig implements Cloneable
 			
 			/**
 			 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onConnectionFail(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info)}
-			 * before the call is made to {@link ReconnectLoop#onReconnectRequest(Info)}. For the first call to {@link ReconnectLoop#onReconnectRequest(Info)},
+			 * before the call is made to {@link ReconnectFilter#onReconnectRequest(Info)}. For the first call to {@link ReconnectFilter#onReconnectRequest(Info)},
 			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ConnectionFailListener.Info#isNull()} will return <code>true</code>.
 			 */
 			public ConnectionFailListener.Info connectionFailInfo(){  return m_connectionFailInfo;  }
@@ -362,7 +362,7 @@ public class BleDeviceConfig implements Cloneable
 		}
 		
 		/**
-		 * Return value for {@link ReconnectLoop#onReconnectRequest(Info)}. Use static constructor methods to create instances.
+		 * Return value for {@link ReconnectFilter#onReconnectRequest(Info)}. Use static constructor methods to create instances.
 		 */
 		public static class Please
 		{
@@ -382,7 +382,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectLoop#onReconnectRequest(ReconnectLoop.Info)} to instantly reconnect.
+			 * Return this from {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to instantly reconnect.
 			 */
 			public static Please retryInstantly()
 			{
@@ -390,7 +390,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectLoop#onReconnectRequest(ReconnectLoop.Info)} to stop a reconnect attempt loop.
+			 * Return this from {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to stop a reconnect attempt loop.
 			 * Note that {@link BleDevice#disconnect()} will also stop any ongoing reconnect loop.
 			 */
 			public static Please stopRetrying()
@@ -399,7 +399,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectLoop#onReconnectRequest(ReconnectLoop.Info)} to retry after the given amount of time.
+			 * Return this from {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to retry after the given amount of time.
 			 */
 			public static Please retryIn(Interval interval)
 			{
@@ -416,10 +416,10 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Default implementation of {@link ReconnectLoop} that uses {@link #DEFAULT_INITIAL_RECONNECT_DELAY}
+	 * Default implementation of {@link ReconnectFilter} that uses {@link #DEFAULT_INITIAL_RECONNECT_DELAY}
 	 * and {@link #DEFAULT_RECONNECT_ATTEMPT_RATE} to infinitely try to reconnect.
 	 */
-	public static class DefaultReconnectLoop implements ReconnectLoop
+	public static class DefaultReconnectFilter implements ReconnectFilter
 	{
 		public static final Please DEFAULT_INITIAL_RECONNECT_DELAY = Please.retryInstantly();
 		public static final Please DEFAULT_RECONNECT_ATTEMPT_RATE = Please.retryIn(Interval.secs(3.0));
@@ -660,17 +660,17 @@ public class BleDeviceConfig implements Cloneable
 	public BondFilter bondFilter							= new DefaultBondFilter();
 	
 	/**
-	 * Default is an instance of {@link DefaultReconnectLoop} - set an implementation here to
+	 * Default is an instance of {@link DefaultReconnectFilter} - set an implementation here to
 	 * have fine control over reconnect behavior. This is basically how often and how long
 	 * the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
 	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
 	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/phone to stay awake while attempting a reconnect.
 	 * 
 	 * @see BleManagerConfig#manageCpuWakeLock
-	 * @see ReconnectLoop
-	 * @see DefaultReconnectLoop
+	 * @see ReconnectFilter
+	 * @see DefaultReconnectFilter
 	 */
-	public ReconnectLoop reconnectLoop = new DefaultReconnectLoop();
+	public ReconnectFilter reconnectFilter = new DefaultReconnectFilter();
 	
 	static boolean boolOrDefault(Boolean bool_nullable)
 	{
