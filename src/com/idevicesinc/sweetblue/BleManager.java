@@ -38,7 +38,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
 import com.idevicesinc.sweetblue.annotations.Advanced;
-import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.*;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
@@ -160,6 +160,7 @@ public class BleManager
 		/**
 		 * Struct passed to {@link DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)}.
 		 */
+		@Immutable
 		public static class DiscoveryEvent
 		{
 			/**
@@ -224,6 +225,7 @@ public class BleManager
 		/**
 		 * Subclass that adds the manager field.
 		 */
+		@Immutable
 		public static class ChangeEvent extends State.ChangeEvent<BleManagerState>
 		{
 			/**
@@ -268,6 +270,7 @@ public class BleManager
 		 * Class declared here to be make it implicitly imported for overrides.
 		 */
 		@Advanced
+		@Immutable
 		public static class ChangeEvent extends StateListener.ChangeEvent
 		{
 			ChangeEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
@@ -455,6 +458,7 @@ public class BleManager
 		/**
 		 * Struct passed to {@link UhOhListener#onUhOh(UhOhEvent)}.
 		 */
+		@Immutable
 		public static class UhOhEvent
 		{
 			public BleManager manager(){  return m_manager;  }
@@ -513,6 +517,7 @@ public class BleManager
 		/**
 		 * Struct passed to {@link ResetListener#onResetEvent(ResetEvent)}.
 		 */
+		@Immutable
 		public static class ResetEvent
 		{
 			/**
@@ -557,9 +562,10 @@ public class BleManager
 	public static interface AssertListener
 	{
 		/**
-		 * Struct passed to {@link AssertListener#onAssertFailed(Info)}.
+		 * Struct passed to {@link AssertListener#onAssertEvent(AssertEvent)}.
 		 */
-		public static class Info
+		@Immutable
+		public static class AssertEvent
 		{
 			/**
 			 * The {@link BleManager} instance for your application.
@@ -579,7 +585,7 @@ public class BleManager
 			public StackTraceElement[] stackTrace(){  return m_stackTrace;  }
 			private final StackTraceElement[] m_stackTrace;
 			
-			Info(BleManager manager, String message, StackTraceElement[] stackTrace)
+			AssertEvent(BleManager manager, String message, StackTraceElement[] stackTrace)
 			{
 				m_manager = manager;
 				m_message = message;
@@ -590,7 +596,7 @@ public class BleManager
 		/**
 		 * Provides additional info about the circumstances surrounding the assert.
 		 */
-		void onAssertFailed(Info info);
+		void onAssertEvent(AssertEvent event);
 	}
 
 	private final UpdateLoop.Callback m_updateLoopCallback = new UpdateLoop.Callback()
@@ -1206,8 +1212,8 @@ public class BleManager
 
 			if( m_assertionListener != null )
 			{
-				AssertListener.Info info = new AssertListener.Info(this, message, dummyException.getStackTrace());
-				m_assertionListener.onAssertFailed(info);
+				AssertListener.AssertEvent info = new AssertListener.AssertEvent(this, message, dummyException.getStackTrace());
+				m_assertionListener.onAssertEvent(info);
 			}
 
 			return false;

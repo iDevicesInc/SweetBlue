@@ -30,8 +30,7 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventT
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
-import com.idevicesinc.sweetblue.annotations.Advanced;
-import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.*;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 
 /**
@@ -60,7 +59,7 @@ public class BleDevice
 		 * 
 		 * @see Result#status
 		 */
-		public static enum Status implements NullableObject
+		public static enum Status implements UsesCustomNull
 		{
 			/**
 			 * As of now, only used for {@link ConnectionFailListener.Info#txnFailReason()} in some cases.
@@ -172,7 +171,7 @@ public class BleDevice
 		/**
 		 * The type of operation for a {@link Result} - read, write, poll, etc.
 		 */
-		public static enum Type implements NullableObject
+		public static enum Type implements UsesCustomNull
 		{
 			/**
 			 * As of now, only used for {@link ConnectionFailListener.Info#txnFailReason()} in some cases.
@@ -259,7 +258,7 @@ public class BleDevice
 		/**
 		 * The type of GATT object, provided by {@link Result#target}.
 		 */
-		public static enum Target implements NullableObject
+		public static enum Target implements UsesCustomNull
 		{
 			/**
 			 * As of now, only used for {@link ConnectionFailListener.Info#txnFailReason()} in some cases.
@@ -291,7 +290,8 @@ public class BleDevice
 		/**
 		 * Provides a bunch of information about a completed read, write, or notification.
 		 */
-		public static class Result implements NullableObject
+		@Immutable
+		public static class Result implements UsesCustomNull
 		{
 			/**
 			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid}
@@ -536,6 +536,7 @@ public class BleDevice
 		/**
 		 * Subclass that adds the device field.
 		 */
+		@Immutable
 		public static class ChangeEvent extends State.ChangeEvent<BleDeviceState>
 		{
 			/**
@@ -593,7 +594,7 @@ public class BleDevice
 		/**
 		 * The reason for the connection failure.
 		 */
-		public static enum Reason implements NullableObject
+		public static enum Reason implements UsesCustomNull
 		{
 			/**
 			 * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link Info#reason()} given to
@@ -750,6 +751,7 @@ public class BleDevice
 		 * Return value for {@link ConnectionFailListener#onConnectionFail(Info)}. Generally you will only return {@link #retry()}
 		 * or {@link #doNotRetry()}, but there are more advanced options as well.
 		 */
+		@Immutable
 		public static class Please
 		{
 			static enum PE_Please
@@ -839,7 +841,8 @@ public class BleDevice
 		/**
 		 * Structure passed to {@link ConnectionFailListener#onConnectionFail(Info)} to provide more info about how/why the connection failed.
 		 */
-		public static class Info implements NullableObject
+		@Immutable
+		public static class Info implements UsesCustomNull
 		{
 			/**
 			 * The {@link BleDevice} this {@link Info} is for.
@@ -919,8 +922,8 @@ public class BleDevice
 			private final Timing m_timing;
 			
 			/**
-			 * If {@link Info#reason()} is {@link Reason#AUTHENTICATION_FAILED} or {@link Reason#INITIALIZATION_FAILED} and {@link BleTransaction#fail(Result)}
-			 * was called to fail the transaction, the {@link Result} passed to {@link BleTransaction#fail(Result)} will appear here. Otherwise, this will return a
+			 * If {@link Info#reason()} is {@link Reason#AUTHENTICATION_FAILED} or {@link Reason#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called
+			 * somewhere in or downstream of {@link ReadWriteListener#onResult(Result)}, then the {@link Result} passed there will be returned here. Otherwise, this will return a
 			 * {@link Result} for which {@link Result#isNull()} returns <code>true</code>.
 			 */
 			public ReadWriteListener.Result txnFailReason(){  return m_txnFailReason;  }
@@ -1009,6 +1012,7 @@ public class BleDevice
 	 * @see ConnectionFailListener
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
 	 */
+	@Immutable
 	public static class DefaultConnectionFailListener implements ConnectionFailListener
 	{
 		/**
@@ -1157,6 +1161,7 @@ public class BleDevice
 		/**
 		 * Struct passed to {@link BondListener#onBondEvent(BondEvent)} to provide more information about a {@link BleDevice#bond()} attempt.
 		 */
+		@Immutable
 		public static class BondEvent
 		{
 			/**

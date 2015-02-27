@@ -16,6 +16,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.utils.*;
 
 /**
@@ -128,6 +129,7 @@ public class BleDeviceConfig implements Cloneable
 		 * Struct passed to {@link BondFilter#onCharacteristicEvent(CharacteristicEvent)}.
 		 */
 		@Advanced
+		@Immutable
 		public static class CharacteristicEvent
 		{
 			/**
@@ -171,6 +173,7 @@ public class BleDeviceConfig implements Cloneable
 		 * Use static constructor methods to create instances.
 		 */
 		@Advanced
+		@Immutable
 		public static class Please
 		{
 			private final Boolean m_bond;
@@ -265,6 +268,7 @@ public class BleDeviceConfig implements Cloneable
 	 * See further explanation in documentation for {@link BondFilter}.
 	 */
 	@Advanced
+	@Immutable
 	public static class DefaultBondFilter implements BondFilter
 	{
 		/**
@@ -305,6 +309,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Struct passed to {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to aid in making a decision.
 		 */
+		@Immutable
 		public static class Info
 		{
 			/**
@@ -364,6 +369,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Return value for {@link ReconnectFilter#onReconnectRequest(Info)}. Use static constructor methods to create instances.
 		 */
+		@Immutable
 		public static class Please
 		{
 			static final Interval INSTANTLY = Interval.ZERO;
@@ -596,9 +602,9 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs(double)} with {@link #DEFAULT_TASK_TIMEOUT}.
-	 * This is an array of timeouts whose indices are meant to map to {@link BleTask} ordinals and provide a
+	 * This is an array of timeouts whose indices are meant to map to {@link BleTask#ordinal()} and provide a
 	 * way to control how long a given task is allowed to run before being "cut loose". If no option is provided for a given {@link BleTask},
-	 * either by setting this array null, or by providing <code>null</code> or {@link Interval#DISABLED} or {@link Interval#INFINITE} 
+	 * either by setting this array <code>null</code>, or by providing <code>null</code> or {@link Interval#DISABLED} or {@link Interval#INFINITE} 
 	 * for a given {@link BleTask}, then no timeout is observed.
 	 * <br><br>
 	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
@@ -670,7 +676,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see ReconnectFilter
 	 * @see DefaultReconnectFilter
 	 */
-	public ReconnectFilter reconnectFilter = new DefaultReconnectFilter();
+	public ReconnectFilter reconnectFilter					= new DefaultReconnectFilter();
 	
 	static boolean boolOrDefault(Boolean bool_nullable)
 	{
@@ -735,6 +741,7 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Convenience member to add entries to {@link #timeouts} for you.
+	 * This will create or expand the {@link #timeouts} array if necessary.
 	 */
 	@Advanced
 	public void setTimeout(final Interval interval_nullable, final BleTask ... tasks)

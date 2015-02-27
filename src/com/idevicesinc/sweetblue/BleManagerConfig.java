@@ -14,6 +14,7 @@ import com.google.android.gms.internal.ig;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
@@ -50,6 +51,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		/**
 		 * Instances of this class are passed to {@link ScanFilter#onScanResult(Result)} to aid in making a decision.
 		 */
+		@Immutable
 		public static class Result
 		{
 			/**
@@ -135,6 +137,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		 * Small struct passed back from {@link ScanFilter#onScanResult(Result)}.
 		 * Use static constructor methods to create an instance.
 		 */
+		@Immutable
 		public static class Please
 		{
 			private final boolean m_ack;

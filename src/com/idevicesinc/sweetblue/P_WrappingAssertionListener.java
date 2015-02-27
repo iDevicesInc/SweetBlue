@@ -18,7 +18,7 @@ class P_WrappingAssertionListener extends PA_CallbackWrapper implements BleManag
 		m_listener = listener;
 	}
 
-	@Override public void onAssertFailed(final Info info)
+	@Override public void onAssertEvent(final AssertEvent info)
 	{
 		if( postToMain() )
 		{
@@ -26,13 +26,13 @@ class P_WrappingAssertionListener extends PA_CallbackWrapper implements BleManag
 			{
 				@Override public void run()
 				{
-					m_listener.onAssertFailed(info);
+					m_listener.onAssertEvent(info);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onAssertFailed(info);
+			m_listener.onAssertEvent(info);
 		}
 	}
 }
