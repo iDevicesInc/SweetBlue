@@ -175,8 +175,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				}
 			}
 
-
 			//--- DRK > The following situation gives rise to the need to make sure gatt is closed here.
+			//---		Before this line was added the library still recovered but it was/is an assert case in native device wrapper.
 //			02-27 16:22:30.963: I/P_TaskQueue(29156): AMY(29156) print() - no current task [DiscoverServices(QUEUED igrill_v2_17D8)]
 //			02-27 16:22:30.963: D/BluetoothManager(29156): getConnectionState()
 //			02-27 16:22:30.963: D/BluetoothManager(29156): getConnectedDevices
@@ -199,6 +199,32 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 //			02-27 16:22:31.363: I/PA_Task(29156): AMY(29156) setState() - Disconnect(SOFTLY_CANCELLED igrill_v2_17D8) - 8010
 //			02-27 16:22:31.363: I/P_TaskQueue(29156): AMY(29156) print() - no current task [Connect(QUEUED igrill_v2_17D8)]
 //			02-27 16:22:31.393: I/P_TaskQueue(29156): AMY(29156) print() - Connect(ARMED igrill_v2_17D8) [queue empty]
+//			02-27 16:22:31.433: D/BluetoothManager(29156): getConnectionState()
+//			02-27 16:22:31.433: D/BluetoothManager(29156): getConnectedDevices
+//			02-27 16:22:31.443: D/BluetoothManager(29156): getConnectionState()
+//			02-27 16:22:31.443: D/BluetoothManager(29156): getConnectedDevices
+//			02-27 16:22:31.453: D/BluetoothManager(29156): getConnectionState()
+//			02-27 16:22:31.453: D/BluetoothManager(29156): getConnectedDevices
+//			02-27 16:22:31.463: D/BluetoothGatt(29156): connect() - device: D4:81:CA:20:17:D8, auto: false
+//			02-27 16:22:31.463: D/BluetoothGatt(29156): registerApp()
+//			02-27 16:22:31.463: D/BluetoothGatt(29156): registerApp() - UUID=e669a333-eddc-4e16-a8a9-794982b3d99c
+//			02-27 16:22:31.473: I/BluetoothGatt(29156): Client registered, waiting for callback
+//			02-27 16:22:31.473: D/BluetoothGatt(29156): onClientRegistered() - status=0 clientIf=6
+//			02-27 16:22:31.513: E/BleManager(29156): ASSERTION FAILED 
+//			02-27 16:22:31.513: E/BleManager(29156): java.lang.Exception
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.BleManager.ASSERT(BleManager.java:1210)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.BleManager.ASSERT(BleManager.java:1194)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.P_NativeDeviceWrapper.setGatt(P_NativeDeviceWrapper.java:255)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.P_NativeDeviceWrapper.updateGattFromCallback(P_NativeDeviceWrapper.java:88)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.P_NativeDeviceWrapper.updateGattInstance(P_NativeDeviceWrapper.java:94)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.P_Task_Connect.execute(P_Task_Connect.java:70)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.PA_Task.execute_wrapper(PA_Task.java:256)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.PA_Task.update_internal(PA_Task.java:325)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.P_TaskQueue.update(P_TaskQueue.java:184)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.BleManager.update_synchronized(BleManager.java:2112)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.BleManager.update(BleManager.java:2106)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.BleManager$1.onUpdate(BleManager.java:611)
+//			02-27 16:22:31.513: E/BleManager(29156): 	at com.idevicesinc.sweetblue.utils.UpdateLoop$1.run(UpdateLoop.java:32)
 			m_device.m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/false);
 		}
 		else if (newState == BluetoothProfile.STATE_CONNECTING)
