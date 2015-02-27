@@ -57,7 +57,7 @@ Getting Started
       1. Right-click on the `src` folder.
       2. Hover over `Build Path->`.
       3. Click `Use as Source Folder`.
-  5. If building with JAR...
+  5. Else if building with JAR...
       1. Expand the `jars` folder.
       2. Right click on `sweetblue_{version}.jar`.
       3. Hover over `Build Path->`.
@@ -77,7 +77,7 @@ Getting Started
     }
     ```
 
-  4. If building with JAR, add the following to `dependencies`:
+  4. Else if building with JAR, add the following to `dependencies`:
 
     ```gradle
     dependencies {
