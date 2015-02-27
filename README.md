@@ -101,23 +101,23 @@ Getting Started
     ```java
     BleManager.get(this).startScan(new DiscoveryListener()
     {
-    	@Override public void onDiscoveryEvent(DiscoveryEvent e)
+    	@Override public void onEvent(DiscoveryEvent e)
     	{
     		if( e.was(LifeCycle.DISCOVERED) )
     		{
 	    		e.device().connect(new StateListener()
 	    		{
-	    			@Override public void onStateChange(ChangeEvent e)
+	    			@Override public void onEvent(StateEvent e)
 	    			{
 	    				if( e.didEnter(BleDeviceState.INITIALIZED) )
 	    				{
 	    					e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
 	    					{
-	    						@Override public void onResult(Result r)
+	    						@Override public void onEvent(ReadWriteEvent e)
 	    						{
-	    							if( r.wasSuccess() )
+	    							if( e.wasSuccess() )
 	    							{
-	    								Log.i("", "Battery level is " + r.data_byte() + "%");
+	    								Log.i("", "Battery level is " + e.data_byte() + "%");
 	    							}
 	    						}
 	    					});
