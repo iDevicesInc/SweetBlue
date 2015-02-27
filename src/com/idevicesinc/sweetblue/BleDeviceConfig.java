@@ -13,10 +13,10 @@ import android.webkit.JavascriptInterface;
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
+import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
-import com.idevicesinc.sweetblue.annotations.Advanced;
-import com.idevicesinc.sweetblue.annotations.Immutable;
+import com.idevicesinc.sweetblue.annotations.*;
 import com.idevicesinc.sweetblue.utils.*;
 
 /**
@@ -36,7 +36,6 @@ public class BleDeviceConfig implements Cloneable
 	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
-	public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
 	
 	
 	/**
@@ -60,10 +59,10 @@ public class BleDeviceConfig implements Cloneable
 	public static final int DEFAULT_TX_POWER							= -50;
 	
 	/**
-	 * Status code used for {@link BleDevice.ReadWriteListener.Result#gattStatus} when the operation failed at a point where a
+	 * Status code used for {@link BleDevice.ReadWriteListener.ScanEvent#gattStatus} when the operation failed at a point where a
 	 * gatt status from the underlying stack isn't provided or applicable.
 	 * <br><br>
-	 * Also used for {@link BleDevice.ConnectionFailListener.Info#gattStatus} for when the failure didn't involve the gatt layer.
+	 * Also used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#gattStatus} for when the failure didn't involve the gatt layer.
 	 */
 	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 	
@@ -89,13 +88,14 @@ public class BleDeviceConfig implements Cloneable
 	 * this brute force solution seems to be the only way to smooth things out.
 	 */
 	@Advanced
+	@Lambda
 	public static interface BondFilter
 	{
 		/**
-		 * Just a dummy subclass of {@link BleDevice.StateListener.ChangeEvent} so that this gets auto-imported for implementations of {@link BondFilter}. 
+		 * Just a dummy subclass of {@link BleDevice.StateListener.StateEvent} so that this gets auto-imported for implementations of {@link BondFilter}. 
 		 */
 		@Advanced
-		public static class StateChangeEvent extends BleDevice.StateListener.ChangeEvent
+		public static class StateChangeEvent extends BleDevice.StateListener.StateEvent
 		{
 			StateChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 			{
@@ -126,7 +126,7 @@ public class BleDeviceConfig implements Cloneable
 		}
 		
 		/**
-		 * Struct passed to {@link BondFilter#onCharacteristicEvent(CharacteristicEvent)}.
+		 * Struct passed to {@link BondFilter#onEvent(CharacteristicEvent)}.
 		 */
 		@Advanced
 		@Immutable
@@ -255,12 +255,12 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Called after a device undergoes a change in its {@link BleDeviceState}.
 		 */
-		Please onStateChangeEvent(StateChangeEvent event);
+		Please onEvent(StateChangeEvent event);
 		
 		/**
 		 * Called immediately before reading, writing, or enabling notification on a characteristic.
 		 */
-		Please onCharacteristicEvent(CharacteristicEvent event);
+		Please onEvent(CharacteristicEvent event);
 	}
 	
 	/**
@@ -279,7 +279,7 @@ public class BleDeviceConfig implements Cloneable
 			return Utils.phoneHasBondingIssues();
 		}
 
-		@Override public Please onStateChangeEvent(StateChangeEvent event)
+		@Override public Please onEvent(StateChangeEvent event)
 		{
 			if( phoneHasBondingIssues() )
 			{
@@ -292,7 +292,7 @@ public class BleDeviceConfig implements Cloneable
 			return Please.doNothing();
 		}
 
-		@Override public Please onCharacteristicEvent(CharacteristicEvent event)
+		@Override public Please onEvent(CharacteristicEvent event)
 		{
 			return Please.doNothing();
 		}
@@ -304,13 +304,14 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #reconnectFilter
 	 * @see DefaultReconnectFilter
 	 */
+	@Lambda
 	public static interface ReconnectFilter
 	{		
 		/**
-		 * Struct passed to {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to aid in making a decision.
+		 * Struct passed to {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to aid in making a decision.
 		 */
 		@Immutable
-		public static class Info
+		public static class ReconnectEvent
 		{
 			/**
 			 * The device that is currently {@link BleDeviceState#ATTEMPTING_RECONNECT}.
@@ -331,21 +332,21 @@ public class BleDeviceConfig implements Cloneable
 			private final Interval m_totalTimeReconnecting;
 			
 			/**
-			 * The previous {@link Interval} returned from {@link ReconnectFilter#onReconnectRequest(Info)}, or {@link Interval#ZERO}
+			 * The previous {@link Interval} returned from {@link ReconnectFilter#onEvent(ReconnectEvent)}, or {@link Interval#ZERO}
 			 * for the first invocation.
 			 */
 			public Interval previousDelay(){  return m_previousDelay;  }
 			private final Interval m_previousDelay;
 			
 			/**
-			 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onConnectionFail(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info)}
-			 * before the call is made to {@link ReconnectFilter#onReconnectRequest(Info)}. For the first call to {@link ReconnectFilter#onReconnectRequest(Info)},
-			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ConnectionFailListener.Info#isNull()} will return <code>true</code>.
+			 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
+			 * before the call is made to {@link ReconnectFilter#onEvent(ReconnectEvent)}. For the first call to {@link ReconnectFilter#onEvent(ReconnectEvent)},
+			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
 			 */
-			public ConnectionFailListener.Info connectionFailInfo(){  return m_connectionFailInfo;  }
-			private final ConnectionFailListener.Info m_connectionFailInfo;
+			public ConnectionFailListener.ConnectionFailEvent connectionFailInfo(){  return m_connectionFailInfo;  }
+			private final ConnectionFailListener.ConnectionFailEvent m_connectionFailInfo;
 			
-			Info(BleDevice device, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, ConnectionFailListener.Info connectionFailInfo)
+			ReconnectEvent(BleDevice device, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 			{
 				this.m_device = device;
 				this.m_failureCount = failureCount;
@@ -367,7 +368,7 @@ public class BleDeviceConfig implements Cloneable
 		}
 		
 		/**
-		 * Return value for {@link ReconnectFilter#onReconnectRequest(Info)}. Use static constructor methods to create instances.
+		 * Return value for {@link ReconnectFilter#onEvent(ReconnectEvent)}. Use static constructor methods to create instances.
 		 */
 		@Immutable
 		public static class Please
@@ -388,7 +389,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to instantly reconnect.
+			 * Return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to instantly reconnect.
 			 */
 			public static Please retryInstantly()
 			{
@@ -396,7 +397,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to stop a reconnect attempt loop.
+			 * Return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to stop a reconnect attempt loop.
 			 * Note that {@link BleDevice#disconnect()} will also stop any ongoing reconnect loop.
 			 */
 			public static Please stopRetrying()
@@ -405,7 +406,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectFilter#onReconnectRequest(ReconnectFilter.Info)} to retry after the given amount of time.
+			 * Return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to retry after the given amount of time.
 			 */
 			public static Please retryIn(Interval interval)
 			{
@@ -418,7 +419,7 @@ public class BleDeviceConfig implements Cloneable
 		 * Use the static methods of {@link Please} as return values to stop reconnection ({@link Please#stopRetrying()}), try again
 		 * instantly ({@link Please#retryInstantly()}), or after some amount of time {@link Please#retryIn(Interval)}.
 		 */
-		Please onReconnectRequest(Info info);
+		Please onEvent(ReconnectEvent event);
 	}
 	
 	/**
@@ -430,9 +431,9 @@ public class BleDeviceConfig implements Cloneable
 		public static final Please DEFAULT_INITIAL_RECONNECT_DELAY = Please.retryInstantly();
 		public static final Please DEFAULT_RECONNECT_ATTEMPT_RATE = Please.retryIn(Interval.secs(3.0));
 		
-		@Override public Please onReconnectRequest(Info info)
+		@Override public Please onEvent(ReconnectEvent event)
 		{
-			if( info.failureCount() == 0 )
+			if( event.failureCount() == 0 )
 			{
 				return DEFAULT_INITIAL_RECONNECT_DELAY;
 			}
@@ -440,6 +441,107 @@ public class BleDeviceConfig implements Cloneable
 			{
 				return DEFAULT_RECONNECT_ATTEMPT_RATE;
 			}
+		}
+	}
+	
+	/**
+	 * Provides a way to control timeout behavior for various {@link BleTask} instances.
+	 */
+	@Lambda
+	@Advanced
+	public static interface TimeoutRequestFilter
+	{
+		/**
+		 * Event passed to {@link TimeoutRequestFilter#onEvent(TimeoutRequestEvent)} that provides
+		 * information about the {@link BleTask} that will soon be executed.
+		 */
+		@Immutable
+		public static class TimeoutRequestEvent
+		{
+			/**
+			 * The {@link BleDevice} associated with the {@link #task()}, or {@link BleDevice#NULL} if
+			 * {@link #task()} {@link BleTask#isManagerSpecific()} returns <code>true</code>.
+			 */
+			public BleDevice device(){  return m_device;  }
+			private BleDevice m_device;
+			
+			/**
+			 * Returns the manager.
+			 */
+			public BleManager manager(){  return m_manager;  }
+			private BleManager m_manager;
+			
+			/**
+			 * The type of task for which we are requesting a timeout.
+			 */
+			public BleTask task(){  return m_task;  }
+			private BleTask m_task;
+			
+			/**
+			 * The ble characteristic {@link UUID} associated with the task, or {@link Uuids#INVALID} otherwise.
+			 */
+			public UUID charUuid(){  return m_charUuid;  }
+			private UUID m_charUuid;
+			
+			/**
+			 * The ble descriptor {@link UUID} associated with the task, or {@link Uuids#INVALID} otherwise.
+			 */
+			public UUID descUuid(){  return m_descUuid;  }
+			private UUID m_descUuid;
+			
+			void init(BleManager manager, BleDevice device, BleTask task, UUID charUuid, UUID descUuid)
+			{
+				m_manager = manager;
+				m_device = device;
+				m_task = task;
+				m_charUuid = charUuid;
+				m_descUuid = descUuid;
+			}
+		}
+		
+		/**
+		 * Use static constructor methods to create instances to return from {@link TimeoutRequestFilter#onEvent(TimeoutRequestEvent)}.
+		 */
+		@Immutable
+		public static class Please
+		{
+			private final Interval m_interval;
+			
+			Please(Interval interval)
+			{
+				m_interval = interval;
+			}
+			
+			public static Please setTimeoutFor(final Interval interval)
+			{
+				return new Please(interval);
+			}
+			
+			public static Please doNotUseTimeout()
+			{
+				return new Please(Interval.DISABLED);
+			}
+		}
+		
+		/**
+		 * Implement this to have fine-grained control over {@link BleTask} timeout behavior.
+		 */
+		Please onEvent(TimeoutRequestEvent event);
+	}
+	
+	/**
+	 * Default implementation of {@link TimeoutRequestFilter} that simply sets the timeout
+	 * for all {@link BleTask} instances to {@link #DEFAULT_TASK_TIMEOUT} seconds.
+	 */
+	public static class DefaultTimeoutRequestFilter implements TimeoutRequestFilter
+	{
+		public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
+		
+		private static final Please RETURN_VALUE = Please.setTimeoutFor(Interval.secs(DEFAULT_TASK_TIMEOUT));
+		
+		@Override public Please onEvent(TimeoutRequestEvent event)
+		{
+			return RETURN_VALUE;
 		}
 	}
 	
@@ -478,7 +580,7 @@ public class BleDeviceConfig implements Cloneable
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
 	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ConnectionFailListener.Please}
-	 * returned from {@link ConnectionFailListener#onConnectionFail(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info)}.
+	 * returned from {@link ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}.
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
@@ -535,7 +637,7 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Default is <code>true</code> - controls whether a {@link BleDevice} is placed into an in-memory cache when it becomes {@link BleDeviceState#UNDISCOVERED}.
-	 * If <code>true</code>, subsequent calls to {@link BleManager.DiscoveryListener#onDiscoveryEvent(BleManager.DiscoveryListener.DiscoveryEvent)} with
+	 * If <code>true</code>, subsequent calls to {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)} with
 	 * {@link LifeCycle#DISCOVERED} (or calls to {@link BleManager#newDevice(String)}) will return the cached {@link BleDevice} instead of creating a new one.
 	 * <br><br>
 	 * The advantages of caching are:<br>
@@ -553,7 +655,8 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Default is <code>true</code> - controls whether {@link ConnectionFailListener.Reason#BONDING_FAILED} is capable of
-	 * failing a {@link BleDevice#connect()}.
+	 * inducing {@link ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
+	 * while a device is {@link BleDeviceState#CONNECTING_OVERALL}.
 	 */
 	public Boolean bondingFailFailsConnection				= true;
 	
@@ -575,7 +678,7 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
-	 * @see BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)
+	 * @see BleManager.DiscoveryListener#onEvent(DiscoveryEvent)
 	 * @see #undiscoveryKeepAlive
 	 */
 	public Interval	minScanTimeNeededForUndiscovery				= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
@@ -589,7 +692,7 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
-	 * @see BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)
+	 * @see BleManager.DiscoveryListener#onEvent(DiscoveryEvent)
 	 * @see #minScanTimeNeededForUndiscovery
 	 */
 	public Interval	undiscoveryKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
@@ -609,15 +712,15 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
 	 */
-	@Advanced
-	public Interval[] timeouts							= newTaskTimeArray();
-	{
-		final Interval defaultTimeout = Interval.secs(DEFAULT_TASK_TIMEOUT);
-		for( int i = 0; i < timeouts.length; i++ )
-		{
-			timeouts[i] = defaultTimeout;
-		}
-	}
+//	@Advanced
+//	public Interval[] timeouts							= newTaskTimeArray();
+//	{
+//		final Interval defaultTimeout = Interval.secs(DEFAULT_TASK_TIMEOUT);
+//		for( int i = 0; i < timeouts.length; i++ )
+//		{
+//			timeouts[i] = defaultTimeout;
+//		}
+//	}
 	
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
@@ -678,6 +781,17 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	public ReconnectFilter reconnectFilter					= new DefaultReconnectFilter();
 	
+	/**
+	 * Default is an instance of {@link DefaultTimeoutRequestFilter} - set an implementation here to
+	 * have fine control over how long individual {@link BleTask} instances can take before they
+	 * are considered "timed out" and failed.
+	 * <br><br>
+	 * NOTE: Setting this to <code>null</code> will disable timeouts for all {@link BleTask} instances,
+	 * which would probably be very dangerous to do - a task could just sit there spinning forever.
+	 */
+	@Advanced
+	public TimeoutRequestFilter timeoutRequestFilter		= new DefaultTimeoutRequestFilter();
+	
 	static boolean boolOrDefault(Boolean bool_nullable)
 	{
 		return bool_nullable == null ? false : bool_nullable;
@@ -722,53 +836,27 @@ public class BleDeviceConfig implements Cloneable
 	{
 	}
 	
-	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr_nullable)
-	{
-		final int ordinal = task.ordinal();
-		final Interval interval_device = intervals_device_nullable != null && intervals_device_nullable.length > ordinal ? intervals_device_nullable[ordinal] : null;
-		final Interval interval_mngr = intervals_mngr_nullable != null && intervals_mngr_nullable.length > ordinal ? intervals_mngr_nullable[ordinal] : null;
-		
-		return interval(interval_device, interval_mngr);
-	}
+//	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr_nullable)
+//	{
+//		final int ordinal = task.ordinal();
+//		final Interval interval_device = intervals_device_nullable != null && intervals_device_nullable.length > ordinal ? intervals_device_nullable[ordinal] : null;
+//		final Interval interval_mngr = intervals_mngr_nullable != null && intervals_mngr_nullable.length > ordinal ? intervals_mngr_nullable[ordinal] : null;
+//		
+//		return interval(interval_device, interval_mngr);
+//	}
 	
-	static Interval getTimeout(final BleTask task, final BleDeviceConfig conf_device_nullable, final BleManagerConfig conf_mngr)
+	static double getTimeout(final TimeoutRequestEvent event)
 	{
-		final Interval[] timeouts_device = conf_device_nullable != null ? conf_device_nullable.timeouts : null;
-		final Interval[] timeouts_mngr = conf_mngr.timeouts;
+		final BleManager manager = event.manager();
+		final BleDevice device_nullable = !event.device().isNull() ? event.device() : null; 
+		final TimeoutRequestFilter filter_device = device_nullable != null ? device_nullable.conf_device().timeoutRequestFilter : null;
+		final TimeoutRequestFilter filter_mngr = manager.m_config.timeoutRequestFilter;
+		final TimeoutRequestFilter filter = filter_device != null ? filter_device : filter_mngr;
+		final TimeoutRequestFilter.Please please = filter != null ? filter.onEvent(event) : null;
+		final Interval timeout = please != null ? please.m_interval : Interval.DISABLED;
+		final double toReturn = timeout != null ? timeout.secs() : Interval.DISABLED.secs();
 		
-		return getTaskInterval(task, timeouts_device, timeouts_mngr);
-	}
-	
-	/**
-	 * Convenience member to add entries to {@link #timeouts} for you.
-	 * This will create or expand the {@link #timeouts} array if necessary.
-	 */
-	@Advanced
-	public void setTimeout(final Interval interval_nullable, final BleTask ... tasks)
-	{
-		this.timeouts = this.timeouts != null ? this.timeouts : newTaskTimeArray();
-		
-		if( this.timeouts.length < BleTask.values().length )
-		{
-			Interval[] timeouts_new = newTaskTimeArray();
-			
-			for( int i = 0; i < this.timeouts.length; i++ )
-			{
-				timeouts_new[i] = this.timeouts[i];
-			}
-			
-			this.timeouts = timeouts_new;
-		}
-		
-		for( int i = 0; i < tasks.length; i++ )
-		{
-			this.timeouts[tasks[i].ordinal()] = interval_nullable;
-		}
-	}
-	
-	private static Interval[] newTaskTimeArray()
-	{
-		return new Interval[BleTask.values().length];
+		return toReturn;
 	}
 	
 	@Override protected BleDeviceConfig clone()

@@ -62,7 +62,7 @@ public enum BleTask
 	TOGGLE_NOTIFY,
 	
 	/**
-	 * Associated with {@link BleDevice#readRssi()}.
+	 * Associated with {@link BleDevice#readRssi()} and {@link BleDevice#startRssiPoll(com.idevicesinc.sweetblue.utils.Interval)} (and overloads thereof).
 	 */
 	READ_RSSI,
 	
@@ -70,4 +70,26 @@ public enum BleTask
 	 * Associated with discovering services after a {@link BleDevice} becomes {@link BleDeviceState#CONNECTED}.
 	 */
 	DISCOVER_SERVICES;
+	
+	/**
+	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
+	 */
+	public boolean isDeviceSpecific()
+	{
+		switch(this)
+		{
+			case TURN_BLE_OFF:
+			case TURN_BLE_ON:
+			case RESOLVE_CRASHES:	return true;
+			default:				return false;
+		}
+	}
+	
+	/**
+	 * Returns whether <code>this</code> is associated with {@link BleManager}.
+	 */
+	public boolean isManagerSpecific()
+	{
+		return !isDeviceSpecific();
+	}
 }

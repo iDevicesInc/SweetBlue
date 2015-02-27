@@ -28,7 +28,7 @@ import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
@@ -37,7 +37,6 @@ import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
-import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.*;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -76,7 +75,7 @@ import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
  *
  *          m_bleManager.startScan(new BleManager.DiscoveryListener()
  *          {
- *              {@literal @}Override public void onDiscoveryEvent(DiscoveryEvent event)
+ *              {@literal @}Override public void onEvent(DiscoveryEvent event)
  *              {
  *                  m_bleManager.stopScan();
  *
@@ -84,7 +83,7 @@ import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
  *                  {
  *                      event.device().connect(new BleDevice.StateListener()
  *                      {
- *                          {@literal @}Override public void onStateChange(ChangeEvent event)
+ *                          {@literal @}Override public void onEvent(StateEvent event)
  *                          {
  *                              if( event.didEnter(BleDeviceState.INITIALIZED) )
  *                              {
@@ -124,6 +123,7 @@ public class BleManager
 	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 * <br><br>
 	 */
+	@Lambda
 	public static interface DiscoveryListener
 	{
 		/**
@@ -158,7 +158,7 @@ public class BleManager
 		}
 		
 		/**
-		 * Struct passed to {@link DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)}.
+		 * Struct passed to {@link DiscoveryListener#onEvent(DiscoveryEvent)}.
 		 */
 		@Immutable
 		public static class DiscoveryEvent
@@ -213,20 +213,21 @@ public class BleManager
 		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link State.ChangeIntent#UNINTENTIONAL}
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
-		void onDiscoveryEvent(DiscoveryEvent event);
+		void onEvent(DiscoveryEvent event);
 	}
 
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_State(StateListener)} to receive callbacks
 	 * when the {@link BleManager} undergoes a {@link BleManagerState} change.
 	 */
+	@Lambda
 	public static interface StateListener
 	{
 		/**
 		 * Subclass that adds the manager field.
 		 */
 		@Immutable
-		public static class ChangeEvent extends State.ChangeEvent<BleManagerState>
+		public static class StateEvent extends State.ChangeEvent<BleManagerState>
 		{
 			/**
 			 * The manager undergoing the state change.
@@ -234,7 +235,7 @@ public class BleManager
 			public BleManager manager(){  return m_manager;  }
 			private final BleManager m_manager;
 			
-			ChangeEvent(BleManager manager, int oldStateBits, int newStateBits, int intentMask)
+			StateEvent(BleManager manager, int oldStateBits, int newStateBits, int intentMask)
 			{
 				super(oldStateBits, newStateBits, intentMask);
 				
@@ -245,8 +246,8 @@ public class BleManager
 			{
 				return Utils.toString
 				(
-					"entered",			Utils.toString(enterMask(), BleDeviceState.values()),
-					"exited",			Utils.toString(exitMask(), BleDeviceState.values())
+					"entered",			Utils.toString(enterMask(), BleManagerState.values()),
+					"exited",			Utils.toString(exitMask(), BleManagerState.values())
 				);
 			}
 		}
@@ -254,7 +255,7 @@ public class BleManager
 		/**
 		 * Called when the manager's abstracted {@link BleManagerState} changes.
 		 */
-		void onStateChange(ChangeEvent event);
+		void onEvent(StateEvent event);
 	}
 
 	/**
@@ -264,6 +265,7 @@ public class BleManager
 	 * abstracted state reflected by {@link StateListener}. Most apps will not find this callback useful.
 	 */
 	@Advanced
+	@Lambda
 	public static interface NativeStateListener
 	{
 		/**
@@ -271,9 +273,9 @@ public class BleManager
 		 */
 		@Advanced
 		@Immutable
-		public static class ChangeEvent extends StateListener.ChangeEvent
+		public static class NativeStateEvent extends StateListener.StateEvent
 		{
-			ChangeEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
+			NativeStateEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
 			{
 				super(manager_in, oldStateBits_in, newStateBits_in, intentMask_in);
 			}
@@ -283,7 +285,7 @@ public class BleManager
 		 * Called when the manager's native bitwise {@link BleManagerState} changes. As many bits as possible are flipped at the same time.
 		 */
 		@Advanced
-		void onNativeStateChange(ChangeEvent event);
+		void onEvent(NativeStateEvent event);
 	}
 
 	/**
@@ -292,6 +294,7 @@ public class BleManager
 	 *
 	 * @see UhOh
 	 */
+	@Lambda
 	public static interface UhOhListener
 	{
 		/**
@@ -456,7 +459,7 @@ public class BleManager
 		}
 		
 		/**
-		 * Struct passed to {@link UhOhListener#onUhOh(UhOhEvent)}.
+		 * Struct passed to {@link UhOhListener#onEvent(UhOhEvent)}.
 		 */
 		@Immutable
 		public static class UhOhEvent
@@ -491,7 +494,7 @@ public class BleManager
 		/**
 		 * Run for the hills.
 		 */
-		void onUhOh(UhOhEvent event);
+		void onEvent(UhOhEvent event);
 	}
 
 	/**
@@ -500,6 +503,7 @@ public class BleManager
 	 *
 	 * @see BleManager#reset(ResetListener)
 	 */
+	@Lambda
 	public static interface ResetListener
 	{
 		/**
@@ -515,7 +519,7 @@ public class BleManager
 		}
 		
 		/**
-		 * Struct passed to {@link ResetListener#onResetEvent(ResetEvent)}.
+		 * Struct passed to {@link ResetListener#onEvent(ResetEvent)}.
 		 */
 		@Immutable
 		public static class ResetEvent
@@ -550,7 +554,7 @@ public class BleManager
 		/**
 		 * The reset event, for now only fired when the reset is completed. Hopefully the bluetooth stack is OK now.
 		 */
-		void onResetEvent(ResetEvent event);
+		void onEvent(ResetEvent event);
 	}
 
 	/**
@@ -559,10 +563,11 @@ public class BleManager
 	 * an assertion fails through {@link BleManager#ASSERT(boolean, String)}.
 	 */
 	@Advanced
+	@Lambda
 	public static interface AssertListener
 	{
 		/**
-		 * Struct passed to {@link AssertListener#onAssertEvent(AssertEvent)}.
+		 * Struct passed to {@link AssertListener#onEvent(AssertEvent)}.
 		 */
 		@Immutable
 		public static class AssertEvent
@@ -596,7 +601,7 @@ public class BleManager
 		/**
 		 * Provides additional info about the circumstances surrounding the assert.
 		 */
-		void onAssertEvent(AssertEvent event);
+		void onEvent(AssertEvent event);
 	}
 
 	private final UpdateLoop.Callback m_updateLoopCallback = new UpdateLoop.Callback()
@@ -699,7 +704,7 @@ public class BleManager
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
 	
-	private static BleManager s_instance = null;
+	static BleManager s_instance = null;
 
 	/**
 	 * Create an instance with special configuration options set.
@@ -1213,7 +1218,7 @@ public class BleManager
 			if( m_assertionListener != null )
 			{
 				AssertListener.AssertEvent info = new AssertListener.AssertEvent(this, message, dummyException.getStackTrace());
-				m_assertionListener.onAssertEvent(info);
+				m_assertionListener.onEvent(info);
 			}
 
 			return false;
@@ -1411,19 +1416,23 @@ public class BleManager
 	}
 
 	/**
-	 * Gets a known {@link BleDeviceState#DISCOVERED} device by MAC address, or <code>null</code> if there is no such device.
+	 * Gets a known {@link BleDeviceState#DISCOVERED} device by MAC address, or {@link BleDevice#NULL} if there is no such device.
 	 */
-	public @Nullable(Prevalence.NORMAL) BleDevice getDevice(String macAddress)
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice(String macAddress)
 	{
-		return m_deviceMngr.get(macAddress);
+		BleDevice device = m_deviceMngr.get(macAddress);
+		
+		if( device != null )  return device;
+		
+		return BleDevice.NULL;
 	}
 
 	/**
-	 * Shortcut for checking if {@link #getDevice(String)} returns <code>null</code>.
+	 * Shortcut for checking if {@link #getDevice(String)} returns {@link BleDevice#NULL}.
 	 */
 	public boolean hasDevice(String macAddress)
 	{
-		return getDevice(macAddress) != null;
+		return !getDevice(macAddress).isNull();
 	}
 
 	/**
@@ -1436,9 +1445,9 @@ public class BleManager
 	}
 
 	/**
-	 * Returns the first device that is in the given state, or null if no match is found.
+	 * Returns the first device that is in the given state, or {@link BleDevice#NULL} if no match is found.
 	 */
-	public @Nullable(Prevalence.NORMAL) BleDevice getDevice(BleDeviceState state)
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice(BleDeviceState state)
 	{
 		for( int i = 0; i < m_deviceMngr.getCount(); i++ )
 		{
@@ -1450,7 +1459,7 @@ public class BleManager
 			}
 		}
 
-		return null;
+		return BleDevice.NULL;
 	}
 
 	/**
@@ -1458,14 +1467,14 @@ public class BleManager
 	 */
 	public boolean hasDevice(BleDeviceState state)
 	{
-		return getDevice(state) != null;
+		return !getDevice(state).isNull();
 	}
 
 	/**
-	 * Returns the first device that matches the query, or null if no match is found.
+	 * Returns the first device that matches the query, or {@link BleDevice#NULL} if no match is found.
 	 * See {@link BleDevice#is(Object...)} for the query format.
 	 */
-	public @Nullable(Prevalence.NORMAL) BleDevice getDevice(Object ... query)
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice(Object ... query)
 	{
 		for( int i = 0; i < m_deviceMngr.getCount(); i++ )
 		{
@@ -1477,7 +1486,7 @@ public class BleManager
 			}
 		}
 
-		return null;
+		return BleDevice.NULL;
 	}
 
 	/**
@@ -1486,7 +1495,7 @@ public class BleManager
 	 */
 	public boolean hasDevice(Object ... query)
 	{
-		return getDevice(query) != null;
+		return !getDevice(query).isNull();
 	}
 
 	/**
@@ -1564,7 +1573,7 @@ public class BleManager
 	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
 	 * and passed a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
-	public @Nullable(Prevalence.RARE) BleDevice newDevice(String macAddress)
+	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress)
 	{
 		return newDevice(macAddress, null, null);
 	}
@@ -1572,7 +1581,7 @@ public class BleManager
 	/**
 	 * Same as {@link #newDevice(String)} but allows a custom name also.
 	 */
-	public @Nullable(Prevalence.RARE) BleDevice newDevice(String macAddress, String name)
+	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress, String name)
 	{
 		return newDevice(macAddress, name, null);
 	}
@@ -1581,21 +1590,21 @@ public class BleManager
 	 * Same as {@link #newDevice(String)} but passes a {@link BleDeviceConfig} to be used as well.
 	 */
 	
-	public @Nullable(Prevalence.RARE) BleDevice newDevice(String macAddress, BleDeviceConfig config)
+	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress, BleDeviceConfig config)
 	{
 		return newDevice(macAddress, "", config);
 	}
 
 	/**
 	 * Creates a new {@link BleDevice} or returns an existing one if the macAddress matches.
-	 * {@link DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)} will be called if a new device
+	 * {@link DiscoveryListener#onEvent(DiscoveryEvent)} will be called if a new device
 	 * is created.
 	 * <br><br>
-	 * NOTE: You should always do a null check on this method's return value just in case. Android
+	 * NOTE: You should always do a {@link BleDevice#isNull()} check on this method's return value just in case. Android
 	 * documentation says that underlying stack will always return a valid {@link BluetoothDevice}
-	 * instance (which is required to create a {@link BleDevice} instance), but you really never know.
+	 * instance (which is required to create a valid {@link BleDevice} instance), but you really never know.
 	 */
-	public @Nullable(Prevalence.RARE) BleDevice newDevice(String macAddress, String name, BleDeviceConfig config)
+	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress, String name, BleDeviceConfig config)
 	{
 		final BleDevice existingDevice = this.getDevice(macAddress);
 
@@ -1609,9 +1618,12 @@ public class BleManager
 			return existingDevice;
 		}
 
-		final BluetoothDevice device_native = getNative().getAdapter().getRemoteDevice(macAddress);
+		final BluetoothDevice device_native = newNativeDevice(macAddress);
 
-		if( device_native == null )  return null; //--- DRK > API says this should never happen...not trusting it!
+		if( device_native == null ) //--- DRK > API says this should never happen...not trusting it!
+		{
+			return BleDevice.NULL;
+		}
 
 		final String name_normalized = Utils.normalizeDeviceName(name);
 
@@ -1621,10 +1633,15 @@ public class BleManager
 
 		return newDevice;
 	}
+	
+	BluetoothDevice newNativeDevice(String macAddress)
+	{
+		return getNative().getAdapter().getRemoteDevice(macAddress);
+	}
 
 	/**
 	 * Forcefully undiscovers a device, disconnecting it first if needed and removing it from this manager's internal list.
-	 * {@link BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)} with {@link LifeCycle#UNDISCOVERED} will be called.
+	 * {@link BleManager.DiscoveryListener#onEvent(DiscoveryEvent)} with {@link LifeCycle#UNDISCOVERED} will be called.
 	 * No clear use case has been thought of but the method is here just in case anyway.
 	 *
 	 * @return	true if the device was undiscovered, false if device is already {@link BleDeviceState#UNDISCOVERED} or manager
@@ -1735,7 +1752,7 @@ public class BleManager
 					if( nukeListeners != null )
 					{
 						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
-						nukeListeners.onResetEvent(event);
+						nukeListeners.onEvent(event);
 					}
 				}
 			}
@@ -1984,7 +2001,7 @@ public class BleManager
 			device_cached = null;
 		}
 		
-		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin, config_nullable);
+		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin, config_nullable, /*isNull=*/false);
 		
 		m_deviceMngr.add(device);
 
@@ -2010,7 +2027,7 @@ public class BleManager
     		if( m_discoveryListener != null )
     		{
     			DiscoveryEvent event = new DiscoveryEvent(this, device, LifeCycle.DISCOVERED);
-    			m_discoveryListener.onDiscoveryEvent(event);
+    			m_discoveryListener.onEvent(event);
     		}
     	}
     	else
@@ -2020,7 +2037,7 @@ public class BleManager
     		if( m_discoveryListener != null )
     		{
     			DiscoveryEvent event = new DiscoveryEvent(this, device, LifeCycle.REDISCOVERED);
-    			m_discoveryListener.onDiscoveryEvent(event);
+    			m_discoveryListener.onEvent(event);
     		}
     	}
     }
@@ -2185,11 +2202,6 @@ public class BleManager
 	void onConnectionSucceeded()
 	{
 		m_connectionFailTracker = 0;
-	}
-	
-	Interval getTaskTimeout(final BleTask task)
-	{
-		return BleDeviceConfig.getTimeout(task, null, m_config);
 	}
 
 	@Override public String toString()

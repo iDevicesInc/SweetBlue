@@ -8,7 +8,7 @@ import java.lang.annotation.*;
  */
 @Documented
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.CLASS) // The original version used RUNTIME
+@Retention(RetentionPolicy.CLASS)
 public @interface Immutable
 {
 

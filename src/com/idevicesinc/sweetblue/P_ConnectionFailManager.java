@@ -4,7 +4,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Info;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please.PE_Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
@@ -67,7 +67,7 @@ class P_ConnectionFailManager
 		return retryCount;
 	}
 	
-	PE_Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage, ReadWriteListener.Result txnFailReason)
+	PE_Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
 	{
 		if( reason_nullable == null )  return PE_Please.DO_NOT_RETRY;
 		
@@ -102,7 +102,7 @@ class P_ConnectionFailManager
 			}
 		}
 		
-		final Info moreInfo = new Info
+		final ConnectionFailEvent moreInfo = new ConnectionFailEvent
 		(
 			m_device, reason_nullable, timing, m_failCount, attemptTime_latest, attemptTime_total, gattStatus,
 			highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason, txnFailReason
@@ -138,18 +138,18 @@ class P_ConnectionFailManager
 		return retryChoice;
 	}
 	
-	PE_Please invokeCallback(final Info moreInfo)
+	PE_Please invokeCallback(final ConnectionFailEvent moreInfo)
 	{
 		PE_Please retryChoice = null;
 		
 		if( m_connectionFailListener != null )
 		{
-			Please please = m_connectionFailListener.onConnectionFail(moreInfo);
+			Please please = m_connectionFailListener.onEvent(moreInfo);
 			retryChoice = please != null ? please.please() : null;
 		}
 		else if( m_device.getManager().m_defaultConnectionFailListener != null )
 		{
-			Please please = m_device.getManager().m_defaultConnectionFailListener.onConnectionFail(moreInfo);
+			Please please = m_device.getManager().m_defaultConnectionFailListener.onEvent(moreInfo);
 			retryChoice = please != null ? please.please() : null;
 		}
 		

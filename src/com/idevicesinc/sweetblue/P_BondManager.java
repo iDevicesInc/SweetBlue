@@ -154,7 +154,7 @@ class P_BondManager
 		
 		final BondFilter.CharacteristicEvent event = new BleDeviceConfig.BondFilter.CharacteristicEvent(m_device, characteristic.getUuid(), type);
 		
-		final BondFilter.Please please = bondFilter.onCharacteristicEvent(event);
+		final BondFilter.Please please = bondFilter.onEvent(event);
 		
 		return applyPlease_BondFilter(please);
 	}

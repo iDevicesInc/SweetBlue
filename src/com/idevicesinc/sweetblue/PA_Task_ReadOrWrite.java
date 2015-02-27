@@ -4,14 +4,10 @@ import java.util.UUID;
 
 import android.bluetooth.BluetoothGatt;
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 
-/**
- * 
- * 
- */
 abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 {
 	protected final P_Characteristic m_characteristic;
@@ -25,7 +21,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		m_readWriteListener = readWriteListener;
 	}
 	
-	protected abstract Result newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid);
+	protected abstract ReadWriteEvent newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid);
 	
 	//--- DRK > Will have to be overridden in the future if we decide to support descriptor reads/writes.
 	protected Target getDefaultTarget()
@@ -36,7 +32,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 	//--- DRK > Will have to be overridden by read/write tasks if we ever support direct descriptor operations.
 	protected UUID getDescriptorUuid()
 	{
-		return Result.NON_APPLICABLE_UUID;
+		return ReadWriteEvent.NON_APPLICABLE_UUID;
 	}
 	
 	protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
@@ -70,6 +66,11 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		 }
 		 
 		 return true;
+	}
+	
+	@Override protected UUID getCharUuid()
+	{
+		return m_characteristic.getUuid();
 	}
 	
 	protected boolean isFor(UUID uuid)

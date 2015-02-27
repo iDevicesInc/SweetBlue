@@ -8,7 +8,7 @@ import android.bluetooth.BluetoothDevice;
 
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
-import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Result;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.ScanEvent;
 import com.idevicesinc.sweetblue.utils.State;
 
 /**
@@ -52,13 +52,13 @@ class P_ScanFilterManager
 	{
 		if( m_filters.size() == 0 && m_default == null )  return Please.acknowledge();
 		
-		Result result = null;
+		ScanEvent result = null;
 		
 		if( m_default != null )
 		{
-			result = new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			result = new ScanEvent(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
-			Please ack = m_default.onScanResult(result);
+			Please ack = m_default.onEvent(result);
 			
 			if( ack != null && ack.ack() )
 			{
@@ -68,11 +68,11 @@ class P_ScanFilterManager
 		
 		for( int i = 0; i < m_filters.size(); i++ )
 		{
-			result = result != null ? result : new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			result = result != null ? result : new ScanEvent(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
 			ScanFilter ithFilter = m_filters.get(i);
 			
-			Please ack = ithFilter.onScanResult(result);
+			Please ack = ithFilter.onEvent(result);
 			
 			if( ack != null && ack.ack() )
 			{

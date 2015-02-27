@@ -5,7 +5,7 @@ import java.util.UUID;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
@@ -28,9 +28,9 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		m_type = type;
 	}
 	
-	private Result newResult(Status status, int gattStatus, int rssi)
+	private ReadWriteEvent newResult(Status status, int gattStatus, int rssi)
 	{
-		return new Result(getDevice(), m_type, /*rssi=*/rssi, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
+		return new ReadWriteEvent(getDevice(), m_type, /*rssi=*/rssi, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
 	
 	@Override protected boolean isExecutable()
@@ -62,7 +62,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	private void succeed(int gattStatus, int rssi)
 	{
-		Result result = newResult(Status.SUCCESS, gattStatus, rssi);
+		ReadWriteEvent result = newResult(Status.SUCCESS, gattStatus, rssi);
 		
 		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
 		 

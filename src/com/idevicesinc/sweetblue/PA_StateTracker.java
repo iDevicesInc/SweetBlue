@@ -10,7 +10,6 @@ import com.idevicesinc.sweetblue.utils.State;
 abstract class PA_StateTracker
 {
 	private int m_stateMask = 0x0;
-	private final P_Logger m_logger;
 	
 	private final Object m_lock = new Object();
 	private final long[] m_timesInState;
@@ -36,9 +35,8 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	PA_StateTracker(P_Logger logger, State[] enums)
+	PA_StateTracker(State[] enums)
 	{
-		m_logger = logger;
 		m_timesInState = new long[enums.length];
 	}
 	

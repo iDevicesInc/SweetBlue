@@ -15,7 +15,7 @@ class P_TransactionManager
 {
 	final BleTransaction.PI_EndListener m_txnEndListener = new BleTransaction.PI_EndListener()
 	{
-		@Override public void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.Result txnFailReason)
+		@Override public void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.ReadWriteEvent txnFailReason)
 		{
 			synchronized (m_device.m_threadLock)
 			{
@@ -23,7 +23,7 @@ class P_TransactionManager
 			}
 		}
 		
-		private void onTransactionEnd_private(BleTransaction txn, EndReason reason, ReadWriteListener.Result txnFailReason)
+		private void onTransactionEnd_private(BleTransaction txn, EndReason reason, ReadWriteListener.ReadWriteEvent txnFailReason)
 		{
 			clearQueueLock();
 
@@ -108,7 +108,7 @@ class P_TransactionManager
 	
 	BleTransaction m_current;
 	
-	ReadWriteListener.Result m_failReason;
+	ReadWriteListener.ReadWriteEvent m_failReason;
 	
 	P_TransactionManager(BleDevice device)
 	{
@@ -270,7 +270,7 @@ class P_TransactionManager
 		m_failReason = m_device.NULL_READWRITE_RESULT();
 	}
 	
-	void onReadWriteResult(ReadWriteListener.Result result)
+	void onReadWriteResult(ReadWriteListener.ReadWriteEvent result)
 	{
 		resetReadWriteResult();
 		

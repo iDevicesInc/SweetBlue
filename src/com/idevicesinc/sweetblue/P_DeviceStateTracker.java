@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
-import com.idevicesinc.sweetblue.BleDevice.StateListener.ChangeEvent;
+import com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.utils.State;
 
@@ -14,7 +14,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	P_DeviceStateTracker(BleDevice device)
 	{
-		super(device.getManager().getLogger(), BleDeviceState.values());
+		super(BleDeviceState.values());
 		
 		m_device = device;
 	}
@@ -33,18 +33,20 @@ class P_DeviceStateTracker extends PA_StateTracker
 
 	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 	{
-		ChangeEvent event = null;
+		if( m_device.isNull() )  return;
+		
+		StateEvent event = null;
 		
 		if( m_stateListener != null )
 		{
-			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
-			m_stateListener.onStateChange(event);
+			event = event != null ? event : new StateEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
+			m_stateListener.onEvent(event);
 		}
 		
 		if( m_device.getManager().m_defaultDeviceStateListener != null )
 		{
-			event = event != null ? event : new ChangeEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
-			m_device.getManager().m_defaultDeviceStateListener.onStateChange(event);
+			event = event != null ? event : new StateEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
+			m_device.getManager().m_defaultDeviceStateListener.onEvent(event);
 		}
 
 		final BleDeviceConfig.BondFilter bondFilter = m_device.conf_device().bondFilter != null ? m_device.conf_device().bondFilter : m_device.conf_mngr().bondFilter;
@@ -53,7 +55,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 		
 		final BondFilter.StateChangeEvent bondStateChangeEvent = new BondFilter.StateChangeEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
 		
-		final BondFilter.Please please = bondFilter.onStateChangeEvent(bondStateChangeEvent);
+		final BondFilter.Please please = bondFilter.onEvent(bondStateChangeEvent);
 		
 		m_device.m_bondMngr.applyPlease_BondFilter(please);
 		

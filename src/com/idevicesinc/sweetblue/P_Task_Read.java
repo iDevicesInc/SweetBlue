@@ -5,17 +5,13 @@ import java.util.UUID;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-/**
- * 
- * 
- */
 class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {
 	private final Type m_type;
@@ -27,14 +23,14 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		m_type = type;
 	}
 	
-	private Result newResult(byte[] data, Target target, UUID charUuid, UUID descUuid)
+	private ReadWriteEvent newResult(byte[] data, Target target, UUID charUuid, UUID descUuid)
 	{
-		return new Result(getDevice(), charUuid, charUuid, m_type, target, data, Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getTotalTime(), getTotalTimeExecuting());
+		return new ReadWriteEvent(getDevice(), charUuid, charUuid, m_type, target, data, Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getTotalTime(), getTotalTimeExecuting());
 	}
 	
-	@Override protected Result newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
+	@Override protected ReadWriteEvent newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
-		return new Result(getDevice(), charUuid, charUuid, m_type, target, null, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
+		return new ReadWriteEvent(getDevice(), charUuid, charUuid, m_type, target, null, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
 
 	@Override public void execute()
@@ -43,14 +39,14 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		
 		if( char_native == null )
 		{
-			fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().readCharacteristic(char_native) )
 		{
-			fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -58,7 +54,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 	
 	private void succeed(byte[] value, Target target)
 	{
-		Result result = newResult(value, target, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID); 
+		ReadWriteEvent result = newResult(value, target, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID); 
 		getDevice().addReadTime(result.time_total().secs());
 		
 		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
@@ -80,7 +76,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 			{
 				if( value.length == 0 )
 				{
-					 fail(Status.EMPTY_DATA, gattStatus, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+					 fail(Status.EMPTY_DATA, gattStatus, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 				}
 				else
 				{
@@ -89,14 +85,14 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 			}
 			else
 			{
-				fail(Status.NULL_DATA, gattStatus, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+				fail(Status.NULL_DATA, gattStatus, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 				 
 				getManager().uhOh(UhOh.READ_RETURNED_NULL);
 			}
 		 }
 		 else
 		 {
-			 fail(Status.REMOTE_GATT_FAILURE, gattStatus, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
+			 fail(Status.REMOTE_GATT_FAILURE, gattStatus, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 		 }
 	}
 	
@@ -106,13 +102,13 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 		{
 			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " read timed out!");
 			
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID));
 			
 			getManager().uhOh(UhOh.READ_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID));
 		}
 	}
 	

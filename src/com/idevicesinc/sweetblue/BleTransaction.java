@@ -59,7 +59,7 @@ public abstract class BleTransaction
 	
 	static interface PI_EndListener
 	{
-		void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.Result failReason);
+		void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.ReadWriteEvent failReason);
 	}
 	
 	private final double m_timeout;
@@ -138,7 +138,7 @@ public abstract class BleTransaction
 		start(m_device);
 	}
 	
-	private boolean end(final EndReason reason, final ReadWriteListener.Result failReason)
+	private boolean end(final EndReason reason, final ReadWriteListener.ReadWriteEvent failReason)
 	{
 		synchronized (m_device.m_threadLock )
 		{			
@@ -185,15 +185,15 @@ public abstract class BleTransaction
 	
 	/**
 	 * Call this from subclasses to indicate that the transaction has failed. Usually you call this in your
-	 * {@link BleDevice.ReadWriteListener#onResult(BleDevice.ReadWriteListener.Result)}
+	 * {@link BleDevice.ReadWriteListener#onEvent(BleDevice.ReadWriteListener.Result)}
 	 * when {@link Status} is something other than {@link Status#SUCCESS}. If you do so,
-	 * {@link ConnectionFailListener.Info#txnFailReason()} will be set.
+	 * {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()} will be set.
 	 * 
 	 * @return <code>false</code> if the transaction wasn't running to begin with.
 	 */
 	protected final boolean fail()
 	{
-		final ReadWriteListener.Result failReason = m_device.m_txnMngr.m_failReason;
+		final ReadWriteListener.ReadWriteEvent failReason = m_device.m_txnMngr.m_failReason;
 		
 		return this.end(EndReason.FAILED, failReason);
 	}

@@ -10,7 +10,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
@@ -56,7 +56,7 @@ class P_PollManager
 			m_entry = entry;
 		}
 		
-		@Override public void onResult(Result result)
+		@Override public void onEvent(ReadWriteEvent result)
 		{
 			m_entry.onSuccessOrFailure();
 
@@ -73,13 +73,13 @@ class P_PollManager
 			super(readWriteListener, handler, postToMain);
 		}
 		
-		@Override public void onResult(Result result)
+		@Override public void onEvent(ReadWriteEvent result)
 		{
 			if( result.status() == Status.SUCCESS )
 			{
 				if( m_lastValue == null || !Arrays.equals(m_lastValue, result.data()) )
 				{
-					super.onResult(result);
+					super.onEvent(result);
 				}
 				else
 				{
@@ -92,7 +92,7 @@ class P_PollManager
 			{
 				m_lastValue = null;
 				
-				super.onResult(result);
+				super.onEvent(result);
 			}
 		}
 	}
@@ -171,20 +171,20 @@ class P_PollManager
 			
 			if( value == null )
 			{
-				Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0);
-				m_pollingReadListener.onResult(result);
+				ReadWriteEvent result = new ReadWriteEvent(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0);
+				m_pollingReadListener.onEvent(result);
 			}
 			else
 			{
 				if( value.length == 0 )
 				{
-					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
-					m_pollingReadListener.onResult(result);
+					ReadWriteEvent result = new ReadWriteEvent(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
+					m_pollingReadListener.onEvent(result);
 				}
 				else
 				{
-					Result result = new Result(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0);
-					m_pollingReadListener.onResult(result);
+					ReadWriteEvent result = new ReadWriteEvent(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0);
+					m_pollingReadListener.onEvent(result);
 				}
 			}
 			
@@ -370,11 +370,11 @@ class P_PollManager
 				
 				if( notifyState == E_NotifyState.NOT_ENABLED )
 				{
-					BleDevice.ReadWriteListener.Result earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION);
+					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION);
 					
 					if( earlyOutResult != null )
 					{
-						ithEntry.m_pollingReadListener.onResult(earlyOutResult);
+						ithEntry.m_pollingReadListener.onEvent(earlyOutResult);
 					}
 					else
 					{
@@ -389,8 +389,8 @@ class P_PollManager
 				
 				if( notifyState == E_NotifyState.ENABLED && ithEntry.m_notifyState != E_NotifyState.ENABLED )
 				{
-					Result result = newAlreadyEnabledResult(characteristic);
-					ithEntry.m_pollingReadListener.onResult(result);
+					ReadWriteEvent result = newAlreadyEnabledResult(characteristic);
+					ithEntry.m_pollingReadListener.onEvent(result);
 				}
 				
 				ithEntry.m_notifyState = notifyState;
@@ -398,12 +398,12 @@ class P_PollManager
 		}
 	}
 	
-	Result newAlreadyEnabledResult(P_Characteristic characteristic)
+	ReadWriteEvent newAlreadyEnabledResult(P_Characteristic characteristic)
 	{
 		//--- DRK > Just being anal with the null check here.
 		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic.getNative(), /*enable=*/true) : BleDevice.EMPTY_BYTE_ARRAY;
 		int gattStatus = BluetoothGatt.GATT_SUCCESS;
-		Result result = new Result(m_device, characteristic.getUuid(), Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0);
+		ReadWriteEvent result = new ReadWriteEvent(m_device, characteristic.getUuid(), Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0);
 		
 		return result;
 	}

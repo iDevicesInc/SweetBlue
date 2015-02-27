@@ -20,7 +20,7 @@ class P_WrappingDiscoveryListener extends PA_CallbackWrapper implements BleManag
 		m_listener = listener;
 	}
 	
-	@Override public void onDiscoveryEvent(final DiscoveryEvent event)
+	@Override public void onEvent(final DiscoveryEvent event)
 	{
 		if( postToMain() )
 		{
@@ -28,13 +28,13 @@ class P_WrappingDiscoveryListener extends PA_CallbackWrapper implements BleManag
 			{
 				@Override public void run()
 				{
-					m_listener.onDiscoveryEvent(event);
+					m_listener.onEvent(event);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onDiscoveryEvent(event);
+			m_listener.onEvent(event);
 		}
 	}
 }

@@ -15,6 +15,7 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
+import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
@@ -33,6 +34,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/30.0;
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
 	
+	static final BleManagerConfig NULL = new BleManagerConfig();
+	
 	/**
 	 * Maximum amount of time for a classic scan to run. This was determined based on experimentation.
 	 * Documentation says that classic scan goes on for about 12 seconds. I forget what the reasoning
@@ -46,13 +49,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * overloads, i.e. {@link BleManager#startScan(BleManagerConfig.ScanFilter)},
 	 * {@link BleManager#startScan(Interval, BleManagerConfig.ScanFilter)}, etc.
 	 */
+	@Lambda
 	public static interface ScanFilter
 	{
 		/**
-		 * Instances of this class are passed to {@link ScanFilter#onScanResult(Result)} to aid in making a decision.
+		 * Instances of this class are passed to {@link ScanFilter#onEvent(ScanEvent)} to aid in making a decision.
 		 */
 		@Immutable
-		public static class Result
+		public static class ScanEvent
 		{
 			/**
 			 * Other parameters are probably enough to make a decision but this native instance is provided just in case.
@@ -100,14 +104,14 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
 			 * <br><br>
-			 * TIP: If {@link Result#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
-			 * and return <code>true</code> from {@link ScanFilter#onScanResult(Result)} without having to check
+			 * TIP: If {@link ScanEvent#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
+			 * and return <code>true</code> from {@link ScanFilter#onEvent(ScanEvent)} without having to check
 			 * uuids or names matching, because obviously you've seen and connected to this device before.
 			 */
 			public State.ChangeIntent lastDisconnectIntent(){  return m_lastDisconnectIntent;  }
 			private final State.ChangeIntent m_lastDisconnectIntent;
 			
-			Result
+			ScanEvent
 			(
 				BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName,
 				String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent
@@ -134,7 +138,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		
 		/**
-		 * Small struct passed back from {@link ScanFilter#onScanResult(Result)}.
+		 * Small struct passed back from {@link ScanFilter#onEvent(ScanEvent)}.
 		 * Use static constructor methods to create an instance.
 		 */
 		@Immutable
@@ -160,8 +164,8 @@ public class BleManagerConfig extends BleDeviceConfig
 			}
 			
 			/**
-			 * Return this from {@link ScanFilter#onScanResult(Result)} to acknowledge the discovery.
-			 * {@link BleManager.DiscoveryListener#onDiscoveryEvent(com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent)}
+			 * Return this from {@link ScanFilter#onEvent(ScanEvent)} to acknowledge the discovery.
+			 * {@link BleManager.DiscoveryListener#onEvent(com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent)}
 			 * will be called presently with a newly created {@link BleDevice}.
 			 */
 			public static Please acknowledge()
@@ -195,7 +199,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			}
 			
 			/**
-			 * Return this from {@link ScanFilter#onScanResult(Result)} to say no to the discovery.
+			 * Return this from {@link ScanFilter#onEvent(ScanEvent)} to say no to the discovery.
 			 */
 			public static Please ignore()
 			{
@@ -204,12 +208,12 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		
 		/**
-		 * Return {@link Please#acknowledge()} to acknowledge the discovery, in which case {@link DiscoveryListener#onDiscoveryEvent(DiscoveryListener.DiscoveryEvent)}
+		 * Return {@link Please#acknowledge()} to acknowledge the discovery, in which case {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)}
 		 * will be called shortly. Otherwise return {@link Please#ignore()} to ignore the discovered device.
 		 * 
 		 * @return {@link Please#acknowledge()}, {@link Please#ignore()}, or {@link Please#acknowledge(BleDeviceConfig)} (or other static constructor methods that may be added in the future).
 		 */
-		Please onScanResult(Result result);
+		Please onEvent(ScanEvent event);
 	}
 	
 	/**
@@ -235,9 +239,9 @@ public class BleManagerConfig extends BleDeviceConfig
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
 		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#DefaultScanFilter(Collection)}.
 		 */
-		@Override public Please onScanResult(Result result)
+		@Override public Please onEvent(ScanEvent event)
 		{
-			if( Utils.haveMatchingIds(result.advertisedServices(), m_whitelist) )
+			if( Utils.haveMatchingIds(event.advertisedServices(), m_whitelist) )
 			{
 				return Please.acknowledge();
 			}
@@ -287,10 +291,10 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * reasons this can fail sometimes. In this case SweetBlue can revert to using classic bluetooth
 	 * discovery through {@link BluetoothAdapter#startDiscovery()}. Be aware that classic
 	 * discovery may not discover some or any advertising BLE devices, nor will it provide
-	 * a {@link ScanFilter.Result#scanRecord} or {@link ScanFilter.Result#advertisedServices}
-	 * to {@link ScanFilter#onScanResult(ScanFilter.Result)}.
+	 * a {@link ScanFilter.ScanEvent#scanRecord} or {@link ScanFilter.ScanEvent#advertisedServices}
+	 * to {@link ScanFilter#onEvent(ScanFilter.ScanEvent)}.
 	 * Most likely you will be forced to filter on name only for your implementation of
-	 * {@link ScanFilter#onScanResult(ScanFilter.Result)}.
+	 * {@link ScanFilter#onEvent(ScanFilter.ScanEvent)}.
 	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.
 	 */
 	@Advanced
@@ -318,7 +322,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * connected but one or more devices are {@link BleDeviceState#ATTEMPTING_RECONNECT}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link BleDeviceConfig.ReconnectFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectFilter#onReconnectRequest(BleDeviceConfig.ReconnectFilter.Info)}.
+	 * {@link BleDeviceConfig.ReconnectFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectFilter#onEvent(BleDeviceConfig.ReconnectFilter.Info)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  

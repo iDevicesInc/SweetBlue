@@ -1,8 +1,12 @@
 package com.idevicesinc.sweetblue;
 
+import java.util.UUID;
+
 import android.os.Handler;
 
+import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 /**
@@ -15,6 +19,8 @@ abstract class PA_Task
 	{
 		void onStateChange(PA_Task task, PE_TaskState state);
 	}
+	
+	private final BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new TimeoutRequestEvent();
 	
 	private 	  BleDevice m_device; 
 	private final BleManager m_manager;
@@ -95,19 +101,28 @@ abstract class PA_Task
 		
 		if( taskType != null )
 		{
-			if( getDevice() != null )
-			{
-				return getDevice().getTaskTimeout(taskType).secs();
-			}
-			else
-			{
-				return getManager().getTaskTimeout(taskType).secs();
-			}
+			final BleDevice device = getDevice() != null ? getDevice() : BleDevice.NULL;
+			
+			s_timeoutRequestEvent.init(getManager(), device, taskType, getCharUuid(), getDescUuid());
+			
+			return BleDeviceConfig.getTimeout(s_timeoutRequestEvent);
 		}
 		else
 		{
-			return Interval.DISABLED.secs();
+			getManager().ASSERT(false, "BleTask type shouldn't be null.");
+			
+			return BleDeviceConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
 		}
+	}
+	
+	protected /*virtual*/ UUID getCharUuid()
+	{
+		return Uuids.INVALID;
+	}
+	
+	protected /*virtual*/ UUID getDescUuid()
+	{
+		return Uuids.INVALID;
 	}
 	
 	void init()

@@ -59,7 +59,7 @@ class P_ReconnectManager
 		}
 	}
 	
-	private double getNextTime(ConnectionFailListener.Info connectionFailInfo)
+	private double getNextTime(ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 	{
 		BleDeviceConfig.ReconnectFilter rateLimiter = m_device.conf_device().reconnectFilter;
 		rateLimiter = rateLimiter != null ? rateLimiter : m_device.conf_mngr().reconnectFilter;
@@ -70,8 +70,8 @@ class P_ReconnectManager
 		}
 		else
 		{
-			ReconnectFilter.Info info = new ReconnectFilter.Info(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo);
-			Please please = rateLimiter.onReconnectRequest(info);
+			ReconnectFilter.ReconnectEvent info = new ReconnectFilter.ReconnectEvent(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo);
+			Please please = rateLimiter.onEvent(info);
 			
 			Interval delay = please != null ? please.getInterval() : null;
 			delay = delay != null ? delay : BleManagerConfig.ReconnectFilter.Please.STOP;
@@ -80,7 +80,7 @@ class P_ReconnectManager
 		}
 	}
 	
-	boolean onConnectionFailed(ConnectionFailListener.Info connectionFailInfo)
+	boolean onConnectionFailed(ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 	{
 		if( !isRunning() )
 		{
