@@ -959,7 +959,7 @@ public class BleDevice
 				(
 					device, Reason.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED,
 					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN,
-					BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, ReadWriteListener.Result.NULL(device)
+					BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_RESULT()
 				);
 			}
 			
@@ -1270,8 +1270,8 @@ public class BleDevice
 	
 	private BleDeviceConfig m_config = null;
 	
-	final ReadWriteListener.Result NULL_READWRITE_RESULT = Result.NULL(this);
-	final ConnectionFailListener.Info NULL_CONNECTIONFAIL_INFO = Info.NULL(this);
+	private ReadWriteListener.Result NULL_READWRITE_RESULT = null;
+	private ConnectionFailListener.Info NULL_CONNECTIONFAIL_INFO = null;
 	
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -1935,7 +1935,7 @@ public class BleDevice
 	 */
 	public void disconnect()
 	{
-		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT);
+		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT());
 	}
 	
 	/**
@@ -2399,7 +2399,7 @@ public class BleDevice
 			(
 				this, Reason.ALREADY_CONNECTING_OR_CONNECTED, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO,
 				BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL,
-				AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT
+				AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT()
 			);
 			
 			m_connectionFailMngr.invokeCallback(info);
@@ -2640,7 +2640,7 @@ public class BleDevice
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_RESULT);
+			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_RESULT());
 			
 			if( !attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
@@ -2870,7 +2870,7 @@ public class BleDevice
 //			m_txnMngr.clearFirmwareUpdateTxn();
 		}
 		
-		Please.PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_RESULT);
+		Please.PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_RESULT());
 		
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.
@@ -2977,6 +2977,8 @@ public class BleDevice
 	
 	void invokeReadWriteCallback(ReadWriteListener listener_nullable, ReadWriteListener.Result result)
 	{
+		m_txnMngr.onReadWriteResult(result);
+		
 		if( listener_nullable != null )
 		{
 			listener_nullable.onResult(result);
@@ -2991,5 +2993,31 @@ public class BleDevice
 		{
 			m_mngr.m_defaultReadWriteListener.onResult(result);
 		}
+		
+		m_txnMngr.onReadWriteResultCallbacksCalled();
+	}
+	
+	ReadWriteListener.Result NULL_READWRITE_RESULT()
+	{
+		if( NULL_READWRITE_RESULT != null )
+		{
+			return NULL_READWRITE_RESULT;
+		}
+		
+		NULL_READWRITE_RESULT = ReadWriteListener.Result.NULL(this);
+		
+		return NULL_READWRITE_RESULT;
+	}
+	
+	ConnectionFailListener.Info NULL_CONNECTIONFAIL_INFO()
+	{
+		if( NULL_CONNECTIONFAIL_INFO != null )
+		{
+			return NULL_CONNECTIONFAIL_INFO;
+		}
+		
+		NULL_CONNECTIONFAIL_INFO = ConnectionFailListener.Info.NULL(this);
+		
+		return NULL_CONNECTIONFAIL_INFO;
 	}
 }

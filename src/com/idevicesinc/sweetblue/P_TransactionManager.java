@@ -108,10 +108,14 @@ class P_TransactionManager
 	
 	BleTransaction m_current;
 	
+	ReadWriteListener.Result m_failReason;
+	
 	P_TransactionManager(BleDevice device)
 	{
 		m_device = device;
 		m_mngr = m_device.getManager();
+
+		resetReadWriteResult();
 	}
 	
 	void start(BleTransaction txn)
@@ -259,6 +263,29 @@ class P_TransactionManager
 				m_initTxn.init(m_device, m_txnEndListener);
 			}
 		}
+	}
+	
+	private void resetReadWriteResult()
+	{
+		m_failReason = m_device.NULL_READWRITE_RESULT();
+	}
+	
+	void onReadWriteResult(ReadWriteListener.Result result)
+	{
+		resetReadWriteResult();
+		
+		if( !result.wasSuccess() )
+		{
+			if( m_device.isAny(AUTHENTICATING, INITIALIZING) )
+			{
+				m_failReason = result;
+			}
+		}
+	}
+	
+	void onReadWriteResultCallbacksCalled()
+	{
+		resetReadWriteResult();
 	}
 	
 	void startOta(BleTransaction.Ota txn)
