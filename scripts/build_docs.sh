@@ -11,5 +11,4 @@ echo "${GLITZ}BUILDING DOCS${GLITZ}"
 cd ../src
 
 javadoc -stylesheetfile ../scripts/$CSS_SOURCE_PATH -protected -windowtitle SweetBlue -author -d $TARGET_PATH -subpackages com.idevicesinc.sweetblue
-
 cd -

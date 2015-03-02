@@ -1,4 +1,4 @@
 /**
- * Contains {@link java.lang.annotation.Annotation} declarations uses throughout the library.
+ * Contains {@link java.lang.annotation.Annotation} declarations used throughout the library.
  */
 package com.idevicesinc.sweetblue.annotations;

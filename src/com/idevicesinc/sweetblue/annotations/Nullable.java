@@ -20,7 +20,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * the API by itself may be ambiguous about its <code>null</code> handling for newcomers.
  * In general, if this annotation isn't used, you may assume {@link Prevalence#NEVER}.
  */
-@Documented
+
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Nullable
 {

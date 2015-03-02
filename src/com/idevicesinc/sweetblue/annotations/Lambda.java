@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * Implementations are technically classes and not language-level lambda constructs because
  * Java at this time does not support them. Conceptually however they can be treated as lambdas.
  */
-@Documented
+
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 public @interface Lambda

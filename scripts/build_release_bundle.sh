@@ -1,7 +1,5 @@
 #!/bin/sh
 
-sh build_docs.sh
-
 source config.sh
 
 ANDROID_JAR=$ANDROID_HOME/platforms/android-$ANDROID_API_LEVEL/android.jar
@@ -21,6 +19,11 @@ fi
 echo "n"
 return 1
 }
+
+if [ $(contains "${ARGS[@]}" "no_docs") == "n" ];
+then
+    sh build_docs.sh
+fi
 
 echo "${GLITZ}COPYING FILES${GLITZ}"
 

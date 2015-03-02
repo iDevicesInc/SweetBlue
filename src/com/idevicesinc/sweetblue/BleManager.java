@@ -126,7 +126,7 @@ public class BleManager
 	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 * <br><br>
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface DiscoveryListener
 	{
 		/**
@@ -224,7 +224,7 @@ public class BleManager
 	 * Provide an implementation to {@link BleManager#setListener_State(StateListener)} to receive callbacks
 	 * when the {@link BleManager} undergoes a {@link BleManagerState} change.
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface StateListener
 	{
 		/**
@@ -270,7 +270,7 @@ public class BleManager
 	 * abstracted state reflected by {@link StateListener}. Most apps will not find this callback useful.
 	 */
 	@Advanced
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface NativeStateListener
 	{
 		/**
@@ -299,7 +299,7 @@ public class BleManager
 	 *
 	 * @see UhOh
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface UhOhListener
 	{
 		/**
@@ -509,7 +509,7 @@ public class BleManager
 	 *
 	 * @see BleManager#reset(ResetListener)
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface ResetListener
 	{
 		/**
@@ -570,7 +570,7 @@ public class BleManager
 	 * an assertion fails through {@link BleManager#ASSERT(boolean, String)}.
 	 */
 	@Advanced
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface AssertListener
 	{
 		/**

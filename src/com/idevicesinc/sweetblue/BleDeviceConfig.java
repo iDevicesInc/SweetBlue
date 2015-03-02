@@ -7,8 +7,6 @@ import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.test.FlakyTest;
-import android.webkit.JavascriptInterface;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
@@ -92,14 +90,14 @@ public class BleDeviceConfig implements Cloneable
 	 * The problem seems to be associated with mismanagement of pairing keys by the OS and
 	 * this brute force solution seems to be the only way to smooth things out.
 	 */
-	@Advanced
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface BondFilter
 	{
 		/**
 		 * Just a dummy subclass of {@link BleDevice.StateListener.StateEvent} so that this gets auto-imported for implementations of {@link BondFilter}. 
 		 */
-		@Advanced
+		@com.idevicesinc.sweetblue.annotations.Advanced
 		public static class StateChangeEvent extends BleDevice.StateListener.StateEvent
 		{
 			StateChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
@@ -111,7 +109,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * An enumeration of the type of characteristic operation for a {@link CharacteristicEvent}.
 		 */
-		@Advanced
+		@com.idevicesinc.sweetblue.annotations.Advanced
 		public static enum CharacteristicEventType
 		{
 			/**
@@ -133,7 +131,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Struct passed to {@link BondFilter#onEvent(CharacteristicEvent)}.
 		 */
-		@Advanced
+		@com.idevicesinc.sweetblue.annotations.Advanced
 		@Immutable
 		public static class CharacteristicEvent
 		{
@@ -178,7 +176,7 @@ public class BleDeviceConfig implements Cloneable
 		 * Return value for the various interface methods of {@link BondFilter}.
 		 * Use static constructor methods to create instances.
 		 */
-		@Advanced
+		@com.idevicesinc.sweetblue.annotations.Advanced
 		@Immutable
 		public static class Please
 		{
@@ -273,7 +271,7 @@ public class BleDeviceConfig implements Cloneable
 	 * Default implementation of {@link BondFilter} that unbonds for certain phone models upon discovery and disconnects.
 	 * See further explanation in documentation for {@link BondFilter}.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Immutable
 	public static class DefaultBondFilter implements BondFilter
 	{
@@ -310,7 +308,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #reconnectRequestFilter
 	 * @see DefaultReconnectRequestFilter
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface ReconnectRequestFilter
 	{		
 		/**
@@ -454,8 +452,8 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Provides a way to control timeout behavior for various {@link BleTask} instances.
 	 */
-	@Lambda
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public static interface TimeoutRequestFilter
 	{
 		/**
@@ -593,7 +591,7 @@ public class BleDeviceConfig implements Cloneable
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
 	 * failed connection for the library to internally start using autoConnect==true).
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Boolean alwaysUseAutoConnect						= false;
 	
 	/**
@@ -604,7 +602,7 @@ public class BleDeviceConfig implements Cloneable
 	 * NOTE: if this flag is true for {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)} then this
 	 * applies to all devices.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Boolean retainDeviceWhenBleTurnsOff				= true;
 	
 	/**
@@ -616,7 +614,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #retainDeviceWhenBleTurnsOff
 	 * @see #autoReconnectDeviceWhenBleTurnsBackOn
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Boolean undiscoverDeviceWhenBleTurnsOff			= true;
 	
 	/**
@@ -628,7 +626,7 @@ public class BleDeviceConfig implements Cloneable
 	 * 
 	 * @see #retainDeviceWhenBleTurnsOff
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 	= true;
 	
 	/**
@@ -639,7 +637,7 @@ public class BleDeviceConfig implements Cloneable
 	 * does what they want, kills the app, then opens the app sometime later. {@link BleDevice#getLastDisconnectIntent()} returns
 	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Boolean manageLastDisconnectOnDisk				= true;
 	
 	/**
@@ -657,7 +655,7 @@ public class BleDeviceConfig implements Cloneable
 	 * 
 	 * See also {@link #minScanTimeNeededForUndiscovery}.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Boolean cacheDeviceOnUndiscovery					= true;
 	
 	/**
@@ -673,7 +671,7 @@ public class BleDeviceConfig implements Cloneable
 	 * if your remote device is routinely changing its gatt service profile. This method call supposedly clears a cache
 	 * that would otherwise prevent changes from being discovered.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Boolean useGattRefresh							= false;
 	
 	/**
@@ -719,7 +717,7 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
 	 */
-//	@Advanced
+//	@com.idevicesinc.sweetblue.annotations.Advanced
 //	public Interval[] timeouts							= newTaskTimeArray();
 //	{
 //		final Interval defaultTimeout = Interval.secs(DEFAULT_TASK_TIMEOUT);
@@ -735,7 +733,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageWriteTime()
 	 * @see #nForAverageRunningReadTime
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Integer		nForAverageRunningWriteTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
@@ -744,7 +742,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageWriteTime()
 	 * @see #nForAverageRunningWriteTime
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Integer		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
@@ -755,7 +753,7 @@ public class BleDeviceConfig implements Cloneable
 	 * 
 	 * @see BleDevice#getTxPower()
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Integer		defaultTxPower						= DEFAULT_TX_POWER;
 	
 	/**
@@ -796,7 +794,7 @@ public class BleDeviceConfig implements Cloneable
 	 * NOTE: Setting this to <code>null</code> will disable timeouts for all {@link BleTask} instances,
 	 * which would probably be very dangerous to do - a task could just sit there spinning forever.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public TimeoutRequestFilter timeoutRequestFilter		= new DefaultTimeoutRequestFilter();
 	
 	static boolean boolOrDefault(Boolean bool_nullable)

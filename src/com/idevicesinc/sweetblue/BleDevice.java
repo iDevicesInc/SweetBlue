@@ -72,7 +72,7 @@ public class BleDevice implements UsesCustomNull
 	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
 	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface ReadWriteListener
 	{
 		/**
@@ -562,7 +562,7 @@ public class BleDevice implements UsesCustomNull
 	 * @see BleDeviceState
 	 * @see BleDevice#setListener_State(StateListener)
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface StateListener
 	{
 		/**
@@ -622,7 +622,7 @@ public class BleDevice implements UsesCustomNull
 	 * @see DefaultConnectionFailListener
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface ConnectionFailListener
 	{
 		/**
@@ -760,7 +760,7 @@ public class BleDevice implements UsesCustomNull
 		/**
 		 * Describes usage of the <code>autoConnect</code> parameter for {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 		 */
-		@Advanced
+		@com.idevicesinc.sweetblue.annotations.Advanced
 		public static enum AutoConnectUsage
 		{
 			/**
@@ -853,7 +853,7 @@ public class BleDevice implements UsesCustomNull
 			 * Same as {@link #retry()}, but <code>autoConnect=true</code> will be passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
-			@Advanced
+			@com.idevicesinc.sweetblue.annotations.Advanced
 			public static Please retryWithAutoConnectTrue()
 			{
 				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_TRUE);
@@ -862,7 +862,7 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * Opposite of{@link #retryWithAutoConnectTrue()}.
 			 */
-			@Advanced
+			@com.idevicesinc.sweetblue.annotations.Advanced
 			public static Please retryWithAutoConnectFalse()
 			{
 				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_FALSE);
@@ -950,7 +950,7 @@ public class BleDevice implements UsesCustomNull
 			 * Whether <code>autoConnect=true</code> was passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
-			@Advanced
+			@com.idevicesinc.sweetblue.annotations.Advanced
 			public AutoConnectUsage autoConnectUsage(){  return m_autoConnectUsage;  }
 			private final AutoConnectUsage m_autoConnectUsage;
 			
@@ -1145,7 +1145,7 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Pass an instance of this listener to {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
 	 */
-	@Lambda
+	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface BondListener
 	{
 		/**
@@ -1494,7 +1494,7 @@ public class BleDevice implements UsesCustomNull
 	 * <br><br>
 	 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public State.ChangeIntent getLastDisconnectIntent()
 	{
 		boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
@@ -1560,7 +1560,7 @@ public class BleDevice implements UsesCustomNull
 	 * 
 	 * @see BleDeviceState
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public int getStateMask()
 	{
 		return m_stateTracker.getState();
@@ -1572,7 +1572,7 @@ public class BleDevice implements UsesCustomNull
 	 * @see #getAverageWriteTime()
 	 * @see BleManagerConfig#nForAverageRunningReadTime
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Interval getAverageReadTime()
 	{
 		return m_readTimeEstimator != null ? Interval.secs(m_readTimeEstimator.getRunningAverage()) : Interval.ZERO;
@@ -1585,7 +1585,7 @@ public class BleDevice implements UsesCustomNull
 	 * This may be useful for estimating how long a series of reads and/or writes will take. For example
 	 * for displaying the estimated time remaining for a firmware update.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Interval getAverageWriteTime()
 	{
 		return m_writeTimeEstimator != null ? Interval.secs(m_writeTimeEstimator.getRunningAverage()) : Interval.ZERO;
@@ -1644,7 +1644,7 @@ public class BleDevice implements UsesCustomNull
 	 * 
 	 * @see BleDeviceConfig#defaultTxPower
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public int getTxPower()
 	{
 		if( isNull() )
@@ -1671,7 +1671,7 @@ public class BleDevice implements UsesCustomNull
 	 * Returns the scan record from when we discovered the device.
 	 * May be empty but never null.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.NEVER) byte[] getScanRecord()
 	{
 		return m_scanRecord;
@@ -1796,7 +1796,7 @@ public class BleDevice implements UsesCustomNull
 	 * NOTE: If you are forced to use this please contact library developers to discuss possible feature addition
 	 * or report bugs.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.RARE) BluetoothDevice getNative()
 	{
 		return m_nativeWrapper.getDevice();
@@ -1807,7 +1807,7 @@ public class BleDevice implements UsesCustomNull
 	 * You should only call this after {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
 	 * Please see the warning for {@link #getNative()}.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(UUID uuid)
 	{
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
@@ -1822,7 +1822,7 @@ public class BleDevice implements UsesCustomNull
 	 * You should only call this after {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
 	 * Please see the warning for {@link #getNative()}.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.NORMAL) BluetoothGattService getNativeService(UUID uuid)
 	{
 		P_Service service = m_serviceMngr.get(uuid);
@@ -1839,7 +1839,7 @@ public class BleDevice implements UsesCustomNull
 	 * NOTE: If you are forced to use this please contact library developers to discuss possible feature addition
 	 * or report bugs.
 	 */
-	@Advanced
+	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.NORMAL) BluetoothGatt getNativeGatt()
 	{
 		return m_nativeWrapper.getGatt();
