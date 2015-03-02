@@ -1,4 +1,4 @@
-![](https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.svg)
+![](https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png)
 
 Why?
 ====
