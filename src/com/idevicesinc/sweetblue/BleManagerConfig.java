@@ -130,6 +130,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"macAddress",	macAddress(),
 					"name",			name_normalized(),
 					"services",		advertisedServices()

@@ -15,7 +15,7 @@ class P_WrappingBondListener extends PA_CallbackWrapper implements BleDevice.Bon
 		m_listener = listener;
 	}
 	
-	@Override public void onBondEvent(final BleDevice.BondListener.BondEvent event)
+	@Override public void onEvent(final BleDevice.BondListener.BondEvent event)
 	{
 		if( postToMain() )
 		{
@@ -23,13 +23,13 @@ class P_WrappingBondListener extends PA_CallbackWrapper implements BleDevice.Bon
 			{
 				@Override public void run()
 				{
-					m_listener.onBondEvent(event);
+					m_listener.onEvent(event);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onBondEvent(event);
+			m_listener.onEvent(event);
 		}
 	}
 }

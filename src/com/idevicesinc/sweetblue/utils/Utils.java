@@ -464,9 +464,11 @@ public class Utils
 		return builder.toString();
 	}
 	
-	public static String toString(Object ... values)
+	public static String toString(Class<?> type, Object ... values)
 	{
 		StringBuilder builder = new StringBuilder();
+		
+		builder.append(type.getSimpleName());
 		
 		int length_highest = 0;
 		for( int i = 0; i < values.length; i+=2 )
@@ -481,10 +483,7 @@ public class Utils
 		
 		for( int i = 0; i < values.length; i+=2 )
 		{
-			if( i > 0 )
-			{
-				builder.append("\n");
-			}
+			builder.append("\n   ");
 			
 			final int length_ith = values[i].toString().length();
 			final int spaceCount = length_highest - length_ith;

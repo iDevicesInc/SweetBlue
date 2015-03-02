@@ -15,6 +15,10 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * on how they handle <code>null</code>. SweetBlue strives to never return <code>null</code>
  * if it doesn't have to, preferring things like {@link BleDeviceState#NULL} for example,
  * but in some situations it's unavoidable.
+ * <br><br>
+ * NOTE: This annotation is only used in places where the library authors have judged that
+ * the API by itself may be ambiguous about its <code>null</code> handling for newcomers.
+ * In general, if this annotation isn't used, you may assume {@link Prevalence#NEVER}.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

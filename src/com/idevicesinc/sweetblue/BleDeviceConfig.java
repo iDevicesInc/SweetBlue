@@ -161,6 +161,7 @@ public class BleDeviceConfig implements Cloneable
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"device",		device().getName_debug(),
 					"charUuid",		device().getManager().getLogger().charName(charUuid()),
 					"type",			type()
@@ -359,6 +360,7 @@ public class BleDeviceConfig implements Cloneable
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"device",					device().getName_debug(),
 					"failureCount",				failureCount(),
 					"totalTimeReconnecting",	totalTimeReconnecting(),
@@ -654,7 +656,7 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean cacheDeviceOnUndiscovery					= true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether {@link ConnectionFailListener.Reason#BONDING_FAILED} is capable of
+	 * Default is <code>true</code> - controls whether {@link ConnectionFailListener.Status#BONDING_FAILED} is capable of
 	 * inducing {@link ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
 	 * while a device is {@link BleDeviceState#CONNECTING_OVERALL}.
 	 */

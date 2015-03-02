@@ -232,6 +232,8 @@ class P_PollManager
 	
 	void startPoll(UUID uuid, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
 	{
+		if( m_device.isNull() )  return;
+		
 		boolean allowDuplicatePollEntries = BleDeviceConfig.bool(m_device.conf_device().allowDuplicatePollEntries, m_device.conf_mngr().allowDuplicatePollEntries);
 		
 		if( !allowDuplicatePollEntries )
@@ -265,6 +267,8 @@ class P_PollManager
 	
 	void stopPoll(UUID uuid, Double interval_nullable, ReadWriteListener listener, boolean usingNotify)
 	{
+		if( m_device.isNull() )  return;
+		
 		for( int i = m_entries.size()-1; i >= 0; i-- )
 		{
 			CallbackEntry ithEntry = m_entries.get(i);

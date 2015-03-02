@@ -200,6 +200,7 @@ public class BleManager
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"device",			device().getName_debug(),
 					"lifeCycle",		lifeCycle(),
 					"rssi",				device().getRssi()
@@ -246,6 +247,7 @@ public class BleManager
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"entered",			Utils.toString(enterMask(), BleManagerState.values()),
 					"exited",			Utils.toString(exitMask(), BleManagerState.values())
 				);
@@ -485,6 +487,7 @@ public class BleManager
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"uhOh",		uhOh(),
 					"remedy",	remedy()
 				);
@@ -546,6 +549,7 @@ public class BleManager
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"progress",		progress()
 				);
 			}
@@ -595,6 +599,16 @@ public class BleManager
 				m_manager = manager;
 				m_message = message;
 				m_stackTrace = stackTrace;
+			}
+			
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+					this.getClass(),
+					"message",			message(),
+					"stackTrace",		stackTrace()
+				);
 			}
 		}
 		
@@ -752,7 +766,7 @@ public class BleManager
 
 	private void initConfigDependentMembers()
 	{
-		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.asDouble(m_config.uhOhCallbackThrottle));
+		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.secs(m_config.uhOhCallbackThrottle));
 
 		if( m_wakeLockMngr == null )
 		{
@@ -786,7 +800,7 @@ public class BleManager
 
 		if( Interval.isEnabled(m_config.autoUpdateRate) )
 		{
-			startAutoUpdate(Interval.asDouble(m_config.autoUpdateRate));
+			startAutoUpdate(Interval.secs(m_config.autoUpdateRate));
 		}
 	}
 
@@ -2131,7 +2145,7 @@ public class BleManager
 
 		if( Interval.isEnabled(m_config.autoScanTime) )
 		{
-			if( m_isForegrounded && Interval.isEnabled(m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_timeForegrounded >= Interval.asDouble(m_config.autoScanDelayAfterResume) )
+			if( m_isForegrounded && Interval.isEnabled(m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_timeForegrounded >= Interval.secs(m_config.autoScanDelayAfterResume) )
 			{
 				m_triedToStartScanAfterResume = true;
 
@@ -2142,7 +2156,7 @@ public class BleManager
 			}
 			else if( !is(SCANNING) )
 			{
-				double scanInterval = Interval.asDouble(m_isForegrounded ? m_config.autoScanInterval : m_config.autoScanIntervalWhileAppIsPaused);
+				double scanInterval = Interval.secs(m_isForegrounded ? m_config.autoScanInterval : m_config.autoScanIntervalWhileAppIsPaused);
 
 				if( Interval.isEnabled(scanInterval) && m_timeNotScanning >= scanInterval )
 				{

@@ -61,6 +61,14 @@ public class Distance
 		return meters(feet/FEET_PER_METER);
 	}
 	
+	/**
+	 * Returns <code>true</code> if {@link #meters()} is >= 0.
+	 */
+	public boolean isValid()
+	{
+		return meters() >= 0.0;
+	}
+	
 	@Override public boolean equals(Object object)
 	{
 		if( object instanceof Distance )
@@ -73,6 +81,13 @@ public class Distance
 	
 	@Override public String toString()
 	{
-		return Utils.toFixed(meters())+"meters/"+Utils.toFixed(feet())+"feet"; 
+		if( !isValid() )
+		{
+			return "INVALID";
+		}
+		else
+		{
+			return Utils.toFixed(meters())+"meters/"+Utils.toFixed(feet())+"feet";
+		}
 	}
 }

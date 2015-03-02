@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import android.bluetooth.BluetoothGatt;
 
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
@@ -11,9 +12,9 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 {
 	protected final P_Characteristic m_characteristic;
-	protected final P_WrappingReadWriteListener m_readWriteListener;
+	protected final ReadWriteListener m_readWriteListener;
 	
-	PA_Task_ReadOrWrite(P_Characteristic characteristic, P_WrappingReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+	PA_Task_ReadOrWrite(P_Characteristic characteristic, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
 	{
 		super(characteristic.getDevice(), txn_nullable, requiresBonding, priority);
 		

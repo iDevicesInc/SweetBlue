@@ -26,7 +26,7 @@ class P_NativeDeviceWrapper
 	{
 		m_device = device;
 		m_native = device_native;
-		m_address = m_native.getAddress() == null ? "" : m_native.getAddress();
+		m_address = m_native == null || m_native.getAddress() == null ? BleDevice.NULL_MAC() : m_native.getAddress();
 		
 		nativeName = nativeName != null ? nativeName : "";
 		m_nativeName = nativeName;
@@ -36,7 +36,7 @@ class P_NativeDeviceWrapper
 		String[] address_split = m_address.split(":");
 		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
 		String debugName = m_normalizedName.length() == 0 ? "<no_name>" : m_normalizedName;
-		m_debugName = debugName + "_" + lastFourOfMac;
+		m_debugName = m_native != null ? debugName + "_" + lastFourOfMac : debugName;
 		
 		m_logger = m_device.getManager().getLogger();
 		m_mngr = m_device.getManager();
@@ -69,7 +69,14 @@ class P_NativeDeviceWrapper
 	
 	public BluetoothDevice getDevice()
 	{
-		return m_native;
+		if( m_device.isNull() )
+		{
+			return m_device.getManager().newNativeDevice(BleDevice.NULL_MAC());
+		}
+		else
+		{
+			return m_native;
+		}
 	}
 	
 	public BluetoothGatt getGatt()
@@ -120,7 +127,7 @@ class P_NativeDeviceWrapper
 	
 	public int getNativeBondState()
 	{
-		return m_native.getBondState();
+		return m_native != null ? m_native.getBondState() : BluetoothDevice.BOND_NONE;
 	}
 	
 	boolean isNativelyBonding()

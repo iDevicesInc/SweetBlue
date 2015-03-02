@@ -108,7 +108,7 @@ public class Interval
 	/**
 	 * Returns the double values as seconds from a given nullable {@link Interval}.
 	 */
-	public static double asDouble(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
+	public static double secs(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
 		if( interval_nullable == null )
 		{

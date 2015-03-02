@@ -6,7 +6,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
 import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
 import android.bluetooth.BluetoothGatt;
 
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -37,7 +37,7 @@ class P_TransactionManager
 				}
 				else if( reason == EndReason.SUCCEEDED || reason == EndReason.FAILED )
 				{
-					m_mngr.ASSERT(false, "nativelyConnected=" + m_mngr.getLogger().gattConn(m_device.m_nativeWrapper.getConnectionState()) + " gatt==" + m_device.m_nativeWrapper.getGatt());
+					m_device.getManager().ASSERT(false, "nativelyConnected=" + m_device.getManager().getLogger().gattConn(m_device.m_nativeWrapper.getConnectionState()) + " gatt==" + m_device.m_nativeWrapper.getGatt());
 					
 					return;
 				}
@@ -67,7 +67,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
+					m_device.disconnectWithReason(Status.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
 			else if (txn == m_initTxn )
@@ -78,7 +78,7 @@ class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Reason.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
+					m_device.disconnectWithReason(Status.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
 			else if (txn == m_device.getFirmwareUpdateTxn())
@@ -100,7 +100,6 @@ class P_TransactionManager
 	private final Object m_threadLock = new Object();
 	
 	private final BleDevice m_device;
-	private final BleManager m_mngr;
 	
 	BleTransaction.Auth m_authTxn;
 	BleTransaction.Init m_initTxn;
@@ -113,7 +112,6 @@ class P_TransactionManager
 	P_TransactionManager(BleDevice device)
 	{
 		m_device = device;
-		m_mngr = m_device.getManager();
 
 		resetReadWriteResult();
 	}
@@ -124,13 +122,13 @@ class P_TransactionManager
 		{
 			if( m_current != null )
 			{
-				m_mngr.ASSERT(false, "Old: " + m_current.getClass().getSimpleName() + " New: " + txn.getClass().getSimpleName());
+				m_device.getManager().ASSERT(false, "Old: " + m_current.getClass().getSimpleName() + " New: " + txn.getClass().getSimpleName());
 			}
 			
 			m_current = txn;
 			if( m_current.needsAtomicity() )
 			{
-				m_mngr.getTaskQueue().add(new P_Task_TxnLock(m_device, txn));
+				m_device.getManager().getTaskQueue().add(new P_Task_TxnLock(m_device, txn));
 			}
 			
 			m_current.start_internal();
@@ -150,13 +148,13 @@ class P_TransactionManager
 		//---		the device lock, which then cascades here and would wait on the queue lock for
 		//---		succeed or clear. Meanwhile queue calls device.equals which used to take device lock.
 		//---		It doesn't anymore, but still putting this behind a runnabel just in case.
-		m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
+		m_device.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 		{
 			@Override public void run()
 			{
-				if( !m_mngr.getTaskQueue().succeed(P_Task_TxnLock.class, m_device) )
+				if( !m_device.getManager().getTaskQueue().succeed(P_Task_TxnLock.class, m_device) )
 				{
-					m_mngr.getTaskQueue().clearQueueOf(P_Task_TxnLock.class, m_device);
+					m_device.getManager().getTaskQueue().clearQueueOf(P_Task_TxnLock.class, m_device);
 				}
 			}
 		});

@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue.utils;
 import com.idevicesinc.sweetblue.annotations.*;
 
 /**
- * Tagging interface implemented by some enums and other {@link Immutable} structs
+ * Interface implemented by some enums and other {@link Immutable} structs
  * that have custom "null" behavior in place of Java's built-in <code>null</code>.
  */
 public interface UsesCustomNull

@@ -17,7 +17,6 @@ class P_ConnectionFailManager
 {
 	private final BleDevice m_device;
 	private final P_ReconnectManager m_reconnectMngr;
-	private final P_Logger m_logger;
 	
 	private ConnectionFailListener m_connectionFailListener = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER;
 	
@@ -31,7 +30,6 @@ class P_ConnectionFailManager
 	{
 		m_device = device;
 		m_reconnectMngr = reconnectMngr;
-		m_logger = m_device.getManager().getLogger();
 		
 		resetFailCount();
 	}
@@ -67,7 +65,7 @@ class P_ConnectionFailManager
 		return retryCount;
 	}
 	
-	PE_Please onConnectionFailed(ConnectionFailListener.Reason reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
+	PE_Please onConnectionFailed(ConnectionFailListener.Status reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
 	{
 		if( reason_nullable == null )  return PE_Please.DO_NOT_RETRY;
 		
@@ -79,7 +77,7 @@ class P_ConnectionFailManager
 		Interval attemptTime_latest = Interval.delta(timeOfLastConnectFail, currentTime);
 		Interval attemptTime_total = Interval.delta(m_timeOfFirstConnect, currentTime);
 		
-		m_logger.w(reason_nullable+"");
+		m_device.getManager().getLogger().w(reason_nullable+"");
 		
 		if( isAttemptingReconnect )
 		{

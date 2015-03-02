@@ -40,7 +40,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	private double getMinimumScanTime()
 	{
-		return Interval.asDouble(getManager().m_config.idealMinScanTime);
+		return Interval.secs(getManager().m_config.idealMinScanTime);
 	}
 	
 	@Override protected void update(double timeStep)

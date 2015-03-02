@@ -16,11 +16,6 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-/**
- * 
- * 
- *
- */
 class P_ServiceManager
 {
 	private final BleDevice m_device;
@@ -120,6 +115,13 @@ class P_ServiceManager
 	{
 		Target target = uuid == Uuids.INVALID ? Target.RSSI : Target.CHARACTERISTIC;
 		final int gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+		
+		if( m_device.isNull() )
+		{
+			ReadWriteEvent result = new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.NULL_DEVICE, gattStatus, 0.0, 0.0);
+			
+			return result;
+		}
 		
 		if( !m_device.is(BleDeviceState.CONNECTED) )
 		{

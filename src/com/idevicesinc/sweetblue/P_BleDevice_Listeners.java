@@ -11,7 +11,7 @@ import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
@@ -105,15 +105,15 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 					}
 					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
 					{
-						m_device.disconnectWithReason(Reason.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.IMMEDIATELY, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
+						m_device.disconnectWithReason(Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.IMMEDIATELY, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
 					}
 					else if( state == PE_TaskState.TIMED_OUT )
 					{
-						m_device.disconnectWithReason(Reason.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.TIMED_OUT, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
+						m_device.disconnectWithReason(Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.TIMED_OUT, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
 					}
 					else
 					{
-						m_device.disconnectWithReason(Reason.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
+						m_device.disconnectWithReason(Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
 					}
 				}
 			}

@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -208,7 +208,7 @@ class P_DeviceManager
 				//--- DRK > Just an early-out performance check here.
 				if( device.is(BleDeviceState.CONNECTED) )
 				{
-					device.disconnectWithReason(priority, Reason.BLE_TURNING_OFF, ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_RESULT());
+					device.disconnectWithReason(priority, Status.BLE_TURNING_OFF, ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_RESULT());
 				}
 			}
 		}
@@ -333,7 +333,7 @@ class P_DeviceManager
 						Interval scanKeepAlive_interval = BleDeviceConfig.interval(device.conf_device().undiscoveryKeepAlive, device.conf_mngr().undiscoveryKeepAlive);
 						if( Interval.isDisabled(scanKeepAlive_interval) )  continue;
 
-						if( scanTime < Interval.asDouble(minScanTimeToInvokeUndiscovery) )  continue;
+						if( scanTime < Interval.secs(minScanTimeToInvokeUndiscovery) )  continue;
 						
 						boolean purgeable = device.getOrigin() != BleDeviceOrigin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
 						

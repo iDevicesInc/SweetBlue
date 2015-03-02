@@ -19,10 +19,9 @@ import android.content.Context;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Reason;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
@@ -49,7 +48,15 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public static BleDevice NULL = new BleDevice(null, null, "NULL", "NULL", BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
 	
-	static String NULL_MAC = "00:00:00:00:00:00";
+	/**
+	 * Spells out "Decaff Coffee"...clever, right? I figure all zeros or something would actually
+	 * have a higher chance of collision in a dev environment.
+	 */
+	static String NULL_MAC()
+	{
+		return "DE:CA:FF:C0:FF:EE";
+	}
+	//static String NULL_MAC = "DE:AD:BE:EF:BA:BE";
 	
 	/**
 	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
@@ -79,6 +86,12 @@ public class BleDevice implements UsesCustomNull
 			 * was sent to the device.
 			 */
 			SUCCESS,
+			
+			/**
+			 * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])}, {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, etc.
+			 * was called on {@link BleDevice#NULL}.
+			 */
+			NULL_DEVICE,
 			
 			/**
 			 * Device is not {@link BleDeviceState#CONNECTED}.
@@ -503,22 +516,24 @@ public class BleDevice implements UsesCustomNull
 					{
 						return Utils.toString
 						(
+							this.getClass(),
 							"status",		status(),
 							"type",			type(),
 							"target",		target(),
 							"rssi",			rssi(),
-							"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
+							"gattStatus",	device().getManager().getLogger().gattStatus(gattStatus())
 						);
 					}
 					else
 					{
 						return Utils.toString
 						(
+							this.getClass(),
 							"status",		status(),
 							"data",			Arrays.toString(data()),
 							"type",			type(),
-							"charUuid",		device().m_mngr.getLogger().uuidName(charUuid()),
-							"gattStatus",	device().m_mngr.getLogger().gattStatus(gattStatus())
+							"charUuid",		device().getManager().getLogger().uuidName(charUuid()),
+							"gattStatus",	device().getManager().getLogger().gattStatus(gattStatus())
 						);
 					}
 				}
@@ -577,6 +592,7 @@ public class BleDevice implements UsesCustomNull
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"device",			device().getName_debug(),
 					"entered",			Utils.toString(enterMask(), BleDeviceState.values()),
 					"exited",			Utils.toString(exitMask(), BleDeviceState.values()),
@@ -603,7 +619,7 @@ public class BleDevice implements UsesCustomNull
 		/**
 		 * The reason for the connection failure.
 		 */
-		public static enum Reason implements UsesCustomNull
+		public static enum Status implements UsesCustomNull
 		{
 			/**
 			 * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link ConnectionFailEvent#reason()} given to
@@ -616,6 +632,11 @@ public class BleDevice implements UsesCustomNull
 			 * is already {@link BleDeviceState#CONNECTING} or {@link BleDeviceState#CONNECTED}.
 			 */
 			ALREADY_CONNECTING_OR_CONNECTED,
+			
+			/**
+			 * {@link BleDevice#connect()} (or various overloads) was called on {@link BleDevice#NULL}.
+			 */
+			NULL_DEVICE,
 			
 			/**
 			 * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
@@ -697,7 +718,7 @@ public class BleDevice implements UsesCustomNull
 		}
 		
 		/**
-		 * For {@link Reason#NATIVE_CONNECTION_FAILED}, {@link Reason#DISCOVERING_SERVICES_FAILED}, and {@link Reason#BONDING_FAILED},
+		 * For {@link Status#NATIVE_CONNECTION_FAILED}, {@link Status#DISCOVERING_SERVICES_FAILED}, and {@link Status#BONDING_FAILED},
 		 * gives further timing information on when the failure took place. For all other reasons, {@link ConnectionFailEvent#timing()} will
 		 * be {@link #NOT_APPLICABLE}.
 		 */
@@ -862,8 +883,8 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * Why the connection failed.
 			 */
-			public Reason reason(){  return m_reason;  }
-			private final Reason m_reason;
+			public Status status(){  return m_status;  }
+			private final Status m_status;
 			
 			/**
 			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
@@ -886,7 +907,7 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
 			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}. If not applicable, for example if {@link ConnectionFailEvent#reason} is
-			 * {@link Reason#EXPLICIT_DISCONNECT}, then this is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
+			 * {@link Status#EXPLICIT_DISCONNECT}, then this is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
 			 * <br><br>
 			 * See {@link ReadWriteEvent#gattStatus} for more information about gatt status codes in general.
 			 * 
@@ -925,13 +946,13 @@ public class BleDevice implements UsesCustomNull
 			private final AutoConnectUsage m_autoConnectUsage;
 			
 			/**
-			 * Further timing information for {@link Reason#NATIVE_CONNECTION_FAILED}, {@link Reason#BONDING_FAILED}, and {@link Reason#DISCOVERING_SERVICES_FAILED}.
+			 * Further timing information for {@link Status#NATIVE_CONNECTION_FAILED}, {@link Status#BONDING_FAILED}, and {@link Status#DISCOVERING_SERVICES_FAILED}.
 			 */
 			public Timing timing(){  return m_timing;  }
 			private final Timing m_timing;
 			
 			/**
-			 * If {@link ConnectionFailEvent#reason()} is {@link Reason#AUTHENTICATION_FAILED} or {@link Reason#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called
+			 * If {@link ConnectionFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or {@link Status#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called
 			 * somewhere in or downstream of {@link ReadWriteListener#onEvent(ReadWriteEvent)}, then the {@link ReadWriteEvent} passed there will be returned here. Otherwise, this will return a
 			 * {@link ReadWriteEvent} for which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
 			 */
@@ -940,13 +961,13 @@ public class BleDevice implements UsesCustomNull
 			
 			ConnectionFailEvent
 			(
-				BleDevice device, Reason reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime,
+				BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime,
 				int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage,
 				int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason
 			)
 			{
 				this.m_device = device;
-				this.m_reason = reason;
+				this.m_status = reason;
 				this.m_timing = timing;
 				this.m_failureCountSoFar = failureCountSoFar;
 				this.m_latestAttemptTime = latestAttemptTime;
@@ -966,9 +987,19 @@ public class BleDevice implements UsesCustomNull
 			{
 				return new ConnectionFailEvent
 				(
-					device, Reason.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED,
-					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.UNKNOWN,
+					device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED,
+					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE,
 					BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_RESULT()
+				);
+			}
+			
+			static ConnectionFailEvent DUMMY(BleDevice device, Status reason)
+			{
+				return new ConnectionFailListener.ConnectionFailEvent
+				(
+					device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO,
+					BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL,
+					AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_RESULT()
 				);
 			}
 			
@@ -978,21 +1009,22 @@ public class BleDevice implements UsesCustomNull
 			 */
 			@Override public boolean isNull()
 			{
-				return reason().isNull();
+				return status().isNull();
 			}
 			
 			@Override public String toString()
 			{
 				if( isNull() )
 				{
-					return Reason.NULL.name();
+					return Status.NULL.name();
 				}
 				else
 				{
 					return Utils.toString
 					(
-						"reason",				reason(),
-						"gattStatus",			device().m_mngr.getLogger().gattStatus(gattStatus()),
+						this.getClass(),
+						"reason",				status(),
+						"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
 						"failureCountSoFar",	failureCountSoFar()
 					);
 				}
@@ -1000,7 +1032,7 @@ public class BleDevice implements UsesCustomNull
 		}
 		
 		/**
-		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Reason#allowsRetry()} is <code>false</code>.
+		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Status#allowsRetry()} is <code>false</code>.
 		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectFilter}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
 		 * lets the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
@@ -1060,7 +1092,7 @@ public class BleDevice implements UsesCustomNull
 		@Override public Please onEvent(ConnectionFailEvent event)
 		{
 			//--- DRK > Not necessary to check this ourselves, just being explicit.
-			if( !event.reason().allowsRetry() || event.device().is(ATTEMPTING_RECONNECT) )
+			if( !event.status().allowsRetry() || event.device().is(ATTEMPTING_RECONNECT) )
 			{
 				return Please.doNotRetry();
 			}
@@ -1073,7 +1105,7 @@ public class BleDevice implements UsesCustomNull
 				}
 				else
 				{
-					if( event.reason() == Reason.NATIVE_CONNECTION_FAILED && event.timing() == Timing.TIMED_OUT )
+					if( event.status() == Status.NATIVE_CONNECTION_FAILED && event.timing() == Timing.TIMED_OUT )
 					{
 						if( event.autoConnectUsage() == AutoConnectUsage.USED )
 						{
@@ -1104,6 +1136,7 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Pass an instance of this listener to {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
 	 */
+	@Lambda
 	public static interface BondListener
 	{
 		/**
@@ -1115,6 +1148,11 @@ public class BleDevice implements UsesCustomNull
 			 * The {@link BleDevice#bond()} call succeeded.
 			 */
 			SUCCESS,
+			
+			/**
+			 * {@link BleDevice#bond(BondListener)} (or overloads) was called on {@link BleDevice#NULL}.
+			 */
+			NULL_DEVICE,
 			
 			/**
 			 * Already {@link BleDeviceState#BONDED} or in the process of {@link BleDeviceState#BONDING}.
@@ -1168,7 +1206,7 @@ public class BleDevice implements UsesCustomNull
 		}
 		
 		/**
-		 * Struct passed to {@link BondListener#onBondEvent(BondEvent)} to provide more information about a {@link BleDevice#bond()} attempt.
+		 * Struct passed to {@link BondListener#onEvent(BondEvent)} to provide more information about a {@link BleDevice#bond()} attempt.
 		 */
 		@Immutable
 		public static class BondEvent
@@ -1213,9 +1251,10 @@ public class BleDevice implements UsesCustomNull
 			{
 				return Utils.toString
 				(
+					this.getClass(),
 					"device",			device().getName_debug(),
 					"status",			status(),
-					"failReason",		device().m_mngr.getLogger().gattUnbondReason(failReason()),
+					"failReason",		device().getManager().getLogger().gattUnbondReason(failReason()),
 					"intent",			intent()
 				);
 			}
@@ -1225,7 +1264,7 @@ public class BleDevice implements UsesCustomNull
 		 * Called after a call to {@link BleDevice#bond(BondListener)} (or overloads), or when bonding through
 		 * another app or the operating system settings.
 		 */
-		void onBondEvent(BondEvent event);
+		void onEvent(BondEvent event);
 	}
 	
 	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener();
@@ -1302,19 +1341,19 @@ public class BleDevice implements UsesCustomNull
 			m_rssiPollMngr = null;
 			m_rssiPollMngr_auto = null;
 //			setConfig(config_nullable);
-			m_nativeWrapper = null;
+			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName, nativeName);
 			m_queue = null;
 			m_listeners = null;
 			m_logger = null;
-			m_serviceMngr = null;
+			m_serviceMngr = new P_ServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this);
-			m_bondMngr = null;
+			m_bondMngr = new P_BondManager(this);
 			m_stateTracker.set(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
-			m_pollMngr = null;
-			m_txnMngr = null;
+			m_pollMngr = new P_PollManager(this);
+			m_txnMngr = new P_TransactionManager(this);
 			m_taskStateListener = null;
 			m_reconnectMngr = null;
-			m_connectionFailMngr = null;
+			m_connectionFailMngr = new P_ConnectionFailManager(this, null);
 			m_dummyDisconnectTask = null;
 		}
 		else
@@ -1364,6 +1403,8 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
 	{
+		if( isNull() )  return;
+		
 		m_config = config_nullable == null ? null : config_nullable.clone();
 		
 		initEstimators();
@@ -1523,9 +1564,9 @@ public class BleDevice implements UsesCustomNull
 	 * @see BleManagerConfig#nForAverageRunningReadTime
 	 */
 	@Advanced
-	public double getAverageReadTime()
+	public Interval getAverageReadTime()
 	{
-		return m_readTimeEstimator != null ? m_readTimeEstimator.getRunningAverage() : 0.0;
+		return m_readTimeEstimator != null ? Interval.secs(m_readTimeEstimator.getRunningAverage()) : Interval.ZERO;
 	}
 	
 	/**
@@ -1536,9 +1577,9 @@ public class BleDevice implements UsesCustomNull
 	 * for displaying the estimated time remaining for a firmware update.
 	 */
 	@Advanced
-	public double getAverageWriteTime()
+	public Interval getAverageWriteTime()
 	{
-		return m_writeTimeEstimator != null ? m_writeTimeEstimator.getRunningAverage() : 0.0;
+		return m_writeTimeEstimator != null ? Interval.secs(m_writeTimeEstimator.getRunningAverage()) : Interval.ZERO;
 	}
 	
 	/**
@@ -1558,11 +1599,18 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public Percent getRssiPercent()
 	{
-		final int rssi_min = BleDeviceConfig.integer(conf_device().rssi_min, conf_mngr().rssi_min, BleDeviceConfig.DEFAULT_RSSI_MIN);
-		final int rssi_max = BleDeviceConfig.integer(conf_device().rssi_max, conf_mngr().rssi_max, BleDeviceConfig.DEFAULT_RSSI_MAX);
-		final double percent = Utils_Rssi.percent(getRssi(), rssi_min, rssi_max);
-		
-		return Percent.fromDouble_clamped(percent);
+		if( isNull() )
+		{
+			return Percent.ZERO;
+		}
+		else
+		{
+			final int rssi_min = BleDeviceConfig.integer(conf_device().rssi_min, conf_mngr().rssi_min, BleDeviceConfig.DEFAULT_RSSI_MIN);
+			final int rssi_max = BleDeviceConfig.integer(conf_device().rssi_max, conf_mngr().rssi_max, BleDeviceConfig.DEFAULT_RSSI_MAX);
+			final double percent = Utils_Rssi.percent(getRssi(), rssi_min, rssi_max);
+			
+			return Percent.fromDouble_clamped(percent);
+		}
 	}
 	
 	/**
@@ -1571,7 +1619,14 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public Distance getDistance()
 	{
-		return Distance.meters(Utils_Rssi.distance(getTxPower(), getRssi()));
+		if( isNull() )
+		{
+			return Distance.INVALID;
+		}
+		else
+		{
+			return Distance.meters(Utils_Rssi.distance(getTxPower(), getRssi()));
+		}
 	}
 	
 	/**
@@ -1583,16 +1638,23 @@ public class BleDevice implements UsesCustomNull
 	@Advanced
 	public int getTxPower()
 	{
-		if( m_knownTxPower != null )
+		if( isNull() )
 		{
-			return m_knownTxPower;
+			return 0;
 		}
 		else
 		{
-			final Integer defaultTxPower = BleDeviceConfig.integer(conf_device().defaultTxPower, conf_mngr().defaultTxPower);
-			final int toReturn = defaultTxPower == null ? BleDeviceConfig.DEFAULT_TX_POWER : defaultTxPower;
-			
-			return toReturn;
+			if( m_knownTxPower != null )
+			{
+				return m_knownTxPower;
+			}
+			else
+			{
+				final Integer defaultTxPower = BleDeviceConfig.integer(conf_device().defaultTxPower, conf_mngr().defaultTxPower);
+				final int toReturn = defaultTxPower == null ? BleDeviceConfig.DEFAULT_TX_POWER : defaultTxPower;
+				
+				return toReturn;
+			}
 		}
 	}
 	
@@ -1689,7 +1751,7 @@ public class BleDevice implements UsesCustomNull
 	 * Equivalent to {@link BluetoothDevice#getName()}. It's suggested to use {@link #getName_normalized()}
 	 * if you're using the name to match/filter against something, e.g. an entry in a config file or for advertising filtering.
 	 */
-	public String getName_native()
+	public @Nullable(Prevalence.NEVER) String getName_native()
 	{
 		return m_nativeWrapper.getNativeName();
 	}
@@ -1703,7 +1765,7 @@ public class BleDevice implements UsesCustomNull
 	 * attempt to normalize name behavior and always return the same name regardless of the underlying stack's
 	 * whimsy. The target format is all lowercase and underscore-delimited with no trailing MAC address.
 	 */
-	public String getName_normalized()
+	public @Nullable(Prevalence.NEVER) String getName_normalized()
 	{
 		return m_nativeWrapper.getNormalizedName();
 	}
@@ -1713,7 +1775,7 @@ public class BleDevice implements UsesCustomNull
 	 * plus the last four digits of the device's MAC address from {@link #getMacAddress()}.
 	 * {@link BleDevice#toString()} uses this.
 	 */
-	public String getName_debug()
+	public @Nullable(Prevalence.NEVER) String getName_debug()
 	{
 		return m_nativeWrapper.getDebugName();
 	}
@@ -1721,20 +1783,14 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Provides just-in-case lower-level access to the native device instance. Be careful with this.
 	 * It generally should not be needed. Only invoke "mutators" of this object in times of extreme need.
-	 * If you are forced to use this please contact library developers to discuss possible feature addition
+	 * <br><br>
+	 * NOTE: If you are forced to use this please contact library developers to discuss possible feature addition
 	 * or report bugs.
 	 */
 	@Advanced
 	public @Nullable(Prevalence.RARE) BluetoothDevice getNative()
 	{
-		if( isNull() )
-		{
-			return getManager().newNativeDevice(NULL_MAC);
-		}
-		else
-		{
-			return m_nativeWrapper.getDevice();
-		}
+		return m_nativeWrapper.getDevice();
 	}
 	
 	/**
@@ -1743,7 +1799,7 @@ public class BleDevice implements UsesCustomNull
 	 * Please see the warning for {@link #getNative()}.
 	 */
 	@Advanced
-	public BluetoothGattCharacteristic getNativeCharacteristic(UUID uuid)
+	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(UUID uuid)
 	{
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		
@@ -1758,7 +1814,7 @@ public class BleDevice implements UsesCustomNull
 	 * Please see the warning for {@link #getNative()}.
 	 */
 	@Advanced
-	public BluetoothGattService getNativeService(UUID uuid)
+	public @Nullable(Prevalence.NORMAL) BluetoothGattService getNativeService(UUID uuid)
 	{
 		P_Service service = m_serviceMngr.get(uuid);
 		
@@ -1770,6 +1826,9 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * See pertinent warning for {@link #getNative()}.
 	 * Generally speaking, this will return <code>null</code> if the BleDevice is {@link BleDeviceState#DISCONNECTED}.
+	 * <br><br>
+	 * NOTE: If you are forced to use this please contact library developers to discuss possible feature addition
+	 * or report bugs.
 	 */
 	@Advanced
 	public @Nullable(Prevalence.NORMAL) BluetoothGatt getNativeGatt()
@@ -1795,7 +1854,7 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Returns the MAC address of this device, as retrieved from the native stack.
 	 */
-	public String getMacAddress()
+	public @Nullable(Prevalence.NEVER) String getMacAddress()
 	{
 		return m_nativeWrapper.getAddress();
 	}
@@ -1808,6 +1867,13 @@ public class BleDevice implements UsesCustomNull
 		if( listener != null )
 		{
 			setListener_Bond(listener);
+		}
+		
+		if( isNull() )
+		{
+			m_bondMngr.invokeCallback(BondListener.Status.NULL_DEVICE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, ChangeIntent.INTENTIONAL);
+			
+			return;
 		}
 		
 		if( isAny(BONDING, BONDED) )
@@ -1864,6 +1930,14 @@ public class BleDevice implements UsesCustomNull
 	public void connect(StateListener stateListener)
 	{
 		connect(stateListener, null);
+	}
+	
+	/**
+	 * Same as {@link #connect()} but calls {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
+	 */
+	public void connect(ConnectionFailListener failListener)
+	{
+		connect(null, failListener);
 	}
 	
 	/**
@@ -1992,20 +2066,26 @@ public class BleDevice implements UsesCustomNull
 	 * cancel all ongoing operations. This method will also bring the device out of the
 	 * {@link BleDeviceState#ATTEMPTING_RECONNECT} state.
 	 * 
-	 * @see ConnectionFailListener.Reason#EXPLICIT_DISCONNECT
+	 * @see ConnectionFailListener.Status#EXPLICIT_DISCONNECT
 	 */
 	public void disconnect()
 	{
-		disconnectWithReason(/*priority=*/null, Reason.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT());
+		if( isNull() )  return;
+		
+		disconnectWithReason(/*priority=*/null, Status.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT());
 	}
 	
 	/**
 	 * Convenience method that calls {@link BleManager#undiscover(BleDevice)}.
 	 * 
+	 * @return <code>true</code> if the device was successfully {@link BleDeviceState#UNDISCOVERED}, <code>false</code> if BleDevice isn't known to the {@link BleManager}.
+	 * 
 	 * @see BleManager#undiscover(BleDevice)
 	 */
 	public boolean undiscover()
 	{
+		if( isNull() )  return false;
+		
 		return m_mngr.undiscover(this);
 	}
 	
@@ -2059,7 +2139,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void startPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
-		m_pollMngr.startPoll(uuid, interval.secs(), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+		m_pollMngr.startPoll(uuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
 	}
 	
 	/**
@@ -2069,7 +2149,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void startChangeTrackingPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
-		m_pollMngr.startPoll(uuid, interval.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+		m_pollMngr.startPoll(uuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
 	}
 	
 	/**
@@ -2160,6 +2240,8 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void startRssiPoll(Interval interval, ReadWriteListener listener)
 	{
+		if( isNull() )  return;
+		
 		m_rssiPollMngr.start(interval.secs(), listener);
 		
 		m_rssiPollMngr_auto.stop();
@@ -2170,6 +2252,8 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void stopRssiPoll()
 	{
+		if( isNull() )  return;
+		
 		m_rssiPollMngr.stop();
 		
 		final Interval autoPollRate = BleDeviceConfig.interval(conf_device().rssiAutoPollRate, conf_mngr().rssiAutoPollRate);
@@ -2188,9 +2272,11 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Reads a characteristic from the device.
 	 */
-	public void read(UUID uuid, ReadWriteListener listener)
+	public void read(UUID uuid, final ReadWriteListener listener)
 	{
-		read_internal(uuid, Type.READ, new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread));
+		final ReadWriteListener listener_mut = getManager() == null ? listener : new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
+		
+		read_internal(uuid, Type.READ, listener_mut);
 	}
 	
 	/**
@@ -2216,7 +2302,7 @@ public class BleDevice implements UsesCustomNull
 		{
 			invokeReadWriteCallback(listener, earlyOutResult);
 			
-			if( earlyOutResult.status() == Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)) )
+			if( earlyOutResult.status() == ReadWriteListener.Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)) )
 			{
 				//--- DRK > No need to put this notify in the poll manager because either the characteristic wasn't found
 				//---		or the notify (or indicate) property isn't supported and we're not doing a backing read poll. 		
@@ -2226,7 +2312,7 @@ public class BleDevice implements UsesCustomNull
 		
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		E_NotifyState notifyState = m_pollMngr.getNotifyState(uuid);
-		boolean shouldSendOutNotifyEnable = notifyState == E_NotifyState.NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != Status.OPERATION_NOT_SUPPORTED);
+		boolean shouldSendOutNotifyEnable = notifyState == E_NotifyState.NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 		
 		if( shouldSendOutNotifyEnable && characteristic != null && is(CONNECTED) )
 		{
@@ -2270,7 +2356,7 @@ public class BleDevice implements UsesCustomNull
 	
 	/**
 	 * Kicks off an OTA transaction if it's not already taking place and the device is {@link BleDeviceState#INITIALIZED}.
-	 * This will put the device into the {@link BleDeviceState#PERFORMING_OTA} state.
+	 * This will put the device into the {@link BleDeviceState#PERFORMING_OTA} state if <code>true</code> is returned.
 	 * <br><br>
 	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly how much time it will take for the ota to complete.
 	 * 
@@ -2282,8 +2368,9 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public boolean performOta(BleTransaction.Ota txn)
 	{
-		if( is(PERFORMING_OTA) )  return false;
-		if( !is(INITIALIZED) )  return false;
+		if( isNull() )				return false;
+		if( is(PERFORMING_OTA) )	return false;
+		if( !is(INITIALIZED) )		return false;
 		
 		m_txnMngr.startOta(txn);
 		
@@ -2454,16 +2541,20 @@ public class BleDevice implements UsesCustomNull
 	
 	private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, boolean isReconnect)
 	{
+		if( isNull() )
+		{
+			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.NULL_DEVICE);
+			
+			m_connectionFailMngr.invokeCallback(info);
+			
+			return;
+		}
+		
 		m_lastConnectOrDisconnectWasUserExplicit = true;
 		
 		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
-			ConnectionFailListener.ConnectionFailEvent info = new ConnectionFailListener.ConnectionFailEvent
-			(
-				this, Reason.ALREADY_CONNECTING_OR_CONNECTED, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO,
-				BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL,
-				AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT()
-			);
+			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
 			
 			m_connectionFailMngr.invokeCallback(info);
 			
@@ -2703,7 +2794,7 @@ public class BleDevice implements UsesCustomNull
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Reason.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_RESULT());
+			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_RESULT());
 			
 			if( !attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_TRUE )
 			{
@@ -2771,13 +2862,15 @@ public class BleDevice implements UsesCustomNull
 		);
 	}
 	
-	void disconnectWithReason(ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
+	void disconnectWithReason(ConnectionFailListener.Status connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
 	{
 		disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus, bondFailReason, txnFailReason);
 	}
 	
-	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Reason connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
+	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Status connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
 	{
+		if( isNull() )  return;
+		
 		boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
 		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 		
@@ -2883,7 +2976,7 @@ public class BleDevice implements UsesCustomNull
 			m_connectionFailMngr.onExplicitDisconnect();
 		}
 		
-		ConnectionFailListener.Reason connectionFailReason_nullable = null;
+		ConnectionFailListener.Status connectionFailReason_nullable = null;
 		final boolean isConnectingOverall = is(CONNECTING_OVERALL);
 		
 		if( isConnectingOverall )
@@ -2892,11 +2985,11 @@ public class BleDevice implements UsesCustomNull
 			{
 				if( m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
 				{
-					connectionFailReason_nullable = ConnectionFailListener.Reason.BLE_TURNING_OFF;
+					connectionFailReason_nullable = ConnectionFailListener.Status.BLE_TURNING_OFF;
 				}
 				else
 				{
-					connectionFailReason_nullable = ConnectionFailListener.Reason.ROGUE_DISCONNECT;
+					connectionFailReason_nullable = ConnectionFailListener.Status.ROGUE_DISCONNECT;
 				}
 			}
 		}
@@ -2949,7 +3042,7 @@ public class BleDevice implements UsesCustomNull
 		m_pollMngr.stopPoll(uuid, interval, listener, /*usingNotify=*/false);
 	}
 	
-	void read_internal(final UUID uuid, final Type type, final P_WrappingReadWriteListener listener)
+	void read_internal(final UUID uuid, final Type type, final ReadWriteListener listener)
 	{
 		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, type);
 		
@@ -2962,11 +3055,6 @@ public class BleDevice implements UsesCustomNull
 		
 		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 		
-		read_internal(characteristic, type, listener);
-	}
-	
-	void read_internal(P_Characteristic characteristic, Type type, P_WrappingReadWriteListener listener)
-	{
 		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
 		
 		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
@@ -3052,9 +3140,9 @@ public class BleDevice implements UsesCustomNull
 			m_defaultReadWriteListener.onEvent(result);
 		}
 		
-		if( m_mngr.m_defaultReadWriteListener != null )
+		if( getManager() != null && getManager().m_defaultReadWriteListener != null )
 		{
-			m_mngr.m_defaultReadWriteListener.onEvent(result);
+			getManager().m_defaultReadWriteListener.onEvent(result);
 		}
 		
 		m_txnMngr.onReadWriteResultCallbacksCalled();
