@@ -28,7 +28,11 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventT
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
-import com.idevicesinc.sweetblue.annotations.*;
+
+import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.Lambda;
+import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 
 /**

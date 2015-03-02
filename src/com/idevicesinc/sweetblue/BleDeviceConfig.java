@@ -16,7 +16,12 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
-import com.idevicesinc.sweetblue.annotations.*;
+
+import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.Lambda;
+import com.idevicesinc.sweetblue.annotations.Immutable;
+import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.*;
 
 /**
