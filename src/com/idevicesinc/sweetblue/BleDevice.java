@@ -46,7 +46,7 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
 	 */
-	public static BleDevice NULL = new BleDevice(null, null, "NULL", "NULL", BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
+	public static BleDevice NULL = new BleDevice(null, null, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
 	
 	/**
 	 * Spells out "Decaff Coffee"...clever, right? I figure all zeros or something would actually
@@ -55,6 +55,11 @@ public class BleDevice implements UsesCustomNull
 	static String NULL_MAC()
 	{
 		return "DE:CA:FF:C0:FF:EE";
+	}
+	
+	static String NULL_STRING()
+	{
+		return "NULL";
 	}
 	//static String NULL_MAC = "DE:AD:BE:EF:BA:BE";
 	
@@ -398,17 +403,17 @@ public class BleDevice implements UsesCustomNull
 			
 			/**
 			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is,
-			 * for example, {@link Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point
+			 * for example, {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point
 			 * where a gatt status is provided, in which case this member is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}
 			 * (value of {@value BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater
 			 * than <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status}
-			 * is {@link Status#SUCCESS} or {@link Status#REMOTE_GATT_FAILURE}. There are also some cases where this will be 0 for
-			 * success but {@link #status} is for example {@link Status#NULL_DATA} - in other words the underlying stack deemed the 
+			 * is {@link ReadWriteListener.Status#SUCCESS} or {@link ReadWriteListener.Status#REMOTE_GATT_FAILURE}. There are also some cases where this will be 0 for
+			 * success but {@link #status} is for example {@link ReadWriteListener.Status#NULL_DATA} - in other words the underlying stack deemed the 
 			 * operation a success but SweetBlue disagreed. For this reason it's recommended to treat this value as a debugging tool
 			 * and use {@link #status} for actual application logic if possible.
 			 * <br><br>
 			 * See {@link BluetoothGatt} for its static <code>GATT_*</code> status code members.
-			 * Also see the source code (commented out) of {@link PS_GattStatus} for SweetBlue's more comprehensive internal
+			 * Also see the source code of {@link PS_GattStatus} for SweetBlue's more comprehensive internal
 			 * reference list of gatt status values. This list may not be totally accurate or up-to-date, nor may it match GATT_ values
 			 * used by the bluetooth stack on your phone.
 			 */
@@ -622,8 +627,8 @@ public class BleDevice implements UsesCustomNull
 		public static enum Status implements UsesCustomNull
 		{
 			/**
-			 * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link ConnectionFailEvent#reason()} given to
-			 * {@link ConnectionFailListener#onConnectionFail(Info)} will *never* be {@link Reason#NULL}.
+			 * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link ConnectionFailEvent#status()} given to
+			 * {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} will *never* be {@link ConnectionFailListener.Status#NULL}.
 			 */
 			NULL,
 			
@@ -655,7 +660,7 @@ public class BleDevice implements UsesCustomNull
 			 * {@link BluetoothDevice#createBond()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
 			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#bondFailReason()}, or (c) {@link Timing#TIMED_OUT}.
 			 * <br><br>
-			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Reason} to be applicable.
+			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Status} to be applicable.
 			 * 
 			 * @see BondListener 
 			 */
@@ -725,7 +730,7 @@ public class BleDevice implements UsesCustomNull
 		public static enum Timing
 		{
 			/**
-			 * For reasons like {@link Reason#BLE_TURNING_OFF}, {@link Reason#AUTHENTICATION_FAILED}, etc.
+			 * For reasons like {@link ConnectionFailListener.Status#BLE_TURNING_OFF}, {@link ConnectionFailListener.Status#AUTHENTICATION_FAILED}, etc.
 			 */
 			NOT_APPLICABLE,
 			
@@ -736,9 +741,9 @@ public class BleDevice implements UsesCustomNull
 			
 			/**
 			 * The operation failed in the native stack. {@link ConnectionFailListener.ConnectionFailEvent#gattStatus()} will probably be a positive number
-			 * if {@link ConnectionFailListener.ConnectionFailEvent#reason()} is {@link ConnectionFailListener.Reason#NATIVE_CONNECTION_FAILED} or
-			 * {@link ConnectionFailListener.Reason#DISCOVERING_SERVICES_FAILED}. {@link ConnectionFailListener.ConnectionFailEvent#bondFailReason()}
-			 * will probably be a positive number if {@link ConnectionFailListener.ConnectionFailEvent#reason()} is {@link ConnectionFailListener.Reason#BONDING_FAILED}.
+			 * if {@link ConnectionFailListener.ConnectionFailEvent#status()} is {@link ConnectionFailListener.Status#NATIVE_CONNECTION_FAILED} or
+			 * {@link ConnectionFailListener.Status#DISCOVERING_SERVICES_FAILED}. {@link ConnectionFailListener.ConnectionFailEvent#bondFailReason()}
+			 * will probably be a positive number if {@link ConnectionFailListener.ConnectionFailEvent#status()} is {@link ConnectionFailListener.Status#BONDING_FAILED}.
 			 */
 			EVENTUALLY,
 			
@@ -762,7 +767,7 @@ public class BleDevice implements UsesCustomNull
 			UNKNOWN,
 			
 			/**
-			 * Usage is not applicable to the {@link ConnectionFailEvent#reason()} given.
+			 * Usage is not applicable to the {@link ConnectionFailEvent#status()} given.
 			 */
 			NOT_APPLICABLE,
 			
@@ -1004,7 +1009,7 @@ public class BleDevice implements UsesCustomNull
 			}
 			
 			/**
-			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for {@link BleDeviceConfig.ReconnectFilter.ConnectionFailEvent#connectionFailInfo()}
+			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for {@link BleDeviceConfig.ReconnectRequestFilter.ConnectionFailEvent#connectionFailInfo()}
 			 * in certain situations.
 			 */
 			@Override public boolean isNull()
@@ -1033,7 +1038,7 @@ public class BleDevice implements UsesCustomNull
 		
 		/**
 		 * Return value is ignored if device is either {@link BleDeviceState#ATTEMPTING_RECONNECT} or reason {@link Status#allowsRetry()} is <code>false</code>.
-		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectFilter}.
+		 * If the device is {@link BleDeviceState#ATTEMPTING_RECONNECT} then authority is deferred to {@link BleDeviceConfig.ReconnectRequestFilter}.
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also
 		 * lets the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
 		 * <br><br>
@@ -2355,8 +2360,9 @@ public class BleDevice implements UsesCustomNull
 	}
 	
 	/**
-	 * Kicks off an OTA transaction if it's not already taking place and the device is {@link BleDeviceState#INITIALIZED}.
+	 * Kicks off an "over the air" long-term transaction if it's not already taking place and the device is {@link BleDeviceState#INITIALIZED}.
 	 * This will put the device into the {@link BleDeviceState#PERFORMING_OTA} state if <code>true</code> is returned.
+	 * You can use this to do firmware updates, file transfers, etc.
 	 * <br><br>
 	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly how much time it will take for the ota to complete.
 	 * 
@@ -2384,7 +2390,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		if( isNull() )
 		{
-			return "NULL";
+			return NULL_STRING();
 		}
 		else
 		{

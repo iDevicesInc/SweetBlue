@@ -185,9 +185,9 @@ public abstract class BleTransaction
 	
 	/**
 	 * Call this from subclasses to indicate that the transaction has failed. Usually you call this in your
-	 * {@link BleDevice.ReadWriteListener#onEvent(BleDevice.ReadWriteListener.Result)}
+	 * {@link BleDevice.ReadWriteListener#onEvent(BleDevice.ReadWriteListener.ReadWriteEvent)}
 	 * when {@link Status} is something other than {@link Status#SUCCESS}. If you do so,
-	 * {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()} will be set.
+	 * {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} will be set.
 	 * 
 	 * @return <code>false</code> if the transaction wasn't running to begin with.
 	 */
@@ -197,17 +197,7 @@ public abstract class BleTransaction
 		
 		return this.end(EndReason.FAILED, failReason);
 	}
-	
-//	/**
-//	 * Same as {@link #fail()} but allows you to pass the reason for the failure, if that reason happens
-//	 * to be a {@link BleDevice#read(java.util.UUID, ReadWriteListener)}, {@link BleDevice#write(java.util.UUID, byte[])}, etc.
-//	 * failure. This reason is propagated to {@link BleDevice.ConnectionFailListener.Info#txnFailReason()}.
-//	 */
-//	protected final boolean fail(ReadWriteListener.Result reason)
-//	{
-//		return this.end(EndReason.FAILED, reason);
-//	}
-	
+		
 	/**
 	 * Call this from subclasses to indicate that the transaction has succeeded.
 	 * 

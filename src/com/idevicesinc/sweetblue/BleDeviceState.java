@@ -30,9 +30,9 @@ public enum BleDeviceState implements State
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleDeviceConfig#reconnectLoop} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleDeviceConfig#reconnectRequestFilter} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
-	 * {@link BleDeviceConfig.ReconnectLoop.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectLoop#onReconnectRequest(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectLoop.Info)}
+	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
 	 */
@@ -124,7 +124,7 @@ public enum BleDeviceState implements State
 	INITIALIZED,
 	
 	/**
-	 * This state for "over-the-air" updates becomes active when you call {@link BleDevice#performOta(BleTransaction)} and remains active until the provided
+	 * This state for "over-the-air" updates becomes active when you call {@link BleDevice#performOta(BleTransaction.Ota)} and remains active until the provided
 	 * {@link BleTransaction} calls {@link BleTransaction#succeed()} or {@link BleTransaction#fail()} (or of course if your {@link BleDevice}
 	 * becomes {@link #DISCONNECTED}).
 	 */
@@ -162,7 +162,7 @@ public enum BleDeviceState implements State
 	 * a transition from one state to another, so something with "ING" in the name (except {@link #PERFORMING_OTA}).
 	 * Chronologically this method returns {@link #CONNECTING}, {@link #DISCOVERING_SERVICES},
 	 * {@link #AUTHENTICATING} (if {@link BleDevice#connect(BleTransaction.Auth)} or 
-	 * {@link BleDevice#connect(BleTransaction, BleTransaction)} is called), {@link #BONDING} (if relevant),
+	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Ota)} is called), {@link #BONDING} (if relevant),
 	 * and {@link #INITIALIZING}  (if {@link BleDevice#connect(BleTransaction.Init)} or 
 	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} is called).
 	 * 

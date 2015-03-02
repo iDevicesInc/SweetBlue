@@ -1,8 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectFilter;
-import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectFilter.Please;
+import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter;
+import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.Please;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 class P_ReconnectManager
@@ -61,20 +61,20 @@ class P_ReconnectManager
 	
 	private double getNextTime(ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 	{
-		BleDeviceConfig.ReconnectFilter rateLimiter = m_device.conf_device().reconnectFilter;
-		rateLimiter = rateLimiter != null ? rateLimiter : m_device.conf_mngr().reconnectFilter;
+		BleDeviceConfig.ReconnectRequestFilter rateLimiter = m_device.conf_device().reconnectRequestFilter;
+		rateLimiter = rateLimiter != null ? rateLimiter : m_device.conf_mngr().reconnectRequestFilter;
 		
 		if( rateLimiter == null )
 		{
-			return BleManagerConfig.ReconnectFilter.Please.STOP.secs();
+			return BleManagerConfig.ReconnectRequestFilter.Please.STOP.secs();
 		}
 		else
 		{
-			ReconnectFilter.ReconnectEvent info = new ReconnectFilter.ReconnectEvent(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo);
+			ReconnectRequestFilter.ReconnectRequestEvent info = new ReconnectRequestFilter.ReconnectRequestEvent(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo);
 			Please please = rateLimiter.onEvent(info);
 			
 			Interval delay = please != null ? please.getInterval() : null;
-			delay = delay != null ? delay : BleManagerConfig.ReconnectFilter.Please.STOP;
+			delay = delay != null ? delay : BleManagerConfig.ReconnectRequestFilter.Please.STOP;
 			
 			return delay.secs();
 		}

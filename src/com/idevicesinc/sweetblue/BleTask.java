@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 /**
  * Under the hood, SweetBlue uses a priority task queue to serialize all interaction with the native BLE stack.
  * This enumeration represents all the tasks that are used and lets you control various timing options in
- * {@link BleDeviceConfig} and {@link BleManagerConfig}, for example {@link BleDeviceConfig#timeouts}.
+ * {@link BleDeviceConfig} and {@link BleManagerConfig}, for example {@link BleDeviceConfig#timeoutRequestFilter}.
  */
 @Advanced
 public enum BleTask
