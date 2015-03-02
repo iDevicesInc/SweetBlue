@@ -1,6 +1,5 @@
 <p align="center"><img src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png" /></p>
-Why?
-====
+###Why?
 
 Android's BLE stack has some...issues...
 
