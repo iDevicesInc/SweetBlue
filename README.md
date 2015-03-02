@@ -1,3 +1,5 @@
+![alt tag](https://raw.github.com/iDevicesInc/SweetBlue/master/scripts/assets/sweetblue_logo.svg)
+
 Why?
 ====
 
