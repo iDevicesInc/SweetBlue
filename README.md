@@ -1,4 +1,4 @@
-![alt tag](https://raw.github.com/iDevicesInc/SweetBlue/master/scripts/assets/sweetblue_logo.svg)
+![](https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.svg)
 
 Why?
 ====
