@@ -1,4 +1,4 @@
-<img align="left" src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png" /><br><br>
+<p align="center"><img align="left" src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png" /></p><br><br>
 Why?
 ====
 
