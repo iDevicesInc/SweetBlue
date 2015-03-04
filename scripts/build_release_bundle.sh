@@ -22,8 +22,25 @@ return 1
 
 if [ $(contains "${ARGS[@]}" "no_docs") == "n" ];
 then
-    sh build_docs.sh
+    if [ $(contains "${ARGS[@]}" "upload") == "y" ];
+    then
+        sh build_then_upload_docs.sh
+    else
+        sh build_docs.sh
+    fi
 fi
+
+
+echo "${GLITZ}BUILD_LICENSES${GLITZ}"
+
+if [ $(contains "${ARGS[@]}" "upload") == "y" ];
+then
+    sh build_then_upload_licenses.sh
+else
+    sh build_licenses.sh
+fi
+
+
 
 echo "${GLITZ}COPYING FILES${GLITZ}"
 
@@ -79,7 +96,32 @@ then
     echo "${GLITZ}ZIPPING UP${GLITZ}"
     rm -rf $CP_TARGET
     cd $STAGE
+
+    cp -rf $JAR_NAME/ sweetblue_standard/
+    cp -rf $JAR_NAME/ sweetblue_professional/
+    rm sweetblue_standard/LICENSE
+    rm sweetblue_professional/LICENSE
+    cp standard.html sweetblue_standard/license.html
+    cp professional.html sweetblue_professional/license.html
+
+    zip -r sweetblue_standard.zip sweetblue_standard/*
+    zip -r sweetblue_professional.zip sweetblue_professional/*
     zip -r $JAR_NAME.zip $JAR_NAME/*
+    cp $JAR_NAME.zip sweetblue.zip
+
+    rm -rf sweetblue_standard/
+    rm -rf sweetblue_professional/
+
+    cd -
+fi
+
+if [ $(contains "${ARGS[@]}" "upload") == "y" ];
+then
+    echo "${GLITZ}UPLOADING ZIPS TO SERVER${GLITZ}"
+    cd $STAGE
+    SERVER_ADDRESS="162.209.102.219"
+    sshpass -p $SWEETBLUE_COM_FTP_PASSWORD scp -p $JAR_NAME.zip "${SWEETBLUE_COM_FTP_USERNAME}@${SERVER_ADDRESS}:/var/www/html/sweetblue/downloads"
+    sshpass -p $SWEETBLUE_COM_FTP_PASSWORD scp -p sweetblue.zip "${SWEETBLUE_COM_FTP_USERNAME}@${SERVER_ADDRESS}:/var/www/html/sweetblue/downloads"
     cd -
 fi
 
