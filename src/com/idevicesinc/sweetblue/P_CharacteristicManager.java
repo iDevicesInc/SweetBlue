@@ -6,11 +6,6 @@ import java.util.UUID;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 
-/**
- * 
- * 
- *
- */
 class P_CharacteristicManager
 {
 	private final P_Service m_service;
@@ -28,6 +23,16 @@ class P_CharacteristicManager
 	public boolean has(UUID uuid)
 	{
 		return get(uuid) != null;
+	}
+	
+	public int getCount()
+	{
+		return m_characteristics.size();
+	}
+	
+	public P_Characteristic get(final int index)
+	{
+		return m_characteristics.get(index);
 	}
 	
 	public P_Characteristic get(UUID uuid)

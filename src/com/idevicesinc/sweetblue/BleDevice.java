@@ -1795,8 +1795,9 @@ public class BleDevice implements UsesCustomNull
 	}
 	
 	/**
-	 * Provides just-in-case lower-level access to the native device instance. Be careful with this.
-	 * It generally should not be needed. Only invoke "mutators" of this object in times of extreme need.
+	 * Provides just-in-case lower-level access to the native device instance.
+	 * <br><br>
+	 * WARNING: Be careful with this. It generally should not be needed. Only invoke "mutators" of this object in times of extreme need.
 	 * <br><br>
 	 * NOTE: If you are forced to use this please contact library developers to discuss possible feature addition
 	 * or report bugs.
@@ -1810,7 +1811,8 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Returns the native characteristic for the given UUID in case you need lower-level access.
 	 * You should only call this after {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
-	 * Please see the warning for {@link #getNative()}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(UUID uuid)
@@ -1825,7 +1827,8 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Returns the native service for the given UUID in case you need lower-level access.
 	 * You should only call this after {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
-	 * Please see the warning for {@link #getNative()}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.NORMAL) BluetoothGattService getNativeService(UUID uuid)
@@ -1836,6 +1839,72 @@ public class BleDevice implements UsesCustomNull
 		
 		return service.getNative();
 	}
+	
+	/**
+	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
+	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
+	{
+		return m_serviceMngr.getNativeServices();
+	}
+	
+	/**
+	 * Convenience overload of {@link #getNativeServices()} that returns a {@link List}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
+	{
+		return m_serviceMngr.getNativeServices_List();
+	}
+	
+	/**
+	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
+	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	public @Nullable(Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
+	{
+		return m_serviceMngr.getNativeCharacteristics();
+	}
+	
+	/**
+	 * Convenience overload of {@link #getNativeCharacteristics()} that returns a {@link List}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	public @Nullable(Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
+	{
+		return m_serviceMngr.getNativeCharacteristics_List();
+	}
+	
+	/**
+	 * Same as {@link #getNativeCharacteristics()} but you can filter on the service {@link UUID}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	public @Nullable(Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service)
+	{
+		return m_serviceMngr.getNativeCharacteristics(service);
+	}
+	
+	/**
+	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	public @Nullable(Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service)
+	{
+		return m_serviceMngr.getNativeCharacteristics_List(service);
+	}
+	
+	
 	
 	/**
 	 * See pertinent warning for {@link #getNative()}.

@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +14,8 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
@@ -302,6 +305,64 @@ class P_ServiceManager
 				}
 			}
 		}
+	}
+	
+	private List<BluetoothGattService> newServiceList()
+	{
+		final ArrayList<BluetoothGattService> toReturn = new ArrayList<BluetoothGattService>();
+		for( int i = 0; i < m_serviceList.size(); i++ )
+		{
+			toReturn.add(m_serviceList.get(i).getNative());
+		}
+		
+		return toReturn;
+	}
+	
+	private List<BluetoothGattCharacteristic> newCharacteristicList(UUID uuid_nullable)
+	{
+		final ArrayList<BluetoothGattCharacteristic> toReturn = new ArrayList<BluetoothGattCharacteristic>();
+		for( int i = 0; i < m_serviceList.size(); i++ )
+		{
+			final P_Service service_ith = m_serviceList.get(i);
+			
+			if( uuid_nullable == null || uuid_nullable.equals(service_ith.getUuid()) )
+			{
+				service_ith.addToList(toReturn);
+			}
+		}
+		
+		return toReturn;
+	}
+	
+	
+	public Iterator<BluetoothGattService> getNativeServices()
+	{
+		return newServiceList().iterator();
+	}
+	
+	public List<BluetoothGattService> getNativeServices_List()
+	{
+		return newServiceList();
+	}
+	
+	public Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
+	{
+		return newCharacteristicList(null).iterator();
+	}
+	
+	public List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
+	{
+		return newCharacteristicList(null);
+	}
+	
+	public Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service)
+	{
+		return newCharacteristicList(service).iterator();
+	}
+	
+	public List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service)
+	{
+		return newCharacteristicList(service);
 	}
 }
 

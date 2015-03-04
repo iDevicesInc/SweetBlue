@@ -1,7 +1,9 @@
 package com.idevicesinc.sweetblue;
 
+import java.util.List;
 import java.util.UUID;
 
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
 /**
@@ -45,6 +47,16 @@ class P_Service
 	void loadCharacteristics()
 	{
 		m_mngr.loadDiscoveredCharacteristics();
+	}
+	
+	void addToList(List<BluetoothGattCharacteristic> chars_out)
+	{
+		for( int i = 0; i < m_mngr.getCount(); i++ )
+		{
+			final P_Characteristic char_ith = m_mngr.get(i);
+			
+			chars_out.add(char_ith.getGuaranteedNative());
+		}
 	}
 	
 	@Override public String toString()
