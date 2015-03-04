@@ -4,6 +4,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +29,6 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventT
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
-
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
@@ -2831,7 +2831,7 @@ public class BleDevice implements UsesCustomNull
 		m_serviceMngr.clear();
 		m_serviceMngr.loadDiscoveredServices();
 		
-		m_txnMngr.runAuthOrInitTxnIfNeeded(DISCOVERING_SERVICES, false);
+		m_txnMngr.runAuthOrInitTxnIfNeeded(DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true);
 	}
 	
 	void onFullyInitialized(Object ... extraFlags)

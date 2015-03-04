@@ -27,7 +27,7 @@ import com.idevicesinc.sweetblue.utils.*;
 /**
  * Provides a number of options to (optionally) pass to {@link BleDevice#setConfig(BleDeviceConfig)}.
  * This class is also the super class of {@link BleManagerConfig}, which you can pass
- * to {@link BleManager#get(Context, BleManagerConfig)} to set default base options for all devices at once.
+ * to {@link BleManager#get(Context, BleManagerConfig)} or {@link BleManager#setConfig(BleManagerConfig)} to set default base options for all devices at once.
  * For all options in this class, you may set the value to <code>null</code> when passed to {@link BleDevice#setConfig(BleDeviceConfig)}
  * and the value will then be inherited from the {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)}.
  * Otherwise, if the value is not <code>null</code> it will override any option in the {@link BleManagerConfig}.
@@ -35,6 +35,8 @@ import com.idevicesinc.sweetblue.utils.*;
  * *and* {@link BleManager#get(Context, BleManagerConfig)}) then it is interpreted as <code>false</code> or {@link Interval#DISABLED}.
  * <br><br>
  * TIP: You can use {@link Interval#DISABLED} instead of <code>null</code> to disable any time-based options, for code readability's sake.
+ * <br><br>
+ * TIP: You can use {@link #newNulled()} (or {@link #nullOut()}) then only set the few options you want for {@link BleDevice#setConfig(BleDeviceConfig)}.
  */
 public class BleDeviceConfig implements Cloneable
 {

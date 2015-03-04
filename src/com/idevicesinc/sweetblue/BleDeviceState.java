@@ -93,6 +93,11 @@ public enum BleDeviceState implements State
 	DISCOVERING_SERVICES,
 	
 	/**
+	 * This state is active after {@link #DISCOVERING_SERVICES} completes successfully.
+	 */
+	SERVICES_DISCOVERED,
+	
+	/**
 	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Auth)} or {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)}
 	 * to start a connection with an authentication transaction.
 	 */
@@ -172,14 +177,14 @@ public enum BleDeviceState implements State
 	{
 		if( CONNECTED.overlaps(stateMask) )
 		{
-			if( INITIALIZING.overlaps(stateMask) )		return INITIALIZING;
-			if( BONDING.overlaps(stateMask) )			return BONDING;
-			if( AUTHENTICATING.overlaps(stateMask) )	return AUTHENTICATING;
+			if( INITIALIZING.overlaps(stateMask) )			return INITIALIZING;
+			if( BONDING.overlaps(stateMask) )				return BONDING;
+			if( AUTHENTICATING.overlaps(stateMask) )		return AUTHENTICATING;
 			if( DISCOVERING_SERVICES.overlaps(stateMask) )	return DISCOVERING_SERVICES;
 		}
 		else
 		{
-			if( CONNECTING.overlaps(stateMask) )		return CONNECTING;
+			if( CONNECTING.overlaps(stateMask) )			return CONNECTING;
 		}
 		
 		return NULL;
@@ -189,12 +194,12 @@ public enum BleDeviceState implements State
 	{
 		switch(this)
 		{
-			case CONNECTING:			return  0;
+			case CONNECTING:				return  0;
 			case DISCOVERING_SERVICES:		return  1;
-			case AUTHENTICATING:		return  2;
-			case BONDING:				return  3;
-			case INITIALIZING:			return  4;
-			default:					return -1;
+			case AUTHENTICATING:			return  2;
+			case BONDING:					return  3;
+			case INITIALIZING:				return  4;
+			default:						return -1;
 		}
 	}
 

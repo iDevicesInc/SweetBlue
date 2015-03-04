@@ -1520,7 +1520,7 @@ public class BleManager
 	 * Returns all the devices managed by this class. This generally includes all devices that are either.
 	 * advertising or connected.
 	 */
-	public BleDeviceIterator getDevices()
+	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices()
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList());
 	}
@@ -1528,7 +1528,7 @@ public class BleManager
 	/**
 	 * Overload of {@link #getDevices()} that returns a {@link List} for you.
 	 */
-	public List<BleDevice> getDevices_List()
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List()
 	{
 		return (List<BleDevice>) m_deviceMngr.getList().clone();
 	}
@@ -1581,7 +1581,7 @@ public class BleManager
 	/**
 	 * Same as {@link #getDevice(BleDeviceState)} except returns all matching devices.
 	 */
-	public BleDeviceIterator getDevices(final BleDeviceState state)
+	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final BleDeviceState state)
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList(), state, true);
 	}
@@ -1589,7 +1589,7 @@ public class BleManager
 	/**
 	 * Overload of {@link #getDevices(BleDeviceState)} that returns a {@link List} for you.
 	 */
-	public List<BleDevice> getDevices_List(final BleDeviceState state)
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final BleDeviceState state)
 	{
 		return m_deviceMngr.getDevices_List(state);
 	}
@@ -1598,7 +1598,7 @@ public class BleManager
 	 * Same as {@link #getDevice(Object...)} except returns all matching devices.
 	 * See {@link BleDevice#is(Object...)} for the query format.
 	 */
-	public BleDeviceIterator getDevices(Object ... query)
+	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(Object ... query)
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList(), query);
 	}
@@ -1606,7 +1606,7 @@ public class BleManager
 	/**
 	 * Overload of {@link #getDevices(Object...)} that returns a {@link List} for you.
 	 */
-	public List<BleDevice> getDevices_List(Object ... query)
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(Object ... query)
 	{
 		return m_deviceMngr.getDevices_List(query);
 	}
