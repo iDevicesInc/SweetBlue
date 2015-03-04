@@ -5,6 +5,10 @@ import com.idevicesinc.sweetblue.annotations.*;
 /**
  * Interface implemented by some enums and other {@link Immutable} structs
  * that have custom "null" behavior in place of Java's built-in <code>null</code>.
+ * <br><br>
+ * NOTE: There is also an informal "statically polymorphic" contract imposed by this
+ * interface that says an implementor must have a <code>public static final NULL</code> member or method.
+ * For enums this simply means having a NULL entry.
  */
 public interface UsesCustomNull
 {

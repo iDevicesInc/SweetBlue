@@ -15,6 +15,8 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
+import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
@@ -338,6 +340,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * @see BleManager.UhOhListener
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Interval	uhOhCallbackThrottle				= Interval.secs(DEFAULT_UH_OH_CALLBACK_THROTTLE);
 	
 	/**
@@ -345,6 +348,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * this option will kick off a scan for {@link #autoScanTime} seconds
 	 * {@link #autoScanDelayAfterResume} seconds after {@link BleManager#onResume()} is called.
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Interval autoScanDelayAfterResume			= Interval.secs(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
 	
 	/**
@@ -353,6 +357,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * if you want to tie the library in to an existing update loop used in your application.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.RARE)
 	public Interval autoUpdateRate						= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
 	
 	/**
@@ -366,6 +371,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * @see BleManager#startPeriodicScan(Interval, Interval)
 	 * @see BleManager#stopPeriodicScan()
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Interval autoScanTime						= Interval.DISABLED; //Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
@@ -373,6 +379,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see #autoScanTime
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Interval autoScanInterval					= Interval.secs(DEFAULT_AUTO_SCAN_INTERVAL);
 	
 	/**
@@ -381,12 +388,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * @see #autoScanInterval
 	 * @see BleManager#onPause()
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Interval autoScanIntervalWhileAppIsPaused	= Interval.DISABLED;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Minimum amount of time in seconds that the library strives to give to a scanning operation.  
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Interval	idealMinScanTime					= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
@@ -396,6 +405,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see ScanFilter
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public ScanFilter defaultScanFilter	= null;
 	
 	/**
@@ -404,12 +414,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * 
 	 * @see BleManager.DiscoveryListener
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public DiscoveryListener defaultDiscoveryListener	= null;
 	
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	final String[] debugThreadNames =
 	{
 		"AMY", "BEN", "CAM", "DON", "ELI", "FAY", "GUS", "HAL", "IAN", "JAY", "LEO",
@@ -417,9 +429,10 @@ public class BleManagerConfig extends BleDeviceConfig
 	};
 	
 	/**
-	 * Default is null - optional, only used if {@link #loggingEnabled} is true. Provides a look-up table
+	 * Default is <code>null</code> - optional, only used if {@link #loggingEnabled} is true. Provides a look-up table
 	 * so logs can show the name associated with a {@link UUID} along with its numeric string.
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public List<UuidNameMap> uuidNameMaps				= null;
 	
 	//--- DRK > Not sure if this is useful so keeping it package private for now.

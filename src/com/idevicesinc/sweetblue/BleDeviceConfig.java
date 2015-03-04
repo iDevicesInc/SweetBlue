@@ -555,6 +555,7 @@ public class BleDeviceConfig implements Cloneable
 	 * Default is <code>true</code> - whether to automatically get services immediately after a {@link BleDevice} is
 	 * {@link BleDeviceState#CONNECTED}. Currently this is the only way to get a device's services.
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Boolean autoGetServices								= true;
 	
 	/**
@@ -563,6 +564,7 @@ public class BleDeviceConfig implements Cloneable
 	 * parameters then two identical polls would run which would probably be wasteful and unintentional.
 	 * This option provides a defense against that situation.
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Boolean allowDuplicatePollEntries			= false;
 	
 	/**
@@ -573,6 +575,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageReadTime()
 	 * @see BleDevice#getAverageWriteTime() 
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Boolean includeOtaReadWriteTimesInAverage		= false;
 	
 	/**
@@ -593,6 +596,7 @@ public class BleDeviceConfig implements Cloneable
 	 * failed connection for the library to internally start using autoConnect==true).
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Boolean alwaysUseAutoConnect						= false;
 	
 	/**
@@ -604,6 +608,7 @@ public class BleDeviceConfig implements Cloneable
 	 * applies to all devices.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Boolean retainDeviceWhenBleTurnsOff				= true;
 	
 	/**
@@ -616,6 +621,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #autoReconnectDeviceWhenBleTurnsBackOn
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Boolean undiscoverDeviceWhenBleTurnsOff			= true;
 	
 	/**
@@ -628,6 +634,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #retainDeviceWhenBleTurnsOff
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 	= true;
 	
 	/**
@@ -639,6 +646,7 @@ public class BleDeviceConfig implements Cloneable
 	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Boolean manageLastDisconnectOnDisk				= true;
 	
 	/**
@@ -657,6 +665,7 @@ public class BleDeviceConfig implements Cloneable
 	 * See also {@link #minScanTimeNeededForUndiscovery}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Boolean cacheDeviceOnUndiscovery					= true;
 	
 	/**
@@ -664,6 +673,7 @@ public class BleDeviceConfig implements Cloneable
 	 * inducing {@link ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
 	 * while a device is {@link BleDeviceState#CONNECTING_OVERALL}.
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Boolean bondingFailFailsConnection				= true;
 	
 	/**
@@ -673,6 +683,7 @@ public class BleDeviceConfig implements Cloneable
 	 * that would otherwise prevent changes from being discovered.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Boolean useGattRefresh							= false;
 	
 	/**
@@ -687,6 +698,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleManager.DiscoveryListener#onEvent(DiscoveryEvent)
 	 * @see #undiscoveryKeepAlive
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Interval	minScanTimeNeededForUndiscovery				= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
@@ -701,32 +713,15 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleManager.DiscoveryListener#onEvent(DiscoveryEvent)
 	 * @see #minScanTimeNeededForUndiscovery
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Interval	undiscoveryKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
 	
 	/**
 	 * Default is {@link #DEFAULT_RSSI_AUTO_POLL_RATE} - The rate at which a {@link BleDevice} will automatically poll for its {@link BleDevice#getRssi()} value
 	 * after it's {@link BleDeviceState#CONNECTED}. You may also use {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)} for more control and feedback.
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Interval rssiAutoPollRate							= Interval.secs(DEFAULT_RSSI_AUTO_POLL_RATE);
-	
-	/**
-	 * Default is an array of {@link Interval} instances populated using {@link Interval#secs(double)} with {@link #DEFAULT_TASK_TIMEOUT}.
-	 * This is an array of timeouts whose indices are meant to map to {@link BleTask#ordinal()} and provide a
-	 * way to control how long a given task is allowed to run before being "cut loose". If no option is provided for a given {@link BleTask},
-	 * either by setting this array <code>null</code>, or by providing <code>null</code> or {@link Interval#DISABLED} or {@link Interval#INFINITE} 
-	 * for a given {@link BleTask}, then no timeout is observed.
-	 * <br><br>
-	 * TIP: Use {@link #setTimeout(Interval, BleTask...)} to modify this option more easily.
-	 */
-//	@com.idevicesinc.sweetblue.annotations.Advanced
-//	public Interval[] timeouts							= newTaskTimeArray();
-//	{
-//		final Interval defaultTimeout = Interval.secs(DEFAULT_TASK_TIMEOUT);
-//		for( int i = 0; i < timeouts.length; i++ )
-//		{
-//			timeouts[i] = defaultTimeout;
-//		}
-//	}
 	
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
@@ -735,6 +730,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #nForAverageRunningReadTime
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Integer		nForAverageRunningWriteTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
@@ -744,6 +740,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see #nForAverageRunningWriteTime
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Integer		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
@@ -755,16 +752,19 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getTxPower()
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public Integer		defaultTxPower						= DEFAULT_TX_POWER;
 	
 	/**
 	 * Default is {@link #DEFAULT_RSSI_MIN} - the estimated minimum value for {@link BleDevice#getRssi()}.
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Integer		rssi_min							= DEFAULT_RSSI_MIN;
 	
 	/**
 	 * Default is {@link #DEFAULT_RSSI_MAX} - the estimated maximum value for {@link BleDevice#getRssi()}.
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public Integer		rssi_max							= DEFAULT_RSSI_MAX;
 	
 	/**
@@ -772,6 +772,7 @@ public class BleDeviceConfig implements Cloneable
 	 * 
 	 * @see BondFilter
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public BondFilter bondFilter							= new DefaultBondFilter();
 	
 	/**
@@ -785,6 +786,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see ReconnectRequestFilter
 	 * @see DefaultReconnectRequestFilter
 	 */
+	@Nullable(Prevalence.NORMAL)
 	public ReconnectRequestFilter reconnectRequestFilter	= new DefaultReconnectRequestFilter();
 	
 	/**
@@ -796,6 +798,7 @@ public class BleDeviceConfig implements Cloneable
 	 * which would probably be very dangerous to do - a task could just sit there spinning forever.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
 	public TimeoutRequestFilter timeoutRequestFilter		= new DefaultTimeoutRequestFilter();
 	
 	static boolean boolOrDefault(Boolean bool_nullable)
@@ -838,6 +841,10 @@ public class BleDeviceConfig implements Cloneable
 		return value_nullable != null ? value_nullable : defaultValue;
 	}
 	
+	/**
+	 * Creates a {@link BleDeviceConfig} with all default options set. See each member of this class
+	 * for what the default options are set to. Consider using {@link #newNulled()} also.
+	 */
 	public BleDeviceConfig()
 	{
 	}
