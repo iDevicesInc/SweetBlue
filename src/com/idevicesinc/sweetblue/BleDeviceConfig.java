@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
@@ -7,6 +9,7 @@ import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
@@ -14,7 +17,6 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
-
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
@@ -840,6 +842,20 @@ public class BleDeviceConfig implements Cloneable
 	{
 	}
 	
+	/**
+	 * Convenience method that returns a nulled out {@link BleDeviceConfig}, which is useful
+	 * when using {@link BleDevice#setConfig(BleDeviceConfig)} to only override a few options
+	 * from {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)}
+	 * or {@link BleManager#setConfig(BleManagerConfig)}.
+	 */
+	public static BleDeviceConfig newNulled()
+	{
+		BleDeviceConfig config = new BleDeviceConfig();
+		config.nullOut();
+		
+		return config;
+	}
+	
 //	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr_nullable)
 //	{
 //		final int ordinal = task.ordinal();
@@ -861,6 +877,18 @@ public class BleDeviceConfig implements Cloneable
 		final double toReturn = timeout != null ? timeout.secs() : Interval.DISABLED.secs();
 		
 		return toReturn;
+	}
+	
+	/**
+	 * Sets all nullable options in {@link BleDeviceConfig} and {@link BleManagerConfig} to <code>null</code> so it's easier to cherry-pick just a few options
+	 * to override from {@link BleManagerConfig} when using {@link BleDevice#setConfig(BleDeviceConfig)}.
+	 * <br><br>
+	 * NOTE: This doesn't affect any non-nullable subclass members of {@link BleManagerConfig} like {@link BleManagerConfig#stopScanOnPause}. 
+	 */
+	public void nullOut()
+	{
+		Utils_Reflection.nullOut(this, BleDeviceConfig.class);
+		Utils_Reflection.nullOut(this, BleManagerConfig.class);
 	}
 	
 	@Override protected BleDeviceConfig clone()

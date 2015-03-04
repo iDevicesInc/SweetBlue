@@ -15,13 +15,9 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 
-/**
- * 
- * 
- *
- */
 class P_Logger
 {
 	private String[] m_debugThreadNamePool;
@@ -58,7 +54,7 @@ class P_Logger
 		for( Field field : Build.class.getFields() )
 		{
 			String fieldName = field.getName();
-			String fieldValue = Utils.fieldStringValue(field);
+			String fieldValue = Utils_Reflection.fieldStringValue(field);
 			
 			this.log(level, fieldName + ": " + fieldValue);
 		}

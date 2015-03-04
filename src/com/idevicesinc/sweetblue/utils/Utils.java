@@ -398,43 +398,6 @@ public class Utils
 		return (short) (value & 0xff);
 	}
 	
-	public static String fieldStringValue(Field field)
-	{
-		Object uuid = staticFieldValue(field);
-		
-		String uuidString = "";
-		
-		if( uuid instanceof String )
-		{
-			uuidString = (String) uuid;
-		}
-		else if( uuid instanceof UUID )
-		{
-			uuidString = uuid.toString();
-		}
-		
-		uuidString = uuidString.toLowerCase();
-		
-		return uuidString;
-	}
-	
-	public static <T extends Object> T staticFieldValue(Field field)
-	{
-		Object value = null;
-		
-		try {
-			value = field.get(null);
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-//			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-//			e.printStackTrace();
-		}
-		
-		return (T) value;
-	}
-	
 	public static String toString(int mask, State[] values)
 	{
 		StringBuilder builder = new StringBuilder();

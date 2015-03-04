@@ -1613,7 +1613,7 @@ public class BleManager
 
 	/**
 	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
-	 * and passed a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
+	 * and passes a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress)
 	{
