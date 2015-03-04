@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import static com.idevicesinc.sweetblue.BleManagerState.*;
 
 import java.lang.reflect.Member;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -1523,6 +1524,14 @@ public class BleManager
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList());
 	}
+	
+	/**
+	 * Overload of {@link #getDevices()} that returns a {@link List} for you.
+	 */
+	public List<BleDevice> getDevices_List()
+	{
+		return (List<BleDevice>) m_deviceMngr.getList().clone();
+	}
 
 	/**
 	 * Returns the total number of devices this manager is...managing.
@@ -1555,7 +1564,7 @@ public class BleManager
 	 * Combine with {@link #getDeviceCount()} to iterate, or you may want to use the
 	 * {@link Iterator} returned from {@link #getDevices()} and its various overloads instead.
 	 */
-	public @Nullable(Prevalence.NEVER) BleDevice getDeviceAt(int index)
+	public @Nullable(Prevalence.NEVER) BleDevice getDeviceAt(final int index)
 	{
 		return m_deviceMngr.get(index);
 	}
@@ -1572,9 +1581,17 @@ public class BleManager
 	/**
 	 * Same as {@link #getDevice(BleDeviceState)} except returns all matching devices.
 	 */
-	public BleDeviceIterator getDevices(BleDeviceState state)
+	public BleDeviceIterator getDevices(final BleDeviceState state)
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList(), state, true);
+	}
+	
+	/**
+	 * Overload of {@link #getDevices(BleDeviceState)} that returns a {@link List} for you.
+	 */
+	public List<BleDevice> getDevices_List(final BleDeviceState state)
+	{
+		return m_deviceMngr.getDevices_List(state);
 	}
 
 	/**
@@ -1584,6 +1601,14 @@ public class BleManager
 	public BleDeviceIterator getDevices(Object ... query)
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList(), query);
+	}
+	
+	/**
+	 * Overload of {@link #getDevices(Object...)} that returns a {@link List} for you.
+	 */
+	public List<BleDevice> getDevices_List(Object ... query)
+	{
+		return m_deviceMngr.getDevices_List(query);
 	}
 
 	/**

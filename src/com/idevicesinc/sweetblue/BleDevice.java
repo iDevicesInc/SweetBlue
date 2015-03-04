@@ -1048,7 +1048,7 @@ public class BleDevice implements UsesCustomNull
 		 * <br><br>
 		 * NOTE that this callback gets fired *after* {@link StateListener} lets you know that the device is {@link BleDeviceState#DISCONNECTED}.
 		 * <br><br>
-		 * The time parameters passed to this method are of optional use to you to decide if connecting again is worth it. For example if you've 
+		 * The time parameters like {@link ConnectionFailEvent#attemptTime_latest()} are of optional use to you to decide if connecting again is worth it. For example if you've 
 		 * been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
 		 */
 		Please onEvent(ConnectionFailEvent event);
@@ -1254,6 +1254,11 @@ public class BleDevice implements UsesCustomNull
 				m_status = status;
 				m_failReason = failReason;
 				m_intent = intent;
+			}
+			
+			public boolean wasSuccess()
+			{
+				return status() == Status.SUCCESS;
 			}
 			
 			@Override public String toString()

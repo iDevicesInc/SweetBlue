@@ -29,9 +29,43 @@ class P_DeviceManager
 		m_logger = m_mngr.getLogger();
 	}
 	
-	public List<BleDevice> getList()
+	public ArrayList<BleDevice> getList()
 	{
 		return m_list;
+	}
+	
+	public List<BleDevice> getDevices_List(Object ... query)
+	{
+		final ArrayList<BleDevice> toReturn = new ArrayList<BleDevice>();
+		
+		for( int i = 0; i < this.getCount(); i++ )
+		{
+			final BleDevice device_ith = this.get(i);
+
+			if( device_ith.is(query) )
+			{
+				toReturn.add(device_ith);
+			}
+		}
+		
+		return toReturn;
+	}
+	
+	public List<BleDevice> getDevices_List(final BleDeviceState state)
+	{
+		final ArrayList<BleDevice> toReturn = new ArrayList<BleDevice>();
+		
+		for( int i = 0; i < this.getCount(); i++ )
+		{
+			final BleDevice device_ith = this.get(i);
+
+			if( device_ith.is(state) )
+			{
+				toReturn.add(device_ith);
+			}
+		}
+		
+		return toReturn;
 	}
 	
 	public boolean has(BleDevice device)

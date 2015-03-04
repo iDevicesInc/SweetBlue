@@ -40,7 +40,6 @@ public class BleDeviceConfig implements Cloneable
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
 	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 	
-	
 	/**
 	 * Default value for {@link #rssiAutoPollRate}.
 	 */

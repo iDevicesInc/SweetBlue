@@ -1,4 +1,4 @@
 #!/bin/sh
 
-SEMVER=1_0_0
+SEMVER=1_1_0
 ANDROID_API_LEVEL=19
