@@ -357,7 +357,8 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * An optional interface you can implement on {@link BleDeviceConfig#reconnectRequestFilter } to control reconnection behavior.
+	 * An optional interface you can implement on {@link BleDeviceConfig#reconnectRequestFilter} 
+	 * and/or {@link BleDeviceConfig#reconnectRequestFilter_transient} to control reconnection behavior.
 	 * 
 	 * @see #reconnectRequestFilter
 	 * @see #reconnectRequestFilter_transient
@@ -512,6 +513,10 @@ public class BleDeviceConfig implements Cloneable
 			}
 		}
 		
+		/**
+		 * Return an instance of this from {@link ReconnectPersistFilter#onEvent(ReconnectPersistEvent)} using
+		 * {@link Please#stopRetrying()} or {@link Please#persist()}.
+		 */
 		@Immutable
 		public static class Please
 		{
@@ -531,7 +536,8 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Indicates that the {@link BleDevice} should stop trying to reconnect.
+			 * Indicates that the {@link BleDevice} should stop {@link BleDeviceState#ATTEMPTING_RECONNECT} or
+			 * {@link BleDeviceState#ATTEMPTING_RECONNECT_TRANSIENT}.
 			 */
 			public static Please stopRetrying()
 			{
