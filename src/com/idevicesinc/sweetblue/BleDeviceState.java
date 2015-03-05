@@ -16,7 +16,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
  * @see BleDevice.StateListener
  */
 public enum BleDeviceState implements State
-{	
+{
 	/**
 	 * Dummy value returned from any method that would otherwise return Java's built-in <code>null</code>.
 	 * A {@link BleDevice} will never be in this state. This will also be the sole state of {@link BleDevice#NULL}.

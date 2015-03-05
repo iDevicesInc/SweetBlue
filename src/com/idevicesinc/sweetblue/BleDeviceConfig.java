@@ -789,10 +789,11 @@ public class BleDeviceConfig implements Cloneable
 	 * @see DefaultReconnectRequestFilter
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public ReconnectRequestFilter reconnectRequestFilter	= new DefaultReconnectRequestFilter();
+	public ReconnectRequestFilter reconnectRequestFilte				= new DefaultReconnectRequestFilter();
 	
 	
-	public ReconnectRequestFilter reconnectRequestFilter_opaque	= new DefaultReconnectRequestFilter();
+	@Nullable(Prevalence.NORMAL)
+	public ReconnectRequestFilter reconnectRequestFilter_transient	= new DefaultReconnectRequestFilter();
 	
 	/**
 	 * Default is an instance of {@link DefaultTimeoutRequestFilter} - set an implementation here to

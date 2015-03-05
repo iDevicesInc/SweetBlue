@@ -8,11 +8,6 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutReq
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-
-/**
- * 
- * 
- */
 abstract class PA_Task
 {
 	static interface I_StateListener
