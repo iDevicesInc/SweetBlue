@@ -313,7 +313,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface ReconnectRequestFilter
-	{		
+	{
 		/**
 		 * Struct passed to {@link ReconnectRequestFilter#onEvent(ReconnectRequestFilter.ReconnectRequestEvent)} to aid in making a decision.
 		 */
@@ -790,6 +790,9 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public ReconnectRequestFilter reconnectRequestFilter	= new DefaultReconnectRequestFilter();
+	
+	
+	public ReconnectRequestFilter reconnectRequestFilter_opaque	= new DefaultReconnectRequestFilter();
 	
 	/**
 	 * Default is an instance of {@link DefaultTimeoutRequestFilter} - set an implementation here to

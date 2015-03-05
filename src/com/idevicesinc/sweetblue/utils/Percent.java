@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.annotations.*;
  * Wrapper for a percentage value, generally from 0-100%;
  */
 @Immutable
-public class Percent
+public class Percent extends Unit<Percent>
 {
 	/**
 	 * Convenience value representing 0%.
@@ -103,18 +103,13 @@ public class Percent
 		return new Percent(value);
 	}
 	
-	@Override public boolean equals(Object object)
-	{
-		if( object instanceof Percent )
-		{
-			return ((Percent)object).toDouble() == this.toDouble();
-		}
-		
-		return super.equals(object);
-	}
-	
 	@Override public String toString()
 	{
 		return toInt_round()+"%";
+	}
+
+	@Override protected double getRawValue()
+	{
+		return m_doubleValue;
 	}
 }

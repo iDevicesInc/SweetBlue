@@ -13,11 +13,6 @@ import android.content.IntentFilter;
 import android.util.Log;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-/**
- * 
- * 
- *
- */
 class P_BleManager_Listeners
 {
 	final BluetoothAdapter.LeScanCallback m_scanCallback = new BluetoothAdapter.LeScanCallback()

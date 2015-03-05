@@ -1,8 +1,6 @@
 package com.idevicesinc.sweetblue.utils;
 
 import com.idevicesinc.sweetblue.*;
-
-
 import com.idevicesinc.sweetblue.annotations.*;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 
@@ -12,7 +10,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * self-documenting and "type-comfortable" way of representing time instead of using naked numeric primitives.
  */
 @Immutable
-public class Interval
+public class Interval extends Unit<Interval>
 {
 	private static final double DISABLED_VALUE = -1.0;
 	
@@ -157,18 +155,13 @@ public class Interval
 		return interval <= 0.0;
 	}
 	
-	@Override public boolean equals(Object object)
-	{
-		if( object != null && object instanceof Interval )
-		{
-			return ((Interval)object).secs() == this.secs();
-		}
-		
-		return super.equals(object);
-	}
-	
 	@Override public String toString()
 	{
 		return Utils.toFixed(secs())+"secs/"+millis()+"millis"; 
+	}
+
+	@Override protected double getRawValue()
+	{
+		return m_secs;
 	}
 }

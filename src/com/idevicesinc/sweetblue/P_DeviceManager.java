@@ -276,9 +276,9 @@ class P_DeviceManager
 		{
 			for( int i = m_list.size()-1; i >= 0; i-- )
 			{
-				BleDevice device = (BleDevice) m_list.get(i);
+				final BleDevice device = (BleDevice) m_list.get(i);
 				
-				boolean autoReconnectDeviceWhenBleTurnsBackOn = BleDeviceConfig.bool(device.conf_device().autoReconnectDeviceWhenBleTurnsBackOn, device.conf_mngr().autoReconnectDeviceWhenBleTurnsBackOn);
+				final boolean autoReconnectDeviceWhenBleTurnsBackOn = BleDeviceConfig.bool(device.conf_device().autoReconnectDeviceWhenBleTurnsBackOn, device.conf_mngr().autoReconnectDeviceWhenBleTurnsBackOn);
 				
 				if( autoReconnectDeviceWhenBleTurnsBackOn && device.lastDisconnectWasBecauseOfBleTurnOff() )
 				{
@@ -288,7 +288,7 @@ class P_DeviceManager
 		}
 	}
 
-	void undiscoverAllForTurnOff(P_DeviceManager cache, PA_StateTracker.E_Intent intent)
+	void undiscoverAllForTurnOff(final P_DeviceManager cache, final PA_StateTracker.E_Intent intent)
 	{
 		synchronized (m_list)
 		{
@@ -296,9 +296,9 @@ class P_DeviceManager
 	
 			for( int i = m_list.size()-1; i >= 0; i-- )
 			{
-				BleDevice device_ith = m_list.get(i);
+				final BleDevice device_ith = m_list.get(i);
 				
-				boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);
+				final boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);
 				
 				if( !retainDeviceWhenBleTurnsOff )
 				{
@@ -307,7 +307,7 @@ class P_DeviceManager
 					continue;
 				}
 				
-				boolean undiscoverDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().undiscoverDeviceWhenBleTurnsOff, device_ith.conf_mngr().undiscoverDeviceWhenBleTurnsOff);
+				final boolean undiscoverDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().undiscoverDeviceWhenBleTurnsOff, device_ith.conf_mngr().undiscoverDeviceWhenBleTurnsOff);
 				
 				if( undiscoverDeviceWhenBleTurnsOff)
 				{

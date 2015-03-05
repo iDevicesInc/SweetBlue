@@ -8,7 +8,7 @@ import com.idevicesinc.sweetblue.annotations.*;
  * Wrapper for a positive-only physical distance supporting various units of measurement.
  */
 @Immutable
-public class Distance
+public class Distance extends Unit<Distance>
 {
 	public static final double FEET_PER_METER = 3.28084;
 	
@@ -69,16 +69,6 @@ public class Distance
 		return meters() >= 0.0;
 	}
 	
-	@Override public boolean equals(Object object)
-	{
-		if( object instanceof Distance )
-		{
-			return ((Distance)object).meters() == this.meters();
-		}
-		
-		return super.equals(object);
-	}
-	
 	@Override public String toString()
 	{
 		if( !isValid() )
@@ -89,5 +79,10 @@ public class Distance
 		{
 			return Utils.toFixed(meters())+"meters/"+Utils.toFixed(feet())+"feet";
 		}
+	}
+
+	@Override protected double getRawValue()
+	{
+		return m_meters;
 	}
 }
