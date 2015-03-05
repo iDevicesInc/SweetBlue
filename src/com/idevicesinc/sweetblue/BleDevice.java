@@ -50,22 +50,8 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
 	 */
+	@Immutable
 	public static BleDevice NULL = new BleDevice(null, null, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
-	
-	/**
-	 * Spells out "Decaff Coffee"...clever, right? I figure all zeros or something would actually
-	 * have a higher chance of collision in a dev environment.
-	 */
-	static String NULL_MAC()
-	{
-		return "DE:CA:FF:C0:FF:EE";
-	}
-	
-	static String NULL_STRING()
-	{
-		return "NULL";
-	}
-	//static String NULL_MAC = "DE:AD:BE:EF:BA:BE";
 	
 	/**
 	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
@@ -3263,4 +3249,19 @@ public class BleDevice implements UsesCustomNull
 	{
 		return m_isNull;
 	}
+	
+	/**
+	 * Spells out "Decaff Coffee"...clever, right? I figure all zeros or something would actually
+	 * have a higher chance of collision in a dev environment.
+	 */
+	static String NULL_MAC()
+	{
+		return "DE:CA:FF:C0:FF:EE";
+	}
+	
+	static String NULL_STRING()
+	{
+		return "NULL";
+	}
+	//static String NULL_MAC = "DE:AD:BE:EF:BA:BE";
 }

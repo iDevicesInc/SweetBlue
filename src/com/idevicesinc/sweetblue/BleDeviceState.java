@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -35,8 +36,20 @@ public enum BleDeviceState implements State
 	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
+	 * @see #ATTEMPTING_RECONNECT_TRANSIENT
 	 */
 	ATTEMPTING_RECONNECT,
+	
+	/**
+	 * If {@link BleDeviceConfig#reconnectRequestFilter_transient} is set and the device implicitly disconnects this state will be entered.
+	 * Unlike with {@link #ATTEMPTING_RECONNECT}, entering this state does not mean that the {@link BleDevice} becomes {@link #DISCONNECTED}.
+	 * By all outward appearances the library treats the {@link BleDevice} as still being {@link #CONNECTED} while transparently trying
+	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectRequestFilter_transient}.
+	 * 
+	 * @see #ATTEMPTING_RECONNECT
+	 */
+	@Advanced
+	ATTEMPTING_RECONNECT_TRANSIENT,
 	
 	/**
 	 * The device will always be in this state unless it becomes {@link #UNDISCOVERED}.

@@ -2143,9 +2143,9 @@ public class BleManager
 	 * alone and let the library handle the calling of this method.
 	 */
 	@Advanced
-	public void update(double timeStep)
+	public void update(final double timeStep_seconds)
 	{
-		update_synchronized(timeStep);
+		update_synchronized(timeStep_seconds);
 	}
 
 	private void update_synchronized(double timeStep)
