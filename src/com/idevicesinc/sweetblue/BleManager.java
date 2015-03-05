@@ -702,8 +702,6 @@ public class BleManager
 	private 	P_UhOhThrottler m_uhOhThrottler;
 				P_WakeLockManager m_wakeLockMngr;
 	
-	private int m_connectionFailTracker = 0;
-	
 		final Object m_threadLock = new Object();
 	
 			DiscoveryListener m_discoveryListener;
@@ -2225,25 +2223,6 @@ public class BleManager
 //		}
 
 		m_uhOhThrottler.uhOh(reason);
-	}
-
-	void onConnectionFailed()
-	{
-		if( m_config.connectionFailUhOhCount <= 0 )  return;
-
-		m_connectionFailTracker++;
-
-		if( m_connectionFailTracker >= m_config.connectionFailUhOhCount )
-		{
-			m_connectionFailTracker = 0;
-
-//			uhOh(UhOh.MULTIPLE_CONNECTIONS_FAILED);
-		}
-	}
-
-	void onConnectionSucceeded()
-	{
-		m_connectionFailTracker = 0;
 	}
 
 	@Override public String toString()

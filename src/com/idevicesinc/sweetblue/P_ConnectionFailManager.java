@@ -107,7 +107,9 @@ class P_ConnectionFailManager
 		);
 		
 		PE_Please retryChoice = invokeCallback(moreInfo);
+		
 		retryChoice = !isAttemptingReconnect ? retryChoice : PE_Please.DO_NOT_RETRY;
+		retryChoice = m_device.is(BleDeviceState.CONNECTING_OVERALL) ? PE_Please.DO_NOT_RETRY : retryChoice;
 		
 		if( reason_nullable != null && reason_nullable.wasCancelled() )
 		{
@@ -120,8 +122,6 @@ class P_ConnectionFailManager
 				//--- DRK > State change may be redundant.
 				m_device.getStateTracker().update(E_Intent.UNINTENTIONAL, gattStatus, ATTEMPTING_RECONNECT, false);
 			}
-			
-			m_device.getManager().onConnectionFailed();
 		}
 		
 		if( retryChoice != null && retryChoice.isRetry() )

@@ -1290,6 +1290,7 @@ public class BleDevice implements UsesCustomNull
 	private final P_TaskQueue m_queue;
 			final P_TransactionManager m_txnMngr;
 	private final P_ReconnectManager m_reconnectMngr;
+	private final P_ReconnectManager m_reconnectMngr_transient;
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
 	private final P_RssiPollManager m_rssiPollMngr_auto;
@@ -1353,6 +1354,7 @@ public class BleDevice implements UsesCustomNull
 			m_txnMngr = new P_TransactionManager(this);
 			m_taskStateListener = null;
 			m_reconnectMngr = null;
+			m_reconnectMngr_transient = null;
 			m_connectionFailMngr = new P_ConnectionFailManager(this, null);
 			m_dummyDisconnectTask = null;
 		}
@@ -1372,7 +1374,8 @@ public class BleDevice implements UsesCustomNull
 			m_pollMngr = new P_PollManager(this);
 			m_txnMngr = new P_TransactionManager(this);
 			m_taskStateListener = m_listeners.m_taskStateListener;
-			m_reconnectMngr = new P_ReconnectManager(this);
+			m_reconnectMngr = new P_ReconnectManager(this, /*transient=*/false);
+			m_reconnectMngr_transient = new P_ReconnectManager(this, /*transient=*/true);
 			m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
 			m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		}
@@ -2891,7 +2894,6 @@ public class BleDevice implements UsesCustomNull
 	
 	void onFullyInitialized(Object ... extraFlags)
 	{
-		m_mngr.onConnectionSucceeded();
 		m_reconnectMngr.stop();
 		m_connectionFailMngr.onFullyInitialized();
 		
@@ -2995,10 +2997,6 @@ public class BleDevice implements UsesCustomNull
 		}
 	}
 	
-	void onDisconnecting()
-	{
-	}
-	
 	boolean lastDisconnectWasBecauseOfBleTurnOff()
 	{
 		return m_lastDisconnectWasBecauseOfBleTurnOff;
@@ -3013,56 +3011,9 @@ public class BleDevice implements UsesCustomNull
 		}
 		
 		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF);
-		
 		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;
 		
 		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
-		
-//		if( m_state.ordinal() < E_State.CONNECTING.ordinal() )
-//		{
-//			m_logger.w("Already disconnected!");
-//			
-//			m_mngr.ASSERT(m_gatt == null);
-//			
-//			return;
-//		}
-		
-		m_pollMngr.resetNotifyStates();
-		
-		boolean attemptingReconnect = false;
-		
-		m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/false);
-		
-		if( !wasExplicit )
-		{
-			if( is(INITIALIZED) )
-			{
-				m_reconnectMngr.start();
-				attemptingReconnect = m_reconnectMngr.isRunning();
-			}
-		}
-		else
-		{
-			m_connectionFailMngr.onExplicitDisconnect();
-		}
-		
-		ConnectionFailListener.Status connectionFailReason_nullable = null;
-		final boolean isConnectingOverall = is(CONNECTING_OVERALL);
-		
-		if( isConnectingOverall )
-		{
-			if( m_mngr.ASSERT(!wasExplicit) )
-			{
-				if( m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
-				{
-					connectionFailReason_nullable = ConnectionFailListener.Status.BLE_TURNING_OFF;
-				}
-				else
-				{
-					connectionFailReason_nullable = ConnectionFailListener.Status.ROGUE_DISCONNECT;
-				}
-			}
-		}
 		
 		final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
 		
@@ -3070,30 +3021,60 @@ public class BleDevice implements UsesCustomNull
 		{
 			m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.INTENTIONAL, hitDisk);
 		}
-		else if( !isConnectingOverall )
+		else
 		{
 			m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 		}
 		
-		attemptingReconnect = attemptingReconnect || is(ATTEMPTING_RECONNECT);
+		m_pollMngr.resetNotifyStates();
+		
+		boolean attemptingReconnect = false;
+		
+		m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/false);
+		
+		final boolean wasConnectingOverall = is(CONNECTING_OVERALL);
+		final ConnectionFailListener.Status connectionFailReason_nullable;
+		if( wasConnectingOverall )
+		{
+			if( m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
+			{
+				connectionFailReason_nullable = ConnectionFailListener.Status.BLE_TURNING_OFF;
+			}
+			else
+			{
+				connectionFailReason_nullable = ConnectionFailListener.Status.ROGUE_DISCONNECT;
+			}
+		}
+		else
+		{
+			connectionFailReason_nullable = null;
+		}
 		
 		if( !wasExplicit )
 		{
 			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
+			m_connectionFailMngr.onExplicitDisconnect();
 		}
+		
+		final boolean wasInitialized = is(INITIALIZED);
 		
 		setStateToDisconnected(attemptingReconnect, /*fromBleCallback=*/true, wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL, gattStatus);
 		
-		if( !attemptingReconnect )
+		m_txnMngr.cancelAllTransactions();
+		
+		//--- DRK > Technically user could have called connect() in callbacks above....bad form but we need to account for it.
+		final boolean isConnectingOverall = is(CONNECTING_OVERALL);
+		
+		
+		TODO connection fail listener must be called first then reconnect manager
+		
+		if( !wasExplicit )
 		{
-			//--- DRK > Should be overkill cause disconnect call itself should have cleared these.
-			m_txnMngr.cancelAllTransactions();
-//			m_txnMngr.clearAllTxns();
-		}
-		else
-		{
-			m_txnMngr.cancelAllTransactions();
-//			m_txnMngr.clearFirmwareUpdateTxn();
+			if( wasInitialized )
+			{
+				m_reconnectMngr.attemptStart();
+				attemptingReconnect = m_reconnectMngr.isRunning();
+			}
 		}
 		
 		Please.PE_Please retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_RESULT());
@@ -3101,7 +3082,7 @@ public class BleDevice implements UsesCustomNull
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//---		hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.
 		//---		TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
-		if( retrying == Please.PE_Please.DO_NOT_RETRY )
+		if( !isConnectingOverall && retrying == Please.PE_Please.DO_NOT_RETRY )
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this);
 		}

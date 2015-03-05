@@ -15,12 +15,16 @@ class P_ReconnectManager
 	private double m_delay = 0.0;
 	private double m_timeTracker = NOT_RUNNING;
 	
-	P_ReconnectManager(BleDevice device)
+	private final boolean m_isTransient;
+	
+	P_ReconnectManager(final BleDevice device, final boolean isTransient)
 	{
 		m_device = device;
+		
+		m_isTransient = isTransient;
 	}
 	
-	void start()
+	void attemptStart()
 	{
 		if( !isRunning() )
 		{
@@ -59,19 +63,32 @@ class P_ReconnectManager
 		}
 	}
 	
+	private ReconnectRequestFilter getRequestFilter()
+	{
+		if( m_isTransient )
+		{
+			final BleDeviceConfig.ReconnectRequestFilter filter = m_device.conf_device().reconnectRequestFilter_transient;
+			return filter != null ? filter : m_device.conf_mngr().reconnectRequestFilter_transient;
+		}
+		else
+		{
+			final BleDeviceConfig.ReconnectRequestFilter filter = m_device.conf_device().reconnectRequestFilter;
+			return filter != null ? filter : m_device.conf_mngr().reconnectRequestFilter;
+		}
+	}
+	
 	private double getNextTime(ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 	{
-		BleDeviceConfig.ReconnectRequestFilter rateLimiter = m_device.conf_device().reconnectRequestFilter;
-		rateLimiter = rateLimiter != null ? rateLimiter : m_device.conf_mngr().reconnectRequestFilter;
+		final BleDeviceConfig.ReconnectRequestFilter filter = getRequestFilter();
 		
-		if( rateLimiter == null )
+		if( filter == null )
 		{
 			return BleManagerConfig.ReconnectRequestFilter.Please.STOP.secs();
 		}
 		else
 		{
 			ReconnectRequestFilter.ReconnectRequestEvent info = new ReconnectRequestFilter.ReconnectRequestEvent(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo);
-			Please please = rateLimiter.onEvent(info);
+			Please please = filter.onEvent(info);
 			
 			Interval delay = please != null ? please.getInterval() : null;
 			delay = delay != null ? delay : BleManagerConfig.ReconnectRequestFilter.Please.STOP;
@@ -120,7 +137,10 @@ class P_ReconnectManager
 		
 		if( m_timeTracker >= m_delay )
 		{
-			m_device.attemptReconnect();
+			if( !m_device.is(BleDeviceState.CONNECTING_OVERALL) )
+			{
+				m_device.attemptReconnect();
+			}
 		}
 	}
 	
