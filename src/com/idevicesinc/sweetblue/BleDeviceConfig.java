@@ -13,6 +13,7 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent;
 import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
@@ -371,36 +372,18 @@ public class BleDeviceConfig implements Cloneable
 		@Immutable
 		public static class ReconnectRequestEvent extends ReconnectRelatedEvent
 		{
-			/**
-			 * The device that is currently {@link BleDeviceState#ATTEMPTING_RECONNECT}.
-			 */
 			@Override public BleDevice device(){  return m_device;  }
 			private final BleDevice m_device;
 			
-			/**
-			 * The number of times a reconnect attempt has failed so far.
-			 */
 			@Override public int failureCount(){  return m_failureCount;  }
 			private final int m_failureCount;
 			
-			/**
-			 * The total amount of time since the device went {@link BleDeviceState#DISCONNECTED} and we started the reconnect loop.
-			 */
 			@Override public Interval totalTimeReconnecting(){  return m_totalTimeReconnecting;  }
 			private final Interval m_totalTimeReconnecting;
 			
-			/**
-			 * The previous {@link Interval} returned from {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)}, or {@link Interval#ZERO}
-			 * for the first invocation.
-			 */
 			@Override public Interval previousDelay(){  return m_previousDelay;  }
 			private final Interval m_previousDelay;
 			
-			/**
-			 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
-			 * before the call is made to {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)}. For the first call to {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)},
-			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
-			 */
 			@Override public ConnectionFailListener.ConnectionFailEvent connectionFailInfo(){  return m_connectionFailInfo;  }
 			private final ConnectionFailListener.ConnectionFailEvent m_connectionFailInfo;
 			
@@ -502,32 +485,31 @@ public class BleDeviceConfig implements Cloneable
 		 * Struct passed to {@link ReconnectPersistFilter#onEvent(ReconnectPersistEvent)}.
 		 */
 		@Immutable
-		public static class ReconnectPersistEvent
+		public static class ReconnectPersistEvent extends ReconnectRelatedEvent
 		{
-			/**
-			 * The device that is currently {@link BleDeviceState#ATTEMPTING_RECONNECT}.
-			 */
-			public BleDevice device(){  return m_device;  }
+			@Override public BleDevice device(){  return m_device;  }
 			private BleDevice m_device;
 			
-			/**
-			 * The number of times a reconnect attempt has failed so far.
-			 */
-			public int failureCount(){  return m_failureCount;  }
+			@Override public int failureCount(){  return m_failureCount;  }
 			private int m_failureCount;
 			
-			/**
-			 * The total amount of time since the device went {@link BleDeviceState#DISCONNECTED} and we started the reconnect loop.
-			 */
-			public Interval totalTimeReconnecting(){  return m_totalTimeReconnecting;  }
+			@Override public Interval totalTimeReconnecting(){  return m_totalTimeReconnecting;  }
 			private Interval m_totalTimeReconnecting;
 			
-			/**
-			 * The previous {@link Interval} returned from {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)}, or {@link Interval#ZERO}
-			 * for the first invocation.
-			 */
-			public Interval previousDelay(){  return m_previousDelay;  }
+			@Override public Interval previousDelay(){  return m_previousDelay;  }
 			private Interval m_previousDelay;
+			
+			@Override public ConnectionFailListener.ConnectionFailEvent connectionFailInfo(){  return m_connectionFailInfo;  }
+			private ConnectionFailListener.ConnectionFailEvent m_connectionFailInfo;
+			
+			void init(BleDevice device, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
+			{
+				this.m_device = device;
+				this.m_failureCount = failureCount;
+				this.m_totalTimeReconnecting = totalTimeReconnecting;
+				this.m_previousDelay = previousDelay;
+				this.m_connectionFailInfo = connectionFailInfo;
+			}
 		}
 		
 		@Immutable
