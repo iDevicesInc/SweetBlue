@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
+import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
@@ -107,7 +107,9 @@ class P_ConnectionFailManager
 		);
 		
 		PE_Please retryChoice = invokeCallback(moreInfo);
+		
 		retryChoice = !isAttemptingReconnect ? retryChoice : PE_Please.DO_NOT_RETRY;
+		retryChoice = m_device.is(BleDeviceState.CONNECTING_OVERALL) ? PE_Please.DO_NOT_RETRY : retryChoice;
 		
 		if( reason_nullable != null && reason_nullable.wasCancelled() )
 		{
@@ -118,10 +120,8 @@ class P_ConnectionFailManager
 			if( !m_reconnectMngr.onConnectionFailed(moreInfo) )
 			{
 				//--- DRK > State change may be redundant.
-				m_device.getStateTracker().update(E_Intent.UNINTENTIONAL, gattStatus, ATTEMPTING_RECONNECT, false);
+				m_device.getStateTracker().update(E_Intent.UNINTENTIONAL, gattStatus, RECONNECTING_LONG_TERM, false);
 			}
-			
-			m_device.getManager().onConnectionFailed();
 		}
 		
 		if( retryChoice != null && retryChoice.isRetry() )

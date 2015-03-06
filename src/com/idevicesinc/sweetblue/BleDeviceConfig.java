@@ -13,7 +13,9 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
+import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent;
 import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
@@ -262,12 +264,12 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Called after a device undergoes a change in its {@link BleDeviceState}.
 		 */
-		Please onEvent(StateChangeEvent event);
+		Please onEvent(StateChangeEvent e);
 		
 		/**
 		 * Called immediately before reading, writing, or enabling notification on a characteristic.
 		 */
-		Please onEvent(CharacteristicEvent event);
+		Please onEvent(CharacteristicEvent e);
 	}
 	
 	/**
@@ -286,11 +288,11 @@ public class BleDeviceConfig implements Cloneable
 			return Utils.phoneHasBondingIssues();
 		}
 
-		@Override public Please onEvent(StateChangeEvent event)
+		@Override public Please onEvent(StateChangeEvent e)
 		{
 			if( phoneHasBondingIssues() )
 			{
-				if( event.didEnterAny(BleDeviceState.DISCOVERED, BleDeviceState.DISCONNECTED) )
+				if( e.didEnterAny(BleDeviceState.DISCOVERED, BleDeviceState.DISCONNECTED) )
 				{
 					return Please.unbond();
 				}
@@ -299,16 +301,67 @@ public class BleDeviceConfig implements Cloneable
 			return Please.doNothing();
 		}
 
-		@Override public Please onEvent(CharacteristicEvent event)
+		@Override public Please onEvent(CharacteristicEvent e)
 		{
 			return Please.doNothing();
 		}
 	}
 	
 	/**
-	 * An optional interface you can implement on {@link BleDeviceConfig#reconnectRequestFilter } to control reconnection behavior.
+	 * Abstract base class for {@link ReconnectRequestEvent} and {@link ReconnectPersistEvent} just to
+	 * tie their APIs together and make sure they're consistent.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Immutable
+	public static abstract class ReconnectRelatedEvent
+	{
+		/**
+		 * The device that is currently {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+		 */
+		public abstract BleDevice device();
+		
+		/**
+		 * The number of times a reconnect attempt has failed so far.
+		 */
+		public abstract int failureCount();
+		
+		/**
+		 * The total amount of time since the device went {@link BleDeviceState#DISCONNECTED} and we started the reconnect loop.
+		 */
+		public abstract Interval totalTimeReconnecting();
+		
+		/**
+		 * The previous {@link Interval} returned from {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)}, or {@link Interval#ZERO}
+		 * for the first invocation.
+		 */
+		public abstract Interval previousDelay();
+		
+		/**
+		 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
+		 * before the call is made to {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)}. For the first call to {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)},
+		 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
+		 */
+		public abstract ConnectionFailListener.ConnectionFailEvent connectionFailInfo();
+		
+		@Override public String toString()
+		{
+			return Utils.toString
+			(
+				this.getClass(),
+				"device",					device().getName_debug(),
+				"failureCount",				failureCount(),
+				"totalTimeReconnecting",	totalTimeReconnecting(),
+				"previousDelay",			previousDelay()
+			);
+		}
+	}
+	
+	/**
+	 * An optional interface you can implement on {@link BleDeviceConfig#reconnectRequestFilter_longTerm} 
+	 * and/or {@link BleDeviceConfig#reconnectRequestFilter_shortTerm} to control reconnection behavior.
 	 * 
-	 * @see #reconnectRequestFilter
+	 * @see #reconnectRequestFilter_longTerm
+	 * @see #reconnectRequestFilter_shortTerm
 	 * @see DefaultReconnectRequestFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
@@ -318,39 +371,21 @@ public class BleDeviceConfig implements Cloneable
 		 * Struct passed to {@link ReconnectRequestFilter#onEvent(ReconnectRequestFilter.ReconnectRequestEvent)} to aid in making a decision.
 		 */
 		@Immutable
-		public static class ReconnectRequestEvent
+		public static class ReconnectRequestEvent extends ReconnectRelatedEvent
 		{
-			/**
-			 * The device that is currently {@link BleDeviceState#ATTEMPTING_RECONNECT}.
-			 */
-			public BleDevice device(){  return m_device;  }
+			@Override public BleDevice device(){  return m_device;  }
 			private final BleDevice m_device;
 			
-			/**
-			 * The number of times a reconnect attempt has failed so far.
-			 */
-			public int failureCount(){  return m_failureCount;  }
+			@Override public int failureCount(){  return m_failureCount;  }
 			private final int m_failureCount;
 			
-			/**
-			 * The total amount of time since the device went {@link BleDeviceState#DISCONNECTED} and we started the reconnect loop.
-			 */
-			public Interval totalTimeReconnecting(){  return m_totalTimeReconnecting;  }
+			@Override public Interval totalTimeReconnecting(){  return m_totalTimeReconnecting;  }
 			private final Interval m_totalTimeReconnecting;
 			
-			/**
-			 * The previous {@link Interval} returned from {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)}, or {@link Interval#ZERO}
-			 * for the first invocation.
-			 */
-			public Interval previousDelay(){  return m_previousDelay;  }
+			@Override public Interval previousDelay(){  return m_previousDelay;  }
 			private final Interval m_previousDelay;
 			
-			/**
-			 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
-			 * before the call is made to {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)}. For the first call to {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)},
-			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
-			 */
-			public ConnectionFailListener.ConnectionFailEvent connectionFailInfo(){  return m_connectionFailInfo;  }
+			@Override public ConnectionFailListener.ConnectionFailEvent connectionFailInfo(){  return m_connectionFailInfo;  }
 			private final ConnectionFailListener.ConnectionFailEvent m_connectionFailInfo;
 			
 			ReconnectRequestEvent(BleDevice device, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
@@ -360,18 +395,6 @@ public class BleDeviceConfig implements Cloneable
 				this.m_totalTimeReconnecting = totalTimeReconnecting;
 				this.m_previousDelay = previousDelay;
 				this.m_connectionFailInfo = connectionFailInfo;
-			}
-			
-			@Override public String toString()
-			{
-				return Utils.toString
-				(
-					this.getClass(),
-					"device",					device().getName_debug(),
-					"failureCount",				failureCount(),
-					"totalTimeReconnecting",	totalTimeReconnecting(),
-					"previousDelay",			previousDelay()
-				);
 			}
 		}
 		
@@ -423,11 +446,11 @@ public class BleDeviceConfig implements Cloneable
 		}
 		
 		/**
-		 * Called for every connection failure while device is {@link BleDeviceState#ATTEMPTING_RECONNECT}.
+		 * Called for every connection failure while device is {@link BleDeviceState#RECONNECTING_LONG_TERM}.
 		 * Use the static methods of {@link Please} as return values to stop reconnection ({@link Please#stopRetrying()}), try again
 		 * instantly ({@link Please#retryInstantly()}), or after some amount of time {@link Please#retryIn(Interval)}.
 		 */
-		Please onEvent(ReconnectRequestEvent event);
+		Please onEvent(ReconnectRequestEvent e);
 	}
 	
 	/**
@@ -438,10 +461,11 @@ public class BleDeviceConfig implements Cloneable
 	{
 		public static final Please DEFAULT_INITIAL_RECONNECT_DELAY = Please.retryInstantly();
 		public static final Please DEFAULT_RECONNECT_ATTEMPT_RATE = Please.retryIn(Interval.secs(3.0));
+		//public static final Interval TRANSIENT_DISCONNECT_TIMEOUT = Interval.secs(value)
 		
-		@Override public Please onEvent(ReconnectRequestEvent event)
+		@Override public Please onEvent(ReconnectRequestEvent e)
 		{
-			if( event.failureCount() == 0 )
+			if( e.failureCount() == 0 )
 			{
 				return DEFAULT_INITIAL_RECONNECT_DELAY;
 			}
@@ -449,6 +473,103 @@ public class BleDeviceConfig implements Cloneable
 			{
 				return DEFAULT_RECONNECT_ATTEMPT_RATE;
 			}
+		}
+	}
+	
+	/**
+	 * Set an instance on {@link BleDeviceConfig#reconnectPersistFilter_longTerm} and/or {@link BleDeviceConfig#reconnectPersistFilter_shortTerm}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	public static interface ReconnectPersistFilter
+	{
+		/**
+		 * Struct passed to {@link ReconnectPersistFilter#onEvent(ReconnectPersistEvent)}.
+		 */
+		@Immutable
+		public static class ReconnectPersistEvent extends ReconnectRelatedEvent
+		{
+			@Override public BleDevice device(){  return m_device;  }
+			private BleDevice m_device;
+			
+			@Override public int failureCount(){  return m_failureCount;  }
+			private int m_failureCount;
+			
+			@Override public Interval totalTimeReconnecting(){  return m_totalTimeReconnecting;  }
+			private Interval m_totalTimeReconnecting;
+			
+			@Override public Interval previousDelay(){  return m_previousDelay;  }
+			private Interval m_previousDelay;
+			
+			@Override public ConnectionFailListener.ConnectionFailEvent connectionFailInfo(){  return m_connectionFailInfo;  }
+			private ConnectionFailListener.ConnectionFailEvent m_connectionFailInfo;
+			
+			void init(BleDevice device, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
+			{
+				this.m_device = device;
+				this.m_failureCount = failureCount;
+				this.m_totalTimeReconnecting = totalTimeReconnecting;
+				this.m_previousDelay = previousDelay;
+				this.m_connectionFailInfo = connectionFailInfo;
+			}
+		}
+		
+		/**
+		 * Return an instance of this from {@link ReconnectPersistFilter#onEvent(ReconnectPersistEvent)} using
+		 * {@link Please#stopRetrying()} or {@link Please#persist()}.
+		 */
+		@Immutable
+		public static class Please
+		{
+			private static final Please PERSIST		= new Please(true);
+			private static final Please STOP		= new Please(false);
+			
+			private final boolean m_persist;
+			
+			private Please(boolean persist)
+			{
+				m_persist = persist;
+			}
+			
+			boolean shouldPersist()
+			{
+				return m_persist;
+			}
+			
+			/**
+			 * Indicates that the {@link BleDevice} should stop {@link BleDeviceState#RECONNECTING_LONG_TERM} or
+			 * {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
+			 */
+			public static Please stopRetrying()
+			{
+				return STOP;
+			}
+			
+			/**
+			 * Indicates that the {@link BleDevice} should keep {@link BleDeviceState#RECONNECTING_LONG_TERM} or
+			 * {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
+			 */
+			public static Please persist()
+			{
+				return PERSIST;
+			}
+		}
+		
+		/**
+		 * Called periodically while {@link BleDeviceState#RECONNECTING_LONG_TERM} or {@value BleDeviceState#RECONNECTING_SHORT_TERM}
+		 * are active. Currently the rate at which this is called is the same as {@link BleManagerConfig#autoUpdateRate}. If {@link BleManagerConfig#autoUpdateRate}
+		 * is {@link Interval#DISABLED} (it should rarely be) then it will be called however often {@link BleManager#update(double)} is called.
+		 */
+		Please onEvent(ReconnectPersistEvent e);
+	}
+	
+	/**
+	 * Default implementation of {@link ReconnectPersistFilter} that just returns {@link ReconnectPersistFilter.Please#persist()}.
+	 */
+	public static class DefaultReconnectPersistFilter implements ReconnectPersistFilter
+	{
+		@Override public Please onEvent(ReconnectPersistEvent e)
+		{
+			return Please.persist();
 		}
 	}
 	
@@ -534,7 +655,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Implement this to have fine-grained control over {@link BleTask} timeout behavior.
 		 */
-		Please onEvent(TimeoutRequestEvent event);
+		Please onEvent(TimeoutRequestEvent e);
 	}
 	
 	/**
@@ -547,7 +668,7 @@ public class BleDeviceConfig implements Cloneable
 		
 		private static final Please RETURN_VALUE = Please.setTimeoutFor(Interval.secs(DEFAULT_TASK_TIMEOUT));
 		
-		@Override public Please onEvent(TimeoutRequestEvent event)
+		@Override public Please onEvent(TimeoutRequestEvent e)
 		{
 			return RETURN_VALUE;
 		}
@@ -775,11 +896,12 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BondFilter
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public BondFilter bondFilter							= new DefaultBondFilter();
+	public BondFilter bondFilter									= new DefaultBondFilter();
 	
 	/**
 	 * Default is an instance of {@link DefaultReconnectRequestFilter} - set an implementation here to
-	 * have fine control over reconnect behavior. This is basically how often and how long
+	 * have fine control over reconnect behavior while {@link BleDevice} is {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+	 * This is basically how often and how long
 	 * the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
 	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
 	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/phone to stay awake while attempting a reconnect.
@@ -789,11 +911,26 @@ public class BleDeviceConfig implements Cloneable
 	 * @see DefaultReconnectRequestFilter
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public ReconnectRequestFilter reconnectRequestFilte				= new DefaultReconnectRequestFilter();
+	public ReconnectRequestFilter reconnectRequestFilter_longTerm			= new DefaultReconnectRequestFilter();
 	
-	
+	/**
+	 * Default is an instance of {@link DefaultReconnectPersistFilter} - set an implementation here to
+	 * optionally stop any ongoing {@link BleDeviceState#RECONNECTING_LONG_TERM} loop. 
+	 */
 	@Nullable(Prevalence.NORMAL)
-	public ReconnectRequestFilter reconnectRequestFilter_transient	= new DefaultReconnectRequestFilter();
+	public ReconnectPersistFilter reconnectPersistFilter_longTerm			= new DefaultReconnectPersistFilter();
+	
+	/**
+	 * Same as {@link #reconnectRequestFilter_longTerm} but for {@link BleDeviceState#RECONNECTING_SHORT_TERM}.  
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public ReconnectRequestFilter reconnectRequestFilter_shortTerm	= new DefaultReconnectRequestFilter();
+	
+	/**
+	 * Same as {@link #reconnectPersistFilter_longTerm} but for {@value BleDeviceState#RECONNECTING_SHORT_TERM}.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public ReconnectPersistFilter reconnectPersistFilter_shortTerm	= new DefaultReconnectPersistFilter();
 	
 	/**
 	 * Default is an instance of {@link DefaultTimeoutRequestFilter} - set an implementation here to
@@ -893,7 +1030,7 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Sets all nullable options in {@link BleDeviceConfig} and {@link BleManagerConfig} to <code>null</code> so it's easier to cherry-pick just a few options
+	 * Sets all {@link Nullable} options in {@link BleDeviceConfig} and {@link BleManagerConfig} to <code>null</code> so it's easier to cherry-pick just a few options
 	 * to override from {@link BleManagerConfig} when using {@link BleDevice#setConfig(BleDeviceConfig)}.
 	 * <br><br>
 	 * NOTE: This doesn't affect any non-nullable subclass members of {@link BleManagerConfig} like {@link BleManagerConfig#stopScanOnPause}. 

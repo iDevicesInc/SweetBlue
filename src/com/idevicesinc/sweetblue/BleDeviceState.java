@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -30,13 +31,25 @@ public enum BleDeviceState implements State
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleDeviceConfig#reconnectRequestFilter} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleDeviceConfig#reconnectRequestFilter_longterm} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
 	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
+	 * @see #RECONNECTING_SHORT_TERM
 	 */
-	ATTEMPTING_RECONNECT,
+	RECONNECTING_LONG_TERM,
+	
+	/**
+	 * If {@link BleDeviceConfig#reconnectRequestFilter_shortterm} is set and the device implicitly disconnects this state will be entered.
+	 * Unlike with {@link #RECONNECTING_LONG_TERM}, entering this state does not mean that the {@link BleDevice} becomes {@link #DISCONNECTED}.
+	 * By all outward appearances the library treats the {@link BleDevice} as still being {@link #CONNECTED} while transparently trying
+	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectRequestFilter_shortterm}.
+	 * 
+	 * @see #RECONNECTING_LONG_TERM
+	 */
+	@Advanced
+	RECONNECTING_SHORT_TERM,
 	
 	/**
 	 * The device will always be in this state unless it becomes {@link #UNDISCOVERED}.
@@ -161,6 +174,8 @@ public enum BleDeviceState implements State
 	{
 		return this.bit() | state.bit();
 	}
+	
+	static final BleDeviceState[] VALUES = BleDeviceState.values();
 	
 	/**
 	 * A convenience for UI purposes, this returns the "highest" connection state representing

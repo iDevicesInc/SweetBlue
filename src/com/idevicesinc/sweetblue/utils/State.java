@@ -42,7 +42,7 @@ public interface State extends UsesCustomNull
 		 * {@link BleDevice#disconnect()} in response to a button click, whereas unintentional would be if the device disconnected because it
 		 * went out of range. As much as possible these flags are meant to represent the actual app <i>user's</i> intent through the app, not
 		 * the intent of you the programmer, nor the intent of the user outside the bounds of the app, like disconnecting by turning the peripheral off.
-		 * For example after a disconnect you might be using {@link BleManagerConfig#reconnectRequestFilter} to try periodically
+		 * For example after a disconnect you might be using {@link BleManagerConfig#reconnectRequestFilter_longTerm} to try periodically
 		 * reconnecting. From you the programmer's perspective a connect, if/when it happens, is arguably an intentional action. From the user's
 		 * perspective however the connect was unintentional. Therefore this mask is currently meant to serve an analytics or debugging role,
 		 * not to necessarily gate application logic.

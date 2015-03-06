@@ -2,11 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.State;
 
-/**
- * 
- * 
- *
- */
 abstract class PA_StateTracker
 {
 	private int m_stateMask = 0x0;

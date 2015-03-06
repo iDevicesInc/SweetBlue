@@ -12,7 +12,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	P_DeviceStateTracker(BleDevice device)
 	{
-		super(BleDeviceState.values());
+		super(BleDeviceState.VALUES);
 		
 		m_device = device;
 	}
@@ -74,6 +74,6 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	@Override public String toString()
 	{
-		return super.toString(BleDeviceState.values());
+		return super.toString(BleDeviceState.VALUES);
 	}
 }

@@ -218,7 +218,7 @@ public class BleManager
 		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link State.ChangeIntent#UNINTENTIONAL}
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
-		void onEvent(DiscoveryEvent event);
+		void onEvent(DiscoveryEvent e);
 	}
 
 	/**
@@ -252,8 +252,9 @@ public class BleManager
 				return Utils.toString
 				(
 					this.getClass(),
-					"entered",			Utils.toString(enterMask(), BleManagerState.values()),
-					"exited",			Utils.toString(exitMask(), BleManagerState.values())
+					"entered",			Utils.toString(enterMask(),		BleManagerState.VALUES),
+					"exited",			Utils.toString(exitMask(),		BleManagerState.VALUES),
+					"current",			Utils.toString(newStateBits(),	BleDeviceState.VALUES)
 				);
 			}
 		}
@@ -261,7 +262,7 @@ public class BleManager
 		/**
 		 * Called when the manager's abstracted {@link BleManagerState} changes.
 		 */
-		void onEvent(StateEvent event);
+		void onEvent(StateEvent e);
 	}
 
 	/**
@@ -291,7 +292,7 @@ public class BleManager
 		 * Called when the manager's native bitwise {@link BleManagerState} changes. As many bits as possible are flipped at the same time.
 		 */
 		@Advanced
-		void onEvent(NativeStateEvent event);
+		void onEvent(NativeStateEvent e);
 	}
 
 	/**
@@ -501,7 +502,7 @@ public class BleManager
 		/**
 		 * Run for the hills.
 		 */
-		void onEvent(UhOhEvent event);
+		void onEvent(UhOhEvent e);
 	}
 
 	/**
@@ -562,7 +563,7 @@ public class BleManager
 		/**
 		 * The reset event, for now only fired when the reset is completed. Hopefully the bluetooth stack is OK now.
 		 */
-		void onEvent(ResetEvent event);
+		void onEvent(ResetEvent e);
 	}
 
 	/**
@@ -619,7 +620,7 @@ public class BleManager
 		/**
 		 * Provides additional info about the circumstances surrounding the assert.
 		 */
-		void onEvent(AssertEvent event);
+		void onEvent(AssertEvent e);
 	}
 
 	private final UpdateLoop.Callback m_updateLoopCallback = new UpdateLoop.Callback()
@@ -701,8 +702,6 @@ public class BleManager
 	private final P_TaskQueue m_taskQueue;
 	private 	P_UhOhThrottler m_uhOhThrottler;
 				P_WakeLockManager m_wakeLockMngr;
-	
-	private int m_connectionFailTracker = 0;
 	
 		final Object m_threadLock = new Object();
 	
@@ -2143,9 +2142,9 @@ public class BleManager
 	 * alone and let the library handle the calling of this method.
 	 */
 	@Advanced
-	public void update(double timeStep)
+	public void update(final double timeStep_seconds)
 	{
-		update_synchronized(timeStep);
+		update_synchronized(timeStep_seconds);
 	}
 
 	private void update_synchronized(double timeStep)
@@ -2225,25 +2224,6 @@ public class BleManager
 //		}
 
 		m_uhOhThrottler.uhOh(reason);
-	}
-
-	void onConnectionFailed()
-	{
-		if( m_config.connectionFailUhOhCount <= 0 )  return;
-
-		m_connectionFailTracker++;
-
-		if( m_connectionFailTracker >= m_config.connectionFailUhOhCount )
-		{
-			m_connectionFailTracker = 0;
-
-//			uhOh(UhOh.MULTIPLE_CONNECTIONS_FAILED);
-		}
-	}
-
-	void onConnectionSucceeded()
-	{
-		m_connectionFailTracker = 0;
 	}
 
 	@Override public String toString()

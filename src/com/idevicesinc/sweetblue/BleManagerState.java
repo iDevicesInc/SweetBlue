@@ -49,6 +49,8 @@ public enum BleManagerState implements State
 	
 	private final int m_nativeCode;
 	
+	static final BleDeviceState[] VALUES = BleDeviceState.values();
+	
 	private BleManagerState()
 	{
 		m_nativeCode = 0;
