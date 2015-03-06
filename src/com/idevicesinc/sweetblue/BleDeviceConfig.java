@@ -1052,15 +1052,6 @@ public class BleDeviceConfig implements Cloneable
 		return config;
 	}
 	
-//	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr_nullable)
-//	{
-//		final int ordinal = task.ordinal();
-//		final Interval interval_device = intervals_device_nullable != null && intervals_device_nullable.length > ordinal ? intervals_device_nullable[ordinal] : null;
-//		final Interval interval_mngr = intervals_mngr_nullable != null && intervals_mngr_nullable.length > ordinal ? intervals_mngr_nullable[ordinal] : null;
-//		
-//		return interval(interval_device, interval_mngr);
-//	}
-	
 	static double getTimeout(final TimeoutRequestEvent event)
 	{
 		final BleManager manager = event.manager();
