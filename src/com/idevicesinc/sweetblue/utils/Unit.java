@@ -75,11 +75,17 @@ public abstract class Unit<T>
 		return this.getRawValue() >= otherUnit;
 	}
 	
+	/**
+	 * Hashes {@link #getRawValue()} to an <code>int</code>
+	 */
 	@Override public int hashCode()
 	{
 		return Double.valueOf(getRawValue()).hashCode();
 	}
 	
+	/**
+	 * Returns <code>==</code> using {@link #getRawValue()}.
+	 */
 	@Override public boolean equals(Object object)
 	{
 		if( object != null && object instanceof Unit )
@@ -90,5 +96,8 @@ public abstract class Unit<T>
 		return super.equals(object);
 	}
 	
+	/**
+	 * Subclasses must implement this to return their raw <code>double</code> value.
+	 */
 	protected abstract double getRawValue();
 }

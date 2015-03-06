@@ -1195,9 +1195,8 @@ public class BleDevice implements UsesCustomNull
 					case FAILED_IMMEDIATELY:		return Timing.IMMEDIATELY;
 					case FAILED_EVENTUALLY:			return Timing.EVENTUALLY;
 					case TIMED_OUT:					return Timing.TIMED_OUT;
+					default:						return Timing.NOT_APPLICABLE;
 				}
-				
-				return Timing.NOT_APPLICABLE;
 			}
 		}
 		
@@ -1290,8 +1289,8 @@ public class BleDevice implements UsesCustomNull
 	private final P_Logger m_logger;
 	private final P_TaskQueue m_queue;
 			final P_TransactionManager m_txnMngr;
-	private final P_ReconnectManager m_reconnectMngr;
-	private final P_ReconnectManager m_reconnectMngr_transient;
+	private final P_ReconnectManager m_reconnectMngr_longTerm;
+	private final P_ReconnectManager m_reconnectMngr_shortTerm;
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
 	private final P_RssiPollManager m_rssiPollMngr_auto;
@@ -1354,8 +1353,8 @@ public class BleDevice implements UsesCustomNull
 			m_pollMngr = new P_PollManager(this);
 			m_txnMngr = new P_TransactionManager(this);
 			m_taskStateListener = null;
-			m_reconnectMngr = null;
-			m_reconnectMngr_transient = null;
+			m_reconnectMngr_longTerm = null;
+			m_reconnectMngr_shortTerm = null;
 			m_connectionFailMngr = new P_ConnectionFailManager(this, null);
 			m_dummyDisconnectTask = null;
 		}
@@ -1375,9 +1374,9 @@ public class BleDevice implements UsesCustomNull
 			m_pollMngr = new P_PollManager(this);
 			m_txnMngr = new P_TransactionManager(this);
 			m_taskStateListener = m_listeners.m_taskStateListener;
-			m_reconnectMngr = new P_ReconnectManager(this, /*transient=*/false);
-			m_reconnectMngr_transient = new P_ReconnectManager(this, /*transient=*/true);
-			m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr);
+			m_reconnectMngr_longTerm = new P_ReconnectManager(this, /*isShortTerm=*/false);
+			m_reconnectMngr_shortTerm = new P_ReconnectManager(this, /*isShortTerm=*/true);
+			m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr_longTerm);
 			m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		}
 	}
@@ -2551,7 +2550,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		clear_undiscovery();
 		
-		m_reconnectMngr.stop();
+		m_reconnectMngr_longTerm.stop();
 		
 		m_stateTracker.set
 		(
@@ -2590,7 +2589,8 @@ public class BleDevice implements UsesCustomNull
 		
 		m_pollMngr.update(timeStep);
 		m_txnMngr.update(timeStep);
-		m_reconnectMngr.update(timeStep);
+		m_reconnectMngr_longTerm.update(timeStep);
+		m_reconnectMngr_shortTerm.update(timeStep);
 		m_rssiPollMngr.update(timeStep);
 	}
 	
@@ -2668,7 +2668,7 @@ public class BleDevice implements UsesCustomNull
 				//--- DRK > We're stopping the reconnect process (if it's running) because the user has decided to explicitly connect
 				//---		for whatever reason. Making a judgement call that the user would then expect reconnect to stop.
 				//---		In other words it's not stopped for any hard technical reasons...it could go on.
-				m_reconnectMngr.stop();
+				m_reconnectMngr_longTerm.stop();
 				m_stateTracker.update(E_Intent.INTENTIONAL, BluetoothGatt.GATT_SUCCESS, RECONNECTING_LONG_TERM, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
 			}
 			else
@@ -2895,7 +2895,7 @@ public class BleDevice implements UsesCustomNull
 	
 	void onFullyInitialized(Object ... extraFlags)
 	{
-		m_reconnectMngr.stop();
+		m_reconnectMngr_longTerm.stop();
 		m_connectionFailMngr.onFullyInitialized();
 		
 		//--- DRK > Saving last disconnect as unintentional here in case for some
@@ -2976,7 +2976,7 @@ public class BleDevice implements UsesCustomNull
 			
 			if( !attemptingReconnect )
 			{
-				m_reconnectMngr.stop();
+				m_reconnectMngr_longTerm.stop();
 			}
 		}
 		else
@@ -2985,7 +2985,7 @@ public class BleDevice implements UsesCustomNull
 			{
 				m_stateTracker.update(intent, gattStatus, RECONNECTING_LONG_TERM, false);
 				
-				m_reconnectMngr.stop();
+				m_reconnectMngr_longTerm.stop();
 			}
 		}
 		
@@ -3091,9 +3091,9 @@ public class BleDevice implements UsesCustomNull
 		
 		if( !wasExplicit && wasInitialized && !isConnectingOverall_2 )
 		{
-			m_reconnectMngr.attemptStart();
+			m_reconnectMngr_longTerm.attemptStart();
 			
-			if( m_reconnectMngr.isRunning() )
+			if( m_reconnectMngr_longTerm.isRunning() )
 			{
 				m_stateTracker.append(RECONNECTING_LONG_TERM, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 			}
