@@ -67,13 +67,13 @@ class P_ReconnectManager
 	{
 		if( m_isTransient )
 		{
-			final BleDeviceConfig.ReconnectRequestFilter filter = m_device.conf_device().reconnectRequestFilter_transient;
-			return filter != null ? filter : m_device.conf_mngr().reconnectRequestFilter_transient;
+			final BleDeviceConfig.ReconnectRequestFilter filter = m_device.conf_device().reconnectRequestFilter_shortTerm;
+			return filter != null ? filter : m_device.conf_mngr().reconnectRequestFilter_shortTerm;
 		}
 		else
 		{
-			final BleDeviceConfig.ReconnectRequestFilter filter = m_device.conf_device().reconnectRequestFilter;
-			return filter != null ? filter : m_device.conf_mngr().reconnectRequestFilter;
+			final BleDeviceConfig.ReconnectRequestFilter filter = m_device.conf_device().reconnectRequestFilter_longTerm;
+			return filter != null ? filter : m_device.conf_mngr().reconnectRequestFilter_longTerm;
 		}
 	}
 	

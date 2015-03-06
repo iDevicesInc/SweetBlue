@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleDeviceState.ATTEMPTING_RECONNECT;
+import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
@@ -120,7 +120,7 @@ class P_ConnectionFailManager
 			if( !m_reconnectMngr.onConnectionFailed(moreInfo) )
 			{
 				//--- DRK > State change may be redundant.
-				m_device.getStateTracker().update(E_Intent.UNINTENTIONAL, gattStatus, ATTEMPTING_RECONNECT, false);
+				m_device.getStateTracker().update(E_Intent.UNINTENTIONAL, gattStatus, RECONNECTING_LONG_TERM, false);
 			}
 		}
 		
