@@ -25,13 +25,13 @@ public enum BleDeviceState implements State
 	NULL,
 	
 	/**
-	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onDiscoveryEvent(DiscoveryEvent)}.
+	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onEvent(DiscoveryEvent)}.
 	 * This means the object is effectively dead. {@link BleManager} has removed all references to it and you should do the same.
 	 */
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleDeviceConfig#reconnectRequestFilter_longterm} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleDeviceConfig#reconnectRequestFilter_longTerm} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
 	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
@@ -41,10 +41,10 @@ public enum BleDeviceState implements State
 	RECONNECTING_LONG_TERM,
 	
 	/**
-	 * If {@link BleDeviceConfig#reconnectRequestFilter_shortterm} is set and the device implicitly disconnects this state will be entered.
+	 * If {@link BleDeviceConfig#reconnectRequestFilter_shortTerm} is set and the device implicitly disconnects this state will be entered.
 	 * Unlike with {@link #RECONNECTING_LONG_TERM}, entering this state does not mean that the {@link BleDevice} becomes {@link #DISCONNECTED}.
 	 * By all outward appearances the library treats the {@link BleDevice} as still being {@link #CONNECTED} while transparently trying
-	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectRequestFilter_shortterm}.
+	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectRequestFilter_shortTerm}.
 	 * 
 	 * @see #RECONNECTING_LONG_TERM
 	 */

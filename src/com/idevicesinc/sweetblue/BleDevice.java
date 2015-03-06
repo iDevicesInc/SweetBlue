@@ -1000,7 +1000,7 @@ public class BleDevice implements UsesCustomNull
 			}
 			
 			/**
-			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for {@link BleDeviceConfig.ReconnectRequestFilter.ConnectionFailEvent#connectionFailInfo()}
+			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for {@link BleDeviceConfig.ReconnectRequestFilter#connectionFailInfo()}
 			 * in certain situations.
 			 */
 			@Override public boolean isNull()

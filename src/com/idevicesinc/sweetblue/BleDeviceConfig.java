@@ -515,7 +515,7 @@ public class BleDeviceConfig implements Cloneable
 		
 		/**
 		 * Return an instance of this from {@link ReconnectPersistFilter#onEvent(ReconnectPersistEvent)} using
-		 * {@link Please#stopRetrying()} or {@link Please#persist()}.
+		 * {@link ReconnectPersistFilter.Please#stopRetrying()} or {@link ReconnectPersistFilter.Please#persist()}.
 		 */
 		@Immutable
 		public static class Please
@@ -555,7 +555,7 @@ public class BleDeviceConfig implements Cloneable
 		}
 		
 		/**
-		 * Called periodically while {@link BleDeviceState#RECONNECTING_LONG_TERM} or {@value BleDeviceState#RECONNECTING_SHORT_TERM}
+		 * Called periodically while {@link BleDeviceState#RECONNECTING_LONG_TERM} or {@link BleDeviceState#RECONNECTING_SHORT_TERM}
 		 * are active. Currently the rate at which this is called is the same as {@link BleManagerConfig#autoUpdateRate}. If {@link BleManagerConfig#autoUpdateRate}
 		 * is {@link Interval#DISABLED} (it should rarely be) then it will be called however often {@link BleManager#update(double)} is called.
 		 */
@@ -927,7 +927,7 @@ public class BleDeviceConfig implements Cloneable
 	public ReconnectRequestFilter reconnectRequestFilter_shortTerm	= new DefaultReconnectRequestFilter();
 	
 	/**
-	 * Same as {@link #reconnectPersistFilter_longTerm} but for {@value BleDeviceState#RECONNECTING_SHORT_TERM}.
+	 * Same as {@link #reconnectPersistFilter_longTerm} but for {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public ReconnectPersistFilter reconnectPersistFilter_shortTerm	= new DefaultReconnectPersistFilter();
