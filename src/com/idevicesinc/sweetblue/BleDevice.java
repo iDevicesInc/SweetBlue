@@ -391,7 +391,7 @@ public class BleDevice implements UsesCustomNull
 			public Interval time_total(){  return m_totalTime;  }
 			private final Interval m_totalTime;
 			
-			/**
+			/**+
 			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is,
 			 * for example, {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point
 			 * where a gatt status is provided, in which case this member is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}
@@ -696,6 +696,14 @@ public class BleDevice implements UsesCustomNull
 			public boolean wasCancelled()
 			{
 				return this == EXPLICIT_DISCONNECT || this == BLE_TURNING_OFF;
+			}
+			
+			/**
+			 * Same as {@link #wasCancelled()}, at least for now, but just being more "explicit", no pun intended.
+			 */
+			boolean wasExplicit()
+			{
+				return wasCancelled();
 			}
 			
 			/**
@@ -1348,7 +1356,7 @@ public class BleDevice implements UsesCustomNull
 			m_listeners = null;
 			m_logger = null;
 			m_serviceMngr = new P_ServiceManager(this);
-			m_stateTracker = new P_DeviceStateTracker(this);
+			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = null;
 			m_bondMngr = new P_BondManager(this);
 			stateTracker().set(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
@@ -1357,7 +1365,7 @@ public class BleDevice implements UsesCustomNull
 			m_taskStateListener = null;
 			m_reconnectMngr_longTerm = null;
 			m_reconnectMngr_shortTerm = null;
-			m_connectionFailMngr = new P_ConnectionFailManager(this, null);
+			m_connectionFailMngr = new P_ConnectionFailManager(this);
 			m_dummyDisconnectTask = null;
 		}
 		else
@@ -1370,8 +1378,8 @@ public class BleDevice implements UsesCustomNull
 			m_listeners = new P_BleDevice_Listeners(this);
 			m_logger = m_mngr != null ? m_mngr.getLogger() : null;
 			m_serviceMngr = new P_ServiceManager(this);
-			m_stateTracker = new P_DeviceStateTracker(this);
-			m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this);
+			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
+			m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
 			m_bondMngr = new P_BondManager(this);
 			stateTracker().set(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 			m_pollMngr = new P_PollManager(this);
@@ -1379,7 +1387,7 @@ public class BleDevice implements UsesCustomNull
 			m_taskStateListener = m_listeners.m_taskStateListener;
 			m_reconnectMngr_longTerm = new P_ReconnectManager(this, /*isShortTerm=*/false);
 			m_reconnectMngr_shortTerm = new P_ReconnectManager(this, /*isShortTerm=*/true);
-			m_connectionFailMngr = new P_ConnectionFailManager(this, m_reconnectMngr_longTerm);
+			m_connectionFailMngr = new P_ConnectionFailManager(this);
 			m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		}
 	}
@@ -1398,6 +1406,18 @@ public class BleDevice implements UsesCustomNull
 		else
 		{
 			return stateTracker_main();
+		}
+	}
+	
+	P_ReconnectManager reconnectMngr()
+	{
+		if( stateTracker_main().checkBitMatch(BleDeviceState.RECONNECTING_SHORT_TERM, true) )
+		{
+			return m_reconnectMngr_shortTerm;
+		}
+		else
+		{
+			return m_reconnectMngr_longTerm;
 		}
 	}
 	
@@ -1721,9 +1741,18 @@ public class BleDevice implements UsesCustomNull
 	 * 
 	 * @see #isAny(BleDeviceState...)
 	 */
-	public boolean is(BleDeviceState state)
+	public boolean is(final BleDeviceState state)
 	{
 		return state.overlaps(getStateMask());
+	}
+	
+	/**
+	 * Returns <code>true</code> if there is bitwise overlap between the provided value
+	 * and {@link #getStateMask()}.
+	 */
+	public boolean is(final int mask_BleDeviceState)
+	{
+		return (getStateMask() & mask_BleDeviceState) != 0x0;
 	}
 	
 	/**
@@ -2181,6 +2210,19 @@ public class BleDevice implements UsesCustomNull
 		}
 		
 		m_connectionFailMngr.onExplicitConnectionStarted();
+		
+		if( connect_earlyOut() )  return;
+		
+		m_lastConnectOrDisconnectWasUserExplicit = true;
+		
+		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+		{
+			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
+			
+			m_connectionFailMngr.invokeCallback(info);
+			
+			return;
+		}
 		
 		connect_private(authenticationTxn, initTxn, /*isReconnect=*/false);
 	}
@@ -2662,12 +2704,7 @@ public class BleDevice implements UsesCustomNull
 		}
 	}
 	
-	void attemptReconnect()
-	{
-		connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /*isReconnect=*/true);
-	}
-	
-	private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, boolean isReconnect)
+	private boolean connect_earlyOut()
 	{
 		if( isNull() )
 		{
@@ -2675,12 +2712,19 @@ public class BleDevice implements UsesCustomNull
 			
 			m_connectionFailMngr.invokeCallback(info);
 			
-			return;
+			return true;
 		}
+		
+		return false;
+	}
+	
+	void attemptReconnect()
+	{
+		if( connect_earlyOut() )  return;
 		
 		m_lastConnectOrDisconnectWasUserExplicit = true;
 		
-		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+		if( isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
 			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
 			
@@ -2689,7 +2733,12 @@ public class BleDevice implements UsesCustomNull
 			return;
 		}
 		
-		if( is(INITIALIZED) )
+		connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /*isReconnect=*/true);
+	}
+	
+	private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, boolean isReconnect)
+	{		
+		if( is_internal(INITIALIZED) )
 		{
 			m_mngr.ASSERT(false, "Device is initialized but not connected!");
 			
@@ -2707,7 +2756,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		m_lastConnectOrDisconnectWasUserExplicit = definitelyExplicit;
 		
-		if( is(/*already*/CONNECTING) )
+		if( is_internal(/*already*/CONNECTING) )
 		{
 			P_Task_Connect task = getTaskQueue().getCurrent(P_Task_Connect.class, this);
 			boolean mostDefinitelyExplicit = task != null && task.isExplicit();
@@ -2739,7 +2788,7 @@ public class BleDevice implements UsesCustomNull
 		E_Intent intent = explicit && !is(RECONNECTING_LONG_TERM) ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
 		
-		if( is(/*already*/CONNECTED) )
+		if( is_internal(/*already*/CONNECTED) )
 		{
 			//--- DRK > Possible to get here when implicit tasks are involved I think. Not sure if assertion should be here,
 			//---		and if it should it perhaps should be keyed off whether the task is implicit or something.
@@ -2786,7 +2835,7 @@ public class BleDevice implements UsesCustomNull
 		}
 		else
 		{
-			m_txnMngr.runAuthOrInitTxnIfNeeded(DISCONNECTED,false, CONNECTING_OVERALL,true, CONNECTING,false, CONNECTED,true, ADVERTISING,false);
+			m_txnMngr.runAuthOrInitTxnIfNeeded(BluetoothGatt.GATT_SUCCESS, DISCONNECTED,false, CONNECTING_OVERALL,true, CONNECTING,false, CONNECTED,true, ADVERTISING,false);
 		}
 	}
 	
@@ -2855,11 +2904,11 @@ public class BleDevice implements UsesCustomNull
 //			}
 //		}
 		
-		boolean wasConnecting = is(CONNECTING_OVERALL);
+		boolean wasConnecting = is_internal(CONNECTING_OVERALL);
 		
-		if( isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL) )
+		if( isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL) )
 		{
-			setStateToDisconnected(attemptingReconnect, E_Intent.UNINTENTIONAL, gattStatus);
+			setStateToDisconnected(attemptingReconnect, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false);
 		}
 		
 		if( wasConnecting )
@@ -2893,10 +2942,10 @@ public class BleDevice implements UsesCustomNull
 		m_serviceMngr.clear();
 		m_serviceMngr.loadDiscoveredServices();
 		
-		m_txnMngr.runAuthOrInitTxnIfNeeded(DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true);
+		m_txnMngr.runAuthOrInitTxnIfNeeded(BluetoothGatt.GATT_SUCCESS, DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true);
 	}
 	
-	void onFullyInitialized(Object ... extraFlags)
+	void onFullyInitialized(final int gattStatus, Object ... extraFlags)
 	{
 		m_reconnectMngr_longTerm.stop();
 		m_connectionFailMngr.onFullyInitialized();
@@ -2909,7 +2958,7 @@ public class BleDevice implements UsesCustomNull
 		stateTracker().update
 		(
 			lastConnectDisconnectIntent(),
-			BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE,
+			gattStatus,
 			extraFlags, RECONNECTING_LONG_TERM, false, CONNECTING_OVERALL, false,
 			AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true
 		);
@@ -2917,7 +2966,7 @@ public class BleDevice implements UsesCustomNull
 		stateTracker_main().remove(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 	
-	private void setStateToDisconnected(boolean attemptingReconnect, E_Intent intent, int gattStatus)
+	private void setStateToDisconnected(final boolean attemptingReconnect, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker)
 	{
 		//--- DRK > Device probably wasn't advertising while connected so here we reset the timer to keep
 		//---		it from being immediately undiscovered after disconnection.
@@ -2926,7 +2975,9 @@ public class BleDevice implements UsesCustomNull
 		m_serviceMngr.clear();
 		m_txnMngr.clearQueueLock();
 		
-		stateTracker().set
+		P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
+		
+		tracker.set
 		(
 			intent,
 			gattStatus,
@@ -2949,7 +3000,8 @@ public class BleDevice implements UsesCustomNull
 	{
 		if( isNull() )  return;
 		
-		boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
+		final boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
+		final boolean explicit = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasExplicit();
 		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 		
 		if( cancelled )
@@ -2959,22 +3011,18 @@ public class BleDevice implements UsesCustomNull
 			m_connectionFailMngr.onExplicitDisconnect();
 		}
 		
-		final boolean wasConnecting = is(CONNECTING_OVERALL);
-		boolean attemptingReconnect = is(RECONNECTING_LONG_TERM);
-		
-		if( cancelled )
-		{
-			attemptingReconnect = false;
-		}
+		final boolean wasConnecting = is_internal(CONNECTING_OVERALL);
+		final boolean attemptingReconnect = cancelled ? false : is(RECONNECTING_LONG_TERM);
 		
 		E_Intent intent = cancelled ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
 		
 		m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable));
 		
-		if( isAny(CONNECTED, CONNECTING_OVERALL, INITIALIZED) )
+		if( isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED) )
 		{
-			setStateToDisconnected(attemptingReconnect, intent, gattStatus);
+			final boolean forceMainStateTracker = explicit;
+			setStateToDisconnected(attemptingReconnect, intent, gattStatus, forceMainStateTracker);
 			
 			m_txnMngr.cancelAllTransactions();
 //				m_txnMngr.clearAllTxns();
@@ -3008,7 +3056,7 @@ public class BleDevice implements UsesCustomNull
 		return m_lastDisconnectWasBecauseOfBleTurnOff;
 	}
 	
-	void onNativeDisconnect(final boolean wasExplicit, final int gattStatus)
+	void onNativeDisconnect(final boolean wasExplicit, final int gattStatus, final boolean doShortTermReconnect)
 	{
 		if( !wasExplicit )
 		{
@@ -3036,15 +3084,19 @@ public class BleDevice implements UsesCustomNull
 		
 		m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/false);
 		
-		final boolean wasInitialized = is(INITIALIZED);
+		final boolean wasInitialized = is_internal(INITIALIZED);
 		
-		if( !wasExplicit && wasInitialized && !m_reconnectMngr_shortTerm.isRunning() )
+		if( doShortTermReconnect )
 		{
-			m_reconnectMngr_shortTerm.attemptStart();
-			
-			if( m_reconnectMngr_shortTerm.isRunning() )
+			if( !wasExplicit && wasInitialized && !m_reconnectMngr_shortTerm.isRunning() )
 			{
-				stateTracker_main().append(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.INTENTIONAL, gattStatus);
+				m_stateTracker_shortTermReconnect.sync(stateTracker_main());
+				m_reconnectMngr_shortTerm.attemptStart(gattStatus);
+				
+				if( m_reconnectMngr_shortTerm.isRunning() )
+				{
+					stateTracker_main().append(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.INTENTIONAL, gattStatus);
+				}
 			}
 		}
 		
@@ -3066,18 +3118,19 @@ public class BleDevice implements UsesCustomNull
 		}
 		
 		
-		final boolean isAttemptingReconnect_longTerm = is(RECONNECTING_LONG_TERM);
-		final boolean wasConnectingOverall = is(CONNECTING_OVERALL);
+		final boolean isAttemptingReconnect_longTerm = is_internal(RECONNECTING_LONG_TERM);
+		final boolean wasConnectingOverall = is_internal(CONNECTING_OVERALL);
 		
 		// BEGIN CALLBACKS TO USER
 		
-		setStateToDisconnected(isAttemptingReconnect_longTerm, wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL, gattStatus);
+		final E_Intent intent = wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
+		setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/doShortTermReconnect==false);
 		
 		m_txnMngr.cancelAllTransactions();
 		
 		//--- DRK > Technically user could have called connect() in callbacks above....bad form but we need to account for it.
-		final boolean isConnectingOverall_1 = is(CONNECTING_OVERALL);
-		final boolean isStillAttemptingReconnect_longTerm = is(RECONNECTING_LONG_TERM);
+		final boolean isConnectingOverall_1 = is_internal(CONNECTING_OVERALL);
+		final boolean isStillAttemptingReconnect_longTerm = is_internal(RECONNECTING_LONG_TERM);
 		final ConnectionFailListener.Status connectionFailReason_nullable;
 		if( !m_reconnectMngr_shortTerm.isRunning() && wasConnectingOverall )
 		{
@@ -3113,11 +3166,11 @@ public class BleDevice implements UsesCustomNull
 		}
 		
 		//--- DRK > Again, technically user could have called connect() in callbacks above....bad form but we need to account for it.
-		final boolean isConnectingOverall_2 = is(CONNECTING_OVERALL);
+		final boolean isConnectingOverall_2 = is_internal(CONNECTING_OVERALL);
 		
 		if( !m_reconnectMngr_shortTerm.isRunning() && !m_reconnectMngr_longTerm.isRunning() && !wasExplicit && wasInitialized && !isConnectingOverall_2 )
 		{
-			m_reconnectMngr_longTerm.attemptStart();
+			m_reconnectMngr_longTerm.attemptStart(gattStatus);
 			
 			if( m_reconnectMngr_longTerm.isRunning() )
 			{

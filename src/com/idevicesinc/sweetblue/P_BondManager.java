@@ -117,7 +117,7 @@ class P_BondManager
 	{
 		if( status.isRealStatus() )
 		{
-			if( m_device.is(BleDeviceState.CONNECTING_OVERALL) )
+			if( m_device.is_internal(BleDeviceState.CONNECTING_OVERALL) )
 			{
 				final boolean bondingFailFailsConnection = BleDeviceConfig.bool(m_device.conf_device().bondingFailFailsConnection, m_device.conf_mngr().bondingFailFailsConnection);
 				

@@ -68,6 +68,23 @@ class P_DeviceManager
 		return toReturn;
 	}
 	
+	public List<BleDevice> getDevices_List(final int mask_BleDeviceState)
+	{
+		final ArrayList<BleDevice> toReturn = new ArrayList<BleDevice>();
+		
+		for( int i = 0; i < this.getCount(); i++ )
+		{
+			final BleDevice device_ith = this.get(i);
+
+			if( device_ith.is(mask_BleDeviceState) )
+			{
+				toReturn.add(device_ith);
+			}
+		}
+		
+		return toReturn;
+	}
+	
 	public boolean has(BleDevice device)
 	{
 		synchronized (m_list)

@@ -39,9 +39,12 @@ public class Utils
 		return false;
 	}
 	
+	private static final int FRACTION_DIGITS = 2;
+	
 	private static final DecimalFormat s_toFixedFormat = new DecimalFormat();
 	{
-		s_toFixedFormat.setMaximumIntegerDigits(2);
+		s_toFixedFormat.setMaximumFractionDigits(FRACTION_DIGITS);
+		s_toFixedFormat.setMinimumFractionDigits(FRACTION_DIGITS);
 	}
 	
 	public static String toFixed(final double value)
@@ -425,6 +428,18 @@ public class Utils
 		builder.append("]");
 		
 		return builder.toString();
+	}
+	
+	public static int calcFullMask(final State[] values)
+	{
+		int mask = 0x0;
+		
+		for( int i = 0; i < values.length; i++ )
+		{
+			mask |= values[i].bit();
+		}
+		
+		return mask;
 	}
 	
 	public static String toString(Class<?> type, Object ... values)

@@ -343,6 +343,22 @@ public class BleDeviceConfig implements Cloneable
 		 */
 		public abstract ConnectionFailListener.ConnectionFailEvent connectionFailInfo();
 		
+		/**
+		 * Shorthand for checking if {@link BleDevice} is {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
+		 */
+		public boolean shortTerm()
+		{
+			return device().is(BleDeviceState.RECONNECTING_SHORT_TERM);
+		}
+		
+		/**
+		 * Shorthand for checking if {@link BleDevice} is {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+		 */
+		public boolean longTerm()
+		{
+			return device().is(BleDeviceState.RECONNECTING_LONG_TERM);
+		}
+		
 		@Override public String toString()
 		{
 			return Utils.toString
@@ -351,7 +367,8 @@ public class BleDeviceConfig implements Cloneable
 				"device",					device().getName_debug(),
 				"failureCount",				failureCount(),
 				"totalTimeReconnecting",	totalTimeReconnecting(),
-				"previousDelay",			previousDelay()
+				"previousDelay",			previousDelay(),
+				"shortTerm",				shortTerm()
 			);
 		}
 	}
@@ -598,7 +615,7 @@ public class BleDeviceConfig implements Cloneable
 		
 		private final Interval m_timeout;
 		
-		DefaultReconnectPersistFilter(Interval timeout)
+		public DefaultReconnectPersistFilter(Interval timeout)
 		{
 			m_timeout = timeout != null ? timeout : Interval.INFINITE;
 		}
@@ -1028,6 +1045,11 @@ public class BleDeviceConfig implements Cloneable
 	static int integerOrDefault(Integer value_nullable, int defaultValue)
 	{
 		return value_nullable != null ? value_nullable : defaultValue;
+	}
+	
+	static <T> T filter(T filter_device, T filter_mngr)
+	{
+		return filter_device != null ? filter_device : filter_mngr;
 	}
 	
 	/**

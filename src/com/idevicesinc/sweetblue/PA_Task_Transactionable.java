@@ -42,6 +42,27 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		return m_txn;
 	}
 	
+	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
+	{
+		final boolean defaultDecision = super.isSoftlyCancellableBy(task);
+		
+		if( defaultDecision == true )
+		{
+			if( getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM) )
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else
+		{
+			return defaultDecision;
+		}
+	}
+	
 	@Override public boolean isInterruptableBy(PA_Task task)
 	{
 		if( m_requiresBonding )
@@ -96,7 +117,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		{
 			if( !(this instanceof P_Task_ToggleNotify) )
 			{
-				if( this.getDevice().is(BleDeviceState.INITIALIZED) )
+				if( this.getDevice().is_internal(BleDeviceState.INITIALIZED) )
 				{
 					return true;
 				}
@@ -109,5 +130,25 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	@Override public PE_TaskPriority getPriority()
 	{
 		return m_priority;
+	}
+	
+	@Override protected boolean isArmable()
+	{
+		if( getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM ) )
+		{
+			//--- DRK > If reconnecting short term, we only allow transaction-related tasks become armed.
+			if( getDevice().is_internal(BleDeviceState.SERVICES_DISCOVERED) )
+			{
+				return getTxn() != null;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return getDevice().is_internal(BleDeviceState.SERVICES_DISCOVERED);
+		}
 	}
 }

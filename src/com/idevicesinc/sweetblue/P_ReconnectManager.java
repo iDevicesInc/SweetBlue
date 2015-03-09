@@ -22,6 +22,8 @@ class P_ReconnectManager
 	private double m_delay = 0.0;
 	private double m_timeTracker = NOT_RUNNING;
 	
+	private int m_gattStatusOfOriginalDisconnect = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	
 	private ConnectionFailListener.ConnectionFailEvent m_connectionFailInfo;
 	
 	private final boolean m_isShortTerm;
@@ -37,7 +39,7 @@ class P_ReconnectManager
 		m_connectionFailInfo = m_device.NULL_CONNECTIONFAIL_INFO();
 	}
 	
-	void attemptStart()
+	void attemptStart(int gattStatusOfDisconnect)
 	{
 		if( !isRunning() )
 		{
@@ -54,10 +56,20 @@ class P_ReconnectManager
 		if( m_delay < 0.0 )
 		{
 			m_timeTracker = NOT_RUNNING;
+			m_gattStatusOfOriginalDisconnect = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+		}
+		else
+		{
+			m_gattStatusOfOriginalDisconnect = gattStatusOfDisconnect;
 		}
 		
 		//--- DRK > If delay is zero we still wait until the first time step to actually attempt first (re)connect.
 		//---		May change in future for API-consistency's sake. 
+	}
+	
+	int gattStatusOfOriginalDisconnect()
+	{
+		return m_gattStatusOfOriginalDisconnect;
 	}
 	
 	boolean isRunning()
@@ -124,11 +136,11 @@ class P_ReconnectManager
 		}
 	}
 	
-	boolean onConnectionFailed(final ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
+	void onConnectionFailed(final ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 	{
 		if( !isRunning() )
 		{
-			return false;
+			return;
 		}
 		
 		m_attemptCount++;
@@ -141,7 +153,7 @@ class P_ReconnectManager
 		{
 			stop();
 			
-			return false;
+			return;
 		}
 		else
 		{
@@ -149,7 +161,7 @@ class P_ReconnectManager
 			m_delay = delay;
 			m_timeTracker = 0.0;
 			
-			return true;
+			return;
 		}
 	}
 	
@@ -159,7 +171,8 @@ class P_ReconnectManager
 		
 		m_totalTime += timeStep;
 		
-		if( !m_device.is(BleDeviceState.DISCONNECTED) )  return;
+		if( !m_isShortTerm && !m_device.is(BleDeviceState.RECONNECTING_LONG_TERM) )  return;
+		if( m_isShortTerm && !m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) )  return;
 		
 		m_timeTracker += timeStep;
 		
@@ -169,7 +182,7 @@ class P_ReconnectManager
 		
 		if( m_timeTracker >= m_delay )
 		{
-			if( !m_device.is(BleDeviceState.CONNECTING_OVERALL) )
+			if( !m_device.is_internal(BleDeviceState.CONNECTING_OVERALL) )
 			{
 				m_device.attemptReconnect();
 			}
@@ -188,11 +201,13 @@ class P_ReconnectManager
 		
 		if( please == null || !please.shouldPersist() )
 		{
+			final int gattStatusOfOriginalDisconnect = gattStatusOfOriginalDisconnect();
+			
 			stop();
 			
 			if( m_isShortTerm )
 			{
-				m_device.disconnectWithReason(/*priority=*/null, Status.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
+				m_device.onNativeDisconnect(/*wasExplicit=*/false, gattStatusOfOriginalDisconnect, /*doShortTermReconnect=*/false);
 			}
 			else
 			{
@@ -212,5 +227,6 @@ class P_ReconnectManager
 		m_attemptCount = 0;
 		m_totalTime = 0.0;
 		m_connectionFailInfo = m_device.NULL_CONNECTIONFAIL_INFO();
+		m_gattStatusOfOriginalDisconnect = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 	}
 }

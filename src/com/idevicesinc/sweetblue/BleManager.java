@@ -825,9 +825,18 @@ public class BleManager
 	 *
 	 * @see #isAny(BleManagerState...)
 	 */
-	public boolean is(BleManagerState state)
+	public boolean is(final BleManagerState state)
 	{
 		return state.overlaps(getStateMask());
+	}
+	
+	/**
+	 * Returns <code>true</code> if there is bitwise overlap between the provided value
+	 * and {@link #getStateMask()}.
+	 */
+	public boolean is(final int mask_BleManagerState)
+	{
+		return (getStateMask() & mask_BleManagerState) != 0x0;
 	}
 
 	/**
@@ -1608,6 +1617,22 @@ public class BleManager
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(Object ... query)
 	{
 		return m_deviceMngr.getDevices_List(query);
+	}
+	
+	/**
+	 * Same as {@link #getDevices()} except filters using {@link BleDevice#is(int)}.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final int mask_BleDeviceState)
+	{
+		return new BleDeviceIterator(m_deviceMngr.getList(), mask_BleDeviceState);
+	}
+	
+	/**
+	 * Overload of {@link #getDevices(int)} that returns a {@link List} for you.
+	 */
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final int mask_BleDeviceState)
+	{
+		return m_deviceMngr.getDevices_List(mask_BleDeviceState);
 	}
 
 	/**

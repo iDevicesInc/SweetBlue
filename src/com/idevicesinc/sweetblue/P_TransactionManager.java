@@ -29,7 +29,7 @@ class P_TransactionManager
 
 			m_current = null;
 			
-			if( !m_device.is(BleDeviceState.CONNECTED) )
+			if( !m_device.is_internal(BleDeviceState.CONNECTED) )
 			{
 				if( reason == EndReason.CANCELLED )
 				{
@@ -62,7 +62,7 @@ class P_TransactionManager
 					}
 					else
 					{
-						m_device.onFullyInitialized();
+						m_device.onFullyInitialized(BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 					}
 				}
 				else
@@ -74,7 +74,7 @@ class P_TransactionManager
 			{
 				if (reason == EndReason.SUCCEEDED)
 				{
-					m_device.onFullyInitialized();
+					m_device.onFullyInitialized(BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 				else
 				{
@@ -274,7 +274,7 @@ class P_TransactionManager
 		
 		if( !result.wasSuccess() )
 		{
-			if( m_device.isAny(AUTHENTICATING, INITIALIZING) )
+			if( m_device.isAny_internal(AUTHENTICATING, INITIALIZING) )
 			{
 				m_failReason = result;
 			}
@@ -301,7 +301,7 @@ class P_TransactionManager
 		}
 	}
 	
-	void runAuthOrInitTxnIfNeeded(Object ... extraFlags)
+	void runAuthOrInitTxnIfNeeded(final int gattStatus, Object ... extraFlags)
 	{
 		synchronized (m_threadLock)
 		{
@@ -310,7 +310,7 @@ class P_TransactionManager
 			{
 				m_device.getPollManager().enableNotifications();
 				
-				m_device.onFullyInitialized(extraFlags);
+				m_device.onFullyInitialized(gattStatus, extraFlags);
 			}
 			else if( m_authTxn != null )
 			{
