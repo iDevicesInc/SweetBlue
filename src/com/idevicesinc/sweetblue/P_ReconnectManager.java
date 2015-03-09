@@ -56,7 +56,7 @@ class P_ReconnectManager
 			m_timeTracker = NOT_RUNNING;
 		}
 		
-		//--- DRK > If delay is zero we still wait until the first time step to actually connect.
+		//--- DRK > If delay is zero we still wait until the first time step to actually attempt first (re)connect.
 		//---		May change in future for API-consistency's sake. 
 	}
 	
@@ -176,7 +176,7 @@ class P_ReconnectManager
 		}
 	}
 	
-	void doPersistCheck()
+	private void doPersistCheck()
 	{
 		ReconnectPersistFilter persistFilter = getPersistFilter();
 		
@@ -196,7 +196,7 @@ class P_ReconnectManager
 			}
 			else
 			{
-				m_device.getStateTracker().update(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, RECONNECTING_LONG_TERM, false);
+				m_device.stateTracker_main().update(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, RECONNECTING_LONG_TERM, false);
 			}
 		}
 	}

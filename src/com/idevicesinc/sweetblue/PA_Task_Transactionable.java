@@ -8,10 +8,6 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 
-/**
- * 
- * 
- */
 abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 {
 	protected final boolean m_requiresBonding;

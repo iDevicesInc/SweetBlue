@@ -4,11 +4,6 @@ import com.idevicesinc.sweetblue.utils.State;
 
 abstract class PA_StateTracker
 {
-	private int m_stateMask = 0x0;
-	
-	private final Object m_lock = new Object();
-	private final long[] m_timesInState;
-	
 	static enum E_Intent
 	{
 		INTENTIONAL, UNINTENTIONAL;
@@ -30,9 +25,19 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	PA_StateTracker(State[] enums)
+	private int m_stateMask = 0x0;
+	
+	private final Object m_lock = new Object();
+	private final long[] m_timesInState;
+	
+	PA_StateTracker(final State[] enums, final boolean trackTimes)
 	{
-		m_timesInState = new long[enums.length];
+		m_timesInState = trackTimes ? new long[enums.length] : null;
+	}
+	
+	PA_StateTracker(final State[] enums)
+	{
+		this(enums, /*trackTimes=*/true);
 	}
 	
 	public int getState()

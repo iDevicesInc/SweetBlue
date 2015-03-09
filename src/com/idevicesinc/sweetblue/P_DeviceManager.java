@@ -225,7 +225,7 @@ class P_DeviceManager
 				
 				if( device.m_nativeWrapper.isNativelyBonded() || device.m_nativeWrapper.isNativelyBonding() )
 				{
-					device.unbond_private(priority, status);
+					device.unbond_internal(priority, status);
 				}
 			}
 		}

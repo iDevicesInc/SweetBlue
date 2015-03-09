@@ -93,19 +93,19 @@ class P_BondManager
 	
 	void onNativeUnbond(final E_Intent intent)
 	{
-		m_device.getStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
+		m_device.stateTracker_main().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
 	void onNativeBonding(final E_Intent intent)
 	{
-		m_device.getStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, true, UNBONDED, false);
+		m_device.stateTracker_main().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, true, UNBONDED, false);
 	}
 	
 	void onNativeBond(final E_Intent intent)
 	{
 		final boolean wasAlreadyBonded = m_device.is(BONDED);
 		
-		m_device.getStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, true, BONDING, false, UNBONDED, false);
+		m_device.stateTracker_main().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, true, BONDING, false, UNBONDED, false);
 		
 		if( !wasAlreadyBonded )
 		{
@@ -139,7 +139,7 @@ class P_BondManager
 		}
 		else
 		{
-			m_device.getStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
+			m_device.stateTracker_main().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
 		}
 		
 		invokeCallback(status, failReason, intent.convert());

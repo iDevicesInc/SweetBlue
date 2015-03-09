@@ -51,7 +51,7 @@ class P_TransactionManager
 					
 					if ( m_initTxn != null)
 					{
-						m_device.getStateTracker().update
+						m_device.stateTracker().update
 						(
 							E_Intent.INTENTIONAL,
 							BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE,
@@ -85,7 +85,7 @@ class P_TransactionManager
 			{
 //				m_device.m_txnMngr.clearFirmwareUpdateTxn();
 				E_Intent intent = E_Intent.UNINTENTIONAL;
-				m_device.getStateTracker().remove(PERFORMING_OTA, intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+				m_device.stateTracker_main().remove(PERFORMING_OTA, intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 
 				//--- DRK > As of now don't care whether this succeeded or failed.
 				if (reason == EndReason.SUCCEEDED)
@@ -295,7 +295,7 @@ class P_TransactionManager
 			m_firmwareUpdateTxn = txn;
 			m_firmwareUpdateTxn.init(m_device, m_txnEndListener);
 			
-			m_device.getStateTracker().append(PERFORMING_OTA, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+			m_device.stateTracker_main().append(PERFORMING_OTA, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 			
 			start(m_firmwareUpdateTxn);
 		}
@@ -314,7 +314,7 @@ class P_TransactionManager
 			}
 			else if( m_authTxn != null )
 			{
-				m_device.getStateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATING, true);
+				m_device.stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATING, true);
 				
 				start(m_authTxn);
 			}
@@ -322,7 +322,7 @@ class P_TransactionManager
 			{
 				m_device.getPollManager().enableNotifications();
 				
-				m_device.getStateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATED, true, INITIALIZING, true);
+				m_device.stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATED, true, INITIALIZING, true);
 				
 				start(m_initTxn);
 			}
