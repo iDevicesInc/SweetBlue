@@ -39,17 +39,11 @@ class P_ReconnectManager
 		m_connectionFailInfo = m_device.NULL_CONNECTIONFAIL_INFO();
 	}
 	
-	void attemptStart(int gattStatusOfDisconnect)
+	void attemptStart(final int gattStatusOfDisconnect)
 	{
-		if( !isRunning() )
-		{
-			m_device.getManager().pushWakeLock();
-		}
-		
 		m_totalTime = 0.0;
 		m_attemptCount = 0;
-		m_delay = 0.0;
-		m_timeTracker = 0.0;
+		m_connectionFailInfo = m_device.NULL_CONNECTIONFAIL_INFO();
 		
 		m_delay = getNextTime(m_device.NULL_CONNECTIONFAIL_INFO());
 		
@@ -60,6 +54,12 @@ class P_ReconnectManager
 		}
 		else
 		{
+			if( !isRunning() )
+			{
+				m_device.getManager().pushWakeLock();
+			}
+			
+			m_timeTracker = 0.0;
 			m_gattStatusOfOriginalDisconnect = gattStatusOfDisconnect;
 		}
 		

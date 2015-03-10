@@ -34,6 +34,21 @@ class P_DeviceManager
 		return m_list;
 	}
 	
+	public BleDevice getDevice(final int mask_BleDeviceState)
+	{
+		for( int i = 0; i < getCount(); i++ )
+		{
+			BleDevice device = get(i);
+
+			if( device.is(mask_BleDeviceState) )
+			{
+				return device;
+			}
+		}
+
+		return BleDevice.NULL;
+	}
+	
 	public List<BleDevice> getDevices_List(Object ... query)
 	{
 		final ArrayList<BleDevice> toReturn = new ArrayList<BleDevice>();

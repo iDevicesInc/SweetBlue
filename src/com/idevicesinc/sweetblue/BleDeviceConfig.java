@@ -309,7 +309,7 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Abstract base class for {@link ReconnectRequestEvent} and {@link ReconnectPersistEvent} just to
-	 * tie their APIs together and make sure they're consistent.
+	 * tie their APIs together and statically ensure that they are consistent.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Immutable
@@ -344,19 +344,28 @@ public class BleDeviceConfig implements Cloneable
 		public abstract ConnectionFailListener.ConnectionFailEvent connectionFailInfo();
 		
 		/**
-		 * Shorthand for checking if {@link BleDevice} is {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
+		 * Returns whether this event is related to {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
 		 */
 		public boolean shortTerm()
 		{
-			return device().is(BleDeviceState.RECONNECTING_SHORT_TERM);
+			return device().is(BleDeviceState.INITIALIZED);
 		}
 		
 		/**
-		 * Shorthand for checking if {@link BleDevice} is {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+		 * Returns whether this event is related to {@link BleDeviceState#RECONNECTING_LONG_TERM}.
 		 */
 		public boolean longTerm()
 		{
-			return device().is(BleDeviceState.RECONNECTING_LONG_TERM);
+			return !shortTerm();
+		}
+		
+		/**
+		 * Returns <i>only</i> either {@link BleDeviceState#RECONNECTING_SHORT_TERM} or {@link BleDeviceState#RECONNECTING_LONG_TERM}
+		 * depending on what "reconnecting" state this event is associated with.
+		 */
+		public BleDeviceState state()
+		{
+			return shortTerm() ? BleDeviceState.RECONNECTING_SHORT_TERM : BleDeviceState.RECONNECTING_LONG_TERM;
 		}
 		
 		@Override public String toString()
@@ -368,7 +377,7 @@ public class BleDeviceConfig implements Cloneable
 				"failureCount",				failureCount(),
 				"totalTimeReconnecting",	totalTimeReconnecting(),
 				"previousDelay",			previousDelay(),
-				"shortTerm",				shortTerm()
+				"state",					state()
 			);
 		}
 	}
