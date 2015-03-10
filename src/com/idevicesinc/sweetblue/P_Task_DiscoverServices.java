@@ -25,12 +25,12 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			}
 		}
 		
-//		if( !getDevice().getNativeGatt().discoverServices() )
-//		{
-//			failImmediately();
-//			
-//			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
-//		}
+		if( !getDevice().getNativeGatt().discoverServices() )
+		{
+			failImmediately();
+			
+			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
+		}
 	}
 	
 	private void refresh()

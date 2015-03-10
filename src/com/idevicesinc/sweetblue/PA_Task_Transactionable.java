@@ -48,7 +48,10 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		
 		if( defaultDecision == true )
 		{
-			if( getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM) )
+			//--- DRK > Accessing short term reconnect mngr here is a hack, but I can't figure out a better way.
+			//---		The disconnect task added to the queue must be done before the state change callback to appland
+			//---		so we're still reconnecting short term as far as device state is concerned.
+			if( getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM) && getDevice().m_reconnectMngr_shortTerm.isRunning() )
 			{
 				return false;
 			}
@@ -148,7 +151,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		}
 		else
 		{
-			return getDevice().is_internal(BleDeviceState.SERVICES_DISCOVERED);
+			return super.isArmable();
 		}
 	}
 }

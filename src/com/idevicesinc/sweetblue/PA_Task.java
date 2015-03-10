@@ -437,8 +437,6 @@ abstract class PA_Task
 		return name + "(" + m_state.name() + deviceEntry + addition + ")";
 	}
 	
-	
-	
 	public boolean executeOnSeperateThread()
 	{
 		return false;

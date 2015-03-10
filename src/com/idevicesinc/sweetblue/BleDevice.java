@@ -40,14 +40,13 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * It acts as a BLE-specific abstraction for the {@link BluetoothDevice} and
  * {@link BluetoothGatt} classes. It does everything you would expect, like
  * providing methods for connecting, reading/writing characteristics, enabling
- * notifications, etc. <br>
- * <br>
+ * notifications, etc 
+ * <br><br>
  * Although instances of this class can be created explicitly through
  * {@link BleManager#newDevice(String, String)}, usually they're created
  * implicitly by {@link BleManager} as a result of a scanning operation (e.g.
  * {@link BleManager#startScan()} and sent to you through
- * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}
- * .
+ * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
  */
 public class BleDevice implements UsesCustomNull
 {
@@ -55,13 +54,11 @@ public class BleDevice implements UsesCustomNull
 	 * Special value that is used in place of Java's built-in <code>null</code>.
 	 */
 	@Immutable
-	public static final BleDevice NULL = new BleDevice(null, null, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*
-																																 * isNull
-																																 * =
-																																 */true);
+	public static final BleDevice NULL = new BleDevice(null, null, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
 
 	/**
 	 * Provide an implementation of this callback to various methods like
+	 * 
 	 * {@link BleDevice#read(UUID, ReadWriteListener)},
 	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)},
 	 * {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
@@ -75,8 +72,7 @@ public class BleDevice implements UsesCustomNull
 		 * A value returned to {@link ReadWriteListener#onEvent(ReadWriteEvent)}
 		 * by way of {@link ReadWriteEvent#status} that indicates success of the
 		 * operation or the reason for its failure. This enum is <i>not</i>
-		 * meant to match up with {@link BluetoothGatt}.GATT_* values in any
-		 * way.
+		 * meant to match up with {@link BluetoothGatt}.GATT_* values in any way.
 		 * 
 		 * @see ReadWriteEvent#status
 		 */
@@ -235,8 +231,7 @@ public class BleDevice implements UsesCustomNull
 				return this == CANCELLED_FROM_DISCONNECT || this == Status.CANCELLED_FROM_BLE_TURNING_OFF;
 			}
 
-			@Override
-			public boolean isNull()
+			@Override public boolean isNull()
 			{
 				return this == NULL;
 			}
@@ -345,8 +340,7 @@ public class BleDevice implements UsesCustomNull
 				return this == NOTIFICATION || this == INDICATION;
 			}
 
-			@Override
-			public boolean isNull()
+			@Override public boolean isNull()
 			{
 				return this == NULL;
 			}
@@ -383,8 +377,7 @@ public class BleDevice implements UsesCustomNull
 			 */
 			RSSI;
 
-			@Override
-			public boolean isNull()
+			@Override public boolean isNull()
 			{
 				return this == NULL;
 			}
@@ -640,8 +633,7 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Returns the first byte from {@link #data()}, or 0x0 if not
-			 * available.
+			 * Returns the first byte from {@link #data()}, or 0x0 if not available.
 			 */
 			public byte data_byte()
 			{
@@ -651,14 +643,12 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * Forwards {@link Type#isNull()}.
 			 */
-			@Override
-			public boolean isNull()
+			@Override public boolean isNull()
 			{
 				return type().isNull();
 			}
-
-			@Override
-			public String toString()
+			
+			@Override public String toString()
 			{
 				if (isNull())
 				{
@@ -742,8 +732,7 @@ public class BleDevice implements UsesCustomNull
 				this.m_gattStatus = gattStatus;
 			}
 
-			@Override
-			public String toString()
+			@Override public String toString()
 			{
 				return Utils.toString(this.getClass(), "device", device().getName_debug(), "entered", Utils.toString(enterMask(), BleDeviceState.VALUES), "exited", Utils.toString(exitMask(), BleDeviceState.VALUES), "current", Utils.toString(newStateBits(), BleDeviceState.VALUES), "gattStatus", device().m_logger.gattStatus(gattStatus()));
 			}
@@ -901,8 +890,7 @@ public class BleDevice implements UsesCustomNull
 				return !this.wasCancelled() && this != ALREADY_CONNECTING_OR_CONNECTED;
 			}
 
-			@Override
-			public boolean isNull()
+			@Override public boolean isNull()
 			{
 				return this == NULL;
 			}
@@ -1148,18 +1136,13 @@ public class BleDevice implements UsesCustomNull
 			private final Interval m_totalAttemptTime;
 
 			/**
-			 * The gattStatus returned, if applicable, from native callbacks
-			 * like
+			 * The gattStatus returned, if applicable, from native callbacks like
 			 * {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
-			 * or
-			 * {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}
-			 * . If not applicable, for example if
-			 * {@link ConnectionFailEvent#reason} is
-			 * {@link Status#EXPLICIT_DISCONNECT}, then this is set to
-			 * {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}. <br>
-			 * <br>
-			 * See {@link ReadWriteEvent#gattStatus} for more information about
-			 * gatt status codes in general.
+			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
+			 * If not applicable, for example if{@link ConnectionFailEvent#reason} is {@link Status#EXPLICIT_DISCONNECT}, then this is set to
+			 * {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}. 
+			 * <br><br>
+			 * See {@link ReadWriteEvent#gattStatus} for more information about gatt status codes in general.
 			 * 
 			 * @see ReadWriteEvent#gattStatus
 			 */
@@ -1284,14 +1267,12 @@ public class BleDevice implements UsesCustomNull
 			 * {@link BleDeviceConfig.ReconnectRequestFilter.ConnectionFailEvent#connectionFailInfo()}
 			 * in certain situations.
 			 */
-			@Override
-			public boolean isNull()
+			@Override public boolean isNull()
 			{
 				return status().isNull();
 			}
 
-			@Override
-			public String toString()
+			@Override public String toString()
 			{
 				if (isNull())
 				{
@@ -1379,10 +1360,9 @@ public class BleDevice implements UsesCustomNull
 			return m_retryCount;
 		}
 
-		@Override
-		public Please onEvent(ConnectionFailEvent e)
+		@Override public Please onEvent(ConnectionFailEvent e)
 		{
-			// --- DRK > Not necessary to check this ourselves, just being
+			//--- DRK > Not necessary to check this ourselves, just being
 			// explicit.
 			if (!e.status().allowsRetry() || e.device().is(RECONNECTING_LONG_TERM))
 			{
@@ -1585,8 +1565,7 @@ public class BleDevice implements UsesCustomNull
 				return status() == Status.SUCCESS;
 			}
 
-			@Override
-			public String toString()
+			@Override public String toString()
 			{
 				return Utils.toString(this.getClass(), "device", device().getName_debug(), "status", status(), "failReason", device().getManager().getLogger().gattUnbondReason(failReason()), "intent", intent());
 			}
@@ -1623,7 +1602,7 @@ public class BleDevice implements UsesCustomNull
 	private final P_TaskQueue m_queue;
 	final P_TransactionManager m_txnMngr;
 	private final P_ReconnectManager m_reconnectMngr_longTerm;
-	private final P_ReconnectManager m_reconnectMngr_shortTerm;
+	final P_ReconnectManager m_reconnectMngr_shortTerm;
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
 	private final P_RssiPollManager m_rssiPollMngr_auto;
@@ -1778,9 +1757,9 @@ public class BleDevice implements UsesCustomNull
 
 		initEstimators();
 
-		// --- DRK > Not really sure how this config option should be
+		//--- DRK > Not really sure how this config option should be
 		// interpreted, but here's a first stab for now.
-		// --- Fringe enough use case that I don't think it's really a big deal.
+		//--- Fringe enough use case that I don't think it's really a big deal.
 		boolean alwaysUseAutoConnect = BleDeviceConfig.bool(conf_device().alwaysUseAutoConnect, conf_mngr().alwaysUseAutoConnect);
 		if (alwaysUseAutoConnect)
 		{
@@ -2290,8 +2269,8 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Returns all {@link BluetoothGattService} instances once
 	 * {@link BleDevice#is(BleDeviceState)} with
-	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>. <br>
-	 * <br>
+	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
+	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -2302,8 +2281,8 @@ public class BleDevice implements UsesCustomNull
 
 	/**
 	 * Convenience overload of {@link #getNativeServices()} that returns a
-	 * {@link List}. <br>
-	 * <br>
+	 * {@link List}.
+	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -2315,8 +2294,8 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Returns all {@link BluetoothGattService} instances once
 	 * {@link BleDevice#is(BleDeviceState)} with
-	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>. <br>
-	 * <br>
+	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
+	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	public @Nullable(Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
@@ -2326,8 +2305,8 @@ public class BleDevice implements UsesCustomNull
 
 	/**
 	 * Convenience overload of {@link #getNativeCharacteristics()} that returns
-	 * a {@link List}. <br>
-	 * <br>
+	 * a {@link List}.
+	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	public @Nullable(Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
@@ -2640,10 +2619,9 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void disconnect()
 	{
-		if (isNull())
-			return;
+		if (isNull())  return;
 
-		disconnectWithReason(/* priority= */null, Status.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT());
+		disconnectWithReason(/*priority=*/null, Status.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_RESULT());
 	}
 
 	/**
@@ -2657,8 +2635,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public boolean undiscover()
 	{
-		if (isNull())
-			return false;
+		if (isNull())  return false;
 
 		return m_mngr.undiscover(this);
 	}
@@ -2677,14 +2654,13 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public boolean equals(BleDevice device)
 	{
-		if (device == null)
-			return false;
+		if (device == null)  return false;
 
-		if (device == this)
-			return true;
+		if (device == this)  return true;
 
-		if (device.getNative() == null || this.getNative() == null)
-			return false;
+		if (device.getNative() == null || this.getNative() == null)  return false;
+		
+		if( this.isNull() && device.isNull() )  return true;
 
 		return device.getNative().equals(this.getNative());
 	}
@@ -2695,8 +2671,7 @@ public class BleDevice implements UsesCustomNull
 	 * 
 	 * @see BleDevice#equals(BleDevice)
 	 */
-	@Override
-	public boolean equals(Object object)
+	@Override public boolean equals(Object object)
 	{
 		if (object instanceof BleDevice)
 		{
@@ -2722,12 +2697,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void startPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
-		m_pollMngr.startPoll(uuid, Interval.secs(interval), listener, /*
-																	 * trackChanges=
-																	 */false, /*
-																			 * usingNotify
-																			 * =
-																			 */false);
+		m_pollMngr.startPoll(uuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
 	}
 
 	/**
@@ -2738,12 +2708,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void startChangeTrackingPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
-		m_pollMngr.startPoll(uuid, Interval.secs(interval), listener, /*
-																	 * trackChanges=
-																	 */true, /*
-																			 * usingNotify
-																			 * =
-																			 */false);
+		m_pollMngr.startPoll(uuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
 	}
 
 	/**
@@ -2841,8 +2806,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void startRssiPoll(Interval interval, ReadWriteListener listener)
 	{
-		if (isNull())
-			return;
+		if (isNull())  return;
 
 		m_rssiPollMngr.start(interval.secs(), listener);
 
@@ -2856,8 +2820,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void stopRssiPoll()
 	{
-		if (isNull())
-			return;
+		if (isNull())  return;
 
 		m_rssiPollMngr.stop();
 
@@ -2913,9 +2876,9 @@ public class BleDevice implements UsesCustomNull
 
 			if (earlyOutResult.status() == ReadWriteListener.Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)))
 			{
-				// --- DRK > No need to put this notify in the poll manager
+				//--- DRK > No need to put this notify in the poll manager
 				// because either the characteristic wasn't found
-				// --- or the notify (or indicate) property isn't supported and
+				//--- or the notify (or indicate) property isn't supported and
 				// we're not doing a backing read poll.
 				return;
 			}
@@ -2943,12 +2906,7 @@ public class BleDevice implements UsesCustomNull
 			}
 		}
 
-		m_pollMngr.startPoll(uuid, forceReadTimeout.secs(), listener, /*
-																	 * trackChanges=
-																	 */true, /*
-																			 * usingNotify
-																			 * =
-																			 */true);
+		m_pollMngr.startPoll(uuid, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
 	}
 
 	/**
@@ -3010,8 +2968,7 @@ public class BleDevice implements UsesCustomNull
 	 * Returns the device's name and current state for logging and debugging
 	 * purposes.
 	 */
-	@Override
-	public String toString()
+	@Override public String toString()
 	{
 		if (isNull())
 		{
@@ -3109,8 +3066,9 @@ public class BleDevice implements UsesCustomNull
 		clear_undiscovery();
 
 		m_reconnectMngr_longTerm.stop();
+		m_reconnectMngr_shortTerm.stop();
 
-		stateTracker_main().set(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCOVERED, false, ADVERTISING, false, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), UNBONDED, m_nativeWrapper.isNativelyUnbonded());
+		stateTracker_main().set(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCOVERED, false, ADVERTISING, false, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), UNBONDED, m_nativeWrapper.isNativelyUnbonded(), DISCONNECTED, true);
 	}
 
 	double getTimeSinceLastDiscovery()
@@ -3186,7 +3144,7 @@ public class BleDevice implements UsesCustomNull
 			return;
 		}
 
-		connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /* isReconnect= */true);
+		connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /*isReconnect=*/true);
 	}
 
 	private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, boolean isReconnect)
@@ -3214,19 +3172,16 @@ public class BleDevice implements UsesCustomNull
 			P_Task_Connect task = getTaskQueue().getCurrent(P_Task_Connect.class, this);
 			boolean mostDefinitelyExplicit = task != null && task.isExplicit();
 
-			// --- DRK > Not positive about this assert...we'll see if it trips.
+			//--- DRK > Not positive about this assert...we'll see if it trips.
 			m_mngr.ASSERT(definitelyExplicit || mostDefinitelyExplicit);
 		}
 		else
 		{
 			if (definitelyExplicit && !isReconnect)
 			{
-				// --- DRK > We're stopping the reconnect process (if it's
-				// running) because the user has decided to explicitly connect
-				// --- for whatever reason. Making a judgement call that the
-				// user would then expect reconnect to stop.
-				// --- In other words it's not stopped for any hard technical
-				// reasons...it could go on.
+				//--- DRK > We're stopping the reconnect process (if it's running) because the user has decided to explicitly connect
+				//--- for whatever reason. Making a judgement call that the user would then expect reconnect to stop.
+				//--- In other words it's not stopped for any hard technical reasons...it could go on.
 				m_reconnectMngr_longTerm.stop();
 				stateTracker().update(E_Intent.INTENTIONAL, BluetoothGatt.GATT_SUCCESS, RECONNECTING_LONG_TERM, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
 			}
@@ -3239,24 +3194,18 @@ public class BleDevice implements UsesCustomNull
 
 	void onNativeConnect(boolean explicit)
 	{
-		m_lastDisconnectWasBecauseOfBleTurnOff = false; // DRK > Just being
-														// anal.
+		m_lastDisconnectWasBecauseOfBleTurnOff = false; // DRK > Just being anal.
 
 		E_Intent intent = explicit && !is(RECONNECTING_LONG_TERM) ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
 
-		if (is_internal(/* already */CONNECTED))
+		if (is_internal(/*already*/CONNECTED))
 		{
-			// --- DRK > Possible to get here when implicit tasks are involved I
-			// think. Not sure if assertion should be here,
-			// --- and if it should it perhaps should be keyed off whether the
-			// task is implicit or something.
-			// --- Also possible to get here for example on connection fail
-			// retries, where we queue a disconnect
-			// --- but that gets immediately soft-cancelled by what will be a
-			// redundant connect task.
-			// --- OVERALL, This assert is here because I'm just curious how it
-			// hits (it does).
+			//--- DRK > Possible to get here when implicit tasks are involved I think. Not sure if assertion should be here,
+			//--- and if it should it perhaps should be keyed off whether the task is implicit or something.
+			//--- Also possible to get here for example on connection fail retries, where we queue a disconnect
+			//--- but that gets immediately soft-cancelled by what will be a redundant connect task.
+			//--- OVERALL, This assert is here because I'm just curious how it hits (it does).
 			String message = "nativelyConnected=" + m_logger.gattConn(m_nativeWrapper.getConnectionState()) + " gatt==" + m_nativeWrapper.getGatt();
 			// m_mngr.ASSERT(false, message);
 			m_mngr.ASSERT(m_nativeWrapper.isNativelyConnected(), message);
@@ -3266,32 +3215,26 @@ public class BleDevice implements UsesCustomNull
 
 		m_mngr.ASSERT(m_nativeWrapper.getGatt() != null);
 
-		// --- DRK > There exists a fringe case like this: You try to connect
-		// with autoConnect==true in the gatt object.
-		// --- The connection fails, so you stop trying. Then you turn off the
-		// remote device. Device gets "undiscovered".
-		// --- You turn the device back on, and apparently underneath the hood,
-		// this whole time, the stack has been trying
-		// --- to reconnect, and now it does, *without* (re)discovering the
-		// device first, or even discovering it at all.
-		// --- So as usual, here's another gnarly workaround to ensure a
-		// consistent API experience through SweetBlue.
-		// ---
-		// --- NOTE: We do explicitly disconnect after a connection failure if
-		// we're using autoConnect, so this
-		// --- case shouldn't really come up much or at all with that in place.
+		//--- DRK > There exists a fringe case like this: You try to connect with autoConnect==true in the gatt object.
+		//--- The connection fails, so you stop trying. Then you turn off the remote device. Device gets "undiscovered".
+		//--- You turn the device back on, and apparently underneath the hood, this whole time, the stack has been trying
+		//--- to reconnect, and now it does, *without* (re)discovering the device first, or even discovering it at all.
+		//--- So as usual, here's another gnarly workaround to ensure a consistent API experience through SweetBlue.
+		//
+		//--- NOTE: We do explicitly disconnect after a connection failure if we're using autoConnect, so this
+		//--- case shouldn't really come up much or at all with that in place.
 		if (!m_mngr.hasDevice(getMacAddress()))
 		{
-			m_mngr.onDiscovered_fromRogueAutoConnect(this, /* newlyDiscovered= */true, m_advertisedServices, getScanRecord(), getRssi());
+			m_mngr.onDiscovered_fromRogueAutoConnect(this, /*newlyDiscovered=*/true, m_advertisedServices, getScanRecord(), getRssi());
 		}
 
-		// --- DRK > Some trapdoor logic for bad android ble bug.
+		//--- DRK > Some trapdoor logic for bad android ble bug.
 		int nativeBondState = m_nativeWrapper.getNativeBondState();
 		if (nativeBondState == BluetoothDevice.BOND_BONDED)
 		{
-			// --- DRK > Trying to catch fringe condition here of stack lying to
+			//--- DRK > Trying to catch fringe condition here of stack lying to
 			// us about bonded state.
-			// --- This is not about finding a logic error in my code.
+			//--- This is not about finding a logic error in my code.
 			m_mngr.ASSERT(m_mngr.getNative().getAdapter().getBondedDevices().contains(m_nativeWrapper.getDevice()));
 		}
 		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
@@ -3311,7 +3254,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		if (!m_nativeWrapper.isNativelyConnected())
 		{
-			// --- DRK > This accounts for certain fringe cases, for example the
+			//--- DRK > This accounts for certain fringe cases, for example the
 			// Nexus 5 log when you unbond a device from the OS settings while
 			// it's connected:
 			// 07-03 12:53:49.489: D/BluetoothGatt(11442):
@@ -3378,12 +3321,9 @@ public class BleDevice implements UsesCustomNull
 		m_serviceMngr.clear();
 		m_queue.add(new P_Task_DiscoverServices(this, m_taskStateListener));
 
-		// --- DRK > We check up top, but check again here cause we might have
-		// been disconnected on another thread in the mean time.
-		// --- Even without this check the library should still be in a goodish
-		// state. Might send some weird state
-		// --- callbacks to the app but eventually things settle down and we're
-		// good again.
+		//--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
+		//--- Even without this check the library should still be in a goodish state. Might send some weird state
+		//--- callbacks to the app but eventually things settle down and we're good again.
 		if (m_nativeWrapper.isNativelyConnected())
 		{
 			stateTracker().update(lastConnectDisconnectIntent(), BluetoothGatt.GATT_SUCCESS, extraFlags, DISCOVERING_SERVICES, true);
@@ -3404,7 +3344,7 @@ public class BleDevice implements UsesCustomNull
 		// {
 		// if( !attemptingReconnect )
 		// {
-		// --- DRK > Now doing this at top of method...no harm really and
+		//--- DRK > Now doing this at top of method...no harm really and
 		// catches fringe case logic erros upstream.
 		// m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/true);
 		// }
@@ -3414,10 +3354,7 @@ public class BleDevice implements UsesCustomNull
 
 		if (isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
-			setStateToDisconnected(attemptingReconnect, E_Intent.UNINTENTIONAL, gattStatus, /*
-																							 * forceMainStateTracker
-																							 * =
-																							 */false);
+			setStateToDisconnected(attemptingReconnect, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false);
 		}
 
 		if (wasConnecting)
@@ -3457,12 +3394,11 @@ public class BleDevice implements UsesCustomNull
 	void onFullyInitialized(final int gattStatus, Object... extraFlags)
 	{
 		m_reconnectMngr_longTerm.stop();
+		m_reconnectMngr_shortTerm.stop();
 		m_connectionFailMngr.onFullyInitialized();
 
-		// --- DRK > Saving last disconnect as unintentional here in case for
-		// some
-		// --- reason app is hard killed or something and we never get a
-		// disconnect callback.
+		//--- DRK > Saving last disconnect as unintentional here in case for some
+		//--- reason app is hard killed or something and we never get a disconnect callback.
 		final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
 		m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 
@@ -3473,9 +3409,8 @@ public class BleDevice implements UsesCustomNull
 
 	private void setStateToDisconnected(final boolean attemptingReconnect, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker)
 	{
-		// --- DRK > Device probably wasn't advertising while connected so here
-		// we reset the timer to keep
-		// --- it from being immediately undiscovered after disconnection.
+		//--- DRK > Device probably wasn't advertising while connected so here we reset the timer to keep
+		//--- it from being immediately undiscovered after disconnection.
 		m_timeSinceLastDiscovery = 0.0;
 
 		m_serviceMngr.clear();
@@ -3493,12 +3428,16 @@ public class BleDevice implements UsesCustomNull
 
 	void disconnectWithReason(PE_TaskPriority disconnectPriority_nullable, ConnectionFailListener.Status connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
 	{
-		if (isNull())
-			return;
+		if (isNull())  return;
 
 		final boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
 		final boolean explicit = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasExplicit();
 		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
+		
+		if( explicit )
+		{
+			m_reconnectMngr_shortTerm.stop();
+		}
 
 		if (cancelled)
 		{
@@ -3513,7 +3452,7 @@ public class BleDevice implements UsesCustomNull
 		E_Intent intent = cancelled ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
 
-		m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /* explicit= */true, disconnectPriority_nullable));
+		m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable));
 
 		if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
 		{
@@ -3556,8 +3495,8 @@ public class BleDevice implements UsesCustomNull
 	{
 		if (!wasExplicit && !attemptShortTermReconnect)
 		{
-			// --- DRK > Just here so it's easy to filter out in logs.
-			m_logger.w("Disconnected Implicitly!");
+			//--- DRK > Just here so it's easy to filter out in logs.
+			m_logger.w("Disconnected Implicitly and attemptShortTermReconnect="+attemptShortTermReconnect);
 		}
 
 		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF);
@@ -3578,7 +3517,10 @@ public class BleDevice implements UsesCustomNull
 
 		m_pollMngr.resetNotifyStates();
 
-		m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */false);
+		if( attemptShortTermReconnect )
+		{
+			m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */false);
+		}
 
 		final boolean wasInitialized = is(INITIALIZED);
 
@@ -3607,8 +3549,7 @@ public class BleDevice implements UsesCustomNull
 			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
 		}
 
-		// --- DRK > Fringe case bail out in case user calls disconnect() in
-		// state change for short term reconnect.
+		//--- DRK > Fringe case bail out in case user calls disconnect() in state change for short term reconnect.
 		if (isDisconnectedAfterReconnectingShortTermStateCallback)
 		{
 			return;
@@ -3620,18 +3561,14 @@ public class BleDevice implements UsesCustomNull
 		// BEGIN CALLBACKS TO USER
 
 		final E_Intent intent = wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
-		setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*
-																					 * forceMainStateTracker
-																					 * =
-																					 */attemptShortTermReconnect == false);
+		setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false);
 
 		if (is(DISCONNECTED))
 		{
 			m_txnMngr.cancelAllTransactions();
 		}
 
-		// --- DRK > Technically user could have called connect() in callbacks
-		// above....bad form but we need to account for it.
+		//--- DRK > Technically user could have called connect() in callbacks above....bad form but we need to account for it.
 		final boolean isConnectingOverall_1 = is_internal(CONNECTING_OVERALL);
 		final boolean isStillAttemptingReconnect_longTerm = is_internal(RECONNECTING_LONG_TERM);
 		final ConnectionFailListener.Status connectionFailReason_nullable;
@@ -3668,8 +3605,7 @@ public class BleDevice implements UsesCustomNull
 			retrying = Please.PE_Please.DO_NOT_RETRY;
 		}
 
-		// --- DRK > Again, technically user could have called connect() in
-		// callbacks above....bad form but we need to account for it.
+		//--- DRK > Again, technically user could have called connect() in callbacks above....bad form but we need to account for it.
 		final boolean isConnectingOverall_2 = is_internal(CONNECTING_OVERALL);
 
 		if (!m_reconnectMngr_shortTerm.isRunning() && !m_reconnectMngr_longTerm.isRunning() && !wasExplicit && wasInitialized && !isConnectingOverall_2)
@@ -3681,13 +3617,21 @@ public class BleDevice implements UsesCustomNull
 				stateTracker_main().append(RECONNECTING_LONG_TERM, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 			}
 		}
+		
+		//--- DRK > Throwing in one last disconnect if it looks like we just came out of a short term reconnect
+		//---		that was connected and (e.g.) getting services and so this method was called but no long term reconnect was started
+		//---		so we have to bail out.
+		if( is(DISCONNECTED) && !is(RECONNECTING_LONG_TERM) && m_reconnectMngr_longTerm.isRunning() == false && m_reconnectMngr_shortTerm.isRunning() == false )
+		{
+			if( m_nativeWrapper.isNativelyConnecting() ||  m_nativeWrapper.isNativelyConnected() )
+			{
+				m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/false, null));
+			}
+		}
 
-		// --- DRK > Not actually entirely sure how, it may be legitimate, but a
-		// connect task can still be
-		// --- hanging out in the queue at this point, so we just make sure to
-		// clear the queue as a failsafe.
-		// --- TODO: Understand the conditions under which a connect task can
-		// still be queued...might be a bug upstream.
+		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
+		//--- hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.
+		//--- TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
 		if (!isConnectingOverall_2 && retrying == Please.PE_Please.DO_NOT_RETRY)
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this);
@@ -3833,8 +3777,7 @@ public class BleDevice implements UsesCustomNull
 	 * Returns <code>true</code> if <code>this</code> is referentially equal to
 	 * {@link #NULL}.
 	 */
-	@Override
-	public boolean isNull()
+	@Override public boolean isNull()
 	{
 		return m_isNull;
 	}
