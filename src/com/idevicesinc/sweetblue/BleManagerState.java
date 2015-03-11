@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothAdapter;
 
 import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * An enumeration of the various states that a {@link BleManager} can be in.
@@ -49,7 +50,13 @@ public enum BleManagerState implements State
 	
 	private final int m_nativeCode;
 	
-	static final BleDeviceState[] VALUES = BleDeviceState.values();
+	
+	static final BleManagerState[] VALUES = BleManagerState.values();
+	
+	/**
+	 * Full bitwise mask made by ORing all {@link BleManagerState} instances together.
+	 */
+	public static final int FULL_MASK = Utils.calcFullMask(BleManagerState.values());
 	
 	private BleManagerState()
 	{
@@ -107,6 +114,11 @@ public enum BleManagerState implements State
 	@Override public int or(State state)
 	{
 		return this.bit() | state.bit();
+	}
+	
+	@Override public int or(int bits)
+	{
+		return this.bit() | bits;
 	}
 
 	@Override public boolean isNull()

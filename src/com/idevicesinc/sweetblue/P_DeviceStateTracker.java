@@ -9,12 +9,16 @@ class P_DeviceStateTracker extends PA_StateTracker
 {
 	private StateListener m_stateListener;
 	private final BleDevice m_device;
+	private final boolean m_forShortTermReconnect;
 	
-	P_DeviceStateTracker(BleDevice device)
+	private boolean m_syncing = false;
+	
+	P_DeviceStateTracker(BleDevice device, final boolean forShortTermReconnect)
 	{
-		super(BleDeviceState.VALUES);
+		super(BleDeviceState.VALUES, /*trackTimes=*/forShortTermReconnect==false);
 		
 		m_device = device;
+		m_forShortTermReconnect = forShortTermReconnect;
 	}
 	
 	public void setListener(StateListener listener)
@@ -28,10 +32,20 @@ class P_DeviceStateTracker extends PA_StateTracker
 			m_stateListener = null;
 		}
 	}
+	
+	void sync(P_DeviceStateTracker otherTracker)
+	{
+		m_syncing = true;
+		
+		this.copy(otherTracker);
+		
+		m_syncing = false;
+	}
 
 	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 	{
-		if( m_device.isNull() )  return;
+		if( m_device.isNull() )		return;
+		if( m_syncing )				return;
 		
 		StateEvent event = null;
 		
@@ -41,13 +55,13 @@ class P_DeviceStateTracker extends PA_StateTracker
 			m_stateListener.onEvent(event);
 		}
 		
-		if( m_device.getManager().m_defaultDeviceStateListener != null )
+		if( !m_forShortTermReconnect && m_device.getManager().m_defaultDeviceStateListener != null )
 		{
 			event = event != null ? event : new StateEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
 			m_device.getManager().m_defaultDeviceStateListener.onEvent(event);
 		}
 
-		final BleDeviceConfig.BondFilter bondFilter = m_device.conf_device().bondFilter != null ? m_device.conf_device().bondFilter : m_device.conf_mngr().bondFilter;
+		final BleDeviceConfig.BondFilter bondFilter = BleDeviceConfig.filter(m_device.conf_device().bondFilter, m_device.conf_mngr().bondFilter);
 		
 		if( bondFilter == null )  return;
 		

@@ -309,7 +309,7 @@ public class BleDeviceConfig implements Cloneable
 	
 	/**
 	 * Abstract base class for {@link ReconnectRequestEvent} and {@link ReconnectPersistEvent} just to
-	 * tie their APIs together and make sure they're consistent.
+	 * tie their APIs together and statically ensure that they are consistent.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Immutable
@@ -343,6 +343,31 @@ public class BleDeviceConfig implements Cloneable
 		 */
 		public abstract ConnectionFailListener.ConnectionFailEvent connectionFailInfo();
 		
+		/**
+		 * Returns whether this event is related to {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
+		 */
+		public boolean shortTerm()
+		{
+			return device().is(BleDeviceState.INITIALIZED);
+		}
+		
+		/**
+		 * Returns whether this event is related to {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+		 */
+		public boolean longTerm()
+		{
+			return !shortTerm();
+		}
+		
+		/**
+		 * Returns <i>only</i> either {@link BleDeviceState#RECONNECTING_SHORT_TERM} or {@link BleDeviceState#RECONNECTING_LONG_TERM}
+		 * depending on what "reconnecting" state this event is associated with.
+		 */
+		public BleDeviceState state()
+		{
+			return shortTerm() ? BleDeviceState.RECONNECTING_SHORT_TERM : BleDeviceState.RECONNECTING_LONG_TERM;
+		}
+		
 		@Override public String toString()
 		{
 			return Utils.toString
@@ -351,7 +376,8 @@ public class BleDeviceConfig implements Cloneable
 				"device",					device().getName_debug(),
 				"failureCount",				failureCount(),
 				"totalTimeReconnecting",	totalTimeReconnecting(),
-				"previousDelay",			previousDelay()
+				"previousDelay",			previousDelay(),
+				"state",					state()
 			);
 		}
 	}
@@ -454,14 +480,22 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Default implementation of {@link ReconnectRequestFilter} that uses {@link #DEFAULT_INITIAL_RECONNECT_DELAY}
-	 * and {@link #DEFAULT_RECONNECT_ATTEMPT_RATE} to infinitely try to reconnect.
+	 * Default implementation of {@link ReconnectRequestFilter} that uses {@link Please#retryInstantly()} for the
+	 * first reconnect attempt, and from then on uses the {@link Interval} rate passed to the constructor
+	 * {@link DefaultReconnectRequestFilter#DefaultReconnectRequestFilter(Interval)}.
 	 */
 	public static class DefaultReconnectRequestFilter implements ReconnectRequestFilter
 	{
 		public static final Please DEFAULT_INITIAL_RECONNECT_DELAY = Please.retryInstantly();
-		public static final Please DEFAULT_RECONNECT_ATTEMPT_RATE = Please.retryIn(Interval.secs(3.0));
-		//public static final Interval TRANSIENT_DISCONNECT_TIMEOUT = Interval.secs(value)
+		public static final Interval LONG_TERM_ATTEMPT_RATE = Interval.secs(3.0);
+		public static final Interval SHORT_TERM_ATTEMPT_RATE = Interval.secs(1.0);
+		
+		private final Please m_please;
+		
+		public DefaultReconnectRequestFilter(Interval reconnectRate)
+		{
+			m_please = Please.retryIn(reconnectRate);
+		}
 		
 		@Override public Please onEvent(ReconnectRequestEvent e)
 		{
@@ -471,7 +505,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			else
 			{
-				return DEFAULT_RECONNECT_ATTEMPT_RATE;
+				return m_please;
 			}
 		}
 	}
@@ -545,12 +579,28 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
+			 * Returns {@link #stopRetrying()} if the condition holds, {@link #persist()} otherwise.
+			 */
+			public static Please stopRetryingIf(boolean condition)
+			{
+				return condition ? stopRetrying() : persist();
+			}
+			
+			/**
 			 * Indicates that the {@link BleDevice} should keep {@link BleDeviceState#RECONNECTING_LONG_TERM} or
 			 * {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
 			 */
 			public static Please persist()
 			{
 				return PERSIST;
+			}
+			
+			/**
+			 * Returns {@link #persist()} if the condition holds, {@link #stopRetrying()} otherwise.
+			 */
+			public static Please persistIf(boolean condition)
+			{
+				return condition ? persist() : stopRetrying();
 			}
 		}
 		
@@ -563,13 +613,42 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Default implementation of {@link ReconnectPersistFilter} that just returns {@link ReconnectPersistFilter.Please#persist()}.
+	 * Default implementation of {@link ReconnectPersistFilter} that returns {@link Please#persist()} for as long
+	 * as the reconnect process has taken less time than the {@link Interval} passed to 
+	 * {@link DefaultReconnectPersistFilter#DefaultReconnectPersistFilter(Interval)}.
+	 * <br><br>
+	 * NOTE: This filter will not kill the reconnect process if we're past the timeout but are {@link BleDeviceState#CONNECTED} and
+	 * going through the final steps of {@link BleDeviceState#CONNECTING_OVERALL} like {@link BleDeviceState#DISCOVERING_SERVICES},
+	 * {@link BleDeviceState#AUTHENTICATING}, or {@link BleDeviceState#INITIALIZING}.
 	 */
 	public static class DefaultReconnectPersistFilter implements ReconnectPersistFilter
 	{
+		public static final Interval SHORT_TERM_TIMEOUT = Interval.FIVE_SECS;
+		public static final Interval LONG_TERM_TIMEOUT = Interval.INFINITE;
+		
+		private final Interval m_timeout;
+		
+		public DefaultReconnectPersistFilter(Interval timeout)
+		{
+			m_timeout = timeout != null ? timeout : Interval.INFINITE;
+		}
+		
 		@Override public Please onEvent(ReconnectPersistEvent e)
 		{
-			return Please.persist();
+			final boolean definitelyPersist =
+						BleDeviceState.CONNECTING_OVERALL.overlaps(e.device().getNativeStateMask()) &&
+						BleDeviceState.CONNECTED.overlaps(e.device().getNativeStateMask())			;;
+						
+			//--- DRK > We don't interrupt if we're in the middle of connecting
+			//---		but this will be the last attempt if it fails.
+			if( definitelyPersist )
+			{
+				return Please.persist();
+			}
+			else
+			{
+				return Please.persistIf(e.totalTimeReconnecting().lt(m_timeout));
+			}
 		}
 	}
 	
@@ -911,26 +990,28 @@ public class BleDeviceConfig implements Cloneable
 	 * @see DefaultReconnectRequestFilter
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public ReconnectRequestFilter reconnectRequestFilter_longTerm			= new DefaultReconnectRequestFilter();
+	public ReconnectRequestFilter reconnectRequestFilter_longTerm			= new DefaultReconnectRequestFilter(DefaultReconnectRequestFilter.LONG_TERM_ATTEMPT_RATE);
 	
 	/**
-	 * Default is an instance of {@link DefaultReconnectPersistFilter} - set an implementation here to
+	 * Default is an instance of {@link DefaultReconnectPersistFilter} created using {@link DefaultReconnectPersistFilter#LONG_TERM_TIMEOUT} - set an implementation here to
 	 * optionally stop any ongoing {@link BleDeviceState#RECONNECTING_LONG_TERM} loop. 
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public ReconnectPersistFilter reconnectPersistFilter_longTerm			= new DefaultReconnectPersistFilter();
+	public ReconnectPersistFilter reconnectPersistFilter_longTerm			= new DefaultReconnectPersistFilter(DefaultReconnectPersistFilter.LONG_TERM_TIMEOUT);
 	
 	/**
 	 * Same as {@link #reconnectRequestFilter_longTerm} but for {@link BleDeviceState#RECONNECTING_SHORT_TERM}.  
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public ReconnectRequestFilter reconnectRequestFilter_shortTerm	= new DefaultReconnectRequestFilter();
+	public ReconnectRequestFilter reconnectRequestFilter_shortTerm			= new DefaultReconnectRequestFilter(DefaultReconnectRequestFilter.SHORT_TERM_ATTEMPT_RATE);
 	
 	/**
 	 * Same as {@link #reconnectPersistFilter_longTerm} but for {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
+	 * Default is an instance of {@link DefaultReconnectPersistFilter} that will return {@link ReconnectPersistFilter.Please#stopRetrying()} after
+	 * {@link DefaultReconnectPersistFilter#SHORT_TERM_TIMEOUT} exceeds.
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public ReconnectPersistFilter reconnectPersistFilter_shortTerm	= new DefaultReconnectPersistFilter();
+	public ReconnectPersistFilter reconnectPersistFilter_shortTerm			= new DefaultReconnectPersistFilter(DefaultReconnectPersistFilter.SHORT_TERM_TIMEOUT);
 	
 	/**
 	 * Default is an instance of {@link DefaultTimeoutRequestFilter} - set an implementation here to
@@ -984,6 +1065,11 @@ public class BleDeviceConfig implements Cloneable
 		return value_nullable != null ? value_nullable : defaultValue;
 	}
 	
+	static <T> T filter(T filter_device, T filter_mngr)
+	{
+		return filter_device != null ? filter_device : filter_mngr;
+	}
+	
 	/**
 	 * Creates a {@link BleDeviceConfig} with all default options set. See each member of this class
 	 * for what the default options are set to. Consider using {@link #newNulled()} also.
@@ -1005,15 +1091,6 @@ public class BleDeviceConfig implements Cloneable
 		
 		return config;
 	}
-	
-//	private static Interval getTaskInterval(final BleTask task, final Interval[] intervals_device_nullable, final Interval[] intervals_mngr_nullable)
-//	{
-//		final int ordinal = task.ordinal();
-//		final Interval interval_device = intervals_device_nullable != null && intervals_device_nullable.length > ordinal ? intervals_device_nullable[ordinal] : null;
-//		final Interval interval_mngr = intervals_mngr_nullable != null && intervals_mngr_nullable.length > ordinal ? intervals_mngr_nullable[ordinal] : null;
-//		
-//		return interval(interval_device, interval_mngr);
-//	}
 	
 	static double getTimeout(final TimeoutRequestEvent event)
 	{

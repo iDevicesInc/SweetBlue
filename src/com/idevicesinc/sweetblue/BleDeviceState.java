@@ -8,6 +8,7 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * An enumeration of the various states that a {@link BleDevice} can be in.
@@ -44,7 +45,9 @@ public enum BleDeviceState implements State
 	 * If {@link BleDeviceConfig#reconnectRequestFilter_shortTerm} is set and the device implicitly disconnects this state will be entered.
 	 * Unlike with {@link #RECONNECTING_LONG_TERM}, entering this state does not mean that the {@link BleDevice} becomes {@link #DISCONNECTED}.
 	 * By all outward appearances the library treats the {@link BleDevice} as still being {@link #CONNECTED} while transparently trying
-	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectRequestFilter_shortTerm}.
+	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectRequestFilter_shortTerm}. You can even perform
+	 * {@link BleDevice#read(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}, {@link BleDevice#write(java.util.UUID, byte[])}, etc.
+	 * and they will be queued up until the device *actually* reconnects under the hood.
 	 * 
 	 * @see #RECONNECTING_LONG_TERM
 	 */
@@ -175,7 +178,17 @@ public enum BleDeviceState implements State
 		return this.bit() | state.bit();
 	}
 	
+	@Override public int or(int bits)
+	{
+		return this.bit() | bits;
+	}
+	
 	static final BleDeviceState[] VALUES = BleDeviceState.values();
+	
+	/**
+	 * Full bitwise mask made by ORing all {@link BleDeviceState} instances together.
+	 */
+	public static final int FULL_MASK = Utils.calcFullMask(BleDeviceState.values());
 	
 	/**
 	 * A convenience for UI purposes, this returns the "highest" connection state representing

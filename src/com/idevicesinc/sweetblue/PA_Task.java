@@ -243,6 +243,11 @@ abstract class PA_Task
 		return true;
 	}
 	
+	protected boolean isArmable()
+	{
+		return true;
+	}
+	
 	private void execute_wrapper()
 	{
 		m_resetableExecuteStartTime = System.currentTimeMillis();
@@ -431,8 +436,6 @@ abstract class PA_Task
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
 		return name + "(" + m_state.name() + deviceEntry + addition + ")";
 	}
-	
-	
 	
 	public boolean executeOnSeperateThread()
 	{

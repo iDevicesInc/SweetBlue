@@ -8,10 +8,6 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 
-/**
- * 
- * 
- */
 abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 {
 	protected final boolean m_requiresBonding;
@@ -44,6 +40,30 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	public BleTransaction getTxn()
 	{
 		return m_txn;
+	}
+	
+	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
+	{
+		final boolean defaultDecision = super.isSoftlyCancellableBy(task);
+		
+		if( defaultDecision == true )
+		{
+			//--- DRK > Accessing short term reconnect mngr here is a hack, but I can't figure out a better way.
+			//---		The disconnect task added to the queue must be done before the state change callback to appland
+			//---		so we're still reconnecting short term as far as device state is concerned.
+			if( getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM) && getDevice().reconnectMngr().isRunning() )
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else
+		{
+			return defaultDecision;
+		}
 	}
 	
 	@Override public boolean isInterruptableBy(PA_Task task)
@@ -100,7 +120,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		{
 			if( !(this instanceof P_Task_ToggleNotify) )
 			{
-				if( this.getDevice().is(BleDeviceState.INITIALIZED) )
+				if( this.getDevice().is_internal(BleDeviceState.INITIALIZED) )
 				{
 					return true;
 				}
@@ -113,5 +133,25 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	@Override public PE_TaskPriority getPriority()
 	{
 		return m_priority;
+	}
+	
+	@Override protected boolean isArmable()
+	{
+		if( getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM ) )
+		{
+			//--- DRK > If reconnecting short term, we only allow transaction-related tasks become armed.
+			if( getDevice().is_internal(BleDeviceState.SERVICES_DISCOVERED) )
+			{
+				return getTxn() != null;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return super.isArmable();
+		}
 	}
 }

@@ -240,6 +240,11 @@ public interface State extends UsesCustomNull
 	int or(State state);
 	
 	/**
+	 * Does a bitwise OR for this state and the given bits.
+	 */
+	int or(int bits);
+	
+	/**
 	 * Returns <code>true</code> if this state is meant to stand in for Java's built-in <code>null</code>.
 	 */
 	boolean isNull();

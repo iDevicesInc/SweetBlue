@@ -18,10 +18,6 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventT
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-/**
- * 
- * 
- */
 class P_PollManager
 {
 	static enum E_NotifyState

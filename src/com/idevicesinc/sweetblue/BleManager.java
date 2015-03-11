@@ -722,6 +722,14 @@ public class BleManager
 	private boolean m_triedToStartScanAfterResume = false;
 	
 	static BleManager s_instance = null;
+	
+	/**
+	 * Field for app to associate any data it wants with the singleton instance of this class
+	 * instead of having to subclass or manage associative hash maps or something.
+	 * 
+	 * @see BleDevice#appData
+	 */
+	public Object appData;
 
 	/**
 	 * Create an instance with special configuration options set.
@@ -819,15 +827,39 @@ public class BleManager
 
 		return false;
 	}
+	
+	/**
+	 * Returns whether the manager is in all of the provided states.
+	 * 
+	 * @see #isAny(BleManagerState...)
+	 */
+	public boolean isAll(BleManagerState... states)
+	{
+		for (int i = 0; i < states.length; i++)
+		{
+			if( !is(states[i]) )  return false;
+		}
+
+		return true;
+	}
 
 	/**
 	 * Returns whether the manager is in the provided state.
 	 *
 	 * @see #isAny(BleManagerState...)
 	 */
-	public boolean is(BleManagerState state)
+	public boolean is(final BleManagerState state)
 	{
 		return state.overlaps(getStateMask());
+	}
+	
+	/**
+	 * Returns <code>true</code> if there is bitwise overlap between the provided value
+	 * and {@link #getStateMask()}.
+	 */
+	public boolean is(final int mask_BleManagerState)
+	{
+		return (getStateMask() & mask_BleManagerState) != 0x0;
 	}
 
 	/**
@@ -1260,6 +1292,7 @@ public class BleManager
 	 *
 	 * @see BleManagerState
 	 */
+	@Advanced
 	public int getNativeStateMask()
 	{
 		return m_nativeStateTracker.getState();
@@ -1514,10 +1547,28 @@ public class BleManager
 	{
 		return !getDevice(query).isNull();
 	}
+	
+	/**
+	 * Returns the first device which returns <code>true</code> for {@link BleDevice#is(int)}, or {@link BleDevice#NULL}
+	 * if no such device is found.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice(final int mask_BleDeviceState)
+	{
+		return m_deviceMngr.getDevice(mask_BleDeviceState);
+	}
+	
+	/**
+	 * Returns <code>true</code> if there is any {@link BleDevice} for which {@link BleDevice#is(int)}
+	 * with the given mask returns <code>true</code>.
+	 */
+	public boolean hasDevice(final int mask_BleDeviceState)
+	{
+		return !getDevice(mask_BleDeviceState).isNull();
+	}
 
 	/**
 	 * Returns all the devices managed by this class. This generally includes all devices that are either.
-	 * advertising or connected.
+	 * {@link BleDeviceState#ADVERTISING} or {@link BleDeviceState#CONNECTED}.
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices()
 	{
@@ -1597,7 +1648,7 @@ public class BleManager
 	 * Same as {@link #getDevice(Object...)} except returns all matching devices.
 	 * See {@link BleDevice#is(Object...)} for the query format.
 	 */
-	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(Object ... query)
+	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final Object ... query)
 	{
 		return new BleDeviceIterator(m_deviceMngr.getList(), query);
 	}
@@ -1605,9 +1656,25 @@ public class BleManager
 	/**
 	 * Overload of {@link #getDevices(Object...)} that returns a {@link List} for you.
 	 */
-	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(Object ... query)
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final Object ... query)
 	{
 		return m_deviceMngr.getDevices_List(query);
+	}
+	
+	/**
+	 * Same as {@link #getDevices()} except filters using {@link BleDevice#is(int)}.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final int mask_BleDeviceState)
+	{
+		return new BleDeviceIterator(m_deviceMngr.getList(), mask_BleDeviceState);
+	}
+	
+	/**
+	 * Overload of {@link #getDevices(int)} that returns a {@link List} for you.
+	 */
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final int mask_BleDeviceState)
+	{
+		return m_deviceMngr.getDevices_List(mask_BleDeviceState);
 	}
 
 	/**
@@ -1649,7 +1716,7 @@ public class BleManager
 	{
 		final BleDevice existingDevice = this.getDevice(macAddress);
 
-		if( existingDevice != null )
+		if( !existingDevice.isNull() )
 		{
 			if( config != null )
 			{

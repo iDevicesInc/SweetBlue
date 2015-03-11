@@ -4,11 +4,6 @@ import com.idevicesinc.sweetblue.utils.State;
 
 abstract class PA_StateTracker
 {
-	private int m_stateMask = 0x0;
-	
-	private final Object m_lock = new Object();
-	private final long[] m_timesInState;
-	
 	static enum E_Intent
 	{
 		INTENTIONAL, UNINTENTIONAL;
@@ -30,9 +25,21 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	PA_StateTracker(State[] enums)
+	private int m_stateMask = 0x0;
+	
+	private final Object m_lock = new Object();
+	private final long[] m_timesInState;
+	private final int m_stateCount;
+	
+	PA_StateTracker(final State[] enums, final boolean trackTimes)
 	{
-		m_timesInState = new long[enums.length];
+		m_stateCount = enums.length;
+		m_timesInState = trackTimes ? new long[m_stateCount] : null;
+	}
+	
+	PA_StateTracker(final State[] enums)
+	{
+		this(enums, /*trackTimes=*/true);
 	}
 	
 	public int getState()
@@ -166,6 +173,8 @@ abstract class PA_StateTracker
 	
 	long getTimeInState(int stateOrdinal)
 	{
+		if( m_timesInState == null )  return 0;
+		
 		int bit = (0x1 << stateOrdinal);
 		
 		if( (bit & m_stateMask) != 0x0 )
@@ -178,6 +187,11 @@ abstract class PA_StateTracker
 		}
 	}
 	
+	protected void copy(PA_StateTracker stateTracker)
+	{
+		this.setStateMask(stateTracker.getState(), 0x0, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+	}
+	
 	private void setStateMask(final int newStateBits, int intentMask, final int status)
 	{
 		int oldStateBits = m_stateMask;
@@ -187,17 +201,23 @@ abstract class PA_StateTracker
 		//---		if other parts of the library are handling their state tracking sanely.
 		if( oldStateBits != newStateBits )
 		{
-			for( int i = 0, bit = 0x1; i < m_timesInState.length; i++, bit <<= 0x1 )
+			for( int i = 0, bit = 0x1; i < m_stateCount; i++, bit <<= 0x1 )
 			{
 				//--- DRK > State exited...
 				if( (oldStateBits & bit) != 0x0 && (newStateBits & bit) == 0x0 )
 				{
-					m_timesInState[i] = System.currentTimeMillis() - m_timesInState[i];
+					if( m_timesInState != null )
+					{
+						m_timesInState[i] = System.currentTimeMillis() - m_timesInState[i];
+					}
 				}
 				//--- DRK > State entered...
 				else if( (oldStateBits & bit) == 0x0 && (newStateBits & bit) != 0x0 )
 				{
-					m_timesInState[i] = System.currentTimeMillis();
+					if( m_timesInState != null )
+					{
+						m_timesInState[i] = System.currentTimeMillis();
+					}
 				}
 				else
 				{

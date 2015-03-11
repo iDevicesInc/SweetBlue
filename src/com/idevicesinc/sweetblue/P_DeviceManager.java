@@ -34,6 +34,21 @@ class P_DeviceManager
 		return m_list;
 	}
 	
+	public BleDevice getDevice(final int mask_BleDeviceState)
+	{
+		for( int i = 0; i < getCount(); i++ )
+		{
+			BleDevice device = get(i);
+
+			if( device.is(mask_BleDeviceState) )
+			{
+				return device;
+			}
+		}
+
+		return BleDevice.NULL;
+	}
+	
 	public List<BleDevice> getDevices_List(Object ... query)
 	{
 		final ArrayList<BleDevice> toReturn = new ArrayList<BleDevice>();
@@ -60,6 +75,23 @@ class P_DeviceManager
 			final BleDevice device_ith = this.get(i);
 
 			if( device_ith.is(state) )
+			{
+				toReturn.add(device_ith);
+			}
+		}
+		
+		return toReturn;
+	}
+	
+	public List<BleDevice> getDevices_List(final int mask_BleDeviceState)
+	{
+		final ArrayList<BleDevice> toReturn = new ArrayList<BleDevice>();
+		
+		for( int i = 0; i < this.getCount(); i++ )
+		{
+			final BleDevice device_ith = this.get(i);
+
+			if( device_ith.is(mask_BleDeviceState) )
 			{
 				toReturn.add(device_ith);
 			}
@@ -225,7 +257,7 @@ class P_DeviceManager
 				
 				if( device.m_nativeWrapper.isNativelyBonded() || device.m_nativeWrapper.isNativelyBonding() )
 				{
-					device.unbond_private(priority, status);
+					device.unbond_internal(priority, status);
 				}
 			}
 		}

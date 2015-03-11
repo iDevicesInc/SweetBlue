@@ -11,6 +11,7 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 {
 	private final List<BleDevice> m_all;
 	private final Object[] m_query;
+	private final int m_mask;
 	
 	private Integer m_next = null;
 	private int m_base = 0;
@@ -19,12 +20,21 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 	{
 		m_all = all;
 		m_query = null;
+		m_mask = BleDeviceState.FULL_MASK;
+	}
+	
+	public BleDeviceIterator(List<BleDevice> all, final int mask)
+	{
+		m_all = all;
+		m_query = null;
+		m_mask = mask;
 	}
 	
 	public BleDeviceIterator(List<BleDevice> all, Object ... query)
 	{
 		m_all = all;
 		m_query = query;
+		m_mask = 0x0;
 	}
 	
 	@Override public boolean hasNext()
@@ -43,11 +53,16 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		
 		if( m_query == null )
 		{
-			if( m_base < m_all.size() )
+			for( int i = m_base; i < m_all.size(); i++ )
 			{
-				m_next = m_base;
+				BleDevice device = m_all.get(i);
 				
-				return true;
+				if( device.is(m_mask) )
+				{
+					m_next = i;
+					
+					return true;
+				}
 			}
 		}
 		else

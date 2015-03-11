@@ -74,7 +74,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				{
 					P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 
-					m_device.onNativeDisconnect(task_cast.isExplicit(), task_cast.getGattStatus());
+					m_device.onNativeDisconnect(task_cast.isExplicit(), task_cast.getGattStatus(), /*doShortTermReconnect=*/true);
 				}
 			}
 			else if (task.getClass() == P_Task_DiscoverServices.class)
@@ -170,7 +170,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				}
 				else
 				{
-					m_device.onNativeDisconnect(/*explicit=*/false, gattStatus);
+					m_device.onNativeDisconnect(/*explicit=*/false, gattStatus, /*doShortTermReconnect=*/true);
 				}
 			}
 
