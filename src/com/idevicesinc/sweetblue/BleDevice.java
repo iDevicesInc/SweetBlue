@@ -2071,11 +2071,25 @@ public class BleDevice implements UsesCustomNull
 	{
 		for (int i = 0; i < states.length; i++)
 		{
-			if (is(states[i]))
-				return true;
+			if (is(states[i]))  return true;
 		}
 
 		return false;
+	}
+	
+	/**
+	 * Returns whether the device is in all of the provided states.
+	 * 
+	 * @see #isAny(BleDeviceState...)
+	 */
+	public boolean isAll(BleDeviceState... states)
+	{
+		for (int i = 0; i < states.length; i++)
+		{
+			if( !is(states[i]) )  return false;
+		}
+
+		return true;
 	}
 
 	/**

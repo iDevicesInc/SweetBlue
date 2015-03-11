@@ -827,6 +827,21 @@ public class BleManager
 
 		return false;
 	}
+	
+	/**
+	 * Returns whether the manager is in all of the provided states.
+	 * 
+	 * @see #isAny(BleManagerState...)
+	 */
+	public boolean isAll(BleManagerState... states)
+	{
+		for (int i = 0; i < states.length; i++)
+		{
+			if( !is(states[i]) )  return false;
+		}
+
+		return true;
+	}
 
 	/**
 	 * Returns whether the manager is in the provided state.
@@ -1277,6 +1292,7 @@ public class BleManager
 	 *
 	 * @see BleManagerState
 	 */
+	@Advanced
 	public int getNativeStateMask()
 	{
 		return m_nativeStateTracker.getState();

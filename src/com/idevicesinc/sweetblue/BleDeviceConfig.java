@@ -618,7 +618,8 @@ public class BleDeviceConfig implements Cloneable
 	 * {@link DefaultReconnectPersistFilter#DefaultReconnectPersistFilter(Interval)}.
 	 * <br><br>
 	 * NOTE: This filter will not kill the reconnect process if we're past the timeout but are {@link BleDeviceState#CONNECTED} and
-	 * going through the final steps like {@link BleDeviceState#DISCOVERING_SERVICES}, {@link BleDeviceState#AUTHENTICATING}, etc.
+	 * going through the final steps of {@link BleDeviceState#CONNECTING_OVERALL} like {@link BleDeviceState#DISCOVERING_SERVICES},
+	 * {@link BleDeviceState#AUTHENTICATING}, or {@link BleDeviceState#INITIALIZING}.
 	 */
 	public static class DefaultReconnectPersistFilter implements ReconnectPersistFilter
 	{
