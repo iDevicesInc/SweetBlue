@@ -616,6 +616,9 @@ public class BleDeviceConfig implements Cloneable
 	 * Default implementation of {@link ReconnectPersistFilter} that returns {@link Please#persist()} for as long
 	 * as the reconnect process has taken less time than the {@link Interval} passed to 
 	 * {@link DefaultReconnectPersistFilter#DefaultReconnectPersistFilter(Interval)}.
+	 * <br><br>
+	 * NOTE: This filter will not kill the reconnect process if we're past the timeout but are {@link BleDeviceState#CONNECTED} and
+	 * going through the final steps like {@link BleDeviceState#DISCOVERING_SERVICES}, {@link BleDeviceState#AUTHENTICATING}, etc.
 	 */
 	public static class DefaultReconnectPersistFilter implements ReconnectPersistFilter
 	{
@@ -631,9 +634,13 @@ public class BleDeviceConfig implements Cloneable
 		
 		@Override public Please onEvent(ReconnectPersistEvent e)
 		{
+			final boolean definitelyPersist =
+						BleDeviceState.CONNECTING_OVERALL.overlaps(e.device().getNativeStateMask()) &&
+						BleDeviceState.CONNECTED.overlaps(e.device().getNativeStateMask())			;;
+						
 			//--- DRK > We don't interrupt if we're in the middle of connecting
-			//--- but this will be the last attempt if it fails.
-			if( e.device().is(BleDeviceState.CONNECTING_OVERALL) )
+			//---		but this will be the last attempt if it fails.
+			if( definitelyPersist )
 			{
 				return Please.persist();
 			}

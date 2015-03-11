@@ -1602,7 +1602,7 @@ public class BleDevice implements UsesCustomNull
 	private final P_TaskQueue m_queue;
 	final P_TransactionManager m_txnMngr;
 	private final P_ReconnectManager m_reconnectMngr_longTerm;
-	final P_ReconnectManager m_reconnectMngr_shortTerm;
+	private final P_ReconnectManager m_reconnectMngr_shortTerm;
 	private final P_ConnectionFailManager m_connectionFailMngr;
 	private final P_RssiPollManager m_rssiPollMngr;
 	private final P_RssiPollManager m_rssiPollMngr_auto;
@@ -1921,6 +1921,17 @@ public class BleDevice implements UsesCustomNull
 	public int getStateMask()
 	{
 		return stateTracker_main().getState();
+	}
+	
+	/**
+	 * Returns the actual native state mask representation of the {@link BleDeviceState} for this device.
+	 * The main purpose of this is to reflect what's going on under the hood while {@link BleDevice#is(BleDeviceState)}
+	 * with {@link BleDeviceState#RECONNECTING_SHORT_TERM} is <code>true</code>.
+	 */
+	@Advanced
+	public int getNativeStateMask()
+	{
+		return stateTracker().getState();
 	}
 
 	/**
