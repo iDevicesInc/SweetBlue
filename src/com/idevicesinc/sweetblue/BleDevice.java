@@ -658,11 +658,27 @@ public class BleDevice implements UsesCustomNull
 				{
 					if (target() == Target.RSSI)
 					{
-						return Utils.toString(this.getClass(), "status", status(), "type", type(), "target", target(), "rssi", rssi(), "gattStatus", device().getManager().getLogger().gattStatus(gattStatus()));
+						return Utils.toString
+						(
+							this.getClass(),
+							"status",		status(),
+							"type",			type(),
+							"target",		target(),
+							"rssi",			rssi(),
+							"gattStatus",	device().getManager().getLogger().gattStatus(gattStatus())
+						);
 					}
 					else
 					{
-						return Utils.toString(this.getClass(), "status", status(), "data", Arrays.toString(data()), "type", type(), "charUuid", device().getManager().getLogger().uuidName(charUuid()), "gattStatus", device().getManager().getLogger().gattStatus(gattStatus()));
+						return Utils.toString
+						(
+							this.getClass(),
+							"status",		status(),
+							"data",			Arrays.toString(data()),
+							"type",			type(),
+							"charUuid",		device().getManager().getLogger().uuidName(charUuid()), 
+							"gattStatus",	device().getManager().getLogger().gattStatus(gattStatus())
+						);
 					}
 				}
 			}
@@ -734,7 +750,15 @@ public class BleDevice implements UsesCustomNull
 
 			@Override public String toString()
 			{
-				return Utils.toString(this.getClass(), "device", device().getName_debug(), "entered", Utils.toString(enterMask(), BleDeviceState.VALUES), "exited", Utils.toString(exitMask(), BleDeviceState.VALUES), "current", Utils.toString(newStateBits(), BleDeviceState.VALUES), "gattStatus", device().m_logger.gattStatus(gattStatus()));
+				return Utils.toString
+				(
+					this.getClass(),
+					"device",			device().getName_debug(),
+					"entered",			Utils.toString(enterMask(), BleDeviceState.VALUES),
+					"exited", 			Utils.toString(exitMask(), BleDeviceState.VALUES),
+					"current",			Utils.toString(newStateBits(), BleDeviceState.VALUES),
+					"gattStatus",		device().m_logger.gattStatus(gattStatus())
+				);
 			}
 		}
 
@@ -1044,11 +1068,9 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Same as {@link #retry()}, but <code>autoConnect=true</code> will
-			 * be passed to
-			 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
-			 * . See more discussion at
-			 * {@link BleDeviceConfig#alwaysUseAutoConnect}.
+			 * Same as {@link #retry()}, but <code>autoConnect=true</code> will be passed to
+			 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
+			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
 			@com.idevicesinc.sweetblue.annotations.Advanced
 			public static Please retryWithAutoConnectTrue()
@@ -1280,7 +1302,13 @@ public class BleDevice implements UsesCustomNull
 				}
 				else
 				{
-					return Utils.toString(this.getClass(), "reason", status(), "gattStatus", device().getManager().getLogger().gattStatus(gattStatus()), "failureCountSoFar", failureCountSoFar());
+					return Utils.toString
+					(
+						this.getClass(),
+						"status", 				status(),
+						"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
+						"failureCountSoFar",	failureCountSoFar()
+					);
 				}
 			}
 		}
@@ -1480,14 +1508,10 @@ public class BleDevice implements UsesCustomNull
 			{
 				switch (this)
 				{
-					case FAILED_IMMEDIATELY:
-						return Timing.IMMEDIATELY;
-					case FAILED_EVENTUALLY:
-						return Timing.EVENTUALLY;
-					case TIMED_OUT:
-						return Timing.TIMED_OUT;
-					default:
-						return Timing.NOT_APPLICABLE;
+					case FAILED_IMMEDIATELY:		return Timing.IMMEDIATELY;
+					case FAILED_EVENTUALLY:			return Timing.EVENTUALLY;
+					case TIMED_OUT:					return Timing.TIMED_OUT;
+					default:						return Timing.NOT_APPLICABLE;
 				}
 			}
 		}
@@ -1567,7 +1591,14 @@ public class BleDevice implements UsesCustomNull
 
 			@Override public String toString()
 			{
-				return Utils.toString(this.getClass(), "device", device().getName_debug(), "status", status(), "failReason", device().getManager().getLogger().gattUnbondReason(failReason()), "intent", intent());
+				return Utils.toString
+				(
+					this.getClass(),
+					"device",		device().getName_debug(),
+					"status",		status(),
+					"failReason",	device().getManager().getLogger().gattUnbondReason(failReason()),
+					"intent",		intent()
+				);
 			}
 		}
 
