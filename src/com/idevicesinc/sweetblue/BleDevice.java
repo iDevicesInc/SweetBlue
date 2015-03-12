@@ -45,7 +45,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * Although instances of this class can be created explicitly through
  * {@link BleManager#newDevice(String, String)}, usually they're created
  * implicitly by {@link BleManager} as a result of a scanning operation (e.g.
- * {@link BleManager#startScan()} and sent to you through
+ * {@link BleManager#startScan()}) and sent to you through
  * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
  */
 public class BleDevice implements UsesCustomNull
@@ -57,13 +57,9 @@ public class BleDevice implements UsesCustomNull
 	public static final BleDevice NULL = new BleDevice(null, null, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
 
 	/**
-	 * Provide an implementation of this callback to various methods like
-	 * 
-	 * {@link BleDevice#read(UUID, ReadWriteListener)},
-	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)},
-	 * {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
-	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)},
-	 * {@link BleDevice#readRssi(ReadWriteListener)}, etc.
+	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
+	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
+	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface ReadWriteListener
@@ -991,8 +987,7 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Returns <code>true</code> for everything except
-			 * {@link #doNotRetry()}.
+			 * Returns <code>true</code> for everything except {@link #doNotRetry()}.
 			 */
 			public boolean isRetry()
 			{
@@ -1001,8 +996,7 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		/**
-		 * Structure passed to
-		 * {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to
+		 * Structure passed to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to
 		 * provide more info about how/why the connection failed.
 		 */
 		@Immutable
@@ -1021,8 +1015,7 @@ public class BleDevice implements UsesCustomNull
 			private final Status m_status;
 
 			/**
-			 * The failure count so far. This will start at 1 and keep
-			 * incrementing for more failures.
+			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
 			 */
 			public int failureCountSoFar() {  return m_failureCountSoFar;  }
 			private final int m_failureCountSoFar;
@@ -1078,31 +1071,24 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * Whether <code>autoConnect=true</code> was passed to
 			 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
-			 * See more discussion at
-			 * {@link BleDeviceConfig#alwaysUseAutoConnect}.
+			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
 			@com.idevicesinc.sweetblue.annotations.Advanced
 			public AutoConnectUsage autoConnectUsage() {  return m_autoConnectUsage;  }
 			private final AutoConnectUsage m_autoConnectUsage;
 
 			/**
-			 * Further timing information for
-			 * {@link Status#NATIVE_CONNECTION_FAILED},
-			 * {@link Status#BONDING_FAILED}, and
-			 * {@link Status#DISCOVERING_SERVICES_FAILED}.
+			 * Further timing information for {@link Status#NATIVE_CONNECTION_FAILED},
+			 * {@link Status#BONDING_FAILED}, and {@link Status#DISCOVERING_SERVICES_FAILED}.
 			 */
 			public Timing timing() {  return m_timing;  }
 			private final Timing m_timing;
 
 			/**
-			 * If {@link ConnectionFailEvent#status()} is
-			 * {@link Status#AUTHENTICATION_FAILED} or
-			 * {@link Status#INITIALIZATION_FAILED} and
-			 * {@link BleTransaction#fail()} was called somewhere in or
-			 * downstream of {@link ReadWriteListener#onEvent(ReadWriteEvent)},
-			 * then the {@link ReadWriteEvent} passed there will be returned
-			 * here. Otherwise, this will return a {@link ReadWriteEvent} for
-			 * which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
+			 * If {@link ConnectionFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or
+			 * {@link Status#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called somewhere in or
+			 * downstream of {@link ReadWriteListener#onEvent(ReadWriteEvent)}, then the {@link ReadWriteEvent} passed there will be returned
+			 * here. Otherwise, this will return a {@link ReadWriteEvent} for which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
 			 */
 			public ReadWriteListener.ReadWriteEvent txnFailReason() {  return m_txnFailReason;  }
 			private final ReadWriteListener.ReadWriteEvent m_txnFailReason;

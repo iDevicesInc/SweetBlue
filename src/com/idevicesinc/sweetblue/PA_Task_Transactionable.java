@@ -139,7 +139,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	{
 		if( getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM ) )
 		{
-			//--- DRK > If reconnecting short term, we only allow transaction-related tasks become armed.
+			//--- DRK > If reconnecting short term, we only allow transaction-related tasks to become armed.
 			if( getDevice().is_internal(BleDeviceState.SERVICES_DISCOVERED) )
 			{
 				return getTxn() != null;

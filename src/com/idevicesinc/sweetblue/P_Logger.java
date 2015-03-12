@@ -431,7 +431,7 @@ class P_Logger
 	
 	public String uuidName(String uuid, String type)
 	{
-		String debugName = "NO_NAME";
+		String debugName = null;
 		
 		if( m_debugUuidNameDicts != null )
 		{
@@ -442,7 +442,9 @@ class P_Logger
 			}
 		}
 		
-		return (type == null ? debugName : type+"="+debugName)+"("+uuid+")";
+		debugName = debugName == null ? uuid : debugName;
+		
+		return (type == null ? debugName : type+"="+debugName);
 	}
 	
 	<T> void checkPlease(final T please_nullable, final Class<T> please_class)

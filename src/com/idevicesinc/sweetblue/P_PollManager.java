@@ -204,7 +204,7 @@ class P_PollManager
 			{
 				m_timeTracker = 0.0;
 				
-				if( m_device.is(BleDeviceState.INITIALIZED) )
+				if( m_device.is(BleDeviceState.INITIALIZED) && !m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) )
 				{					
 					if( !m_waitingForResponse )
 					{

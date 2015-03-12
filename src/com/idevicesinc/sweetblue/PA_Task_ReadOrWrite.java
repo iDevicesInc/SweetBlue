@@ -81,6 +81,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 	
 	@Override protected String getToStringAddition()
 	{
-		return getManager().getLogger().uuidName(m_uuid);
+		final String txn = getTxn() != null ? " txn!=null" : " txn==null";
+		return getManager().getLogger().uuidName(m_uuid) + txn;
 	}
 }
