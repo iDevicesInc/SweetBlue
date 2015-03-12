@@ -116,7 +116,7 @@ class P_ServiceManager
 	
 	BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
 	{
-		Target target = uuid == Uuids.INVALID ? Target.RSSI : Target.CHARACTERISTIC;
+		final Target target = uuid == Uuids.INVALID ? Target.RSSI : Target.CHARACTERISTIC;
 		final int gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
 		
 		if( m_device.isNull() )
