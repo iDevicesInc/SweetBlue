@@ -27,14 +27,14 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	private byte[] m_writeValue = null;
 	
-	public P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener)
+	public P_Task_ToggleNotify(BleDevice device, UUID uuid, boolean enable, P_WrappingReadWriteListener writeListener)
 	{
-		this(characteristic, enable, writeListener, null);
+		this(device, uuid, enable, writeListener, null);
 	}
 	
-	private P_Task_ToggleNotify(P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener, PE_TaskPriority priority)
+	private P_Task_ToggleNotify(BleDevice device, UUID uuid, boolean enable, P_WrappingReadWriteListener writeListener, PE_TaskPriority priority)
 	{
-		super(characteristic, writeListener, false, null, priority);
+		super(device, uuid, writeListener, false, null, priority);
 		
 		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
 		m_enable = enable;
@@ -69,18 +69,18 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 
 	@Override public void execute()
 	{
-		BluetoothGattCharacteristic char_native = m_characteristic.getGuaranteedNative();
+		BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(m_uuid);
 		
 		if( char_native == null )
 		{
-			this.fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+			this.fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().setCharacteristicNotification(char_native, m_enable) )
 		{
-			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -89,7 +89,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( descriptor == null )
 		{
-			this.fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			this.fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_uuid, m_descUuid);
 			
 			return;
 		}
@@ -98,14 +98,14 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( !descriptor.setValue(getWriteValue()) )
 		{
-			this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_uuid, m_descUuid);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().writeDescriptor(descriptor) )
 		{
-			this.fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid);
+			this.fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_uuid, m_descUuid);
 			
 			return;
 		}
@@ -115,7 +115,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	{
 		if( m_enable )
 		{
-			getDevice().getPollManager().onNotifyStateChange(m_characteristic.getUuid(), E_NotifyState.NOT_ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(m_uuid, E_NotifyState.NOT_ENABLED);
 		}
 		
 		super.fail(status, gattStatus, target, charUuid, descUuid);
@@ -123,16 +123,16 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	@Override protected void succeed()
 	{
-		ReadWriteEvent result = newResult(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid); 
+		ReadWriteEvent result = newResult(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, Target.DESCRIPTOR, m_uuid, m_descUuid); 
 //		getDevice().addWriteTime(result.totalTime);
 		
 		if( m_enable )
 		{
-			getDevice().getPollManager().onNotifyStateChange(m_characteristic.getUuid(), E_NotifyState.ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(m_uuid, E_NotifyState.ENABLED);
 		}
 		else
 		{
-			getDevice().getPollManager().onNotifyStateChange(m_characteristic.getUuid(), E_NotifyState.NOT_ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(m_uuid, E_NotifyState.NOT_ENABLED);
 		}
 		
 		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
@@ -152,7 +152,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		 }
 		 else
 		 {
-			 fail(Status.REMOTE_GATT_FAILURE, status, Target.DESCRIPTOR, m_characteristic.getUuid(), descUuid);
+			 fail(Status.REMOTE_GATT_FAILURE, status, Target.DESCRIPTOR, m_uuid, descUuid);
 		 }
 	}
 	
@@ -160,9 +160,9 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	{
 		if( state == PE_TaskState.TIMED_OUT )
 		{
-			m_logger.w(m_logger.charName(m_characteristic.getUuid()) + " descriptor write timed out!");
+			m_logger.w(m_logger.charName(m_uuid) + " descriptor write timed out!");
 			
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_characteristic.getUuid(), m_descUuid));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_uuid, m_descUuid));
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
@@ -170,7 +170,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		{
 			Target target = this.getState() == PE_TaskState.EXECUTING ? Target.DESCRIPTOR : Target.CHARACTERISTIC;
 			UUID descUuid = target == Target.DESCRIPTOR ? m_descUuid : ReadWriteEvent.NON_APPLICABLE_UUID;
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, target, m_characteristic.getUuid(), descUuid));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, target, m_uuid, descUuid));
 		}
 	}
 	

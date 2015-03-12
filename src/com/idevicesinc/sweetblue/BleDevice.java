@@ -79,25 +79,19 @@ public class BleDevice implements UsesCustomNull
 		public static enum Status implements UsesCustomNull
 		{
 			/**
-			 * As of now, only used for
-			 * {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()}
-			 * in some cases.
+			 * As of now, only used for {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
 			 */
 			NULL,
 
 			/**
-			 * If {@link ReadWriteEvent#type} {@link Type#isRead()} then
-			 * {@link ReadWriteEvent#data} will contain some data returned from
-			 * the device. If type is {@link Type#WRITE} then
-			 * {@link ReadWriteEvent#data} was sent to the device.
+			 * If {@link ReadWriteEvent#type} {@link Type#isRead()} then {@link ReadWriteEvent#data} will contain some data returned from
+			 * the device. If type is {@link Type#WRITE} then {@link ReadWriteEvent#data} was sent to the device.
 			 */
 			SUCCESS,
 
 			/**
-			 * {@link BleDevice#read(UUID, ReadWriteListener)},
-			 * {@link BleDevice#write(UUID, byte[])},
-			 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, etc. was
-			 * called on {@link BleDevice#NULL}.
+			 * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])},
+			 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, etc. was called on {@link BleDevice#NULL}.
 			 */
 			NULL_DEVICE,
 
@@ -107,42 +101,31 @@ public class BleDevice implements UsesCustomNull
 			NOT_CONNECTED,
 
 			/**
-			 * Couldn't find a matching {@link ReadWriteEvent#target} for the
-			 * {@link ReadWriteEvent#charUuid} (or
-			 * {@link ReadWriteEvent#descUuid} if {@link ReadWriteEvent#target}
-			 * is {@link Target#DESCRIPTOR}) which was given to
-			 * {@link BleDevice#read(UUID, ReadWriteListener)},
-			 * {@link BleDevice#write(UUID, byte[])}, etc. This most likely
-			 * means that the internal call to
-			 * {@link BluetoothGatt#discoverServices()} didn't find any
-			 * {@link BluetoothGattService} that contained a
-			 * {@link BluetoothGattCharacteristic} for
-			 * {@link ReadWriteEvent#charUuid}.
+			 * Couldn't find a matching {@link ReadWriteEvent#target} for the {@link ReadWriteEvent#charUuid} (or
+			 * {@link ReadWriteEvent#descUuid} if {@link ReadWriteEvent#target} is {@link Target#DESCRIPTOR}) which was given to
+			 * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])}, etc. This most likely
+			 * means that the internal call to {@link BluetoothGatt#discoverServices()} didn't find any
+			 * {@link BluetoothGattService} that contained a {@link BluetoothGattCharacteristic} for {@link ReadWriteEvent#charUuid()}.
 			 */
 			NO_MATCHING_TARGET,
 
 			/**
 			 * You tried to do a read on a characteristic that is write-only, or
-			 * vice-versa, or tried to read a notify-only characteristic, or
-			 * etc., etc.
+			 * vice-versa, or tried to read a notify-only characteristic, or etc., etc.
 			 */
 			OPERATION_NOT_SUPPORTED,
 
 			/**
 			 * {@link BluetoothGatt#setCharacteristicNotification(BluetoothGattCharacteristic, boolean)}
-			 * returned false for an unknown reason. This {@link Status} is only
-			 * relevant for calls to
-			 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and
-			 * {@link BleDevice#disableNotify(UUID, ReadWriteListener)} (or the
-			 * various overloads).
+			 * returned <code>false</code> for an unknown reason. This {@link Status} is only relevant for calls to
+			 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and {@link BleDevice#disableNotify(UUID, ReadWriteListener)}
+			 * (or the various overloads).
 			 */
 			FAILED_TO_TOGGLE_NOTIFICATION,
 
 			/**
-			 * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of
-			 * its overloads) or
-			 * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its
-			 * overloads) returned <code>false</code>.
+			 * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of its overloads) or
+			 * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its overloads) returned <code>false</code>.
 			 */
 			FAILED_TO_SET_VALUE_ON_TARGET,
 
@@ -150,41 +133,30 @@ public class BleDevice implements UsesCustomNull
 			 * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)}
 			 * or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
 			 * or etc. returned <code>false</code> and thus failed immediately
-			 * for unknown reasons. No good remedy for this...perhaps try
-			 * {@link BleManager#reset()}.
+			 * for unknown reasons. No good remedy for this...perhaps try {@link BleManager#reset()}.
 			 */
 			FAILED_TO_SEND_OUT,
 
 			/**
-			 * The operation was cancelled by the device becoming
-			 * {@link BleDeviceState#DISCONNECTED}.
+			 * The operation was cancelled by the device becoming {@link BleDeviceState#DISCONNECTED}.
 			 */
 			CANCELLED_FROM_DISCONNECT,
 
 			/**
-			 * The operation was cancelled because {@link BleManager} went
-			 * {@link BleManagerState#TURNING_OFF} and/or
-			 * {@link BleManagerState#OFF}. Note that if the user turns off BLE
-			 * from their OS settings (airplane mode, etc.) then
-			 * {@link ReadWriteEvent#status} could potentially be
-			 * {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
-			 * the disconnect callback before the turning off callback. Basic
-			 * testing has revealed that this is *not* the case, but you never know.
+			 * The operation was cancelled because {@link BleManager} went {@link BleManagerState#TURNING_OFF} and/or
+			 * {@link BleManagerState#OFF}. Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then
+			 * {@link ReadWriteEvent#status} could potentially be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
+			 * the disconnect callback before the turning off callback. Basic testing has revealed that this is *not* the case, but you never know.
 			 * <br><br>
 			 * Either way, the device was or will be disconnected.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF,
 
 			/**
-			 * Used either when {@link ReadWriteEvent#type()}
-			 * {@link Type#isRead()} and the stack returned a <code>null</code>
-			 * value for {@link BluetoothGattCharacteristic#getValue()} despite
-			 * the operation being otherwise "successful", <i>or</i>
-			 * {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were
-			 * called with a null data parameter. For the read case, the library
-			 * will throw an {@link UhOh#READ_RETURNED_NULL}, but hopefully it
-			 * was just a temporary glitch. If the problem persists try
-			 * {@link BleManager#reset()}.
+			 * Used either when {@link ReadWriteEvent#type()} {@link Type#isRead()} and the stack returned a <code>null</code>
+			 * value for {@link BluetoothGattCharacteristic#getValue()} despite the operation being otherwise "successful", <i>or</i>
+			 * {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter. For the read case, the library
+			 * will throw an {@link UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch. If the problem persists try {@link BleManager#reset()}.
 			 */
 			NULL_DATA,
 
@@ -2752,7 +2724,7 @@ public class BleDevice implements UsesCustomNull
 	 * notification in some time it may be a sign that notifications have broken
 	 * in the underlying stack.
 	 */
-	public void enableNotify(UUID uuid, Interval forceReadTimeout, ReadWriteListener listener)
+	public void enableNotify(final UUID uuid, final Interval forceReadTimeout, final ReadWriteListener listener)
 	{
 		ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.ENABLING_NOTIFICATION);
 
@@ -2779,7 +2751,7 @@ public class BleDevice implements UsesCustomNull
 			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
-			m_queue.add(new P_Task_ToggleNotify(characteristic, /* enable= */true, wrappingListener));
+			m_queue.add(new P_Task_ToggleNotify(this, uuid, /* enable= */true, wrappingListener));
 
 			m_pollMngr.onNotifyStateChange(uuid, E_NotifyState.ENABLING);
 		}
@@ -2801,7 +2773,7 @@ public class BleDevice implements UsesCustomNull
 	 * provided should be the same one that you passed to {@link #enableNotify(UUID, ReadWriteListener)}. Listen for
 	 * {@link Type#DISABLING_NOTIFICATION} in your listener to know when the remote device actually confirmed.
 	 */
-	public void disableNotify(UUID uuid, ReadWriteListener listener)
+	public void disableNotify(final UUID uuid, final ReadWriteListener listener)
 	{
 		this.disableNotify_private(uuid, null, listener);
 	}
@@ -2809,7 +2781,7 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Same as {@link #disableNotify(UUID, ReadWriteListener)} but filters on the given {@link Interval}.
 	 */
-	public void disableNotify(UUID uuid, Interval forceReadTimeout, ReadWriteListener listener)
+	public void disableNotify(final UUID uuid, final Interval forceReadTimeout, final ReadWriteListener listener)
 	{
 		this.disableNotify_private(uuid, forceReadTimeout.secs(), listener);
 	}
@@ -2830,7 +2802,7 @@ public class BleDevice implements UsesCustomNull
 	 * @see BleManagerConfig#includeOtaReadWriteTimesInAverage
 	 * @see BleManagerConfig#autoScanDuringOta
 	 */
-	public boolean performOta(BleTransaction.Ota txn)
+	public boolean performOta(final BleTransaction.Ota txn)
 	{
 		if (isNull())				return false;
 		if (is(PERFORMING_OTA))		return false;
@@ -3470,10 +3442,10 @@ public class BleDevice implements UsesCustomNull
 
 		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
 
-		m_queue.add(new P_Task_Read(characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Read(this, uuid, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 
-	void write_internal(UUID uuid, byte[] data, P_WrappingReadWriteListener listener)
+	void write_internal(final UUID uuid, final byte[] data, final P_WrappingReadWriteListener listener)
 	{
 		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, data, Type.WRITE);
 
@@ -3488,7 +3460,7 @@ public class BleDevice implements UsesCustomNull
 
 		boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.WRITE);
 
-		m_queue.add(new P_Task_Write(characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Write(this, uuid, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 	}
 
 	private void disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)
@@ -3507,7 +3479,7 @@ public class BleDevice implements UsesCustomNull
 		if (characteristic != null && is(CONNECTED))
 		{
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
-			m_queue.add(new P_Task_ToggleNotify(characteristic, /* enable= */false, wrappingListener));
+			m_queue.add(new P_Task_ToggleNotify(this, uuid, /* enable= */false, wrappingListener));
 		}
 
 		m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /* usingNotify= */true);

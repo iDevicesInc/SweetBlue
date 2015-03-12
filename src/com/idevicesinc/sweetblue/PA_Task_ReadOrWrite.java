@@ -11,14 +11,14 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 
 abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 {
-	protected final P_Characteristic m_characteristic;
+	protected final UUID m_uuid;
 	protected final ReadWriteListener m_readWriteListener;
 	
-	PA_Task_ReadOrWrite(P_Characteristic characteristic, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+	PA_Task_ReadOrWrite(BleDevice device, UUID uuid, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
 	{
-		super(characteristic.getDevice(), txn_nullable, requiresBonding, priority);
+		super(device, txn_nullable, requiresBonding, priority);
 		
-		m_characteristic = characteristic;
+		m_uuid = uuid;
 		m_readWriteListener = readWriteListener;
 	}
 	
@@ -49,7 +49,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		
 		if( !super_isExecutable )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_uuid, getDescriptorUuid()));
 		}
 		
 		return super_isExecutable;
@@ -71,16 +71,16 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 	
 	@Override protected UUID getCharUuid()
 	{
-		return m_characteristic.getUuid();
+		return m_uuid;
 	}
 	
 	protected boolean isFor(UUID uuid)
 	{
-		return uuid.equals(m_characteristic.getUuid());
+		return uuid.equals(m_uuid);
 	}
 	
 	@Override protected String getToStringAddition()
 	{
-		return getManager().getLogger().uuidName(m_characteristic.getUuid());
+		return getManager().getLogger().uuidName(m_uuid);
 	}
 }
