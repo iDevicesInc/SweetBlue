@@ -769,8 +769,8 @@ public class BleDevice implements UsesCustomNull
 			 * {@link Timing#IMMEDIATELY} returned <code>false</code>, (b)
 			 * {@link Timing#EVENTUALLY} returned a bad
 			 * {@link ConnectionFailEvent#bondFailReason()}, or (c)
-			 * {@link Timing#TIMED_OUT}. <br>
-			 * <br>
+			 * {@link Timing#TIMED_OUT}.
+			 * <br><br>
 			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be
 			 * <code>true</code> for this {@link Status} to be applicable.
 			 * 
@@ -882,31 +882,23 @@ public class BleDevice implements UsesCustomNull
 			IMMEDIATELY,
 
 			/**
-			 * The operation failed in the native stack.
-			 * {@link ConnectionFailListener.ConnectionFailEvent#gattStatus()}
-			 * will probably be a positive number if
-			 * {@link ConnectionFailListener.ConnectionFailEvent#status()} is
-			 * {@link ConnectionFailListener.Status#NATIVE_CONNECTION_FAILED} or
-			 * {@link ConnectionFailListener.Status#DISCOVERING_SERVICES_FAILED}
-			 * .
-			 * {@link ConnectionFailListener.ConnectionFailEvent#bondFailReason()}
-			 * will probably be a positive number if
-			 * {@link ConnectionFailListener.ConnectionFailEvent#status()} is
-			 * {@link ConnectionFailListener.Status#BONDING_FAILED}.
+			 * The operation failed in the native stack. {@link ConnectionFailListener.ConnectionFailEvent#gattStatus()}
+			 * will probably be a positive number if {@link ConnectionFailListener.ConnectionFailEvent#status()} is
+			 * {@link ConnectionFailListener.Status#NATIVE_CONNECTION_FAILED} or {@link ConnectionFailListener.Status#DISCOVERING_SERVICES_FAILED}.
+			 * {@link ConnectionFailListener.ConnectionFailEvent#bondFailReason()} will probably be a positive number if
+			 * {@link ConnectionFailListener.ConnectionFailEvent#status()} is {@link ConnectionFailListener.Status#BONDING_FAILED}.
 			 */
 			EVENTUALLY,
 
 			/**
-			 * The operation took longer than the time specified in
-			 * {@link BleDeviceConfig#timeoutRequestFilter}.
+			 * The operation took longer than the time specified in {@link BleDeviceConfig#timeoutRequestFilter}.
 			 */
 			TIMED_OUT;
 		}
 
 		/**
 		 * Describes usage of the <code>autoConnect</code> parameter for
-		 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
-		 * .
+		 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
 		 */
 		@com.idevicesinc.sweetblue.annotations.Advanced
 		public static enum AutoConnectUsage
@@ -1102,9 +1094,8 @@ public class BleDevice implements UsesCustomNull
 			private final BleDeviceState m_highestStateReached_latest;
 
 			/**
-			 * The highest state reached during the whole connection attempt
-			 * cycle. <br>
-			 * <br>
+			 * The highest state reached during the whole connection attempt cycle.
+			 * <br><br>
 			 * TIP: You can use this to keep the visual feedback in your
 			 * connection progress UI "bookmarked" while the connection retries
 			 * and goes through previous states again.
@@ -1174,10 +1165,8 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Returns whether this {@link ConnectionFailEvent} instance is a
-			 * "dummy" value. For now used for
-			 * {@link BleDeviceConfig.ReconnectRequestFilter.ConnectionFailEvent#connectionFailInfo()}
-			 * in certain situations.
+			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
+			 * {@link BleDeviceConfig.ReconnectRequestFilter.ConnectionFailEvent#connectionFailInfo()} in certain situations.
 			 */
 			@Override public boolean isNull()
 			{
@@ -1781,8 +1770,8 @@ public class BleDevice implements UsesCustomNull
 	 * Sets a default backup {@link ReadWriteListener} that will be called for
 	 * all calls to {@link #read(UUID, ReadWriteListener)},
 	 * {@link #write(UUID, byte[], ReadWriteListener)},
-	 * {@link #enableNotify(UUID, ReadWriteListener)}, etc.<br>
-	 * <br>
+	 * {@link #enableNotify(UUID, ReadWriteListener)}, etc.
+	 * <br><br>
 	 * NOTE: This will be called after the {@link ReadWriteListener} provided
 	 * directly through the method params.
 	 */
@@ -2003,21 +1992,37 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns <code>true</code> if there is bitwise overlap between the
-	 * provided value and {@link #getStateMask()}.
+	 * @deprecated Use {@link #isAny(int)} instead.
 	 */
 	public boolean is(final int mask_BleDeviceState)
 	{
 		return (getStateMask() & mask_BleDeviceState) != 0x0;
 	}
+	
+	/**
+	 * Returns <code>true</code> if there is partial bitwise overlap between the provided value and {@link #getStateMask()}.
+	 * 
+	 * @see #isAll(int)
+	 */
+	public boolean isAny(final int mask_BleDeviceState)
+	{
+		return (getStateMask() & mask_BleDeviceState) != 0x0;
+	}
+	
+	/**
+	 * Returns <code>true</code> if there is complete bitwise overlap between the provided value and {@link #getStateMask()}.
+	 * 
+	 * @see #isAny(int)
+	 */
+	public boolean isAll(final int mask_BleDeviceState)
+	{
+		return (getStateMask() & mask_BleDeviceState) == mask_BleDeviceState;
+	}
 
 	/**
-	 * Similar to {@link #is(BleDeviceState)} and
-	 * {@link #isAny(BleDeviceState...)} but allows you to give a simple query
-	 * made up of {@link BleDeviceState} and {@link Boolean} pairs. So an
-	 * example would be
-	 * <code>myDevice.is({@link BleDeviceState#CONNECTING}, true, {@link BleDeviceState#RECONNECTING_LONG_TERM}, false)</code>
-	 * .
+	 * Similar to {@link #is(BleDeviceState)} and {@link #isAny(BleDeviceState...)} but allows you to give a simple query
+	 * made up of {@link BleDeviceState} and {@link Boolean} pairs. So an example would be
+	 * <code>myDevice.is({@link BleDeviceState#CONNECTING}, true, {@link BleDeviceState#RECONNECTING_LONG_TERM}, false)</code>.
 	 */
 	public boolean is(Object... query)
 	{
@@ -2135,11 +2140,11 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Provides just-in-case lower-level access to the native device instance. <br>
-	 * <br>
+	 * Provides just-in-case lower-level access to the native device instance.
+	 * <br><br>
 	 * WARNING: Be careful with this. It generally should not be needed. Only
-	 * invoke "mutators" of this object in times of extreme need. <br>
-	 * <br>
+	 * invoke "mutators" of this object in times of extreme need.
+	 * <br><br>
 	 * NOTE: If you are forced to use this please contact library developers to
 	 * discuss possible feature addition or report bugs.
 	 */
@@ -2150,10 +2155,9 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the native characteristic for the given UUID in case you need
-	 * lower-level access. You should only call this after
-	 * {@link BleDeviceState#DISCOVERING_SERVICES} has completed. <br>
-	 * <br>
+	 * Returns the native characteristic for the given UUID in case you need lower-level access. You should only call this after
+	 * {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
+	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -2167,10 +2171,9 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the native service for the given UUID in case you need
-	 * lower-level access. You should only call this after
-	 * {@link BleDeviceState#DISCOVERING_SERVICES} has completed. <br>
-	 * <br>
+	 * Returns the native service for the given UUID in case you need lower-level access. You should only call this after
+	 * {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
+	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -2184,8 +2187,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns all {@link BluetoothGattService} instances once
-	 * {@link BleDevice#is(BleDeviceState)} with
+	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
 	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
@@ -2197,8 +2199,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Convenience overload of {@link #getNativeServices()} that returns a
-	 * {@link List}.
+	 * Convenience overload of {@link #getNativeServices()} that returns a {@link List}.
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
@@ -2209,8 +2210,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns all {@link BluetoothGattService} instances once
-	 * {@link BleDevice#is(BleDeviceState)} with
+	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
 	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
@@ -2221,8 +2221,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Convenience overload of {@link #getNativeCharacteristics()} that returns
-	 * a {@link List}.
+	 * Convenience overload of {@link #getNativeCharacteristics()} that returns a {@link List}.
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
@@ -2232,9 +2231,8 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #getNativeCharacteristics()} but you can filter on the
-	 * service {@link UUID}. <br>
-	 * <br>
+	 * Same as {@link #getNativeCharacteristics()} but you can filter on the service {@link UUID}.
+	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	public @Nullable(Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service)
@@ -2243,9 +2241,8 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that
-	 * returns a {@link List}. <br>
-	 * <br>
+	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
+	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	public @Nullable(Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service)
@@ -2255,9 +2252,8 @@ public class BleDevice implements UsesCustomNull
 
 	/**
 	 * See pertinent warning for {@link #getNative()}. Generally speaking, this
-	 * will return <code>null</code> if the BleDevice is
-	 * {@link BleDeviceState#DISCONNECTED}. <br>
-	 * <br>
+	 * will return <code>null</code> if the BleDevice is {@link BleDeviceState#DISCONNECTED}.
+	 * <br><br>
 	 * NOTE: If you are forced to use this please contact library developers to
 	 * discuss possible feature addition or report bugs.
 	 */
@@ -2283,8 +2279,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the MAC address of this device, as retrieved from the native
-	 * stack.
+	 * Returns the MAC address of this device, as retrieved from the native stack.
 	 */
 	public @Nullable(Prevalence.NEVER) String getMacAddress()
 	{
@@ -2292,8 +2287,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #bond()} but you can pass a listener to be notified of the
-	 * details behind success or failure.
+	 * Same as {@link #bond()} but you can pass a listener to be notified of the details behind success or failure.
 	 */
 	public void bond(BondListener listener)
 	{
@@ -2322,11 +2316,9 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Attempts to create a bond. Analogous to
-	 * {@link BluetoothDevice#createBond()} This is also sometimes called
-	 * pairing, but while pairing and bonding are closely related, they are
-	 * technically different from each other. <br>
-	 * <br>
+	 * Attempts to create a bond. Analogous to {@link BluetoothDevice#createBond()} This is also sometimes called
+	 * pairing, but while pairing and bonding are closely related, they are technically different from each other.
+	 * <br><br>
 	 * Bonding is required for reading/writing encrypted characteristics and,
 	 * anecdotally, may improve connection stability in some cases. This is
 	 * mentioned here and there on Internet threads complaining about Android
@@ -2363,8 +2355,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect()} but calls
-	 * {@link #setListener_State(StateListener)} for you.
+	 * Same as {@link #connect()} but calls {@link #setListener_State(StateListener)} for you.
 	 */
 	public void connect(StateListener stateListener)
 	{
@@ -2372,8 +2363,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect()} but calls
-	 * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
+	 * Same as {@link #connect()} but calls {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
 	 */
 	public void connect(ConnectionFailListener failListener)
 	{
@@ -2381,8 +2371,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect()} but calls
-	 * {@link #setListener_State(StateListener)} and
+	 * Same as {@link #connect()} but calls {@link #setListener_State(StateListener)} and
 	 * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
 	 */
 	public void connect(StateListener stateListener, ConnectionFailListener failListener)
@@ -2447,8 +2436,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect(BleTransaction.Init)} but calls
-	 * {@link #setListener_State(StateListener)} for you.
+	 * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} for you.
 	 */
 	public void connect(BleTransaction.Init initTxn, StateListener stateListener)
 	{
@@ -2456,8 +2444,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect(BleTransaction.Init)} but calls
-	 * {@link #setListener_State(StateListener)} and
+	 * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} and
 	 * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
 	 */
 	public void connect(BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
@@ -2466,9 +2453,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Combination of {@link #connect(BleTransaction.Auth)} and
-	 * {@link #connect(BleTransaction.Init)}. See those two methods for
-	 * explanation.
+	 * Combination of {@link #connect(BleTransaction.Auth)} and {@link #connect(BleTransaction.Init)}. See those two methods for explanation.
 	 * 
 	 * @see #connect()
 	 * @see #connect(BleTransaction.Auth)
@@ -2480,8 +2465,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but
-	 * calls {@link #setListener_State(StateListener)} for you.
+	 * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} for you.
 	 */
 	public void connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener)
 	{
@@ -2489,8 +2473,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but
-	 * calls {@link #setListener_State(StateListener)} and
+	 * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} and
 	 * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
 	 */
 	public void connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
@@ -2543,9 +2526,7 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Convenience method that calls {@link BleManager#undiscover(BleDevice)}.
 	 * 
-	 * @return <code>true</code> if the device was successfully
-	 *         {@link BleDeviceState#UNDISCOVERED}, <code>false</code> if
-	 *         BleDevice isn't known to the {@link BleManager}.
+	 * @return <code>true</code> if the device was successfully {@link BleDeviceState#UNDISCOVERED}, <code>false</code> if BleDevice isn't known to the {@link BleManager}.
 	 * 
 	 * @see BleManager#undiscover(BleDevice)
 	 */
@@ -2563,8 +2544,7 @@ public class BleDevice implements UsesCustomNull
 	 * isn't useful to you). Otherwise it probably means your app is holding on
 	 * to old references that have been undiscovered, and this may be a bug or
 	 * bad design decision in your code. This library will (well, should) never
-	 * hold references to two devices such that this method returns true for
-	 * them.
+	 * hold references to two devices such that this method returns true for them.
 	 * 
 	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
 	 */
@@ -2579,8 +2559,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns {@link #equals(BleDevice)} if object is an instance of
-	 * {@link BleDevice}. Otherwise calls super.
+	 * Returns {@link #equals(BleDevice)} if object is an instance of {@link BleDevice}. Otherwise calls super.
 	 * 
 	 * @see BleDevice#equals(BleDevice)
 	 */
@@ -2616,8 +2595,7 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Similar to {@link #startPoll(UUID, Interval, ReadWriteListener)} but only
 	 * invokes a callback when a change in the characteristic value is detected.
-	 * Use this in preference to {@link #enableNotify(UUID, ReadWriteListener)
-	 * ()} if possible.
+	 * Use this in preference to {@link #enableNotify(UUID, ReadWriteListener)} if possible.
 	 */
 	public void startChangeTrackingPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
@@ -2625,10 +2603,8 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Stops a poll(s) started by either
-	 * {@link #startPoll(UUID, Interval, ReadWriteListener)} or
-	 * {@link #startChangeTrackingPoll(UUID, Interval, ReadWriteListener)}. This
-	 * will stop all polls matching the provided parameters.
+	 * Stops a poll(s) started by either {@link #startPoll(UUID, Interval, ReadWriteListener)} or
+	 * {@link #startChangeTrackingPoll(UUID, Interval, ReadWriteListener)}. This will stop all polls matching the provided parameters.
 	 * 
 	 * @see #startPoll(UUID, Interval, ReadWriteListener)
 	 * @see #startChangeTrackingPoll(UUID, Interval, ReadWriteListener)
@@ -2639,8 +2615,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #stopPoll(UUID, ReadWriteListener)} but with added
-	 * filtering for the poll {@link Interval}.
+	 * Same as {@link #stopPoll(UUID, ReadWriteListener)} but with added filtering for the poll {@link Interval}.
 	 */
 	public void stopPoll(UUID uuid, Interval interval, ReadWriteListener listener)
 	{
@@ -2727,9 +2702,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Stops an RSSI poll previously started either by
-	 * {@link #startRssiPoll(Interval)} or
-	 * {@link #startRssiPoll(Interval, ReadWriteListener)}.
+	 * Stops an RSSI poll previously started either by {@link #startRssiPoll(Interval)} or {@link #startRssiPoll(Interval, ReadWriteListener)}.	 * 
 	 */
 	public void stopRssiPoll()
 	{
@@ -2823,13 +2796,10 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Disables all notifications enabled by
-	 * {@link #enableNotify(UUID, ReadWriteListener)} or
+	 * Disables all notifications enabled by {@link #enableNotify(UUID, ReadWriteListener)} or
 	 * {@link #enableNotify(UUID, Interval, ReadWriteListener)}. The listener
-	 * provided should be the same one that you passed to
-	 * {@link #enableNotify(UUID, ReadWriteListener)}. Listen for
-	 * {@link Type#DISABLING_NOTIFICATION} in your listener to know when the
-	 * remote device actually confirmed.
+	 * provided should be the same one that you passed to {@link #enableNotify(UUID, ReadWriteListener)}. Listen for
+	 * {@link Type#DISABLING_NOTIFICATION} in your listener to know when the remote device actually confirmed.
 	 */
 	public void disableNotify(UUID uuid, ReadWriteListener listener)
 	{
@@ -2837,8 +2807,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #disableNotify(UUID, ReadWriteListener)} but filters on
-	 * the given {@link Interval}.
+	 * Same as {@link #disableNotify(UUID, ReadWriteListener)} but filters on the given {@link Interval}.
 	 */
 	public void disableNotify(UUID uuid, Interval forceReadTimeout, ReadWriteListener listener)
 	{
@@ -2855,10 +2824,8 @@ public class BleDevice implements UsesCustomNull
 	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly
 	 * how much time it will take for the ota to complete.
 	 * 
-	 * @return {@link Boolean#TRUE} if firmware update has started, otherwise
-	 *         {@link Boolean#FALSE} if device is either already
-	 *         {@link BleDeviceState#PERFORMING_OTA} or is not
-	 *         {@link BleDeviceState#INITIALIZED}.
+	 * @return {@link Boolean#TRUE} if firmware update has started, otherwise {@link Boolean#FALSE} if device is either already
+	 *         {@link BleDeviceState#PERFORMING_OTA} or is not {@link BleDeviceState#INITIALIZED}.
 	 * 
 	 * @see BleManagerConfig#includeOtaReadWriteTimesInAverage
 	 * @see BleManagerConfig#autoScanDuringOta
@@ -3619,8 +3586,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns <code>true</code> if <code>this</code> is referentially equal to
-	 * {@link #NULL}.
+	 * Returns <code>true</code> if <code>this</code> is referentially equal to {@link #NULL}.
 	 */
 	@Override public boolean isNull()
 	{

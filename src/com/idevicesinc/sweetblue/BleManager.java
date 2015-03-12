@@ -854,12 +854,31 @@ public class BleManager
 	}
 	
 	/**
-	 * Returns <code>true</code> if there is bitwise overlap between the provided value
-	 * and {@link #getStateMask()}.
+	 * @deprecated Use {@link #isAny(int)}.
 	 */
 	public boolean is(final int mask_BleManagerState)
 	{
 		return (getStateMask() & mask_BleManagerState) != 0x0;
+	}
+	
+	/**
+	 * Returns <code>true</code> if there is partial bitwise overlap between the provided value and {@link #getStateMask()}.
+	 * 
+	 * @see #isAll(int)
+	 */
+	public boolean isAny(final int mask_BleManagerState)
+	{
+		return (getStateMask() & mask_BleManagerState) != 0x0;
+	}
+	
+	/**
+	 * Returns <code>true</code> if there is complete bitwise overlap between the provided value and {@link #getStateMask()}.
+	 * 
+	 * @see #isAny(int)
+	 */
+	public boolean isAll(final int mask_BleManagerState)
+	{
+		return (getStateMask() & mask_BleManagerState) == mask_BleManagerState;
 	}
 
 	/**
@@ -1549,8 +1568,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Returns the first device which returns <code>true</code> for {@link BleDevice#is(int)}, or {@link BleDevice#NULL}
-	 * if no such device is found.
+	 * Returns the first device which returns <code>true</code> for {@link BleDevice#isAny(int)}, or {@link BleDevice#NULL} if no such device is found.
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(final int mask_BleDeviceState)
 	{
@@ -1558,8 +1576,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Returns <code>true</code> if there is any {@link BleDevice} for which {@link BleDevice#is(int)}
-	 * with the given mask returns <code>true</code>.
+	 * Returns <code>true</code> if there is any {@link BleDevice} for which {@link BleDevice#isAny(int)} with the given mask returns <code>true</code>.
 	 */
 	public boolean hasDevice(final int mask_BleDeviceState)
 	{
@@ -1662,7 +1679,7 @@ public class BleManager
 	}
 	
 	/**
-	 * Same as {@link #getDevices()} except filters using {@link BleDevice#is(int)}.
+	 * Same as {@link #getDevices()} except filters using {@link BleDevice#isAny(int)}.
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final int mask_BleDeviceState)
 	{

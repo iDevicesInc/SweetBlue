@@ -40,7 +40,7 @@ class P_DeviceManager
 		{
 			BleDevice device = get(i);
 
-			if( device.is(mask_BleDeviceState) )
+			if( device.isAny(mask_BleDeviceState) )
 			{
 				return device;
 			}
@@ -91,7 +91,7 @@ class P_DeviceManager
 		{
 			final BleDevice device_ith = this.get(i);
 
-			if( device_ith.is(mask_BleDeviceState) )
+			if( device_ith.isAny(mask_BleDeviceState) )
 			{
 				toReturn.add(device_ith);
 			}

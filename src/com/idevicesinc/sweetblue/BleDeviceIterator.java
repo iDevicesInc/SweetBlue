@@ -57,7 +57,7 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 			{
 				BleDevice device = m_all.get(i);
 				
-				if( device.is(m_mask) )
+				if( device.isAny(m_mask) )
 				{
 					m_next = i;
 					
