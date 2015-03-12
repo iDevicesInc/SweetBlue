@@ -11,11 +11,6 @@ import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.ScanEvent;
 import com.idevicesinc.sweetblue.utils.State;
 
-/**
- * 
- * 
- *
- */
 class P_ScanFilterManager
 {
 	private final ArrayList<BleManagerConfig.ScanFilter> m_filters = new ArrayList<BleManagerConfig.ScanFilter>();
@@ -48,7 +43,7 @@ class P_ScanFilterManager
 		m_filters.add(filter);
 	}
 	
-	BleManagerConfig.ScanFilter.Please allow(BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent)
+	BleManagerConfig.ScanFilter.Please allow(P_Logger logger, BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent)
 	{
 		if( m_filters.size() == 0 && m_default == null )  return Please.acknowledge();
 		
@@ -58,11 +53,13 @@ class P_ScanFilterManager
 		{
 			result = new ScanEvent(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
-			Please ack = m_default.onEvent(result);
+			final Please please = m_default.onEvent(result);
 			
-			if( ack != null && ack.ack() )
+			logger.checkPlease(please, Please.class);
+			
+			if( please != null && please.ack() )
 			{
-				return ack;
+				return please;
 			}
 		}
 		
@@ -72,11 +69,13 @@ class P_ScanFilterManager
 			
 			ScanFilter ithFilter = m_filters.get(i);
 			
-			Please ack = ithFilter.onEvent(result);
+			final Please please = ithFilter.onEvent(result);
 			
-			if( ack != null && ack.ack() )
+			logger.checkPlease(please, Please.class);
+			
+			if( please != null && please.ack() )
 			{
-				return ack;
+				return please;
 			}
 		}
 		

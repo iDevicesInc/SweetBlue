@@ -127,7 +127,9 @@ class P_ReconnectManager
 		else
 		{
 			ReconnectRequestFilter.ReconnectRequestEvent info = new ReconnectRequestFilter.ReconnectRequestEvent(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo);
-			Please please = filter.onEvent(info);
+			final Please please = filter.onEvent(info);
+			
+			m_device.getManager().getLogger().checkPlease(please, Please.class);
 			
 			Interval delay = please != null ? please.getInterval() : null;
 			delay = delay != null ? delay : BleManagerConfig.ReconnectRequestFilter.Please.STOP;
@@ -197,7 +199,9 @@ class P_ReconnectManager
 		
 		PERSIST_EVENT.init(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), m_connectionFailInfo);
 		
-		ReconnectPersistFilter.Please please = persistFilter.onEvent(PERSIST_EVENT);
+		final ReconnectPersistFilter.Please please = persistFilter.onEvent(PERSIST_EVENT);
+		
+		m_device.getManager().getLogger().checkPlease(please, ReconnectPersistFilter.Please.class);
 		
 		if( please == null || !please.shouldPersist() )
 		{

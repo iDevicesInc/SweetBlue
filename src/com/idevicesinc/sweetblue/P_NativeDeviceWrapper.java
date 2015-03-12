@@ -244,6 +244,7 @@ class P_NativeDeviceWrapper
 //			}
 			
 			m_gatt.close();
+			m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			m_gatt = null;
 		}
 	}
@@ -259,12 +260,10 @@ class P_NativeDeviceWrapper
 				//---		As a result of a brief audit, moved gatt object setting from the ending state
 				//---		handler of the connect task in P_BleDevice_Listeners to the execute method of the connect task itself.
 				//---		Doesn't solve any particular issue found, but seems more logical.
-				m_mngr.ASSERT(m_gatt == gatt);
+				m_mngr.ASSERT(m_gatt == gatt, "Different gatt object set.");
 				
 				if( m_gatt != gatt )
 				{
-					m_mngr.ASSERT(false, "Different gatt object set.");
-					
 					closeGatt(/*disconnectAlso=*/false);
 				}
 				else

@@ -1103,6 +1103,8 @@ public class BleDeviceConfig implements Cloneable
 		final Interval timeout = please != null ? please.m_interval : Interval.DISABLED;
 		final double toReturn = timeout != null ? timeout.secs() : Interval.DISABLED.secs();
 		
+		event.device().getManager().getLogger().checkPlease(please, TimeoutRequestFilter.Please.class);
+		
 		return toReturn;
 	}
 	

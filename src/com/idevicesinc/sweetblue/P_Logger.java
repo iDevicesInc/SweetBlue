@@ -444,4 +444,14 @@ class P_Logger
 		
 		return (type == null ? debugName : type+"="+debugName)+"("+uuid+")";
 	}
+	
+	<T> void checkPlease(final T please_nullable, final Class<T> please_class)
+	{
+		final Class<? extends Object> class_Listener = please_class.getEnclosingClass();
+		
+		if( please_nullable == null )
+		{
+			w("WARNING: The " +please_class.getSimpleName() + " returned from " +class_Listener.getSimpleName() +".onEvent() is null. Consider returning a valid instance using static constructor methods.");
+		}
+	}
 }

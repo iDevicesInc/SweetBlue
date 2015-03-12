@@ -69,6 +69,8 @@ class P_DeviceStateTracker extends PA_StateTracker
 		
 		final BondFilter.Please please = bondFilter.onEvent(bondStateChangeEvent);
 		
+		m_device.getManager().getLogger().checkPlease(please, BondFilter.Please.class);
+		
 		m_device.m_bondMngr.applyPlease_BondFilter(please);
 		
 //		m_device.getManager().getLogger().e(this.toString());

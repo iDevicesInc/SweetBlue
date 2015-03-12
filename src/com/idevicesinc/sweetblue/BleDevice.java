@@ -147,10 +147,8 @@ public class BleDevice implements UsesCustomNull
 			FAILED_TO_SET_VALUE_ON_TARGET,
 
 			/**
-			 * The call to
-			 * {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)}
-			 * or
-			 * {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
+			 * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)}
+			 * or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
 			 * or etc. returned <code>false</code> and thus failed immediately
 			 * for unknown reasons. No good remedy for this...perhaps try
 			 * {@link BleManager#reset()}.
@@ -171,9 +169,8 @@ public class BleDevice implements UsesCustomNull
 			 * {@link ReadWriteEvent#status} could potentially be
 			 * {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
 			 * the disconnect callback before the turning off callback. Basic
-			 * testing has revealed that this is *not* the case, but you never
-			 * know. <br>
-			 * <br>
+			 * testing has revealed that this is *not* the case, but you never know.
+			 * <br><br>
 			 * Either way, the device was or will be disconnected.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF,
@@ -238,15 +235,12 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		/**
-		 * The type of operation for a {@link ReadWriteEvent} - read, write,
-		 * poll, etc.
+		 * The type of operation for a {@link ReadWriteEvent} - read, write, poll, etc.
 		 */
 		public static enum Type implements UsesCustomNull
 		{
 			/**
-			 * As of now, only used for
-			 * {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()}
-			 * in some cases.
+			 * As of now, only used for {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
 			 */
 			NULL,
 
@@ -402,32 +396,20 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * The {@link BleDevice} this {@link ReadWriteEvent} is for.
 			 */
-			public BleDevice device()
-			{
-				return m_device;
-			}
-
+			public BleDevice device() {  return m_device;  }
 			private final BleDevice m_device;
 
 			/**
 			 * The type of operation, read, write, etc.
 			 */
-			public Type type()
-			{
-				return m_type;
-			}
-
+			public Type type() {  return m_type; }
 			private final Type m_type;
 
 			/**
 			 * The type of GATT object this {@link ReadWriteEvent} is for,
 			 * currently, characteristic, descriptor, or rssi.
 			 */
-			public Target target()
-			{
-				return m_target;
-			}
-
+			public Target target() {  return m_target;  }
 			private final Target m_target;
 
 			/**
@@ -435,11 +417,7 @@ public class BleDevice implements UsesCustomNull
 			 * {@link ReadWriteEvent}. This will always be a valid {@link UUID},
 			 * even if {@link #target} is {@link Target#DESCRIPTOR}.
 			 */
-			public UUID charUuid()
-			{
-				return m_charUuid;
-			}
-
+			public UUID charUuid() {  return m_charUuid;  }
 			private final UUID m_charUuid;
 
 			/**
@@ -449,11 +427,7 @@ public class BleDevice implements UsesCustomNull
 			 * equal (i.e. you can use == to compare) to
 			 * {@link #NON_APPLICABLE_UUID}.
 			 */
-			public UUID descUuid()
-			{
-				return m_descUuid;
-			}
-
+			public UUID descUuid() {  return m_descUuid;  }
 			private final UUID m_descUuid;
 
 			/**
@@ -463,11 +437,7 @@ public class BleDevice implements UsesCustomNull
 			 * This will never be null. For error statuses it will be a
 			 * zero-length array.
 			 */
-			public byte[] data()
-			{
-				return m_data;
-			}
-
+			public byte[] data() {  return m_data;  }
 			private final byte[] m_data;
 
 			/**
@@ -480,11 +450,7 @@ public class BleDevice implements UsesCustomNull
 			 * @see BleDevice#getRssiPercent()
 			 * @see BleDevice#getDistance()
 			 */
-			public int rssi()
-			{
-				return m_rssi;
-			}
-
+			public int rssi() {  return m_rssi;  }
 			private final int m_rssi;
 
 			/**
@@ -493,11 +459,7 @@ public class BleDevice implements UsesCustomNull
 			 * For example a {@link Type#NOTIFICATION} cannot fail with
 			 * {@link Status#TIMED_OUT}.
 			 */
-			public Status status()
-			{
-				return m_status;
-			}
-
+			public Status status() {  return m_status;  }
 			private final Status m_status;
 
 			/**
@@ -505,11 +467,7 @@ public class BleDevice implements UsesCustomNull
 			 * the peripheral's embedded software, what have you. This will
 			 * always be slightly less than {@link #time_total()}.
 			 */
-			public Interval time_ota()
-			{
-				return m_transitTime;
-			}
-
+			public Interval time_ota() {  return m_transitTime;  }
 			private final Interval m_transitTime;
 
 			/**
@@ -518,11 +476,7 @@ public class BleDevice implements UsesCustomNull
 			 * queue plus {@link ReadWriteEvent#time_ota()}. This will always be
 			 * longer than {@link #time_ota()}, though usually only slightly so.
 			 */
-			public Interval time_total()
-			{
-				return m_totalTime;
-			}
-
+			public Interval time_total() {  return m_totalTime;  }
 			private final Interval m_totalTime;
 
 			/**
@@ -544,8 +498,8 @@ public class BleDevice implements UsesCustomNull
 			 * underlying stack deemed the operation a success but SweetBlue
 			 * disagreed. For this reason it's recommended to treat this value
 			 * as a debugging tool and use {@link #status} for actual
-			 * application logic if possible. <br>
-			 * <br>
+			 * application logic if possible.
+			 * <br><br>
 			 * See {@link BluetoothGatt} for its static <code>GATT_*</code>
 			 * status code members. Also see the source code of
 			 * {@link PS_GattStatus} for SweetBlue's more comprehensive internal
@@ -553,11 +507,7 @@ public class BleDevice implements UsesCustomNull
 			 * totally accurate or up-to-date, nor may it match GATT_ values
 			 * used by the bluetooth stack on your phone.
 			 */
-			public int gattStatus()
-			{
-				return m_gattStatus;
-			}
-
+			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
 			ReadWriteEvent(BleDevice device, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime)
@@ -712,11 +662,7 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * The device undergoing the state change.
 			 */
-			public BleDevice device()
-			{
-				return m_device;
-			}
-
+			public BleDevice device() {  return m_device;  }
 			private final BleDevice m_device;
 
 			/**
@@ -726,18 +672,11 @@ public class BleDevice implements UsesCustomNull
 			 * {@link BleDeviceState#DISCONNECTED} is <code>true</code> and
 			 * {@link #didExit(State)} with {@link BleDeviceState#CONNECTING} is
 			 * also <code>true</code> then {@link #gattStatus()} may be greater
-			 * than zero and give some further hint as to why the connection
-			 * failed. <br>
-			 * <br>
-			 * See
-			 * {@link ConnectionFailListener.ConnectionFailEvent#gattStatus()}
-			 * for more information.
+			 * than zero and give some further hint as to why the connection failed.
+			 * <br><br>
+			 * See {@link ConnectionFailListener.ConnectionFailEvent#gattStatus()} for more information.
 			 */
-			public int gattStatus()
-			{
-				return m_gattStatus;
-			}
-
+			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
 			StateEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
@@ -1108,53 +1047,32 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * The {@link BleDevice} this {@link ConnectionFailEvent} is for.
 			 */
-			public BleDevice device()
-			{
-				return m_device;
-			}
-
+			public BleDevice device() {  return m_device;  }
 			private final BleDevice m_device;
 
 			/**
-			 * Why the connection failed.
+			 * General reason why the connection failed.
 			 */
-			public Status status()
-			{
-				return m_status;
-			}
-
+			public Status status() {  return m_status;  }
 			private final Status m_status;
 
 			/**
 			 * The failure count so far. This will start at 1 and keep
 			 * incrementing for more failures.
 			 */
-			public int failureCountSoFar()
-			{
-				return m_failureCountSoFar;
-			}
-
+			public int failureCountSoFar() {  return m_failureCountSoFar;  }
 			private final int m_failureCountSoFar;
 
 			/**
 			 * How long the last connection attempt took before failing.
 			 */
-			public Interval attemptTime_latest()
-			{
-				return m_latestAttemptTime;
-			}
-
+			public Interval attemptTime_latest() {  return m_latestAttemptTime;  }
 			private final Interval m_latestAttemptTime;
 
 			/**
-			 * How long it's been since {@link BleDevice#connect()} (or
-			 * overloads) were initially called.
+			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
 			 */
-			public Interval attemptTime_total()
-			{
-				return m_totalAttemptTime;
-			}
-
+			public Interval attemptTime_total() {  return m_totalAttemptTime;  }
 			private final Interval m_totalAttemptTime;
 
 			/**
@@ -1168,31 +1086,19 @@ public class BleDevice implements UsesCustomNull
 			 * 
 			 * @see ReadWriteEvent#gattStatus
 			 */
-			public int gattStatus()
-			{
-				return m_gattStatus;
-			}
-
+			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
 			/**
 			 * See {@link BondEvent#failReason()}.
 			 */
-			public int bondFailReason()
-			{
-				return m_bondFailReason;
-			}
-
+			public int bondFailReason() {  return m_bondFailReason;  }
 			private final int m_bondFailReason;
 
 			/**
 			 * The highest state reached by the latest connection attempt.
 			 */
-			public BleDeviceState highestStateReached_latest()
-			{
-				return m_highestStateReached_latest;
-			}
-
+			public BleDeviceState highestStateReached_latest() {  return m_highestStateReached_latest;  }
 			private final BleDeviceState m_highestStateReached_latest;
 
 			/**
@@ -1203,25 +1109,17 @@ public class BleDevice implements UsesCustomNull
 			 * connection progress UI "bookmarked" while the connection retries
 			 * and goes through previous states again.
 			 */
-			public BleDeviceState highestStateReached_total()
-			{
-				return m_highestStateReached_total;
-			}
-
+			public BleDeviceState highestStateReached_total() {  return m_highestStateReached_total;  }
 			private final BleDeviceState m_highestStateReached_total;
 
 			/**
 			 * Whether <code>autoConnect=true</code> was passed to
-			 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
-			 * . See more discussion at
+			 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
+			 * See more discussion at
 			 * {@link BleDeviceConfig#alwaysUseAutoConnect}.
 			 */
 			@com.idevicesinc.sweetblue.annotations.Advanced
-			public AutoConnectUsage autoConnectUsage()
-			{
-				return m_autoConnectUsage;
-			}
-
+			public AutoConnectUsage autoConnectUsage() {  return m_autoConnectUsage;  }
 			private final AutoConnectUsage m_autoConnectUsage;
 
 			/**
@@ -1230,11 +1128,7 @@ public class BleDevice implements UsesCustomNull
 			 * {@link Status#BONDING_FAILED}, and
 			 * {@link Status#DISCOVERING_SERVICES_FAILED}.
 			 */
-			public Timing timing()
-			{
-				return m_timing;
-			}
-
+			public Timing timing() {  return m_timing;  }
 			private final Timing m_timing;
 
 			/**
@@ -1247,11 +1141,7 @@ public class BleDevice implements UsesCustomNull
 			 * here. Otherwise, this will return a {@link ReadWriteEvent} for
 			 * which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
 			 */
-			public ReadWriteListener.ReadWriteEvent txnFailReason()
-			{
-				return m_txnFailReason;
-			}
-
+			public ReadWriteListener.ReadWriteEvent txnFailReason() {  return m_txnFailReason;  }
 			private final ReadWriteListener.ReadWriteEvent m_txnFailReason;
 
 			ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
@@ -1322,11 +1212,11 @@ public class BleDevice implements UsesCustomNull
 		 * Otherwise, this method offers a more convenient way of retrying a
 		 * connection, as opposed to manually doing it yourself. It also lets
 		 * the library handle things in a slightly more optimized/cleaner
-		 * fashion and so is recommended for that reason also. <br>
-		 * <br>
+		 * fashion and so is recommended for that reason also.
+		 * <br><br>
 		 * NOTE that this callback gets fired *after* {@link StateListener} lets
-		 * you know that the device is {@link BleDeviceState#DISCONNECTED}. <br>
-		 * <br>
+		 * you know that the device is {@link BleDeviceState#DISCONNECTED}.
+		 * <br><br>
 		 * The time parameters like
 		 * {@link ConnectionFailEvent#attemptTime_latest()} are of optional use
 		 * to you to decide if connecting again is worth it. For example if
@@ -1340,9 +1230,8 @@ public class BleDevice implements UsesCustomNull
 	 * Default implementation of {@link ConnectionFailListener} that attempts a
 	 * certain number of retries. An instance of this class is set by default
 	 * for all new {@link BleDevice} instances using
-	 * {@link BleDevice.DefaultConnectionFailListener#DEFAULT_CONNECTION_FAIL_RETRY_COUNT}
-	 * . Use
-	 * {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)} to
+	 * {@link BleDevice.DefaultConnectionFailListener#DEFAULT_CONNECTION_FAIL_RETRY_COUNT}.
+	 * Use {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)} to
 	 * override the default behavior.
 	 * 
 	 * @see ConnectionFailListener
@@ -1390,8 +1279,7 @@ public class BleDevice implements UsesCustomNull
 
 		@Override public Please onEvent(ConnectionFailEvent e)
 		{
-			//--- DRK > Not necessary to check this ourselves, just being
-			// explicit.
+			//--- DRK > Not necessary to check this ourselves, just being explicit.
 			if (!e.status().allowsRetry() || e.device().is(RECONNECTING_LONG_TERM))
 			{
 				return Please.doNotRetry();
@@ -1435,8 +1323,7 @@ public class BleDevice implements UsesCustomNull
 
 	/**
 	 * Pass an instance of this listener to
-	 * {@link BleDevice#setListener_Bond(BondListener)} or
-	 * {@link BleDevice#bond(BondListener)}.
+	 * {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface BondListener
@@ -1526,21 +1413,13 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * The {@link BleDevice} that attempted to {@link BleDevice#bond()}.
 			 */
-			public BleDevice device()
-			{
-				return m_device;
-			}
-
+			public BleDevice device() {  return m_device;  }
 			private final BleDevice m_device;
 
 			/**
 			 * The {@link Status} associated with this event.
 			 */
-			public Status status()
-			{
-				return m_status;
-			}
-
+			public Status status() {  return m_status;  }
 			private final Status m_status;
 
 			/**
@@ -1552,11 +1431,7 @@ public class BleDevice implements UsesCustomNull
 			 * will be equal to
 			 * {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
 			 */
-			public int failReason()
-			{
-				return m_failReason;
-			}
-
+			public int failReason() {  return m_failReason;  }
 			private final int m_failReason;
 
 			/**
@@ -1569,11 +1444,7 @@ public class BleDevice implements UsesCustomNull
 			 * settings, or maybe from a request by the remote BLE device
 			 * itself.
 			 */
-			public State.ChangeIntent intent()
-			{
-				return m_intent;
-			}
-
+			public State.ChangeIntent intent() {  return m_intent;  }
 			private final State.ChangeIntent m_intent;
 
 			BondEvent(BleDevice device, Status status, int failReason, State.ChangeIntent intent)
@@ -1674,7 +1545,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public Object appData;
 
-	BleDevice(BleManager mngr, BluetoothDevice device_native, String normalizedName, String nativeName, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
+	BleDevice(BleManager mngr, BluetoothDevice device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
 	{
 		m_mngr = mngr;
 		m_origin = origin;
@@ -1685,7 +1556,7 @@ public class BleDevice implements UsesCustomNull
 			m_rssiPollMngr = null;
 			m_rssiPollMngr_auto = null;
 			// setConfig(config_nullable);
-			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName, nativeName);
+			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
 			m_queue = null;
 			m_listeners = null;
 			m_logger = null;
@@ -1707,7 +1578,7 @@ public class BleDevice implements UsesCustomNull
 			m_rssiPollMngr = new P_RssiPollManager(this);
 			m_rssiPollMngr_auto = new P_RssiPollManager(this);
 			setConfig(config_nullable);
-			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, normalizedName, nativeName);
+			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
 			m_queue = m_mngr != null ? m_mngr.getTaskQueue() : null;
 			m_listeners = new P_BleDevice_Listeners(this);
 			m_logger = m_mngr != null ? m_mngr.getLogger() : null;
@@ -1781,8 +1652,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
 	{
-		if (isNull())
-			return;
+		if (isNull())  return;
 
 		m_config = config_nullable == null ? null : config_nullable.clone();
 
@@ -1851,26 +1721,25 @@ public class BleDevice implements UsesCustomNull
 	 * This enum gives you an indication of the last interaction with a device
 	 * across app sessions or in-app BLE {@link BleManagerState#OFF}->
 	 * {@link BleManagerState#ON} cycles or undiscovery->rediscovery, which
-	 * basically means how it was last {@link BleDeviceState#DISCONNECTED}. <br>
-	 * <br>
+	 * basically means how it was last {@link BleDeviceState#DISCONNECTED}.
+	 * <br><br>
 	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown
 	 * because (a) device has never been seen before, (b) reason for disconnect
 	 * was app being killed and
-	 * {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>
-	 * , (c) app user cleared app data between app sessions, (d) etc., etc. <br>
-	 * <br>
+	 * {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>,
+	 * (c) app user cleared app data between app sessions, (d) etc., etc.
+	 * <br><br>
 	 * If {@link State.ChangeIntent#UNINTENTIONAL}, then from a user experience
 	 * perspective, the user may not have wanted the disconnect to happen, and
 	 * thus *probably* would want to be automatically connected again as soon as
-	 * the device is discovered. <br>
-	 * <br>
+	 * the device is discovered.
+	 * <br><br>
 	 * If {@link State.ChangeIntent#INTENTIONAL}, then last reason the device
 	 * was {@link BleDeviceState#DISCONNECTED} was because
 	 * {@link BleDevice#disconnect()} was called, which most-likely means the
-	 * user doesn't want to automatically connect to this device again. <br>
-	 * <br>
-	 * See further explanation at
-	 * {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
+	 * user doesn't want to automatically connect to this device again.
+	 * <br><br>
+	 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public State.ChangeIntent getLastDisconnectIntent()
@@ -2178,16 +2047,14 @@ public class BleDevice implements UsesCustomNull
 
 	private boolean is_query(final boolean internal, Object... query)
 	{
-		if (query == null || query.length == 0)
-			return false;
+		if (query == null || query.length == 0)  return false;
 
 		for (int i = 0; i < query.length; i += 2)
 		{
 			Object first = query[i];
 			Object second = i + 1 < query.length ? query[i + 1] : null;
 
-			if (first == null || second == null)
-				return false;
+			if (first == null || second == null)  return false;
 
 			if (!(first instanceof BleDeviceState) || !(second instanceof Boolean))
 			{
@@ -2199,17 +2066,13 @@ public class BleDevice implements UsesCustomNull
 
 			if (internal)
 			{
-				if (value && !this.is_internal(state))
-					return false;
-				else if (!value && this.is_internal(state))
-					return false;
+				if (value && !this.is_internal(state))			return false;
+				else if (!value && this.is_internal(state))		return false;
 			}
 			else
 			{
-				if (value && !this.is(state))
-					return false;
-				else if (!value && this.is(state))
-					return false;
+				if (value && !this.is(state))					return false;
+				else if (!value && this.is(state))				return false;
 			}
 		}
 
@@ -2298,8 +2161,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 
-		if (characteristic == null)
-			return null;
+		if (characteristic == null)  return null;
 
 		return characteristic.getGuaranteedNative();
 	}
@@ -2316,8 +2178,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		P_Service service = m_serviceMngr.get(uuid);
 
-		if (service == null)
-			return null;
+		if (service == null)  return null;
 
 		return service.getNative();
 	}
@@ -2646,8 +2507,7 @@ public class BleDevice implements UsesCustomNull
 
 		m_connectionFailMngr.onExplicitConnectionStarted();
 
-		if (connect_earlyOut())
-			return;
+		if (connect_earlyOut())  return;
 
 		m_lastConnectOrDisconnectWasUserExplicit = true;
 
@@ -2710,13 +2570,10 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public boolean equals(BleDevice device)
 	{
-		if (device == null)  return false;
-
-		if (device == this)  return true;
-
-		if (device.getNative() == null || this.getNative() == null)  return false;
-		
-		if( this.isNull() && device.isNull() )  return true;
+		if (device == null)												return false;
+		if (device == this)												return true;
+		if (device.getNative() == null || this.getNative() == null)		return false;
+		if( this.isNull() && device.isNull() )							return true;
 
 		return device.getNative().equals(this.getNative());
 	}
@@ -2907,7 +2764,7 @@ public class BleDevice implements UsesCustomNull
 	 * Enables notification on the given characteristic. The listener will be
 	 * called both for the notifications themselves and for the actual
 	 * registration for the notification.
-	 * <code>switch</switch> on {@link Type#ENABLING_NOTIFICATION}
+	 * <code>switch</code> on {@link Type#ENABLING_NOTIFICATION}
 	 * and {@link Type#NOTIFICATION} (or {@link Type#INDICATION}) in your listener to distinguish between these.
 	 */
 	public void enableNotify(UUID uuid, ReadWriteListener listener)
@@ -2993,8 +2850,8 @@ public class BleDevice implements UsesCustomNull
 	 * taking place and the device is {@link BleDeviceState#INITIALIZED}. This
 	 * will put the device into the {@link BleDeviceState#PERFORMING_OTA} state
 	 * if <code>true</code> is returned. You can use this to do firmware
-	 * updates, file transfers, etc. <br>
-	 * <br>
+	 * updates, file transfers, etc.
+	 * <br><br>
 	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly
 	 * how much time it will take for the ota to complete.
 	 * 
@@ -3008,12 +2865,9 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public boolean performOta(BleTransaction.Ota txn)
 	{
-		if (isNull())
-			return false;
-		if (is(PERFORMING_OTA))
-			return false;
-		if (!is(INITIALIZED))
-			return false;
+		if (isNull())				return false;
+		if (is(PERFORMING_OTA))		return false;
+		if (!is(INITIALIZED))		return false;
 
 		m_txnMngr.startOta(txn);
 
@@ -3021,8 +2875,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the device's name and current state for logging and debugging
-	 * purposes.
+	 * Returns the device's name and current state for logging and debugging purposes.
 	 */
 	@Override public String toString()
 	{
@@ -3056,8 +2909,7 @@ public class BleDevice implements UsesCustomNull
 
 	void addWriteTime(double timeStep)
 	{
-		if (!shouldAddOperationTime())
-			return;
+		if (!shouldAddOperationTime())  return;
 
 		if (m_writeTimeEstimator != null)
 		{
@@ -3186,8 +3038,7 @@ public class BleDevice implements UsesCustomNull
 
 	void attemptReconnect()
 	{
-		if (connect_earlyOut())
-			return;
+		if (connect_earlyOut())  return;
 
 		m_lastConnectOrDisconnectWasUserExplicit = true;
 
@@ -3310,67 +3161,6 @@ public class BleDevice implements UsesCustomNull
 	{
 		if (!m_nativeWrapper.isNativelyConnected())
 		{
-			//--- DRK > This accounts for certain fringe cases, for example the
-			// Nexus 5 log when you unbond a device from the OS settings while
-			// it's connected:
-			// 07-03 12:53:49.489: D/BluetoothGatt(11442):
-			// onClientConnectionState() - status=0 clientIf=5
-			// device=D4:81:CA:00:1D:61
-			// 07-03 12:53:49.499: I/BleDevice_Listeners(11442): FAY(11538)
-			// onConnectionStateChange() - GATT_SUCCESS(0) STATE_DISCONNECTED(0)
-			// 07-03 12:53:49.759: I/BleManager_Listeners(11442): AMY(11442)
-			// onNativeBondStateChanged() - previous=BOND_BONDED(12)
-			// new=BOND_NONE(10)
-			// 07-03 12:53:54.299: D/BluetoothGatt(11442):
-			// onClientConnectionState() - status=0 clientIf=5
-			// device=D4:81:CA:00:1D:61
-			// 07-03 12:53:54.299: I/BleDevice_Listeners(11442): CAM(11453)
-			// onConnectionStateChange() - GATT_SUCCESS(0) STATE_CONNECTED(2)
-			// 07-03 12:53:54.299: D/BleDevice(11442): CAM(11453)
-			// getNativeBondState() - BOND_NONE(10)
-			// 07-03 12:53:54.309: D/BleDevice(11442): CAM(11453)
-			// getNativeBondState() - BOND_NONE(10)
-			// 07-03 12:53:54.309: I/A_BtTask(11442): CAM(11453) setState() -
-			// BtTask_Bond(CREATED)
-			// 07-03 12:53:54.309: I/A_BtTask(11442): CAM(11453) setState() -
-			// BtTask_Bond(QUEUED) - 4032
-			// 07-03 12:53:54.309: I/BtTaskQueue(11442): CAM(11453) printQueue()
-			// - null [BtTask_Bond(QUEUED)]
-			// 07-03 12:53:54.309: D/BluetoothManager(11442):
-			// getConnectionState()
-			// 07-03 12:53:54.319: D/BluetoothManager(11442):
-			// getConnectedDevices
-			// 07-03 12:53:54.329: I/A_BtTask(11442): BEN(11488) setState() -
-			// BtTask_Bond(ARMED) - 4032
-			// 07-03 12:53:54.339: I/BtTaskQueue(11442): BEN(11488) printQueue()
-			// - BtTask_Bond(ARMED) [ empty ]
-			// 07-03 12:53:54.379: I/A_BtTask(11442): BEN(11488) setState() -
-			// BtTask_Bond(EXECUTING) - 4033
-			// 07-03 12:53:54.379: D/BleDevice(11442): GUS(11487)
-			// getNativeBondState() - BOND_NONE(10)
-			// 07-03 12:53:54.379: D/BleDevice(11442): GUS(11487)
-			// getNativeBondState() - BOND_NONE(10)
-			// 07-03 12:53:54.419: I/BleManager_Listeners(11442): AMY(11442)
-			// onNativeBondStateChanged() - previous=BOND_NONE(10)
-			// new=BOND_BONDING(11)
-			// 07-03 12:53:54.599: D/BluetoothGatt(11442):
-			// onClientConnectionState() - status=133 clientIf=5
-			// device=D4:81:CA:00:1D:61
-			// 07-03 12:53:54.599: W/BleDevice_Listeners(11442): FAY(11538)
-			// onConnectionStateChange() - UNKNOWN_STATUS(133)
-			// STATE_DISCONNECTED(0)
-			// 07-03 12:53:54.599: I/BleManager_Listeners(11442): AMY(11442)
-			// onNativeBondStateChanged() - previous=BOND_BONDING(11)
-			// new=BOND_NONE(10)
-			// 07-03 12:53:54.599: I/A_BtTask(11442): AMY(11442) setState() -
-			// BtTask_Bond(FAILED) - 4042
-			// 07-03 12:53:54.609: I/A_BtTask(11442): AMY(11442) setState() -
-			// BtTask_DiscoverServices(CREATED)
-			// 07-03 12:53:54.609: I/A_BtTask(11442): AMY(11442) setState() -
-			// BtTask_DiscoverServices(QUEUED) - 4042
-			// 07-03 12:53:54.609: I/BtTaskQueue(11442): AMY(11442) printQueue()
-			// - null [BtTask_DiscoverServices(QUEUED)]
-
 			return;
 		}
 
@@ -3389,9 +3179,8 @@ public class BleDevice implements UsesCustomNull
 	void onNativeConnectFail(PE_TaskState state, int gattStatus, AutoConnectUsage autoConnectUsage)
 	{
 		m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */true);
-
-		if (state == PE_TaskState.SOFTLY_CANCELLED || state == PE_TaskState.NO_OP)
-			return;
+		
+		if (state == PE_TaskState.SOFTLY_CANCELLED || state == PE_TaskState.NO_OP)	return;
 
 		boolean attemptingReconnect = is(RECONNECTING_LONG_TERM);
 		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
@@ -3783,23 +3572,23 @@ public class BleDevice implements UsesCustomNull
 		}
 	}
 
-	void invokeReadWriteCallback(ReadWriteListener listener_nullable, ReadWriteListener.ReadWriteEvent result)
+	void invokeReadWriteCallback(final ReadWriteListener listener_nullable, final ReadWriteListener.ReadWriteEvent event)
 	{
-		m_txnMngr.onReadWriteResult(result);
+		m_txnMngr.onReadWriteResult(event);
 
 		if (listener_nullable != null)
 		{
-			listener_nullable.onEvent(result);
+			listener_nullable.onEvent(event);
 		}
 
 		if (m_defaultReadWriteListener != null)
 		{
-			m_defaultReadWriteListener.onEvent(result);
+			m_defaultReadWriteListener.onEvent(event);
 		}
 
 		if (getManager() != null && getManager().m_defaultReadWriteListener != null)
 		{
-			getManager().m_defaultReadWriteListener.onEvent(result);
+			getManager().m_defaultReadWriteListener.onEvent(event);
 		}
 
 		m_txnMngr.onReadWriteResultCallbacksCalled();
