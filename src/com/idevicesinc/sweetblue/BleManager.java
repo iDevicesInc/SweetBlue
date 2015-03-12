@@ -471,9 +471,15 @@ public class BleManager
 		@Immutable
 		public static class UhOhEvent
 		{
+			/**
+			 * The manager associated with the {@link UhOhEvent}
+			 */
 			public BleManager manager(){  return m_manager;  }
 			private final BleManager m_manager;
 			
+			/**
+			 * Returns the type of {@link UhOh} that occurred.
+			 */
 			public UhOh uhOh(){  return m_uhOh;  }
 			private final UhOh m_uhOh;
 			
@@ -493,8 +499,8 @@ public class BleManager
 				return Utils.toString
 				(
 					this.getClass(),
-					"uhOh",		uhOh(),
-					"remedy",	remedy()
+					"uhOh",			uhOh(),
+					"remedy",		remedy()
 				);
 			}
 		}
