@@ -176,7 +176,7 @@ public interface State extends UsesCustomNull
 		public static int toDiskValue(final ChangeIntent intent_nullable)
 		{
 			if( intent_nullable == null )	return NULL.toDiskValue();
-			else					return intent_nullable.toDiskValue();
+			else							return intent_nullable.toDiskValue();
 		}
 		
 		/**

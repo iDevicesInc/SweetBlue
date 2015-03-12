@@ -252,9 +252,9 @@ public class BleManager
 				return Utils.toString
 				(
 					this.getClass(),
-					"entered",			Utils.toString(enterMask(),		BleManagerState.VALUES),
-					"exited",			Utils.toString(exitMask(),		BleManagerState.VALUES),
-					"current",			Utils.toString(newStateBits(),	BleDeviceState.VALUES)
+					"entered",			Utils.toString(enterMask(),		BleManagerState.VALUES()),
+					"exited",			Utils.toString(exitMask(),		BleManagerState.VALUES()),
+					"current",			Utils.toString(newStateBits(),	BleDeviceState.VALUES())
 				);
 			}
 		}

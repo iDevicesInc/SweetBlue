@@ -10,7 +10,7 @@ class P_NativeBleStateTracker extends PA_StateTracker
 	
 	P_NativeBleStateTracker(BleManager mngr)
 	{
-		super(BleManagerState.values());
+		super(BleManagerState.VALUES());
 		
 		m_mngr = mngr;
 	}

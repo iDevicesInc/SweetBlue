@@ -183,12 +183,18 @@ public enum BleDeviceState implements State
 		return this.bit() | bits;
 	}
 	
-	static final BleDeviceState[] VALUES = BleDeviceState.values();
+	static BleDeviceState[] VALUES()
+	{
+		s_values = s_values != null ? s_values : values();
+		
+		return s_values;
+	}
+	private static BleDeviceState[] s_values = null;
 	
 	/**
 	 * Full bitwise mask made by ORing all {@link BleDeviceState} instances together.
 	 */
-	public static final int FULL_MASK = Utils.calcFullMask(BleDeviceState.values());
+	public static final int FULL_MASK = Utils.calcFullMask(VALUES());
 	
 	/**
 	 * A convenience for UI purposes, this returns the "highest" connection state representing

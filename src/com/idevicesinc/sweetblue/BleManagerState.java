@@ -50,8 +50,13 @@ public enum BleManagerState implements State
 	
 	private final int m_nativeCode;
 	
-	
-	static final BleManagerState[] VALUES = BleManagerState.values();
+	static BleManagerState[] VALUES()
+	{
+		s_values = s_values != null ? s_values : values();
+		
+		return s_values;
+	}
+	private static BleManagerState[] s_values = null;
 	
 	/**
 	 * Full bitwise mask made by ORing all {@link BleManagerState} instances together.
@@ -80,11 +85,11 @@ public enum BleManagerState implements State
 	
 	static BleManagerState get(int nativeCode)
 	{
-		for( int i = 0; i < values().length; i++ )
+		for( int i = 0; i < VALUES().length; i++ )
 		{
-			if( values()[i].getNativeCode() == nativeCode )
+			if( VALUES()[i].getNativeCode() == nativeCode )
 			{
-				return values()[i];
+				return VALUES()[i];
 			}
 		}
 		

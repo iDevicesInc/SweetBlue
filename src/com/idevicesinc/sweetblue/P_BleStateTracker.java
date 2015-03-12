@@ -4,12 +4,6 @@ import com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent;
 
 import android.transition.ChangeBounds;
 
-
-/**
- * 
- * 
- *
- */
 class P_BleStateTracker extends PA_StateTracker
 {
 	private BleManager.StateListener m_stateListener;
@@ -17,7 +11,7 @@ class P_BleStateTracker extends PA_StateTracker
 	
 	P_BleStateTracker(BleManager mngr)
 	{
-		super(BleManagerState.values());
+		super(BleManagerState.VALUES());
 		
 		m_mngr = mngr;
 	}
@@ -45,6 +39,6 @@ class P_BleStateTracker extends PA_StateTracker
 	
 	@Override public String toString()
 	{
-		return super.toString(BleManagerState.values());
+		return super.toString(BleManagerState.VALUES());
 	}
 }

@@ -480,7 +480,7 @@ public class BleDevice implements UsesCustomNull
 			private final Interval m_totalTime;
 
 			/**
-			 * + The native gatt status returned from the stack, if applicable.
+			 * The native gatt status returned from the stack, if applicable.
 			 * If the {@link #status} returned is, for example,
 			 * {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the
 			 * operation didn't even reach the point where a gatt status is
@@ -693,9 +693,9 @@ public class BleDevice implements UsesCustomNull
 				(
 					this.getClass(),
 					"device",			device().getName_debug(),
-					"entered",			Utils.toString(enterMask(), BleDeviceState.VALUES),
-					"exited", 			Utils.toString(exitMask(), BleDeviceState.VALUES),
-					"current",			Utils.toString(newStateBits(), BleDeviceState.VALUES),
+					"entered",			Utils.toString(enterMask(), BleDeviceState.VALUES()),
+					"exited", 			Utils.toString(exitMask(), BleDeviceState.VALUES()),
+					"current",			Utils.toString(newStateBits(), BleDeviceState.VALUES()),
 					"gattStatus",		device().m_logger.gattStatus(gattStatus())
 				);
 			}

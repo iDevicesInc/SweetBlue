@@ -15,7 +15,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	P_DeviceStateTracker(BleDevice device, final boolean forShortTermReconnect)
 	{
-		super(BleDeviceState.VALUES, /*trackTimes=*/forShortTermReconnect==false);
+		super(BleDeviceState.VALUES(), /*trackTimes=*/forShortTermReconnect==false);
 		
 		m_device = device;
 		m_forShortTermReconnect = forShortTermReconnect;
@@ -90,6 +90,6 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	@Override public String toString()
 	{
-		return super.toString(BleDeviceState.VALUES);
+		return super.toString(BleDeviceState.VALUES());
 	}
 }
