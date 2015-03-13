@@ -1595,7 +1595,7 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices()
 	{
-		return new BleDeviceIterator(m_deviceMngr.getList());
+		return new BleDeviceIterator(getDevices_List());
 	}
 	
 	/**
@@ -1656,7 +1656,7 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final BleDeviceState state)
 	{
-		return new BleDeviceIterator(m_deviceMngr.getList(), state, true);
+		return new BleDeviceIterator(getDevices_List(), state, true);
 	}
 	
 	/**
@@ -1673,7 +1673,7 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final Object ... query)
 	{
-		return new BleDeviceIterator(m_deviceMngr.getList(), query);
+		return new BleDeviceIterator(getDevices_List(), query);
 	}
 	
 	/**
@@ -1689,7 +1689,7 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final int mask_BleDeviceState)
 	{
-		return new BleDeviceIterator(m_deviceMngr.getList(), mask_BleDeviceState);
+		return new BleDeviceIterator(getDevices_List(), mask_BleDeviceState);
 	}
 	
 	/**

@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Implementation of {@link Iterator} for {@link BleDevice} instances, returned from {@link BleManager#getDevices()} and its overloads.
@@ -15,6 +16,7 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 	
 	private Integer m_next = null;
 	private int m_base = 0;
+	private BleDevice m_deviceReturned;
 	
 	public BleDeviceIterator(List<BleDevice> all)
 	{
@@ -82,8 +84,8 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		
 		return false;
 	}
-
-	@Override public BleDevice next()
+	
+	private BleDevice next_private()
 	{
 		if( m_next == null )
 		{
@@ -97,10 +99,26 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		return m_all.get(next);
 	}
 
+	@Override public BleDevice next()
+	{
+		m_deviceReturned = next_private();
+		
+		//--- DRK > Conforming to soft throw requirements dictated by Iterator interface.		
+		if( m_deviceReturned == null )  throw new NoSuchElementException("No more BleDevice instances in this iterator.");
+		
+		return m_deviceReturned;
+	}
+
 	/**
-	 * For now doesn't do anything.
+	 * Calls {@link BleManager#undiscover(BleDevice)}, removing it from the {@link BleManager} singleton's internal list.
 	 */
 	@Override public void remove()
-	{		
+	{
+		//--- DRK > Conforming to soft throw requirements dictated by Iterator interface.
+		if( m_deviceReturned == null )  throw new IllegalStateException("remove() was already called.");
+		
+		final BleDevice toUndiscover = m_deviceReturned;
+		m_deviceReturned = null;
+		toUndiscover.undiscover();
 	}
 }
