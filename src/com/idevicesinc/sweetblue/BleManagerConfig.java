@@ -207,6 +207,14 @@ public class BleManagerConfig extends BleDeviceConfig
 			{
 				return new Please(false, null);
 			}
+			
+			/**
+			 * Returns {@link #ignore()} if the given condition holds <code>true</code>, {@link #acknowledge()} otherwise.
+			 */
+			public static Please ignoreIf(final boolean condition)
+			{
+				return condition ? ignore() : acknowledge();
+			}
 		}
 		
 		/**

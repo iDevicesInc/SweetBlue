@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue.utils;
 
+import com.idevicesinc.sweetblue.annotations.Lambda;
+
 import android.os.Handler;
 import android.os.Looper;
 
@@ -11,6 +13,7 @@ public class UpdateLoop
 	/**
 	 * A callback where you handle the update time step.
 	 */
+	@Lambda
 	public static interface Callback
 	{
 		/**
