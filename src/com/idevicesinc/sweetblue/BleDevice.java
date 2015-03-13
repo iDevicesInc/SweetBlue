@@ -478,8 +478,7 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Convenience method for checking if {@link ReadWriteEvent#status}
-			 * equals {@link Status#SUCCESS}.
+			 * Convenience method for checking if {@link ReadWriteEvent#status} equals {@link Status#SUCCESS}.
 			 */
 			public boolean wasSuccess()
 			{
@@ -570,10 +569,8 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Provide an implementation to
-	 * {@link BleDevice#setListener_State(StateListener)} and/or
-	 * {@link BleManager#setListener_DeviceState(BleDevice.StateListener)} to
-	 * receive state change events.
+	 * Provide an implementation to {@link BleDevice#setListener_State(StateListener)} and/or
+	 * {@link BleManager#setListener_DeviceState(BleDevice.StateListener)} to receive state change events.
 	 * 
 	 * @see BleDeviceState
 	 * @see BleDevice#setListener_State(StateListener)
@@ -637,8 +634,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Provide an implementation of this callback to
-	 * {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)}.
+	 * Provide an implementation of this callback to {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)}.
 	 * 
 	 * @see DefaultConnectionFailListener
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
@@ -662,81 +658,62 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * A call was made to {@link BleDevice#connect()} or its overloads
 			 * but {@link ConnectionFailEvent#device()} is already
-			 * {@link BleDeviceState#CONNECTING} or
-			 * {@link BleDeviceState#CONNECTED}.
+			 * {@link BleDeviceState#CONNECTING} or {@link BleDeviceState#CONNECTED}.
 			 */
 			ALREADY_CONNECTING_OR_CONNECTED,
 
 			/**
-			 * {@link BleDevice#connect()} (or various overloads) was called on
-			 * {@link BleDevice#NULL}.
+			 * {@link BleDevice#connect()} (or various overloads) was called on {@link BleDevice#NULL}.
 			 */
 			NULL_DEVICE,
 
 			/**
-			 * Couldn't connect through
-			 * {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
-			 * because it (a) {@link Timing#IMMEDIATELY} returned
-			 * <code>null</code>, (b) {@link Timing#EVENTUALLY} returned a bad
-			 * {@link ConnectionFailEvent#gattStatus()}, or (c)
-			 * {@link Timing#TIMED_OUT}.
+			 * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
+			 * because it (a) {@link Timing#IMMEDIATELY} returned <code>null</code>, (b) {@link Timing#EVENTUALLY} returned a bad
+			 * {@link ConnectionFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
 			 */
 			NATIVE_CONNECTION_FAILED,
 
 			/**
-			 * {@link BluetoothGatt#discoverServices()} either (a)
-			 * {@link Timing#IMMEDIATELY} returned <code>false</code>, (b)
-			 * {@link Timing#EVENTUALLY} returned a bad
-			 * {@link ConnectionFailEvent#gattStatus()}, or (c)
-			 * {@link Timing#TIMED_OUT}.
+			 * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
+			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
 			 */
 			DISCOVERING_SERVICES_FAILED,
 
 			/**
-			 * {@link BluetoothDevice#createBond()} either (a)
-			 * {@link Timing#IMMEDIATELY} returned <code>false</code>, (b)
-			 * {@link Timing#EVENTUALLY} returned a bad
-			 * {@link ConnectionFailEvent#bondFailReason()}, or (c)
-			 * {@link Timing#TIMED_OUT}.
+			 * {@link BluetoothDevice#createBond()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
+			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#bondFailReason()}, or (c) {@link Timing#TIMED_OUT}.
 			 * <br><br>
-			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be
-			 * <code>true</code> for this {@link Status} to be applicable.
+			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Status} to be applicable.
 			 * 
 			 * @see BondListener
 			 */
 			BONDING_FAILED,
 
 			/**
-			 * The {@link BleTransaction} instance passed to
-			 * {@link BleDevice#connect(BleTransaction.Auth)} or
-			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)}
-			 * failed through {@link BleTransaction#fail()}.
+			 * The {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Auth)} or
+			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} failed through {@link BleTransaction#fail()}.
+			 * 
 			 */
 			AUTHENTICATION_FAILED,
 
 			/**
-			 * {@link BleTransaction} instance passed to
-			 * {@link BleDevice#connect(BleTransaction.Init)} or
-			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)}
-			 * failed through {@link BleTransaction#fail()}.
+			 * {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Init)} or
+			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} failed through {@link BleTransaction#fail()}.
+			 * 
 			 */
 			INITIALIZATION_FAILED,
 
 			/**
-			 * Remote peripheral randomly disconnected sometime during the
-			 * connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
-			 * but only occurs after the device is
-			 * {@link BleDeviceState#CONNECTED} and we're going through
-			 * {@link BleDeviceState#DISCOVERING_SERVICES}, or
-			 * {@link BleDeviceState#AUTHENTICATING}, or what have you. It might
-			 * be from the device turning off, or going out of range, or any
-			 * other random reason.
+			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
+			 * but only occurs after the device is {@link BleDeviceState#CONNECTED} and we're going through
+			 * {@link BleDeviceState#DISCOVERING_SERVICES}, or {@link BleDeviceState#AUTHENTICATING}, or what have you. It might
+			 * be from the device turning off, or going out of range, or any other random reason.
 			 */
 			ROGUE_DISCONNECT,
 
 			/**
-			 * {@link BleDevice#disconnect()} was called sometime during the
-			 * connection process.
+			 * {@link BleDevice#disconnect()} was called sometime during the connection process.
 			 */
 			EXPLICIT_DISCONNECT,
 
@@ -754,8 +731,7 @@ public class BleDevice implements UsesCustomNull
 			BLE_TURNING_OFF;
 
 			/**
-			 * Returns true for {@link #EXPLICIT_DISCONNECT} or
-			 * {@link #BLE_TURNING_OFF}.
+			 * Returns true for {@link #EXPLICIT_DISCONNECT} or {@link #BLE_TURNING_OFF}.
 			 */
 			public boolean wasCancelled()
 			{
@@ -763,8 +739,7 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Same as {@link #wasCancelled()}, at least for now, but just being
-			 * more "explicit", no pun intended.
+			 * Same as {@link #wasCancelled()}, at least for now, but just being more "explicit", no pun intended.
 			 */
 			boolean wasExplicit()
 			{
@@ -788,17 +763,14 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		/**
-		 * For {@link Status#NATIVE_CONNECTION_FAILED},
-		 * {@link Status#DISCOVERING_SERVICES_FAILED}, and
-		 * {@link Status#BONDING_FAILED}, gives further timing information on
-		 * when the failure took place. For all other reasons,
-		 * {@link ConnectionFailEvent#timing()} will be {@link #NOT_APPLICABLE}.
+		 * For {@link Status#NATIVE_CONNECTION_FAILED}, {@link Status#DISCOVERING_SERVICES_FAILED}, and
+		 * {@link Status#BONDING_FAILED}, gives further timing information on when the failure took place.
+		 * For all other reasons, {@link ConnectionFailEvent#timing()} will be {@link #NOT_APPLICABLE}.
 		 */
 		public static enum Timing
 		{
 			/**
-			 * For reasons like
-			 * {@link ConnectionFailListener.Status#BLE_TURNING_OFF},
+			 * For reasons like {@link ConnectionFailListener.Status#BLE_TURNING_OFF},
 			 * {@link ConnectionFailListener.Status#AUTHENTICATION_FAILED}, etc.
 			 */
 			NOT_APPLICABLE,
@@ -841,8 +813,7 @@ public class BleDevice implements UsesCustomNull
 			UNKNOWN,
 
 			/**
-			 * Usage is not applicable to the
-			 * {@link ConnectionFailEvent#status()} given.
+			 * Usage is not applicable to the{@link ConnectionFailEvent#status()} given.
 			 */
 			NOT_APPLICABLE,
 
@@ -858,8 +829,7 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		/**
-		 * Return value for
-		 * {@link ConnectionFailListener#onEvent(ConnectionFailEvent)}.
+		 * Return value for {@link ConnectionFailListener#onEvent(ConnectionFailEvent)}.
 		 * Generally you will only return {@link #retry()} or
 		 * {@link #doNotRetry()}, but there are more advanced options as well.
 		 */
@@ -1111,23 +1081,17 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		/**
-		 * Return value is ignored if device is either
-		 * {@link BleDeviceState#RECONNECTING_LONG_TERM} or reason
-		 * {@link Status#allowsRetry()} is <code>false</code>. If the device is
-		 * {@link BleDeviceState#RECONNECTING_LONG_TERM} then authority is
-		 * deferred to {@link BleDeviceConfig.ReconnectRequestFilter}.
-		 * Otherwise, this method offers a more convenient way of retrying a
-		 * connection, as opposed to manually doing it yourself. It also lets
-		 * the library handle things in a slightly more optimized/cleaner
-		 * fashion and so is recommended for that reason also.
+		 * Return value is ignored if device is either {@link BleDeviceState#RECONNECTING_LONG_TERM} or reason
+		 * {@link Status#allowsRetry()} is <code>false</code>. If the device is {@link BleDeviceState#RECONNECTING_LONG_TERM}
+		 * then authority is deferred to {@link BleDeviceConfig.ReconnectRequestFilter}.
 		 * <br><br>
-		 * NOTE that this callback gets fired *after* {@link StateListener} lets
-		 * you know that the device is {@link BleDeviceState#DISCONNECTED}.
+		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also lets
+		 * the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
 		 * <br><br>
-		 * The time parameters like
-		 * {@link ConnectionFailEvent#attemptTime_latest()} are of optional use
-		 * to you to decide if connecting again is worth it. For example if
-		 * you've been trying to connect for 10 seconds already, chances are
+		 * NOTE that this callback gets fired *after* {@link StateListener} lets you know that the device is {@link BleDeviceState#DISCONNECTED}.
+		 * <br><br>
+		 * The time parameters like {@link ConnectionFailEvent#attemptTime_latest()} are of optional use
+		 * to you to decide if connecting again is worth it. For example if you've been trying to connect for 10 seconds already, chances are
 		 * that another connection attempt probably won't work.
 		 */
 		Please onEvent(ConnectionFailEvent event);
@@ -1148,11 +1112,9 @@ public class BleDevice implements UsesCustomNull
 	public static class DefaultConnectionFailListener implements ConnectionFailListener
 	{
 		/**
-		 * The default retry count provided to
-		 * {@link DefaultConnectionFailListener}. So if you were to call
-		 * {@link BleDevice#connect()} and all connections failed, in total the
-		 * library would try to connect
-		 * {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
+		 * The default retry count provided to {@link DefaultConnectionFailListener}.
+		 * So if you were to call {@link BleDevice#connect()} and all connections failed, in total the
+		 * library would try to connect {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
 		 * 
 		 * @see DefaultConnectionFailListener
 		 */
@@ -1229,15 +1191,13 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Pass an instance of this listener to
-	 * {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
+	 * Pass an instance of this listener to {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface BondListener
 	{
 		/**
-		 * Used on {@link BondEvent#status()} to roughly enumerate success or
-		 * failure.
+		 * Used on {@link BondEvent#status()} to roughly enumerate success or failure.
 		 */
 		public static enum Status
 		{
@@ -1247,20 +1207,17 @@ public class BleDevice implements UsesCustomNull
 			SUCCESS,
 
 			/**
-			 * {@link BleDevice#bond(BondListener)} (or overloads) was called on
-			 * {@link BleDevice#NULL}.
+			 * {@link BleDevice#bond(BondListener)} (or overloads) was called on {@link BleDevice#NULL}.
 			 */
 			NULL_DEVICE,
 
 			/**
-			 * Already {@link BleDeviceState#BONDED} or in the process of
-			 * {@link BleDeviceState#BONDING}.
+			 * Already {@link BleDeviceState#BONDED} or in the process of {@link BleDeviceState#BONDING}.
 			 */
 			ALREADY_BONDING_OR_BONDED,
 
 			/**
-			 * The call to {@link BluetoothDevice#createBond()} returned
-			 * <code>false</code> and thus failed immediately.
+			 * The call to {@link BluetoothDevice#createBond()} returned <code>false</code> and thus failed immediately.
 			 */
 			FAILED_IMMEDIATELY,
 
@@ -1280,16 +1237,13 @@ public class BleDevice implements UsesCustomNull
 			TIMED_OUT,
 
 			/**
-			 * A call was made to {@link BleDevice#unbond()} at some point
-			 * during the bonding process.
+			 * A call was made to {@link BleDevice#unbond()} at some point during the bonding process.
 			 */
 			CANCELLED_FROM_UNBOND,
 
 			/**
-			 * Cancelled from {@link BleManager} going
-			 * {@link BleManagerState#TURNING_OFF} or
-			 * {@link BleManagerState#OFF}, probably from calling
-			 * {@link BleManager#reset()}.
+			 * Cancelled from {@link BleManager} going {@link BleManagerState#TURNING_OFF} or
+			 * {@link BleManagerState#OFF}, probably from calling {@link BleManager#reset()}.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF;
 
@@ -1330,26 +1284,19 @@ public class BleDevice implements UsesCustomNull
 			private final Status m_status;
 
 			/**
-			 * If {@link #status()} is
-			 * {@link BondListener.Status#FAILED_EVENTUALLY}, this integer will
-			 * be one of the values enumerated in {@link BluetoothDevice} that
-			 * start with <code>UNBOND_REASON</code> such as
-			 * {@link BluetoothDevice#UNBOND_REASON_AUTH_FAILED}. Otherwise it
-			 * will be equal to
+			 * If {@link #status()} is {@link BondListener.Status#FAILED_EVENTUALLY}, this integer will
+			 * be one of the values enumerated in {@link BluetoothDevice} that start with <code>UNBOND_REASON</code> such as
+			 * {@link BluetoothDevice#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to
 			 * {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
 			 */
 			public int failReason() {  return m_failReason;  }
 			private final int m_failReason;
 
 			/**
-			 * Tells whether the bond was created through an explicit call
-			 * through SweetBlue, or otherwise. If
-			 * {@link ChangeIntent#INTENTIONAL}, then {@link BleDevice#bond()}
-			 * (or overloads) were called. If {@link ChangeIntent#UNINTENTIONAL}
-			 * , then the bond was created "spontaneously" as far as SweetBlue
-			 * is concerned, whether through another app, the OS Bluetooth
-			 * settings, or maybe from a request by the remote BLE device
-			 * itself.
+			 * Tells whether the bond was created through an explicit call through SweetBlue, or otherwise. If
+			 * {@link ChangeIntent#INTENTIONAL}, then {@link BleDevice#bond()} (or overloads) were called. If {@link ChangeIntent#UNINTENTIONAL},
+			 * then the bond was created "spontaneously" as far as SweetBlue is concerned, whether through another app, the OS Bluetooth
+			 * settings, or maybe from a request by the remote BLE device itself.
 			 */
 			public State.ChangeIntent intent() {  return m_intent;  }
 			private final State.ChangeIntent m_intent;
@@ -1381,9 +1328,8 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		/**
-		 * Called after a call to {@link BleDevice#bond(BondListener)} (or
-		 * overloads), or when bonding through another app or the operating
-		 * system settings.
+		 * Called after a call to {@link BleDevice#bond(BondListener)} (or overloads),
+		 * or when bonding through another app or the operating system settings.
 		 */
 		void onEvent(BondEvent e);
 	}
@@ -1447,8 +1393,7 @@ public class BleDevice implements UsesCustomNull
 
 	/**
 	 * Field for app to associate any data it wants with instances of this class
-	 * instead of having to subclass or manage associative hash maps or
-	 * something.
+	 * instead of having to subclass or manage associative hash maps or something.
 	 */
 	public Object appData;
 
@@ -1553,9 +1498,8 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Optionally sets overrides for any custom options given to
-	 * {@link BleManager#get(android.content.Context, BleManagerConfig)} for
-	 * this individual device.
+	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
+	 * for this individual device.
 	 */
 	public void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
 	{
@@ -1685,13 +1629,10 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Sets a default backup {@link ReadWriteListener} that will be called for
-	 * all calls to {@link #read(UUID, ReadWriteListener)},
-	 * {@link #write(UUID, byte[], ReadWriteListener)},
-	 * {@link #enableNotify(UUID, ReadWriteListener)}, etc.
+	 * Sets a default backup {@link ReadWriteListener} that will be called for all calls to {@link #read(UUID, ReadWriteListener)},
+	 * {@link #write(UUID, byte[], ReadWriteListener)}, {@link #enableNotify(UUID, ReadWriteListener)}, etc.
 	 * <br><br>
-	 * NOTE: This will be called after the {@link ReadWriteListener} provided
-	 * directly through the method params.
+	 * NOTE: This will be called after the {@link ReadWriteListener} provided directly through the method params.
 	 */
 	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) ReadWriteListener listener_nullable)
 	{
@@ -1706,12 +1647,9 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the connection failure retry count during a retry loop. Basic
-	 * example use case is to provide a callback to
-	 * {@link #setListener_ConnectionFail(ConnectionFailListener)} and update
-	 * your application's UI with this method's return value downstream of your
-	 * {@link ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)}
-	 * override.
+	 * Returns the connection failure retry count during a retry loop. Basic example use case is to provide a callback to
+	 * {@link #setListener_ConnectionFail(ConnectionFailListener)} and update your application's UI with this method's return value downstream of your
+	 * {@link ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} override.
 	 */
 	public int getConnectionRetryCount()
 	{
@@ -1719,8 +1657,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the bitwise state mask representation of {@link BleDeviceState}
-	 * for this device.
+	 * Returns the bitwise state mask representation of {@link BleDeviceState} for this device.
 	 * 
 	 * @see BleDeviceState
 	 */
@@ -1754,14 +1691,10 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the average round trip time in seconds for all write operations
-	 * started with {@link #write(UUID, byte[])} or
-	 * {@link #write(UUID, byte[], ReadWriteListener)}. This is a running
-	 * average with N being defined by
-	 * {@link BleManagerConfig#nForAverageRunningWriteTime}. This may be useful
-	 * for estimating how long a series of reads and/or writes will take. For
-	 * example for displaying the estimated time remaining for a firmware
-	 * update.
+	 * Returns the average round trip time in seconds for all write operations started with {@link #write(UUID, byte[])} or
+	 * {@link #write(UUID, byte[], ReadWriteListener)}. This is a running average with N being defined by
+	 * {@link BleManagerConfig#nForAverageRunningWriteTime}. This may be useful for estimating how long a series of
+	 * reads and/or writes will take. For example for displaying the estimated time remaining for a firmware update.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public Interval getAverageWriteTime()
@@ -1771,11 +1704,9 @@ public class BleDevice implements UsesCustomNull
 
 	/**
 	 * Returns the raw RSSI retrieved from when the device was discovered,
-	 * rediscovered, or when you call {@link #readRssi()} or
-	 * {@link #startRssiPoll(Interval)}.
+	 * rediscovered, or when you call {@link #readRssi()} or {@link #startRssiPoll(Interval)}.
 	 * 
 	 * @see #getDistance()
-	 * 
 	 */
 	public int getRssi()
 	{
@@ -1783,8 +1714,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Raw RSSI from {@link #getRssi()} is a little cryptic, so this gives you a
-	 * friendly 0%-100% value for signal strength.
+	 * Raw RSSI from {@link #getRssi()} is a little cryptic, so this gives you a friendly 0%-100% value for signal strength.
 	 */
 	public Percent getRssiPercent()
 	{
@@ -1803,9 +1733,8 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the approximate distance in meters based on {@link #getRssi()}
-	 * and {@link #getTxPower()}. NOTE: the higher the distance, the less the
-	 * accuracy.
+	 * Returns the approximate distance in meters based on {@link #getRssi()} and
+	 * {@link #getTxPower()}. NOTE: the higher the distance, the less the accuracy.
 	 */
 	public Distance getDistance()
 	{
@@ -1850,8 +1779,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the scan record from when we discovered the device. May be empty
-	 * but never null.
+	 * Returns the scan record from when we discovered the device. May be empty but never <code>null</code>.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.NEVER) byte[] getScanRecord()
@@ -1860,8 +1788,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the advertised services, if any, parsed from
-	 * {@link #getScanRecord()}. May be empty but never null.
+	 * Returns the advertised services, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
 	 */
 	public @Nullable(Prevalence.NEVER) UUID[] getAdvertisedServices()
 	{
