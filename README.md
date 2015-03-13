@@ -1,4 +1,4 @@
-[[Why?](#Why?)] [[Features?](#Features?)] [[Getting Started?](#Getting Started?)] [[Licensing?](#Licensing?)]
+[[Why?](#Why?)] [[Features](#Features)] [[Getting Started](#Getting Started)] [[Licensing](#Licensing)]
 
 <p align="center"><a href="https://idevicesinc.com/sweetblue"><img src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png" /></a></p>
 Why?
