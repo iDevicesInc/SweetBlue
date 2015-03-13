@@ -1,4 +1,4 @@
-**|** [Why?](#why) **|** [Features](#features) **|** [Getting Started](#getting started) **|** [Licensing](#licensing) **|**
+**|** [Why?](#why) **|** [Features](#features) **|** [Getting Started](#getting-started) **|** [Licensing](#licensing) **|**
 
 <p align="center"><a href="https://idevicesinc.com/sweetblue"><img src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png" /></a></p>
 Why?
