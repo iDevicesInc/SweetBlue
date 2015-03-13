@@ -209,7 +209,7 @@ class P_ServiceManager
 			case POLL:
 			case PSUEDO_NOTIFICATION:	return BluetoothGattCharacteristic.PROPERTY_READ;
 			
-			case WRITE:					return BluetoothGattCharacteristic.PROPERTY_WRITE;
+			case WRITE:					return BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
 			
 			case ENABLING_NOTIFICATION:
 			case DISABLING_NOTIFICATION:
