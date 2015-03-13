@@ -157,23 +157,17 @@ public class BleDevice implements UsesCustomNull
 			NULL_DATA,
 
 			/**
-			 * Used either when {@link ReadWriteEvent#type}
-			 * {@link Type#isRead()} and the operation was "successful" but
-			 * returned a zero-length array for {@link ReadWriteEvent#data},
-			 * <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) )
-			 * was called with a non-null but zero-length data parameter. Note
-			 * that {@link ReadWriteEvent#data} will be a zero-length array for
-			 * all other error statuses as well, for example
-			 * {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc. In
-			 * other words it's never null.
+			 * Used either when {@link ReadWriteEvent#type} {@link Type#isRead()} and the operation was "successful" but
+			 * returned a zero-length array for {@link ReadWriteEvent#data}, <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) )
+			 * was called with a non-null but zero-length data parameter. Note that {@link ReadWriteEvent#data} will be a zero-length array for
+			 * all other error statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc. In other words it's never null.
 			 */
 			EMPTY_DATA,
 
 			/**
 			 * The operation failed in a "normal" fashion, at least relative to
 			 * all the other strange ways an operation can fail. This means for
-			 * example that
-			 * {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
+			 * example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
 			 * returned a status code that was not zero. This could mean the
 			 * device went out of range, was turned off, signal was disrupted,
 			 * whatever. Often this means that the device is about to become
@@ -182,14 +176,12 @@ public class BleDevice implements UsesCustomNull
 			REMOTE_GATT_FAILURE,
 
 			/**
-			 * Operation took longer than time specified in
-			 * {@link BleDeviceConfig#timeoutRequestFilter} so we cut it loose.
+			 * Operation took longer than time specified in {@link BleDeviceConfig#timeoutRequestFilter} so we cut it loose.
 			 */
 			TIMED_OUT;
 
 			/**
-			 * Returns <code>true</code> for {@link #CANCELLED_FROM_DISCONNECT}
-			 * or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
+			 * Returns <code>true</code> for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
 			 */
 			public boolean wasCancelled()
 			{
@@ -213,50 +205,39 @@ public class BleDevice implements UsesCustomNull
 			NULL,
 
 			/**
-			 * Associated with {@link BleDevice#read(UUID, ReadWriteListener)}
-			 * or {@link BleDevice#readRssi(ReadWriteListener)}.
+			 * Associated with {@link BleDevice#read(UUID, ReadWriteListener)} or {@link BleDevice#readRssi(ReadWriteListener)}.
 			 */
 			READ,
 
 			/**
-			 * Associated with {@link BleDevice#write(UUID, byte[])} or
-			 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}.
+			 * Associated with {@link BleDevice#write(UUID, byte[])} or {@link BleDevice#write(UUID, byte[], ReadWriteListener)}.
 			 */
 			WRITE,
 
 			/**
-			 * Associated with
-			 * {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)} or
-			 * {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
+			 * Associated with {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)} or {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
 			 */
 			POLL,
 
 			/**
-			 * Associated with
-			 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)} when we
-			 * actually get a notification.
+			 * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} when we  actually get a notification.
 			 */
 			NOTIFICATION,
 
 			/**
-			 * Similar to {@link #NOTIFICATION}, kicked off from
-			 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, but
+			 * Similar to {@link #NOTIFICATION}, kicked off from {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, but
 			 * under the hood this is treated slightly differently.
 			 */
 			INDICATION,
 
 			/**
-			 * Associated with
-			 * {@link BleDevice#startChangeTrackingPoll(UUID, Interval, ReadWriteListener)}
-			 * or
-			 * {@link BleDevice#enableNotify(UUID, Interval, ReadWriteListener)}
-			 * where a force-read timeout is invoked.
+			 * Associated with {@link BleDevice#startChangeTrackingPoll(UUID, Interval, ReadWriteListener)}
+			 * or {@link BleDevice#enableNotify(UUID, Interval, ReadWriteListener)} where a force-read timeout is invoked.
 			 */
 			PSUEDO_NOTIFICATION,
 
 			/**
-			 * Associated with
-			 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and
+			 * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and
 			 * called when enabling the notification completes by writing to the
 			 * Descriptor of the given {@link UUID}. {@link Status#SUCCESS}
 			 * doesn't <i>necessarily</i> mean that notifications will
@@ -271,10 +252,8 @@ public class BleDevice implements UsesCustomNull
 			DISABLING_NOTIFICATION;
 
 			/**
-			 * Returns {@link Boolean#TRUE} for every {@link Type} except
-			 * {@link #WRITE}, {@link #ENABLING_NOTIFICATION}, and
-			 * {@link #DISABLING_NOTIFICATION}. Overall this convenience method
-			 * is meant to tell you when we've <i>received</i> something from
+			 * Returns {@link Boolean#TRUE} for every {@link Type} except {@link #WRITE}, {@link #ENABLING_NOTIFICATION}, and
+			 * {@link #DISABLING_NOTIFICATION}. Overall this convenience method is meant to tell you when we've <i>received</i> something from
 			 * the device as opposed to writing something to it.
 			 */
 			public boolean isRead()
@@ -283,8 +262,7 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Returns true if <code>this</code> is {@link #NOTIFICATION},
-			 * {@link #PSUEDO_NOTIFICATION}, or {@link #INDICATION}.
+			 * Returns true if <code>this</code> is {@link #NOTIFICATION}, {@link #PSUEDO_NOTIFICATION}, or {@link #INDICATION}.
 			 */
 			public boolean isNotification()
 			{
@@ -292,10 +270,8 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Subset of {@link #isNotification()}, returns <code>true</code>
-			 * only for {@link #NOTIFICATION} and {@link #INDICATION}, i.e. only
-			 * notifications who origin is an *actual* notification (or
-			 * indication) sent from the remote BLE device.
+			 * Subset of {@link #isNotification()}, returns <code>true</code> only for {@link #NOTIFICATION} and {@link #INDICATION}, i.e. only
+			 * notifications who origin is an *actual* notification (or indication) sent from the remote BLE device.
 			 */
 			public boolean isNativeNotification()
 			{
@@ -314,9 +290,7 @@ public class BleDevice implements UsesCustomNull
 		public static enum Target implements UsesCustomNull
 		{
 			/**
-			 * As of now, only used for
-			 * {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()}
-			 * in some cases.
+			 * As of now, only used for {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
 			 */
 			NULL,
 
@@ -346,8 +320,7 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		/**
-		 * Provides a bunch of information about a completed read, write, or
-		 * notification.
+		 * Provides a bunch of information about a completed read, write, or notification.
 		 */
 		@Immutable
 		public static class ReadWriteEvent implements UsesCustomNull
@@ -448,32 +421,20 @@ public class BleDevice implements UsesCustomNull
 			private final Interval m_totalTime;
 
 			/**
-			 * The native gatt status returned from the stack, if applicable.
-			 * If the {@link #status} returned is, for example,
-			 * {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the
-			 * operation didn't even reach the point where a gatt status is
-			 * provided, in which case this member is set to
-			 * {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE} (value of
-			 * {@value BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}). Otherwise
-			 * it will be <code>0</code> for success or greater than
-			 * <code>0</code> when there's an issue. <i>Generally</i> this value
-			 * will only be meaningful when {@link #status} is
-			 * {@link ReadWriteListener.Status#SUCCESS} or
-			 * {@link ReadWriteListener.Status#REMOTE_GATT_FAILURE}. There are
-			 * also some cases where this will be 0 for success but
-			 * {@link #status} is for example
-			 * {@link ReadWriteListener.Status#NULL_DATA} - in other words the
-			 * underlying stack deemed the operation a success but SweetBlue
-			 * disagreed. For this reason it's recommended to treat this value
-			 * as a debugging tool and use {@link #status} for actual
+			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is, for example,
+			 * {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point where a gatt status is
+			 * provided, in which case this member is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE} (value of
+			 * {@value BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater than
+			 * <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status} is
+			 * {@link ReadWriteListener.Status#SUCCESS} or {@link ReadWriteListener.Status#REMOTE_GATT_FAILURE}. There are
+			 * also some cases where this will be 0 for success but {@link #status} is for example
+			 * {@link ReadWriteListener.Status#NULL_DATA} - in other words the underlying stack deemed the operation a success but SweetBlue
+			 * disagreed. For this reason it's recommended to treat this value as a debugging tool and use {@link #status} for actual
 			 * application logic if possible.
 			 * <br><br>
-			 * See {@link BluetoothGatt} for its static <code>GATT_*</code>
-			 * status code members. Also see the source code of
-			 * {@link PS_GattStatus} for SweetBlue's more comprehensive internal
-			 * reference list of gatt status values. This list may not be
-			 * totally accurate or up-to-date, nor may it match GATT_ values
-			 * used by the bluetooth stack on your phone.
+			 * See {@link BluetoothGatt} for its static <code>GATT_*</code> status code members. Also see the source code of
+			 * {@link PS_GattStatus} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be
+			 * totally accurate or up-to-date, nor may it match GATT_ values used by the bluetooth stack on your phone.
 			 */
 			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
@@ -499,7 +460,6 @@ public class BleDevice implements UsesCustomNull
 			{
 				this.m_device = device;
 				this.m_charUuid = NON_APPLICABLE_UUID;
-				;
 				this.m_descUuid = NON_APPLICABLE_UUID;
 				this.m_type = type;
 				this.m_target = Target.RSSI;

@@ -218,7 +218,7 @@ public class BleManager
 		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link State.ChangeIntent#UNINTENTIONAL}
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
-		void onEvent(DiscoveryEvent e);
+		void onEvent(final DiscoveryEvent e);
 	}
 
 	/**
@@ -240,7 +240,7 @@ public class BleManager
 			public BleManager manager(){  return m_manager;  }
 			private final BleManager m_manager;
 			
-			StateEvent(BleManager manager, int oldStateBits, int newStateBits, int intentMask)
+			StateEvent(final BleManager manager, final int oldStateBits, final int newStateBits, final int intentMask)
 			{
 				super(oldStateBits, newStateBits, intentMask);
 				
@@ -254,7 +254,7 @@ public class BleManager
 					this.getClass(),
 					"entered",			Utils.toString(enterMask(),		BleManagerState.VALUES()),
 					"exited",			Utils.toString(exitMask(),		BleManagerState.VALUES()),
-					"current",			Utils.toString(newStateBits(),	BleDeviceState.VALUES())
+					"current",			Utils.toString(newStateBits(),	BleManagerState.VALUES())
 				);
 			}
 		}
@@ -262,7 +262,7 @@ public class BleManager
 		/**
 		 * Called when the manager's abstracted {@link BleManagerState} changes.
 		 */
-		void onEvent(StateEvent e);
+		void onEvent(final StateEvent e);
 	}
 
 	/**
@@ -282,9 +282,9 @@ public class BleManager
 		@Immutable
 		public static class NativeStateEvent extends StateListener.StateEvent
 		{
-			NativeStateEvent(BleManager manager_in, int oldStateBits_in, int newStateBits_in, int intentMask_in)
+			NativeStateEvent(final BleManager manager, final int oldStateBits, final int newStateBits, final int intentMask)
 			{
-				super(manager_in, oldStateBits_in, newStateBits_in, intentMask_in);
+				super(manager, oldStateBits, newStateBits, intentMask);
 			}
 		}
 		
@@ -292,7 +292,7 @@ public class BleManager
 		 * Called when the manager's native bitwise {@link BleManagerState} changes. As many bits as possible are flipped at the same time.
 		 */
 		@Advanced
-		void onEvent(NativeStateEvent e);
+		void onEvent(final NativeStateEvent e);
 	}
 
 	/**
@@ -508,7 +508,7 @@ public class BleManager
 		/**
 		 * Run for the hills.
 		 */
-		void onEvent(UhOhEvent e);
+		void onEvent(final UhOhEvent e);
 	}
 
 	/**
@@ -569,7 +569,7 @@ public class BleManager
 		/**
 		 * The reset event, for now only fired when the reset is completed. Hopefully the bluetooth stack is OK now.
 		 */
-		void onEvent(ResetEvent e);
+		void onEvent(final ResetEvent e);
 	}
 
 	/**
@@ -626,7 +626,7 @@ public class BleManager
 		/**
 		 * Provides additional info about the circumstances surrounding the assert.
 		 */
-		void onEvent(AssertEvent e);
+		void onEvent(final AssertEvent e);
 	}
 
 	private final UpdateLoop.Callback m_updateLoopCallback = new UpdateLoop.Callback()
@@ -1712,7 +1712,7 @@ public class BleManager
 	/**
 	 * Same as {@link #newDevice(String)} but allows a custom name also.
 	 */
-	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress, String name)
+	public @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name)
 	{
 		return newDevice(macAddress, name, null);
 	}
@@ -1721,7 +1721,7 @@ public class BleManager
 	 * Same as {@link #newDevice(String)} but passes a {@link BleDeviceConfig} to be used as well.
 	 */
 	
-	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress, BleDeviceConfig config)
+	public @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final BleDeviceConfig config)
 	{
 		return newDevice(macAddress, "", config);
 	}
@@ -1735,7 +1735,7 @@ public class BleManager
 	 * documentation says that underlying stack will always return a valid {@link BluetoothDevice}
 	 * instance (which is required to create a valid {@link BleDevice} instance), but you really never know.
 	 */
-	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress, String name, BleDeviceConfig config)
+	public @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name, final BleDeviceConfig config)
 	{
 		final BleDevice existingDevice = this.getDevice(macAddress);
 
@@ -1765,7 +1765,7 @@ public class BleManager
 		return newDevice;
 	}
 	
-	BluetoothDevice newNativeDevice(String macAddress)
+	BluetoothDevice newNativeDevice(final String macAddress)
 	{
 		return getNative().getAdapter().getRemoteDevice(macAddress);
 	}
@@ -1775,12 +1775,13 @@ public class BleManager
 	 * {@link BleManager.DiscoveryListener#onEvent(DiscoveryEvent)} with {@link LifeCycle#UNDISCOVERED} will be called.
 	 * No clear use case has been thought of but the method is here just in case anyway.
 	 *
-	 * @return	true if the device was undiscovered, false if device is already {@link BleDeviceState#UNDISCOVERED} or manager
+	 * @return	<code>true</code> if the device was undiscovered, <code>false</code> if device is already {@link BleDeviceState#UNDISCOVERED} or manager
 	 * 			doesn't contain an instance, checked referentially, not through {@link BleDevice#equals(BleDevice)} (i.e. by mac address).
 	 */
-	public boolean undiscover(BleDevice device)
+	public boolean undiscover(final BleDevice device)
 	{
 		if( device == null )							return false;
+		if( device.isNull() )							return false;
 		if( !hasDevice(device) )						return false;
 		if( device.is(BleDeviceState.UNDISCOVERED) )	return false;
 
@@ -1803,12 +1804,12 @@ public class BleManager
 	P_Logger					getLogger(){					return m_logger;					}
 
 
-	private void turnOff(boolean removeAllBonds)
+	private void turnOff(final boolean removeAllBonds)
 	{
 		turnOff_synchronized(removeAllBonds);
 	}
 
-	private void turnOff_synchronized(boolean removeAllBonds)
+	private void turnOff_synchronized(final boolean removeAllBonds)
 	{
 		if( isAny(TURNING_OFF, OFF) )  return;
 
@@ -1844,7 +1845,7 @@ public class BleManager
 		m_taskQueue.add(task);
 	}
 
-	private void reset_synchronized(ResetListener listener)
+	private void reset_synchronized(final ResetListener listener)
 	{
 		if( listener != null )
 		{
@@ -1890,7 +1891,7 @@ public class BleManager
 		}));
 	}
 
-	void startAutoUpdate(double updateRate)
+	void startAutoUpdate(final double updateRate)
 	{
 		if( m_updateLoop != null )
 		{
@@ -1906,7 +1907,7 @@ public class BleManager
 		}
 	}
 
-	P_Task_Scan.E_Mode startNativeScan(E_Intent intent)
+	P_Task_Scan.E_Mode startNativeScan(final E_Intent intent)
 	{
 		//--- DRK > Not sure how useful this retry loop is. I've definitely seen startLeScan
 		//---		fail but then work again at a later time (seconds-minutes later), so
@@ -2009,12 +2010,12 @@ public class BleManager
 		return null;
 	}
 
-	void onDiscovered(BluetoothDevice device_native, int rssi, byte[] scanRecord_nullable)
+	void onDiscovered(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		onDiscovered_synchronized(device_native, rssi, scanRecord_nullable);
 	}
 
-	private void onDiscovered_synchronized(BluetoothDevice device_native, int rssi, byte[] scanRecord_nullable)
+	private void onDiscovered_synchronized(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
@@ -2111,7 +2112,7 @@ public class BleManager
     	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
 	}
 
-	private BleDevice newDevice_private(BluetoothDevice device_native, String normalizedName, String nativeName, BleDeviceOrigin origin, BleDeviceConfig config_nullable)
+	private BleDevice newDevice_private(final BluetoothDevice device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
 	{
 		final boolean hitCache = true; // TODO: for now always true...should it be behind a config option?
 		
@@ -2132,14 +2133,14 @@ public class BleManager
 			device_cached = null;
 		}
 		
-		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, normalizedName, nativeName, origin, config_nullable, /*isNull=*/false);
+		final BleDevice device = device_cached != null ? device_cached : new BleDevice(BleManager.this, device_native, name_normalized, name_native, origin, config_nullable, /*isNull=*/false);
 		
 		m_deviceMngr.add(device);
 
 		return device;
 	}
 	
-	void onDiscovered_fromRogueAutoConnect(BleDevice device, boolean newlyDiscovered, List<UUID> services_nullable, byte[] scanRecord_nullable, int rssi)
+	void onDiscovered_fromRogueAutoConnect(final BleDevice device, final boolean newlyDiscovered, final List<UUID> services_nullable, final byte[] scanRecord_nullable, final int rssi)
 	{
 		if( !m_deviceMngr.has(device) ) // DRK > as of now checked upstream also, so just being anal
 		{
@@ -2149,7 +2150,7 @@ public class BleManager
 		onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
 	}
 
-    private void onDiscovered_wrapItUp(BleDevice device, boolean newlyDiscovered, List<UUID> services_nullable, byte[] scanRecord_nullable, int rssi)
+    private void onDiscovered_wrapItUp(final BleDevice device, final boolean newlyDiscovered, final List<UUID> services_nullable, final byte[] scanRecord_nullable, final int rssi)
     {
     	if( newlyDiscovered )
     	{
@@ -2173,7 +2174,7 @@ public class BleManager
     	}
     }
 
-	void stopNativeScan(P_Task_Scan scanTask)
+	void stopNativeScan(final P_Task_Scan scanTask)
 	{
 		if( scanTask.getMode() == P_Task_Scan.E_Mode.BLE )
 		{
@@ -2212,7 +2213,7 @@ public class BleManager
 		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	void clearScanningRelatedMembers(E_Intent intent)
+	void clearScanningRelatedMembers(final E_Intent intent)
 	{
 //		m_filterMngr.clear();
 
@@ -2221,7 +2222,7 @@ public class BleManager
 		m_stateTracker.remove(BleManagerState.SCANNING, intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	void tryPurgingStaleDevices(double scanTime)
+	void tryPurgingStaleDevices(final double scanTime)
 	{
 		m_deviceMngr.purgeStaleDevices(scanTime, m_deviceMngr_cache, m_discoveryListener);
 	}
@@ -2237,7 +2238,7 @@ public class BleManager
 		update_synchronized(timeStep_seconds);
 	}
 
-	private void update_synchronized(double timeStep)
+	private void update_synchronized(final double timeStep)
 	{
 		m_uhOhThrottler.update(timeStep);
 		m_taskQueue.update(timeStep);
