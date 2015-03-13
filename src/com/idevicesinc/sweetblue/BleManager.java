@@ -55,7 +55,7 @@ import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
  * <br><br>
  * Also put the following entries (or something similar) in the root of your AndroidManifest.xml:
  * <br><br>
- * {@code <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19" />}<br>
+ * {@code <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="21" />}<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH" /> }<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> }<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" /> }<br>

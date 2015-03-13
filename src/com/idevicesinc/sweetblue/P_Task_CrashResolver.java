@@ -1,11 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-/**
- * 
- * 
- *
- */
 class P_Task_CrashResolver extends PA_Task_RequiresBleOn 
 {
 	private final P_BluetoothCrashResolver m_resolver;
