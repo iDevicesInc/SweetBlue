@@ -300,8 +300,8 @@ public class Utils
 
 		return value;
 	}
-
-	public static String getStringValue(byte[] data)
+	
+	public static String getStringValue(final byte[] data, final String charset)
 	{
 		String string = null;
 		byte[] value = data;
@@ -310,7 +310,7 @@ public class Utils
 		{
 			try
 			{
-				string = new String(value, "UTF-8");
+				string = new String(value, charset);
 			}
 			catch(UnsupportedEncodingException e)
 			{
@@ -321,6 +321,11 @@ public class Utils
 		}
 
 		return string;
+	}
+
+	public static String getStringValue(final byte[] data)
+	{
+		return getStringValue(data, "UTF-8");
 	}
 
 	private static class FlagOnStyle extends CharacterStyle

@@ -32,7 +32,10 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	@Override protected ReadWriteEvent newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
-		return new ReadWriteEvent(getDevice(), charUuid, descUuid, Type.WRITE, target, m_allDataToSend, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
+		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(charUuid);
+		final Type type = getDevice().getServiceManager().modifyResultType(char_native, Type.WRITE);
+		
+		return new ReadWriteEvent(getDevice(), charUuid, descUuid, type, target, m_allDataToSend, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
 	
 	private boolean weBeChunkin()

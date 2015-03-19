@@ -40,7 +40,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * It acts as a BLE-specific abstraction for the {@link BluetoothDevice} and
  * {@link BluetoothGatt} classes. It does everything you would expect, like
  * providing methods for connecting, reading/writing characteristics, enabling
- * notifications, etc 
+ * notifications, etc.
  * <br><br>
  * Although instances of this class can be created explicitly through
  * {@link BleManager#newDevice(String, String)}, usually they're created
@@ -213,6 +213,18 @@ public class BleDevice implements UsesCustomNull
 			 * Associated with {@link BleDevice#write(UUID, byte[])} or {@link BleDevice#write(UUID, byte[], ReadWriteListener)}.
 			 */
 			WRITE,
+			
+			/**
+			 * Similar to {@link #WRITE} but under the hood {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE} is used.
+			 * See also {@link BluetoothGattCharacteristic#PROPERTY_WRITE_NO_RESPONSE}.
+			 */
+			WRITE_NO_RESPONSE,
+			
+			/**
+			 * Similar to {@link #WRITE} but under the hood {@link BluetoothGattCharacteristic#WRITE_TYPE_SIGNED} is used.
+			 * See also {@link BluetoothGattCharacteristic#PROPERTY_SIGNED_WRITE}.
+			 */
+			WRITE_SIGNED,
 
 			/**
 			 * Associated with {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)} or {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
@@ -252,13 +264,21 @@ public class BleDevice implements UsesCustomNull
 			DISABLING_NOTIFICATION;
 
 			/**
-			 * Returns {@link Boolean#TRUE} for every {@link Type} except {@link #WRITE}, {@link #ENABLING_NOTIFICATION}, and
+			 * Returns <code>true</code> for every {@link Type} except {@link #isWrite()}, {@link #ENABLING_NOTIFICATION}, and
 			 * {@link #DISABLING_NOTIFICATION}. Overall this convenience method is meant to tell you when we've <i>received</i> something from
 			 * the device as opposed to writing something to it.
 			 */
 			public boolean isRead()
 			{
-				return this != WRITE && this != ENABLING_NOTIFICATION && this != DISABLING_NOTIFICATION;
+				return !isWrite() && this != ENABLING_NOTIFICATION && this != DISABLING_NOTIFICATION;
+			}
+			
+			/**
+			 * Returns <code>true</code> if <code>this</code> is {@link #WRITE} or {@link #WRITE_NO_RESPONSE} or {@link #WRITE_SIGNED}.
+			 */
+			public boolean isWrite()
+			{
+				return this == WRITE || this == WRITE_NO_RESPONSE || this == WRITE_SIGNED;
 			}
 
 			/**
@@ -347,45 +367,37 @@ public class BleDevice implements UsesCustomNull
 			private final Type m_type;
 
 			/**
-			 * The type of GATT object this {@link ReadWriteEvent} is for,
-			 * currently, characteristic, descriptor, or rssi.
+			 * The type of GATT object this {@link ReadWriteEvent} is for, currently, characteristic, descriptor, or rssi.
 			 */
 			public Target target() {  return m_target;  }
 			private final Target m_target;
 
 			/**
-			 * The {@link UUID} of the characteristic associated with this
-			 * {@link ReadWriteEvent}. This will always be a valid {@link UUID},
+			 * The {@link UUID} of the characteristic associated with this {@link ReadWriteEvent}. This will always be a valid {@link UUID},
 			 * even if {@link #target} is {@link Target#DESCRIPTOR}.
 			 */
 			public UUID charUuid() {  return m_charUuid;  }
 			private final UUID m_charUuid;
 
 			/**
-			 * The {@link UUID} of the descriptor associated with this
-			 * {@link ReadWriteEvent}. If {@link #target} is
-			 * {@link Target#CHARACTERISTIC} then this will be referentially
-			 * equal (i.e. you can use == to compare) to
+			 * The {@link UUID} of the descriptor associated with this {@link ReadWriteEvent}. If {@link #target} is
+			 * {@link Target#CHARACTERISTIC} then this will be referentially equal (i.e. you can use == to compare) to
 			 * {@link #NON_APPLICABLE_UUID}.
 			 */
 			public UUID descUuid() {  return m_descUuid;  }
 			private final UUID m_descUuid;
 
 			/**
-			 * The data sent to the peripheral if {@link ReadWriteEvent#type} is
-			 * {@link Type#WRITE}, otherwise the data received from the
-			 * peripheral if {@link ReadWriteEvent#type} {@link Type#isRead()}.
-			 * This will never be null. For error statuses it will be a
+			 * The data sent to the peripheral if {@link ReadWriteEvent#type} {@link Type#isWrite()}, otherwise the data received from the
+			 * peripheral if {@link ReadWriteEvent#type} {@link Type#isRead()}. This will never be null. For error statuses it will be a
 			 * zero-length array.
 			 */
 			public byte[] data() {  return m_data;  }
 			private final byte[] m_data;
 
 			/**
-			 * This value gets updated as a result of a
-			 * {@link BleDevice#readRssi(ReadWriteListener)} call. It will
-			 * always be equivalent to {@link BleDevice#getRssi()} but is
-			 * included here for convenience.
+			 * This value gets updated as a result of a {@link BleDevice#readRssi(ReadWriteListener)} call. It will
+			 * always be equivalent to {@link BleDevice#getRssi()} but is included here for convenience.
 			 * 
 			 * @see BleDevice#getRssi()
 			 * @see BleDevice#getRssiPercent()
@@ -395,10 +407,8 @@ public class BleDevice implements UsesCustomNull
 			private final int m_rssi;
 
 			/**
-			 * Indicates either success or the type of failure. Some values of
-			 * {@link Status} are not used for certain values of {@link Type}.
-			 * For example a {@link Type#NOTIFICATION} cannot fail with
-			 * {@link Status#TIMED_OUT}.
+			 * Indicates either success or the type of failure. Some values of {@link Status} are not used for certain values of {@link Type}.
+			 * For example a {@link Type#NOTIFICATION} cannot fail with {@link Status#TIMED_OUT}.
 			 */
 			public Status status() {  return m_status;  }
 			private final Status m_status;
@@ -508,6 +518,14 @@ public class BleDevice implements UsesCustomNull
 			{
 				return type().isRead();
 			}
+			
+			/**
+			 * Forwards {@link Type#isWrite()}.
+			 */
+			public boolean isWrite()
+			{
+				return type().isWrite();
+			}
 
 			/**
 			 * Returns the first byte from {@link #data()}, or 0x0 if not available.
@@ -515,6 +533,32 @@ public class BleDevice implements UsesCustomNull
 			public byte data_byte()
 			{
 				return data().length > 0 ? data()[0] : 0x0;
+			}
+			
+			/**
+			 * Convenience method that attempts to parse the data as a UTF-8 string.
+			 */
+			public String data_utf8()
+			{
+				return data_string("UTF-8");
+			}
+			
+			/**
+			 * Best effort parsing of {@link #data()} as a {@link String}.
+			 * For now simply forwards {@link #data_utf8()}.
+			 * In the future may try to autodetect encoding first. 
+			 */
+			public String data_string()
+			{
+				return data_utf8();
+			}
+			
+			/**
+			 * Convenience method that attempts to parse {@link #data()} as a {@link String} with the given charset, for example <code>"UTF-8"</code>.
+			 */
+			public String data_string(final String charset)
+			{
+				return Utils.getStringValue(data(), charset);
 			}
 
 			/**
@@ -3190,7 +3234,7 @@ public class BleDevice implements UsesCustomNull
 
 				if (m_reconnectMngr_shortTerm.isRunning())
 				{
-					stateTracker_main().append(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.INTENTIONAL, gattStatus);
+					stateTracker_main().append(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 		}

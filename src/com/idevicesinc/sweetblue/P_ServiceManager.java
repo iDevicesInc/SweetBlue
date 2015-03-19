@@ -99,7 +99,9 @@ class P_ServiceManager
 			//--- DRK > just a sanity check here...might still trip if GC is slow.
 			if( m_oldServices.size() > 100 )
 			{
-				m_device.getManager().ASSERT(false);
+				//--- DRK > NOTE: This did trip during some stress testing, so converting to warning now so it's quieter.
+//				m_device.getManager().ASSERT(false);
+				m_device.getManager().getLogger().w("Weak old services array is getting pretty big...GC lagging behind");
 			}
 			
 			m_serviceMap.clear();
@@ -140,7 +142,24 @@ class P_ServiceManager
 			}
 		}
 		
-		if( type == Type.WRITE )
+		if( target == Target.RSSI )  return null;
+		
+		final P_Characteristic characteristic = getCharacteristic(uuid);
+		
+		if( characteristic == null )
+		{
+			return newNoMatchingTargetResult(type, data, uuid);
+		}
+		
+		final BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
+		type = modifyResultType(char_native, type);
+		
+		if( char_native == null )
+		{
+			return newNoMatchingTargetResult(type, data, uuid);
+		}
+		
+		if( type != null && type.isWrite() )
 		{
 			if( data == null )
 			{
@@ -150,24 +169,7 @@ class P_ServiceManager
 			{
 				return new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
 			}
-		}
-		
-		if( target == Target.RSSI )  return null;
-		
-		P_Characteristic characteristic = getCharacteristic(uuid);
-		
-		if( characteristic == null )
-		{
-			return newNoMatchingTargetResult(type, data, uuid);
-		}
-		
-		BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
-		type = modifyResultType(char_native, type);
-		
-		if( char_native == null )
-		{
-			return newNoMatchingTargetResult(type, data, uuid);
-		}
+		}		
 		
 		int property = getProperty(type);
 		
@@ -196,6 +198,20 @@ class P_ServiceManager
 					}
 				}
 			}
+			else if( type == Type.WRITE )
+			{
+				if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) == 0x0 )
+				{
+					if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0x0 )
+					{
+						type = Type.WRITE_NO_RESPONSE;
+					}
+					else if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) != 0x0 )
+					{
+						type = Type.WRITE_SIGNED;
+					}
+				}
+			}
 		}
 		
 		return type;
@@ -207,14 +223,16 @@ class P_ServiceManager
 		{
 			case READ:
 			case POLL:
-			case PSUEDO_NOTIFICATION:	return BluetoothGattCharacteristic.PROPERTY_READ;
+			case PSUEDO_NOTIFICATION:	return		BluetoothGattCharacteristic.PROPERTY_READ;
 			
-			case WRITE:					return BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
-			
+			case WRITE:					return		BluetoothGattCharacteristic.PROPERTY_WRITE				|
+													BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE	|
+													BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE		;
 			case ENABLING_NOTIFICATION:
 			case DISABLING_NOTIFICATION:
 			case NOTIFICATION:
-			case INDICATION:			return BluetoothGattCharacteristic.PROPERTY_INDICATE | BluetoothGattCharacteristic.PROPERTY_NOTIFY;
+			case INDICATION:			return		BluetoothGattCharacteristic.PROPERTY_INDICATE			|
+													BluetoothGattCharacteristic.PROPERTY_NOTIFY				;
 		}
 		
 		return 0x0;
