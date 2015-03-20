@@ -180,7 +180,7 @@ public abstract class BleTransaction
 	
 	final void cancel()
 	{
-		end(EndReason.CANCELLED, m_device.NULL_READWRITE_RESULT());
+		end(EndReason.CANCELLED, m_device.NULL_READWRITE_EVENT());
 	}
 	
 	/**
@@ -205,7 +205,7 @@ public abstract class BleTransaction
 	 */
 	protected final boolean succeed()
 	{
-		return end(EndReason.SUCCEEDED, m_device.NULL_READWRITE_RESULT());
+		return end(EndReason.SUCCEEDED, m_device.NULL_READWRITE_EVENT());
 	}
 	
 	void update_internal(double timeStep)

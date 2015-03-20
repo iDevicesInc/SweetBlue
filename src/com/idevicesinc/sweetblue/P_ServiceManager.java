@@ -184,7 +184,7 @@ class P_ServiceManager
 		return null;
 	}
 	
-	BleDevice.ReadWriteListener.Type modifyResultType(BluetoothGattCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
+	static BleDevice.ReadWriteListener.Type modifyResultType(BluetoothGattCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
 	{
 		if( char_native != null )
 		{

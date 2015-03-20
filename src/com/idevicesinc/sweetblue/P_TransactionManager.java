@@ -95,6 +95,10 @@ class P_TransactionManager
 				{
 				}
 			}
+			else if( txn == m_anonTxn )
+			{
+				m_anonTxn = null;
+			}
 		}
 	};
 	private final Object m_threadLock = new Object();
@@ -104,6 +108,7 @@ class P_TransactionManager
 	BleTransaction.Auth m_authTxn;
 	BleTransaction.Init m_initTxn;
 	BleTransaction.Ota m_firmwareUpdateTxn;
+	BleTransaction m_anonTxn;
 	
 	BleTransaction m_current;
 	
@@ -226,6 +231,12 @@ class P_TransactionManager
 			}
 			
 			cancelFirmwareUpdateTxn();
+			
+			if( m_anonTxn != null && m_anonTxn.isRunning() )
+			{
+				m_anonTxn.cancel();
+				m_anonTxn = null;
+			}
 		}
 	}
 	
@@ -246,6 +257,11 @@ class P_TransactionManager
 			if( m_firmwareUpdateTxn != null && m_firmwareUpdateTxn.isRunning() )
 			{
 				m_firmwareUpdateTxn.update_internal(timeStep);
+			}
+			
+			if( m_anonTxn != null && m_anonTxn.isRunning() )
+			{
+				m_anonTxn.update_internal(timeStep);
 			}
 		}
 	}
@@ -271,7 +287,7 @@ class P_TransactionManager
 	
 	private void resetReadWriteResult()
 	{
-		m_failReason = m_device.NULL_READWRITE_RESULT();
+		m_failReason = m_device.NULL_READWRITE_EVENT();
 	}
 	
 	void onReadWriteResult(ReadWriteListener.ReadWriteEvent result)
@@ -305,6 +321,14 @@ class P_TransactionManager
 			
 			start(m_firmwareUpdateTxn);
 		}
+	}
+	
+	void performAnonTransaction(BleTransaction txn)
+	{
+		m_anonTxn = txn;
+		
+		m_anonTxn.init(m_device, m_txnEndListener);
+		start(m_anonTxn);
 	}
 	
 	void runAuthOrInitTxnIfNeeded(final int gattStatus, Object ... extraFlags)

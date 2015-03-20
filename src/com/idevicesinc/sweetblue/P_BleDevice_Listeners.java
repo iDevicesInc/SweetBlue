@@ -104,15 +104,15 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 					}
 					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
 					{
-						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.IMMEDIATELY, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
+						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.IMMEDIATELY, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
 					else if( state == PE_TaskState.TIMED_OUT )
 					{
-						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.TIMED_OUT, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
+						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.TIMED_OUT, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
 					else
 					{
-						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_RESULT());
+						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
 				}
 			}

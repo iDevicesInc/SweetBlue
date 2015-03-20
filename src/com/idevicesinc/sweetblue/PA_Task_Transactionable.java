@@ -68,12 +68,14 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	
 	@Override public boolean isInterruptableBy(PA_Task task)
 	{
-		if( m_requiresBonding )
+		if( task instanceof P_Task_Bond )
 		{
-			if( task instanceof P_Task_Bond )
-			{
-				P_Task_Bond bondTask = (P_Task_Bond) task;
-				
+			P_Task_Bond bondTask = (P_Task_Bond) task;
+			
+			//--- DRK > Commenting out the "requires bonding" check because for now it requires user to implement
+			//---		a custom bond filter, which is too much a requirement for beginners to be aware of.
+//			if( m_requiresBonding )
+			{	
 				if( !bondTask.isExplicit() )
 				{
 					return true;

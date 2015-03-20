@@ -135,7 +135,7 @@ class P_BondManager
 	{
 		if( failConnection(status) )
 		{
-			m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.BONDING_FAILED, status.timing(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, failReason, m_device.NULL_READWRITE_RESULT());
+			m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.BONDING_FAILED, status.timing(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, failReason, m_device.NULL_READWRITE_EVENT());
 		}
 		else
 		{
@@ -184,18 +184,17 @@ class P_BondManager
 		return bond;
 	}
 	
-	void invokeCallback(Status status, int failReason, State.ChangeIntent intent)
+	BondEvent invokeCallback(Status status, int failReason, State.ChangeIntent intent)
 	{
-		final BondEvent event;
-		if( m_listener != null || m_device.getManager().m_defaultBondListener != null )
-		{
-			event = new BondEvent(m_device, status, failReason, intent);
-		}
-		else
-		{
-			event = null;
-		}
+		final BondEvent event = new BondEvent(m_device, status, failReason, intent);
 		
+		invokeCallback(event);
+		
+		return event;
+	}
+	
+	void invokeCallback(final BondEvent event)
+	{		
 		if( m_listener != null )
 		{
 			m_listener.onEvent(event);

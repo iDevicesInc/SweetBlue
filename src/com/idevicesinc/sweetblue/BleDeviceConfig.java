@@ -767,7 +767,7 @@ public class BleDeviceConfig implements Cloneable
 	 * This option provides a defense against that situation.
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Boolean allowDuplicatePollEntries			= false;
+	public Boolean allowDuplicatePollEntries					= false;
 	
 	/**
 	 * Default is <code>false</code> - {@link BleDevice#getAverageReadTime()} and {@link BleDevice#getAverageWriteTime()} can be 
@@ -778,7 +778,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BleDevice#getAverageWriteTime() 
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Boolean includeOtaReadWriteTimesInAverage		= false;
+	public Boolean includeOtaReadWriteTimesInAverage			= false;
 	
 	/**
 	 * Default is <code>false</code> - see the <code>boolean autoConnect</code> parameter of
@@ -799,7 +799,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Boolean alwaysUseAutoConnect						= false;
+	public Boolean alwaysUseAutoConnect							= false;
 	
 	/**
 	 * Default is <code>true</code> - controls whether {@link BleManager} will keep a device in active memory when it goes {@link BleManagerState#OFF}.
@@ -811,7 +811,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Boolean retainDeviceWhenBleTurnsOff				= true;
+	public Boolean retainDeviceWhenBleTurnsOff					= true;
 	
 	/**
 	 * Default is <code>true</code> - only applicable if {@link #retainDeviceWhenBleTurnsOff} is also true. If {@link #retainDeviceWhenBleTurnsOff}
@@ -824,7 +824,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Boolean undiscoverDeviceWhenBleTurnsOff			= true;
+	public Boolean undiscoverDeviceWhenBleTurnsOff				= true;
 	
 	/**
 	 * Default is <code>true</code> - if devices are kept in memory for a {@link BleManager#turnOff()}/{@link BleManager#turnOn()} cycle
@@ -837,7 +837,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 	= true;
+	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 		= true;
 	
 	/**
 	 * Default is <code>true</code> - controls whether the {@link State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
@@ -849,7 +849,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Boolean manageLastDisconnectOnDisk				= true;
+	public Boolean manageLastDisconnectOnDisk					= true;
 	
 	/**
 	 * Default is <code>true</code> - controls whether a {@link BleDevice} is placed into an in-memory cache when it becomes {@link BleDeviceState#UNDISCOVERED}.
@@ -858,7 +858,7 @@ public class BleDeviceConfig implements Cloneable
 	 * <br><br>
 	 * The advantages of caching are:<br>
 	 * <ul>
-	 * <li>Slightly better performance at the cost of some retained memory, especially in situations where you're frequently discovering and undiscovering devices.
+	 * <li>Slightly better performance at the cost of some retained memory, especially in situations where you're frequently discovering and undiscovering many devices.
 	 * <li>Resistance to future stack failures that would otherwise mean missing data like {@link BleDevice#getAdvertisedServices()} for future discovery events.
 	 * <li>More resistant to potential "user error" of retaining devices in app-land after BleManager undiscovery.
 	 * <ul><br>
@@ -868,7 +868,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Boolean cacheDeviceOnUndiscovery					= true;
+	public Boolean cacheDeviceOnUndiscovery						= true;
 	
 	/**
 	 * Default is <code>true</code> - controls whether {@link ConnectionFailListener.Status#BONDING_FAILED} is capable of
@@ -876,7 +876,7 @@ public class BleDeviceConfig implements Cloneable
 	 * while a device is {@link BleDeviceState#CONNECTING_OVERALL}.
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Boolean bondingFailFailsConnection				= true;
+	public Boolean bondingFailFailsConnection					= true;
 	
 	/**
 	 * Default is <code>false</code> - whether to use {@link BluetoothGatt#refresh()} right before service discovery.
@@ -886,7 +886,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Boolean useGattRefresh							= false;
+	public Boolean useGattRefresh								= false;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
@@ -933,7 +933,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Integer		nForAverageRunningWriteTime			= DEFAULT_RUNNING_AVERAGE_N;
+	public Integer		nForAverageRunningWriteTime				= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - Same thing as {@link #nForAverageRunningWriteTime} but for reads.
@@ -943,7 +943,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Integer		nForAverageRunningReadTime			= DEFAULT_RUNNING_AVERAGE_N;
+	public Integer		nForAverageRunningReadTime				= DEFAULT_RUNNING_AVERAGE_N;
 	
 	/**
 	 * Default is {@link #DEFAULT_TX_POWER} - this value is used if we can't establish a device's calibrated transmission power from the device itself,
@@ -955,19 +955,19 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Integer		defaultTxPower						= DEFAULT_TX_POWER;
+	public Integer		defaultTxPower							= DEFAULT_TX_POWER;
 	
 	/**
 	 * Default is {@link #DEFAULT_RSSI_MIN} - the estimated minimum value for {@link BleDevice#getRssi()}.
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Integer		rssi_min							= DEFAULT_RSSI_MIN;
+	public Integer		rssi_min								= DEFAULT_RSSI_MIN;
 	
 	/**
 	 * Default is {@link #DEFAULT_RSSI_MAX} - the estimated maximum value for {@link BleDevice#getRssi()}.
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Integer		rssi_max							= DEFAULT_RSSI_MAX;
+	public Integer		rssi_max								= DEFAULT_RSSI_MAX;
 	
 	/**
 	 * Default is instance of {@link DefaultBondFilter}.
@@ -975,7 +975,7 @@ public class BleDeviceConfig implements Cloneable
 	 * @see BondFilter
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public BondFilter bondFilter									= new DefaultBondFilter();
+	public BondFilter bondFilter											= new DefaultBondFilter();
 	
 	/**
 	 * Default is an instance of {@link DefaultReconnectRequestFilter} - set an implementation here to
@@ -1023,7 +1023,7 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public TimeoutRequestFilter timeoutRequestFilter		= new DefaultTimeoutRequestFilter();
+	public TimeoutRequestFilter timeoutRequestFilter						= new DefaultTimeoutRequestFilter();
 	
 	static boolean boolOrDefault(Boolean bool_nullable)
 	{
