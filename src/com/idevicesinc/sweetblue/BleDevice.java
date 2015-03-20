@@ -2713,7 +2713,7 @@ public class BleDevice implements UsesCustomNull
 	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly
 	 * how much time it will take for the ota to complete.
 	 * 
-	 * @return {@link Boolean#TRUE} if firmware update has started, otherwise {@link Boolean#FALSE} if device is either already
+	 * @return <code>true</code> if firmware update has started, otherwise <code>false</code> if device is either already
 	 *         {@link BleDeviceState#PERFORMING_OTA} or is not {@link BleDeviceState#INITIALIZED}.
 	 * 
 	 * @see BleManagerConfig#includeOtaReadWriteTimesInAverage
@@ -2721,13 +2721,39 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public boolean performOta(final BleTransaction.Ota txn)
 	{
-		if (isNull())				return false;
-		if (is(PERFORMING_OTA))		return false;
-		if (!is(INITIALIZED))		return false;
+		if( performTransaction_earlyOut(txn) )		return false;
+		if (is(PERFORMING_OTA))						return false;
 
 		m_txnMngr.startOta(txn);
 
 		return true;
+	}
+	
+	/**
+	 * Allows you to perform an arbitrary transaction that is not associated with any {@link BleDeviceState} like
+	 * {@link BleDeviceState#PERFORMING_OTA}, {@link BleDeviceState#AUTHENTICATING} or {@link BleDeviceState#INITIALIZING}.
+	 * <br><br>
+	 * The device must be {@link BleDeviceState#INITIALIZED}.
+	 * 
+	 * @return <code>true</code> if the transaction successfully started, <code>false</code> otherwise if device is not {@link BleDeviceState#INITIALIZED}.
+	 */
+	public boolean performTransaction(final BleTransaction txn)
+	{
+		if( performTransaction_earlyOut(txn) )		return false;
+		
+		txn.init(this, null);
+		P_TransactionManager.start_common(this, txn);
+		
+		return true;
+	}
+	
+	private boolean performTransaction_earlyOut(final BleTransaction txn)
+	{
+		if ( txn == null )			return true;
+		if (isNull())				return true;
+		if (!is(INITIALIZED))		return true;
+		
+		return false;
 	}
 
 	/**

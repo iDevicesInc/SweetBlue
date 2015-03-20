@@ -116,7 +116,7 @@ class P_TransactionManager
 		resetReadWriteResult();
 	}
 	
-	void start(BleTransaction txn)
+	void start(final BleTransaction txn)
 	{
 		synchronized (m_threadLock)
 		{
@@ -126,13 +126,19 @@ class P_TransactionManager
 			}
 			
 			m_current = txn;
-			if( m_current.needsAtomicity() )
-			{
-				m_device.getManager().getTaskQueue().add(new P_Task_TxnLock(m_device, txn));
-			}
 			
-			m_current.start_internal();
+			start_common(m_device, txn);
 		}
+	}
+	
+	static void start_common(final BleDevice device, final BleTransaction txn)
+	{
+		if( txn.needsAtomicity() )
+		{
+			device.getManager().getTaskQueue().add(new P_Task_TxnLock(device, txn));
+		}
+		
+		txn.start_internal();
 	}
 	
 	BleTransaction getCurrent()
