@@ -20,6 +20,7 @@ echo "n"
 return 1
 }
 
+echo "${GLITZ}BUILD_JAVADOC${GLITZ}"
 if [ $(contains "${ARGS[@]}" "no_docs") == "n" ];
 then
     if [ $(contains "${ARGS[@]}" "upload") == "y" ];
@@ -40,82 +41,34 @@ else
     sh build_licenses.sh
 fi
 
-
-
-echo "${GLITZ}COPYING FILES${GLITZ}"
-
-mkdir -p $BUNDLE_FOLDER
-mkdir -p $JAR_DIR
-rsync -a ../ $BUNDLE_FOLDER --exclude scripts
-mv $BUNDLE_FOLDER/src $CP_TARGET
-cp -rf $SWEETBLUE_SRC_PATH $BUNDLE_FOLDER
-rm -rf $BUNDLE_FOLDER/scripts
-rm -rf $BUNDLE_FOLDER/.git
-rm -rf $BUNDLE_FOLDER/.gitignore
-rm -rf $BUNDLE_FOLDER/test
-
-
 if [ $(contains "${ARGS[@]}" "no_samples") == "n" ];
 then
     echo "${GLITZ}BUILDING SAMPLES${GLITZ}"
+    cd ..
     git clone https://github.com/iDevicesInc/SweetBlue_Samples.git $STAGE/samples
     cd $STAGE/samples/scripts/
+	#Remove the below line once the testing branch has been merged
+    git checkout testing
     sh update_sweetblue.sh
     cd -
     rsync -a $STAGE/samples/samples $BUNDLE_FOLDER --exclude scripts --exclude scripts
 fi
 
-echo "${GLITZ}COMPILING${GLITZ}"
+echo "${GLITZ}COMPILING AND BUILDING JARS${GLITZ}"
+cd ..
+sh gradlew build sourceJar javadocJar
 
-cd $CP_TARGET
-javac -cp $ANDROID_JAR com/idevicesinc/sweetblue/*.java com/idevicesinc/sweetblue/utils/*.java com/idevicesinc/sweetblue/annotations/*.java
-find ./com -name "*.java" -type f|xargs rm -f
-find ./com -name "*.DS_Store" -type f|xargs rm -f
 cd -
-
-echo "${GLITZ}BUILDING JARS${GLITZ}"
-cd $CP_TARGET
-jar cf $JAR_NAME.jar com/*
-cd -
-mv $CP_TARGET/$JAR_NAME.jar $JAR_DIR/$JAR_NAME.jar
-
-
-cd $BUNDLE_FOLDER/docs/api
-jar cf $JAVADOC_JAR_NAME.jar ./*
-cd -
-mv $BUNDLE_FOLDER/docs/api/$JAVADOC_JAR_NAME.jar $JAR_DIR/$JAVADOC_JAR_NAME.jar
-
-
-cd $BUNDLE_FOLDER/src
-jar cf $SOURCES_JAR_NAME.jar com/*
-cd -
-mv $BUNDLE_FOLDER/src/$SOURCES_JAR_NAME.jar $JAR_DIR/$SOURCES_JAR_NAME.jar
 
 if [ $(contains "${ARGS[@]}" "no_zip") == "n" ];
 then
     echo "${GLITZ}ZIPPING UP${GLITZ}"
-    rm -rf $CP_TARGET
-    cd $STAGE
-
-    cp -rf $JAR_NAME/ sweetblue_standard/
-    cp -rf $JAR_NAME/ sweetblue_professional/
-    rm sweetblue_standard/LICENSE
-    rm sweetblue_professional/LICENSE
-    cp standard.html sweetblue_standard/license.html
-    cp professional.html sweetblue_professional/license.html
-
-    zip -r sweetblue_standard.zip sweetblue_standard/*
-    zip -r sweetblue_professional.zip sweetblue_professional/*
-    zip -r $JAR_NAME.zip $JAR_NAME/*
-    cp $JAR_NAME.zip sweetblue.zip
-
-    rm -rf sweetblue_standard/
-    rm -rf sweetblue_professional/
-
+    cd ..
+    sh gradlew createZips
     cd -
 fi
 
-if [ $(contains "${ARGS[@]}" "upload") == "y" ];
+if [ $(contains "${ARGS[@]}" "uploaSWEEd") == "y" ];
 then
     echo "${GLITZ}UPLOADING ZIPS TO SERVER${GLITZ}"
     cd $STAGE
@@ -130,4 +83,5 @@ then
     echo "${GLITZ}CLEANING UP${GLITZ}"
     rm -rf $BUNDLE_FOLDER
     rm -rf $STAGE/samples
+    rm -rf ../build
 fi

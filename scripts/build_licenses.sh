@@ -1,8 +1,11 @@
 #!/bin/sh
 
-source ./config_license.sh
+#source ./config_license.sh
 
-rm -rf $OUTDIR
+#rm -rf $OUTDIR
 
-sh build_license.sh standard
-sh build_license.sh professional
+#sh build_license.sh standard
+#sh build_license.sh professional
+cd ..
+sh gradlew createStandardLicense createProLicense
+cd -

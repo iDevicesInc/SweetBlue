@@ -26,7 +26,8 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 
 /**
  * Provides a number of options to pass to the {@link BleManager#get(Context, BleManagerConfig)}
- * constructor. Use {@link Interval#DISABLED} or <code>null</code> to disable any time-based options.
+ * singleton getter or {@link BleManager#setConfig(BleManagerConfig)}.
+ * Use {@link Interval#DISABLED} or <code>null</code> to disable any time-based options.
  */
 public class BleManagerConfig extends BleDeviceConfig
 {
@@ -335,10 +336,11 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * It should look like this: {@code <uses-permission android:name="android.permission.WAKE_LOCK" />}
 	 * Sets whether the library will attempt to obtain a wake lock in certain situations.
 	 * For now the only situation is when there are no remote bluetooth devices
-	 * connected but one or more devices are {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+	 * {@link BleDeviceState#CONNECTED} but one or more devices are {@link BleDeviceState#RECONNECTING_LONG_TERM}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}.
+	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from
+	 * {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  

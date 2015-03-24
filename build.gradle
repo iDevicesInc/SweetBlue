@@ -1,0 +1,162 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+version = '1.0'
+
+// Set base variables
+ext.JAR_BASE_NAME="sweetblue_" + SEMVER
+ext.BUNDLE_FOLDER=STAGE + "/" + JAR_BASE_NAME
+ext.JAR_DIR=BUNDLE_FOLDER + "/jars"
+ext.JAR_NAME=JAR_BASE_NAME + ".jar"
+ext.JAVADOC_JAR_NAME=JAR_BASE_NAME + "-javadoc.jar"
+ext.SOURCES_JAR_NAME=JAR_BASE_NAME + "-sources.jar"
+ext.SERVER_ADDRESS="162.209.102.219"
+ext.user=System.getenv("SWEETBLUE_COM_FTP_USERNAME")
+ext.pass=System.getenv("SWEETBLUE_COM_FTP_PASSWORD")
+ext.ANDROID_JAR=System.getenv("ANDROID_HOME") + "/platforms/android-" + ANDROID_API_LEVEL + "/android.jar"
+
+// Configuration needed for pushing zips to server via scp
+configurations {
+   sshAntTask
+}
+
+repositories {
+   mavenCentral()
+}
+
+sourceSets {
+   main {
+      java {
+         srcDir 'src/'
+      }
+   }
+}
+
+dependencies {
+   sshAntTask "org.apache.ant:ant-jsch:1.9.2"
+   compile files(ANDROID_JAR)
+}
+
+
+// Task definitions
+
+
+jar {
+   archiveName = JAR_NAME
+   destinationDir = new File(JAR_DIR)
+}
+
+task sourceJar(type: Jar, dependsOn: jar) {
+   archiveName = SOURCES_JAR_NAME
+   classifier = 'sources'
+   from sourceSets.main.allSource
+   destinationDir = new File(JAR_DIR)
+}
+
+// disable the crazy super-strict doclint tool in Java 8
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+task gendocs(type: Javadoc) {
+   options.stylesheetFile = new File("./scripts/assets/doc_style.css")
+   options.windowTitle = "SweetBlue"
+   options.memberLevel = JavadocMemberLevel.PROTECTED
+   options.author = true
+   //include("com.idevicesinc.sweetblue")
+   version = SEMVER.replace("_", '.')
+   source = sourceSets.main.allJava
+   classpath += configurations.compile
+}
+
+task javadocJar(type: Jar, dependsOn: gendocs) {
+   classifier = 'javadoc'
+   archiveName = JAVADOC_JAR_NAME
+   from gendocs.destinationDir
+   destinationDir = new File(JAR_DIR)
+}
+
+task zipJar(type: Zip, dependsOn: build) {
+   from "${BUNDLE_FOLDER}"
+   archiveName = "sweetblue.zip"
+   destinationDir = new File("${STAGE}")
+}
+
+task copyStandardFolder(type: Copy) {
+   File f = new File("${STAGE}/${STANDARD_DIR}")
+   if (!f.exists()) {
+      f.mkdirs()
+   }
+   from BUNDLE_FOLDER
+   into STAGE + "/" + STANDARD_DIR
+}
+
+task copyProFolder(type: Copy) {
+   File f = new File("${STAGE}/${PRO_DIR}")
+   if (!f.exists()) {
+      f.mkdirs()
+   }
+   from BUNDLE_FOLDER
+   into STAGE + "/" + PRO_DIR
+}
+
+task createStandardLicense(dependsOn: copyStandardFolder) << {
+   String license = new File('./scripts/assets/license_template.html').getText('UTF-8')
+   String lic = license.replace("{{level}}", STANDARD)
+   lic = lic.replace("{{support}}", STANDARD_SUPPORT)
+   new File("${STAGE}/${STANDARD_DIR}/license.html").write(lic, 'UTF-8')
+}
+
+task createProLicense(dependsOn: copyProFolder) << {
+   String license = new File('./scripts/assets/license_template.html').getText('UTF-8')
+   String lic = license.replace("{{level}}", PRO)
+   lic = lic.replace("{{support}}", PRO_SUPPORT)
+   new File("${STAGE}/${PRO_DIR}/license.html").write(lic, 'UTF-8')
+}
+
+task zipStandard(type: Zip, dependsOn: createStandardLicense) {
+   from "${STAGE}/${STANDARD_DIR}"
+   archiveName = "sweetblue_standard.zip"
+   destinationDir = new File("${STAGE}")
+}
+
+task zipPro(type: Zip, dependsOn: createProLicense) {
+   from "${STAGE}/${PRO_DIR}"
+   archiveName = "sweetblue_professional.zip"
+   destinationDir = new File("${STAGE}")
+}
+
+// Convenience task to run all zip operations
+task createZips(dependsOn: [zipJar, sourceJar, javadocJar, createStandardLicense, createProLicense, zipStandard, zipPro]) {
+}
+
+task cleanZipFolders << {
+   delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}"
+}
+
+// Ant section for uploading zip files to our server via scp
+
+ant.taskdef(
+   name: 'scp',
+   classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp',
+   classpath: configurations.sshAntTask.asPath)
+
+task upload1() << {
+   def knownHosts = File.createTempFile("known hosts", "txt")
+   try {
+      ant.scp(
+         file: file("${STAGE}/test.zip"),
+         todir: "${user}@${SERVER_ADDRESS}:/var/www/html/sweetblue/downloads",
+	 password: "${pass}",
+     	 trust: true,
+	 knownhosts: knownHosts
+      )
+         
+   } finally {
+      knownHosts.delete()
+   }
+}
+
+

@@ -3,7 +3,8 @@
 !**/bin/*.apk
 .svn
 **.DS_Store
-
+.gradle/
+script_output/
 **/proguard/
 **/doc
 **/docs
