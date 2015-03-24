@@ -267,9 +267,22 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Bluetooth Share has stopped" error messages. See https://github.com/RadiusNetworks/bluetooth-crash-resolver or
 	 * http://developer.radiusnetworks.com/2014/04/02/a-solution-for-android-bluetooth-crashes.html or
 	 * Google "Bluetooth Crash Resolver" for more information.
+	 * <br><br>
+	 * NOTE:" This option gates a "proactive" approach towards mitigating the above-described crash.
+	 * 
+	 * @see #enableCrashResolverForReset
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean enableCrashResolver					= false;
+	
+	/**
+	 * Default is <code>true</code> - this option gates whether the "crash resolver" described in {@link #enableCrashResolver}
+	 * is invoked during a {@link BleManager#reset()} operation to forcefully clear the memory that causes the crash.
+	 * 
+	 * @see #enableCrashResolver
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean enableCrashResolverForReset			= true;
 	
 	/**
 	 * Default is <code>true</code> - makes it so {@link BleManager#stopScan()} is called automatically after {@link BleManager#onPause()}.

@@ -1864,7 +1864,10 @@ public class BleManager
 
 		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
 
-		m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
+		if( m_config.enableCrashResolverForReset )
+		{
+			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
+		}
 
 		turnOff(/*removeAllBonds=*/true);
 
@@ -1995,6 +1998,7 @@ public class BleManager
 			{
 				m_logger.w("Started native scan with " + (retryCount+1) + " attempts.");
 			}
+			
 			if( m_config.enableCrashResolver )
 			{
 				m_crashResolver.start();

@@ -593,11 +593,11 @@ public class BleDevice implements UsesCustomNull
 						return Utils.toString
 						(
 							this.getClass(),
-							"status",		status(),
-							"type",			type(),
-							"target",		target(),
-							"rssi",			rssi(),
-							"gattStatus",	device().getManager().getLogger().gattStatus(gattStatus())
+							"status",			status(),
+							"type",				type(),
+							"target",			target(),
+							"rssi",				rssi(),
+							"gattStatus",		device().getManager().getLogger().gattStatus(gattStatus())
 						);
 					}
 					else
@@ -605,11 +605,11 @@ public class BleDevice implements UsesCustomNull
 						return Utils.toString
 						(
 							this.getClass(),
-							"status",		status(),
-							"data",			Arrays.toString(data()),
-							"type",			type(),
-							"charUuid",		device().getManager().getLogger().uuidName(charUuid()), 
-							"gattStatus",	device().getManager().getLogger().gattStatus(gattStatus())
+							"status",			status(),
+							"data",				Arrays.toString(data()),
+							"type",				type(),
+							"charUuid",			device().getManager().getLogger().uuidName(charUuid()), 
+							"gattStatus",		device().getManager().getLogger().gattStatus(gattStatus())
 						);
 					}
 				}
