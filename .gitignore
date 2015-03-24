@@ -2,6 +2,7 @@
 **/bin/*
 !**/bin/*.apk
 .svn
+**.DS_Store
 
 **/proguard/
 **/doc
