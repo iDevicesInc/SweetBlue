@@ -1289,7 +1289,7 @@ public class BleDevice implements UsesCustomNull
 				return this == CANCELLED_FROM_BLE_TURNING_OFF || this == CANCELLED_FROM_UNBOND;
 			}
 
-			boolean isRealStatus()
+			boolean canFailConnection()
 			{
 				return this == FAILED_IMMEDIATELY || this == FAILED_EVENTUALLY || this == TIMED_OUT;
 			}
@@ -3309,7 +3309,7 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		final boolean wasConnecting = is_internal(CONNECTING_OVERALL);
-		final boolean attemptingReconnect = cancelled ? false : is(RECONNECTING_LONG_TERM);
+		final boolean attemptingReconnect_longTerm = cancelled ? false : is(RECONNECTING_LONG_TERM);
 
 		E_Intent intent = cancelled ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
@@ -3319,19 +3319,19 @@ public class BleDevice implements UsesCustomNull
 		if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
 		{
 			final boolean forceMainStateTracker = explicit;
-			setStateToDisconnected(attemptingReconnect, intent, gattStatus, forceMainStateTracker);
+			setStateToDisconnected(attemptingReconnect_longTerm, intent, gattStatus, forceMainStateTracker);
 
 			m_txnMngr.cancelAllTransactions();
 			// m_txnMngr.clearAllTxns();
 
-			if (!attemptingReconnect)
+			if (!attemptingReconnect_longTerm)
 			{
 				m_reconnectMngr_longTerm.stop();
 			}
 		}
 		else
 		{
-			if (!attemptingReconnect)
+			if (!attemptingReconnect_longTerm)
 			{
 				stateTracker().update(intent, gattStatus, RECONNECTING_LONG_TERM, false);
 
@@ -3343,7 +3343,7 @@ public class BleDevice implements UsesCustomNull
 		{
 			if (m_mngr.ASSERT(connectionFailReasonIfConnecting != null))
 			{
-				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect, gattStatus, bondFailReason, highestState, AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
+				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect_longTerm, gattStatus, bondFailReason, highestState, AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
 			}
 		}
 	}

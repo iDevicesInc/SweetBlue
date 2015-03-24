@@ -90,7 +90,7 @@ public interface State extends UsesCustomNull
 		}
 		
 		/**
-		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns true on any of the {@link State} instances given.
+		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns <code>true</code> on any of the {@link State} instances given.
 		 */
 		public boolean didEnterAny(T_State ... states)
 		{
@@ -103,7 +103,7 @@ public interface State extends UsesCustomNull
 		}
 		
 		/**
-		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns true on any of the {@link State} instances given.
+		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns <code>true</code> on any of the {@link State} instances given.
 		 */
 		public boolean didExitAny(T_State ... states)
 		{
@@ -113,6 +113,32 @@ public interface State extends UsesCustomNull
 			}
 			
 			return false;
+		}
+		
+		/**
+		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns <code>true</code> for all the {@link State} instances given.
+		 */
+		public boolean didEnterAll(T_State ... states)
+		{
+			for( int i = 0; i < states.length; i++ )
+			{
+				if( !didEnter(states[i]) )  return false;
+			}
+			
+			return true;
+		}
+		
+		/**
+		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns <code>true</code> for all the {@link State} instances given.
+		 */
+		public boolean didExitAll(T_State ... states)
+		{
+			for( int i = 0; i < states.length; i++ )
+			{
+				if( !didExit(states[i]) )  return false;
+			}
+			
+			return true;
 		}
 		
 		/**
