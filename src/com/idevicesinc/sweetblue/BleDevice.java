@@ -363,22 +363,23 @@ public class BleDevice implements UsesCustomNull
 			private final Type m_type;
 
 			/**
-			 * The type of GATT object this {@link ReadWriteEvent} is for, currently, characteristic, descriptor, or rssi.
+			 * The type of GATT object this {@link ReadWriteEvent} is for, currently characteristic, descriptor, or rssi.
 			 */
 			public Target target() {  return m_target;  }
 			private final Target m_target;
 
 			/**
-			 * The {@link UUID} of the characteristic associated with this {@link ReadWriteEvent}. This will always be a valid {@link UUID},
-			 * even if {@link #target} is {@link Target#DESCRIPTOR}.
+			 * The {@link UUID} of the characteristic associated with this {@link ReadWriteEvent}. This will always be a non-null {@link UUID},
+			 * even if {@link #target} is {@link Target#DESCRIPTOR}. If {@link #target} is {@link Target#RSSI} then this will be referentially equal
+			 * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
 			 */
 			public UUID charUuid() {  return m_charUuid;  }
 			private final UUID m_charUuid;
 
 			/**
 			 * The {@link UUID} of the descriptor associated with this {@link ReadWriteEvent}. If {@link #target} is
-			 * {@link Target#CHARACTERISTIC} then this will be referentially equal (i.e. you can use == to compare) to
-			 * {@link #NON_APPLICABLE_UUID}.
+			 * {@link Target#CHARACTERISTIC} or {@link Target#RSSI} then this will be referentially equal
+			 * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
 			 */
 			public UUID descUuid() {  return m_descUuid;  }
 			private final UUID m_descUuid;
@@ -449,7 +450,6 @@ public class BleDevice implements UsesCustomNull
 			{
 				this.m_device = device;
 				this.m_charUuid = charUuid != null ? charUuid : NON_APPLICABLE_UUID;
-				;
 				this.m_descUuid = descUuid != null ? descUuid : NON_APPLICABLE_UUID;
 				this.m_type = type;
 				this.m_target = target;
@@ -457,7 +457,6 @@ public class BleDevice implements UsesCustomNull
 				this.m_gattStatus = gattStatus;
 				this.m_totalTime = Interval.secs(totalTime);
 				this.m_transitTime = Interval.secs(transitTime);
-
 				this.m_data = data != null ? data : EMPTY_BYTE_ARRAY;
 				this.m_rssi = device.getRssi();
 			}
@@ -473,7 +472,6 @@ public class BleDevice implements UsesCustomNull
 				this.m_gattStatus = gattStatus;
 				this.m_totalTime = Interval.secs(totalTime);
 				this.m_transitTime = Interval.secs(transitTime);
-
 				this.m_data = EMPTY_BYTE_ARRAY;
 				this.m_rssi = status == Status.SUCCESS ? rssi : device.getRssi();
 			}
@@ -481,6 +479,24 @@ public class BleDevice implements UsesCustomNull
 			static ReadWriteEvent NULL(BleDevice device)
 			{
 				return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs());
+			}
+
+			/**
+			 * Forwards {@link BleDevice#getNativeCharacteristic(UUID)}, which will be non=null
+			 * if {@link #target()} is {@link Target#CHARACTERISTIC} or {@link Target#DESCRIPTOR}.
+			 */
+			public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
+			{
+				return device().getNativeCharacteristic(charUuid());
+			}
+			
+			/**
+			 * Forwards {@link BleDevice#getNativeDescriptor(UUID, UUID)}, which will be non=null
+			 * if {@link #target()} is {@link Target#DESCRIPTOR}.
+			 */
+			public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor descriptor()
+			{
+				return device().getNativeDescriptor(charUuid(), descUuid());
 			}
 
 			/**
@@ -534,17 +550,16 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * Convenience method that attempts to parse the data as a UTF-8 string.
 			 */
-			public String data_utf8()
+			public @Nullable(Prevalence.NEVER) String data_utf8()
 			{
 				return data_string("UTF-8");
 			}
 			
 			/**
-			 * Best effort parsing of {@link #data()} as a {@link String}.
-			 * For now simply forwards {@link #data_utf8()}.
+			 * Best effort parsing of {@link #data()} as a {@link String}. For now simply forwards {@link #data_utf8()}.
 			 * In the future may try to autodetect encoding first. 
 			 */
-			public String data_string()
+			public @Nullable(Prevalence.NEVER) String data_string()
 			{
 				return data_utf8();
 			}
@@ -552,7 +567,7 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * Convenience method that attempts to parse {@link #data()} as a {@link String} with the given charset, for example <code>"UTF-8"</code>.
 			 */
-			public String data_string(final String charset)
+			public @Nullable(Prevalence.NEVER) String data_string(final String charset)
 			{
 				return Utils.getStringValue(data(), charset);
 			}
@@ -1457,6 +1472,9 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Field for app to associate any data it wants with instances of this class
 	 * instead of having to subclass or manage associative hash maps or something.
+	 * The library does not touch or interact with this data in any way.
+	 * 
+	 * @see BleManager#appData
 	 */
 	public Object appData;
 
@@ -2061,6 +2079,24 @@ public class BleDevice implements UsesCustomNull
 	{
 		return m_nativeWrapper.getDevice();
 	}
+	
+	/**
+	 * Returns the native descriptor for the given UUID in case you need lower-level access. You should only call this after
+	 * {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID charUuid, final UUID descUUID)
+	{
+		final BluetoothGattCharacteristic char_native = getNativeCharacteristic(charUuid);
+		
+		if( char_native == null )  return null;
+		
+		final BluetoothGattDescriptor desc_native = char_native.getDescriptor(descUUID);
+		
+		return desc_native;
+	}
 
 	/**
 	 * Returns the native characteristic for the given UUID in case you need lower-level access. You should only call this after
@@ -2069,9 +2105,9 @@ public class BleDevice implements UsesCustomNull
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(UUID uuid)
+	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID uuid)
 	{
-		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
 
 		if (characteristic == null)  return null;
 
@@ -2085,9 +2121,9 @@ public class BleDevice implements UsesCustomNull
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NORMAL) BluetoothGattService getNativeService(UUID uuid)
+	public @Nullable(Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
 	{
-		P_Service service = m_serviceMngr.get(uuid);
+		final P_Service service = m_serviceMngr.get(uuid);
 
 		if (service == null)  return null;
 
@@ -2934,20 +2970,20 @@ public class BleDevice implements UsesCustomNull
 		return m_serviceMngr;
 	}
 
-	void onNewlyDiscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
+	void onNewlyDiscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		clear_discovery();
 
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
-		stateTracker_main().update(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), UNBONDED, m_nativeWrapper.isNativelyUnbonded(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, true, DISCONNECTED, true);
+		stateTracker_main().update(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), UNBONDED, m_nativeWrapper.isNativelyUnbonded(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
 	}
 
-	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable)
+	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
-		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded());
+		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY);
 	}
 
 	void onUndiscovered(E_Intent intent)

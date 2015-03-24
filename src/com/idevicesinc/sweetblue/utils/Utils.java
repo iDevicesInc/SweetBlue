@@ -303,7 +303,7 @@ public class Utils
 	
 	public static String getStringValue(final byte[] data, final String charset)
 	{
-		String string = null;
+		String string = "";
 		byte[] value = data;
 
 		if(value != null && value.length > 0)

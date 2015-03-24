@@ -732,14 +732,12 @@ public class BleManager
 	/**
 	 * Field for app to associate any data it wants with the singleton instance of this class
 	 * instead of having to subclass or manage associative hash maps or something.
+	 * The library does not touch or interact with this data in any way.
 	 * 
 	 * @see BleDevice#appData
 	 */
 	public Object appData;
 
-	/**
-	 * Create an instance with special configuration options set.
-	 */
 	private BleManager(Context context, BleManagerConfig config)
 	{
 		m_context = context.getApplicationContext();
@@ -1760,7 +1758,7 @@ public class BleManager
 
 		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDeviceOrigin.EXPLICIT, config);
 		
-		onDiscovered_wrapItUp(newDevice, /*newlyDiscovered=*/true, null, null, 0);
+		onDiscovered_wrapItUp(newDevice, /*newlyDiscovered=*/true, null, null, 0, BleDeviceOrigin.EXPLICIT);
 
 		return newDevice;
 	}
@@ -2109,7 +2107,7 @@ public class BleManager
     		newlyDiscovered = true;
     	}
 
-    	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
+    	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY);
 	}
 
 	private BleDevice newDevice_private(final BluetoothDevice device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
@@ -2147,14 +2145,14 @@ public class BleManager
 			m_deviceMngr.add(device);
 		}
 		
-		onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi);
+		onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY);
 	}
 
-    private void onDiscovered_wrapItUp(final BleDevice device, final boolean newlyDiscovered, final List<UUID> services_nullable, final byte[] scanRecord_nullable, final int rssi)
+    private void onDiscovered_wrapItUp(final BleDevice device, final boolean newlyDiscovered, final List<UUID> services_nullable, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin)
     {
     	if( newlyDiscovered )
     	{
-    		device.onNewlyDiscovered(services_nullable, rssi, scanRecord_nullable);
+    		device.onNewlyDiscovered(services_nullable, rssi, scanRecord_nullable, origin);
 
     		if( m_discoveryListener != null )
     		{
@@ -2164,7 +2162,7 @@ public class BleManager
     	}
     	else
     	{
-    		device.onRediscovered(services_nullable, rssi, scanRecord_nullable);
+    		device.onRediscovered(services_nullable, rssi, scanRecord_nullable, BleDeviceOrigin.FROM_DISCOVERY);
 
     		if( m_discoveryListener != null )
     		{

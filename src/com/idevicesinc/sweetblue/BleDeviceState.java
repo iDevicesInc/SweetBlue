@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothProfile;
 
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -21,7 +22,7 @@ public enum BleDeviceState implements State
 {
 	/**
 	 * Dummy value returned from any method that would otherwise return Java's built-in <code>null</code>.
-	 * A {@link BleDevice} will never be in this state. This will also be the sole state of {@link BleDevice#NULL}.
+	 * A normal {@link BleDevice} will never be in this state, but this will be the sole state of {@link BleDevice#NULL}.
 	 */
 	NULL,
 	
@@ -60,8 +61,9 @@ public enum BleDeviceState implements State
 	DISCOVERED,
 	
 	/**
-	 * The device will always be in this state while {@link #CONNECTED} is not active. Note that this doesn't *necessarily* mean that the actual
-	 * physical device is advertising, just that it is assumed to be so.
+	 * When {@link BleDevice#getOrigin()} is {@link BleDeviceOrigin#FROM_DISCOVERY}, a device will always be in this state while {@link #CONNECTED}
+	 * is not active. Note that this doesn't *necessarily* mean that the actual physical device is advertising, just that it was {@link LifeCycle#DISCOVERED}
+	 * or {@link LifeCycle#REDISCOVERED} through a {@link BleManager#startScan()}, so it is still assumed to be advertising.
 	 */
 	ADVERTISING,
 	
