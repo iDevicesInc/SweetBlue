@@ -4,6 +4,7 @@
 .svn
 **.DS_Store
 .gradle/
+build/
 script_output/
 **/proguard/
 **/doc

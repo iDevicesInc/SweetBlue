@@ -44,6 +44,7 @@ import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -193,6 +194,22 @@ public class BleManager
 			}
 			
 			/**
+			 * Forwards {@link BleDevice#getRssi()}.
+			 */
+			public int rssi()
+			{
+				return device().getRssi();
+			}
+			
+			/**
+			 * Forwards {@link BleDevice#getRssiPercent()}.
+			 */
+			public Percent rssi_percent()
+			{
+				return device().getRssiPercent();
+			}
+			
+			/**
 			 * Convenience method for checking equality of given {@link LifeCycle} and {@link #lifeCycle()}.
 			 */
 			public boolean was(LifeCycle lifeCycle)
@@ -205,9 +222,10 @@ public class BleManager
 				return Utils.toString
 				(
 					this.getClass(),
-					"device",			device().getName_debug(),
-					"lifeCycle",		lifeCycle(),
-					"rssi",				device().getRssi()
+					"device",				device().getName_debug(),
+					"lifeCycle",			lifeCycle(),
+					"rssi",					rssi(),
+					"rssi_percent",			rssi_percent()
 				);
 			}
 		}

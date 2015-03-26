@@ -115,7 +115,7 @@ class P_BondManager
 	
 	private boolean failConnection(final BondListener.Status status)
 	{
-		if( status.isRealStatus() )
+		if( status.canFailConnection() )
 		{
 			if( m_device.is_internal(BleDeviceState.CONNECTING_OVERALL) )
 			{
@@ -135,14 +135,26 @@ class P_BondManager
 	{
 		if( failConnection(status) )
 		{
+			final boolean doingReconnect_shortTerm = m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM);
+			
 			m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.BONDING_FAILED, status.timing(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, failReason, m_device.NULL_READWRITE_EVENT());
+			
+			if( doingReconnect_shortTerm )
+			{
+				onNativeBondFailed_common(intent);
+			}
 		}
 		else
 		{
-			m_device.stateTracker_main().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
+			onNativeBondFailed_common(intent);
 		}
 		
 		invokeCallback(status, failReason, intent.convert());
+	}
+	
+	private void onNativeBondFailed_common(final E_Intent intent)
+	{
+		m_device.stateTracker_main().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
 	boolean bondIfNeeded(final P_Characteristic characteristic, final BondFilter.CharacteristicEventType type)

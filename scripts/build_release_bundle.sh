@@ -47,9 +47,7 @@ then
     cd ..
     git clone https://github.com/iDevicesInc/SweetBlue_Samples.git $STAGE/samples
     cd $STAGE/samples/scripts/
-	#Remove the below line once the testing branch has been merged
-    git checkout testing
-    sh update_sweetblue.sh
+	sh update_sweetblue.sh
     cd -
     rsync -a $STAGE/samples/samples $BUNDLE_FOLDER --exclude scripts --exclude scripts
 fi
@@ -64,11 +62,11 @@ if [ $(contains "${ARGS[@]}" "no_zip") == "n" ];
 then
     echo "${GLITZ}ZIPPING UP${GLITZ}"
     cd ..
-    sh gradlew createZips
+    sh gradlew createZips cleanZipFolders
     cd -
 fi
 
-if [ $(contains "${ARGS[@]}" "uploaSWEEd") == "y" ];
+if [ $(contains "${ARGS[@]}" "upload") == "y" ];
 then
     echo "${GLITZ}UPLOADING ZIPS TO SERVER${GLITZ}"
     cd $STAGE

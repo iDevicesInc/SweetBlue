@@ -67,11 +67,21 @@ task gendocs(type: Javadoc) {
    options.author = true
    //include("com.idevicesinc.sweetblue")
    version = SEMVER.replace("_", '.')
+   destinationDir = new File("${BUNDLE_FOLDER}/docs/api")
    source = sourceSets.main.allJava
    classpath += configurations.compile
 }
 
-task javadocJar(type: Jar, dependsOn: gendocs) {
+task genJavaDoc(type: Copy, dependsOn: gendocs) {
+	File f = new File("${BUNDLE_FOLDER}/docs/api")
+	if (!f.exists()) {
+		f.mkdirs()
+	}
+	from "docs/api"
+	into "${BUNDLE_FOLDER}/docs/api"
+}
+
+task javadocJar(type: Jar, dependsOn: genJavaDoc) {
    classifier = 'javadoc'
    archiveName = JAVADOC_JAR_NAME
    from gendocs.destinationDir
@@ -84,7 +94,22 @@ task zipJar(type: Zip, dependsOn: build) {
    destinationDir = new File("${STAGE}")
 }
 
-task copyStandardFolder(type: Copy) {
+task copyFiles << {
+	File f = new File("${BUNDLE_FOLDER}")
+	if (!f.exists()) {
+		f.mkdirs()
+	}
+	copy {
+		from "src"
+		into "${BUNDLE_FOLDER}/src"
+	}
+	copy {
+		from "README.md"
+		into BUNDLE_FOLDER
+	}
+}
+
+task copyStandardFolder(type: Copy, dependsOn: copyFiles) {
    File f = new File("${STAGE}/${STANDARD_DIR}")
    if (!f.exists()) {
       f.mkdirs()
@@ -93,7 +118,7 @@ task copyStandardFolder(type: Copy) {
    into STAGE + "/" + STANDARD_DIR
 }
 
-task copyProFolder(type: Copy) {
+task copyProFolder(type: Copy, dependsOn: copyFiles) {
    File f = new File("${STAGE}/${PRO_DIR}")
    if (!f.exists()) {
       f.mkdirs()
