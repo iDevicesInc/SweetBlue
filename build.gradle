@@ -138,8 +138,9 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
 	// again, so this doesn't fail the build
 	File f = new File("${STAGE}/samples")
 	if (f.exists()) {
-		def r = "rm -rf ${STAGE}/samples".execute()
-		r.waitFor()
+		delete "${STAGE}/samples"
+		//def r = "rm -rf ${STAGE}/samples".execute()
+		//r.waitFor()
 	}
 	def r = "git clone -b testing https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
 	r.waitFor()
@@ -182,7 +183,7 @@ task copyAndRenameJars(dependsOn: getSamples) << {
 			into targetName
 			rename("_${SEMVER}", "")
 		}
-	}
+	}	
 }
 
 task copySamples(dependsOn: copyAndRenameJars) << {
@@ -194,6 +195,11 @@ task copySamples(dependsOn: copyAndRenameJars) << {
 		from "${STAGE}/samples/samples"
 		into "${STAGE}/${STANDARD_DIR}/samples"
 	}	
+}
+
+task updateSamplesRepo(type: Exec, dependsOn: copySamples) {
+	workingDir = "${STAGE}/samples"
+	commandLine 'git add -u', 'git commit -m "updating sweetblue libraries"'
 }
 
 task buildBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
