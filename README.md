@@ -132,8 +132,6 @@ Getting Started
     });
     ```
 
-Other folders in `MyApp/libs/sweetblue/` like `MyApp/libs/sweetblue/samples/` are included in this repo for convenience but are not essential so you may delete them.
-
 Licensing
 =========
 
