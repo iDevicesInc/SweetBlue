@@ -6,9 +6,7 @@ ext.JAR_BASE_NAME="sweetblue_${SEMVER}"
 ext.BUNDLE_FOLDER=STAGE + "/" + JAR_BASE_NAME
 ext.JAR_NAME=BUNDLE_FOLDER + "/${JAR_BASE_NAME}.jar"
 
-cd ..
 sh gradlew fullBuild
-cd -
 echo "${GLITZ}UPLOADING ZIPS TO SERVER${GLITZ}"
     cd $STAGE
     SERVER_ADDRESS="162.209.102.219"

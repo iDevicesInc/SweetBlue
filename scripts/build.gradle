@@ -17,7 +17,7 @@ targetCompatibility = '1.6'
 sourceSets {
    main {
       java {
-         srcDir 'src/'
+         srcDir '../src/'
       }
    }
 }
@@ -49,7 +49,7 @@ if (JavaVersion.current().isJava8Compatible()) {
 }
 
 task gendocs(type: Javadoc) {
-   options.stylesheetFile = new File("./scripts/assets/doc_style.css")
+   options.stylesheetFile = new File("./assets/doc_style.css")
    options.windowTitle = "SweetBlue"
    options.memberLevel = JavadocMemberLevel.PROTECTED
    options.author = true
@@ -118,14 +118,14 @@ task copyProFolder(type: Copy, dependsOn: copyFiles) {
 }
 
 task createStandardLicense(dependsOn: copyStandardFolder) << {
-   String license = new File('./scripts/assets/license_template.html').getText('UTF-8')
+   String license = new File('./assets/license_template.html').getText('UTF-8')
    String lic = license.replace("{{level}}", STANDARD)
    lic = lic.replace("{{support}}", STANDARD_SUPPORT)
    new File("${STAGE}/${STANDARD_DIR}/license.html").write(lic, 'UTF-8')
 }
 
 task createProLicense(dependsOn: copyProFolder) << {
-   String license = new File('./scripts/assets/license_template.html').getText('UTF-8')
+   String license = new File('./assets/license_template.html').getText('UTF-8')
    String lic = license.replace("{{level}}", PRO)
    lic = lic.replace("{{support}}", PRO_SUPPORT)
    new File("${STAGE}/${PRO_DIR}/license.html").write(lic, 'UTF-8')
@@ -152,11 +152,14 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
 ext.mainJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}.jar"
 ext.sourcesJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-sources.jar"
 ext.javadocJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-javadoc.jar"
+
 ext.sampleBleAS = "${STAGE}/samples/samples/ble_util/android_studio/app/libs"
 ext.sampleBle = "${STAGE}/samples/samples/ble_util/eclipse/lib"
 ext.sampleHelloAS = "${STAGE}/samples/samples/hello_ble/android_studio/app/libs"
 ext.sampleHello = "${STAGE}/samples/samples/hello_ble/eclipse/lib"
+
 ext.sampleJarLocs = [sampleBleAS, sampleBle, sampleHelloAS, sampleHello]
+
 
 task copyAndRenameJars(dependsOn: getSamples) << {
 	sampleJarLocs.each {def targetName ->
@@ -193,17 +196,27 @@ task copySamples(dependsOn: copyAndRenameJars) << {
 	}	
 }
 
-task buildBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
+task buildStandardBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
+	buildFile = "${STAGE}/${STANDARD_DIR}/samples/ble_util/android_studio/app/build.gradle"
+	tasks = ['assemble']
+}
+
+task buildProBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
 	buildFile = "${STAGE}/${PRO_DIR}/samples/ble_util/android_studio/app/build.gradle"
 	tasks = ['assemble']
 }
 
-task buildHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
+task buildStandardHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
+	buildFile = "${STAGE}/${STANDARD_DIR}/samples/hello_ble/android_studio/app/build.gradle"
+	tasks = ['assemble']
+}
+
+task buildProHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
 	buildFile = "${STAGE}/${PRO_DIR}/samples/hello_ble/android_studio/app/build.gradle"
 	tasks = ['assemble']
 }
 
-task buildSamples(dependsOn: [buildBleUtilSample, buildHelloBleSample])
+task buildSamples(dependsOn: [buildProBleUtilSample, buildProHelloBleSample, buildStandardBleUtilSample, buildStandardHelloBleSample])
 
 task zipStandard(type: Zip, dependsOn: [createStandardLicense, copySamples]) {
    from "${STAGE}/${STANDARD_DIR}"
