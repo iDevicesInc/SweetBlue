@@ -131,18 +131,14 @@ task createProLicense(dependsOn: copyProFolder) << {
    new File("${STAGE}/${PRO_DIR}/license.html").write(lic, 'UTF-8')
 }
 
-// ****** MAKE SURE TO REMOVE -b testing from the below task BEFORE MERGING!! *****
-
 task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
 	// If the directory already exists, wipe it out, and start over
 	// again, so this doesn't fail the build
 	File f = new File("${STAGE}/samples")
 	if (f.exists()) {
 		delete "${STAGE}/samples"
-		//def r = "rm -rf ${STAGE}/samples".execute()
-		//r.waitFor()
 	}
-	def r = "git clone -b testing https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
+	def r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
 	r.waitFor()
 	String v = r.exitValue()
 	if (!v.equals("0")) {
@@ -195,11 +191,6 @@ task copySamples(dependsOn: copyAndRenameJars) << {
 		from "${STAGE}/samples/samples"
 		into "${STAGE}/${STANDARD_DIR}/samples"
 	}	
-}
-
-task updateSamplesRepo(type: Exec, dependsOn: copySamples) {
-	workingDir = "${STAGE}/samples"
-	commandLine 'git add -u', 'git commit -m "updating sweetblue libraries"'
 }
 
 task buildBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
