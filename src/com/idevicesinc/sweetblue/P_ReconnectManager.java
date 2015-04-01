@@ -22,7 +22,7 @@ class P_ReconnectManager
 	private double m_delay = 0.0;
 	private double m_timeTracker = NOT_RUNNING;
 	
-	private int m_gattStatusOfOriginalDisconnect = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	private int m_gattStatusOfOriginalDisconnect = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	
 	private ConnectionFailListener.ConnectionFailEvent m_connectionFailInfo;
 	
@@ -50,7 +50,7 @@ class P_ReconnectManager
 		if( m_delay < 0.0 )
 		{
 			m_timeTracker = NOT_RUNNING;
-			m_gattStatusOfOriginalDisconnect = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+			m_gattStatusOfOriginalDisconnect = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		}
 		else
 		{
@@ -215,7 +215,7 @@ class P_ReconnectManager
 			}
 			else
 			{
-				m_device.stateTracker_main().update(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, RECONNECTING_LONG_TERM, false);
+				m_device.stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, RECONNECTING_LONG_TERM, false);
 			}
 		}
 	}
@@ -231,6 +231,6 @@ class P_ReconnectManager
 		m_attemptCount = 0;
 		m_totalTime = 0.0;
 		m_connectionFailInfo = m_device.NULL_CONNECTIONFAIL_INFO();
-		m_gattStatusOfOriginalDisconnect = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+		m_gattStatusOfOriginalDisconnect = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	}
 }

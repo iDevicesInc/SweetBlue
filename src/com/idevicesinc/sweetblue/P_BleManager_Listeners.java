@@ -11,10 +11,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
+
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 class P_BleManager_Listeners
 {
+	public static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
+	public static final String BluetoothDevice_ACTION_DISAPPEARED = "android.bluetooth.device.action.DISAPPEARED";
+	
 	final BluetoothAdapter.LeScanCallback m_scanCallback = new BluetoothAdapter.LeScanCallback()
 	{
 		@Override public void onLeScan(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord)
@@ -85,7 +89,7 @@ class P_BleManager_Listeners
 			
 			//--- DRK > This block doesn't do anything...just wrote it to see how these other events work and if they're useful.
 			//---		They don't seem to be but leaving it here for the future if needed anyway.
-			else if( action.contains("ACL") || action.equals(BluetoothDevice.ACTION_UUID) || action.equals(PS_GattStatus.BluetoothDevice_ACTION_DISAPPEARED) )
+			else if( action.contains("ACL") || action.equals(BluetoothDevice.ACTION_UUID) || action.equals(BluetoothDevice_ACTION_DISAPPEARED) )
 			{
 				final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 				
@@ -134,7 +138,7 @@ class P_BleManager_Listeners
 		intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
 		intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 		intentFilter.addAction(BluetoothDevice.ACTION_UUID);
-		intentFilter.addAction(PS_GattStatus.BluetoothDevice_ACTION_DISAPPEARED);
+		intentFilter.addAction(BluetoothDevice_ACTION_DISAPPEARED);
 		
 		m_mngr.getApplicationContext().registerReceiver(m_receiver, intentFilter);
 	}
@@ -268,8 +272,8 @@ class P_BleManager_Listeners
 		BleManagerState previousState = BleManagerState.get(previousNativeState);
 		BleManagerState newState = BleManagerState.get(newNativeState);
 		
-		m_mngr.getNativeStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
-		m_mngr.getStateTracker().update(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
+		m_mngr.getNativeStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
+		m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
 		
 		if( previousNativeState != BluetoothAdapter.STATE_ON && newNativeState == BluetoothAdapter.STATE_ON )
 		{
@@ -309,15 +313,15 @@ class P_BleManager_Listeners
 		if( newState == BluetoothDevice.BOND_NONE )
 		{
 			//--- DRK > Can't access BluetoothDevice.EXTRA_REASON cause of stupid @hide annotation, so hardcoding string here.
-			failReason = intent.getIntExtra(PS_GattStatus.BluetoothDevice_EXTRA_REASON, BluetoothDevice.ERROR);
-			if( failReason != PS_GattStatus.BluetoothDevice_BOND_SUCCESS )
+			failReason = intent.getIntExtra(BluetoothDevice_EXTRA_REASON, BluetoothDevice.ERROR);
+			if( failReason != BleStatuses.BOND_SUCCESS )
 			{
 				m_logger.w(m_logger.gattUnbondReason(failReason));
 			}
 		}
 		else
 		{
-			failReason = BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE;
+			failReason = BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE;
 		}
 		
 		final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -363,7 +367,13 @@ class P_BleManager_Listeners
 		
 		if( device != null )
 		{
-			device.getListeners().onNativeBondStateChanged(previousState, newState, failReason);
+			//--- DRK > Got an NPE here when restarting the app through the debugger. Pretty sure it's an impossible case
+			//---		for actual app usage cause the listeners member of the device is final. So some memory corruption issue
+			//---		associated with debugging most likely...still gating it for the hell of it.
+			if( device.getListeners() != null )
+			{
+				device.getListeners().onNativeBondStateChanged(previousState, newState, failReason);
+			}
 		}
 		
 //		if( previousState == BluetoothDevice.BOND_BONDING && newState == BluetoothDevice.BOND_NONE )

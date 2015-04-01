@@ -36,7 +36,7 @@ public enum BleTask
 	DISCONNECT,
 	
 	/**
-	 * Associated with {@link BleDevice#bond()}.
+	 * Associated with {@link BleDevice#bond()} and {@value BleDeviceState#BONDING}.
 	 */
 	BOND,
 	
@@ -80,8 +80,8 @@ public enum BleTask
 		{
 			case TURN_BLE_OFF:
 			case TURN_BLE_ON:
-			case RESOLVE_CRASHES:	return true;
-			default:				return false;
+			case RESOLVE_CRASHES:	return false;
+			default:				return true;
 		}
 	}
 	
@@ -91,5 +91,13 @@ public enum BleTask
 	public boolean isManagerSpecific()
 	{
 		return !isDeviceSpecific();
+	}
+	
+	/**
+	 * Returns <code>true</code> if the task can have a characteristic UUID associated with it - for now {@link #READ}, {@link #WRITE} and {@link #TOGGLE_NOTIFY}.
+	 */
+	public boolean usesCharUuid()
+	{
+		return this == READ || this == WRITE || this == TOGGLE_NOTIFY;
 	}
 }

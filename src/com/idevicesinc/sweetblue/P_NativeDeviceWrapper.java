@@ -127,7 +127,9 @@ class P_NativeDeviceWrapper
 	
 	public int getNativeBondState()
 	{
-		return m_native != null ? m_native.getBondState() : BluetoothDevice.BOND_NONE;
+		final int bondState_native = m_native != null ? m_native.getBondState() : BluetoothDevice.BOND_NONE;
+		
+		return bondState_native;		
 	}
 	
 	boolean isNativelyBonding()

@@ -85,4 +85,9 @@ public class Distance extends Unit<Distance>
 	{
 		return m_meters;
 	}
+
+	@Override protected Unit<Distance> newInstance(double rawValue)
+	{
+		return meters(rawValue);
+	}
 }

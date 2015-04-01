@@ -1,24 +1,78 @@
 package com.idevicesinc.sweetblue;
 
-/**
- * 
- * 
- *
- */
-class PS_GattStatus
-{
-	public static final int UNKNOWN_STATUS_AFTER_GATT_INSUFFICIENT_AUTHENTICATION = 137;
-	public static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
-	public static final String BluetoothDevice_ACTION_DISAPPEARED = "android.bluetooth.device.action.DISAPPEARED";
-	public static final int BluetoothDevice_BOND_SUCCESS = 0;
+import android.bluetooth.BluetoothGatt;
 
-	public static final int UNKNOWN_STATUS_FOR_IMMEDIATE_CONNECTION_FAILURE = 133;
+/**
+ * A collection of various BLE status codes that for whatever reason are not exposed through Android's 
+ * public BLE layer - this can be because they are <code>public</code> but use the @hide annotation,
+ * or they are not <code>public</code> in the first place, or they can only be found by Googling
+ * for native C/C++ library code.
+ * <br><br>
+ * See the static members of {@link BluetoothDevice} and {@link BluetoothGatt} for more information.
+ * <br><br>
+ * NOTE: Most <code>GATT_</code> members here are copy/pasted from
+ * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.3_r1.1/stack/include/gatt_api.h
+ */
+public class BleStatuses
+{
+	/**
+	 * Status code used for {@link BleDevice.ReadWriteListener.ScanEvent#gattStatus} when the operation failed at a point where a
+	 * gatt status from the underlying stack isn't provided or applicable.
+	 * <br><br>
+	 * Also used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#gattStatus()} for when the failure didn't involve the gatt layer.
+	 */
+	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 	
-	//--- DRK > People are referencing this as GATT_ERROR or GATT_INTERNAL_ERROR on stackoverflow but no mentions in the project. 
-	public static final int UNKNOWN_STATUS_FOR_SERVICE_DISCOVERY_FAILURE = 129;
+	/**
+	 * Used on {@link BleDevice.BondListener.BondEvent#failReason()} when {@link BleDevice.BondListener.BondEvent#status()}
+	 * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.
+	 */
+	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= GATT_STATUS_NOT_APPLICABLE;
 	
-	public static final int BYTE_LIMIT = 20;
-	
+	/**
+     * A bond attempt succeeded.
+     */
+    public static final int BOND_SUCCESS = 0;
+
+    /**
+     * A bond attempt failed because pins did not match, or remote device did not respond to pin request in time.
+     */
+    public static final int UNBOND_REASON_AUTH_FAILED = 1;
+
+    /**
+     * A bond attempt failed because the other side explicitly rejected bonding.
+     */
+    public static final int UNBOND_REASON_AUTH_REJECTED = 2;
+
+    /**
+     * A bond attempt failed because we canceled the bonding process.
+     */
+    public static final int UNBOND_REASON_AUTH_CANCELED = 3;
+
+    /**
+     * A bond attempt failed because we could not contact the remote device.
+     */
+    public static final int UNBOND_REASON_REMOTE_DEVICE_DOWN = 4;
+
+    /**
+     * A bond attempt failed because a discovery is in progress.
+     */
+    public static final int UNBOND_REASON_DISCOVERY_IN_PROGRESS = 5;
+
+    /**
+     * A bond attempt failed because of authentication timeout.
+     */
+    public static final int UNBOND_REASON_AUTH_TIMEOUT = 6;
+
+    /**
+     * A bond attempt failed because of repeated attempts.
+     */
+    public static final int UNBOND_REASON_REPEATED_ATTEMPTS = 7;
+
+    /**
+     * A bond attempt failed because we received an Authentication Cancel by remote end.
+     */
+    public static final int UNBOND_REASON_REMOTE_AUTH_CANCELED = 8;
 	
 	//--- DRK > List from https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.3_r1.1/stack/include/gatt_api.h
 	//---		Copy/pasting here for easier reference or in case that resource disappears or something.

@@ -49,6 +49,8 @@ abstract class PA_Task
 	
 	protected final P_Logger m_logger;
 	
+	private int m_ordinal = -1; // until added to the queue and assigned an actual ordinal.
+	
 	private final Runnable m_executeRunnable = new Runnable()
 	{
 		@Override public void run()
@@ -131,15 +133,22 @@ abstract class PA_Task
 		
 		m_state = newState;
 		
-		if( m_state.isEndingState() && m_logger.isEnabled() )
+		if( m_logger.isEnabled() )
 		{
-			String logText = this.toString();
-			if( m_queue != null )
+			if( m_state.isEndingState() )
 			{
-				logText += " - " + m_queue.getUpdateCount();
+				String logText = this.toString();
+				if( m_queue != null )
+				{
+					logText += " - " + m_queue.getUpdateCount();
+				}
+				
+				m_logger.i(logText);
 			}
-			
-			m_logger.i(logText);
+			else if (m_state == PE_TaskState.EXECUTING )
+			{
+				getQueue().print();
+			}
 		}
 		
 		if( m_stateListener != null )  m_stateListener.onStateChange(this, m_state);
@@ -150,9 +159,15 @@ abstract class PA_Task
 		return m_state;
 	}
 	
+	int getOrdinal()
+	{
+		return m_ordinal;
+	}
+	
 	void onAddedToQueue(P_TaskQueue queue)
 	{
 		m_queue = queue;
+		m_ordinal = getQueue().assignOrdinal();
 		setState(PE_TaskState.QUEUED);
 //		m_retryCount = 0;
 		m_updateCount = 0;

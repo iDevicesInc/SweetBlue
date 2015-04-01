@@ -5,11 +5,6 @@ import java.util.ArrayList;
 import android.os.Handler;
 import android.os.Looper;
 
-/**
- * 
- * 
- *
- */
 class P_TaskQueue
 {
 	private final ArrayList<PA_Task> m_queue = new ArrayList<PA_Task>();
@@ -21,12 +16,28 @@ class P_TaskQueue
 	
 	private Handler m_executeHandler = null;
 	
+	private int m_currentOrdinal;
+	
 	P_TaskQueue(BleManager mngr)
 	{
 		m_mngr = mngr;
 		m_logger = mngr.getLogger();
 		
 		initHandler(); 
+	}
+	
+	int assignOrdinal()
+	{
+		final int toReturn = m_currentOrdinal;
+		
+		m_currentOrdinal++;
+		
+		return toReturn;
+	}
+	
+	int getCurrentOrdinal()
+	{
+		return m_currentOrdinal;
 	}
 	
 	private void initHandler()

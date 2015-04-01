@@ -76,6 +76,54 @@ public abstract class Unit<T>
 	}
 	
 	/**
+	 * Returns a new instance that is the result of doing <code>this - other</code>.
+	 */
+	public T minus(Unit<T> other)
+	{
+		if( other == null )  return (T) this;
+		
+		final double result_raw = this.getRawValue() - other.getRawValue();
+		
+		return (T) newInstance(result_raw);
+	}
+	
+	/**
+	 * Returns a new instance that is the result of doing <code>this + other</code>.
+	 */
+	public Unit<T> plus(Unit<T> other)
+	{
+		if( other == null )  return this;
+		
+		final double result_raw = this.getRawValue() + other.getRawValue();
+		
+		return newInstance(result_raw);
+	}
+	
+	/**
+	 * Returns a new instance that is the result of doing <code>this * other</code>.
+	 */
+	public Unit<T> times(Unit<T> other)
+	{
+		if( other == null )  return newInstance(0.0);
+		
+		final double result_raw = this.getRawValue() * other.getRawValue();
+		
+		return newInstance(result_raw);
+	}
+	
+	/**
+	 * Returns a new instance that is the result of doing <code>this / other</code>.
+	 */
+	public Unit<T> dividedBy(Unit<T> other)
+	{
+		if( other == null )  return newInstance(Double.POSITIVE_INFINITY);
+		
+		final double result_raw = this.getRawValue() / other.getRawValue();
+		
+		return newInstance(result_raw);
+	}
+	
+	/**
 	 * Hashes {@link #getRawValue()} to an <code>int</code>
 	 */
 	@Override public int hashCode()
@@ -100,4 +148,9 @@ public abstract class Unit<T>
 	 * Subclasses must implement this to return their raw <code>double</code> value.
 	 */
 	protected abstract double getRawValue();
+	
+	/**
+	 * Subclasses must override this so that arithmetic "operators" can create new instances.
+	 */
+	protected abstract Unit<T> newInstance(final double rawValue);
 }

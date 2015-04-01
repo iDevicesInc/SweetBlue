@@ -39,7 +39,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		
 		if( !super_isExecutable )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 		
 		return super_isExecutable;
@@ -56,7 +56,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		if( !getDevice().getNativeGatt().readRemoteRssi() )
 		{
-			fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 	}
 	
@@ -87,11 +87,11 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		if( state == PE_TaskState.TIMED_OUT )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, 0));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 	}
 	

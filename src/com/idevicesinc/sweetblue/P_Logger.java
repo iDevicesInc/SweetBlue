@@ -273,7 +273,7 @@ class P_Logger
 
 		initFromReflection(BluetoothGatt.class, "GATT_", m_gattStatusCodes);
 		initFromReflection(BleDeviceConfig.class, "GATT_", m_gattStatusCodes);
-		initFromReflection(PS_GattStatus.class, "GATT_", m_gattStatusCodes);
+		initFromReflection(BleStatuses.class, "GATT_", m_gattStatusCodes);
 	}
 	
 	

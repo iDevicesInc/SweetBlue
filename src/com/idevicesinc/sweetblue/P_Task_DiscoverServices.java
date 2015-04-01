@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {
-	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	
 	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener)
 	{

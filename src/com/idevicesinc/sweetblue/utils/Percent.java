@@ -112,4 +112,9 @@ public class Percent extends Unit<Percent>
 	{
 		return m_doubleValue;
 	}
+	
+	@Override protected Unit<Percent> newInstance(double rawValue)
+	{
+		return fromDouble(rawValue);
+	}
 }

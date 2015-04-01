@@ -4,24 +4,35 @@ import android.annotation.SuppressLint;
 
 class P_Task_Bond extends PA_Task_RequiresBleOn
 {
+	//--- DRK > Originally used because for tab 4 (and any other bonding failure during connection) we'd force disconnect from the connection failing
+	//---		and then put another bond task on the queue, but because we hadn't actually yet killed the transaction lock, the bond task would
+	//---		cut the unbond task in the queue. Not adding bonding task in the disconnect flow now though so this is probably useless for future use.
+	static enum E_TransactionLockBehavior
+	{
+		PASSES,
+		DOES_NOT_PASS;
+	}
+	
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
 	private final boolean m_partOfConnection;
+	private final E_TransactionLockBehavior m_lockBehavior;
 	
-	private int m_failReason = BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE;
+	private int m_failReason = BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE;
 	
-	public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener, PE_TaskPriority priority)
+	public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener, PE_TaskPriority priority, E_TransactionLockBehavior lockBehavior)
 	{
 		super(device, listener);
 		
 		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
 		m_explicit = explicit;
 		m_partOfConnection = partOfConnection;
+		m_lockBehavior = lockBehavior;
 	}
 	
-	public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener)
+	public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener, E_TransactionLockBehavior lockBehavior)
 	{
-		this(device, explicit, partOfConnection, listener, null);
+		this(device, explicit, partOfConnection, listener, null, lockBehavior);
 	}
 	
 	@Override public boolean isExplicit()
@@ -68,11 +79,14 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 	{
 		if( task instanceof P_Task_TxnLock )
 		{
-			P_Task_TxnLock task_cast = (P_Task_TxnLock) task;
-			
-			if( this.getDevice() == task_cast.getDevice() )
+			if( m_lockBehavior == E_TransactionLockBehavior.PASSES )
 			{
-				return true;
+				P_Task_TxnLock task_cast = (P_Task_TxnLock) task;
+				
+				if( this.getDevice() == task_cast.getDevice() )
+				{
+					return true;
+				}
 			}
 		}
 		

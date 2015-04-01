@@ -58,7 +58,10 @@ public class Utils
 	 */ 
 	public static boolean phoneHasBondingIssues()
 	{
-		return Utils.isManufacturer("sony") || Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
+		return
+				Utils.isManufacturer("sony")																		||
+				Utils.isManufacturer("motorola") && (Utils.isProduct("ghost") || Utils.isProduct("victara"))		||
+				Utils.isManufacturer("samsung") && (Utils.isProduct("degaswifiue"))									 ;
 	}
 	
 	public static boolean isManufacturer(String manufacturer)

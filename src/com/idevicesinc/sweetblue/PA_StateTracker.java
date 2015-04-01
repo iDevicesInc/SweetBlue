@@ -42,6 +42,11 @@ abstract class PA_StateTracker
 		this(enums, /*trackTimes=*/true);
 	}
 	
+	public boolean is(State state)
+	{
+		return checkBitMatch(state, true);
+	}
+	
 	public int getState()
 	{
 		return m_stateMask;
@@ -55,7 +60,7 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	private int getMask(int currentStateMask, Object[] statesAndValues)
+	private int getMask(final int currentStateMask, final Object[] statesAndValues)
 	{
 		int newStateBits = currentStateMask;
 		
@@ -69,7 +74,6 @@ abstract class PA_StateTracker
 				
 				continue;
 			}
-			
 			
 			State state = (State) statesAndValues[i];
 			boolean append = true;
@@ -94,10 +98,6 @@ abstract class PA_StateTracker
 		
 		return newStateBits;
 	}
-	
-	
-	
-	
 	
 	void append(State newState, E_Intent intent, int status)
 	{
@@ -141,16 +141,16 @@ abstract class PA_StateTracker
 //		setStateMask(newStateBits);
 //	}
 	
-	void set(E_Intent intent, int status, Object ... statesAndValues)
+	void set(final E_Intent intent, final int status, final Object ... statesAndValues)
 	{
 		set(intent.getMask(), status, statesAndValues);
 	}
 	
-	private void set(int intentMask, int status, Object ... statesAndValues)
+	private void set(final int intentMask, final int status, final Object ... statesAndValues)
 	{
 		synchronized ( m_lock )
 		{
-			int newStateBits = getMask(0x0, statesAndValues);
+			final int newStateBits = getMask(0x0, statesAndValues);
 			
 			setStateMask(newStateBits, intentMask, status);
 		}
@@ -189,7 +189,7 @@ abstract class PA_StateTracker
 	
 	protected void copy(PA_StateTracker stateTracker)
 	{
-		this.setStateMask(stateTracker.getState(), 0x0, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+		this.setStateMask(stateTracker.getState(), 0x0, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 	
 	private void setStateMask(final int newStateBits, int intentMask, final int status)

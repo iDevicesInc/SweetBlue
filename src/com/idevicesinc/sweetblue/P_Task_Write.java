@@ -1,10 +1,13 @@
 package com.idevicesinc.sweetblue;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
@@ -13,13 +16,15 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
+class P_Task_Write extends PA_Task_ReadOrWrite
 {
+	public static final int MTU_LIMIT = 20;
+	
 	private final byte[] m_allDataToSend;
 	
 	private int m_offset = 0;
 	private byte[] m_maxChunkBuffer;
-	private final int m_maxChunkSize = PS_GattStatus.BYTE_LIMIT;
+	private final int m_maxChunkSize = MTU_LIMIT;
 	
 	private byte[] m_lastChunkBufferSent;
 	
@@ -30,7 +35,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		m_allDataToSend = data;
 	}
 	
-	@Override protected ReadWriteEvent newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
+	@Override protected ReadWriteEvent newResult(final Status status, final int gattStatus, final Target target, final UUID charUuid, final UUID descUuid)
 	{
 		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(charUuid);
 		final Type type = P_ServiceManager.modifyResultType(char_native, Type.WRITE);
@@ -45,11 +50,13 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 
 	@Override public void execute()
 	{
+		super.execute();
+		
 		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(m_uuid);
 		
 		if( char_native == null )
 		{
-			fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
+			fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -62,7 +69,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		{
 			if( !getDevice().getNativeGatt().beginReliableWrite() )
 			{
-				fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
+				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 				
 				return;
 			}
@@ -97,14 +104,14 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	{
 		if( !char_native.setValue(data) )
 		{
-			fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
+			fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().writeCharacteristic(char_native) )
 		{
-			fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
+			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -119,7 +126,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		super.succeed();
 	}
 	
-	public void onCharacteristicWrite(BluetoothGatt gatt, UUID uuid, int gattStatus)
+	public void onCharacteristicWrite(final BluetoothGatt gatt, final UUID uuid, final int gattStatus)
 	{
 		 getManager().ASSERT(gatt == getDevice().getNativeGatt());
 		 
@@ -166,7 +173,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		 }
 	}
 	
-	public void onReliableWriteCompleted(BluetoothGatt gatt, int gattStatus)
+	public void onReliableWriteCompleted(final BluetoothGatt gatt, final int gattStatus)
 	{
 		if( Utils.isSuccess(gattStatus) )
 		{
@@ -188,7 +195,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 	
 	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
-	private void abortReliableWrite(BluetoothGatt gatt)
+	private void abortReliableWrite(final BluetoothGatt gatt)
 	{
 		if( android.os.Build.VERSION.SDK_INT < 19 )
 		{
@@ -208,15 +215,17 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		}
 	}
 	
-	@Override public void onStateChange(PA_Task task, PE_TaskState state)
+	@Override public void onStateChange(final PA_Task task, final PE_TaskState state)
 	{
+		super.onStateChange(task, state);
+		
 		if( state == PE_TaskState.TIMED_OUT )
 		{
 			m_logger.w(m_logger.charName(m_uuid) + " write timed out!");
 			
 			abortReliableWriteIfNeeded();
 			
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID));
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
@@ -224,7 +233,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite implements PA_Task.I_StateListene
 		{
 			abortReliableWriteIfNeeded();
 			
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID));
 		}
 	}
 	
