@@ -67,18 +67,16 @@ public class BleDeviceConfig implements Cloneable
 	public static final int DEFAULT_TX_POWER							= -50;
 	
 	/**
-	 * Status code used for {@link BleDevice.ReadWriteListener.ScanEvent#gattStatus} when the operation failed at a point where a
-	 * gatt status from the underlying stack isn't provided or applicable.
-	 * <br><br>
-	 * Also used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#gattStatus} for when the failure didn't involve the gatt layer.
+	 * @deprecated Use {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 	 */
-	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
+	@Deprecated
+	public static final int GATT_STATUS_NOT_APPLICABLE 					= BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	
 	/**
-	 * Used on {@link BleDevice.BondListener.BondEvent#failReason()} when {@link BleDevice.BondListener.BondEvent#status()}
-	 * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.
+	 * @deprecated Use {@link BleStatuses#BOND_FAIL_REASON_NOT_APPLICABLE}.
 	 */
-	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= GATT_STATUS_NOT_APPLICABLE;
+	@Deprecated
+	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE;
 	
 	/**
 	 * As of now there are two main default uses for this class...
@@ -292,9 +290,9 @@ public class BleDeviceConfig implements Cloneable
 		{
 			if( phoneHasBondingIssues() )
 			{
-				if( e.didEnterAny(BleDeviceState.DISCOVERED, BleDeviceState.DISCONNECTED) )
+				if( !e.device().is(BleDeviceState.BONDING) )
 				{
-					return Please.unbond();
+					return Please.unbondIf( e.didEnterAny(BleDeviceState.DISCOVERED, BleDeviceState.DISCONNECTED) );
 				}
 			}
 			
@@ -686,13 +684,15 @@ public class BleDeviceConfig implements Cloneable
 			private BleTask m_task;
 			
 			/**
-			 * The ble characteristic {@link UUID} associated with the task, or {@link Uuids#INVALID} otherwise.
+			 * The ble characteristic {@link UUID} associated with the task if {@link BleTask#usesCharUuid()}
+			 * returns <code>true</code>, or {@link Uuids#INVALID} otherwise.
 			 */
 			public UUID charUuid(){  return m_charUuid;  }
 			private UUID m_charUuid;
 			
 			/**
 			 * The ble descriptor {@link UUID} associated with the task, or {@link Uuids#INVALID} otherwise.
+			 * For now only associated with {@link BleTask#TOGGLE_NOTIFY}.
 			 */
 			public UUID descUuid(){  return m_descUuid;  }
 			private UUID m_descUuid;
@@ -745,13 +745,46 @@ public class BleDeviceConfig implements Cloneable
 	{
 		public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
 		
-		private static final Please RETURN_VALUE = Please.setTimeoutFor(Interval.secs(DEFAULT_TASK_TIMEOUT));
+		private static final Please DEFAULT_RETURN_VALUE = Please.setTimeoutFor(Interval.secs(DEFAULT_TASK_TIMEOUT));
 		
 		@Override public Please onEvent(TimeoutRequestEvent e)
 		{
-			return RETURN_VALUE;
+			if( e.task() == BleTask.BOND )
+			{
+				return DEFAULT_RETURN_VALUE;
+			}
+			else
+			{
+				return DEFAULT_RETURN_VALUE;
+			}
 		}
 	}
+	
+	/**
+	 * Default is <code>true</code> - controls whether the library is allowed to optimize fast disconnect/reconnect cycles
+	 * by actually not disconnecting in the native stack at all. For example, if this option is <code>true</code> and your
+	 * {@link BleDevice} is {@link BleDeviceState#CONNECTED}, calling {@link BleDevice#disconnect()} then {@link BleDevice#connect()}
+	 * again won't result in a native disconnect/reconnect - your actual physical ble device firmware won't know that a disconnect was requested.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public Boolean disconnectIsCancellable						= true;
+	
+	/**
+	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},
+	 * so this option controls whether the library will internally change any bonding flow dictated by {@link #bondFilter} when a bond fails and try
+	 * to bond again the next time the device is {@link BleDeviceState#DISCONNECTED}.
+	 * <br><br>
+	 * NOTE: This option was added after noticing this behavior with the Samsung Tab 4 running 4.4.4.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public Boolean tryBondingWhileDisconnected					= true;
+	
+	/**
+	 * Default is <code>true</code> - controls whether any bonding issues worked around if {@link #tryBondingWhileDisconnected} is <code>true</code> are remembered on disk
+	 * (through {@link SharedPreferences}) so that bonding is as stable as possible across application sessions. 
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public Boolean tryBondingWhileDisconnected_manageOnDisk		= true;
 	
 	/**
 	 * Default is <code>true</code> - whether to automatically get services immediately after a {@link BleDevice} is
@@ -783,7 +816,7 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Default is <code>false</code> - see the <code>boolean autoConnect</code> parameter of
 	 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}. 
-	 * 
+	 * <br><br>
 	 * This parameter is one of Android's deepest mysteries. By default we keep it false, but it has been observed that a
 	 * connection can fail or time out, but then if you try again with autoConnect set to true it works! One would think,
 	 * why not always set it to true? Well, while true is anecdotally more stable, it also (anecdotally) makes for longer
@@ -1022,7 +1055,7 @@ public class BleDeviceConfig implements Cloneable
 	 * which would probably be very dangerous to do - a task could just sit there spinning forever.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	@Nullable(Prevalence.NORMAL)
+	@Nullable(Prevalence.RARE)
 	public TimeoutRequestFilter timeoutRequestFilter						= new DefaultTimeoutRequestFilter();
 	
 	static boolean boolOrDefault(Boolean bool_nullable)

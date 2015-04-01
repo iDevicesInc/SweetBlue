@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
@@ -79,6 +80,8 @@ public enum BleDeviceState implements State
 	
 	/**
 	 * Analogous to {@link BluetoothDevice#BOND_BONDING}. May not be relevant for your application if you don't use encrypted characteristics.
+	 * From this state, a device will either become {@link BleDeviceState#BONDED} (if successful) or {@link BleDeviceState#UNBONDED}.
+	 * If the latter, use {@link BleDevice.BondListener} to get further information on what happened.
 	 */
 	BONDING,
 	

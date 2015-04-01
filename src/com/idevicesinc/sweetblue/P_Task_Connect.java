@@ -4,14 +4,11 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsa
 
 import android.bluetooth.BluetoothGatt;
 
-/**
- * 
- */
 class P_Task_Connect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
-	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	private BluetoothGatt m_gatt = null;
 	
 	private AutoConnectUsage m_autoConnectUsage = AutoConnectUsage.UNKNOWN;

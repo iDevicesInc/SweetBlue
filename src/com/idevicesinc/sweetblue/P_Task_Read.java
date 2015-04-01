@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
+class P_Task_Read extends PA_Task_ReadOrWrite
 {
 	private final Type m_type;
 	
@@ -36,18 +36,20 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 
 	@Override public void execute()
 	{
+		super.execute();
+		
 		BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(m_uuid);
 		
 		if( char_native == null )
 		{
-			fail(Status.NO_MATCHING_TARGET, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
+			fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
 		
 		if( !getDevice().getNativeGatt().readCharacteristic(char_native) )
 		{
-			fail(Status.FAILED_TO_SEND_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
+			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 			
 			return;
 		}
@@ -99,17 +101,19 @@ class P_Task_Read extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 	
 	@Override public void onStateChange(PA_Task task, PE_TaskState state)
 	{
+		super.onStateChange(task, state);
+		
 		if( state == PE_TaskState.TIMED_OUT )
 		{
 			m_logger.w(m_logger.charName(m_uuid) + " read timed out!");
 			
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID));
 			
 			getManager().uhOh(UhOh.READ_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_uuid, ReadWriteEvent.NON_APPLICABLE_UUID));
 		}
 	}
 	

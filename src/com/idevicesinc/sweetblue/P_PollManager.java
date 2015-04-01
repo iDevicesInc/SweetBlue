@@ -163,7 +163,7 @@ class P_PollManager
 			
 			BluetoothGattCharacteristic char_native = m_device.getServiceManager().getCharacteristic(m_uuid).getGuaranteedNative(); 
 			Type type = P_ServiceManager.modifyResultType(char_native, Type.NOTIFICATION);
-			int gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+			int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 			
 			if( value == null )
 			{

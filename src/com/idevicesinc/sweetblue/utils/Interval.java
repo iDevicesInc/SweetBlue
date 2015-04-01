@@ -164,4 +164,9 @@ public class Interval extends Unit<Interval>
 	{
 		return m_secs;
 	}
+	
+	@Override protected Unit<Interval> newInstance(double rawValue)
+	{
+		return secs(rawValue);
+	}
 }

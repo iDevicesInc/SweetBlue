@@ -2,6 +2,8 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 
+import java.util.ArrayList;
+
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
@@ -22,6 +24,8 @@ class P_ConnectionFailManager
 	
 	private Long m_timeOfFirstConnect = null;
 	private Long m_timeOfLastConnectFail = null;
+	
+	private final ArrayList<ConnectionFailEvent> m_history = new ArrayList<ConnectionFailEvent>();
 	
 	P_ConnectionFailManager(BleDevice device)
 	{
@@ -52,6 +56,7 @@ class P_ConnectionFailManager
 		m_failCount = 0;
 		m_highestStateReached_total = null;
 		m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
+		m_history.clear();
 	}
 	
 	int getRetryCount()
@@ -73,7 +78,7 @@ class P_ConnectionFailManager
 		Interval attemptTime_latest = Interval.delta(timeOfLastConnectFail, currentTime);
 		Interval attemptTime_total = Interval.delta(m_timeOfFirstConnect, currentTime);
 		
-		m_device.getManager().getLogger().w(reason_nullable+"");
+		m_device.getManager().getLogger().w(reason_nullable+", timing="+timing);
 		
 		if( isAttemptingReconnect_longTerm )
 		{
@@ -99,8 +104,11 @@ class P_ConnectionFailManager
 		final ConnectionFailEvent moreInfo = new ConnectionFailEvent
 		(
 			m_device, reason_nullable, timing, m_failCount, attemptTime_latest, attemptTime_total, gattStatus,
-			highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason, txnFailReason
+			highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason, txnFailReason,
+			m_history
 		);
+		
+		m_history.add(moreInfo);
 		
 		//--- DRK > Not invoking callback if we're attempting short-term reconnect.
 		PE_Please retryChoice = m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) ? PE_Please.DO_NOT_RETRY : invokeCallback(moreInfo);
@@ -117,12 +125,13 @@ class P_ConnectionFailManager
 		}
 		else
 		{
-			final int gattStatusOfOriginalDisconnect = m_device.reconnectMngr().gattStatusOfOriginalDisconnect();
-			final boolean wasRunning = m_device.reconnectMngr().isRunning();
+			final P_ReconnectManager reconnectMngr = m_device.reconnectMngr();
+			final int gattStatusOfOriginalDisconnect = reconnectMngr.gattStatusOfOriginalDisconnect();
+			final boolean wasRunning = reconnectMngr.isRunning();
 			
-			m_device.reconnectMngr().onConnectionFailed(moreInfo);
+			reconnectMngr.onConnectionFailed(moreInfo);
 			
-			if( wasRunning && !m_device.reconnectMngr().isRunning() )
+			if( wasRunning && !reconnectMngr.isRunning() )
 			{
 				if( m_device.is(RECONNECTING_LONG_TERM) )
 				{

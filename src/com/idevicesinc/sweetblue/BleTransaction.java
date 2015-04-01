@@ -17,6 +17,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * @see BleDevice#connect(BleTransaction.Auth)
  * @see BleDevice#connect(BleTransaction.Init)
  * @see BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)
+ * @see BleDevice#performTransaction(BleTransaction)
  */
 public abstract class BleTransaction
 {
@@ -150,7 +151,7 @@ public abstract class BleTransaction
 				return false;
 			}
 		
-			m_device.getManager().getLogger().i(reason.name());
+			m_device.getManager().getLogger().i("transaction " + reason.name());
 			
 			m_isRunning = false;
 			

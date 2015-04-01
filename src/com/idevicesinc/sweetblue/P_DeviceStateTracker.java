@@ -86,6 +86,11 @@ class P_DeviceStateTracker extends PA_StateTracker
 			//---		abstractly connected/connecting but actually not natively connected. 
 //			m_device.getManager().ASSERT(m_device.m_nativeWrapper.isNativelyConnected());
 		}
+		
+		if( newState == BleDeviceState.BONDING )
+		{
+			int a;
+		}
 	}
 	
 	@Override public String toString()

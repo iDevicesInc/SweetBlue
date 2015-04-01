@@ -54,7 +54,7 @@ class P_TransactionManager
 						m_device.stateTracker().update
 						(
 							E_Intent.INTENTIONAL,
-							BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE,
+							BleStatuses.GATT_STATUS_NOT_APPLICABLE,
 							AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, true
 						);
 
@@ -62,30 +62,30 @@ class P_TransactionManager
 					}
 					else
 					{
-						m_device.onFullyInitialized(BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+						m_device.onFullyInitialized(BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 					}
 				}
 				else
 				{
-					m_device.disconnectWithReason(Status.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
+					m_device.disconnectWithReason(Status.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
 			else if (txn == m_initTxn )
 			{
 				if (reason == EndReason.SUCCEEDED)
 				{
-					m_device.onFullyInitialized(BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+					m_device.onFullyInitialized(BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 				}
 				else
 				{
-					m_device.disconnectWithReason(Status.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
+					m_device.disconnectWithReason(Status.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
 			else if (txn == m_device.getFirmwareUpdateTxn())
 			{
 //				m_device.m_txnMngr.clearFirmwareUpdateTxn();
 				E_Intent intent = E_Intent.UNINTENTIONAL;
-				m_device.stateTracker_main().remove(PERFORMING_OTA, intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+				m_device.stateTracker_main().remove(PERFORMING_OTA, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 				//--- DRK > As of now don't care whether this succeeded or failed.
 				if (reason == EndReason.SUCCEEDED)
@@ -237,6 +237,14 @@ class P_TransactionManager
 				m_anonTxn.cancel();
 				m_anonTxn = null;
 			}
+			
+			if( m_current != null )
+			{
+				m_device.getManager().ASSERT(false, "Expected current transaction to be null.");
+				
+				m_current.cancel();
+				m_current = null;
+			}
 		}
 	}
 	
@@ -317,7 +325,7 @@ class P_TransactionManager
 			m_firmwareUpdateTxn = txn;
 			m_firmwareUpdateTxn.init(m_device, m_txnEndListener);
 			
-			m_device.stateTracker_main().append(PERFORMING_OTA, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+			m_device.stateTracker_main().append(PERFORMING_OTA, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			
 			start(m_firmwareUpdateTxn);
 		}

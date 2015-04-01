@@ -28,6 +28,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
+import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
@@ -440,7 +441,7 @@ public class BleDevice implements UsesCustomNull
 			 * application logic if possible.
 			 * <br><br>
 			 * See {@link BluetoothGatt} for its static <code>GATT_*</code> status code members. Also see the source code of
-			 * {@link PS_GattStatus} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be
+			 * {@link BleStatuses} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be
 			 * totally accurate or up-to-date, nor may it match GATT_ values used by the bluetooth stack on your phone.
 			 */
 			public int gattStatus() {  return m_gattStatus;  }
@@ -478,7 +479,7 @@ public class BleDevice implements UsesCustomNull
 
 			static ReadWriteEvent NULL(BleDevice device)
 			{
-				return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs());
+				return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs());
 			}
 
 			/**
@@ -665,15 +666,31 @@ public class BleDevice implements UsesCustomNull
 
 			@Override public String toString()
 			{
-				return Utils.toString
-				(
-					this.getClass(),
-					"device",			device().getName_debug(),
-					"entered",			Utils.toString(enterMask(), BleDeviceState.VALUES()),
-					"exited", 			Utils.toString(exitMask(), BleDeviceState.VALUES()),
-					"current",			Utils.toString(newStateBits(), BleDeviceState.VALUES()),
-					"gattStatus",		device().m_logger.gattStatus(gattStatus())
-				);
+				if( device().is(RECONNECTING_SHORT_TERM) )
+				{
+					return Utils.toString
+					(
+						this.getClass(),
+						"device",			device().getName_debug(),
+						"entered",			Utils.toString(enterMask(),						BleDeviceState.VALUES()),
+						"exited", 			Utils.toString(exitMask(),						BleDeviceState.VALUES()),
+						"current",			Utils.toString(newStateBits(),					BleDeviceState.VALUES()),
+						"current_native",	Utils.toString(device().getNativeStateMask(),	BleDeviceState.VALUES()),
+						"gattStatus",		device().m_logger.gattStatus(gattStatus())
+					);
+				}
+				else
+				{
+					return Utils.toString
+					(
+						this.getClass(),
+						"device",			device().getName_debug(),
+						"entered",			Utils.toString(enterMask(),						BleDeviceState.VALUES()),
+						"exited", 			Utils.toString(exitMask(),						BleDeviceState.VALUES()),
+						"current",			Utils.toString(newStateBits(),					BleDeviceState.VALUES()),
+						"gattStatus",		device().m_logger.gattStatus(gattStatus())
+					);
+				}
 			}
 		}
 
@@ -1055,8 +1072,18 @@ public class BleDevice implements UsesCustomNull
 			 */
 			public ReadWriteListener.ReadWriteEvent txnFailReason() {  return m_txnFailReason;  }
 			private final ReadWriteListener.ReadWriteEvent m_txnFailReason;
+			
+			/**
+			 * Returns a chronologically-ordered list of all {@link ConnectionFailEvent} instances returned through
+			 * {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} since the first call to {@link BleDevice#connect()},
+			 * including the current instance. Thus this list will always have at least a length of one (except if {@link #isNull()} is <code>true</code>).
+			 * The list length is "reset" back to one whenever a {@link BleDeviceState#CONNECTING_OVERALL} operation completes, either
+			 * through becoming {@link BleDeviceState#INITIALIZED}, or {@link BleDeviceState#DISCONNECTED} for good.
+			 */
+			public ConnectionFailEvent[] history()  {  return m_history;  }
+			private final ConnectionFailEvent[] m_history;
 
-			ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
+			ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason, ArrayList<ConnectionFailEvent> history)
 			{
 				this.m_device = device;
 				this.m_status = reason;
@@ -1070,19 +1097,42 @@ public class BleDevice implements UsesCustomNull
 				this.m_autoConnectUsage = autoConnectUsage;
 				this.m_bondFailReason = bondFailReason;
 				this.m_txnFailReason = txnFailReason;
+				
+				if( history == null )
+				{
+					this.m_history = EMPTY_HISTORY();
+				}
+				else
+				{
+					this.m_history = new ConnectionFailEvent[history.size()+1];
+					for( int i = 0; i < history.size(); i++ )
+					{
+						this.m_history[i] = history.get(i);
+					}
+					
+					this.m_history[this.m_history.length-1] = this;
+				}
 
 				m_device.getManager().ASSERT(highestStateReached != null, "highestState_latest shouldn't be null.");
 				m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
 			}
+			
+			private static ConnectionFailEvent[] s_emptyHistory = null;
+			static ConnectionFailEvent[] EMPTY_HISTORY()
+			{
+				s_emptyHistory = s_emptyHistory != null ? s_emptyHistory : new ConnectionFailEvent[]{};
+				
+				return s_emptyHistory;
+			}
 
 			static ConnectionFailEvent NULL(BleDevice device)
 			{
-				return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
+				return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
 			}
 
 			static ConnectionFailEvent DUMMY(BleDevice device, Status reason)
 			{
-				return new ConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
+				return new ConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
 			}
 
 			/**
@@ -1102,13 +1152,26 @@ public class BleDevice implements UsesCustomNull
 				}
 				else
 				{
-					return Utils.toString
-					(
-						this.getClass(),
-						"status", 				status(),
-						"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
-						"failureCountSoFar",	failureCountSoFar()
-					);
+					if( status() == Status.BONDING_FAILED )
+					{
+						return Utils.toString
+						(
+							this.getClass(),
+							"status", 				status(),
+							"bondFailReason",		device().getManager().getLogger().gattUnbondReason(bondFailReason()),
+							"failureCountSoFar",	failureCountSoFar()
+						);
+					}
+					else
+					{
+						return Utils.toString
+						(
+							this.getClass(),
+							"status", 				status(),
+							"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
+							"failureCountSoFar",	failureCountSoFar()
+						);
+					}
 				}
 			}
 		}
@@ -1123,9 +1186,8 @@ public class BleDevice implements UsesCustomNull
 		 * <br><br>
 		 * NOTE that this callback gets fired *after* {@link StateListener} lets you know that the device is {@link BleDeviceState#DISCONNECTED}.
 		 * <br><br>
-		 * The time parameters like {@link ConnectionFailEvent#attemptTime_latest()} are of optional use
-		 * to you to decide if connecting again is worth it. For example if you've been trying to connect for 10 seconds already, chances are
-		 * that another connection attempt probably won't work.
+		 * The time parameters like {@link ConnectionFailEvent#attemptTime_latest()} are of optional use to you to decide if connecting again
+		 * is worth it. For example if you've been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
 		 */
 		Please onEvent(ConnectionFailEvent event);
 	}
@@ -1151,11 +1213,14 @@ public class BleDevice implements UsesCustomNull
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 
 		/**
-		 * The default connection fail limit past which
-		 * {@link DefaultConnectionFailListener} will start returning
-		 * {@link Please#retryWithAutoConnectTrue()}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#retryWithAutoConnectTrue()}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
+		
+		/**
+		 * The maximum amount of time to keep trying if connection is failing due to (what usually are) transient bonding failures
+		 */
+		public static final Interval MAX_RETRY_TIME_FOR_BOND_FAILURE = Interval.secs(120.0);
 
 		private final int m_retryCount;
 		private final int m_failCountBeforeUsingAutoConnect;
@@ -1183,6 +1248,36 @@ public class BleDevice implements UsesCustomNull
 			{
 				return Please.doNotRetry();
 			}
+			
+			//--- DRK > It has been noticed that bonding can fail several times due to the follow status code but then succeed,
+			//---		so we just keep on trying for a little bit in case we can eventually make it.
+			//---		NOTE: After testing for a little bit, this doesn't seem to work, regardless of how much time you give it.
+//			if( e.bondFailReason() == BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN )
+//			{
+//				final Interval timeNow = e.attemptTime_total();
+//				Interval timeSinceFirstUnbond = e.attemptTime_total();
+//				final ConnectionFailEvent[] history = e.history();
+//				for( int i = history.length-1; i >= 0; i-- )
+//				{
+//					final ConnectionFailEvent history_ith = history[i];
+//					
+//					if( history_ith.bondFailReason() == BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN )
+//					{
+//						timeSinceFirstUnbond = history_ith.attemptTime_total();
+//					}
+//					else
+//					{
+//						break;
+//					}
+//				}
+//				
+//				final Interval totalTimeFailingDueToBondingIssues = timeNow.minus(timeSinceFirstUnbond);
+//				
+//				if( totalTimeFailingDueToBondingIssues.lt(MAX_RETRY_TIME_FOR_BOND_FAILURE) )
+//				{
+//					return Please.retry();
+//				}
+//			}
 
 			if (e.failureCountSoFar() <= m_retryCount)
 			{
@@ -1335,8 +1430,8 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * If {@link #status()} is {@link BondListener.Status#FAILED_EVENTUALLY}, this integer will
 			 * be one of the values enumerated in {@link BluetoothDevice} that start with <code>UNBOND_REASON</code> such as
-			 * {@link BluetoothDevice#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to
-			 * {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
+			 * {@link BluetoothDevice#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
+			 * See also a publically accessible list in {@link BleStatuses}.
 			 */
 			public int failReason() {  return m_failReason;  }
 			private final int m_failReason;
@@ -1360,7 +1455,7 @@ public class BleDevice implements UsesCustomNull
 			
 			private static BondEvent NULL(final BleDevice device)
 			{
-				return new BondEvent(device, Status.NULL, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, ChangeIntent.NULL);
+				return new BondEvent(device, Status.NULL, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, ChangeIntent.NULL);
 			}
 
 			/**
@@ -1413,8 +1508,10 @@ public class BleDevice implements UsesCustomNull
 
 	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener();
 
+	//--- DRK > Some reusable empty-array-type instances so we don't have to create them from scratch over and over on demand.
 	private static final UUID[] EMPTY_UUID_ARRAY = new UUID[0];
 	private static final ArrayList<UUID> EMPTY_LIST = new ArrayList<UUID>();
+	
 	static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
 	final Object m_threadLock = new Object();
@@ -1457,9 +1554,9 @@ public class BleDevice implements UsesCustomNull
 
 	private boolean m_useAutoConnect = false;
 	private boolean m_alwaysUseAutoConnect = false;
-
 	private Boolean m_lastConnectOrDisconnectWasUserExplicit = null;
 	private boolean m_lastDisconnectWasBecauseOfBleTurnOff = false;
+	private boolean m_underwentPossibleImplicitBondingAttempt = false;
 
 	private BleDeviceConfig m_config = null;
 
@@ -1497,7 +1594,7 @@ public class BleDevice implements UsesCustomNull
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = null;
 			m_bondMngr = new P_BondManager(this);
-			stateTracker().set(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
+			stateTracker().set(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
 			m_pollMngr = new P_PollManager(this);
 			m_txnMngr = new P_TransactionManager(this);
 			m_taskStateListener = null;
@@ -1519,20 +1616,31 @@ public class BleDevice implements UsesCustomNull
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
 			m_bondMngr = new P_BondManager(this);
-			stateTracker().set(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
+			stateTracker().set(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true, m_bondMngr.getNativeBondingStateOverrides());
 			m_pollMngr = new P_PollManager(this);
 			m_txnMngr = new P_TransactionManager(this);
 			m_taskStateListener = m_listeners.m_taskStateListener;
 			m_reconnectMngr_longTerm = new P_ReconnectManager(this, /*isShortTerm=*/false);
 			m_reconnectMngr_shortTerm = new P_ReconnectManager(this, /*isShortTerm=*/true);
 			m_connectionFailMngr = new P_ConnectionFailManager(this);
-			m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
+			m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING, /*cancellable=*/true);
 		}
+	}
+	
+	void notifyOfPossibleImplicitBondingAttempt()
+	{
+		m_underwentPossibleImplicitBondingAttempt = true;
 	}
 
 	P_DeviceStateTracker stateTracker_main()
 	{
 		return m_stateTracker;
+	}
+	
+	void stateTracker_updateBoth(E_Intent intent, int status, Object ... statesAndValues)
+	{
+		m_stateTracker_shortTermReconnect.update(intent, status, statesAndValues);
+		stateTracker_main().update(intent, status, statesAndValues);
 	}
 
 	P_DeviceStateTracker stateTracker()
@@ -1650,26 +1758,20 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * This enum gives you an indication of the last interaction with a device
-	 * across app sessions or in-app BLE {@link BleManagerState#OFF}->
-	 * {@link BleManagerState#ON} cycles or undiscovery->rediscovery, which
+	 * This enum gives you an indication of the last interaction with a device across app sessions or in-app BLE 
+	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles or undiscovery->rediscovery, which
 	 * basically means how it was last {@link BleDeviceState#DISCONNECTED}.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown
-	 * because (a) device has never been seen before, (b) reason for disconnect
-	 * was app being killed and
-	 * {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>,
+	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown because
+	 * (a) device has never been seen before,
+	 * (b) reason for disconnect was app being killed and {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>,
 	 * (c) app user cleared app data between app sessions, (d) etc., etc.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#UNINTENTIONAL}, then from a user experience
-	 * perspective, the user may not have wanted the disconnect to happen, and
-	 * thus *probably* would want to be automatically connected again as soon as
-	 * the device is discovered.
+	 * If {@link State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
+	 * the disconnect to happen, and thus *probably* would want to be automatically connected again as soon as the device is discovered.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#INTENTIONAL}, then the last reason the device
-	 * was {@link BleDeviceState#DISCONNECTED} was because
-	 * {@link BleDevice#disconnect()} was called, which most-likely means the
-	 * user doesn't want to automatically connect to this device again.
+	 * If {@link State.ChangeIntent#INTENTIONAL}, then the last reason the device was {@link BleDeviceState#DISCONNECTED} was because
+	 * {@link BleDevice#disconnect()} was called, which most-likely means the user doesn't want to automatically connect to this device again.
 	 * <br><br>
 	 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
 	 */
@@ -1677,7 +1779,7 @@ public class BleDevice implements UsesCustomNull
 	public State.ChangeIntent getLastDisconnectIntent()
 	{
 		boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
-		State.ChangeIntent lastDisconnect = m_mngr.m_lastDisconnectMngr.load(getMacAddress(), hitDisk);
+		State.ChangeIntent lastDisconnect = m_mngr.m_diskOptionsMngr.loadLastDisconnect(getMacAddress(), hitDisk);
 
 		return lastDisconnect;
 	}
@@ -2244,21 +2346,21 @@ public class BleDevice implements UsesCustomNull
 
 		if (isNull())
 		{
-			final BondListener.BondEvent event = m_bondMngr.invokeCallback(BondListener.Status.NULL_DEVICE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, ChangeIntent.INTENTIONAL);
+			final BondListener.BondEvent event = m_bondMngr.invokeCallback(BondListener.Status.NULL_DEVICE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, ChangeIntent.INTENTIONAL);
 
 			return event;
 		}
 
 		if (isAny(BONDING, BONDED))
 		{
-			final BondListener.BondEvent event = m_bondMngr.invokeCallback(BondListener.Status.ALREADY_BONDING_OR_BONDED, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, ChangeIntent.INTENTIONAL);
+			final BondListener.BondEvent event = m_bondMngr.invokeCallback(BondListener.Status.ALREADY_BONDING_OR_BONDED, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, ChangeIntent.INTENTIONAL);
 
 			return event;
 		}
 
-		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener));
-
-		stateTracker_main().append(BONDING, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+		bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
+		
+		stateTracker_updateBoth(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, true, UNBONDED, false);
 		
 		return NULL_BOND_EVENT();
 	}
@@ -2513,7 +2615,7 @@ public class BleDevice implements UsesCustomNull
 		
 		final boolean alreadyDisconnected = is(DISCONNECTED);
 
-		disconnectWithReason(/*priority=*/null, Status.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
+		disconnectWithReason(/*priority=*/null, Status.EXPLICIT_DISCONNECT, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
 		
 		return !alreadyDisconnected;
 	}
@@ -2845,12 +2947,15 @@ public class BleDevice implements UsesCustomNull
 	 * <br><br>
 	 * TIP: Use the {@link TimeEstimator} class to let your users know roughly
 	 * how much time it will take for the ota to complete.
+	 * <br><br>
+	 * TIP: For shorter-running transactions consider using {@link #performTransaction(BleTransaction)}.
 	 * 
 	 * @return <code>true</code> if firmware update has started, otherwise <code>false</code> if device is either already
 	 *         {@link BleDeviceState#PERFORMING_OTA} or is not {@link BleDeviceState#INITIALIZED}.
 	 * 
 	 * @see BleManagerConfig#includeOtaReadWriteTimesInAverage
 	 * @see BleManagerConfig#autoScanDuringOta
+	 * @see #performTransaction(BleTransaction)
 	 */
 	public boolean performOta(final BleTransaction.Ota txn)
 	{
@@ -2869,6 +2974,8 @@ public class BleDevice implements UsesCustomNull
 	 * {@link #performOta(BleTransaction.Ota)}.
 	 * <br><br>
 	 * The device must be {@link BleDeviceState#INITIALIZED}.
+	 * <br><br>
+	 * TIP: For long-term transactions consider using {@link #performOta(BleTransaction.Ota)}.
 	 * 
 	 * @return <code>true</code> if the transaction successfully started, <code>false</code> otherwise if device is not {@link BleDeviceState#INITIALIZED}.
 	 */
@@ -2976,14 +3083,14 @@ public class BleDevice implements UsesCustomNull
 
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
-		stateTracker_main().update(E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), UNBONDED, m_nativeWrapper.isNativelyUnbonded(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
+		stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
 	}
 
 	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
-		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY);
+		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY);
 	}
 
 	void onUndiscovered(E_Intent intent)
@@ -2993,7 +3100,7 @@ public class BleDevice implements UsesCustomNull
 		m_reconnectMngr_longTerm.stop();
 		m_reconnectMngr_shortTerm.stop();
 
-		stateTracker_main().set(intent, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCOVERED, false, ADVERTISING, false, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), UNBONDED, m_nativeWrapper.isNativelyUnbonded(), DISCONNECTED, true);
+		stateTracker_main().set(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCOVERED, false, ADVERTISING, false, m_bondMngr.getNativeBondingStateOverrides(), DISCONNECTED, true);
 	}
 
 	double getTimeSinceLastDiscovery()
@@ -3024,18 +3131,33 @@ public class BleDevice implements UsesCustomNull
 		m_reconnectMngr_shortTerm.update(timeStep);
 		m_rssiPollMngr.update(timeStep);
 	}
-
-	void unbond_internal(final PE_TaskPriority priority, final BondListener.Status status)
+	
+	void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior)
 	{
-		m_queue.add(new P_Task_Unbond(this, m_taskStateListener, priority));
+		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
+	}
+	
+	void unbond_justAddTheTask()
+	{
+		unbond_justAddTheTask(null);
+	}
+	
+	void unbond_justAddTheTask(final PE_TaskPriority priority_nullable)
+	{
+		m_queue.add(new P_Task_Unbond(this, m_taskStateListener, priority_nullable));
+	}
+
+	void unbond_internal(final PE_TaskPriority priority_nullable, final BondListener.Status status)
+	{
+		unbond_justAddTheTask(priority_nullable);
 
 		final boolean wasBonding = is(BONDING);
 
-		stateTracker_main().update(E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
+		stateTracker_updateBoth(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_BondManager.OVERRIDE_UNBONDED_STATES);
 
 		if (wasBonding)
 		{
-			m_bondMngr.invokeCallback(status, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, State.ChangeIntent.INTENTIONAL);
+			m_bondMngr.invokeCallback(status, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, State.ChangeIntent.INTENTIONAL);
 		}
 	}
 
@@ -3081,13 +3203,36 @@ public class BleDevice implements UsesCustomNull
 		}
 
 		m_txnMngr.onConnect(authenticationTxn, initTxn);
+		
+		final Object[] extraBondingStates;
+		
+		if( is(UNBONDED) )
+		{
+			final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
+			final boolean doPreBond = getManager().m_diskOptionsMngr.loadNeedsBonding(getMacAddress(), tryBondingWhileDisconnected_manageOnDisk);
+			
+			if( doPreBond )
+			{
+				bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
+				
+				extraBondingStates = P_BondManager.OVERRIDE_BONDING_STATES;
+			}
+			else
+			{
+				extraBondingStates = P_BondManager.OVERRIDE_EMPTY_STATES;
+			}
+		}
+		else
+		{
+			extraBondingStates = P_BondManager.OVERRIDE_EMPTY_STATES;
+		}
 
 		m_queue.add(new P_Task_Connect(this, m_taskStateListener));
 
-		onConnecting(/* definitelyExplicit= */true, isReconnect);
+		onConnecting(/* definitelyExplicit= */true, isReconnect, extraBondingStates);
 	}
 
-	void onConnecting(boolean definitelyExplicit, boolean isReconnect)
+	void onConnecting(boolean definitelyExplicit, boolean isReconnect, final Object[] extraBondingStates)
 	{
 		m_lastConnectOrDisconnectWasUserExplicit = definitelyExplicit;
 
@@ -3098,20 +3243,31 @@ public class BleDevice implements UsesCustomNull
 
 			//--- DRK > Not positive about this assert...we'll see if it trips.
 			m_mngr.ASSERT(definitelyExplicit || mostDefinitelyExplicit);
+			
+			stateTracker_main().update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, extraBondingStates);
 		}
 		else
 		{
+			final E_Intent intent;
+			
 			if (definitelyExplicit && !isReconnect)
 			{
 				//--- DRK > We're stopping the reconnect process (if it's running) because the user has decided to explicitly connect
 				//--- for whatever reason. Making a judgement call that the user would then expect reconnect to stop.
 				//--- In other words it's not stopped for any hard technical reasons...it could go on.
 				m_reconnectMngr_longTerm.stop();
-				stateTracker().update(E_Intent.INTENTIONAL, BluetoothGatt.GATT_SUCCESS, RECONNECTING_LONG_TERM, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
+				intent = E_Intent.INTENTIONAL;
+				stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, RECONNECTING_LONG_TERM, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false, extraBondingStates);
 			}
 			else
 			{
-				stateTracker().update(lastConnectDisconnectIntent(), BluetoothGatt.GATT_SUCCESS, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false);
+				intent = lastConnectDisconnectIntent();
+				stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false, extraBondingStates);
+			}
+			
+			if( stateTracker() != stateTracker_main() )
+			{
+				stateTracker_main().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, extraBondingStates);
 			}
 		}
 	}
@@ -3212,12 +3368,15 @@ public class BleDevice implements UsesCustomNull
 		// }
 		// }
 
-		boolean wasConnecting = is_internal(CONNECTING_OVERALL);
+		final boolean wasConnecting = is_internal(CONNECTING_OVERALL);
+		final ConnectionFailListener.Status connectionFailStatus = ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
 
 		if (isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
-			setStateToDisconnected(attemptingReconnect, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false);
+			setStateToDisconnected(attemptingReconnect, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
 		}
+		
+		m_txnMngr.cancelAllTransactions();
 
 		if (wasConnecting)
 		{
@@ -3228,7 +3387,7 @@ public class BleDevice implements UsesCustomNull
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED, timing, attemptingReconnect, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_EVENT());
+			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(connectionFailStatus, timing, attemptingReconnect, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_EVENT());
 
 			if (!attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_TRUE)
 			{
@@ -3262,14 +3421,14 @@ public class BleDevice implements UsesCustomNull
 		//--- DRK > Saving last disconnect as unintentional here in case for some
 		//--- reason app is hard killed or something and we never get a disconnect callback.
 		final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
-		m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
+		m_mngr.m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 
 		stateTracker().update(lastConnectDisconnectIntent(), gattStatus, extraFlags, RECONNECTING_LONG_TERM, false, CONNECTING_OVERALL, false, AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true);
 
-		stateTracker_main().remove(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.UNINTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+		stateTracker_main().remove(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	private void setStateToDisconnected(final boolean attemptingReconnect, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker)
+	private void setStateToDisconnected(final boolean attemptingReconnect_longTerm, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker, final Object[] overrideBondingStates)
 	{
 		//--- DRK > Device probably wasn't advertising while connected so here we reset the timer to keep
 		//--- it from being immediately undiscovered after disconnection.
@@ -3278,9 +3437,34 @@ public class BleDevice implements UsesCustomNull
 		m_serviceMngr.clear();
 		m_txnMngr.clearQueueLock();
 
-		P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
-
-		tracker.set(intent, gattStatus, DISCOVERED, true, DISCONNECTED, true, BONDING, m_nativeWrapper.isNativelyBonding(), BONDED, m_nativeWrapper.isNativelyBonded(), UNBONDED, m_nativeWrapper.isNativelyUnbonded(), RECONNECTING_LONG_TERM, attemptingReconnect, ADVERTISING, !attemptingReconnect);
+		final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
+		
+		tracker.set
+		(
+			intent,
+			gattStatus,
+			DISCOVERED,					true,
+			DISCONNECTED,				true,
+			BONDING,					m_nativeWrapper.isNativelyBonding(),
+			BONDED,						m_nativeWrapper.isNativelyBonded(),
+			UNBONDED,					m_nativeWrapper.isNativelyUnbonded(),
+			RECONNECTING_LONG_TERM,		attemptingReconnect_longTerm,
+			ADVERTISING,				!attemptingReconnect_longTerm,
+			
+			overrideBondingStates
+		);
+		
+		if( tracker != stateTracker_main() )
+		{
+			stateTracker_main().update
+			(
+				intent,
+				gattStatus,
+				BONDING,					tracker.is(BONDING),
+				BONDED,						tracker.is(BONDED),
+				UNBONDED,					tracker.is(UNBONDED)
+			);
+		}
 	}
 
 	void disconnectWithReason(ConnectionFailListener.Status connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
@@ -3313,13 +3497,27 @@ public class BleDevice implements UsesCustomNull
 
 		E_Intent intent = cancelled ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
-
-		m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable));
+		
+		final boolean cancellableFromConnect = BleDeviceConfig.bool(conf_device().disconnectIsCancellable, conf_mngr().disconnectIsCancellable);
+		final boolean tryBondingWhileDisconnected = connectionFailReasonIfConnecting == Status.BONDING_FAILED && BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
+		final boolean underwentPossibleImplicitBondingAttempt = m_nativeWrapper.isNativelyUnbonded() && m_underwentPossibleImplicitBondingAttempt == true;
+		final boolean taskIsCancellable = cancellableFromConnect == true && tryBondingWhileDisconnected == false && underwentPossibleImplicitBondingAttempt == false;
+		
+		m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable));
+		
+		//--- DRK > Had this here but for a final connection failure it would add one more bond attempt after disconnected, which didn't make sense.
+		//---		Now all handled before connection.
+//		if( tryBondingWhileDisconnected )
+//		{
+//			bond_justAddTheTask(E_TransactionLockBehavior.DOES_NOT_PASS);
+//		}
 
 		if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
 		{
+			final Object[] overrideBondingStates = m_bondMngr.getOverrideBondStatesForDisconnect(connectionFailReasonIfConnecting);
 			final boolean forceMainStateTracker = explicit;
-			setStateToDisconnected(attemptingReconnect_longTerm, intent, gattStatus, forceMainStateTracker);
+			
+			setStateToDisconnected(attemptingReconnect_longTerm, intent, gattStatus, forceMainStateTracker, overrideBondingStates);
 
 			m_txnMngr.cancelAllTransactions();
 			// m_txnMngr.clearAllTxns();
@@ -3335,7 +3533,7 @@ public class BleDevice implements UsesCustomNull
 			{
 				stateTracker().update(intent, gattStatus, RECONNECTING_LONG_TERM, false);
 
-				m_reconnectMngr_longTerm.stop();
+				m_reconnectMngr_longTerm.stop(); 
 			}
 		}
 
@@ -3364,17 +3562,17 @@ public class BleDevice implements UsesCustomNull
 		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF);
 		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;
 
-		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
+		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 
 		final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
 
 		if (wasExplicit)
 		{
-			m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.INTENTIONAL, hitDisk);
+			m_mngr.m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.INTENTIONAL, hitDisk);
 		}
 		else
 		{
-			m_mngr.m_lastDisconnectMngr.save(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
+			m_mngr.m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 		}
 
 		m_pollMngr.resetNotifyStates();
@@ -3383,6 +3581,8 @@ public class BleDevice implements UsesCustomNull
 		{
 			m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */false);
 		}
+		
+		final int overrideOrdinal = getManager().getTaskQueue().getCurrentOrdinal();
 
 		final boolean wasInitialized = is(INITIALIZED);
 
@@ -3395,20 +3595,32 @@ public class BleDevice implements UsesCustomNull
 
 				if (m_reconnectMngr_shortTerm.isRunning())
 				{
-					stateTracker_main().append(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+					stateTracker_main().append(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 				}
 			}
 		}
 
 		final boolean isDisconnectedAfterReconnectingShortTermStateCallback = is(DISCONNECTED);
-
-		if (isDisconnectedAfterReconnectingShortTermStateCallback || wasExplicit)
+		final boolean isConnectingBle = is(CONNECTING);
+		final boolean ignoreKindOf = isConnectingBle && wasExplicit;
+		final boolean cancelTasks;
+		
+		if( !ignoreKindOf )
 		{
-			m_connectionFailMngr.onExplicitDisconnect();
+			if (isDisconnectedAfterReconnectingShortTermStateCallback || wasExplicit)
+			{
+				m_connectionFailMngr.onExplicitDisconnect();
+				
+				cancelTasks = false;
+			}
+			else
+			{
+				cancelTasks = true;
+			}
 		}
 		else
 		{
-			m_queue.softlyCancelTasks(m_dummyDisconnectTask);
+			cancelTasks = false;
 		}
 
 		//--- DRK > Fringe case bail out in case user calls disconnect() in state change for short term reconnect.
@@ -3419,16 +3631,22 @@ public class BleDevice implements UsesCustomNull
 
 		final boolean isAttemptingReconnect_longTerm = is_internal(RECONNECTING_LONG_TERM);
 		final boolean wasConnectingOverall = is(CONNECTING_OVERALL);
+		
+		if( ignoreKindOf )
+		{
+			//--- DRK > Shouldn't be possible to get here for now, just being future-proof.
+			if( cancelTasks )
+			{
+				softlyCancelTasks(overrideOrdinal);
+			}
+			
+			return;
+		}
 
 		// BEGIN CALLBACKS TO USER
 
 		final E_Intent intent = wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
-		setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false);
-
-		if (is(DISCONNECTED))
-		{
-			m_txnMngr.cancelAllTransactions();
-		}
+		setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
 
 		//--- DRK > Technically user could have called connect() in callbacks above....bad form but we need to account for it.
 		final boolean isConnectingOverall_1 = is_internal(CONNECTING_OVERALL);
@@ -3449,13 +3667,33 @@ public class BleDevice implements UsesCustomNull
 		{
 			connectionFailReason_nullable = null;
 		}
+		
+		//--- DRK > Originally had is(DISCONNECTED) here, changed to is_internal, but then realized
+		//---		you probably want to (and it's safe to ) cancel all transactions all the time.
+		//---		I think the original intent was to account for the faulty assumption that someone
+		//---		would call connect again themselves in the state callback and somehow cancel the 
+		//---		new transaction passed to connect()...BUT this can't happen cause the actual connect
+		//---		task has to run (even if it's redundant), and services have to be discovered.
+//						if (is_internal(DISCONNECTED))
+		{
+			m_txnMngr.cancelAllTransactions();
+		}
+		
+		//--- DRK > This was originally where cancelTasks = true; is now placed, before disconnected state change. Putting it after because of the following scenario:
+		//---		(1) Write task takes a long time (timeout scenario). Specifically, tab 4 onCharacteristicWrite gets called only internally (doesn't make it to callback) then keeps spinning.
+		//---		(2) An unsolicited disconnect comes in but we don't get a callback for the write.
+		//---		(3) Before, the soft cancellation was done before the state change, which made the connection failure reason due to authentication failing, not an unsolicited disconnect like it should be.
+		if( cancelTasks )
+		{
+			softlyCancelTasks(overrideOrdinal);
+		}
 
 		final Please.PE_Please retrying;
 		if (!isConnectingOverall_1 && !m_reconnectMngr_shortTerm.isRunning())
 		{
 			if (connectionFailReason_nullable != null)
 			{
-				retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
+				retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
 			}
 			else
 			{
@@ -3476,7 +3714,7 @@ public class BleDevice implements UsesCustomNull
 
 			if (m_reconnectMngr_longTerm.isRunning())
 			{
-				stateTracker_main().append(RECONNECTING_LONG_TERM, E_Intent.INTENTIONAL, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE);
+				stateTracker_main().append(RECONNECTING_LONG_TERM, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}
 		}
 		
@@ -3487,7 +3725,7 @@ public class BleDevice implements UsesCustomNull
 		{
 			if( m_nativeWrapper.isNativelyConnecting() ||  m_nativeWrapper.isNativelyConnected() )
 			{
-				m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/false, null));
+				m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/false, null, /*cancellable=*/true));
 			}
 		}
 
@@ -3498,6 +3736,12 @@ public class BleDevice implements UsesCustomNull
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this);
 		}
+	}
+	
+	private void softlyCancelTasks(final int overrideOrdinal)
+	{
+		m_dummyDisconnectTask.setOverrideOrdinal(overrideOrdinal);
+		m_queue.softlyCancelTasks(m_dummyDisconnectTask);
 	}
 
 	private void stopPoll_private(final UUID uuid, final Double interval, final ReadWriteListener listener)

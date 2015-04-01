@@ -4,14 +4,35 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
-	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
+	private final boolean m_cancellableByConnect;
+	private Integer m_overrideOrdinal = null;
 	
-	public P_Task_Disconnect(BleDevice device, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
+	public P_Task_Disconnect(BleDevice device, I_StateListener listener, boolean explicit, PE_TaskPriority priority, final boolean cancellableByConnect)
 	{
 		super(device, listener);
 		
 		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
 		m_explicit = explicit;
+		
+		m_cancellableByConnect = cancellableByConnect;
+	}
+	
+	@Override int getOrdinal()
+	{
+		if( m_overrideOrdinal != null )
+		{
+			return m_overrideOrdinal;
+		}
+		else
+		{
+			return super.getOrdinal();
+		}
+	}
+	
+	public void setOverrideOrdinal(int ordinal)
+	{
+		m_overrideOrdinal = ordinal;
 	}
 	
 	@Override public boolean isExplicit()
@@ -73,11 +94,16 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 		return m_priority;
 	}
 	
+	boolean isCancellable()
+	{
+		return this.m_explicit && this.m_cancellableByConnect;
+	}
+	
 	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
 	{
 		if( task.getClass() == P_Task_Connect.class && this.getDevice().equals(task.getDevice()) )
 		{
-			if( this.m_explicit )
+			if( isCancellable() )
 			{
 				return true;
 			}
