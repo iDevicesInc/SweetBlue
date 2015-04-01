@@ -10,7 +10,7 @@ import android.bluetooth.BluetoothGatt;
  * <br><br>
  * See the static members of {@link BluetoothDevice} and {@link BluetoothGatt} for more information.
  * <br><br>
- * NOTE: All <code>GATT_</code> members here are copy/pasted from
+ * NOTE: Most <code>GATT_</code> members here are copy/pasted from
  * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.3_r1.1/stack/include/gatt_api.h
  */
 public class BleStatuses
@@ -19,7 +19,7 @@ public class BleStatuses
 	 * Status code used for {@link BleDevice.ReadWriteListener.ScanEvent#gattStatus} when the operation failed at a point where a
 	 * gatt status from the underlying stack isn't provided or applicable.
 	 * <br><br>
-	 * Also used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#gattStatus} for when the failure didn't involve the gatt layer.
+	 * Also used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#gattStatus()} for when the failure didn't involve the gatt layer.
 	 */
 	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 	

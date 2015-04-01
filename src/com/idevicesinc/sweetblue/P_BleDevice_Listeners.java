@@ -234,7 +234,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			{
 				m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 
-				m_device.onConnecting(/*definitelyExplicit=*/false, /*isReconnect=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
+				m_device.onConnecting(/*definitelyExplicit=*/false, /*isReconnect=*/false, P_BondManager.OVERRIDE_EMPTY_STATES, /*bleConnect=*/true);
 				
 				if (!m_queue.isCurrent(P_Task_Connect.class, m_device))
 				{

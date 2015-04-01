@@ -335,6 +335,12 @@ public class BleManager
 		public enum UhOh
 		{
 			/**
+			 * A {@link BleTask#BOND} operation timed out. This can happen a lot with the Galaxy Tab 4, and doing {@link BleManager#reset()} seems to fix it.
+			 * SweetBlue does as much as it can to work around the issue that causes bond timeouts, but some might still slip through.
+			 */
+			BOND_TIMED_OUT,
+			
+			/**
 			 * A {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)}
 			 * took longer than timeout set by {@link BleDeviceConfig#timeoutRequestFilter}.
 			 * You will also get a {@link BleDevice.ReadWriteListener.Result} with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}
@@ -421,12 +427,6 @@ public class BleManager
 			 * {@link BluetoothGatt#discoverServices()} failed right off the bat and returned false.
 			 */
 			SERVICE_DISCOVERY_IMMEDIATELY_FAILED,
-			
-			/**
-			 * A {@link BleTask#BOND} operation timed out. This can happen a lot with the Galaxy Tab 4, and doing {@link BleManager#reset()} seems to fix it.
-			 * SweetBlue does as much as it can to work around the issue that causes bond timeouts, but some might still slip through.
-			 */
-			BOND_TIMED_OUT,
 			
 			/**
 			 * {@link BluetoothAdapter#disable()}, through {@link BleManager#turnOff()}, is failing to complete.

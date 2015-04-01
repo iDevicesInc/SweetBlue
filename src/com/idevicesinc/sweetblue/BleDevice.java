@@ -1020,7 +1020,7 @@ public class BleDevice implements UsesCustomNull
 			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
 			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
 			 * If not applicable, for example if {@link ConnectionFailEvent#reason()} is {@link Status#EXPLICIT_DISCONNECT}, then this is set to
-			 * {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}. 
+			 * {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}. 
 			 * <br><br>
 			 * See {@link ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
 			 * 
@@ -3193,7 +3193,7 @@ public class BleDevice implements UsesCustomNull
 		connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /*isReconnect=*/true);
 	}
 
-	private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, boolean isReconnect)
+	private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, final boolean isReconnect)
 	{
 		if (is_internal(INITIALIZED))
 		{
@@ -3226,17 +3226,25 @@ public class BleDevice implements UsesCustomNull
 		{
 			extraBondingStates = P_BondManager.OVERRIDE_EMPTY_STATES;
 		}
+		
+		onConnecting(/* definitelyExplicit= */true, isReconnect, extraBondingStates, /*bleConnect=*/false);
+		
+		//--- DRK > Just accounting for technical possibility that user calls #disconnect() or something in the state change callback for connecting overall.
+		if( !/*still*/is_internal(CONNECTING_OVERALL) )
+		{
+			return;
+		}
 
 		m_queue.add(new P_Task_Connect(this, m_taskStateListener));
 
-		onConnecting(/* definitelyExplicit= */true, isReconnect, extraBondingStates);
+		onConnecting(/* definitelyExplicit= */true, isReconnect, extraBondingStates, /*bleConnect=*/true);
 	}
 
-	void onConnecting(boolean definitelyExplicit, boolean isReconnect, final Object[] extraBondingStates)
+	void onConnecting(boolean definitelyExplicit, boolean isReconnect, final Object[] extraBondingStates, final boolean bleConnect)
 	{
 		m_lastConnectOrDisconnectWasUserExplicit = definitelyExplicit;
 
-		if (is_internal(/* already */CONNECTING))
+		if (bleConnect && is_internal(/* already */CONNECTING))
 		{
 			P_Task_Connect task = getTaskQueue().getCurrent(P_Task_Connect.class, this);
 			boolean mostDefinitelyExplicit = task != null && task.isExplicit();
@@ -3257,17 +3265,17 @@ public class BleDevice implements UsesCustomNull
 				//--- In other words it's not stopped for any hard technical reasons...it could go on.
 				m_reconnectMngr_longTerm.stop();
 				intent = E_Intent.INTENTIONAL;
-				stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, RECONNECTING_LONG_TERM, false, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false, extraBondingStates);
+				stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, RECONNECTING_LONG_TERM, false, CONNECTING, bleConnect, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false, extraBondingStates);
 			}
 			else
 			{
 				intent = lastConnectDisconnectIntent();
-				stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, CONNECTING, true, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false, extraBondingStates);
+				stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, CONNECTING, bleConnect, CONNECTING_OVERALL, true, DISCONNECTED, false, ADVERTISING, false, extraBondingStates);
 			}
 			
 			if( stateTracker() != stateTracker_main() )
 			{
-				stateTracker_main().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, extraBondingStates);
+				stateTracker_main().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNBONDED, stateTracker().is(UNBONDED), BONDING, stateTracker().is(BONDING), BONDED, stateTracker().is(BONDED));
 			}
 		}
 	}
