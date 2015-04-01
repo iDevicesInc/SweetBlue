@@ -138,7 +138,7 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
 	if (f.exists()) {
 		delete "${STAGE}/samples"
 	}
-	def r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
+	def r = "git clone -b testing https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
 	r.waitFor()
 	String v = r.exitValue()
 	if (!v.equals("0")) {
