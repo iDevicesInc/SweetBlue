@@ -15,15 +15,18 @@ sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
 sourceSets {
-   main {
-      java {
-         srcDir '../src/'
-      }
-   }
+   main.java.srcDir '../src/'
+   test.java.srcDir '../test/'
+}
+
+repositories {
+	mavenCentral()
 }
 
 dependencies {
    	compile files("${ANDROID_JAR}")
+   	testCompile 'junit:junit:4.10'
+   	testCompile 'org.robolectric:robolectric:2.4'
 }
 
 // Task definitions
@@ -62,10 +65,7 @@ task gendocs(type: Javadoc) {
 }
 
 task copyJavaDoc(type: Copy, dependsOn: gendocs) {
-	File f = new File("${BUNDLE_FOLDER}/docs/api")
-	if (!f.exists()) {
-		f.mkdirs()
-	}
+	checkDir("${BUNDLE_FOLDER}/docs/api")
 	from "docs/api"
 	into "${BUNDLE_FOLDER}/docs/api"
 }
@@ -85,10 +85,7 @@ task zipJar(type: Zip, dependsOn: build) {
 
 // Copy the src directory, and Readme file 
 task copyFiles << {
-	File f = new File("${BUNDLE_FOLDER}")
-	if (!f.exists()) {
-		f.mkdirs()
-	}
+	checkDir("${BUNDLE_FOLDER}")
 	copy {
 		from "src"
 		into "${BUNDLE_FOLDER}/src"
@@ -99,22 +96,23 @@ task copyFiles << {
 	}
 }
 
+def checkDir(String dir) {
+	File f = new File(dir)
+	if (!f.exists()) {
+		f.mkdirs()
+	}
+}
+
 task copyStandardFolder(type: Copy, dependsOn: copyFiles) {
-   File f = new File("${STAGE}/${STANDARD_DIR}")
-   if (!f.exists()) {
-      f.mkdirs()
-   }
+   checkDir("${STAGE}/${STANDARD_DIR}")
    from BUNDLE_FOLDER
    into STAGE + "/" + STANDARD_DIR
 }
 
 task copyProFolder(type: Copy, dependsOn: copyFiles) {
-   File f = new File("${STAGE}/${PRO_DIR}")
-   if (!f.exists()) {
-      f.mkdirs()
-   }
-   from BUNDLE_FOLDER
-   into STAGE + "/" + PRO_DIR
+	checkDir("${STAGE}/${PRO_DIR}")
+   	from BUNDLE_FOLDER
+   	into STAGE + "/" + PRO_DIR
 }
 
 task createStandardLicense(dependsOn: copyStandardFolder) << {
@@ -138,7 +136,17 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
 	if (f.exists()) {
 		delete "${STAGE}/samples"
 	}
-	def r = "git clone -b testing https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
+	
+	// When running on the build server, we need to inject the username and password
+	// otherwise it will pull the un/pw of the current user.
+	String gu = System.getenv("G_UNAME")
+	def r;
+	if (!gu || !gu.trim()) {
+		r = "git clone -b testing https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
+	} else {
+		String run = "git clone -b testing https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples"
+		r = run.execute()
+	}	
 	r.waitFor()
 	String v = r.exitValue()
 	if (!v.equals("0")) {
