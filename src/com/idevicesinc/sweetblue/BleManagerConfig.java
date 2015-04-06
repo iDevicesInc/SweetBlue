@@ -377,7 +377,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval autoUpdateRate						= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
 	
 	/**
-	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices. Used in conjunction with {@link #autoScanInterval},
+	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices.
+	 * Used in conjunction with {@link #autoScanInterval}, {@link #autoScanIntervalWhileAppIsPaused}, and {@link #autoScanDelayAfterResume},
 	 * this option allows the library to periodically send off scan "pulses" that last {@link #autoScanTime} seconds.
 	 * Use {@link BleManager#startPeriodicScan(Interval, Interval)} to adjust this behavior while the library is running.
 	 * If either {@link #autoScanTime} or {@link #autoScanInterval} is {@link Interval#DISABLED} then auto scanning is disabled.

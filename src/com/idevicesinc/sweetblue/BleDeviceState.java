@@ -223,8 +223,11 @@ public enum BleDeviceState implements State
 		}
 		else
 		{
+			if( BONDING.overlaps(stateMask) )				return BONDING;
 			if( CONNECTING.overlaps(stateMask) )			return CONNECTING;
 		}
+		
+		if( CONNECTING_OVERALL.overlaps(stateMask) )		return CONNECTING_OVERALL;
 		
 		return NULL;
 	}
