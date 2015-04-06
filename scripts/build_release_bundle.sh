@@ -7,6 +7,9 @@ then
 elif [ "$ARG" == "stacktrace" ]
 then
 	sh gradlew fullBuild --stacktrace
+elif [ "$ARG" == "no_zip" ]
+then
+	sh gradlew bundleNoZip
 else
 	sh gradlew fullBuild
 fi

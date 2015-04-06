@@ -188,28 +188,19 @@ task copyAndRenameJars(dependsOn: getSamples) << {
 }
 
 task copySamples(dependsOn: copyAndRenameJars) << {
+	String d = "${STAGE}/samples/samples"
 	copy {
-		from "${STAGE}/samples/samples"
+		from d
 		into "${STAGE}/${PRO_DIR}/samples"
 	}
 	copy {
-		from "${STAGE}/samples/samples"
+		from d
 		into "${STAGE}/${STANDARD_DIR}/samples"
 	}
 	copy {
-		from "${STAGE}/samples/samples"
+		from d
 		into "${BUNDLE_FOLDER}/samples"
-	}
-	copy {
-		from "../LICENSE"
-		into "${BUNDLE_FOLDER}"
-	}
-}
-
-task zipJar(type: Zip, dependsOn: copySamples) {
-   from "${BUNDLE_FOLDER}"
-   archiveName = "sweetblue.zip"
-   destinationDir = new File("${STAGE}")
+	}	
 }
 
 task buildStandardBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
@@ -246,6 +237,23 @@ task zipPro(type: Zip, dependsOn: [createProLicense, copySamples]) {
    destinationDir = new File("${STAGE}")
 }
 
+task copyGPL(dependsOn: [zipStandard, zipPro]) << {
+	copy {
+		from "../LICENSE"
+		into "${BUNDLE_FOLDER}"
+	}
+}
+
+task zipTrial(type: Zip, dependsOn: copyGPL) {
+   from "${BUNDLE_FOLDER}"
+   archiveName = "sweetblue.zip"
+   destinationDir = new File("${STAGE}")
+}
+
+task zipJar(dependsOn: [zipTrial])
+
+task zipAll(dependsOn: [zipStandard, zipPro, zipJar])
+
 task cleanFolders << {
    delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
 }
@@ -254,7 +262,7 @@ task cleanFolders << {
 task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense])
 
 // Convenience task to run all zip operations
-task fullBuild(dependsOn: [buildSamples, zipJar, createStandardLicense, createProLicense, zipStandard, zipPro])
+task fullBuild(dependsOn: [buildSamples, createStandardLicense, createProLicense, zipAll])
 
 fullBuild.finalizedBy cleanFolders
 
