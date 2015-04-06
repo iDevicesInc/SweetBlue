@@ -77,12 +77,6 @@ task javadocJar(type: Jar, dependsOn: copyJavaDoc) {
    destinationDir = new File(JAR_DIR)
 }
 
-task zipJar(type: Zip, dependsOn: build) {
-   from "${BUNDLE_FOLDER}"
-   archiveName = "sweetblue.zip"
-   destinationDir = new File("${STAGE}")
-}
-
 // Copy the src directory, and Readme file 
 task copyFiles << {
 	checkDir("${BUNDLE_FOLDER}")
@@ -201,7 +195,21 @@ task copySamples(dependsOn: copyAndRenameJars) << {
 	copy {
 		from "${STAGE}/samples/samples"
 		into "${STAGE}/${STANDARD_DIR}/samples"
-	}	
+	}
+	copy {
+		from "${STAGE}/samples/samples"
+		into "${BUNDLE_FOLDER}/samples"
+	}
+	copy {
+		from "../LICENSE"
+		into "${BUNDLE_FOLDER}"
+	}
+}
+
+task zipJar(type: Zip, dependsOn: copySamples) {
+   from "${BUNDLE_FOLDER}"
+   archiveName = "sweetblue.zip"
+   destinationDir = new File("${STAGE}")
 }
 
 task buildStandardBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
