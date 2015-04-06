@@ -87,11 +87,11 @@ task zipJar(type: Zip, dependsOn: build) {
 task copyFiles << {
 	checkDir("${BUNDLE_FOLDER}")
 	copy {
-		from "src"
+		from "../src"
 		into "${BUNDLE_FOLDER}/src"
 	}
 	copy {
-		from "README.md"
+		from "../README.md"
 		into BUNDLE_FOLDER
 	}
 }
