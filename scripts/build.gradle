@@ -142,9 +142,9 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
 	String gu = System.getenv("G_UNAME")
 	def r;
 	if (!gu || !gu.trim()) {
-		r = "git clone -b testing https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
+		r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
 	} else {
-		String run = "git clone -b testing https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples"
+		String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples"
 		r = run.execute()
 	}	
 	r.waitFor()
