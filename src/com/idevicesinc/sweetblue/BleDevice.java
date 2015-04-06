@@ -2401,10 +2401,8 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Starts a connection process, or does nothing if already
-	 * {@link BleDeviceState#CONNECTED} or {@link BleDeviceState#CONNECTING}.
-	 * Use {@link #setListener_ConnectionFail(ConnectionFailListener)} and
-	 * {@link #setListener_State(StateListener)} to receive callbacks for
+	 * Starts a connection process, or does nothing if already {@link BleDeviceState#CONNECTED} or {@link BleDeviceState#CONNECTING}.
+	 * Use {@link #setListener_ConnectionFail(ConnectionFailListener)} and {@link #setListener_State(StateListener)} to receive callbacks for
 	 * progress and errors.
 	 * 
 	 * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
@@ -2446,15 +2444,10 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect()} but provides a hook for the app to do some
-	 * kind of authentication handshake if it wishes. This is popular with
-	 * commercial BLE devices where you don't want hobbyists or competitors
-	 * using your devices for nefarious purposes - like releasing a better
-	 * application for your device than you ;-). Usually the characteristics
-	 * read/written inside this transaction are encrypted and so one way or
-	 * another will require the device to become {@link BleDeviceState#BONDED}.
-	 * This should happen automatically for you, i.e you shouldn't need to call
-	 * {@link #bond()} yourself.
+	 * Same as {@link #connect()} but provides a hook for the app to do some kind of authentication handshake if it wishes. This is popular with
+	 * commercial BLE devices where you don't want hobbyists or competitors using your devices for nefarious purposes - like releasing a better application
+	 * for your device than you ;-). Usually the characteristics read/written inside this transaction are encrypted and so one way or another will require  
+	 * the device to become {@link BleDeviceState#BONDED}. This should happen automatically for you, i.e you shouldn't need to call {@link #bond()} yourself.
 	 * 
 	 * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
 	 * 
@@ -2490,12 +2483,9 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #connect()} but provides a hook for the app to do some
-	 * kind of initialization before it's considered fully
-	 * {@link BleDeviceState#INITIALIZED}. For example if you had a BLE-enabled
-	 * thermometer you could use this transaction to attempt an initial
-	 * temperature read before updating your UI to indicate "full" connection
-	 * success, even though BLE connection itself already succeeded.
+	 * Same as {@link #connect()} but provides a hook for the app to do some kind of initialization before it's considered fully
+	 * {@link BleDeviceState#INITIALIZED}. For example if you had a BLE-enabled thermometer you could use this transaction to attempt an initial
+	 * temperature read before updating your UI to indicate "full" connection success, even though BLE connection itself already succeeded.
 	 * 
 	 * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
 	 * 
@@ -2807,7 +2797,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Stops an RSSI poll previously started either by {@link #startRssiPoll(Interval)} or {@link #startRssiPoll(Interval, ReadWriteListener)}.	 * 
+	 * Stops an RSSI poll previously started either by {@link #startRssiPoll(Interval)} or {@link #startRssiPoll(Interval, ReadWriteListener)}.
 	 */
 	public void stopRssiPoll()
 	{
