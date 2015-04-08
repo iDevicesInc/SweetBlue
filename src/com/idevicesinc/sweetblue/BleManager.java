@@ -224,7 +224,7 @@ public class BleManager
 		/**
 		 * Called when the discovery lifecycle of a device is updated.
 		 * <br><br> 
-		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link State.ChangeIntent#UNINTENTIONAL}
+		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link utils.State.ChangeIntent#UNINTENTIONAL}
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
 		void onEvent(final DiscoveryEvent e);
@@ -334,14 +334,14 @@ public class BleManager
 			/**
 			 * A {@link BleDevice#read(java.util.UUID, BleDevice.ReadWriteListener)}
 			 * took longer than timeout set by {@link BleDeviceConfig#timeoutRequestFilter}.
-			 * You will also get a {@link BleDevice.ReadWriteListener.Result} with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}
+			 * You will also get a {@link BleDevice.ReadWriteListener.ReadWriteEvent} with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}
 			 * but a timeout is a sort of fringe case that should not regularly happen.
 			 */
 			READ_TIMED_OUT,
 			
 			/**
 			 * A {@link BleDevice#read(java.util.UUID, BleDevice.ReadWriteListener)} returned with a <code>null</code>
-			 * characteristic value. The <code>null</code> value will end up as an empty array in {@link Result#data}
+			 * characteristic value. The <code>null</code> value will end up as an empty array in {@link BleDevice.ReadWriteListener.ReadWriteEvent#data}
 			 * so app-land doesn't have to do any special <code>null</code> handling.
 			 */
 			READ_RETURNED_NULL,
@@ -376,7 +376,7 @@ public class BleManager
 			OLD_DUPLICATE_SERVICE_FOUND,
 			
 			/**
-			 * {@link android.bluetooth.BluetoothAdapter#startLeScan()} failed for an unknown reason. The library is now using
+			 * {@link android.bluetooth.BluetoothAdapter#startLeScan(BluetoothAdapter.LeScanCallback)} failed for an unknown reason. The library is now using
 			 * {@link android.bluetooth.BluetoothAdapter#startDiscovery()} instead.
 			 * 
 			 * @see BleManagerConfig#revertToClassicDiscoveryIfNeeded
@@ -384,7 +384,7 @@ public class BleManager
 			START_BLE_SCAN_FAILED__USING_CLASSIC,
 			
 			/**
-			 * {@link android.bluetooth.BluetoothGatt#getConnectionState()} says we're connected but we never tried to connect in the first place.
+			 * {@link android.bluetooth.BluetoothGatt#getConnectionState(BluetoothDevice)} says we're connected but we never tried to connect in the first place.
 			 * My theory is that this can happen on some phones when you quickly restart the app and the stack doesn't have 
 			 * a chance to disconnect from the device entirely. 
 			 */
@@ -402,14 +402,14 @@ public class BleManager
 			RANDOM_EXCEPTION,
 			
 			/**
-			 * {@link android.bluetooth.BluetoothAdapter#startLeScan()} failed and {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is <code>false</code>.
+			 * {@link android.bluetooth.BluetoothAdapter#startLeScan(BluetoothAdapter.LeScanCallback)} failed and {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is <code>false</code>.
 			 * 
 			 * @see BleManagerConfig#revertToClassicDiscoveryIfNeeded
 			 */
 			START_BLE_SCAN_FAILED,
 			
 			/**
-			 * {@link android.bluetooth.BluetoothAdapter#startLeScan()} failed and {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is <code>true</code>
+			 * {@link android.bluetooth.BluetoothAdapter#startLeScan(BluetoothAdapter.LeScanCallback)} failed and {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is <code>true</code>
 			 * so we try {@link android.bluetooth.BluetoothAdapter#startDiscovery()} but that also fails...fun!
 			 */
 			CLASSIC_DISCOVERY_FAILED,
@@ -1401,7 +1401,7 @@ public class BleManager
 	/**
 	 * Convenience method to request your user to enable ble in a "standard" way
 	 * with an {@link android.content.Intent} instead of using {@link #turnOn()} directly.
-	 * Result will be posted as normal to {@link android.app.Activity#onActivityResult()}.
+	 * Result will be posted as normal to {@link android.app.Activity#onActivityResult(int, int, Intent)}.
 	 * If current state is {@link BleManagerState#ON} or {@link BleManagerState#TURNING_ON}
 	 * this method early outs and does nothing.
 	 */

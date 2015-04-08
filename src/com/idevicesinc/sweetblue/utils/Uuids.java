@@ -14,7 +14,7 @@ public class Uuids
 	public static final UUID INVALID												= new UUID(0x0, 0x0);
 	
 	/**
-	 * The template for standard services, characteristics, and descriptors - see {@linkplain https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx}.
+	 * The template for standard services, characteristics, and descriptors - see <a href="https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx">https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx</a>
 	 * This is used to generate some of the other static {@link UUID} instances in this class using {@link #fromShort(String, String)}.
 	 */
 	public static final String STANDARD_UUID_TEMPLATE								= "00000000-0000-1000-8000-00805f9b34fb";

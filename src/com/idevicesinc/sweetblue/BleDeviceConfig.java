@@ -337,7 +337,7 @@ public class BleDeviceConfig implements Cloneable
 		/**
 		 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
 		 * before the call is made to {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)}. For the first call to {@link ReconnectRequestFilter#onEvent(ReconnectRequestEvent)},
-		 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
+		 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
 		 */
 		public abstract ConnectionFailListener.ConnectionFailEvent connectionFailInfo();
 		
@@ -392,7 +392,7 @@ public class BleDeviceConfig implements Cloneable
 	public static interface ReconnectRequestFilter
 	{
 		/**
-		 * Struct passed to {@link ReconnectRequestFilter#onEvent(ReconnectRequestFilter.ReconnectRequestEvent)} to aid in making a decision.
+		 * Struct passed to {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)} to aid in making a decision.
 		 */
 		@Immutable
 		public static class ReconnectRequestEvent extends ReconnectRelatedEvent
@@ -444,7 +444,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectRequestFilter#onEvent(ReconnectRequestFilter.ReconnectRequestEvent)} to instantly reconnect.
+			 * Return this from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)} to instantly reconnect.
 			 */
 			public static Please retryInstantly()
 			{
@@ -452,7 +452,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectRequestFilter#onEvent(ReconnectRequestFilter.ReconnectRequestEvent)} to stop a reconnect attempt loop.
+			 * Return this from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)} to stop a reconnect attempt loop.
 			 * Note that {@link BleDevice#disconnect()} will also stop any ongoing reconnect loop.
 			 */
 			public static Please stopRetrying()
@@ -461,7 +461,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 			
 			/**
-			 * Return this from {@link ReconnectRequestFilter#onEvent(ReconnectRequestFilter.ReconnectRequestEvent)} to retry after the given amount of time.
+			 * Return this from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)} to retry after the given amount of time.
 			 */
 			public static Please retryIn(Interval interval)
 			{
@@ -478,9 +478,9 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Default implementation of {@link ReconnectRequestFilter} that uses {@link Please#retryInstantly()} for the
+	 * Default implementation of {@link ReconnectRequestFilter} that uses {@link ReconnectRequestFilter.Please#retryInstantly()} for the
 	 * first reconnect attempt, and from then on uses the {@link Interval} rate passed to the constructor
-	 * {@link DefaultReconnectRequestFilter#DefaultReconnectRequestFilter(Interval)}.
+	 * {@link BleDeviceConfig.DefaultReconnectRequestFilter#BleDeviceConfig.DefaultReconnectRequestFilter(Interval)}.
 	 */
 	public static class DefaultReconnectRequestFilter implements ReconnectRequestFilter
 	{
@@ -611,9 +611,9 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Default implementation of {@link ReconnectPersistFilter} that returns {@link Please#persist()} for as long
+	 * Default implementation of {@link ReconnectPersistFilter} that returns {@link ReconnectPersistFilter.Please#persist()} for as long
 	 * as the reconnect process has taken less time than the {@link Interval} passed to 
-	 * {@link DefaultReconnectPersistFilter#DefaultReconnectPersistFilter(Interval)}.
+	 * {@link BleDeviceConfig.DefaultReconnectPersistFilter#BleDeviceConfig.DefaultReconnectPersistFilter(Interval)}.
 	 * <br><br>
 	 * NOTE: This filter will not kill the reconnect process if we're past the timeout but are {@link BleDeviceState#CONNECTED} and
 	 * going through the final steps of {@link BleDeviceState#CONNECTING_OVERALL} like {@link BleDeviceState#DISCOVERING_SERVICES},
@@ -823,8 +823,8 @@ public class BleDeviceConfig implements Cloneable
 	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
-	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ConnectionFailListener.Please}
-	 * returned from {@link ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}.
+	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link BleDevice.ConnectionFailListener.Please}
+	 * returned from {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)}.
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device that only works
 	 * with autoConnect==true and you want connection time to be faster (i.e. you don't want to wait for that first
@@ -873,12 +873,12 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 		= true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether the {@link State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
+	 * Default is <code>true</code> - controls whether the {@link utils.State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
 	 * is saved to and loaded from disk so that it can be restored across app sessions, undiscoveries, and BLE
 	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
 	 * any extra permissions. The main advantage of this is the following scenario: User connects to a device through your app,
 	 * does what they want, kills the app, then opens the app sometime later. {@link BleDevice#getLastDisconnectIntent()} returns
-	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
+	 * {@link utils.State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
@@ -904,7 +904,7 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean cacheDeviceOnUndiscovery						= true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether {@link ConnectionFailListener.Status#BONDING_FAILED} is capable of
+	 * Default is <code>true</code> - controls whether {@link BleDevice.ConnectionFailListener.Status#BONDING_FAILED} is capable of
 	 * inducing {@link ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
 	 * while a device is {@link BleDeviceState#CONNECTING_OVERALL}.
 	 */
@@ -912,7 +912,7 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean bondingFailFailsConnection					= true;
 	
 	/**
-	 * Default is <code>false</code> - whether to use {@link BluetoothGatt#refresh()} right before service discovery.
+	 * Default is <code>false</code> - whether to use <code>BluetoothGatt.refresh()</code> right before service discovery.
 	 * This method is not in the public Android API, so its use is disabled by default. You may find it useful to enable
 	 * if your remote device is routinely changing its gatt service profile. This method call supposedly clears a cache
 	 * that would otherwise prevent changes from being discovered.

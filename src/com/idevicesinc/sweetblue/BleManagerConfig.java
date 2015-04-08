@@ -106,7 +106,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
 			 * <br><br>
-			 * TIP: If {@link ScanEvent#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
+			 * TIP: If {@link ScanEvent#lastDisconnectIntent} isn't {@link utils.State.ChangeIntent#NULL} then most likely you can early-out
 			 * and return <code>true</code> from {@link ScanFilter#onEvent(ScanEvent)} without having to check
 			 * uuids or names matching, because obviously you've seen and connected to this device before.
 			 */
@@ -219,7 +219,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		
 		/**
-		 * Return {@link Please#acknowledge()} to acknowledge the discovery, in which case {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)}
+		 * Return {@link Please#acknowledge()} to acknowledge the discovery, in which case {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}
 		 * will be called shortly. Otherwise return {@link Please#ignore()} to ignore the discovered device.
 		 * 
 		 * @return {@link Please#acknowledge()}, {@link Please#ignore()}, or {@link Please#acknowledge(BleDeviceConfig)} (or other static constructor methods that may be added in the future).
@@ -248,7 +248,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		
 		/**
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
-		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#DefaultScanFilter(Collection)}.
+		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#BleManagerConfig.DefaultScanFilter(Collection)}.
 		 */
 		@Override public Please onEvent(ScanEvent e)
 		{
@@ -304,14 +304,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	public boolean autoScanDuringOta					= false;
 	
 	/**
-	 * Default is <code>true</code> - SweetBlue uses {@link BluetoothAdapter#startLeScan()} by default but for unknown
+	 * Default is <code>true</code> - SweetBlue uses {@link BluetoothAdapter#startLeScan(BluetoothAdapter.LeScanCallback)} by default but for unknown
 	 * reasons this can fail sometimes. In this case SweetBlue can revert to using classic bluetooth
 	 * discovery through {@link BluetoothAdapter#startDiscovery()}. Be aware that classic
 	 * discovery may not discover some or any advertising BLE devices, nor will it provide
-	 * a {@link ScanFilter.ScanEvent#scanRecord} or {@link ScanFilter.ScanEvent#advertisedServices}
-	 * to {@link ScanFilter#onEvent(ScanFilter.ScanEvent)}.
+	 * a {@link BleManagerConfig.ScanFilter.ScanEvent#scanRecord} or {@link BleManagerConfig.ScanFilter.ScanEvent#advertisedServices}
+	 * to {@link BleManagerConfig.ScanFilter#onEvent(BleManagerConfig.ScanFilter.ScanEvent)}.
 	 * Most likely you will be forced to filter on name only for your implementation of
-	 * {@link ScanFilter#onEvent(ScanFilter.ScanEvent)}.
+	 * {@link BleManagerConfig.ScanFilter#onEvent(BleManagerConfig.ScanFilter.ScanEvent)}.
 	 * As such this is meant as a better-than-nothing back-up solution for BLE scanning.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -332,7 +332,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	boolean postCallbacksToMainThread					= true;
 	
 	/**
-	 * Default is <code>true</code> - requires the {@link Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
+	 * Default is <code>true</code> - requires the {@link android.Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
 	 * It should look like this: {@code <uses-permission android:name="android.permission.WAKE_LOCK" />}
 	 * Sets whether the library will attempt to obtain a wake lock in certain situations.
 	 * For now the only situation is when there are no remote bluetooth devices
@@ -349,9 +349,9 @@ public class BleManagerConfig extends BleDeviceConfig
 	public boolean manageCpuWakeLock					= true;
 	
 	/**
-	 * Default is {@value #DEFAULT_UH_OH_CALLBACK_THROTTLE} seconds - {@link UhOh} callbacks from {@link UhOhListener}
-	 * can be a little spammy at times so this is an option to throttle them back on a per-{@link UhOh} basis.
-	 * Set this to {@link Interval#DISABLED} to receive all every {@link UhOh} and manage them yourself.
+	 * Default is {@value #DEFAULT_UH_OH_CALLBACK_THROTTLE} seconds - {@link BleManager.UhOhListener.UhOh} callbacks from {@link BleManager.UhOhListener}
+	 * can be a little spammy at times so this is an option to throttle them back on a per-{@link BleManager.UhOhListener.UhOh} basis.
+	 * Set this to {@link Interval#DISABLED} to receive all every {@link BleManager.UhOhListener.UhOh} and manage them yourself.
 	 * 
 	 * @see BleManager.UhOhListener
 	 */

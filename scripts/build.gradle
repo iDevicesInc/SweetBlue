@@ -45,20 +45,19 @@ task sourceJar(type: Jar, dependsOn: jar) {
 }
 
 // disable the crazy super-strict doclint tool in Java 8
-if (JavaVersion.current().isJava8Compatible()) {
-    tasks.withType(Javadoc) {
-        options.addStringOption('Xdoclint:none', '-quiet')
-    }
-}
+//if (JavaVersion.current().isJava8Compatible()) {
+//    tasks.withType(Javadoc) {
+//        options.addStringOption('Xdoclint:none', '-quiet')
+//    }
+//}
 
 task gendocs(type: Javadoc) {
    options.stylesheetFile = new File("./assets/doc_style.css")
    options.windowTitle = "SweetBlue"
    options.memberLevel = JavadocMemberLevel.PROTECTED
    options.author = true
-   //options.links("http://d.android.com/reference")
    options.linksOffline('http://d.android.com/reference', System.getenv("ANDROID_HOME") + '/docs/reference')
-      //include("com.idevicesinc.sweetblue")
+   //include("com.idevicesinc.sweetblue")
    String v = "${SEMVER}"
    version = v.replace("_", '.')
    destinationDir = new File("${BUNDLE_FOLDER}/docs/api")

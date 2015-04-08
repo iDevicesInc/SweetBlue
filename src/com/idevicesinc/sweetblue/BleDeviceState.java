@@ -206,7 +206,7 @@ public enum BleDeviceState implements State
 	 * a transition from one state to another, so something with "ING" in the name (except {@link #PERFORMING_OTA}).
 	 * Chronologically this method returns {@link #CONNECTING}, {@link #DISCOVERING_SERVICES},
 	 * {@link #AUTHENTICATING} (if {@link BleDevice#connect(BleTransaction.Auth)} or 
-	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Ota)} is called), {@link #BONDING} (if relevant),
+	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} is called), {@link #BONDING} (if relevant),
 	 * and {@link #INITIALIZING}  (if {@link BleDevice#connect(BleTransaction.Init)} or 
 	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} is called).
 	 * 

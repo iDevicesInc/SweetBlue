@@ -54,7 +54,7 @@ public class Utils
 	
 	/**
 	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
-	 * and so this method is used in {@link BleDeviceConfig.DefaultBondFilter}. 
+	 * and so this method is used in {@link com.idevicesinc.sweetblue.BleDeviceConfig.DefaultBondFilter}. 
 	 */ 
 	public static boolean phoneHasBondingIssues()
 	{

@@ -154,7 +154,7 @@ public class BleDevice implements UsesCustomNull
 			 * Used either when {@link ReadWriteEvent#type()} {@link Type#isRead()} and the stack returned a <code>null</code>
 			 * value for {@link BluetoothGattCharacteristic#getValue()} despite the operation being otherwise "successful", <i>or</i>
 			 * {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter. For the read case, the library
-			 * will throw an {@link UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch. If the problem persists try {@link BleManager#reset()}.
+			 * will throw an {@link BleManager.UhOhListener.UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch. If the problem persists try {@link BleManager#reset()}.
 			 */
 			NULL_DATA,
 
@@ -255,7 +255,7 @@ public class BleDevice implements UsesCustomNull
 
 			/**
 			 * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and called when enabling the notification completes by writing to the
-			 * Descriptor of the given {@link UUID}. {@link Status#SUCCESS} doesn't <i>necessarily</i> mean that notifications will
+			 * Descriptor of the given {@link UUID}. {@link BleDevice.ReadWriteListener.Status#SUCCESS} doesn't <i>necessarily</i> mean that notifications will
 			 * definitely now work (there may be other issues in the underlying stack), but it's a reasonable guarantee.
 			 */
 			ENABLING_NOTIFICATION,
@@ -406,7 +406,7 @@ public class BleDevice implements UsesCustomNull
 
 			/**
 			 * Indicates either success or the type of failure. Some values of {@link Status} are not used for certain values of {@link Type}.
-			 * For example a {@link Type#NOTIFICATION} cannot fail with {@link Status#TIMED_OUT}.
+			 * For example a {@link Type#NOTIFICATION} cannot fail with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}.
 			 */
 			public Status status() {  return m_status;  }
 			private final Status m_status;
@@ -431,8 +431,8 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is, for example,
 			 * {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point where a gatt status is
-			 * provided, in which case this member is set to {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE} (value of
-			 * {@value BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater than
+			 * provided, in which case this member is set to {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE} (value of
+			 * {@value com.idevicesinc.sweetblue.BleStatuses#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater than
 			 * <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status} is
 			 * {@link ReadWriteListener.Status#SUCCESS} or {@link ReadWriteListener.Status#REMOTE_GATT_FAILURE}. There are
 			 * also some cases where this will be 0 for success but {@link #status} is for example
@@ -501,7 +501,7 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Convenience method for checking if {@link ReadWriteEvent#status} equals {@link Status#SUCCESS}.
+			 * Convenience method for checking if {@link ReadWriteEvent#status} equals {@link BleDevice.ReadWriteListener.Status#SUCCESS}.
 			 */
 			public boolean wasSuccess()
 			{
@@ -1019,7 +1019,7 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
 			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
-			 * If not applicable, for example if {@link ConnectionFailEvent#reason()} is {@link Status#EXPLICIT_DISCONNECT}, then this is set to
+			 * If not applicable, for example if {@link ConnectionFailEvent#status()} is {@link Status#EXPLICIT_DISCONNECT}, then this is set to
 			 * {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}. 
 			 * <br><br>
 			 * See {@link ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
@@ -1137,7 +1137,7 @@ public class BleDevice implements UsesCustomNull
 
 			/**
 			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
-			 * {@link BleDeviceConfig.ReconnectRequestFilter.ConnectionFailEvent#connectionFailInfo()} in certain situations.
+			 * {@link BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent#connectionFailInfo()} in certain situations.
 			 */
 			@Override public boolean isNull()
 			{
@@ -1430,7 +1430,7 @@ public class BleDevice implements UsesCustomNull
 			/**
 			 * If {@link #status()} is {@link BondListener.Status#FAILED_EVENTUALLY}, this integer will
 			 * be one of the values enumerated in {@link BluetoothDevice} that start with <code>UNBOND_REASON</code> such as
-			 * {@link BluetoothDevice#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
+			 * {@link BleStatuses#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
 			 * See also a publically accessible list in {@link BleStatuses}.
 			 */
 			public int failReason() {  return m_failReason;  }
@@ -1459,7 +1459,7 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Shortcut for checking if {@link #status()} == {@link Status#SUCCESS}.
+			 * Shortcut for checking if {@link #status()} == {@link BondListener.Status#SUCCESS}.
 			 */
 			public boolean wasSuccess()
 			{
@@ -1762,15 +1762,15 @@ public class BleDevice implements UsesCustomNull
 	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles or undiscovery->rediscovery, which
 	 * basically means how it was last {@link BleDeviceState#DISCONNECTED}.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown because
+	 * If {@link utils.State.ChangeIntent#NULL}, then the last disconnect is unknown because
 	 * (a) device has never been seen before,
 	 * (b) reason for disconnect was app being killed and {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>,
 	 * (c) app user cleared app data between app sessions, (d) etc., etc.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
+	 * If {@link utils.State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
 	 * the disconnect to happen, and thus *probably* would want to be automatically connected again as soon as the device is discovered.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#INTENTIONAL}, then the last reason the device was {@link BleDeviceState#DISCONNECTED} was because
+	 * If {@link utils.State.ChangeIntent#INTENTIONAL}, then the last reason the device was {@link BleDeviceState#DISCONNECTED} was because
 	 * {@link BleDevice#disconnect()} was called, which most-likely means the user doesn't want to automatically connect to this device again.
 	 * <br><br>
 	 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
@@ -2633,7 +2633,7 @@ public class BleDevice implements UsesCustomNull
 	 * bad design decision in your code. This library will (well, should) never
 	 * hold references to two devices such that this method returns true for them.
 	 * 
-	 * @see BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)
+	 * 
 	 */
 	public boolean equals(BleDevice device)
 	{

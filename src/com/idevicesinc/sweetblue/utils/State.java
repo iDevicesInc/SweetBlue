@@ -16,7 +16,7 @@ import com.idevicesinc.sweetblue.BleManagerState;
 public interface State extends UsesCustomNull
 {
 	/**
-	 * Abstract base class for {@link BleDevice.StateListener.StateEvent} and {@link BleManager.StateListener.StateEvent}.
+	 * Abstract base class for {@link com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent} and {@link com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent}.
 	 */
 	public static abstract class ChangeEvent<T_State extends State>
 	{
@@ -245,8 +245,8 @@ public interface State extends UsesCustomNull
 	String name();
 	
 	/**
-	 * Given an old and new state mask, for example from {@link BleDevice.StateListener#onEvent(BleDevice.StateListener.StateEvent)}
-	 *  or {@link BleManager.StateListener#onEvent(BleManager.StateListener.StateEvent)}, this method tells you whether the
+	 * Given an old and new state mask, for example from {@link com.idevicesinc.sweetblue.BleDevice.StateListener#onEvent(com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent)}
+	 *  or {@link com.idevicesinc.sweetblue.BleManager.StateListener#onEvent(com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent)}, this method tells you whether the
 	 * the 'this' state was appended.
 	 * 
 	 * @see #didExit(int, int)

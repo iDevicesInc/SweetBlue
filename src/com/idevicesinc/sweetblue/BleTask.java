@@ -36,7 +36,7 @@ public enum BleTask
 	DISCONNECT,
 	
 	/**
-	 * Associated with {@link BleDevice#bond()} and {@value BleDeviceState#BONDING}.
+	 * Associated with {@link BleDevice#bond()} and {@link BleDeviceState#BONDING}.
 	 */
 	BOND,
 	
