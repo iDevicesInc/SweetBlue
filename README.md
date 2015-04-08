@@ -1,3 +1,5 @@
+[![Build Status](http://75.144.199.157:7117/job/SweetBlue/badge/icon)](http://75.144.199.157:7117/job/SweetBlue/)
+
 **|** [Why?](#why) **|** [Features](#features) **|** [Getting Started](#getting-started) **|** [Licensing](#licensing) **|**
 
 <p align="center" style="margin-top:100px;"><br><a href="https://idevicesinc.com/sweetblue"><img src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png" /></a></p>
