@@ -1,5 +1,5 @@
 [![Build Status](http://75.144.199.157:7117/job/SweetBlue/badge/icon)](http://75.144.199.157:7117/job/SweetBlue/)
-[![Version](https://img.shields.io/badge/version-1.26.10-blue.svg)](https://img.shields.io/badge/version-1.26.10-blue.svg)
+[![Version](https://img.shields.io/badge/version-1.26.10-blue.svg)]
 
 **|** [Why?](#why) **|** [Features](#features) **|** [Getting Started](#getting-started) **|** [Licensing](#licensing) **|**
 

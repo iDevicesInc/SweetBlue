@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'checkstyle'
 
 version = '1.0'
 
@@ -31,6 +32,14 @@ dependencies {
 
 // Task definitions
 
+task checker(type: Checkstyle) {
+	configFile file("./config/checkstyle/checkstyle.xml")
+	source 'src'
+	include '**/*.java'
+	exclude '**/gen/**'	
+	classpath = files()
+}
+
 // This will make sure the main jar is created when running build
 jar {
 	archiveName = JAR_NAME
@@ -62,8 +71,10 @@ task gendocs(type: Javadoc) {
    version = v.replace("_", '.')
    destinationDir = new File("${BUNDLE_FOLDER}/docs/api")
    source = sourceSets.main.allJava
-   classpath += configurations.compile
+   classpath += configurations.compile   
 }
+
+gendocs.finalizedBy checker
 
 task copyJavaDoc(type: Copy, dependsOn: gendocs) {
 	checkDir("${BUNDLE_FOLDER}/docs/api")

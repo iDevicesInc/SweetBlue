@@ -2,9 +2,7 @@
 
 source config.sh
 
-JAR_BASE_NAME=sweetblue_$SEMVER
-BUNDLE_FOLDER=$STAGE/$JAR_BASE_NAME
-JAR_NAME=$BUNDLE_FOLDER/$JAR_BASE_NAME.jar
+JAR_NAME=sweetblue_$SEMVER
 
 sh gradlew fullBuild
 read -n 1 -p "Are you sure you want to upload? " sure

@@ -441,7 +441,7 @@ public class BleDevice implements UsesCustomNull
 			 * application logic if possible.
 			 * <br><br>
 			 * See {@link BluetoothGatt} for its static <code>GATT_*</code> status code members. Also see the source code of
-			 * {@link BleStatuses} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be
+			 * {@link BleStatuses1} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be
 			 * totally accurate or up-to-date, nor may it match GATT_ values used by the bluetooth stack on your phone.
 			 */
 			public int gattStatus() {  return m_gattStatus;  }
