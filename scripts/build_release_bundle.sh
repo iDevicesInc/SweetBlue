@@ -1,5 +1,4 @@
 #!/bin/sh
-
 ARG=$1
 if [ "$ARG" == "info" ]
 then

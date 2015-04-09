@@ -74,8 +74,6 @@ task gendocs(type: Javadoc) {
    classpath += configurations.compile   
 }
 
-gendocs.finalizedBy checker
-
 task copyJavaDoc(type: Copy, dependsOn: gendocs) {
 	checkDir("${BUNDLE_FOLDER}/docs/api")
 	from "docs/api"
