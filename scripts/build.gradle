@@ -268,6 +268,22 @@ task cleanFolders << {
    delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
 }
 
+task updateReadmeVersion << {
+	exec {
+		workingDir '../'
+		executable 'sed'
+		args "-i", "", "2d", "README.md"
+	}
+	String dver = SEMVER.replace("_", ".")
+	def line = "[![Version](https://img.shields.io/badge/version-" + dver + 
+	"-blue.svg)](https://img.shields.io/badge/version-" + dver + "-blue.svg)"
+	exec {
+		workingDir '../'
+		executable 'sed'
+		args "-i", "", "2s|.*|${line}|", "README.md"
+	}
+}
+
 // Perform full build, but do not zip anything, and do not clean folders
 task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense])
 
