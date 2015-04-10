@@ -66,22 +66,22 @@ Features
 Getting Started
 ===============
 1. If using **Eclipse**...
-1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/libs/`.
-2. Open the `Package Explorer` view.
-3. Expand `MyApp/libs/sweetblue/`.
-4. If building with source...
-1. Right-click on the `src` folder.
-2. Hover over `Build Path->`.
-3. Click `Use as Source Folder`.
-5. Else if building with JAR...
-1. Expand the `jars` folder.
-2. Right click on `sweetblue_{version}.jar`.
-3. Hover over `Build Path->`.
-4. Click `Add to Build Path`.
+  1. [Download](https://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/libs/`.
+  2. Open the `Package Explorer` view.
+  3. Expand `MyApp/libs/sweetblue/`.
+  4. If building with source...
+    1. Right-click on the `src` folder.
+    2. Hover over `Build Path->`.
+    3. Click `Use as Source Folder`.
+  5. Else if building with JAR...
+    1. Expand the `jars` folder.
+    2. Right click on `sweetblue_{version}.jar`.
+    3. Hover over `Build Path->`.
+    4. Click `Add to Build Path`.
 2. Else if using **Android Studio** or **Gradle**...
-1. [Download](http://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/src/main/lib/.`
-2. Open the app module's `build.gradle` file.
-3. If building with source, add the following to `sourceSets`:
+  1. [Download](http://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/src/main/lib/.`
+  2. Open the app module's `build.gradle` file.
+  3. If building with source, add the following to `sourceSets`:
 
 ```gradle
 android {
@@ -93,7 +93,7 @@ android {
 }
 ```
 
-4. Else if building with JAR, add the following to `dependencies`:
+  4. Else if building with JAR, add the following to `dependencies`:
 
 ```gradle
 dependencies {
