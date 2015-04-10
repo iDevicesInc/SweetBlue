@@ -85,11 +85,11 @@ Getting Started
 
 ```gradle
 android {
-  ...
-  sourceSets {
     ...
-    main.java.srcDirs += 'src/main/lib/sweetblue/src'
-  }
+    sourceSets {
+        ...
+        main.java.srcDirs += 'src/main/lib/sweetblue/src'
+    }
 }
 ```
 
@@ -97,8 +97,8 @@ android {
 
 ```gradle
 dependencies {
-  ...
-  compile fileTree(dir: 'libs', include: '*.jar')
+    ...
+    compile fileTree(dir: 'libs', include: '*.jar')
 }
 ```
 
@@ -117,31 +117,31 @@ dependencies {
 ```java
 BleManager.get(this).startScan(new DiscoveryListener()
 {
-  @Override public void onEvent(DiscoveryEvent e)
-  {
-    if( e.was(LifeCycle.DISCOVERED) )
+    @Override public void onEvent(DiscoveryEvent e)
     {
-      e.device().connect(new StateListener()
-      {
-        @Override public void onEvent(StateEvent e)
+        if( e.was(LifeCycle.DISCOVERED) )
         {
-          if( e.didEnter(BleDeviceState.INITIALIZED) )
-          {
-            e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
+            e.device().connect(new StateListener()
             {
-              @Override public void onEvent(ReadWriteEvent e)
-              {
-                if( e.wasSuccess() )
+                @Override public void onEvent(StateEvent e)
                 {
-                  Log.i("", "Battery level is " + e.data_byte() + "%");
+                    if( e.didEnter(BleDeviceState.INITIALIZED) )
+                    {
+                        e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
+                        {
+                            @Override public void onEvent(ReadWriteEvent e)
+                            {
+                                if( e.wasSuccess() )
+                                {
+                                    Log.i("", "Battery level is " + e.data_byte() + "%");
+                                }
+                            }
+                        });
+                    }
                 }
-              }
             });
-          }
         }
-      });
     }
-  }
 });
 ```
 
