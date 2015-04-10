@@ -275,7 +275,7 @@ task updateReadmeVersion << {
 	exec {
 		workingDir '../'
 		executable 'sed'
-		args "-i", "", "2s|.*|${line}|", "README.md"
+		args "-i", "", "s/version-.*-blue/version-${dver}-blue/g", "README.md"
 	}
 }
 
