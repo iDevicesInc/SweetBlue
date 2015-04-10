@@ -101,7 +101,6 @@ Getting Started
     }
     ```
 3. Now add these to the root of `MyApp/AndroidManifest.xml`:
-
 ```xml
 <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="21" />
 <uses-permission android:name="android.permission.BLUETOOTH" />
