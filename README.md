@@ -8,8 +8,11 @@
   <img align="right" src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/whitespace.bmp" />
   <img align="right" src="http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue Library"/>
 </a>
-
-<p align="center" style="margin-top:100px;"><br><a href="https://idevicesinc.com/sweetblue"><img src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png" /></a></p>
+<p align="center" style="margin-top:100px;">
+  <a href="https://idevicesinc.com/sweetblue">
+    <img src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/sweetblue_logo.png" />
+  </a
+</p>
 Why?
 ====
 
