@@ -6,7 +6,7 @@
 <a href="http://75.144.199.157:7117/job/SweetBlue/">
   <img align="right" src="https://img.shields.io/badge/version-1.26.10-blue.svg" />
   <img align="right" src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/whitespace.bmp" />
-  <img align="right" src="http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue Library"/>
+  <img align="right" src="http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue%20Library"/>
 </a>
 <p align="center">
   <br>
@@ -85,11 +85,11 @@ Getting Started
 
 ```gradle
 android {
-...
-sourceSets {
-...
-main.java.srcDirs += 'src/main/lib/sweetblue/src'
-}
+  ...
+  sourceSets {
+    ...
+    main.java.srcDirs += 'src/main/lib/sweetblue/src'
+  }
 }
 ```
 
@@ -97,8 +97,8 @@ main.java.srcDirs += 'src/main/lib/sweetblue/src'
 
 ```gradle
 dependencies {
-...
-compile fileTree(dir: 'libs', include: '*.jar')
+  ...
+  compile fileTree(dir: 'libs', include: '*.jar')
 }
 ```
 
@@ -117,31 +117,31 @@ compile fileTree(dir: 'libs', include: '*.jar')
 ```java
 BleManager.get(this).startScan(new DiscoveryListener()
 {
-@Override public void onEvent(DiscoveryEvent e)
-{
-if( e.was(LifeCycle.DISCOVERED) )
-{
-e.device().connect(new StateListener()
-{
-@Override public void onEvent(StateEvent e)
-{
-if( e.didEnter(BleDeviceState.INITIALIZED) )
-{
-e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
-{
-@Override public void onEvent(ReadWriteEvent e)
-{
-if( e.wasSuccess() )
-{
-Log.i("", "Battery level is " + e.data_byte() + "%");
-}
-}
-});
-}
-}
-});
-}
-}
+  @Override public void onEvent(DiscoveryEvent e)
+  {
+    if( e.was(LifeCycle.DISCOVERED) )
+    {
+      e.device().connect(new StateListener()
+      {
+        @Override public void onEvent(StateEvent e)
+        {
+          if( e.didEnter(BleDeviceState.INITIALIZED) )
+          {
+            e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
+            {
+              @Override public void onEvent(ReadWriteEvent e)
+              {
+                if( e.wasSuccess() )
+                {
+                  Log.i("", "Battery level is " + e.data_byte() + "%");
+                }
+              }
+            });
+          }
+        }
+      });
+    }
+  }
 });
 ```
 
