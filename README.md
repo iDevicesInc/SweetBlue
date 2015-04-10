@@ -100,48 +100,49 @@ Getting Started
         compile fileTree(dir: 'libs', include: '*.jar')
     }
     ```
-3. Now add these to the root of `MyApp/AndroidManifest.xml`:
-
-```xml
-<uses-sdk android:minSdkVersion="18" android:targetSdkVersion="21" />
-<uses-permission android:name="android.permission.BLUETOOTH" />
-<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-<uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
-<uses-permission android:name="android.permission.WAKE_LOCK" />
-<uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
-```
-
-4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
-```java
-BleManager.get(this).startScan(new DiscoveryListener()
-{
-    @Override public void onEvent(DiscoveryEvent e)
+ 3. Now add these to the root of `MyApp/AndroidManifest.xml`:
+ 
+    ```xml
+    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="21" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    ```
+        
+ 4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
+    ```java
+    BleManager.get(this).startScan(new DiscoveryListener()
     {
-        if( e.was(LifeCycle.DISCOVERED) )
-        {
-            e.device().connect(new StateListener()
-            {
-                @Override public void onEvent(StateEvent e)
-                {
-                    if( e.didEnter(BleDeviceState.INITIALIZED) )
-                    {
-                        e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
-                        {
-                            @Override public void onEvent(ReadWriteEvent e)
-                            {
-                                if( e.wasSuccess() )
-                                {
-                                    Log.i("", "Battery level is " + e.data_byte() + "%");
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        }
-    }
-});
-```
+    	@Override public void onEvent(DiscoveryEvent e)
+    	{
+    		if( e.was(LifeCycle.DISCOVERED) )
+    		{
+	    		e.device().connect(new StateListener()
+	    		{
+	    			@Override public void onEvent(StateEvent e)
+	    			{
+	    				if( e.didEnter(BleDeviceState.INITIALIZED) )
+	    				{
+	    					e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
+	    					{
+	    						@Override public void onEvent(ReadWriteEvent e)
+	    						{
+	    							if( e.wasSuccess() )
+	    							{
+	    								Log.i("", "Battery level is " + e.data_byte() + "%");
+	    							}
+	    						}
+	    					});
+	    				}
+	    			}
+	    		});
+	    	}
+    	}
+    });
+    ```
+
 
 Licensing
 =========
