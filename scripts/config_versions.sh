@@ -1,4 +1,4 @@
 #!/bin/sh
 
-SEMVER=1_26_10
+# SEMVER has moved to the gradle.properties file.
 ANDROID_API_LEVEL=19

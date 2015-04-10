@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'checkstyle'
 
 version = '1.0'
 
@@ -30,8 +31,14 @@ dependencies {
 }
 
 // Task definitions
+task checker(type: Checkstyle) {
+	configFile file("./config/checkstyle/checkstyle.xml")
+	source 'src'
+	include '**/*.java'
+	exclude '**/gen/**'	
+	classpath = files()
+}
 
-// This will make sure the main jar is created when running build
 jar {
 	archiveName = JAR_NAME
    	destinationDir = new File(JAR_DIR)
@@ -56,13 +63,15 @@ task gendocs(type: Javadoc) {
    options.windowTitle = "SweetBlue"
    options.memberLevel = JavadocMemberLevel.PROTECTED
    options.author = true
+   //options.compilerArgs << "-Xlint:all" << "-Werror"
+   //options.jFlags("-Xlint:all", "-Werror")
    options.linksOffline('http://d.android.com/reference', System.getenv("ANDROID_HOME") + '/docs/reference')
    //include("com.idevicesinc.sweetblue")
    String v = "${SEMVER}"
    version = v.replace("_", '.')
    destinationDir = new File("${BUNDLE_FOLDER}/docs/api")
    source = sourceSets.main.allJava
-   classpath += configurations.compile
+   classpath += configurations.compile   
 }
 
 task copyJavaDoc(type: Copy, dependsOn: gendocs) {
@@ -259,11 +268,22 @@ task cleanFolders << {
    delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
 }
 
+task updateReadmeVersion << {
+	String dver = SEMVER.replace("_", ".")
+	def line = "[![Version](https://img.shields.io/badge/version-" + dver + 
+	"-blue.svg)](https://img.shields.io/badge/version-" + dver + "-blue.svg)"
+	exec {
+		workingDir '../'
+		executable 'sed'
+		args "-i", "", "2s|.*|${line}|", "README.md"
+	}
+}
+
 // Perform full build, but do not zip anything, and do not clean folders
-task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense])
+task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense, updateReadmeVersion])
 
 // Convenience task to run all zip operations
-task fullBuild(dependsOn: [buildSamples, createStandardLicense, createProLicense, zipAll])
+task fullBuild(dependsOn: [buildSamples, createStandardLicense, createProLicense, zipAll, updateReadmeVersion])
 
 fullBuild.finalizedBy cleanFolders
 
