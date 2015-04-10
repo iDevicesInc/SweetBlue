@@ -100,7 +100,7 @@ Getting Started
         compile fileTree(dir: 'libs', include: '*.jar')
     }
     ```
- 3. Now add these to the root of `MyApp/AndroidManifest.xml`:
+3. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```xml
     <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="21" />
@@ -111,7 +111,7 @@ Getting Started
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     ```
         
- 4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
+4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
     ```java
     BleManager.get(this).startScan(new DiscoveryListener()
     {
