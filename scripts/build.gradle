@@ -31,7 +31,6 @@ dependencies {
 }
 
 // Task definitions
-
 task checker(type: Checkstyle) {
 	configFile file("./config/checkstyle/checkstyle.xml")
 	source 'src'
@@ -40,7 +39,6 @@ task checker(type: Checkstyle) {
 	classpath = files()
 }
 
-// This will make sure the main jar is created when running build
 jar {
 	archiveName = JAR_NAME
    	destinationDir = new File(JAR_DIR)
@@ -65,6 +63,8 @@ task gendocs(type: Javadoc) {
    options.windowTitle = "SweetBlue"
    options.memberLevel = JavadocMemberLevel.PROTECTED
    options.author = true
+   //options.compilerArgs << "-Xlint:all" << "-Werror"
+   //options.jFlags("-Xlint:all", "-Werror")
    options.linksOffline('http://d.android.com/reference', System.getenv("ANDROID_HOME") + '/docs/reference')
    //include("com.idevicesinc.sweetblue")
    String v = "${SEMVER}"
@@ -269,11 +269,6 @@ task cleanFolders << {
 }
 
 task updateReadmeVersion << {
-	exec {
-		workingDir '../'
-		executable 'sed'
-		args "-i", "", "2d", "README.md"
-	}
 	String dver = SEMVER.replace("_", ".")
 	def line = "[![Version](https://img.shields.io/badge/version-" + dver + 
 	"-blue.svg)](https://img.shields.io/badge/version-" + dver + "-blue.svg)"
@@ -285,10 +280,10 @@ task updateReadmeVersion << {
 }
 
 // Perform full build, but do not zip anything, and do not clean folders
-task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense])
+task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense, updateReadmeVersion])
 
 // Convenience task to run all zip operations
-task fullBuild(dependsOn: [buildSamples, createStandardLicense, createProLicense, zipAll])
+task fullBuild(dependsOn: [buildSamples, createStandardLicense, createProLicense, zipAll, updateReadmeVersion])
 
 fullBuild.finalizedBy cleanFolders
 
