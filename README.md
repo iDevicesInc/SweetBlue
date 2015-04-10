@@ -78,27 +78,29 @@ Getting Started
     2. Right click on `sweetblue_{version}.jar`.
     3. Hover over `Build Path->`.
     4. Click `Add to Build Path`.
-2. Else if using **Android Studio** or **Gradle**...
+ 2. Else if using **Android Studio** or **Gradle**...
   1. [Download](http://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/src/main/lib/.`
   2. Open the app module's `build.gradle` file.
   3. If building with source, add the following to `sourceSets`:
-```gradle
-android {
-    ...
-    sourceSets {
+ 
+    ```gradle
+    android {
         ...
-        main.java.srcDirs += 'src/main/lib/sweetblue/src'
+        sourceSets {
+            ...
+            main.java.srcDirs += 'src/main/lib/sweetblue/src'
+        }
     }
-}
-```
+    ```
+
   4. Else if building with JAR, add the following to `dependencies`:
 
-```gradle
-dependencies {
-    ...
-    compile fileTree(dir: 'libs', include: '*.jar')
-}
-```
+    ```gradle
+    dependencies {
+        ...
+        compile fileTree(dir: 'libs', include: '*.jar')
+    }
+    ```
 
 3. Now add these to the root of `MyApp/AndroidManifest.xml`:
 
