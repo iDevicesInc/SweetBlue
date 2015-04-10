@@ -82,7 +82,6 @@ Getting Started
   1. [Download](http://github.com/iDevicesInc/SweetBlue/releases) the latest release to a subfolder of your project such as `MyApp/src/main/lib/.`
   2. Open the app module's `build.gradle` file.
   3. If building with source, add the following to `sourceSets`:
-
 ```gradle
 android {
     ...
@@ -92,7 +91,6 @@ android {
     }
 }
 ```
-
   4. Else if building with JAR, add the following to `dependencies`:
 
 ```gradle
