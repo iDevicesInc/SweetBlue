@@ -1,4 +1,4 @@
-[![Build Status](http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue Library)](http://75.144.199.157:7117/job/SweetBlue%20Library/)
+[![Build Status](http://75.144.199.157:7117/job/SweetBlue%20Library/badge/icon)](http://75.144.199.157:7117/job/SweetBlue%20Library/)
 [![Version](https://img.shields.io/badge/version-1.26.10-blue.svg)](https://img.shields.io/badge/version-1.26.10-blue.svg)
 
 
