@@ -6,7 +6,6 @@
 <a href="http://75.144.199.157:7117/job/SweetBlue/">
   <img align="right" src="https://img.shields.io/badge/version-1.26.10-blue.svg" />
   <img align="right" src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/whitespace.bmp" />
-  <img align="right" src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/whitespace.bmp" />
   <img align="right" src="http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue Library"/>
 </a>
 
