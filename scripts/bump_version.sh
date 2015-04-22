@@ -7,14 +7,21 @@ nano=${vers[2]}
 
 performBump () {
 	sed -i '' 's/'${current}'/'${1}'/g' gradle.properties
+	nver=(${1//_/.})
+	sed -i '' 's/version-.*-blue/version-'${nver}'-blue/g' ../README.md
 }
 
 echo "Current SweetBlue version: ${current}"
 echo
-echo "Please format version like X_X_X (eg 1_26_10)"
-echo
 
-read -p "Enter new version: " newver
+if [ -z "${1}" ];
+then
+	echo "Please format version like X_X_X (eg 1_26_10)"
+	echo
+	read -p "Enter new version: " newver
+else
+	newver=$1
+fi
 
 if [ -z "${newver}" ]
 then
