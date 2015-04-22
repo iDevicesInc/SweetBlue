@@ -1,10 +1,10 @@
 #!/bin/sh
 
 source config.sh
-
-JAR_NAME=sweetblue_$SEMVER
-
+ver=$(sh echo_version.sh)
+JAR_NAME=sweetblue_$ver
 sh gradlew fullBuild
+cp $STAGE/sweetblue.zip $STAGE/$JAR_NAME.zip
 read -n 1 -p "Are you sure you want to upload? " sure
 if [ "$sure" = "y" -o "$sure" = "Y" ];
 	then
