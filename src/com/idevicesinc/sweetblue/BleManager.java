@@ -1109,7 +1109,7 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime)
 	{
-		startPeriodicScan(scanActiveTime, scanPauseTime, (ScanFilter)null, (DiscoveryListener)null);
+		startPeriodicScan(scanActiveTime, scanPauseTime, (ScanFilter) null, (DiscoveryListener) null);
 	}
 
 	/**
@@ -1525,16 +1525,24 @@ public class BleManager
 	/**
 	 * Shortcut for checking if {@link #getDevice(String)} returns {@link BleDevice#NULL}.
 	 */
-	public boolean hasDevice(String macAddress)
+	public boolean hasDevice(final String macAddress)
 	{
 		return !getDevice(macAddress).isNull();
+	}
+
+	/**
+	 * Calls {@link #hasDevice(String)}.
+	 */
+	public boolean hasDevice(final BleDevice device)
+	{
+		return hasDevice(device.getMacAddress());
 	}
 
 	/**
 	 * Might not be useful to outside world. Used for sanity/early-out checks internally. Keeping private for now.
 	 * Does referential equality check.
 	 */
-	private boolean hasDevice(BleDevice device)
+	private boolean hasDevice_private(BleDevice device)
 	{
 		return m_deviceMngr.has(device);
 	}

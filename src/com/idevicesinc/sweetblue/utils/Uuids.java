@@ -95,4 +95,12 @@ public class Uuids
 		
 		return UUID.fromString(uuid);
 	}
+
+	/**
+	 * Convenience forwarding of {@link UUID#fromString(String)}.
+	 */
+	public static UUID fromString(final String value)
+	{
+		return UUID.fromString(value);
+	}
 }

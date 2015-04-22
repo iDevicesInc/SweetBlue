@@ -1189,7 +1189,7 @@ public class BleDevice implements UsesCustomNull
 		 * The time parameters like {@link ConnectionFailEvent#attemptTime_latest()} are of optional use to you to decide if connecting again
 		 * is worth it. For example if you've been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
 		 */
-		Please onEvent(ConnectionFailEvent event);
+		Please onEvent(ConnectionFailEvent e);
 	}
 
 	/**
@@ -2435,12 +2435,21 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * Same as {@link #connect()} but calls {@link #setListener_State(StateListener)} and
 	 * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
-	 * 
+	 *
 	 * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener, ConnectionFailListener failListener)
 	{
 		return connect(null, null, stateListener, failListener);
+	}
+
+	/**
+	 * Same as {@link #connect(com.idevicesinc.sweetblue.BleDevice.StateListener, com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener)}
+	 * with reversed arguments.
+	 */
+	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(ConnectionFailListener failListener, StateListener stateListener)
+	{
+		return connect(stateListener, failListener);
 	}
 
 	/**
@@ -2940,7 +2949,7 @@ public class BleDevice implements UsesCustomNull
 	 * <br><br>
 	 * TIP: For shorter-running transactions consider using {@link #performTransaction(BleTransaction)}.
 	 * 
-	 * @return <code>true</code> if firmware update has started, otherwise <code>false</code> if device is either already
+	 * @return <code>true</code> if OTA has started, otherwise <code>false</code> if device is either already
 	 *         {@link BleDeviceState#PERFORMING_OTA} or is not {@link BleDeviceState#INITIALIZED}.
 	 * 
 	 * @see BleManagerConfig#includeOtaReadWriteTimesInAverage
@@ -3089,6 +3098,8 @@ public class BleDevice implements UsesCustomNull
 
 		m_reconnectMngr_longTerm.stop();
 		m_reconnectMngr_shortTerm.stop();
+		m_rssiPollMngr.stop();
+		m_rssiPollMngr_auto.stop();
 
 		stateTracker_main().set(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCOVERED, false, ADVERTISING, false, m_bondMngr.getNativeBondingStateOverrides(), DISCONNECTED, true);
 	}
