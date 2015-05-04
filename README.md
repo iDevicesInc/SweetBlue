@@ -66,7 +66,7 @@ Features
 Getting Started
 ===============
 1. If using **Eclipse**...
-  1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/libs/`.
+  1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/libs/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
   2. Open the `Package Explorer` view.
   3. Expand `MyApp/libs/sweetblue/`.
   4. If building with source...
@@ -79,7 +79,7 @@ Getting Started
     3. Hover over `Build Path->`.
     4. Click `Add to Build Path`.
 2. Else if using **Android Studio** or **Gradle**...
-  1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/src/main/lib/.`
+  1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/src/main/lib/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
   2. Open the app module's `build.gradle` file.
   3. If building with source, add the following to `sourceSets`:
 
