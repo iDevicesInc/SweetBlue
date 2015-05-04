@@ -8,7 +8,11 @@ nano=${vers[2]}
 performBump () {
 	sed -i '' 's/'${current}'/'${1}'/g' gradle.properties
 	nver=(${1//_/.})
-	sed -i '' 's/version-.*-blue/version-'${nver}'-blue/g' ../README.md
+	sed -i '' 's/version-.*-blue/version-'${nver}'-blue/g' ../README.md	
+	# Get the sha1 hash of the sweetblue version, and add this
+	# to the Uuids.java class, so we can tell versions of SB when scanning a store's apps
+	sha=$(echo -n $1 | openssl sha1)	
+	sed -i '' 's/BLUETOOTH_CONNECTED_HASH = \".*\"/BLUETOOTH_CONNECTED_HASH = \"'$sha'\"/g' ../src/com/idevicesinc/sweetblue/utils/Uuids.java
 }
 
 echo "Current SweetBlue version: ${current}"

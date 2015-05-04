@@ -24,11 +24,22 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "commons-codec:commons-codec:1.8"
+    }
+}
+dependencies {    
     compile files("${ANDROID_JAR}")
     testCompile 'junit:junit:4.10'
     testCompile 'org.robolectric:robolectric:2.4'
 }
+
+import org.apache.commons.codec.digest.DigestUtils
 
 // Task definitions
 task checker(type: Checkstyle) {
@@ -146,7 +157,7 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
         r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
     } else {
         String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples"
-        r = run.execute()
+        r = run.execute()                
     }
     r.waitFor()
     String v = r.exitValue()
@@ -271,6 +282,12 @@ task updateReadmeVersion << {
         workingDir '../'
         executable 'sed'
         args "-i", "", "s/version-.*-blue/version-${dver}-blue/g", "README.md"
+    }
+    String hash = DigestUtils.sha1Hex("${SEMVER}")
+    exec {
+        workingDir '../src/com/idevicesinc/sweetblue/utils'
+        executable 'sed'
+        args "-i", "", "s/BLUETOOTH_CONNECTED_HASH = \".*\"/BLUETOOTH_CONNECTED_HASH = \"${hash}\"/g", "Uuids.java"
     }
 }
 
