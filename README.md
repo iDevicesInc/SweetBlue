@@ -45,8 +45,8 @@ Features
 *	Undiscovery based on last time seen.
 *	Clean leakage of underlying native stack objects in case of emergency.
 *	Wraps Android API level checks that gate certain methods.
-*	Verbose logging that outputs human-readable thread IDs, UUIDs, status codes and states instead of alphabet soup.
-*	Wrangles a big bowl of thread spaghetti so you don’t have to - make a call on main thread, get a callback on main thread.
+*	Verbose [logging](https://github.com/iDevicesInc/SweetBlue/wiki/Logging) that outputs human-readable thread IDs, UUIDs, status codes and states instead of alphabet soup.
+*	Wrangles a big bowl of thread spaghetti behind a nice asynchronous API - make a call on main thread, get a callback on main thread a short time later.
 *	Internal priority job queue that ensures serialization of all operations so native stack doesn’t get overloaded and important stuff gets done first.
 *	Optimal coordination of the BLE stack when connected to multiple devices.
 *	Detection and correction of dozens of BLE failure conditions.
