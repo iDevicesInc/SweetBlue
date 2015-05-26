@@ -1,12 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
@@ -14,10 +7,15 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
-import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Uuids;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 class P_ServiceManager
 {
@@ -173,11 +171,11 @@ class P_ServiceManager
 		
 		int property = getProperty(type);
 		
-		if( (char_native.getProperties() & property) == 0x0 )
+		if( (char_native.getProperties() & property) != 0x0 )
 		{
 			//TODO: Use correct gatt status even though we never reach gatt layer?
 			ReadWriteEvent result = new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0);
-			
+
 			return result;
 		}
 		
