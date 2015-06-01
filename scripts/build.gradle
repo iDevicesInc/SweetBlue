@@ -11,6 +11,8 @@ ext.JAR_NAME = JAR_BASE_NAME + ".jar"
 ext.JAVADOC_JAR_NAME = JAR_BASE_NAME + "-javadoc.jar"
 ext.SOURCES_JAR_NAME = JAR_BASE_NAME + "-sources.jar"
 ext.ANDROID_JAR = System.getenv("ANDROID_HOME") + "/platforms/android-" + ANDROID_API_LEVEL + "/android.jar"
+ext.AS_SUFFIX = "/android_studio/app/libs"
+ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
@@ -105,31 +107,31 @@ def checkDir(String dir) {
     }
 }
 
-task copyStandardFolder(type: Copy, dependsOn: copyFiles) {
-    checkDir("${STAGE}/${STANDARD_DIR}")
-    from BUNDLE_FOLDER
-    into STAGE + "/" + STANDARD_DIR
-}
+//task copyStandardFolder(type: Copy, dependsOn: copyFiles) {
+//    checkDir("${STAGE}/${STANDARD_DIR}")
+//    from BUNDLE_FOLDER
+//    into STAGE + "/" + STANDARD_DIR
+//}
 
-task copyProFolder(type: Copy, dependsOn: copyFiles) {
-    checkDir("${STAGE}/${PRO_DIR}")
-    from BUNDLE_FOLDER
-    into STAGE + "/" + PRO_DIR
-}
+//task copyProFolder(type: Copy, dependsOn: copyFiles) {
+//    checkDir("${STAGE}/${PRO_DIR}")
+//    from BUNDLE_FOLDER
+//    into STAGE + "/" + PRO_DIR
+//}
 
-task createStandardLicense(dependsOn: copyStandardFolder) << {
-    String license = new File('./assets/license_template.html').getText('UTF-8')
-    String lic = license.replace("{{level}}", STANDARD)
-    lic = lic.replace("{{support}}", STANDARD_SUPPORT)
-    new File("${STAGE}/${STANDARD_DIR}/license.html").write(lic, 'UTF-8')
-}
+//task createStandardLicense(dependsOn: copyStandardFolder) << {
+//    String license = new File('./assets/license_template.html').getText('UTF-8')
+//    String lic = license.replace("{{level}}", STANDARD)
+//    lic = lic.replace("{{support}}", STANDARD_SUPPORT)
+//    new File("${STAGE}/${STANDARD_DIR}/license.html").write(lic, 'UTF-8')
+//}
 
-task createProLicense(dependsOn: copyProFolder) << {
-    String license = new File('./assets/license_template.html').getText('UTF-8')
-    String lic = license.replace("{{level}}", PRO)
-    lic = lic.replace("{{support}}", PRO_SUPPORT)
-    new File("${STAGE}/${PRO_DIR}/license.html").write(lic, 'UTF-8')
-}
+//task createProLicense(dependsOn: copyProFolder) << {
+//    String license = new File('./assets/license_template.html').getText('UTF-8')
+//    String lic = license.replace("{{level}}", PRO)
+//    lic = lic.replace("{{support}}", PRO_SUPPORT)
+//    new File("${STAGE}/${PRO_DIR}/license.html").write(lic, 'UTF-8')
+//}
 
 task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
     // If the directory already exists, wipe it out, and start over
@@ -171,81 +173,118 @@ ext.sampleHello = "${STAGE}/samples/samples/hello_ble/eclipse/lib"
 ext.sampleJarLocs = [sampleBleAS, sampleBle, sampleHelloAS, sampleHello]
 
 
-task copyAndRenameJars(dependsOn: getSamples) << {
-    sampleJarLocs.each { def targetName ->
-        copy {
-            from mainJar
-            into targetName
-            rename("_${SEMVER}", "")
-        }
-    }
-    sampleJarLocs.each { def targetName ->
-        copy {
-            from sourcesJar
-            into targetName
-            rename("_${SEMVER}", "")
-        }
-    }
-    sampleJarLocs.each { def targetName ->
-        copy {
-            from javadocJar
-            into targetName
-            rename("_${SEMVER}", "")
-        }
-    }
-}
+//task copyAndRenameJars(dependsOn: getSamples) << {
+//    sampleJarLocs.each { def targetName ->
+//        copy {
+//            from mainJar
+//            into targetName
+//            rename("_${SEMVER}", "")
+//        }
+//    }
+//    sampleJarLocs.each { def targetName ->
+///        copy {
+//            from sourcesJar
+//            into targetName
+//            rename("_${SEMVER}", "")
+//        }
+//    }
+//    sampleJarLocs.each { def targetName ->
+//        copy {
+//            from javadocJar
+//            into targetName
+//            rename("_${SEMVER}", "")
+//        }
+ //   }
+//}
 
-task copySamples(dependsOn: copyAndRenameJars) << {
-    String d = "${STAGE}/samples/samples"
-    copy {
-        from d
-        into "${STAGE}/${PRO_DIR}/samples"
-    }
-    copy {
-        from d
-        into "${STAGE}/${STANDARD_DIR}/samples"
-    }
+task copySamples(dependsOn: [copyFiles, getSamples] ) << {
+    String d = "${STAGE}/samples/samples"    
     copy {
         from d
         into "${BUNDLE_FOLDER}/samples"
     }
 }
 
-task buildStandardBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
-    buildFile = "${STAGE}/${STANDARD_DIR}/samples/ble_util/android_studio/app/build.gradle"
-    tasks = ['assemble']
+def buildSampleTask(buildDir) {
+    return tasks.create("build${buildDir}SampleTask", GradleBuild) {
+        buildFile = "${buildDir}/android_studio/app/build.gradle"
+        tasks = ['assemble']
+    }
 }
 
-task buildProBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
-    buildFile = "${STAGE}/${PRO_DIR}/samples/ble_util/android_studio/app/build.gradle"
-    tasks = ['assemble']
+task copyAndRenameJars(dependsOn: copySamples) << {
+    File sampleDir = new File("${STAGE}/samples/samples")    
+    FileCollection collection = files { sampleDir.listFiles() }
+    collection.each { File file ->
+        copy {
+            from mainJar
+            into file.getAbsolutePath() + AS_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from mainJar
+            into file.getAbsolutePath() + ECLIPSE_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from sourcesJar
+            into file.getAbsolutePath() + AS_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from sourcesJar
+            into file.getAbsolutePath() + ECLIPSE_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from javadocJar
+            into file.getAbsolutePath() + AS_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from javadocJar
+            into file.getAbsolutePath() + ECLIPSE_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        buildSampleTask(file.getAbsolutePath()).execute()
+    }
 }
 
-task buildStandardHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
-    buildFile = "${STAGE}/${STANDARD_DIR}/samples/hello_ble/android_studio/app/build.gradle"
-    tasks = ['assemble']
-}
+//task buildStandardBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
+//    buildFile = "${STAGE}/${STANDARD_DIR}/samples/ble_util/android_studio/app/build.gradle"
+//    tasks = ['assemble']
+//}
 
-task buildProHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
-    buildFile = "${STAGE}/${PRO_DIR}/samples/hello_ble/android_studio/app/build.gradle"
-    tasks = ['assemble']
-}
+//task buildProBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
+//    buildFile = "${STAGE}/${PRO_DIR}/samples/ble_util/android_studio/app/build.gradle"
+//    tasks = ['assemble']
+//}
 
-task buildSamples(dependsOn: [buildProBleUtilSample, buildProHelloBleSample, buildStandardBleUtilSample, buildStandardHelloBleSample])
+//task buildStandardHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
+//    buildFile = "${STAGE}/${STANDARD_DIR}/samples/hello_ble/android_studio/app/build.gradle"
+//    tasks = ['assemble']
+//}
 
-task zipStandard(type: Zip, dependsOn: [createStandardLicense, copySamples]) {
-    from "${STAGE}/${STANDARD_DIR}"
-    archiveName = "sweetblue_standard.zip"
-    destinationDir = new File("${STAGE}")
-}
+//task buildProHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
+//    buildFile = "${STAGE}/${PRO_DIR}/samples/hello_ble/android_studio/app/build.gradle"
+//    tasks = ['assemble']
+//}
 
-task zipPro(type: Zip, dependsOn: [createProLicense, copySamples]) {
-    from "${STAGE}/${PRO_DIR}"
-    archiveName = "sweetblue_professional.zip"
-    destinationDir = new File("${STAGE}")
-}
+//task buildSamples(dependsOn: [buildProBleUtilSample, buildProHelloBleSample, buildStandardBleUtilSample, buildStandardHelloBleSample])
 
-task copyGPL(dependsOn: [zipStandard, zipPro]) << {
+//task zipStandard(type: Zip, dependsOn: [createStandardLicense, copySamples]) {
+//    from "${STAGE}/${STANDARD_DIR}"
+//    archiveName = "sweetblue_standard.zip"
+//    destinationDir = new File("${STAGE}")
+//}
+
+//task zipPro(type: Zip, dependsOn: [createProLicense, copySamples]) {
+//    from "${STAGE}/${PRO_DIR}"
+//    archiveName = "sweetblue_professional.zip"
+//    destinationDir = new File("${STAGE}")
+//}
+
+task copyGPL(dependsOn: copyAndRenameJars) << {
     copy {
         from "../LICENSE"
         into "${BUNDLE_FOLDER}"
@@ -260,7 +299,7 @@ task zipTrial(type: Zip, dependsOn: copyGPL) {
 
 task zipJar(dependsOn: [zipTrial])
 
-task zipAll(dependsOn: [zipStandard, zipPro, zipJar])
+//task zipAll(dependsOn: [zipStandard, zipPro, zipJar])
 
 task cleanFolders << {
     delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
@@ -276,9 +315,11 @@ task updateReadmeVersion << {
 }
 
 // Perform full build, but do not zip anything, and do not clean folders
-task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense, updateReadmeVersion])
+//task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense, updateReadmeVersion])
+task bundleNoZip(dependsOn: [copyAndRenameJars, updateReadmeVersion])
 
 // Convenience task to run all zip operations
-task fullBuild(dependsOn: [buildSamples, createStandardLicense, createProLicense, zipAll, updateReadmeVersion])
+//task fullBuild(dependsOn: [buildSamples, createStandardLicense, createProLicense, zipAll, updateReadmeVersion])
+task fullBuild(dependsOn: [copyAndRenameJars, zipJar, updateReadmeVersion])
 
 fullBuild.finalizedBy cleanFolders
