@@ -15,6 +15,7 @@ ext.ANDROID_JAR = System.getenv("ANDROID_HOME") + "/platforms/android-" + ANDROI
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
+
 sourceSets {
     main.java.srcDir '../src/'
     test.java.srcDir '../test/'

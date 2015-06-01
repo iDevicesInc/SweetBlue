@@ -8,35 +8,56 @@ import com.idevicesinc.sweetblue.utils.State;
 
 class P_DiskOptionsManager
 {
-	//--- DRK > Just adding some salt to this to mitigate any possible conflict.
 	private static final int ACCESS_MODE = Context.MODE_PRIVATE;
-	
-	private final Context m_context;
-	
-	private final HashMap<String, Integer> m_inMemoryDb_lastDisconnect = new HashMap<String, Integer>();
-	private final HashMap<String, Boolean> m_inMemoryDb_needsBonding = new HashMap<String, Boolean>();
-	
+
+	//--- DRK > Just adding some salt to these to mitigate any possible conflict.
 	private static enum E_Namespace
 	{
 		LAST_DISCONNECT("sweetblue_16l@{&a}"),
-		NEEDS_BONDING("sweetblue_p59=F%k");
-		
+		NEEDS_BONDING("sweetblue_p59=F%k"),
+		DEVICE_NAME("sweetblue_qurhzpoc");
+
+
 		private final String m_key;
-		
+
 		private E_Namespace(final String key)
 		{
 			m_key = key;
 		}
-		
+
 		public String key()
 		{
 			return m_key;
 		}
 	}
 	
+	private final Context m_context;
+	
+	private final HashMap<String, Integer> m_inMemoryDb_lastDisconnect = new HashMap<String, Integer>();
+	private final HashMap<String, Boolean> m_inMemoryDb_needsBonding = new HashMap<String, Boolean>();
+	private final HashMap<String, String> m_inMemoryDb_name = new HashMap<String, String>();
+
+	private final HashMap[] m_inMemoryDbs = new HashMap[E_Namespace.values().length];
+	
 	public P_DiskOptionsManager(Context context)
 	{
 		m_context = context;
+
+		m_inMemoryDbs[E_Namespace.LAST_DISCONNECT.ordinal()] = m_inMemoryDb_lastDisconnect;
+		m_inMemoryDbs[E_Namespace.NEEDS_BONDING.ordinal()] = m_inMemoryDb_needsBonding;
+		m_inMemoryDbs[E_Namespace.DEVICE_NAME.ordinal()] = m_inMemoryDb_name;
+
+		final E_Namespace[] values = E_Namespace.values();
+
+		for( int i = 0; i < values.length; i++ )
+		{
+			Object ith = m_inMemoryDbs[i];
+
+			if( ith == null )
+			{
+				throw new Error("Expected in-memory DB to be not null");
+			}
+		}
 	}
 	
 	private SharedPreferences prefs(E_Namespace namespace)
@@ -103,5 +124,70 @@ class P_DiskOptionsManager
 		final boolean value_disk = prefs.getBoolean(mac, false);
 		
 		return value_disk;
+	}
+
+	public void saveName(final String mac, final String name, final boolean hitDisk)
+	{
+		final String name_override = name != null ? name : "";
+
+		m_inMemoryDb_name.put(mac, name_override);
+
+		if( !hitDisk )  return;
+
+		prefs(E_Namespace.DEVICE_NAME).edit().putString(mac, name_override).commit();
+	}
+
+	public String loadName(final String mac, final boolean hitDisk)
+	{
+		final String value_memory = m_inMemoryDb_name.get(mac);
+
+		if( value_memory != null )
+		{
+			return value_memory;
+		}
+
+		if( !hitDisk )  return null;
+
+		final SharedPreferences prefs = prefs(E_Namespace.DEVICE_NAME);
+
+		final String value_disk = prefs.getString(mac, null);
+
+		return value_disk;
+	}
+
+	void clear()
+	{
+		final E_Namespace[] values = E_Namespace.values();
+
+		for( int i = 0; i < values.length; i++ )
+		{
+			final SharedPreferences prefs = prefs(values[i]);
+			prefs.edit().clear().commit();
+
+			final HashMap ith = m_inMemoryDbs[i];
+
+			if( ith != null )
+			{
+				ith.clear();
+			}
+		}
+	}
+
+	void clear(final String macAddress)
+	{
+		final E_Namespace[] values = E_Namespace.values();
+
+		for( int i = 0; i < values.length; i++ )
+		{
+			final SharedPreferences prefs = prefs(values[i]);
+			prefs.edit().remove(macAddress).commit();
+
+			final HashMap ith = m_inMemoryDbs[i];
+
+			if( ith != null )
+			{
+				ith.remove(macAddress);
+			}
+		}
 	}
 }

@@ -102,6 +102,14 @@ public class Percent extends Unit<Percent>
 	{
 		return new Percent(value);
 	}
+
+	/**
+	 * Returns a new instance clamped between 0% and 100%, regardless of input value.
+	 */
+	public static Percent fromInt_clamped(final int value)
+	{
+		return new Percent(clamp(value));
+	}
 	
 	@Override public String toString()
 	{

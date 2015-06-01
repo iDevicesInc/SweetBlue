@@ -116,9 +116,8 @@ class P_ServiceManager
 		return new ReadWriteEvent(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0);
 	}
 	
-	BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
+	BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type, final Target target)
 	{
-		final Target target = uuid == Uuids.INVALID ? Target.RSSI : Target.CHARACTERISTIC;
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
 		if( m_device.isNull() )
@@ -169,7 +168,7 @@ class P_ServiceManager
 			{
 				return new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
 			}
-		}		
+		}
 		
 		int property = getProperty(type);
 		

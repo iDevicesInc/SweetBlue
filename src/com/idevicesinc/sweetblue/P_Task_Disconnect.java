@@ -7,14 +7,22 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	private final boolean m_cancellableByConnect;
 	private Integer m_overrideOrdinal = null;
+
+	private final boolean m_saveLastDisconnect;
 	
 	public P_Task_Disconnect(BleDevice device, I_StateListener listener, boolean explicit, PE_TaskPriority priority, final boolean cancellableByConnect)
 	{
+		this(device, listener, explicit, priority, cancellableByConnect, false);
+	}
+
+	public P_Task_Disconnect(BleDevice device, I_StateListener listener, boolean explicit, PE_TaskPriority priority, final boolean cancellableByConnect, final boolean saveLastDisconnect)
+	{
 		super(device, listener);
-		
+
+		m_saveLastDisconnect = saveLastDisconnect;
 		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
 		m_explicit = explicit;
-		
+
 		m_cancellableByConnect = cancellableByConnect;
 	}
 	
@@ -38,6 +46,11 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 	@Override public boolean isExplicit()
 	{
 		return m_explicit;
+	}
+
+	public boolean shouldSaveLastDisconnect()
+	{
+		return m_saveLastDisconnect;
 	}
 	
 	@Override public void execute()

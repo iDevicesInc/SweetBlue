@@ -49,7 +49,7 @@ public @interface Nullable
 		/**
 		 * For method return values, returning <code>null</code> will never happen.
 		 * <br><br>
-		 * For method input parameters, passing  <code>null</code> is not allowed and may result in an {@link Exception}.
+		 * For method input parameters, passing <code>null</code> is not allowed and may result in an {@link Exception}.
 		 */
 		NEVER;
 	}

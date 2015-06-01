@@ -47,7 +47,7 @@ class P_TransactionManager
 			{
 				if (reason == EndReason.SUCCEEDED)
 				{
-					m_device.getPollManager().enableNotifications();
+					m_device.getPollManager().enableNotifications_assumesWeAreConnected();
 					
 					if ( m_initTxn != null)
 					{
@@ -346,7 +346,7 @@ class P_TransactionManager
 			E_Intent intent = m_device.lastConnectDisconnectIntent();
 			if( m_authTxn == null && m_initTxn == null )
 			{
-				m_device.getPollManager().enableNotifications();
+				m_device.getPollManager().enableNotifications_assumesWeAreConnected();
 				
 				m_device.onFullyInitialized(gattStatus, extraFlags);
 			}
@@ -358,7 +358,7 @@ class P_TransactionManager
 			}
 			else if( m_initTxn != null )
 			{
-				m_device.getPollManager().enableNotifications();
+				m_device.getPollManager().enableNotifications_assumesWeAreConnected();
 				
 				m_device.stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATED, true, INITIALIZING, true);
 				

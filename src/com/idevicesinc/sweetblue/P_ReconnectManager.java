@@ -211,7 +211,7 @@ class P_ReconnectManager
 			
 			if( m_isShortTerm )
 			{
-				m_device.onNativeDisconnect(/*wasExplicit=*/false, gattStatusOfOriginalDisconnect, /*doShortTermReconnect=*/false);
+				m_device.onNativeDisconnect(/*wasExplicit=*/false, gattStatusOfOriginalDisconnect, /*doShortTermReconnect=*/false, /*saveLastDisconnect=*/true);
 			}
 			else
 			{

@@ -134,13 +134,16 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		//---		higher priority than notification enabling. Otherwise we don't care.
 		else if( task instanceof P_Task_ToggleNotify )
 		{
-			if( !(this instanceof P_Task_ToggleNotify) )
-			{
-				if( this.getDevice().is_internal(BleDeviceState.INITIALIZED) )
-				{
-					return true;
-				}
-			}
+			//--- DRK > NOTE: Disabling this now because some protocols use a write/notify combination to "read" data from a device.
+			//---		Why not just use read? Who knows, but it happens. The below logic would mean that for enableNotify and then write,
+			//---		the write task would skip ahead of the enable notify, which could cause some problems.
+//			if( !(this instanceof P_Task_ToggleNotify) )
+//			{
+//				if( this.getDevice().is_internal(BleDeviceState.INITIALIZED) )
+//				{
+//					return true;
+//				}
+//			}
 		}
 		
 		return super.isMoreImportantThan(task);
