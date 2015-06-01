@@ -42,11 +42,13 @@ task checker(type: Checkstyle) {
     classpath = files()
 }
 
+// Creates Sweetblue jar
 jar {
     archiveName = JAR_NAME
     destinationDir = new File(JAR_DIR)
 }
 
+// Create the source Jar
 task sourceJar(type: Jar, dependsOn: jar) {
     archiveName = SOURCES_JAR_NAME
     classifier = 'sources'
@@ -61,6 +63,7 @@ if (JavaVersion.current().isJava8Compatible()) {
     }
 }
 
+// Generate javadocs
 task gendocs(type: Javadoc) {
     options.stylesheetFile = new File("./assets/doc_style.css")
     options.windowTitle = "SweetBlue"
@@ -80,6 +83,7 @@ task copyJavaDoc(type: Copy, dependsOn: gendocs) {
     into "${BUNDLE_FOLDER}/docs/api"
 }
 
+// Create javadoc jar file
 task javadocJar(type: Jar, dependsOn: copyJavaDoc) {
     classifier = 'javadoc'
     archiveName = JAVADOC_JAR_NAME
@@ -107,32 +111,7 @@ def checkDir(String dir) {
     }
 }
 
-//task copyStandardFolder(type: Copy, dependsOn: copyFiles) {
-//    checkDir("${STAGE}/${STANDARD_DIR}")
-//    from BUNDLE_FOLDER
-//    into STAGE + "/" + STANDARD_DIR
-//}
-
-//task copyProFolder(type: Copy, dependsOn: copyFiles) {
-//    checkDir("${STAGE}/${PRO_DIR}")
-//    from BUNDLE_FOLDER
-//    into STAGE + "/" + PRO_DIR
-//}
-
-//task createStandardLicense(dependsOn: copyStandardFolder) << {
-//    String license = new File('./assets/license_template.html').getText('UTF-8')
-//    String lic = license.replace("{{level}}", STANDARD)
-//    lic = lic.replace("{{support}}", STANDARD_SUPPORT)
-//    new File("${STAGE}/${STANDARD_DIR}/license.html").write(lic, 'UTF-8')
-//}
-
-//task createProLicense(dependsOn: copyProFolder) << {
-//    String license = new File('./assets/license_template.html').getText('UTF-8')
-//    String lic = license.replace("{{level}}", PRO)
-//    lic = lic.replace("{{support}}", PRO_SUPPORT)
-//    new File("${STAGE}/${PRO_DIR}/license.html").write(lic, 'UTF-8')
-//}
-
+// Pull down the samples repo
 task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
     // If the directory already exists, wipe it out, and start over
     // again, so this doesn't fail the build
@@ -159,44 +138,12 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
 
 }
 
-// Copy current jar files into samples folders, and strip off the version
-// number
+
 ext.mainJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}.jar"
 ext.sourcesJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-sources.jar"
 ext.javadocJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-javadoc.jar"
 
-ext.sampleBleAS = "${STAGE}/samples/samples/ble_util/android_studio/app/libs"
-ext.sampleBle = "${STAGE}/samples/samples/ble_util/eclipse/lib"
-ext.sampleHelloAS = "${STAGE}/samples/samples/hello_ble/android_studio/app/libs"
-ext.sampleHello = "${STAGE}/samples/samples/hello_ble/eclipse/lib"
-
-ext.sampleJarLocs = [sampleBleAS, sampleBle, sampleHelloAS, sampleHello]
-
-
-//task copyAndRenameJars(dependsOn: getSamples) << {
-//    sampleJarLocs.each { def targetName ->
-//        copy {
-//            from mainJar
-//            into targetName
-//            rename("_${SEMVER}", "")
-//        }
-//    }
-//    sampleJarLocs.each { def targetName ->
-///        copy {
-//            from sourcesJar
-//            into targetName
-//            rename("_${SEMVER}", "")
-//        }
-//    }
-//    sampleJarLocs.each { def targetName ->
-//        copy {
-//            from javadocJar
-//            into targetName
-//            rename("_${SEMVER}", "")
-//        }
- //   }
-//}
-
+// Copy the samples to the bundle folder
 task copySamples(dependsOn: [copyFiles, getSamples] ) << {
     String d = "${STAGE}/samples/samples"    
     copy {
@@ -205,6 +152,7 @@ task copySamples(dependsOn: [copyFiles, getSamples] ) << {
     }
 }
 
+// Creates a new gradle build task for the input build.gradle file
 def buildSampleTask(buildDir) {
     return tasks.create("build${buildDir}SampleTask", GradleBuild) {
         buildFile = "${buildDir}/android_studio/app/build.gradle"
@@ -212,6 +160,8 @@ def buildSampleTask(buildDir) {
     }
 }
 
+// Copy the new sweetblue jar, sourcejar, and javadoc jars to each sample AS
+// project, and build 
 task copyAndRenameJars(dependsOn: copySamples) << {
     File sampleDir = new File("${STAGE}/samples/samples")    
     FileCollection collection = files { sampleDir.listFiles() }
@@ -250,40 +200,6 @@ task copyAndRenameJars(dependsOn: copySamples) << {
     }
 }
 
-//task buildStandardBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
-//    buildFile = "${STAGE}/${STANDARD_DIR}/samples/ble_util/android_studio/app/build.gradle"
-//    tasks = ['assemble']
-//}
-
-//task buildProBleUtilSample(type: GradleBuild, dependsOn: copySamples) {
-//    buildFile = "${STAGE}/${PRO_DIR}/samples/ble_util/android_studio/app/build.gradle"
-//    tasks = ['assemble']
-//}
-
-//task buildStandardHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
-//    buildFile = "${STAGE}/${STANDARD_DIR}/samples/hello_ble/android_studio/app/build.gradle"
-//    tasks = ['assemble']
-//}
-
-//task buildProHelloBleSample(type: GradleBuild, dependsOn: copySamples) {
-//    buildFile = "${STAGE}/${PRO_DIR}/samples/hello_ble/android_studio/app/build.gradle"
-//    tasks = ['assemble']
-//}
-
-//task buildSamples(dependsOn: [buildProBleUtilSample, buildProHelloBleSample, buildStandardBleUtilSample, buildStandardHelloBleSample])
-
-//task zipStandard(type: Zip, dependsOn: [createStandardLicense, copySamples]) {
-//    from "${STAGE}/${STANDARD_DIR}"
-//    archiveName = "sweetblue_standard.zip"
-//    destinationDir = new File("${STAGE}")
-//}
-
-//task zipPro(type: Zip, dependsOn: [createProLicense, copySamples]) {
-//    from "${STAGE}/${PRO_DIR}"
-//    archiveName = "sweetblue_professional.zip"
-//    destinationDir = new File("${STAGE}")
-//}
-
 task copyGPL(dependsOn: copyAndRenameJars) << {
     copy {
         from "../LICENSE"
@@ -299,8 +215,6 @@ task zipTrial(type: Zip, dependsOn: copyGPL) {
 
 task zipJar(dependsOn: [zipTrial])
 
-//task zipAll(dependsOn: [zipStandard, zipPro, zipJar])
-
 task cleanFolders << {
     delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
 }
@@ -315,11 +229,9 @@ task updateReadmeVersion << {
 }
 
 // Perform full build, but do not zip anything, and do not clean folders
-//task bundleNoZip(dependsOn: [buildSamples, createStandardLicense, createProLicense, updateReadmeVersion])
 task bundleNoZip(dependsOn: [copyAndRenameJars, updateReadmeVersion])
 
 // Convenience task to run all zip operations
-//task fullBuild(dependsOn: [buildSamples, createStandardLicense, createProLicense, zipAll, updateReadmeVersion])
 task fullBuild(dependsOn: [copyAndRenameJars, zipJar, updateReadmeVersion])
 
 fullBuild.finalizedBy cleanFolders
