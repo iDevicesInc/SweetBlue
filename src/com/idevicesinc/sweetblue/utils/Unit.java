@@ -78,13 +78,13 @@ public abstract class Unit<T>
 	/**
 	 * Returns a new instance that is the result of doing <code>this - other</code>.
 	 */
-	public T minus(Unit<T> other)
+	public Unit<T> minus(Unit<T> other)
 	{
-		if( other == null )  return (T) this;
+		if( other == null )  return this;
 		
 		final double result_raw = this.getRawValue() - other.getRawValue();
 		
-		return (T) newInstance(result_raw);
+		return newInstance(result_raw);
 	}
 	
 	/**
@@ -124,7 +124,7 @@ public abstract class Unit<T>
 	}
 	
 	/**
-	 * Hashes {@link #getRawValue()} to an <code>int</code>
+	 * Hashes {@link #getRawValue()} to an <code>int</code> using {@link Double#hashCode()}.
 	 */
 	@Override public int hashCode()
 	{

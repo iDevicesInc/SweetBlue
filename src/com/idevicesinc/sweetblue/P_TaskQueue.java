@@ -144,6 +144,8 @@ class P_TaskQueue
 			
 			index = m_queue.size()-1;
 		}
+
+		task.assignDefaultOrdinal(this);
 		
 		softlyCancelTasks(task);
 		

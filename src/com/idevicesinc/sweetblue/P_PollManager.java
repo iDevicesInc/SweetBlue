@@ -112,6 +112,8 @@ class P_PollManager
 			m_device = device;
 			m_usingNotify = usingNotify;
 			m_notifyState = E_NotifyState.NOT_ENABLED;
+
+			m_timeTracker = interval; // to get it to do a first read pretty much instantly.
 			
 			if( trackChanges || m_usingNotify)
 			{
@@ -254,7 +256,7 @@ class P_PollManager
 		
 		if( usingNotify )
 		{
-			E_NotifyState state = getNotifyState(uuid);
+			final E_NotifyState state = getNotifyState(uuid);
 			newEntry.m_notifyState = state;
 		}
 
@@ -348,7 +350,7 @@ class P_PollManager
 		}
 	}
 	
-	void enableNotifications()
+	void enableNotifications_assumesWeAreConnected()
 	{
 		for( int i = 0; i < m_entries.size(); i++ )
 		{
@@ -370,7 +372,7 @@ class P_PollManager
 				
 				if( notifyState == E_NotifyState.NOT_ENABLED )
 				{
-					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION);
+					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.getServiceManager().getEarlyOutResult(ithEntry.m_uuid, BleDevice.EMPTY_BYTE_ARRAY, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
 					
 					if( earlyOutResult != null )
 					{
@@ -389,7 +391,7 @@ class P_PollManager
 				
 				if( notifyState == E_NotifyState.ENABLED && ithEntry.m_notifyState != E_NotifyState.ENABLED )
 				{
-					ReadWriteEvent result = newAlreadyEnabledResult(characteristic);
+					ReadWriteEvent result = newAlreadyEnabledResult(characteristic, ithEntry.m_uuid);
 					ithEntry.m_pollingReadListener.onEvent(result);
 				}
 				
@@ -398,12 +400,12 @@ class P_PollManager
 		}
 	}
 	
-	ReadWriteEvent newAlreadyEnabledResult(P_Characteristic characteristic)
+	ReadWriteEvent newAlreadyEnabledResult(P_Characteristic characteristic, final UUID uuid)
 	{
 		//--- DRK > Just being anal with the null check here.
 		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic.getNative(), /*enable=*/true) : BleDevice.EMPTY_BYTE_ARRAY;
 		int gattStatus = BluetoothGatt.GATT_SUCCESS;
-		ReadWriteEvent result = new ReadWriteEvent(m_device, characteristic.getUuid(), Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0);
+		ReadWriteEvent result = new ReadWriteEvent(m_device, uuid, Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0);
 		
 		return result;
 	}

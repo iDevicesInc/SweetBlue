@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 
 class P_NativeDeviceWrapper
@@ -11,35 +12,67 @@ class P_NativeDeviceWrapper
 	private final BluetoothDevice m_native;
 	private	BluetoothGatt m_gatt;
 	private final String m_address;
-	private final String m_nativeName;
-	private final String m_normalizedName;
-	private final String m_debugName;
 	private final P_Logger m_logger;
 	private final BleManager m_mngr;
+
+	private String m_name_native;
+	private String m_name_normalized;
+	private String m_name_debug;
+	private String m_name_override;
 	
 	//--- DRK > We have to track connection state ourselves because using
 	//---		BluetoothManager.getConnectionState() is slightly out of date
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
 	private	Integer m_nativeConnectionState = null;
 	
-	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String normalizedName, String nativeName)
+	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String name_normalized, String name_native)
 	{
 		m_device = device;
 		m_native = device_native;
 		m_address = m_native == null || m_native.getAddress() == null ? BleDevice.NULL_MAC() : m_native.getAddress();
-		
-		nativeName = nativeName != null ? nativeName : "";
-		m_nativeName = nativeName;
-		
-		m_normalizedName = normalizedName;
-		
-		String[] address_split = m_address.split(":");
-		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
-		String debugName = m_normalizedName.length() == 0 ? "<no_name>" : m_normalizedName;
-		m_debugName = m_native != null ? debugName + "_" + lastFourOfMac : debugName;
-		
 		m_logger = m_device.getManager().getLogger();
 		m_mngr = m_device.getManager();
+
+		updateName(name_native, name_normalized);
+
+		//--- DRK > Manager can be null for BleDevice.NULL.
+		final boolean hitDiskForOverrideName = true;
+		final String name_disk = m_mngr == null ? m_mngr.m_diskOptionsMngr.loadName(m_device.getMacAddress(), hitDiskForOverrideName) : null;
+
+		if( name_disk != null )
+		{
+			setName_override(name_disk);
+		}
+		else
+		{
+			setName_override(m_name_native);
+		}
+	}
+
+	void setName_override(final String name)
+	{
+		m_name_override = name != null ? name : "";
+	}
+
+	void updateNativeName(final String name_native)
+	{
+		final String name_native_override = name_native != null ? name_native : "";
+		final String name_normalized = Utils.normalizeDeviceName(name_native_override);
+
+		updateName(name_native_override, name_normalized);
+	}
+
+	private void updateName(String name_native, String name_normalized)
+	{
+		name_native = name_native != null ? name_native : "";
+		m_name_native = name_native;
+
+		m_name_normalized = name_normalized;
+
+		String[] address_split = m_address.split(":");
+		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
+		String debugName = m_name_normalized.length() == 0 ? "<no_name>" : m_name_normalized;
+		m_name_debug = m_native != null ? debugName + "_" + lastFourOfMac : debugName;
 	}
 	
 	public String getAddress()
@@ -54,17 +87,22 @@ class P_NativeDeviceWrapper
 	
 	public String getNormalizedName()
 	{
-		return m_normalizedName;
+		return m_name_normalized;
 	}
 	
 	public String getNativeName()
 	{
-		return m_nativeName;
+		return m_name_native;
+	}
+
+	public String getName_override()
+	{
+		return m_name_override;
 	}
 	
 	public String getDebugName()
 	{
-		return m_debugName;
+		return m_name_debug;
 	}
 	
 	public BluetoothDevice getDevice()

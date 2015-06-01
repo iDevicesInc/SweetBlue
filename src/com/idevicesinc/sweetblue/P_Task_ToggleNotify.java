@@ -141,21 +141,33 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		 
 		super.succeed();
 	}
-	
+
 	public void onDescriptorWrite(BluetoothGatt gatt, UUID descUuid, int status)
 	{
-		 getManager().ASSERT(gatt == getDevice().getNativeGatt());
-		 
-		 if( !descUuid.equals(m_descUuid) )  return;
+		getManager().ASSERT(gatt == getDevice().getNativeGatt());
 
-		 if( Utils.isSuccess(status) )
-		 {
-			 succeed();
-		 }
-		 else
-		 {
-			 fail(Status.REMOTE_GATT_FAILURE, status, Target.DESCRIPTOR, m_uuid, descUuid);
-		 }
+		if( !descUuid.equals(m_descUuid) ) return;
+
+		final boolean isConnected = getDevice().is_internal(BleDeviceState.CONNECTED);
+
+		if( isConnected && Utils.isSuccess(status))
+		{
+			succeed();
+		}
+		else
+		{
+			if( !isConnected && Utils.isSuccess(status) )
+			{
+				//--- DRK > Trying to catch a case that I currently can't explain any other way.
+				getManager().ASSERT(false, "Successfully enabled notification but device isn't connected.");
+
+				fail(Status.CANCELLED_FROM_DISCONNECT, status, Target.DESCRIPTOR, m_uuid, descUuid);
+			}
+			else
+			{
+				fail(Status.REMOTE_GATT_FAILURE, status, Target.DESCRIPTOR, m_uuid, descUuid);
+			}
+		}
 	}
 	
 	@Override public void onStateChange(PA_Task task, PE_TaskState state)

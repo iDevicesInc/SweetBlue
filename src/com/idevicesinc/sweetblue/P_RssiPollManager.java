@@ -82,7 +82,7 @@ class P_RssiPollManager
 		
 		if( m_timeTracker >= m_interval && !m_waitingOnResponse)
 		{
-			if( m_device.is(BleDeviceState.CONNECTED) )
+			if( m_device.is(BleDeviceState.INITIALIZED) )
 			{
 				m_waitingOnResponse = true;
 				m_device.readRssi_internal(Type.POLL, m_listener);	

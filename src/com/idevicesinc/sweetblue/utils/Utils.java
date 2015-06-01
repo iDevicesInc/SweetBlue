@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import com.idevicesinc.sweetblue.BleDeviceConfig;
@@ -94,6 +95,21 @@ public class Utils
 		consistentName = consistentName.replace(" ", "_");
 		
 		return consistentName;
+	}
+
+	public static boolean contains(final Object[] uuids, final Object uuid)
+	{
+		for( int i = 0; i < uuids.length; i++ )
+		{
+			final Object ith = uuids[i];
+
+			if( ith.equals(uuid) )
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static boolean haveMatchingIds(List<UUID> advertisedIds, Collection<UUID> lookedForIds)
@@ -485,5 +501,75 @@ public class Utils
 		}
 		
 		return builder.toString();
+	}
+
+	public static byte[] shortToBytes(short l)
+	{
+		byte[] result = new byte[2];
+		for( short i = 1; i >= 0; i-- )
+		{
+			result[i] = (byte) (l & 0xFF);
+			l >>= 8;
+		}
+		return result;
+	}
+
+	public static short bytesToShort(byte[] b)
+	{
+		short result = 0;
+		for( short i = 0; i < 2; i++ )
+		{
+			result <<= 8;
+			result |= (b[i] & 0xFF);
+		}
+
+		return result;
+	}
+
+	public static byte[] intToBytes(int l)
+	{
+		byte[] result = new byte[4];
+		for( int i = 3; i >= 0; i-- )
+		{
+			result[i] = (byte) (l & 0xFF);
+			l >>= 8;
+		}
+		return result;
+	}
+
+	public static int bytesToInt(byte[] b)
+	{
+		int result = 0;
+		for( int i = 0; i < 4; i++ )
+		{
+			result <<= 8;
+			result |= (b[i] & 0xFF);
+		}
+
+		return result;
+	}
+
+
+
+	public static byte[] longToBytes(long l)
+	{
+		byte[] result = new byte[8];
+		for( int i = 7; i >= 0; i-- )
+		{
+			result[i] = (byte) (l & 0xFF);
+			l >>= 8;
+		}
+		return result;
+	}
+
+	public static long bytesToLong(byte[] b)
+	{
+		long result = 0;
+		for( int i = 0; i < 8; i++ )
+		{
+			result <<= 8;
+			result |= (b[i] & 0xFF);
+		}
+		return result;
 	}
 }

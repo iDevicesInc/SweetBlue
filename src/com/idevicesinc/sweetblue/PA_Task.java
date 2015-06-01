@@ -14,6 +14,8 @@ abstract class PA_Task
 	{
 		void onStateChange(PA_Task task, PE_TaskState state);
 	}
+
+	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
 	private final BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new TimeoutRequestEvent();
 	
@@ -49,7 +51,7 @@ abstract class PA_Task
 	
 	protected final P_Logger m_logger;
 	
-	private int m_ordinal = -1; // until added to the queue and assigned an actual ordinal.
+	private int m_defaultOrdinal = ORDINAL_NOT_YET_ASSIGNED; // until added to the queue and assigned an actual ordinal.
 	
 	private final Runnable m_executeRunnable = new Runnable()
 	{
@@ -161,13 +163,17 @@ abstract class PA_Task
 	
 	int getOrdinal()
 	{
-		return m_ordinal;
+		return m_defaultOrdinal;
+	}
+
+	void assignDefaultOrdinal(final P_TaskQueue queue)
+	{
+		m_defaultOrdinal = m_defaultOrdinal == ORDINAL_NOT_YET_ASSIGNED ? queue.assignOrdinal() : m_defaultOrdinal;
 	}
 	
 	void onAddedToQueue(P_TaskQueue queue)
 	{
 		m_queue = queue;
-		m_ordinal = getQueue().assignOrdinal();
 		setState(PE_TaskState.QUEUED);
 //		m_retryCount = 0;
 		m_updateCount = 0;

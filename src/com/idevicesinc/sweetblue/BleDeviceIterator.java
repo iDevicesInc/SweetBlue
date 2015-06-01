@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -10,6 +11,7 @@ import java.util.NoSuchElementException;
  */
 public class BleDeviceIterator implements Iterator<BleDevice>
 {
+	private final List<Integer> m_all_states;
 	private final List<BleDevice> m_all;
 	private final Object[] m_query;
 	private final int m_mask;
@@ -23,6 +25,10 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		m_all = all;
 		m_query = null;
 		m_mask = BleDeviceState.FULL_MASK;
+
+		m_all_states = null;
+
+		initStateList();
 	}
 	
 	public BleDeviceIterator(List<BleDevice> all, final int mask)
@@ -30,6 +36,10 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		m_all = all;
 		m_query = null;
 		m_mask = mask;
+
+		m_all_states = new ArrayList<Integer>();
+
+		initStateList();
 	}
 	
 	public BleDeviceIterator(List<BleDevice> all, Object ... query)
@@ -37,6 +47,22 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		m_all = all;
 		m_query = query;
 		m_mask = 0x0;
+
+		m_all_states = new ArrayList<Integer>();
+
+		initStateList();
+	}
+
+	private void initStateList()
+	{
+		if( m_all_states == null )  return;
+
+		for( int i = 0; i < m_all.size(); i++ )
+		{
+			final BleDevice ith = m_all.get(i);
+
+			m_all_states.add(ith.getStateMask());
+		}
 	}
 	
 	@Override public boolean hasNext()
@@ -57,9 +83,9 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		{
 			for( int i = m_base; i < m_all.size(); i++ )
 			{
-				BleDevice device = m_all.get(i);
+				final int mask = m_all_states != null ? m_all_states.get(i) : BleDeviceState.FULL_MASK;
 				
-				if( device.isAny(m_mask) )
+				if( (mask & m_mask) != 0x0 )
 				{
 					m_next = i;
 					
@@ -71,9 +97,9 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 		{
 			for( int i = m_base; i < m_all.size(); i++ )
 			{
-				BleDevice device = m_all.get(i);
+				final int mask = m_all_states != null ? m_all_states.get(i) : BleDeviceState.FULL_MASK;
 				
-				if( device.is(m_query) )
+				if( BleDevice.is_query(mask, m_query) )
 				{
 					m_next = i;
 					

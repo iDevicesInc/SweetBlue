@@ -69,7 +69,6 @@ public abstract class BleTransaction
 	private BleDevice m_device = null;
 	private PI_EndListener m_listener;
 	
-	
 	public BleTransaction()
 	{
 		m_timeout = 0.0;
@@ -142,7 +141,7 @@ public abstract class BleTransaction
 	private boolean end(final EndReason reason, final ReadWriteListener.ReadWriteEvent failReason)
 	{
 		synchronized (m_device.m_threadLock )
-		{			
+		{
 			if( !m_isRunning )
 			{
 				//--- DRK > Can be due to a legitimate race condition, so warning might be a little much.

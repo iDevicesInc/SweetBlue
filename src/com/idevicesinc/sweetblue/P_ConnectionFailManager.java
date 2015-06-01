@@ -141,7 +141,7 @@ class P_ConnectionFailManager
 				else if( m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) )
 				{
 					retryChoice = PE_Please.DO_NOT_RETRY;
-					m_device.onNativeDisconnect(/*wasExplicit=*/false, gattStatusOfOriginalDisconnect, /*doShortTermReconnect=*/false);
+					m_device.onNativeDisconnect(/*wasExplicit=*/false, gattStatusOfOriginalDisconnect, /*doShortTermReconnect=*/false, /*saveLastDisconnect=*/true);
 				}
 			}
 		}

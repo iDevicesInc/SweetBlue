@@ -1,27 +1,20 @@
 package com.idevicesinc.sweetblue;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent;
 import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
-import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.*;
@@ -306,7 +299,7 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Abstract base class for {@link ReconnectRequestEvent} and {@link ReconnectPersistEvent} just to
+	 * Abstract base class for {@link ReconnectRequestEvent} and {@link BleDeviceConfig.ReconnectPersistFilter.ReconnectPersistEvent} just to
 	 * tie their APIs together and statically ensure that they are consistent.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -480,7 +473,7 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Default implementation of {@link ReconnectRequestFilter} that uses {@link ReconnectRequestFilter.Please#retryInstantly()} for the
 	 * first reconnect attempt, and from then on uses the {@link Interval} rate passed to the constructor
-	 * {@link BleDeviceConfig.DefaultReconnectRequestFilter#BleDeviceConfig.DefaultReconnectRequestFilter(Interval)}.
+	 * {@link BleDeviceConfig.DefaultReconnectRequestFilter#DefaultReconnectRequestFilter(Interval)}.
 	 */
 	public static class DefaultReconnectRequestFilter implements ReconnectRequestFilter
 	{
@@ -613,7 +606,7 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Default implementation of {@link ReconnectPersistFilter} that returns {@link ReconnectPersistFilter.Please#persist()} for as long
 	 * as the reconnect process has taken less time than the {@link Interval} passed to 
-	 * {@link BleDeviceConfig.DefaultReconnectPersistFilter#BleDeviceConfig.DefaultReconnectPersistFilter(Interval)}.
+	 * {@link BleDeviceConfig.DefaultReconnectPersistFilter#onEvent(BleDeviceConfig.ReconnectPersistFilter.ReconnectPersistEvent)}.
 	 * <br><br>
 	 * NOTE: This filter will not kill the reconnect process if we're past the timeout but are {@link BleDeviceState#CONNECTED} and
 	 * going through the final steps of {@link BleDeviceState#CONNECTING_OVERALL} like {@link BleDeviceState#DISCOVERING_SERVICES},
@@ -651,7 +644,7 @@ public class BleDeviceConfig implements Cloneable
 	}
 	
 	/**
-	 * Provides a way to control timeout behavior for various {@link BleTask} instances.
+	 * Provides a way to control timeout behavior for various {@link BleTask} instances. Assign an instance to {@link BleDeviceConfig#timeoutRequestFilter}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -719,12 +712,20 @@ public class BleDeviceConfig implements Cloneable
 			{
 				m_interval = interval;
 			}
-			
+
+			/**
+			 * Tells SweetBlue to wait for the given interval before timing out the task.
+			 */
 			public static Please setTimeoutFor(final Interval interval)
 			{
 				return new Please(interval);
 			}
-			
+
+			/**
+			 * Tells SweetBlue to not timeout the task at all.
+			 * <br><br>
+			 * WARNING: This can be dangerous to use because if a task never finishes it will block all other operations indefinitely.
+			 */
 			public static Please doNotUseTimeout()
 			{
 				return new Please(Interval.DISABLED);
@@ -759,6 +760,280 @@ public class BleDeviceConfig implements Cloneable
 			}
 		}
 	}
+
+	/**
+	 * Provide an instance of this class to {@link com.idevicesinc.sweetblue.BleDeviceConfig#historicalDataLogFilter} to control
+	 * how/if historical data from BLE operations is logged.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	public static interface HistoricalDataLogFilter
+	{
+		/**
+		 * Special value you can use in place of Java's built-in <code>null</code>, just for code readability.
+		 */
+		public static HistoricalDataLogFilter DISABLED = null;
+
+		/**
+		 * Signifies where the data came from, usually from a BLE read or notification.
+		 */
+		public static enum Source implements UsesCustomNull
+		{
+			/**
+			 * Satisfies soft contract of {@link com.idevicesinc.sweetblue.utils.UsesCustomNull}
+			 */
+			NULL,
+
+			/**
+			 * Originates from {@link BleDevice#read(java.util.UUID, BleDevice.ReadWriteListener)}.
+			 *
+			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#READ
+			 */
+			READ,
+
+			/**
+			 * Originates from {@link BleDevice#startPoll(java.util.UUID, com.idevicesinc.sweetblue.utils.Interval, BleDevice.ReadWriteListener)}.
+			 *
+			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#POLL
+			 */
+			POLL,
+
+			/**
+			 * Originates from {@link BleDevice#enableNotify(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+			 *
+			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#NOTIFICATION
+			 */
+			NOTIFICATION,
+
+			/**
+			 * Originates from {@link com.idevicesinc.sweetblue.BleDevice#enableNotify(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+			 *
+			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#INDICATION
+			 */
+			INDICATION,
+
+			/**
+			 * Originates from {@link com.idevicesinc.sweetblue.BleDevice#enableNotify(java.util.UUID, Interval, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)},
+			 * where a force-read timeout is invoked, or from {@link BleDevice#startChangeTrackingPoll(java.util.UUID, com.idevicesinc.sweetblue.utils.Interval, BleDevice.ReadWriteListener)}.
+			 *
+			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#PSUEDO_NOTIFICATION
+			 */
+			PSUEDO_NOTIFICATION,
+
+			/**
+			 * Originates from manual addition of data through {@link BleDevice#addHistoricalData(UUID, byte[], EpochTime)}
+			 * or various overloads that add one piece of historical data.
+			 */
+			SINGLE_MANUAL_ADDITION,
+
+			/**
+			 * Originates from manual addition of data through {@link BleDevice#addHistoricalData(UUID, java.util.Iterator)}
+			 * or various overloads that add multiple pieces of data all at once.
+			 */
+			MULTIPLE_MANUAL_ADDITIONS;
+
+			/**
+			 * Returns <code>true</code> if <code>this</code> == {@link #NULL}.
+			 */
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
+		}
+
+		/**
+		 * Event passed to {@link BleDeviceConfig.HistoricalDataLogFilter#onEvent(HistoricalDataLogEvent)} that provides
+		 * information you can use to determine whether or not {@link HistoricalDataLogEvent#data()} should be logged.
+		 */
+		public static class HistoricalDataLogEvent
+		{
+			/**
+			 * The device in question.
+			 */
+			public BleDevice device()  {  return m_device;  }
+			private final BleDevice m_device;
+
+			/**
+			 * The data to be written.
+			 */
+			public byte[] data()  {  return m_data;  }
+			private final byte[] m_data;
+
+			/**
+			 * Timestamp of when the data was obtained.
+			 */
+			public EpochTime epochTime()  {  return m_epochTime;  }
+			private final EpochTime m_epochTime;
+
+			/**
+			 * The source of the data - read, notify, etc.
+			 */
+			public Source source()  {  return m_source;  }
+			private final Source m_source;
+
+			/**
+			 * The characteristic {@link java.util.UUID} associated with {@link #data()}.
+			 */
+			public UUID charUuid()  {  return m_charUuid;  }
+			private final UUID m_charUuid;
+
+			HistoricalDataLogEvent(final BleDevice device, final UUID charUuid, final byte[] data, final EpochTime epochTime, final Source source)
+			{
+				m_device = device;
+				m_charUuid = charUuid;
+				m_data = data;
+				m_epochTime = epochTime;
+				m_source = source;
+			}
+		}
+
+		static enum PersistenceLevel
+		{
+			NONE, MEMORY, DISK
+		}
+
+		/**
+		 * Special value returned from {@link HistoricalDataLogFilter#onEvent(HistoricalDataLogFilter.HistoricalDataLogEvent)}
+		 * that determines if/how {@link HistoricalDataLogFilter.HistoricalDataLogEvent#data()} will get logged.
+		 */
+		public static class Please
+		{
+			final PersistenceLevel m_logChoice;
+
+			private byte[] m_amendedData = null;
+			private EpochTime m_amendedEpochTime = null;
+			private Long m_logLimit = null;
+
+			private Please(final PersistenceLevel logChoice)
+			{
+				m_logChoice = logChoice;
+			}
+
+			/**
+			 * Returns the limit provided through {@link #andLimitLogTo(long)}, or {@link Long#MAX_VALUE} if not applicable.
+			 */
+			public long getLimit()
+			{
+				return m_logLimit != null ? m_logLimit : Long.MAX_VALUE;
+			}
+
+			/**
+			 * Returns the amended data provided through {@link #andAmendData(byte[])}, or <code>null</code> if not applicable.
+			 */
+			@Nullable(Prevalence.NORMAL) public byte[] getAmendedData()
+			{
+				return m_amendedData;
+			}
+
+			/**
+			 * Returns the amended epoch time provided through {@link #andAmendEpochTime(EpochTime)}, or {@link com.idevicesinc.sweetblue.utils.EpochTime#NULL} if not applicable.
+			 */
+			@Nullable(Prevalence.NEVER) public EpochTime getAmendedEpochTime()
+			{
+				return m_amendedEpochTime != null ? m_amendedEpochTime : EpochTime.NULL;
+			}
+
+			/**
+			 * Last chance to amend or replace {@link HistoricalDataLogEvent#data()} before it's written to the log.
+			 *
+			 * @return <code>this</code> so you can chain calls together.
+			 */
+			public Please andAmendData(final byte[] data)
+			{
+				m_amendedData = data;
+
+				return this;
+			}
+
+			/**
+			 * Last chance to amend or replace {@link HistoricalDataLogEvent#epochTime()} before it's written to the log.
+			 * @return <code>this</code> so you can chain calls together.
+			 */
+			public Please andAmendEpochTime(final EpochTime epochTime)
+			{
+				m_amendedEpochTime = epochTime;
+
+				return this;
+			}
+
+			/**
+			 * Calling this will crop the log to the given limit <i>before></i> {@link HistoricalDataLogEvent#data()} is written.
+			 * So if you call this with <code>0</code> {@link BleDevice#getHistoricalDataCount(java.util.UUID)} will return <code>1</code>
+			 * after this.
+			 *
+			 * @return <code>this</code> so you can chain calls together.
+			 */
+			public Please andLimitLogTo(final long logLimit)
+			{
+				m_logLimit = logLimit;
+
+				return this;
+			}
+
+			/**
+			 * Will log the data to disk, currently through SQLite. Data is preserved across app sessions
+			 * until (a) the user uninstalls the app, (b) the user clears the app's data, or (c) you call
+			 * one of the {@link com.idevicesinc.sweetblue.BleDevice#clearHistoricalData()} overloads.
+			 */
+			public static Please logToDisk()
+			{
+				return new Please(PersistenceLevel.DISK);
+			}
+
+			/**
+			 * Will log the data to current app memory only. When the app is destroyed the data will be lost.
+			 */
+			public static Please logToMemory()
+			{
+				return new Please(PersistenceLevel.MEMORY);
+			}
+
+			/**
+			 * Will not log the data.
+			 */
+			public static Please doNotLog()
+			{
+				return new Please(PersistenceLevel.NONE);
+			}
+		}
+
+		/**
+		 * Implement this method to be notified of when the library requests whether historical data should be written to a log,
+		 * and to respond with your preference of if/how this data should be written.
+		 */
+		Please onEvent(final HistoricalDataLogEvent e);
+	}
+
+	/**
+	 * Default implementation of {@link HistoricalDataLogFilter} set on {@link #historicalDataLogFilter}
+	 * that logs the most recent data reading to memory only, flushing the previous one.
+	 */
+	public static class DefaultHistoricalDataLogFilter implements HistoricalDataLogFilter
+	{
+		private static final Please DEFAULT = Please.logToMemory().andLimitLogTo(1);
+
+		@Override public Please onEvent(final HistoricalDataLogEvent e)
+		{
+			return DEFAULT;
+		}
+	}
+
+	/**
+	 * Provide an instance to {@link #historicalDataFactory} to return custom subclasses
+	 * of {@link com.idevicesinc.sweetblue.utils.HistoricalData} if you would like. For example
+	 * you might have a graphing library which requires a "Point" interface with methods <code>getX()</code>
+	 * and <code>getY()</code>. You could then create a factory that returns subclasses of
+	 * {@link com.idevicesinc.sweetblue.utils.HistoricalData} that implement this interface, so you don't
+	 * need to duplicate the data and waste memory.
+	 */
+	public static interface HistoricalDataFactory
+	{
+		/**
+		 * Return a new subclass of {@link HistoricalData} that for example implements a custom interface
+		 * for another library that handles graphing or analytics.
+		 */
+		HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime);
+	}
 	
 	/**
 	 * Default is <code>true</code> - controls whether the library is allowed to optimize fast disconnect/reconnect cycles
@@ -785,6 +1060,14 @@ public class BleDeviceConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Boolean tryBondingWhileDisconnected_manageOnDisk		= true;
+
+	/**
+	 * Default is <code>true</code> - controls whether changes to a device's name through {@link BleDevice#setName(String)} are remembered on disk through
+	 * {@link SharedPreferences}. If true, this means calls to {@link com.idevicesinc.sweetblue.BleDevice#getName_override()} will return the same thing
+	 * even across app restarts.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public Boolean saveNameChangesToDisk						= false;
 	
 	/**
 	 * Default is <code>true</code> - whether to automatically get services immediately after a {@link BleDevice} is
@@ -873,12 +1156,12 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 		= true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether the {@link utils.State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
+	 * Default is <code>true</code> - controls whether the {@link State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
 	 * is saved to and loaded from disk so that it can be restored across app sessions, undiscoveries, and BLE
 	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
 	 * any extra permissions. The main advantage of this is the following scenario: User connects to a device through your app,
 	 * does what they want, kills the app, then opens the app sometime later. {@link BleDevice#getLastDisconnectIntent()} returns
-	 * {@link utils.State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
+	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
@@ -1057,6 +1340,30 @@ public class BleDeviceConfig implements Cloneable
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.RARE)
 	public TimeoutRequestFilter timeoutRequestFilter						= new DefaultTimeoutRequestFilter();
+
+
+	/**
+	 * Default is an instance of {@link com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter} -
+	 * set an implementation here to control how/if data is logged.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
+	public HistoricalDataLogFilter historicalDataLogFilter					= new DefaultHistoricalDataLogFilter();
+
+	/**
+	 * Implement this to override the default behavior, which is simply to return an instance created with
+	 * the constructor {@link HistoricalData#HistoricalData(byte[], com.idevicesinc.sweetblue.utils.EpochTime)}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
+	public HistoricalDataFactory historicalDataFactory						= new HistoricalDataFactory()
+	{
+		@Override public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime)
+		{
+			return new HistoricalData(data, epochTime);
+		}
+	};
+
 	
 	static boolean boolOrDefault(Boolean bool_nullable)
 	{

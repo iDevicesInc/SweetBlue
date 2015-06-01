@@ -10,6 +10,8 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
+import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 
@@ -32,6 +34,128 @@ class P_DeviceManager
 	public ArrayList<BleDevice> getList()
 	{
 		return m_list;
+	}
+
+	void forEach(final Object forEach, final Object ... query)
+	{
+		final boolean isQueryValid = query != null && query.length > 0;
+
+		for( int i = 0; i < m_mngr.getDeviceCount(); i++ )
+		{
+			final BleDevice ith = m_mngr.getDeviceAt(i);
+
+			if( isQueryValid )
+			{
+				if( ith.is(query) )
+				{
+					if( !forEach_invoke(forEach, ith) )
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				if( !forEach_invoke(forEach, ith) )
+				{
+					break;
+				}
+			}
+		}
+	}
+
+	private boolean forEach_invoke(final Object forEach, final BleDevice device)
+	{
+		if( forEach instanceof ForEach_Breakable )
+		{
+			ForEach_Breakable<BleDevice> forEach_cast = (ForEach_Breakable<BleDevice>)forEach;
+
+			final ForEach_Breakable.Please please = forEach_cast.next(device);
+
+			return please.shouldContinue();
+		}
+		else if( forEach instanceof ForEach_Void )
+		{
+			ForEach_Void<BleDevice> forEach_cast = (ForEach_Void<BleDevice>)forEach;
+
+			forEach_cast.next(device);
+
+			return true;
+		}
+
+		return false;
+	}
+
+	BleDevice getDevice_offset(final BleDevice device, final int offset, Object ... query)
+	{
+		final int index = m_mngr.getDeviceIndex(device);
+		final int offset_override = offset < 0 ? -1 : 1;
+		final boolean isQueryValid = query != null && query.length > 0;
+
+		if( index >= 0 )
+		{
+			BleDevice device_ith = BleDevice.NULL;
+			int nextIndex = index + offset_override;
+			do
+			{
+				if( nextIndex < 0 )
+				{
+					nextIndex = m_mngr.getDeviceCount()-1;
+				}
+				else if( nextIndex >= m_mngr.getDeviceCount() )
+				{
+					nextIndex = 0;
+				}
+				else
+				{
+					nextIndex = nextIndex;
+				}
+
+				device_ith = m_mngr.getDeviceAt(nextIndex);
+
+				if( isQueryValid )
+				{
+					if( device_ith.is(query) )
+					{
+						return device_ith;
+					}
+				}
+				else
+				{
+					return device_ith;
+				}
+
+				nextIndex += offset_override;
+			}
+			while( !device_ith.equals(device) && !device_ith.equals(BleDevice.NULL) );
+		}
+		else
+		{
+			if( isQueryValid )
+			{
+				if( m_mngr.hasDevice(query) )
+				{
+					return m_mngr.getDevice(query);
+				}
+				else
+				{
+					return BleDevice.NULL;
+				}
+			}
+			else
+			{
+				if( m_mngr.hasDevices() )
+				{
+					return m_mngr.getDevice();
+				}
+				else
+				{
+					return BleDevice.NULL;
+				}
+			}
+		}
+
+		return BleDevice.NULL;
 	}
 	
 	public BleDevice getDevice(final int mask_BleDeviceState)
@@ -262,6 +386,45 @@ class P_DeviceManager
 			}
 		}
 	}
+
+	void undiscoverAll()
+	{
+		synchronized (m_list)
+		{
+			for( int i = m_list.size()-1; i >= 0; i-- )
+			{
+				final BleDevice device = get(i);
+
+				device.undiscover();
+			}
+		}
+	}
+
+	void disconnectAll()
+	{
+		synchronized (m_list)
+		{
+			for( int i = m_list.size()-1; i >= 0; i-- )
+			{
+				final BleDevice device = get(i);
+
+				device.disconnect();
+			}
+		}
+	}
+
+	void disconnectAll_remote()
+	{
+		synchronized (m_list)
+		{
+			for( int i = m_list.size()-1; i >= 0; i-- )
+			{
+				final BleDevice device = get(i);
+
+				device.disconnect_remote();
+			}
+		}
+	}
 	
 	void disconnectAllForTurnOff(PE_TaskPriority priority)
 	{
@@ -269,7 +432,7 @@ class P_DeviceManager
 		{
 			for( int i = m_list.size()-1; i >= 0; i-- )
 			{
-				BleDevice device = get(i);
+				final BleDevice device = get(i);
 
 				//--- DRK > Just an early-out performance check here.
 				if( device.is(BleDeviceState.CONNECTED) )

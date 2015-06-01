@@ -34,6 +34,11 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
+import com.idevicesinc.sweetblue.utils.EpochTime;
+import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
+import com.idevicesinc.sweetblue.utils.ForEach_Void;
+import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.State;
@@ -224,7 +229,7 @@ public class BleManager
 		/**
 		 * Called when the discovery lifecycle of a device is updated.
 		 * <br><br> 
-		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link utils.State.ChangeIntent#UNINTENTIONAL}
+		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link State.ChangeIntent#UNINTENTIONAL}
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
 		void onEvent(final DiscoveryEvent e);
@@ -725,7 +730,8 @@ public class BleManager
 				P_WakeLockManager m_wakeLockMngr;
 	
 		final Object m_threadLock = new Object();
-	
+
+			BleDevice.HistoricalDataLoadListener m_historicalDataLoadListener;
 			DiscoveryListener m_discoveryListener;
 	private P_WrappingResetListener m_resetListeners;
 	private AssertListener m_assertionListener;
@@ -741,6 +747,8 @@ public class BleManager
 	
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
+
+	final Backend_HistoricalDatabase m_historicalDatabase;
 	
 	static BleManager s_instance = null;
 	
@@ -758,6 +766,7 @@ public class BleManager
 		m_context = context.getApplicationContext();
 		m_config = config.clone();
 		initLogger();
+		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
 		m_filterMngr = new P_ScanFilterManager(m_config.defaultScanFilter);
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
@@ -957,6 +966,15 @@ public class BleManager
 	}
 
 	/**
+	 * Sets a default backup {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener} that will be invoked
+	 * for all historical data loads to memory for all uuids for all devices.
+	 */
+	public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleDevice.HistoricalDataLoadListener listener_nullable)
+	{
+		m_historicalDataLoadListener = listener_nullable;
+	}
+
+	/**
 	 * Set a listener here to be notified whenever we encounter an {@link UhOh}.
 	 */
 	public void setListener_UhOh(@Nullable(Prevalence.NORMAL) UhOhListener listener_nullable)
@@ -1117,7 +1135,7 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, DiscoveryListener discoveryListener)
 	{
-		startPeriodicScan(scanActiveTime, scanPauseTime, (ScanFilter)null, discoveryListener);
+		startPeriodicScan(scanActiveTime, scanPauseTime, (ScanFilter) null, discoveryListener);
 	}
 
 	/**
@@ -1399,6 +1417,34 @@ public class BleManager
 	}
 
 	/**
+	 * Disconnects all devices that are {@link BleDeviceState#CONNECTED}.
+	 * Essentially a convenience method for calling {@link com.idevicesinc.sweetblue.BleDevice#disconnect()},
+	 * on each device individually.
+	 */
+	public void disconnectAll()
+	{
+		m_deviceMngr.disconnectAll();
+	}
+
+	/**
+	 * Same as {@link #disconnectAll()} but drills down to {@link com.idevicesinc.sweetblue.BleDevice#disconnect_remote()} instead.
+	 */
+	public void disconnectAll_remote()
+	{
+		m_deviceMngr.disconnectAll_remote();
+	}
+
+	/**
+	 * Undiscovers all devices that are {@link BleDeviceState#DISCOVERED}.
+	 * Essentially a convenience method for calling {@link BleDevice#undiscover()},
+	 * on each device individually.
+	 */
+	public void undiscoverAll()
+	{
+		m_deviceMngr.undiscoverAll();
+	}
+
+	/**
 	 * Convenience method to request your user to enable ble in a "standard" way
 	 * with an {@link android.content.Intent} instead of using {@link #turnOn()} directly.
 	 * Result will be posted as normal to {@link android.app.Activity#onActivityResult(int, int, Intent)}.
@@ -1574,6 +1620,14 @@ public class BleManager
 	}
 
 	/**
+	 * Forwards {@link #getDeviceAt(int)} with index of 0.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice()
+	{
+		return hasDevices() ? getDeviceAt(0) : BleDevice.NULL;
+	}
+
+	/**
 	 * Returns the first device that matches the query, or {@link BleDevice#NULL} if no match is found.
 	 * See {@link BleDevice#is(Object...)} for the query format.
 	 */
@@ -1615,6 +1669,42 @@ public class BleManager
 	public boolean hasDevice(final int mask_BleDeviceState)
 	{
 		return !getDevice(mask_BleDeviceState).isNull();
+	}
+
+	/**
+	 * Offers a more "functional" means of iterating through the internal list of devices instead of
+	 * using {@link #getDevices()} or {@link #getDevices_List()}.
+	 */
+	public void getDevices(final ForEach_Void<BleDevice> forEach)
+	{
+		m_deviceMngr.forEach(forEach);
+	}
+
+	/**
+	 * Same as {@link #getDevices(com.idevicesinc.sweetblue.utils.ForEach_Void)} but will only return devices
+	 * in the given state provided.
+	 */
+	public void getDevices(final ForEach_Void<BleDevice> forEach, final BleDeviceState state)
+	{
+		m_deviceMngr.forEach(forEach, state, true);
+	}
+
+	/**
+	 * Overload of {@link #getDevices(com.idevicesinc.sweetblue.utils.ForEach_Void)}
+	 * if you need to break out of the iteration at any point.
+	 */
+	public void getDevices(final ForEach_Breakable<BleDevice> forEach)
+	{
+		m_deviceMngr.forEach(forEach);
+	}
+
+	/**
+	 * Overload of {@link #getDevices(com.idevicesinc.sweetblue.utils.ForEach_Void, BleDeviceState)}
+	 * if you need to break out of the iteration at any point.
+	 */
+	public void getDevices(final ForEach_Breakable<BleDevice> forEach, final BleDeviceState state)
+	{
+		m_deviceMngr.forEach(forEach, state, true);
 	}
 
 	/**
@@ -1668,6 +1758,75 @@ public class BleManager
 	public @Nullable(Prevalence.NEVER) BleDevice getDeviceAt(final int index)
 	{
 		return m_deviceMngr.get(index);
+	}
+
+	/**
+	 * Returns the index of this device in the internal list, or -1 if it's not found.
+	 */
+	public int getDeviceIndex(final BleDevice device)
+	{
+		for( int i = 0; i < getDeviceCount(); i++ )
+		{
+			final BleDevice ith = getDeviceAt(i);
+
+			if( ith.equals(device) )
+			{
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device)
+	{
+		return m_deviceMngr.getDevice_offset(device, -1);
+	}
+
+	/**
+	 * Same as {@link #getDevice_next(BleDevice, BleDeviceState)} but just returns the next device in the internal list
+	 * with no state checking.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device)
+	{
+		return m_deviceMngr.getDevice_offset(device, 1);
+	}
+
+	/**
+	 * Returns the first device previous to the provided one in the internal list that is in the given state. For various fringe cases like
+	 * this manager not having any devices, this method returns {@link BleDevice#NULL}. This method wraps
+	 * around so that if the provided device is at index 0, the returned device will be the last device this manager holds.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device, final BleDeviceState state)
+	{
+		return m_deviceMngr.getDevice_offset(device, -1, state, true);
+	}
+
+	/**
+	 * Same as {@link #getDevice_previous(BleDevice, BleDeviceState)} but returns the next device in the internal list
+	 * with no state checking.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device, final BleDeviceState state)
+	{
+		return m_deviceMngr.getDevice_offset(device, 1, state, true);
+	}
+
+	/**
+	 * Same as {@link #getDevice_previous(BleDevice, BleDeviceState)} but allows you to pass a query.
+	 * See {@link BleDevice#is(Object...)} for the query format.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device, final Object ... query)
+	{
+		return m_deviceMngr.getDevice_offset(device, -1, query);
+	}
+
+	/**
+	 * Same as {@link #getDevice_next(BleDevice, BleDeviceState)} but allows you to pass a query.
+	 * See {@link BleDevice#is(Object...)} for the query format.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device, final Object ... query)
+	{
+		return m_deviceMngr.getDevice_offset(device, 1, query);
 	}
 
 	/**
@@ -1729,6 +1888,43 @@ public class BleManager
 	}
 
 	/**
+	 * Returns a new {@link com.idevicesinc.sweetblue.utils.HistoricalData} instance using
+	 * {@link com.idevicesinc.sweetblue.BleDeviceConfig#historicalDataFactory} if available.
+	 */
+	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime)
+	{
+		final BleDeviceConfig.HistoricalDataFactory factory = m_config.historicalDataFactory;
+
+		if( m_config.historicalDataFactory != null )
+		{
+			return m_config.historicalDataFactory.newHistoricalData(data, epochTime);
+		}
+		else
+		{
+			return new HistoricalData(data, epochTime);
+		}
+	}
+
+	/**
+	 * Same as {@link #newHistoricalData(byte[], com.idevicesinc.sweetblue.utils.EpochTime)} but tries to use
+	 * {@link BleDevice#newHistoricalData(byte[], com.idevicesinc.sweetblue.utils.EpochTime)} if we have a device
+	 * matching the given mac address.
+	 */
+	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime, final String macAddress)
+	{
+		final BleDevice device = getDevice(macAddress);
+
+		if( device.isNull() )
+		{
+			return newHistoricalData(data, epochTime);
+		}
+		else
+		{
+			return device.newHistoricalData(data, epochTime);
+		}
+	}
+
+	/**
 	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
 	 * and passes a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
@@ -1751,7 +1947,7 @@ public class BleManager
 	
 	public @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final BleDeviceConfig config)
 	{
-		return newDevice(macAddress, "", config);
+		return newDevice(macAddress, null, config);
 	}
 
 	/**
@@ -1773,6 +1969,11 @@ public class BleManager
 			{
 				existingDevice.setConfig(config);
 			}
+
+			if( name != null )
+			{
+				existingDevice.setName(name);
+			}
 			
 			return existingDevice;
 		}
@@ -1786,7 +1987,12 @@ public class BleManager
 
 		final String name_normalized = Utils.normalizeDeviceName(name);
 
-		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name, BleDeviceOrigin.EXPLICIT, config);
+		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name != null ? name : "", BleDeviceOrigin.EXPLICIT, config);
+
+		if( name != null )
+		{
+			newDevice.setName(name);
+		}
 		
 		onDiscovered_wrapItUp(newDevice, /*newlyDiscovered=*/true, null, null, 0, BleDeviceOrigin.EXPLICIT);
 
@@ -1821,6 +2027,42 @@ public class BleManager
 		m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, m_deviceMngr_cache, E_Intent.INTENTIONAL);
 
 		return true;
+	}
+
+	/**
+	 * Convenience forwarding of {@link #clearSharedPreferences(String)}.
+	 *
+	 * @see #clearSharedPreferences(String)
+	 */
+	public void clearSharedPreferences(final BleDevice device)
+	{
+		clearSharedPreferences(device.getMacAddress());
+	}
+
+	/**
+	 * Clears all data currently being held in {@link android.content.SharedPreferences} for a particular device.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig#manageLastDisconnectOnDisk
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig#tryBondingWhileDisconnected_manageOnDisk
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig#saveNameChangesToDisk
+	 * @see #clearSharedPreferences()
+	 */
+	public void clearSharedPreferences(final String macAddress)
+	{
+		m_diskOptionsMngr.clear(macAddress);
+	}
+
+	/**
+	 * Clears all data currently being held in {@link android.content.SharedPreferences} for all devices.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig#manageLastDisconnectOnDisk
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig#tryBondingWhileDisconnected_manageOnDisk
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig#saveNameChangesToDisk
+	 * @see #clearSharedPreferences(String)
+	 */
+	public void clearSharedPreferences()
+	{
+		m_diskOptionsMngr.clear();
 	}
 
 	//--- DRK > Smooshing together a bunch of package-private accessors here.
@@ -2136,8 +2378,12 @@ public class BleManager
 
     	if ( device == null )
     	{
+
+
+			final String name_native = device_native.getName();
+
     		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
-    		device = newDevice_private(device_native, normalizedDeviceName, device_native.getName(), BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
+    		device = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
     		newlyDiscovered = true;
     	}
 
@@ -2146,7 +2392,8 @@ public class BleManager
 
 	private BleDevice newDevice_private(final BluetoothDevice device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
 	{
-		final boolean hitCache = true; // TODO: for now always true...should it be behind a config option?
+		// TODO: for now always true...should these be behind a config option?
+		final boolean hitCache = true;
 		
 		final BleDevice device_cached;
 		
