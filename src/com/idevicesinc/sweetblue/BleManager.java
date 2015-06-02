@@ -229,7 +229,7 @@ public class BleManager
 		/**
 		 * Called when the discovery lifecycle of a device is updated.
 		 * <br><br> 
-		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link State.ChangeIntent#UNINTENTIONAL}
+		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
 		void onEvent(final DiscoveryEvent e);

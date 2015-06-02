@@ -107,7 +107,7 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 	}
 
 	/**
-	 * @inherit
+	 * @inheritDoc
 	 */
 	@Override public int compareTo(final EpochTime another)
 	{

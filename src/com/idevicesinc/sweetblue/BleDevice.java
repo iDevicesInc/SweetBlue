@@ -1549,7 +1549,7 @@ public class BleDevice implements UsesCustomNull
 	/**
 	 * A callback that is used by various overloads of {@link BleDevice#loadHistoricalData()} that accept instances hereof.
 	 * You can also set default listeners on {@link BleDevice#setListener_HistoricalDataLoad(HistoricalDataLoadListener)}
-	 * and {@link BleManager#setListener_HistoricalDataLoad(HistoricalDataLoadListener)}.
+	 * and {@link BleManager#setListener_HistoricalDataLoad(BleDevice.HistoricalDataLoadListener)}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface HistoricalDataLoadListener
@@ -1643,7 +1643,8 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Returns <code>true</code> if {@link #status()} is either {@link Status#LOADED} or {@link Status#ALREADY_LOADED}.
+			 * Returns <code>true</code> if {@link #status()} is either {@link HistoricalDataLoadListener.Status#LOADED} or
+			 *  {@link HistoricalDataLoadListener.Status#ALREADY_LOADED}.
 			 */
 			public boolean wasSuccess()
 			{
@@ -1916,15 +1917,15 @@ public class BleDevice implements UsesCustomNull
 	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles or undiscovery->rediscovery, which
 	 * basically means how it was last {@link BleDeviceState#DISCONNECTED}.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown because
+	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#NULL}, then the last disconnect is unknown because
 	 * (a) device has never been seen before,
 	 * (b) reason for disconnect was app being killed and {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>,
 	 * (c) app user cleared app data between app sessions, (d) etc., etc.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
+	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
 	 * the disconnect to happen, and thus *probably* would want to be automatically connected again as soon as the device is discovered.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#INTENTIONAL}, then the last reason the device was {@link BleDeviceState#DISCONNECTED} was because
+	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#INTENTIONAL}, then the last reason the device was {@link BleDeviceState#DISCONNECTED} was because
 	 * {@link BleDevice#disconnect()} was called, which most-likely means the user doesn't want to automatically connect to this device again.
 	 * <br><br>
 	 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
@@ -2885,7 +2886,7 @@ public class BleDevice implements UsesCustomNull
 	 * <br><br>
 	 * If the device is currently {@link BleDeviceState#CONNECTING_OVERALL} then your
 	 * {@link com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
-	 * implementation will be called with {@link Status#ROGUE_DISCONNECT}.
+	 * implementation will be called with {@link ConnectionFailListener.Status#ROGUE_DISCONNECT}.
 	 * <br><br>
 	 * NOTE: One major difference between this and an actual remote disconnect is that this will not cause the device to enter
 	 * {@link BleDeviceState#RECONNECTING_SHORT_TERM} or {@link BleDeviceState#RECONNECTING_LONG_TERM}.
