@@ -17,6 +17,7 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.*;
 
 /**
@@ -473,7 +474,7 @@ public class BleDeviceConfig implements Cloneable
 	/**
 	 * Default implementation of {@link ReconnectRequestFilter} that uses {@link ReconnectRequestFilter.Please#retryInstantly()} for the
 	 * first reconnect attempt, and from then on uses the {@link Interval} rate passed to the constructor
-	 * {@link BleDeviceConfig.DefaultReconnectRequestFilter#DefaultReconnectRequestFilter(Interval)}.
+	 * 
 	 */
 	public static class DefaultReconnectRequestFilter implements ReconnectRequestFilter
 	{
@@ -909,7 +910,7 @@ public class BleDeviceConfig implements Cloneable
 		}
 
 		/**
-		 * Special value returned from {@link HistoricalDataLogFilter#onEvent(HistoricalDataLogFilter.HistoricalDataLogEvent)}
+		 * Special value returned from {@link BleDeviceConfig.HistoricalDataLogFilter#onEvent(HistoricalDataLogEvent)}
 		 * that determines if/how {@link HistoricalDataLogFilter.HistoricalDataLogEvent#data()} will get logged.
 		 */
 		public static class Please
@@ -1172,12 +1173,12 @@ public class BleDeviceConfig implements Cloneable
 	public Boolean autoReconnectDeviceWhenBleTurnsBackOn 		= true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether the {@link State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
+	 * Default is <code>true</code> - controls whether the {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent} behind a device going {@link BleDeviceState#DISCONNECTED}
 	 * is saved to and loaded from disk so that it can be restored across app sessions, undiscoveries, and BLE
 	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles. This uses Android's {@link SharedPreferences} so does not require
 	 * any extra permissions. The main advantage of this is the following scenario: User connects to a device through your app,
 	 * does what they want, kills the app, then opens the app sometime later. {@link BleDevice#getLastDisconnectIntent()} returns
-	 * {@link State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
+	 * {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}, which lets you know that you can probably automatically connect to this device without user confirmation.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)

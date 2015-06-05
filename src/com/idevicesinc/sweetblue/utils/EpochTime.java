@@ -106,8 +106,6 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 		return isBetween_inclusive(range.from(), range.to());
 	}
 
-	/**
-	 */
 	@Override public int compareTo(final EpochTime another)
 	{
 		if( another == null )
