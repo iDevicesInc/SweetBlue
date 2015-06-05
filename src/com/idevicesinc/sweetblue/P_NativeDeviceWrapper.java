@@ -282,8 +282,35 @@ class P_NativeDeviceWrapper
 //			{
 //				m_gatt.disconnect();
 //			}
-			
-			m_gatt.close();
+
+			//--- DRK > This can randomly throw an NPE down stream...NOT from m_gatt being null, but a few methods downstream.
+			//---		See below for more info.
+			try
+			{
+				m_gatt.close();
+			}
+			catch(NullPointerException e)
+			{
+				//--- DRK > From Flurry crash reports...happened several times on S4 running 4.4.4 but was not able to reproduce.
+//				This error occurred: java.lang.NullPointerException
+//				android.os.Parcel.readException(Parcel.java:1546)
+//				android.os.Parcel.readException(Parcel.java:1493)
+//				android.bluetooth.IBluetoothGatt$Stub$Proxy.unregisterClient(IBluetoothGatt.java:905)
+//				android.bluetooth.BluetoothGatt.unregisterApp(BluetoothGatt.java:710)
+//				android.bluetooth.BluetoothGatt.close(BluetoothGatt.java:649)
+//				com.idevicesinc.sweetblue.P_NativeDeviceWrapper.closeGatt(P_NativeDeviceWrapper.java:238)
+//				com.idevicesinc.sweetblue.P_NativeDeviceWrapper.closeGattIfNeeded(P_NativeDeviceWrapper.java:221)
+//				com.idevicesinc.sweetblue.BleDevice.onNativeConnectFail(BleDevice.java:2193)
+//				com.idevicesinc.sweetblue.P_BleDevice_Listeners$1.onStateChange_synchronized(P_BleDevice_Listeners.java:78)
+//				com.idevicesinc.sweetblue.P_BleDevice_Listeners$1.onStateChange(P_BleDevice_Listeners.java:49)
+//				com.idevicesinc.sweetblue.PA_Task.setState(PA_Task.java:118)
+//				com.idevicesinc.sweetblue.PA_Task.setEndingState(PA_Task.java:242)
+//				com.idevicesinc.sweetblue.P_TaskQueue.endCurrentTask(P_TaskQueue.java:220)
+//				com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask(P_TaskQueue.java:267)
+//				com.idevicesinc.sweetblue.P_TaskQueue.fail(P_TaskQueue.java:260)
+//				com.idevicesinc.sweetblue.P_BleDevice_Listeners.onConnectionStateChange_synchronized(P_BleDevice_Listeners.java:168)
+				m_device.getManager().uhOh(UhOh.RANDOM_EXCEPTION);
+			}
 			m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			m_gatt = null;
 		}

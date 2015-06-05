@@ -2068,7 +2068,7 @@ public class BleManager
 	//--- DRK > Smooshing together a bunch of package-private accessors here.
 	P_BleStateTracker			getStateTracker(){				return m_stateTracker;				}
 	P_NativeBleStateTracker		getNativeStateTracker(){		return m_nativeStateTracker;		}
-	UpdateLoop					getUpdateLoop(){				return m_updateLoop;				}
+	public UpdateLoop			getUpdateLoop(){				return m_updateLoop;				}
 	P_BluetoothCrashResolver	getCrashResolver(){				return m_crashResolver;				}
 	P_TaskQueue					getTaskQueue(){					return m_taskQueue;					}
 	P_Logger					getLogger(){					return m_logger;					}

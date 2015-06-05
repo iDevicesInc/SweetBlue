@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue.backend.historical;
 
+import android.database.Cursor;
+
 import com.idevicesinc.sweetblue.utils.EpochTimeRange;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
@@ -128,4 +130,5 @@ class P_HistoricalDataCursor_List implements HistoricalDataCursor
 			return HistoricalData.NULL;
 		}
 	}
+
 }

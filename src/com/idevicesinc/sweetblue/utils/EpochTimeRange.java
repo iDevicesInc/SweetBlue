@@ -86,6 +86,14 @@ public class EpochTimeRange implements UsesCustomNull
 	}
 
 	/**
+	 * Returns a new instance representing the time range between the given epoch times as primitive longs.
+	 */
+	public EpochTimeRange(final long from, final long to)
+	{
+		this(new EpochTime(from), new EpochTime(to));
+	}
+
+	/**
 	 * Returns the "from" date passed into the constructor,
 	 * or {@link com.idevicesinc.sweetblue.utils.EpochTime#NULL} if <code>null</code>
 	 * was originally passed in.

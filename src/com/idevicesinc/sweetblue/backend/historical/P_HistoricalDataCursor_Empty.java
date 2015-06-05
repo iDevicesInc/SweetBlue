@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue.backend.historical;
 
+import android.database.Cursor;
+
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;

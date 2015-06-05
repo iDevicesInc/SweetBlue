@@ -107,7 +107,6 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 	}
 
 	/**
-	 * @inherit
 	 */
 	@Override public int compareTo(final EpochTime another)
 	{
@@ -135,5 +134,10 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 	@Override public boolean isNull()
 	{
 		return this == NULL;
+	}
+
+	@Override public String toString()
+	{
+		return toMilliseconds()+"";
 	}
 }

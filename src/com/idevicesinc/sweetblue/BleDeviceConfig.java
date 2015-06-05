@@ -885,6 +885,22 @@ public class BleDeviceConfig implements Cloneable
 				m_epochTime = epochTime;
 				m_source = source;
 			}
+
+			/**
+			 * Returns true if this event is associated with the given uuid.
+			 */
+			public boolean isFor(final UUID uuid)
+			{
+				return uuid.equals(charUuid());
+			}
+
+			/**
+			 * Returns true if this event is associated with any of the given uuids.
+			 */
+			public boolean isFor(final UUID[] uuids)
+			{
+				return Utils.contains(uuids, charUuid());
+			}
 		}
 
 		static enum PersistenceLevel

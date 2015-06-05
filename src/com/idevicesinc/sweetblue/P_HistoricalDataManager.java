@@ -1,7 +1,10 @@
 package com.idevicesinc.sweetblue;
 
+import android.database.Cursor;
+
 import static com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter.*;
 
+import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDataList;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
@@ -70,7 +73,8 @@ class P_HistoricalDataManager
 
 				if( tableExists )
 				{
-					final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_device.getMacAddress(), uuid, tableExists);
+					final String uuidName = m_device.getManager().getLogger().charName(uuid);
+					final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_device.getMacAddress(), uuid, uuidName, tableExists);
 					m_lists.put(uuid, newList);
 
 					return newList;
@@ -91,8 +95,9 @@ class P_HistoricalDataManager
 			if( existingList == null )
 			{
 				final boolean tableExists = getDatabase().doesDataExist(m_device.getMacAddress(), uuid);
+				final String uuidName = m_device.getManager().getLogger().charName(uuid);
 
-				final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_device.getMacAddress(), uuid, tableExists);
+				final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_device.getMacAddress(), uuid, uuidName, tableExists);
 				m_lists.put(uuid, newList);
 
 				return newList;
@@ -396,19 +401,26 @@ class P_HistoricalDataManager
 					{
 						@Override public void onDone()
 						{
-							if( list.getLoadState() == Backend_HistoricalDataList.LOAD_STATE__LOADED )
+							m_device.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 							{
-								invokeListeners(uuid_nullable, list.getRange(), BleDevice.HistoricalDataLoadListener.Status.LOADED, listener_nullable);
-							}
-							else if( list.getLoadState() == Backend_HistoricalDataList.LOAD_STATE__NOT_LOADED )
-							{
-								//--- DRK > Should be fringe but technically possible if user is doing things on multiple threads (they shouldn't but if they do...).
-								invokeListeners(uuid_nullable, EpochTimeRange.NULL, BleDevice.HistoricalDataLoadListener.Status.NOTHING_TO_LOAD, listener_nullable);
-							}
-							else
-							{
-								m_device.getManager().ASSERT(false, "Didn't expect to still be loading historical data.");
-							}
+								@Override public void run()
+								{
+									if( list.getLoadState() == Backend_HistoricalDataList.LOAD_STATE__LOADED )
+									{
+										invokeListeners(uuid_nullable, list.getRange(), BleDevice.HistoricalDataLoadListener.Status.LOADED, listener_nullable);
+									}
+									else if( list.getLoadState() == Backend_HistoricalDataList.LOAD_STATE__NOT_LOADED )
+									{
+										//--- DRK > Should be fringe but technically possible if user is doing things on multiple threads (they shouldn't but if they do...).
+										invokeListeners(uuid_nullable, EpochTimeRange.NULL, BleDevice.HistoricalDataLoadListener.Status.NOTHING_TO_LOAD, listener_nullable);
+									}
+									else
+									{
+										m_device.getManager().ASSERT(false, "Didn't expect to still be loading historical data.");
+									}
+								}
+							});
+
 						}
 					});
 				}
@@ -519,5 +531,11 @@ class P_HistoricalDataManager
 		}
 
 		return event_nullable;
+	}
+
+	//GOOD
+	public String getTableName(final UUID uuid)
+	{
+		return getDatabase().getTableName(m_device.getMacAddress(), uuid);
 	}
 }

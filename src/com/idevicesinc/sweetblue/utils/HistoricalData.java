@@ -1,7 +1,10 @@
 package com.idevicesinc.sweetblue.utils;
 
+import android.database.Cursor;
+
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -45,13 +48,25 @@ public class HistoricalData implements UsesCustomNull
 
 	public HistoricalData(final byte[] blob, final EpochTime epochTime)
 	{
-		m_blob = blob;
+		m_blob = blob != null ? blob : new byte[0];
 		m_epochTime = epochTime != null ? epochTime : new EpochTime();
 	}
 
 	public HistoricalData(final byte[] blob)
 	{
 		this(blob, null);
+	}
+
+	public static @Nullable(Nullable.Prevalence.NEVER) HistoricalData fromCursor(final Cursor cursor)
+	{
+		if( cursor == null )
+		{
+			return HistoricalData.NULL;
+		}
+
+		final HistoricalData data = new HistoricalData(cursor.getLong(Backend_HistoricalDatabase.COLUMN_INDEX__EPOCH_TIME), cursor.getBlob(Backend_HistoricalDatabase.COLUMN_INDEX__DATA));
+
+		return data;
 	}
 
 	/**

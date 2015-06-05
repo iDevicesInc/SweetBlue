@@ -33,7 +33,7 @@ public class Backend_HistoricalDataList_Default implements Backend_HistoricalDat
 	{
 	}
 
-	@Override public void init(final Backend_HistoricalDatabase database, final String macAddress, final UUID uuid, final boolean hasExistingTable)
+	@Override public void init(final Backend_HistoricalDatabase database, final String macAddress, final UUID uuid, final String uuidName, final boolean hasExistingTable)
 	{
 		m_database = database;
 		m_macAddress = macAddress;

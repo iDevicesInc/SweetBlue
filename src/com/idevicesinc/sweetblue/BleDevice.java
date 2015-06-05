@@ -16,6 +16,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
@@ -71,7 +72,7 @@ public class BleDevice implements UsesCustomNull
 		 * operation or the reason for its failure. This enum is <i>not</i>
 		 * meant to match up with {@link BluetoothGatt}.GATT_* values in any way.
 		 *
-		 * @see ReadWriteEvent#status
+		 * @see ReadWriteEvent#status()
 		 */
 		public static enum Status implements UsesCustomNull
 		{
@@ -1649,12 +1650,137 @@ public class BleDevice implements UsesCustomNull
 			{
 				return status() == Status.LOADED || status() == Status.ALREADY_LOADED;
 			}
+
+			@Override public String toString()
+			{
+				return Utils.toString
+						(
+								this.getClass(),
+								"device", device().getName_debug(),
+								"uuid", device().getManager().getLogger().uuidName(uuid()),
+								"status", status()
+						);
+			}
 		}
 
 		/**
 		 * Called when the historical data for a given characteristic {@link UUID} is done loading from disk.
 		 */
 		void onEvent(final HistoricalDataLoadEvent e);
+	}
+
+	/**
+	 * A callback that is used by {@link BleDevice#select()} to listen for when a database query is done processing.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	public static interface HistoricalDataQueryListener
+	{
+		/**
+		 * Enumerates the status codes for operations kicked off from {@link BleDevice#select()}.
+		 */
+		public static enum Status implements UsesCustomNull
+		{
+			/**
+			 * Fulfills soft contract of {@link UsesCustomNull}.
+			 */
+			NULL,
+
+			/**
+			 * Query completed successfully - {@link HistoricalDataQueryEvent#cursor()} may be empty but there were no exceptions or anything.
+			 */
+			SUCCESS,
+
+			/**
+			 * There is no backing table for the given {@link UUID}.
+			 */
+			NO_TABLE,
+
+			/**
+			 * General failure - this feature is still in {@link com.idevicesinc.sweetblue.annotations.Alpha} so expect more detailed error statuses in the future.
+			 */
+			ERROR;
+
+			/**
+			 * Returns true if <code>this==</code> {@link #NULL}.
+			 */
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
+		}
+
+		/**
+		 * Event struct passed to {@link HistoricalDataQueryListener#onEvent(HistoricalDataQueryEvent)} that provides
+		 * further information about the status of a historical data load to memory using {@link BleDevice#loadHistoricalData()}
+		 * (or overloads).
+		 */
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class HistoricalDataQueryEvent
+		{
+			/**
+			 * The {@link BleDevice} that the data is being queried for.
+			 */
+			public BleDevice device() {  return m_device; }
+			private final BleDevice m_device;
+
+			/**
+			 * The {@link UUID} that the data is being queried for.
+			 */
+			public UUID uuid() {  return m_uuid;  }
+			private final UUID m_uuid;
+
+			/**
+			 * The general status of the query operation.
+			 */
+			public Status status() {  return m_status; }
+			private final Status m_status;
+
+			/**
+			 * The resulting {@link Cursor} from the database query. This will never be null, just an empty cursor if anything goes wrong.
+			 */
+			public @Nullable(Prevalence.NEVER) Cursor cursor() {  return m_cursor; }
+			private final Cursor m_cursor;
+
+			/**
+			 * The resulting {@link Cursor} from the database query. This will never be null, just an empty cursor if anything goes wrong.
+			 */
+			public @Nullable(Prevalence.NEVER) String rawQuery() {  return m_rawQuery; }
+			private final String m_rawQuery;
+
+			public HistoricalDataQueryEvent(final BleDevice device, final UUID uuid, final Cursor cursor, final Status status, final String rawQuery)
+			{
+				m_device = device;
+				m_uuid = uuid;
+				m_cursor = cursor;
+				m_status = status;
+				m_rawQuery = rawQuery;
+			}
+
+			/**
+			 * Returns <code>true</code> if {@link #status()} is {@link Status#SUCCESS}.
+			 */
+			public boolean wasSuccess()
+			{
+				return status() == Status.SUCCESS;
+			}
+
+			@Override public String toString()
+			{
+				return Utils.toString
+				(
+						this.getClass(),
+						"device",			device().getName_debug(),
+						"uuid",				device().getManager().getLogger().uuidName(uuid()),
+						"status",			status()
+				);
+			}
+		}
+
+		/**
+		 * Called when the historical data for a given characteristic {@link UUID} is done querying.
+		 */
+		void onEvent(final HistoricalDataQueryEvent e);
 	}
 
 	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener();
@@ -3221,6 +3347,15 @@ public class BleDevice implements UsesCustomNull
 		}
 	}
 
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	public @Nullable(Prevalence.NEVER) HistoricalDataQuery.Part_Select select()
+	{
+		final HistoricalDataQuery.Part_Select select = HistoricalDataQuery.select(this, getManager().m_historicalDatabase);
+
+		return select;
+	}
+
 	/**
 	 * Returns a cursor capable of random access to the database-persisted historical data for this device.
 	 * Unlike calls to methods like {@link #getHistoricalData_iterator(UUID)} and other overloads,
@@ -3551,6 +3686,15 @@ public class BleDevice implements UsesCustomNull
 		if( isNull() ) return;
 
 		m_historicalDataMngr.add_single(uuid, data, epochTime, BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
+	}
+
+	/**
+	 * Just an overload of {@link #addHistoricalData(UUID, byte[], EpochTime)} with the data and epochTime parameters switched around.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void addHistoricalData(final UUID uuid, final EpochTime epochTime, final byte[] data)
+	{
+		this.addHistoricalData(uuid, data, epochTime);
 	}
 
 	/**

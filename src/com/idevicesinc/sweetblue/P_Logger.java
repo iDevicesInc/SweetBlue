@@ -17,6 +17,7 @@ import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
+import com.idevicesinc.sweetblue.utils.UuidNameMap_ListWrapper;
 
 class P_Logger
 {
@@ -29,12 +30,12 @@ class P_Logger
 	private HashMap<Integer, String> m_gattBondStates = null;
 	private HashMap<Integer, String> m_unbondReasonCodes = null;
 	private boolean m_enabled;
-	private final List<UuidNameMap> m_debugUuidNameDicts;
+	private final UuidNameMap_ListWrapper m_nameMap;
 	
 	public P_Logger(String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, boolean enabled)
 	{		
 		m_debugThreadNamePool = debugThreadNamePool;
-		m_debugUuidNameDicts = debugUuidNameDicts;
+		m_nameMap = new UuidNameMap_ListWrapper(debugUuidNameDicts);
 		m_enabled = enabled;
 		
 		//--- DRK > Most of the time this will give the first alphabetical thread name to the main thread.
@@ -431,18 +432,7 @@ class P_Logger
 	
 	public String uuidName(String uuid, String type)
 	{
-		String debugName = null;
-		
-		if( m_debugUuidNameDicts != null )
-		{
-			for(int i = 0; i < m_debugUuidNameDicts.size(); i++ )
-			{
-				String actualDebugName = m_debugUuidNameDicts.get(i).getUuidName(uuid);
-				debugName = actualDebugName != null ? actualDebugName : debugName;
-			}
-		}
-		
-		debugName = debugName == null ? uuid : debugName;
+		String debugName = m_nameMap.getUuidName(uuid);
 		
 		return (type == null ? debugName : type+"="+debugName);
 	}

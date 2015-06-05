@@ -2,8 +2,10 @@ package com.idevicesinc.sweetblue.backend.historical;
 
 
 import android.content.Context;
+import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.BleManager;
+import com.idevicesinc.sweetblue.utils.EmptyCursor;
 import com.idevicesinc.sweetblue.utils.EpochTimeRange;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
@@ -107,5 +109,19 @@ public class Backend_HistoricalDatabase_Default implements Backend_HistoricalDat
 		printWarning();
 
 		return EMPTY_CURSOR;
+	}
+
+	@Override public Cursor query(String query)
+	{
+		printWarning();
+
+		return EmptyCursor.SINGLETON;
+	}
+
+	@Override public String getTableName(String macAddress, UUID uuid)
+	{
+		printWarning();
+
+		return "";
 	}
 }

@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue.backend.historical;
 
 
 import android.content.Context;
+import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.BleDeviceConfig;
 import com.idevicesinc.sweetblue.BleManager;
@@ -18,6 +19,12 @@ import java.util.UUID;
  */
 public interface Backend_HistoricalDatabase
 {
+	public static final int COLUMN_INDEX__EPOCH_TIME = 0;
+	public static final int COLUMN_INDEX__DATA = 1;
+
+	public static final String COLUMN_NAME__EPOCH_TIME = "date";
+	public static final String COLUMN_NAME__DATA = "data";
+
 	void init(final BleManager manager);
 
 	void add_single(final String macAddress, final UUID uuid, final HistoricalData data, final long maxCountToDelete);
@@ -43,4 +50,8 @@ public interface Backend_HistoricalDatabase
 	int getCount(final String macAddress, final UUID uuid, final EpochTimeRange range);
 
 	HistoricalDataCursor getCursor(final String macAddress, final UUID uuid, final EpochTimeRange range);
+
+	Cursor query(final String query);
+
+	String getTableName(final String macAddress, final UUID uuid);
 }

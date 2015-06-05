@@ -17,7 +17,7 @@ class PU_HistoricalData
 {
 	private static final BleDeviceConfig.HistoricalDataLogFilter.Please DO_NOT_LOG = BleDeviceConfig.HistoricalDataLogFilter.Please.doNotLog();
 
-	static Backend_HistoricalDataList newList(final Backend_HistoricalDatabase database, final String macAddress, UUID uuid, final boolean doesTableExist)
+	static Backend_HistoricalDataList newList(final Backend_HistoricalDatabase database, final String macAddress, UUID uuid, final String uuidName, final boolean doesTableExist)
 	{
 		final Class<? extends Backend_HistoricalDataList> listClass = Backend_Modules.HISTORICAL_DATA_LIST;
 
@@ -39,7 +39,7 @@ class PU_HistoricalData
 
 		newList = newList != null ? newList : new Backend_HistoricalDataList_Default();
 
-		newList.init(database, macAddress, uuid, doesTableExist);
+		newList.init(database, macAddress, uuid, uuidName, doesTableExist);
 
 		return newList;
 	}

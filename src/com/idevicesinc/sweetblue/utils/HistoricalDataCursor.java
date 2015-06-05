@@ -1,10 +1,14 @@
 package com.idevicesinc.sweetblue.utils;
 
+import android.database.Cursor;
+
 /**
  * This interface defines a wrapper around a database cursor (similar to {@link android.database.Cursor})
  * specific to a database representing a series of {@link HistoricalData} serializations.
  * For performance reasons, implementations are not required to return actual {@link HistoricalData} instances,
  * just the underlying <code>byte[]</code> BLOB and <code>long</code> timestamp for each.
+ * <br><br>
+ * NOTE: This may be wrapping an in-memory list, not just a database.
  */
 public interface HistoricalDataCursor
 {
