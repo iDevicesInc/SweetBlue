@@ -48,7 +48,12 @@ class P_BleManager_Listeners
 			if( state.isEndingState() )
 			{
 				P_Task_Scan scanTask = (P_Task_Scan) task;
-				m_mngr.tryPurgingStaleDevices(scanTask.getTotalTimeExecuting());
+
+				if( state == PE_TaskState.INTERRUPTED || state == PE_TaskState.TIMED_OUT || state == PE_TaskState.SUCCEEDED )
+				{
+					m_mngr.tryPurgingStaleDevices(scanTask.getTotalTimeExecuting());
+				}
+
 				m_mngr.stopNativeScan(scanTask);
 				
 				if( state == PE_TaskState.INTERRUPTED )

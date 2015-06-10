@@ -564,7 +564,7 @@ class P_DeviceManager
 
 						if( scanTime < Interval.secs(minScanTimeToInvokeUndiscovery) )  continue;
 						
-						boolean purgeable = device.getOrigin() != BleDeviceOrigin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
+						final boolean purgeable = device.getOrigin() != BleDeviceOrigin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
 						
 						if( purgeable )
 						{
