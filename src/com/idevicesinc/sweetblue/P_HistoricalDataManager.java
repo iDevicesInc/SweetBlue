@@ -218,6 +218,14 @@ class P_HistoricalDataManager
 		}
 	}
 
+	// GOOD
+	public void clearEverything()
+	{
+		delete_all(EpochTimeRange.FROM_MIN_TO_MAX, Long.MAX_VALUE, false);
+
+		m_previousUuidsWithDataAdded.clearAll();
+	}
+
 	//GOOD
 	public void delete_all(final EpochTimeRange range, final long limit, final boolean memoryOnly)
 	{

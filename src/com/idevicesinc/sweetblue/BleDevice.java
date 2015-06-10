@@ -1759,7 +1759,7 @@ public class BleDevice implements UsesCustomNull
 			}
 
 			/**
-			 * Returns <code>true</code> if {@link #status()} is {@link Status#SUCCESS}.
+			 * Returns <code>true</code> if {@link #status()} is {@link HistoricalDataQueryListener.Status#SUCCESS}.
 			 */
 			public boolean wasSuccess()
 			{
@@ -2445,7 +2445,7 @@ public class BleDevice implements UsesCustomNull
 
 	/**
 	 * Same as {@link #setName(String, UUID, BleDevice.ReadWriteListener)} but will not attempt to propagate the
-	 * name change to the remove device. Only {@link #getName_override()} will be affected by this.
+	 * name change to the remote device. Only {@link #getName_override()} will be affected by this.
 	 */
 	public void setName(final String name)
 	{
@@ -2506,6 +2506,15 @@ public class BleDevice implements UsesCustomNull
 		{
 			return NULL_READWRITE_EVENT();
 		}
+	}
+
+	/**
+	 * Clears any name previously provided through {@link #setName(String)} or overloads.
+	 */
+	public void clearName()
+	{
+		m_nativeWrapper.clearName_override();
+		getManager().m_diskOptionsMngr.clearName(getMacAddress());
 	}
 
 	/**
@@ -3351,6 +3360,50 @@ public class BleDevice implements UsesCustomNull
 		}
 	}
 
+	/**
+	 * Returns the database table name for the underlying store of historical data for the given {@link UUID}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Prevalence.NEVER) String getHistoricalDataTableName(final UUID uuid)
+	{
+		return getManager().m_historicalDatabase.getTableName(getMacAddress(), uuid);
+	}
+
+	/**
+	 * Provides a means to perform a raw SQL query on the database storing the historical data for this device. Use {@link #getHistoricalDataTableName(UUID)}
+	 * to generate table names and {@link HistoricalDataColumn} to get column names.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	public @Nullable(Prevalence.NEVER) HistoricalDataQueryListener.HistoricalDataQueryEvent queryHistoricalData(final String query)
+	{
+		final Cursor cursor = getManager().m_historicalDatabase.query(query);
+
+		return new BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent(this, Uuids.INVALID, cursor, BleDevice.HistoricalDataQueryListener.Status.SUCCESS, query);
+	}
+
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	public void queryHistoricalData(final String query, final HistoricalDataQueryListener listener)
+	{
+		new Thread()
+		{
+			@Override public void run()
+			{
+				final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = queryHistoricalData(query);
+
+				BleDevice.this.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+				{
+					@Override public void run()
+					{
+						listener.onEvent(e);
+					}
+				});
+			}
+
+		}.start();
+	}
+
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@com.idevicesinc.sweetblue.annotations.Alpha
 	public @Nullable(Prevalence.NEVER) HistoricalDataQuery.Part_Select select()
@@ -3770,6 +3823,17 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
+	 * One method to remove absolutely all "metadata" related to this device that is stored on disk and/or cached in memory in any way.
+	 * This method is useful if for example you have a "forget device" feature in your app.
+	 */
+	public void clearAllData()
+	{
+		clearName();
+		clearHistoricalData();
+		clearSharedPreferences();
+	}
+
+	/**
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device.
 	 *
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
@@ -3778,7 +3842,9 @@ public class BleDevice implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData()
 	{
-		clearHistoricalData(EpochTimeRange.FROM_MIN_TO_MAX, Long.MAX_VALUE);
+		if( isNull() ) return;
+
+		m_historicalDataMngr.clearEverything();
 	}
 
 	/**
@@ -4001,29 +4067,6 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #enableNotify(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} but you can use
-	 * this if you don't need a callback. Callbacks will still be posted to {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener}
-	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} and
-	 * {@link BleManager#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
-	 */
-	public ReadWriteListener.ReadWriteEvent enableNotify(UUID uuid)
-	{
-		return this.enableNotify(uuid, Interval.INFINITE, null);
-	}
-
-	/**
-	 * Enables notification on the given characteristic. The listener will be called both for the notifications themselves and for the actual
-	 * registration for the notification. <code>switch</code> on {@link Type#ENABLING_NOTIFICATION}
-	 * and {@link Type#NOTIFICATION} (or {@link Type#INDICATION}) in your listener to distinguish between these.
-	 *
-	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
-	 */
-	public ReadWriteListener.ReadWriteEvent enableNotify(UUID uuid, ReadWriteListener listener)
-	{
-		return this.enableNotify(uuid, Interval.INFINITE, listener);
-	}
-
-	/**
 	 * Returns <code>true</code> if notifications are enabled for the given uuid.
 	 * NOTE: {@link #isNotifyEnabling(UUID)} may return true here even if this returns false.
 	 *
@@ -4050,6 +4093,66 @@ public class BleDevice implements UsesCustomNull
 		final E_NotifyState notifyState = m_pollMngr.getNotifyState(uuid);
 
 		return notifyState == E_NotifyState.ENABLING;
+	}
+
+	/**
+	 * Overload for {@link #enableNotify(UUID)}.
+	 */
+	public void enableNotify(final UUID[] uuids)
+	{
+		this.enableNotify(uuids, Interval.INFINITE, null);
+	}
+
+	/**
+	 * Overload for {@link #enableNotify(UUID, ReadWriteListener)}.
+	 */
+	public void enableNotify(final UUID[] uuids, ReadWriteListener listener)
+	{
+		this.enableNotify(uuids, Interval.INFINITE, listener);
+	}
+
+	/**
+	 * Overload for {@link #enableNotify(UUID, Interval)}.
+	 */
+	public void enableNotify(final UUID[] uuids, final Interval forceReadTimeout)
+	{
+		this.enableNotify(uuids, forceReadTimeout, null);
+	}
+
+	/**
+	 * Overload for {@link #enableNotify(UUID, Interval, ReadWriteListener)}.
+	 */
+	public void enableNotify(final UUID[] uuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+	{
+		for( int i = 0; i < uuids.length; i++ )
+		{
+			final UUID ith = uuids[i];
+
+			enableNotify(ith, forceReadTimeout, listener);
+		}
+	}
+
+	/**
+	 * Same as {@link #enableNotify(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} but you can use
+	 * this if you don't need a callback. Callbacks will still be posted to {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener}
+	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} and
+	 * {@link BleManager#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+	 */
+	public ReadWriteListener.ReadWriteEvent enableNotify(UUID uuid)
+	{
+		return this.enableNotify(uuid, Interval.INFINITE, null);
+	}
+
+	/**
+	 * Enables notification on the given characteristic. The listener will be called both for the notifications themselves and for the actual
+	 * registration for the notification. <code>switch</code> on {@link Type#ENABLING_NOTIFICATION}
+	 * and {@link Type#NOTIFICATION} (or {@link Type#INDICATION}) in your listener to distinguish between these.
+	 *
+	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+	 */
+	public ReadWriteListener.ReadWriteEvent enableNotify(UUID uuid, ReadWriteListener listener)
+	{
+		return this.enableNotify(uuid, Interval.INFINITE, listener);
 	}
 
 	/**
@@ -4174,6 +4277,43 @@ public class BleDevice implements UsesCustomNull
 	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID uuid, final Interval forceReadTimeout)
 	{
 		return this.disableNotify_private(uuid, Interval.secs(forceReadTimeout), null);
+	}
+
+	/**
+	 * Overload for {@link #disableNotify(UUID, ReadWriteListener)}.
+	 */
+	public void disableNotify(final UUID[] uuids, final ReadWriteListener listener)
+	{
+		this.disableNotify(uuids, null, listener);
+	}
+
+	/**
+	 * Overload for {@link #disableNotify(UUID)}.
+	 */
+	public void disableNotify(final UUID[] uuids)
+	{
+		this.disableNotify(uuids, null, null);
+	}
+
+	/**
+	 * Overload for {@link #disableNotify(UUID, Interval)}.
+	 */
+	public void disableNotify(final UUID[] uuids, final Interval forceReadTimeout)
+	{
+		this.disableNotify(uuids, forceReadTimeout, null);
+	}
+
+	/**
+	 * Overload for {@link #disableNotify(UUID, Interval, BleDevice.ReadWriteListener)}.
+	 */
+	public void disableNotify(final UUID[] uuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+	{
+		for( int i = 0; i < uuids.length; i++ )
+		{
+			final UUID ith = uuids[i];
+
+			disableNotify(ith, forceReadTimeout, listener);
+		}
 	}
 
 	/**

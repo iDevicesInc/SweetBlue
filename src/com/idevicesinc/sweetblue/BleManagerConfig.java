@@ -366,6 +366,45 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Interval autoScanDelayAfterResume			= Interval.secs(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
+
+	/**
+	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices.
+	 * Used in conjunction with {@link #autoScanInterval}, {@link #autoScanIntervalWhileAppIsPaused}, and {@link #autoScanDelayAfterResume},
+	 * this option allows the library to periodically send off scan "pulses" that last {@link #autoScanTime} seconds.
+	 * Use {@link BleManager#startPeriodicScan(Interval, Interval)} to adjust this behavior while the library is running.
+	 * If either {@link #autoScanTime} or {@link #autoScanInterval} is {@link Interval#DISABLED} then auto scanning is disabled.
+	 * It can also be turned off with {@link BleManager#stopPeriodicScan()}.
+	 *
+	 * @see #autoScanInterval
+	 * @see BleManager#startPeriodicScan(Interval, Interval)
+	 * @see BleManager#stopPeriodicScan()
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public Interval autoScanTime						= Interval.DISABLED; //Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
+
+	/**
+	 * Default is {@value #DEFAULT_AUTO_SCAN_INTERVAL} seconds - Length of time in seconds between automatic scan pulses defined by {@link #autoScanTime}.
+	 *
+	 * @see #autoScanTime
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public Interval autoScanInterval					= Interval.secs(DEFAULT_AUTO_SCAN_INTERVAL);
+
+	/**
+	 * Default is {@link Interval#DISABLED} - Same as {@link #autoScanInterval} except this value is used while the app is paused.
+	 *
+	 * @see #autoScanInterval
+	 * @see BleManager#onPause()
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public Interval autoScanIntervalWhileAppIsPaused	= Interval.DISABLED;
+
+	/**
+	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Minimum amount of time in seconds that the library strives to give to a scanning operation.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
+	public Interval	idealMinScanTime					= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
 	 * Default is {@value #DEFAULT_AUTO_UPDATE_RATE} seconds - The rate at which the library's internal update loop ticks.
@@ -375,46 +414,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.RARE)
 	public Interval autoUpdateRate						= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
-	
-	/**
-	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices.
-	 * Used in conjunction with {@link #autoScanInterval}, {@link #autoScanIntervalWhileAppIsPaused}, and {@link #autoScanDelayAfterResume},
-	 * this option allows the library to periodically send off scan "pulses" that last {@link #autoScanTime} seconds.
-	 * Use {@link BleManager#startPeriodicScan(Interval, Interval)} to adjust this behavior while the library is running.
-	 * If either {@link #autoScanTime} or {@link #autoScanInterval} is {@link Interval#DISABLED} then auto scanning is disabled.
-	 * It can also be turned off with {@link BleManager#stopPeriodicScan()}.
-	 * 
-	 * @see #autoScanInterval
-	 * @see BleManager#startPeriodicScan(Interval, Interval)
-	 * @see BleManager#stopPeriodicScan()
-	 */
-	@Nullable(Prevalence.NORMAL)
-	public Interval autoScanTime						= Interval.DISABLED; //Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
-	
-	/**
-	 * Default is {@value #DEFAULT_AUTO_SCAN_INTERVAL} seconds - Length of time in seconds between automatic scan pulses defined by {@link #autoScanTime}.
-	 * 
-	 * @see #autoScanTime
-	 */
-	@Nullable(Prevalence.NORMAL)
-	public Interval autoScanInterval					= Interval.secs(DEFAULT_AUTO_SCAN_INTERVAL);
-	
-	/**
-	 * Default is {@link Interval#DISABLED} - Same as {@link #autoScanInterval} except this value is used while the app is paused.
-	 * 
-	 * @see #autoScanInterval
-	 * @see BleManager#onPause()
-	 */
-	@Nullable(Prevalence.NORMAL)
-	public Interval autoScanIntervalWhileAppIsPaused	= Interval.DISABLED;
-	
-	/**
-	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Minimum amount of time in seconds that the library strives to give to a scanning operation.  
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	@Nullable(Prevalence.NORMAL)
-	public Interval	idealMinScanTime					= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
-	
+
 	/**
 	 * Default is <code>null</code>, meaning no filtering - all discovered devices will
 	 * be piped through your {@link BleManager.DiscoveryListener} instance

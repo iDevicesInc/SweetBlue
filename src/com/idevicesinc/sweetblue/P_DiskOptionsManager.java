@@ -173,21 +173,34 @@ class P_DiskOptionsManager
 		}
 	}
 
+	void clearName(final String macAddress)
+	{
+		final E_Namespace namespace = E_Namespace.DEVICE_NAME;
+
+		clearNamespace(macAddress, namespace);
+	}
+
+	private void clearNamespace(final String macAddress, final E_Namespace namespace)
+	{
+		final int ordinal = namespace.ordinal();
+		final SharedPreferences prefs = prefs(namespace);
+		prefs.edit().remove(macAddress).commit();
+
+		final HashMap ith = m_inMemoryDbs[ordinal];
+
+		if( ith != null )
+		{
+			ith.remove(macAddress);
+		}
+	}
+
 	void clear(final String macAddress)
 	{
 		final E_Namespace[] values = E_Namespace.values();
 
 		for( int i = 0; i < values.length; i++ )
 		{
-			final SharedPreferences prefs = prefs(values[i]);
-			prefs.edit().remove(macAddress).commit();
-
-			final HashMap ith = m_inMemoryDbs[i];
-
-			if( ith != null )
-			{
-				ith.remove(macAddress);
-			}
+			clearNamespace(macAddress, values[i]);
 		}
 	}
 }

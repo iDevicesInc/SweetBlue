@@ -526,6 +526,11 @@ public class Utils
 		return result;
 	}
 
+	public static byte boolToByte(final boolean value)
+	{
+		return (byte) (value ? 0x1 : 0x0);
+	}
+
 	public static byte[] intToBytes(int l)
 	{
 		byte[] result = new byte[4];

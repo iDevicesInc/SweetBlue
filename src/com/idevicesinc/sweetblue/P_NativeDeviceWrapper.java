@@ -62,6 +62,11 @@ class P_NativeDeviceWrapper
 		updateName(name_native_override, name_normalized);
 	}
 
+	void clearName_override()
+	{
+		setName_override(m_name_native);
+	}
+
 	private void updateName(String name_native, String name_normalized)
 	{
 		name_native = name_native != null ? name_native : "";

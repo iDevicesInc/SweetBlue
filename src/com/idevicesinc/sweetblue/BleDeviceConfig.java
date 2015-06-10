@@ -1084,7 +1084,7 @@ public class BleDeviceConfig implements Cloneable
 	 * even across app restarts.
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Boolean saveNameChangesToDisk						= false;
+	public Boolean saveNameChangesToDisk						= true;
 	
 	/**
 	 * Default is <code>true</code> - whether to automatically get services immediately after a {@link BleDevice} is
