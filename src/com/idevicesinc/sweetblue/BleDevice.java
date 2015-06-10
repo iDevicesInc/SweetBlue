@@ -2978,6 +2978,9 @@ public class BleDevice implements UsesCustomNull
 
 		if (isAny(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
+			//--- DRK > Making a judgement call that an explicit connect call here means we bail out of the long term reconnect state.
+			stateTracker_main().remove(RECONNECTING_LONG_TERM, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
 			final ConnectionFailListener.ConnectionFailEvent info_alreadyConnected = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
 
 			m_connectionFailMngr.invokeCallback(info_alreadyConnected);
@@ -4325,7 +4328,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
-		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY);
+		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY);
 	}
 
 	void onUndiscovered(E_Intent intent)
