@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.*;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -1708,6 +1709,15 @@ public class BleManager
 	}
 
 	/**
+	 * Returns the mac addresses of all devices that we know about from both current and previous
+	 * app sessions.
+	 */
+	public @Nullable(Prevalence.NEVER) Iterator<String> getDevices_previouslyConnected()
+	{
+		return m_diskOptionsMngr.getPreviouslyConnectedDevices();
+	}
+
+	/**
 	 * Returns all the devices managed by this class. This generally includes all devices that are either.
 	 * {@link BleDeviceState#ADVERTISING} or {@link BleDeviceState#CONNECTED}.
 	 */
@@ -2574,9 +2584,11 @@ public class BleManager
 
 		if( scanTask != null )
 		{
-			if( scanTask.getState() == PE_TaskState.ARMED || scanTask.getState() == PE_TaskState.EXECUTING )
+			//--- DRK > Not sure why this was originally also for the ARMED case...
+//			if( scanTask.getState() == PE_TaskState.ARMED || scanTask.getState() == PE_TaskState.EXECUTING )
+			if( scanTask.getState() == PE_TaskState.EXECUTING )
 			{
-				tryPurgingStaleDevices(scanTask.getTotalTimeExecuting());
+				tryPurgingStaleDevices(scanTask.getAggregatedTimeArmedAndExecuting());
 			}
 		}
 	}

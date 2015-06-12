@@ -97,7 +97,7 @@ class P_PollManager
 	{
 		private final BleDevice m_device;
 		private final PollingReadListener m_pollingReadListener;
-		private final double m_interval;
+		private double m_interval;
 		private final UUID m_uuid;
 		private final boolean m_usingNotify;
 		private E_NotifyState m_notifyState;
@@ -170,19 +170,20 @@ class P_PollManager
 			if( value == null )
 			{
 				ReadWriteEvent result = new ReadWriteEvent(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0);
-				m_pollingReadListener.onEvent(result);
+
+				m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 			}
 			else
 			{
 				if( value.length == 0 )
 				{
 					ReadWriteEvent result = new ReadWriteEvent(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
-					m_pollingReadListener.onEvent(result);
+					m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 				}
 				else
 				{
 					ReadWriteEvent result = new ReadWriteEvent(m_device, m_uuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0);
-					m_pollingReadListener.onEvent(result);
+					m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 				}
 			}
 			
@@ -239,6 +240,11 @@ class P_PollManager
 			for( int i = m_entries.size()-1; i >= 0; i-- )
 			{
 				CallbackEntry ithEntry = m_entries.get(i);
+
+				if( ithEntry.m_uuid.equals(uuid) )
+				{
+					ithEntry.m_interval = interval;
+				}
 				
 				if( ithEntry.isFor(uuid, interval, /*listener=*/null, usingNotify) )
 				{

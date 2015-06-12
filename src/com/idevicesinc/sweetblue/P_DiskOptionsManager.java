@@ -1,9 +1,13 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import com.idevicesinc.sweetblue.utils.EmptyIterator;
 import com.idevicesinc.sweetblue.utils.State;
 
 class P_DiskOptionsManager
@@ -201,6 +205,22 @@ class P_DiskOptionsManager
 		for( int i = 0; i < values.length; i++ )
 		{
 			clearNamespace(macAddress, values[i]);
+		}
+	}
+
+	Iterator<String> getPreviouslyConnectedDevices()
+	{
+		final SharedPreferences prefs = prefs(E_Namespace.LAST_DISCONNECT);
+
+		Map<String, ?> map = prefs.getAll();
+
+		if( map != null )
+		{
+			return map.keySet().iterator();
+		}
+		else
+		{
+			return new EmptyIterator<String>();
 		}
 	}
 }

@@ -1797,6 +1797,7 @@ public class BleDevice implements UsesCustomNull
 	final P_NativeDeviceWrapper m_nativeWrapper;
 
 	private double m_timeSinceLastDiscovery;
+	private EpochTime m_lastDiscoveryTime = EpochTime.NULL;
 
 	final P_BleDevice_Listeners m_listeners;
 	private final P_ServiceManager m_serviceMngr;
@@ -1965,6 +1966,8 @@ public class BleDevice implements UsesCustomNull
 	private void clear_undiscovery()
 	{
 		// clear_common();
+
+		m_lastDiscoveryTime = EpochTime.NULL;
 	}
 
 	/**
@@ -2031,11 +2034,25 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * How the device was created.
+	 * How the device was originally created, either from scanning or explicit creation.
+	 * <br><br>
+	 * NOTE: That devices for which this returns {@link BleDeviceOrigin#EXPLICIT} may still be
+	 * {@link BleManager.DiscoveryListener.LifeCycle#REDISCOVERED} through {@link BleManager#startScan()}.
 	 */
 	public BleDeviceOrigin getOrigin()
 	{
 		return m_origin;
+	}
+
+	/**
+	 * Returns the last time the device was {@link BleManager.DiscoveryListener.LifeCycle#DISCOVERED}
+	 * or {@link BleManager.DiscoveryListener.LifeCycle#REDISCOVERED}. If {@link #getOrigin()} returns
+	 * {@link BleDeviceOrigin#EXPLICIT} then this will return {@link EpochTime#NULL} unless or until
+	 * the device is {@link BleManager.DiscoveryListener.LifeCycle#REDISCOVERED}.
+	 */
+	public EpochTime getLastDiscoveryTime()
+	{
+		return m_lastDiscoveryTime;
 	}
 
 	/**
@@ -2493,10 +2510,7 @@ public class BleDevice implements UsesCustomNull
 						m_nativeWrapper.updateNativeName(name);
 					}
 
-					if( listener != null )
-					{
-						listener.onEvent(e);
-					}
+					invokeReadWriteCallback(listener, e);
 				}
 			};
 
@@ -3705,7 +3719,7 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns <code>true</code> if there is any historical data for the given characteristic.
+	 * Returns <code>true</code> if there is any historical data for the given uuid.
 	 *
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
@@ -3717,7 +3731,27 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
-	 * Returns <code>true</code> if there is any historical data for the given characteristic within the given range.
+	 * Returns <code>true</code> if there is any historical data for any of the given uuids.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean hasHistoricalData(final UUID[] uuids)
+	{
+		for( int i = 0; i < uuids.length; i++ )
+		{
+			if( hasHistoricalData(uuids[i], EpochTimeRange.FROM_MIN_TO_MAX) )
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Returns <code>true</code> if there is any historical data for the given uuid within the given range.
 	 *
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
@@ -4490,6 +4524,7 @@ public class BleDevice implements UsesCustomNull
 
 	private void onDiscovered_private(List<UUID> advertisedServices_nullable, final int rssi, byte[] scanRecord_nullable)
 	{
+		m_lastDiscoveryTime = EpochTime.now();
 		m_timeSinceLastDiscovery = 0.0;
 		updateRssi(rssi);
 		m_advertisedServices = advertisedServices_nullable == null || advertisedServices_nullable.size() == 0 ? m_advertisedServices : advertisedServices_nullable;

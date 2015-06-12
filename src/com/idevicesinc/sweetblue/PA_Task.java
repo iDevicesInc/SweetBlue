@@ -387,6 +387,11 @@ abstract class PA_Task
 	{
 		return (System.currentTimeMillis() - m_timeCreated)/1000.0;
 	}
+
+	public double getAggregatedTimeArmedAndExecuting()
+	{
+		return m_totalTimeArmedAndExecuting;
+	}
 	
 	public BleDevice getDevice()
 	{

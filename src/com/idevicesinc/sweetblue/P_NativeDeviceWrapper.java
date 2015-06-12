@@ -37,7 +37,7 @@ class P_NativeDeviceWrapper
 
 		//--- DRK > Manager can be null for BleDevice.NULL.
 		final boolean hitDiskForOverrideName = true;
-		final String name_disk = m_mngr == null ? m_mngr.m_diskOptionsMngr.loadName(m_device.getMacAddress(), hitDiskForOverrideName) : null;
+		final String name_disk = m_mngr != null ? m_mngr.m_diskOptionsMngr.loadName(m_address, hitDiskForOverrideName) : null;
 
 		if( name_disk != null )
 		{
@@ -46,6 +46,8 @@ class P_NativeDeviceWrapper
 		else
 		{
 			setName_override(m_name_native);
+			final boolean saveToDisk = BleDeviceConfig.bool(m_device.conf_device().saveNameChangesToDisk, m_device.conf_mngr().saveNameChangesToDisk);
+			m_mngr.m_diskOptionsMngr.saveName(m_address, m_name_native, saveToDisk);
 		}
 	}
 
