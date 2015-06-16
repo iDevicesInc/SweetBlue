@@ -127,6 +127,14 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 	}
 
 	/**
+	 * Returns the delta resulting from <code>this-epochTime</code>.
+	 */
+	public EpochTimeRange minus(final EpochTime epochTime)
+	{
+		return EpochTimeRange.fromGiven_toGiven(epochTime, this);
+	}
+
+	/**
 	 * Returns <code>true</code> if <code>this</code> is referentially equal to {@link #NULL}.
 	 */
 	@Override public boolean isNull()

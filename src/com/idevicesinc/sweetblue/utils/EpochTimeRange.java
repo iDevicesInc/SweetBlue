@@ -5,6 +5,8 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
 
 /**
  * Class representing a range of time between two instances of {@link com.idevicesinc.sweetblue.utils.EpochTime}.
+ * This is similar to {@link Interval} but stores the actual beginning and end times and is generally meant for longer
+ * periods of time.
  */
 @Immutable
 public class EpochTimeRange implements UsesCustomNull
@@ -20,6 +22,10 @@ public class EpochTimeRange implements UsesCustomNull
 
 	public static final EpochTimeRange FROM_1970_TO_MAX = new EpochTimeRange(EpochTime.ZERO, EpochTime.MAX);
 
+	public static final EpochTimeRange ZERO = new EpochTimeRange(EpochTime.ZERO, EpochTime.ZERO);
+
+	public static final EpochTimeRange FIVE_SECONDS = new EpochTimeRange(EpochTime.ZERO, new EpochTime(1000 * 5));
+
 	/**
 	 * Returns a new instance representing the time range from the given value to {@link Long#MAX_VALUE}.
 	 */
@@ -32,6 +38,14 @@ public class EpochTimeRange implements UsesCustomNull
 	 * Returns a new instance representing the time range from the given value to now.
 	 */
 	public static EpochTimeRange fromGiven_toNow(final EpochTime from)
+	{
+		return new EpochTimeRange(from, EpochTime.now());
+	}
+
+	/**
+	 * Basically just a more readable overload for the normal constructor {@link #EpochTimeRange(EpochTime, EpochTime)}.
+	 */
+	public static EpochTimeRange fromGiven_toGiven(final EpochTime from, final EpochTime to)
 	{
 		return new EpochTimeRange(from, EpochTime.now());
 	}
@@ -138,6 +152,14 @@ public class EpochTimeRange implements UsesCustomNull
 	}
 
 	/**
+	 * Returns the raw milliseconds between {@link #from()} and {@link #to()}.
+	 */
+	public long getDelta()
+	{
+		return to().toMilliseconds() - from().toMilliseconds();
+	}
+
+	/**
 	 * See {@link #isInvalid()} and {@link #isZero()}.
 	 */
 	public boolean isInvalidOrZero()
@@ -151,5 +173,37 @@ public class EpochTimeRange implements UsesCustomNull
 	@Override public boolean isNull()
 	{
 		return this == NULL;
+	}
+
+	/**
+	 * "less than" comparison.
+	 */
+	public boolean lt(final EpochTimeRange otherRange)
+	{
+		return this.getDelta() < otherRange.getDelta();
+	}
+
+	/**
+	 * "less than or equal" comparison.
+	 */
+	public boolean lte(final EpochTimeRange otherRange)
+	{
+		return this.getDelta() <= otherRange.getDelta();
+	}
+
+	/**
+	 * "greater than" comparison.
+	 */
+	public boolean gt(final EpochTimeRange otherRange)
+	{
+		return this.getDelta() > otherRange.getDelta();
+	}
+
+	/**
+	 * "greater than or equal" comparison.
+	 */
+	public boolean gte(final EpochTimeRange otherRange)
+	{
+		return this.getDelta() >= otherRange.getDelta();
 	}
 }

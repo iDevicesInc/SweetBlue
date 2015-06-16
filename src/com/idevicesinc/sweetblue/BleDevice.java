@@ -388,6 +388,14 @@ public class BleDevice implements UsesCustomNull
 			private final Target m_target;
 
 			/**
+			 * The {@link UUID} of the service associated with this {@link ReadWriteEvent}. This will always be a non-null {@link UUID},
+			 * even if {@link #target} is {@link Target#DESCRIPTOR}. If {@link #target} is {@link Target#RSSI} then this will be referentially equal
+			 * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
+			 */
+			public UUID serviceUuid() {  return m_serviceUuid;  }
+			private final UUID m_serviceUuid;
+
+			/**
 			 * The {@link UUID} of the characteristic associated with this {@link ReadWriteEvent}. This will always be a non-null {@link UUID},
 			 * even if {@link #target} is {@link Target#DESCRIPTOR}. If {@link #target} is {@link Target#RSSI} then this will be referentially equal
 			 * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
@@ -465,9 +473,15 @@ public class BleDevice implements UsesCustomNull
 			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
-			ReadWriteEvent(BleDevice device, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime)
+			ReadWriteEvent(BleDevice device, P_Characteristic characteristic, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime)
+			{
+				this(device, characteristic.getServiceUuid(), characteristic.getUuid(), descUuid, type, target, data, status, gattStatus, totalTime, transitTime);
+			}
+
+			ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime)
 			{
 				this.m_device = device;
+				this.m_serviceUuid = serviceUuid != null ? serviceUuid : NON_APPLICABLE_UUID;
 				this.m_charUuid = charUuid != null ? charUuid : NON_APPLICABLE_UUID;
 				this.m_descUuid = descUuid != null ? descUuid : NON_APPLICABLE_UUID;
 				this.m_type = type;
@@ -485,6 +499,7 @@ public class BleDevice implements UsesCustomNull
 				this.m_device = device;
 				this.m_charUuid = NON_APPLICABLE_UUID;
 				this.m_descUuid = NON_APPLICABLE_UUID;
+				this.m_serviceUuid = NON_APPLICABLE_UUID;
 				this.m_type = type;
 				this.m_target = Target.RSSI;
 				this.m_status = status;
@@ -497,16 +512,16 @@ public class BleDevice implements UsesCustomNull
 
 			static ReadWriteEvent NULL(BleDevice device)
 			{
-				return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs());
+				return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs());
 			}
 
 			/**
-			 * Forwards {@link BleDevice#getNativeCharacteristic(UUID)}, which will be non=null
+			 * Forwards {@link BleDevice#getNativeCharacteristic(UUID, UUID)}, which will be non=null
 			 * if {@link #target()} is {@link Target#CHARACTERISTIC} or {@link Target#DESCRIPTOR}.
 			 */
 			public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
 			{
-				return device().getNativeCharacteristic(charUuid());
+				return device().getNativeCharacteristic(serviceUuid(), charUuid());
 			}
 
 			/**
@@ -2605,7 +2620,9 @@ public class BleDevice implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID charUuid, final UUID descUUID)
 	{
-		final BluetoothGattCharacteristic char_native = getNativeCharacteristic(charUuid);
+		final UUID serviceUuid = null;
+
+		final BluetoothGattCharacteristic char_native = getNativeCharacteristic(serviceUuid, charUuid);
 
 		if( char_native == null )  return null;
 
@@ -2621,9 +2638,24 @@ public class BleDevice implements UsesCustomNull
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID uuid)
+	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID characteristicUuid)
 	{
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		final UUID serviceUuid = null;
+
+		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+
+		if (characteristic == null)  return null;
+
+		return characteristic.getGuaranteedNative();
+	}
+
+	/**
+	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
+	{
+		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 
 		if (characteristic == null)  return null;
 
@@ -3133,9 +3165,11 @@ public class BleDevice implements UsesCustomNull
 	 * @see #enableNotify(UUID, ReadWriteListener)
 	 * @see #stopPoll(UUID, ReadWriteListener)
 	 */
-	public void startPoll(final UUID uuid, final Interval interval, final ReadWriteListener listener)
+	public void startPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
 	{
-		m_pollMngr.startPoll(uuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+		final UUID serviceUuid = null;
+
+		m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
 	}
 
 	/**
@@ -3143,9 +3177,25 @@ public class BleDevice implements UsesCustomNull
 	 * <br><br>
 	 * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
 	 */
-	public void startPoll(final UUID uuid, final Interval interval)
+	public void startPoll(final UUID characteristicUuid, final Interval interval)
 	{
-		startPoll(uuid, interval, null);
+		startPoll(characteristicUuid, interval, null);
+	}
+
+	/**
+	 * Overload of {@link #startPoll(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+	{
+		m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+	}
+
+	/**
+	 * Overload of {@link #startPoll(UUID, Interval)} for when you have characteristics with identical uuids under different services.
+	 */
+	public void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval)
+	{
+		startPoll(serviceUuid, characteristicUuid, interval, null);
 	}
 
 	/**
@@ -3178,9 +3228,19 @@ public class BleDevice implements UsesCustomNull
 	 * <br><br>
 	 * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}.
 	 */
-	public void startChangeTrackingPoll(final UUID uuid, final Interval interval, final ReadWriteListener listener)
+	public void startChangeTrackingPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
 	{
-		m_pollMngr.startPoll(uuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+		final UUID serviceUuid = null;
+
+		m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+	}
+
+	/**
+	 * Overload of {@link #startChangeTrackingPoll(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public void startChangeTrackingPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+	{
+		m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
 	}
 
 	/**
@@ -3190,33 +3250,71 @@ public class BleDevice implements UsesCustomNull
 	 * @see #startPoll(UUID, Interval, ReadWriteListener)
 	 * @see #startChangeTrackingPoll(UUID, Interval, ReadWriteListener)
 	 */
-	public void stopPoll(final UUID uuid, final ReadWriteListener listener)
+	public void stopPoll(final UUID characteristicUuid, final ReadWriteListener listener)
 	{
-		stopPoll_private(uuid, null, listener);
+		final UUID serviceUuid = null;
+
+		stopPoll_private(serviceUuid, characteristicUuid, null, listener);
 	}
 
 	/**
 	 * Same as {@link #stopPoll(java.util.UUID, BleDevice.ReadWriteListener)} but without the listener.
 	 */
-	public void stopPoll(final UUID uuid)
+	public void stopPoll(final UUID characteristicUuid)
 	{
-		stopPoll(uuid, (ReadWriteListener) null);
+		stopPoll(characteristicUuid, (ReadWriteListener) null);
 	}
 
 	/**
 	 * Same as {@link #stopPoll(UUID, ReadWriteListener)} but with added filtering for the poll {@link Interval}.
 	 */
-	public void stopPoll(final UUID uuid, final Interval interval, final ReadWriteListener listener)
+	public void stopPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
 	{
-		stopPoll_private(uuid, interval != null ? interval.secs() : null, listener);
+		final UUID serviceUuid = null;
+
+		stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, listener);
 	}
 
 	/**
 	 * Same as {@link #stopPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} but without the listener.
 	 */
-	public void stopPoll(final UUID uuid, final Interval interval)
+	public void stopPoll(final UUID characteristicUuid, final Interval interval)
 	{
-		stopPoll_private(uuid, interval != null ? interval.secs() : null, null);
+		final UUID serviceUuid = null;
+
+		stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, null);
+	}
+
+	/**
+	 * Overload of {@link #stopPoll(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
+	{
+		stopPoll_private(serviceUuid, characteristicUuid, null, listener);
+	}
+
+	/**
+	 * Overload of {@link #stopPoll(UUID)} for when you have characteristics with identical uuids under different services.
+	 */
+	public void stopPoll(final UUID serviceUuid, final UUID characteristicUuid)
+	{
+		stopPoll(serviceUuid, characteristicUuid, (ReadWriteListener) null);
+	}
+
+	/**
+	 * Overload of {@link #stopPoll(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+	{
+		stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, listener);
+	}
+
+	/**
+	 * Overload of {@link #stopPoll(UUID, Interval)} for when you have characteristics with identical uuids under different services.
+	 */
+	public void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval)
+	{
+		stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, null);
 	}
 
 	/**
@@ -3253,9 +3351,9 @@ public class BleDevice implements UsesCustomNull
 	 *
 	 * @see #write(UUID, byte[], ReadWriteListener)
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID uuid, final byte[] data)
+	public ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data)
 	{
-		return this.write(uuid, data, (ReadWriteListener) null);
+		return this.write(characteristicUuid, data, (ReadWriteListener) null);
 	}
 
 	/**
@@ -3265,9 +3363,27 @@ public class BleDevice implements UsesCustomNull
 	 *
 	 * @see #write(UUID, byte[])
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID uuid, final byte[] data, final ReadWriteListener listener)
+	public ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
 	{
-		return write_internal(uuid, data, new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread));
+		final UUID serviceUuid = null;
+
+		return write_internal(serviceUuid, characteristicUuid, data, new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread));
+	}
+
+	/**
+	 * Overload of {@link #write(UUID, byte[])} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data)
+	{
+		return this.write(serviceUuid, characteristicUuid, data, (ReadWriteListener) null);
+	}
+
+	/**
+	 * Overload of {@link #write(UUID, byte[], ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
+	{
+		return write_internal(serviceUuid, characteristicUuid, data, new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread));
 	}
 
 	/**
@@ -3290,7 +3406,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(Uuids.INVALID, EMPTY_BYTE_ARRAY, Type.READ, ReadWriteListener.Target.RSSI);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(Uuids.INVALID, Uuids.INVALID, EMPTY_BYTE_ARRAY, Type.READ, ReadWriteListener.Target.RSSI);
 
 		if (earlyOutResult != null)
 		{
@@ -4083,9 +4199,11 @@ public class BleDevice implements UsesCustomNull
 	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} and
 	 * {@link BleManager#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
 	 */
-	public ReadWriteListener.ReadWriteEvent read(UUID uuid)
+	public ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid)
 	{
-		return read_internal(uuid, Type.READ, null);
+		final UUID serviceUuid = null;
+
+		return read_internal(serviceUuid, characteristicUuid, Type.READ, null);
 	}
 
 	/**
@@ -4093,11 +4211,31 @@ public class BleDevice implements UsesCustomNull
 	 *
 	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
 	 */
-	public ReadWriteListener.ReadWriteEvent read(UUID uuid, final ReadWriteListener listener)
+	public ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final ReadWriteListener listener)
 	{
 		final ReadWriteListener listener_override = getManager() == null ? listener : new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
 
-		return read_internal(uuid, Type.READ, listener_override);
+		final UUID serviceUuid = null;
+
+		return read_internal(serviceUuid, characteristicUuid, Type.READ, listener_override);
+	}
+
+	/**
+	 * Overload of {@link #read(UUID)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid)
+	{
+		return read_internal(serviceUuid, characteristicUuid, Type.READ, null);
+	}
+
+	/**
+	 * Overload of {@link #read(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
+	{
+		final ReadWriteListener listener_override = getManager() == null ? listener : new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
+
+		return read_internal(serviceUuid, characteristicUuid, Type.READ, listener_override);
 	}
 
 	/**
@@ -4110,7 +4248,9 @@ public class BleDevice implements UsesCustomNull
 	{
 		if( isNull() )  return false;
 
-		final E_NotifyState notifyState = m_pollMngr.getNotifyState(uuid);
+		final UUID serviceUuid = null;
+
+		final E_NotifyState notifyState = m_pollMngr.getNotifyState(serviceUuid, uuid);
 
 		return notifyState == E_NotifyState.ENABLED;
 	}
@@ -4124,7 +4264,9 @@ public class BleDevice implements UsesCustomNull
 	{
 		if( isNull() )  return false;
 
-		final E_NotifyState notifyState = m_pollMngr.getNotifyState(uuid);
+		final UUID serviceUuid = null;
+
+		final E_NotifyState notifyState = m_pollMngr.getNotifyState(serviceUuid, uuid);
 
 		return notifyState == E_NotifyState.ENABLING;
 	}
@@ -4172,9 +4314,9 @@ public class BleDevice implements UsesCustomNull
 	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} and
 	 * {@link BleManager#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
 	 */
-	public ReadWriteListener.ReadWriteEvent enableNotify(UUID uuid)
+	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid)
 	{
-		return this.enableNotify(uuid, Interval.INFINITE, null);
+		return this.enableNotify(null, characteristicUuid, Interval.INFINITE, null);
 	}
 
 	/**
@@ -4184,9 +4326,9 @@ public class BleDevice implements UsesCustomNull
 	 *
 	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
 	 */
-	public ReadWriteListener.ReadWriteEvent enableNotify(UUID uuid, ReadWriteListener listener)
+	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, ReadWriteListener listener)
 	{
-		return this.enableNotify(uuid, Interval.INFINITE, listener);
+		return this.enableNotify(null, characteristicUuid, Interval.INFINITE, listener);
 	}
 
 	/**
@@ -4195,9 +4337,9 @@ public class BleDevice implements UsesCustomNull
 	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} and
 	 * {@link BleManager#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
 	 */
-	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID uuid, final Interval forceReadTimeout)
+	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
 	{
-		return this.enableNotify(uuid, forceReadTimeout, null);
+		return this.enableNotify(null, characteristicUuid, forceReadTimeout, null);
 	}
 
 	/**
@@ -4207,9 +4349,41 @@ public class BleDevice implements UsesCustomNull
 	 *
 	 * @return (same as {@link #enableNotify(UUID, ReadWriteListener)}).
 	 */
-	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID uuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+		return this.enableNotify(null, characteristicUuid, forceReadTimeout, listener);
+	}
+
+	/**
+	 * Overload of {@link #enableNotify(UUID)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid)
+	{
+		return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null);
+	}
+
+	/**
+	 * Overload of {@link #enableNotify(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, ReadWriteListener listener)
+	{
+		return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, listener);
+	}
+
+	/**
+	 * Overload of {@link #enableNotify(UUID, Interval)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
+	{
+		return this.enableNotify(serviceUuid, characteristicUuid, forceReadTimeout, null);
+	}
+
+	/**
+	 * Overload of {@link #enableNotify(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+	{
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -4223,8 +4397,8 @@ public class BleDevice implements UsesCustomNull
 			}
 		}
 
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
-		final E_NotifyState notifyState = m_pollMngr.getNotifyState(uuid);
+		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+		final E_NotifyState notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
 		final boolean shouldSendOutNotifyEnable = notifyState == E_NotifyState.NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
 		final ReadWriteEvent result;
@@ -4235,9 +4409,9 @@ public class BleDevice implements UsesCustomNull
 			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
-			m_queue.add(new P_Task_ToggleNotify(this, uuid, /*enable=*/true, wrappingListener));
+			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, wrappingListener));
 
-			m_pollMngr.onNotifyStateChange(uuid, E_NotifyState.ENABLING);
+			m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, E_NotifyState.ENABLING);
 
 			result = NULL_READWRITE_EVENT();
 		}
@@ -4245,7 +4419,7 @@ public class BleDevice implements UsesCustomNull
 		{
 			if (listener != null && isConnected )
 			{
-				result = m_pollMngr.newAlreadyEnabledResult(characteristic, uuid);
+				result = m_pollMngr.newAlreadyEnabledResult(characteristic, serviceUuid, characteristicUuid);
 
 				invokeReadWriteCallback(listener, result);
 			}
@@ -4264,7 +4438,7 @@ public class BleDevice implements UsesCustomNull
 			result = NULL_READWRITE_EVENT();
 		}
 
-		m_pollMngr.startPoll(uuid, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
+		m_pollMngr.startPoll(serviceUuid, characteristicUuid, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
 
 		return result;
 	}
@@ -4277,9 +4451,11 @@ public class BleDevice implements UsesCustomNull
 	 *
 	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
 	 */
-	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID uuid, final ReadWriteListener listener)
+	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final ReadWriteListener listener)
 	{
-		return this.disableNotify_private(uuid, null, listener);
+		final UUID serviceUuid = null;
+
+		return this.disableNotify_private(serviceUuid, characteristicUuid, null, listener);
 	}
 
 	/**
@@ -4287,9 +4463,11 @@ public class BleDevice implements UsesCustomNull
 	 *
 	 * @return (same as {@link #disableNotify(UUID, ReadWriteListener)}).
 	 */
-	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID uuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
 	{
-		return this.disableNotify_private(uuid, Interval.secs(forceReadTimeout), listener);
+		final UUID serviceUuid = null;
+
+		return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), listener);
 	}
 
 	/**
@@ -4298,9 +4476,11 @@ public class BleDevice implements UsesCustomNull
 	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} and
 	 * {@link BleManager#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
 	 */
-	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID uuid)
+	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid)
 	{
-		return this.disableNotify_private(uuid, null, null);
+		final UUID serviceUuid = null;
+
+		return this.disableNotify_private(serviceUuid, characteristicUuid, null, null);
 	}
 
 	/**
@@ -4308,9 +4488,43 @@ public class BleDevice implements UsesCustomNull
 	 *
 	 * @return (same as {@link #disableNotify(UUID, ReadWriteListener)}).
 	 */
-	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID uuid, final Interval forceReadTimeout)
+	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
 	{
-		return this.disableNotify_private(uuid, Interval.secs(forceReadTimeout), null);
+		final UUID serviceUuid = null;
+
+		return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null);
+	}
+
+	/**
+	 * Overload of {@link #disableNotify(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
+	{
+		return this.disableNotify_private(serviceUuid, characteristicUuid, null, listener);
+	}
+
+	/**
+	 * Overload of {@link #disableNotify(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+	{
+		return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), listener);
+	}
+
+	/**
+	 * Overload of {@link #disableNotify(UUID)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid)
+	{
+		return this.disableNotify_private(serviceUuid, characteristicUuid, null, null);
+	}
+
+	/**
+	 * Overload of {@link #disableNotify(UUID, Interval)} for when you have characteristics with identical uuids under different services.
+	 */
+	public ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
+	{
+		return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null);
 	}
 
 	/**
@@ -5181,14 +5395,14 @@ public class BleDevice implements UsesCustomNull
 		m_queue.softlyCancelTasks(m_dummyDisconnectTask);
 	}
 
-	private void stopPoll_private(final UUID uuid, final Double interval, final ReadWriteListener listener)
+	private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final Double interval, final ReadWriteListener listener)
 	{
-		m_pollMngr.stopPoll(uuid, interval, listener, /* usingNotify= */false);
+		m_pollMngr.stopPoll(serviceUuid, characteristicUuid, interval, listener, /* usingNotify= */false);
 	}
 
-	ReadWriteListener.ReadWriteEvent read_internal(final UUID uuid, final Type type, final ReadWriteListener listener)
+	ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final Type type, final ReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, type, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, type, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5197,18 +5411,18 @@ public class BleDevice implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 
 		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
 
-		m_queue.add(new P_Task_Read(this, uuid, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
 		return NULL_READWRITE_EVENT();
 	}
 
-	ReadWriteListener.ReadWriteEvent write_internal(final UUID uuid, final byte[] data, final P_WrappingReadWriteListener listener)
+	ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final P_WrappingReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(serviceUuid, characteristicUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5217,18 +5431,18 @@ public class BleDevice implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 
 		boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.WRITE);
 
-		m_queue.add(new P_Task_Write(this, uuid, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		m_queue.add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
 		return NULL_READWRITE_EVENT();
 	}
 
-	private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID uuid, Double forceReadTimeout, ReadWriteListener listener)
+	private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, ReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(uuid, EMPTY_BYTE_ARRAY, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5237,15 +5451,15 @@ public class BleDevice implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(uuid);
+		P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 
 		if (characteristic != null && is(CONNECTED))
 		{
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
-			m_queue.add(new P_Task_ToggleNotify(this, uuid, /* enable= */false, wrappingListener));
+			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, wrappingListener));
 		}
 
-		m_pollMngr.stopPoll(uuid, forceReadTimeout, listener, /* usingNotify= */true);
+		m_pollMngr.stopPoll(serviceUuid, characteristicUuid, forceReadTimeout, listener, /* usingNotify= */true);
 
 		return NULL_READWRITE_EVENT();
 	}

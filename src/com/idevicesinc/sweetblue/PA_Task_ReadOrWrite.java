@@ -14,21 +14,21 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 {
 	private static final String FIELD_NAME_AUTH_RETRY = "mAuthRetry";
 	
-	protected final UUID m_uuid;
+	protected final P_Characteristic m_characteristic;
 	protected final ReadWriteListener m_readWriteListener;
 	
 	private Boolean m_authRetryValue_onExecute = null;
 	private boolean m_triedToKickOffBond = false;
 	
-	PA_Task_ReadOrWrite(BleDevice device, UUID uuid, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+	PA_Task_ReadOrWrite(BleDevice device, P_Characteristic characteristic, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
 	{
 		super(device, txn_nullable, requiresBonding, priority);
-		
-		m_uuid = uuid;
+
+		m_characteristic = characteristic;
 		m_readWriteListener = readWriteListener;
 	}
 	
-	protected abstract ReadWriteEvent newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid);
+	protected abstract ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid);
 	
 	//--- DRK > Will have to be overridden in the future if we decide to support descriptor reads/writes.
 	protected Target getDefaultTarget()
@@ -44,7 +44,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 	
 	protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
-		getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(status, gattStatus, target, charUuid, descUuid));
+		getDevice().invokeReadWriteCallback(m_readWriteListener, newReadWriteEvent(status, gattStatus, target, getServiceUuid(), charUuid, descUuid));
 		
 		this.fail();
 	}
@@ -55,7 +55,8 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 		
 		if( !super_isExecutable )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_uuid, getDescriptorUuid()));
+			final ReadWriteEvent event = newReadWriteEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getServiceUuid(), getCharUuid(), getDescriptorUuid());
+			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 		}
 		
 		return super_isExecutable;
@@ -144,18 +145,23 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 	
 	@Override protected UUID getCharUuid()
 	{
-		return m_uuid;
+		return m_characteristic.getUuid();
+	}
+
+	protected UUID getServiceUuid()
+	{
+		return m_characteristic.getServiceUuid();
 	}
 	
 	protected boolean isFor(UUID uuid)
 	{
-		return uuid.equals(m_uuid);
+		return uuid.equals(getCharUuid());
 	}
 	
 	@Override protected String getToStringAddition()
 	{
 		final String txn = getTxn() != null ? " txn!=null" : " txn==null";
-		return getManager().getLogger().uuidName(m_uuid) + txn;
+		return getManager().getLogger().uuidName(getCharUuid()) + txn;
 	}
 	
 	@Override public void onStateChange(PA_Task task, PE_TaskState state)

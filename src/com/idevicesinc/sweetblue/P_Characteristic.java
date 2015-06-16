@@ -6,11 +6,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
-/**
- * 
- * 
- *
- */
 class P_Characteristic
 {
 	private final BluetoothGattCharacteristic m_native;
@@ -30,6 +25,11 @@ class P_Characteristic
 //		m_device = device;
 //		m_native = characteristic_native;
 //	}
+
+	public UUID getServiceUuid()
+	{
+		return getService().getUuid();
+	}
 	
 	public UUID getUuid()
 	{
