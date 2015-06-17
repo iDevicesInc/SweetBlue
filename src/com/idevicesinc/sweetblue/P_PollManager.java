@@ -150,7 +150,7 @@ class P_PollManager
 		
 		boolean isFor(final UUID serviceUuid, final UUID charUuid)
 		{
-			if( serviceUuid == null )
+			if( serviceUuid == null || m_serviceUuid == null )
 			{
 				return charUuid.equals(m_charUuid);
 			}
