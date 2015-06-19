@@ -1670,12 +1670,12 @@ public class BleDevice implements UsesCustomNull
 			@Override public String toString()
 			{
 				return Utils.toString
-						(
-								this.getClass(),
-								"device", device().getName_debug(),
-								"uuid", device().getManager().getLogger().uuidName(uuid()),
-								"status", status()
-						);
+				(
+					this.getClass(),
+					"device", device().getName_debug(),
+					"uuid", device().getManager().getLogger().uuidName(uuid()),
+					"status", status()
+				);
 			}
 		}
 
@@ -1785,10 +1785,10 @@ public class BleDevice implements UsesCustomNull
 			{
 				return Utils.toString
 				(
-						this.getClass(),
-						"device",			device().getName_debug(),
-						"uuid",				device().getManager().getLogger().uuidName(uuid()),
-						"status",			status()
+					this.getClass(),
+					"device",			device().getName_debug(),
+					"uuid",				device().getManager().getLogger().uuidName(uuid()),
+					"status",			status()
 				);
 			}
 		}
@@ -3406,7 +3406,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(Uuids.INVALID, Uuids.INVALID, EMPTY_BYTE_ARRAY, Type.READ, ReadWriteListener.Target.RSSI);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, EMPTY_BYTE_ARRAY, Type.READ, ReadWriteListener.Target.RSSI);
 
 		if (earlyOutResult != null)
 		{
@@ -3516,7 +3516,14 @@ public class BleDevice implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Alpha
 	public void queryHistoricalData(final String query, final HistoricalDataQueryListener listener)
 	{
-		new Thread()
+		if( isNull() )
+		{
+			listener.onEvent(new HistoricalDataQueryListener.HistoricalDataQueryEvent(this, Uuids.INVALID, new EmptyCursor(), HistoricalDataQueryListener.Status.NULL, query));
+
+			return;
+		}
+
+		m_historicalDataMngr.post(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -3530,8 +3537,7 @@ public class BleDevice implements UsesCustomNull
 					}
 				});
 			}
-
-		}.start();
+		});
 	}
 
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -4383,7 +4389,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5402,7 +5408,7 @@ public class BleDevice implements UsesCustomNull
 
 	ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final Type type, final ReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, type, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, type, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5422,7 +5428,7 @@ public class BleDevice implements UsesCustomNull
 
 	ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final P_WrappingReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(serviceUuid, characteristicUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5442,7 +5448,7 @@ public class BleDevice implements UsesCustomNull
 
 	private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, ReadWriteListener listener)
 	{
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutResult(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, EMPTY_BYTE_ARRAY, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{

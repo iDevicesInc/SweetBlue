@@ -14,9 +14,6 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
-import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 class P_ServiceManager
@@ -112,14 +109,14 @@ class P_ServiceManager
 		}
 	}
 	
-	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetResult(Type type, byte[] data, UUID serviceUuid, UUID characteristicUuid)
+	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetEvent(Type type, byte[] data, UUID serviceUuid, UUID characteristicUuid)
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
 		return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0);
 	}
 	
-	BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutResult(UUID serviceUuid, UUID characteristicUuid, byte[] data, BleDevice.ReadWriteListener.Type type, final Target target)
+	BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, byte[] data, BleDevice.ReadWriteListener.Type type, final Target target)
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
@@ -150,7 +147,7 @@ class P_ServiceManager
 		
 		if( characteristic == null )
 		{
-			return newNoMatchingTargetResult(type, data, serviceUuid, characteristicUuid);
+			return newNoMatchingTargetEvent(type, data, serviceUuid, characteristicUuid);
 		}
 		
 		final BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
@@ -158,7 +155,7 @@ class P_ServiceManager
 		
 		if( char_native == null )
 		{
-			return newNoMatchingTargetResult(type, data, serviceUuid, characteristicUuid);
+			return newNoMatchingTargetEvent(type, data, serviceUuid, characteristicUuid);
 		}
 		
 		if( type != null && type.isWrite() )

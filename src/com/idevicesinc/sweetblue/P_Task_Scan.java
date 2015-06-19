@@ -30,6 +30,17 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
+		//--- DRK > Because scanning has to be done on a separate thread, isExecutable() can return true
+		//---		but then by the time we get here it can be false. isExecutable() is currently not thread-safe
+		//---		either, thus we're doing the manual check in the native stack. Before 5.0 the scan would just fail
+		//---		so we'd fail as we do below, but Android 5.0 makes this an exception for at least some phones (OnePlus One (A0001)).
+		if( !getManager().getNative().getAdapter().isEnabled() )
+		{
+			fail();
+
+			return;
+		}
+
 		m_mode = getManager().startNativeScan(m_explicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
 		
 		if( m_mode == null )

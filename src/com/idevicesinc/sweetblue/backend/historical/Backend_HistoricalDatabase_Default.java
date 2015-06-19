@@ -50,12 +50,12 @@ public class Backend_HistoricalDatabase_Default implements Backend_HistoricalDat
 		printWarning();
 	}
 
-	@Override public void add_multiple_start(final String macAddress, final UUID uuid)
+	@Override public void add_multiple_start()
 	{
 		printWarning();
 	}
 
-	@Override public void add_multiple_next(final HistoricalData data)
+	@Override public void add_multiple_next(final String macAddress, final UUID uuid, final HistoricalData data)
 	{
 		printWarning();
 	}

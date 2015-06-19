@@ -29,9 +29,9 @@ public interface Backend_HistoricalDatabase
 
 	void add_single(final String macAddress, final UUID uuid, final HistoricalData data, final long maxCountToDelete);
 
-	void add_multiple_start(final String macAddress, final UUID uuid);
+	void add_multiple_start();
 
-	void add_multiple_next(final HistoricalData data);
+	void add_multiple_next(final String macAddress, final UUID uuid, final HistoricalData data);
 
 	void add_multiple_end();
 

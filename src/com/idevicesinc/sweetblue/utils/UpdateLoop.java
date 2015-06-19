@@ -55,6 +55,17 @@ public class UpdateLoop
 	{
 		return new UpdateLoop(callback, false);
 	}
+
+	public static UpdateLoop newAnonThreadLoop()
+	{
+		return new UpdateLoop(new Callback()
+		{
+			@Override public void onUpdate(double timestep)
+			{
+
+			}
+		}, false);
+	}
 	
 	private UpdateLoop(Callback callback, boolean runOnMainThread)
 	{
