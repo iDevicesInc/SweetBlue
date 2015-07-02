@@ -31,7 +31,7 @@ class PU_TaskQueue
 	{
 		if( task == null )  return false;
 		
-		if( task.getClass() == taskClass )
+		if( taskClass.isAssignableFrom(task.getClass()) )
 		{
 			if( mngr_nullable == null )
 			{

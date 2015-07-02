@@ -47,7 +47,12 @@ public class Utils
 		s_toFixedFormat.setMaximumFractionDigits(FRACTION_DIGITS);
 		s_toFixedFormat.setMinimumFractionDigits(FRACTION_DIGITS);
 	}
-	
+
+	public static boolean isLollipop()
+	{
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+	}
+
 	public static String toFixed(final double value)
 	{
 		return s_toFixedFormat.format(value);

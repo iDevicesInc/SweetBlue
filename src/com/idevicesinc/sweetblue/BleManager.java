@@ -6,14 +6,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.ScanCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.DeadObjectException;
 import android.os.Handler;
 import android.util.Log;
@@ -722,9 +725,9 @@ public class BleManager
 			  BleManagerConfig m_config;
 		final P_DeviceManager m_deviceMngr;
 		final P_DeviceManager m_deviceMngr_cache;
-	private final P_BleManager_Listeners m_listeners;
+	final P_BleManager_Listeners m_listeners;
 	private final P_BleStateTracker m_stateTracker;
-	private final P_NativeBleStateTracker m_nativeStateTracker;
+	final P_NativeBleStateTracker m_nativeStateTracker;
 	private 	 UpdateLoop m_updateLoop;
 	private final P_TaskQueue m_taskQueue;
 	private 	P_UhOhThrottler m_uhOhThrottler;
@@ -964,6 +967,15 @@ public class BleManager
 	public BluetoothManager getNative()
 	{
 		return m_btMngr;
+	}
+
+	/**
+	 * Returns the native bluetooth adapter.
+	 */
+	@Advanced
+	public BluetoothAdapter getNativeAdapter()
+	{
+		return getNative().getAdapter();
 	}
 
 	/**
@@ -2190,110 +2202,6 @@ public class BleManager
 		}
 	}
 
-	P_Task_Scan.E_Mode startNativeScan(final E_Intent intent)
-	{
-		//--- DRK > Not sure how useful this retry loop is. I've definitely seen startLeScan
-		//---		fail but then work again at a later time (seconds-minutes later), so
-		//---		it's possible that it can recover although I haven't observed it in this loop.
-		int retryCount = 0;
-		final int retryCountMax = 3;
-		while( retryCount <= retryCountMax )
-		{
-			if( m_btMngr.getAdapter().startLeScan(m_listeners.m_scanCallback) )
-			{
-				if( retryCount >= 1 )
-				{
-					//--- DRK > Not really an ASSERT case...rather just really want to know if this can happen
-					//---		so if/when it does I want it to be loud.
-					//---		UPDATE: Yes, this hits...TODO: Now have to determine if this is my fault or Android's.
-					//---		Error message is "09-29 16:37:11.622: E/BluetoothAdapter(16286): LE Scan has already started".
-					//---		Calling stopLeScan below "fixes" the issue.
-//					ASSERT(false, "Started Le scan on attempt number " + retryCount);
-				}
-
-				break;
-			}
-
-			retryCount++;
-
-			if( retryCount <= retryCountMax )
-			{
-				if( retryCount == 1 )
-				{
-					m_logger.w("Failed first startLeScan() attempt. Calling stopLeScan() then trying again...");
-
-					//--- DRK > It's been observed that right on app start up startLeScan can fail with a log
-					//---		message saying it's already started...not sure if it's my fault or not but throwing
-					//---		this in as a last ditch effort to "fix" things.
-					//---
-					//---		UPDATE: It's been observed through simple test apps that when restarting an app through eclipse,
-					//---		Android somehow, sometimes, keeps the same actual BleManager instance in memory, so it's not 
-					//---		far-fetched to assume that the scan from the previous app run can sometimes still be ongoing.
-					m_btMngr.getAdapter().stopLeScan(m_listeners.m_scanCallback);
-				}
-				else
-				{
-					m_logger.w("Failed startLeScan() attempt number " + retryCount + ". Trying again...");
-				}
-			}
-
-			try
-			{
-				Thread.sleep(10);
-			}
-			catch (InterruptedException e)
-			{
-			}
-		}
-
-		if( retryCount > retryCountMax )
-		{
-			m_logger.w("LeScan totally failed to start!");
-
-			if( m_config.revertToClassicDiscoveryIfNeeded )
-			{
-				if( !m_btMngr.getAdapter().startDiscovery() )
-				{
-					m_logger.w("Classic discovery failed to start!");
-
-					m_taskQueue.fail(P_Task_Scan.class, this);
-					uhOh(UhOh.CLASSIC_DISCOVERY_FAILED);
-				}
-				else
-				{
-					m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-					uhOh(UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
-
-					return E_Mode.CLASSIC;
-				}
-			}
-			else
-			{
-				m_taskQueue.fail(P_Task_Scan.class, this);
-				uhOh(UhOh.START_BLE_SCAN_FAILED);
-			}
-		}
-		else
-		{
-			if( retryCount > 0 )
-			{
-				m_logger.w("Started native scan with " + (retryCount+1) + " attempts.");
-			}
-			
-			if( m_config.enableCrashResolver )
-			{
-				m_crashResolver.start();
-			}
-
-			m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-			return E_Mode.BLE;
-		}
-
-		return null;
-	}
-
 	void onDiscovered(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		onDiscovered_synchronized(device_native, rssi, scanRecord_nullable);
@@ -2388,8 +2296,6 @@ public class BleManager
 
     	if ( device == null )
     	{
-
-
 			final String name_native = device_native.getName();
 
     		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
@@ -2463,13 +2369,26 @@ public class BleManager
     	}
     }
 
+	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+	private void stopNativeScan_nested_postLollipop(ScanCallback scanCallback_postLollipop)
+	{
+		getNativeAdapter().getBluetoothLeScanner().stopScan(scanCallback_postLollipop);
+	}
+
 	void stopNativeScan(final P_Task_Scan scanTask)
 	{
 		if( scanTask.getMode() == P_Task_Scan.E_Mode.BLE )
 		{
 			try
 			{
-				m_btMngr.getAdapter().stopLeScan(m_listeners.m_scanCallback);
+				if( Utils.isLollipop() )
+				{
+					stopNativeScan_nested_postLollipop(scanTask.getScanCallback_postLollipop());
+				}
+				else
+				{
+					getNativeAdapter().stopLeScan(m_listeners.m_scanCallback_preLollipop);
+				}
 			}
 			catch(NullPointerException e)
 			{
@@ -2499,7 +2418,7 @@ public class BleManager
 			m_crashResolver.stop();
 		}
 
-		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	void clearScanningRelatedMembers(final E_Intent intent)

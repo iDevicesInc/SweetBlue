@@ -409,7 +409,15 @@ class P_TaskQueue
 	private void clearQueueOf$removeFromQueue(int index)
 	{
 		PA_Task task = m_queue.remove(index);
-		task.setEndingState(PE_TaskState.CLEARED_FROM_QUEUE);
+
+		if( task.wasSoftlyCancelled() )
+		{
+			task.setEndingState(PE_TaskState.SOFTLY_CANCELLED);
+		}
+		else
+		{
+			task.setEndingState(PE_TaskState.CLEARED_FROM_QUEUE);
+		}
 		
 		print();
 	}

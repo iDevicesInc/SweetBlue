@@ -1905,9 +1905,9 @@ public class BleDevice implements UsesCustomNull
 			m_rssiPollMngr_auto = new P_RssiPollManager(this);
 			setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
-			m_queue = m_mngr != null ? m_mngr.getTaskQueue() : null;
+			m_queue = m_mngr != null ? getManager().getTaskQueue() : null;
 			m_listeners = new P_BleDevice_Listeners(this);
-			m_logger = m_mngr != null ? m_mngr.getLogger() : null;
+			m_logger = m_mngr != null ? getManager().getLogger() : null;
 			m_serviceMngr = new P_ServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
@@ -2094,7 +2094,7 @@ public class BleDevice implements UsesCustomNull
 		if( isNull() )  return State.ChangeIntent.NULL;
 
 		boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
-		State.ChangeIntent lastDisconnect = m_mngr.m_diskOptionsMngr.loadLastDisconnect(getMacAddress(), hitDisk);
+		State.ChangeIntent lastDisconnect = getManager().m_diskOptionsMngr.loadLastDisconnect(getMacAddress(), hitDisk);
 
 		return lastDisconnect;
 	}
@@ -2144,7 +2144,7 @@ public class BleDevice implements UsesCustomNull
 
 		if (listener_nullable != null)
 		{
-			m_defaultReadWriteListener = new P_WrappingReadWriteListener(listener_nullable, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
+			m_defaultReadWriteListener = new P_WrappingReadWriteListener(listener_nullable, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
 		}
 		else
 		{
@@ -3103,7 +3103,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		if (isNull())  return false;
 
-		return m_mngr.undiscover(this);
+		return getManager().undiscover(this);
 	}
 
 	/**
@@ -3367,7 +3367,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		final UUID serviceUuid = null;
 
-		return write_internal(serviceUuid, characteristicUuid, data, new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread));
+		return write_internal(serviceUuid, characteristicUuid, data, new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread));
 	}
 
 	/**
@@ -3383,7 +3383,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
 	{
-		return write_internal(serviceUuid, characteristicUuid, data, new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread));
+		return write_internal(serviceUuid, characteristicUuid, data, new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread));
 	}
 
 	/**
@@ -3415,7 +3415,7 @@ public class BleDevice implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		P_WrappingReadWriteListener wrappingListener = listener != null ? new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread) : null;
+		P_WrappingReadWriteListener wrappingListener = listener != null ? new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread) : null;
 		readRssi_internal(Type.READ, wrappingListener);
 
 		return NULL_READWRITE_EVENT();
@@ -4414,7 +4414,7 @@ public class BleDevice implements UsesCustomNull
 		{
 			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 
-			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
+			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
 			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, wrappingListener));
 
 			m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, E_NotifyState.ENABLING);
@@ -4832,7 +4832,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		if (is_internal(INITIALIZED))
 		{
-			m_mngr.ASSERT(false, "Device is initialized but not connected!");
+			getManager().ASSERT(false, "Device is initialized but not connected!");
 
 			return;
 		}
@@ -4885,7 +4885,7 @@ public class BleDevice implements UsesCustomNull
 			boolean mostDefinitelyExplicit = task != null && task.isExplicit();
 
 			//--- DRK > Not positive about this assert...we'll see if it trips.
-			m_mngr.ASSERT(definitelyExplicit || mostDefinitelyExplicit);
+			getManager().ASSERT(definitelyExplicit || mostDefinitelyExplicit);
 
 			stateTracker_main().update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, extraBondingStates);
 		}
@@ -4930,13 +4930,13 @@ public class BleDevice implements UsesCustomNull
 			//--- but that gets immediately soft-cancelled by what will be a redundant connect task.
 			//--- OVERALL, This assert is here because I'm just curious how it hits (it does).
 			String message = "nativelyConnected=" + m_logger.gattConn(m_nativeWrapper.getConnectionState()) + " gatt==" + m_nativeWrapper.getGatt();
-			// m_mngr.ASSERT(false, message);
-			m_mngr.ASSERT(m_nativeWrapper.isNativelyConnected(), message);
+			// getManager().ASSERT(false, message);
+			getManager().ASSERT(m_nativeWrapper.isNativelyConnected(), message);
 
 			return;
 		}
 
-		m_mngr.ASSERT(m_nativeWrapper.getGatt() != null);
+		getManager().ASSERT(m_nativeWrapper.getGatt() != null);
 
 		//--- DRK > There exists a fringe case like this: You try to connect with autoConnect==true in the gatt object.
 		//--- The connection fails, so you stop trying. Then you turn off the remote device. Device gets "undiscovered".
@@ -4946,9 +4946,9 @@ public class BleDevice implements UsesCustomNull
 		//
 		//--- NOTE: We do explicitly disconnect after a connection failure if we're using autoConnect, so this
 		//--- case shouldn't really come up much or at all with that in place.
-		if (!m_mngr.hasDevice(getMacAddress()))
+		if (!getManager().hasDevice(getMacAddress()))
 		{
-			m_mngr.onDiscovered_fromRogueAutoConnect(this, /*newlyDiscovered=*/true, m_advertisedServices, getScanRecord(), getRssi());
+			getManager().onDiscovered_fromRogueAutoConnect(this, /*newlyDiscovered=*/true, m_advertisedServices, getScanRecord(), getRssi());
 		}
 
 		//--- DRK > Some trapdoor logic for bad android ble bug.
@@ -4958,7 +4958,7 @@ public class BleDevice implements UsesCustomNull
 			//--- DRK > Trying to catch fringe condition here of stack lying to
 			// us about bonded state.
 			//--- This is not about finding a logic error in my code.
-			m_mngr.ASSERT(m_mngr.getNative().getAdapter().getBondedDevices().contains(m_nativeWrapper.getDevice()));
+			getManager().ASSERT(getManager().getNative().getAdapter().getBondedDevices().contains(m_nativeWrapper.getDevice()));
 		}
 		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
 
@@ -5064,7 +5064,7 @@ public class BleDevice implements UsesCustomNull
 		//--- DRK > Saving last disconnect as unintentional here in case for some
 		//--- reason app is hard killed or something and we never get a disconnect callback.
 		final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
-		m_mngr.m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
+		getManager().m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 
 		stateTracker().update(lastConnectDisconnectIntent(), gattStatus, extraFlags, RECONNECTING_LONG_TERM, false, CONNECTING_OVERALL, false, AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true);
 
@@ -5161,6 +5161,8 @@ public class BleDevice implements UsesCustomNull
 
 			m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes));
 
+			m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this);
+
 			final Object[] overrideBondingStates = m_bondMngr.getOverrideBondStatesForDisconnect(connectionFailReasonIfConnecting);
 			final boolean forceMainStateTracker = explicit;
 
@@ -5186,7 +5188,7 @@ public class BleDevice implements UsesCustomNull
 
 		if (wasConnecting)
 		{
-			if (m_mngr.ASSERT(connectionFailReasonIfConnecting != null))
+			if (getManager().ASSERT(connectionFailReasonIfConnecting != null))
 			{
 				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect_longTerm, gattStatus, bondFailReason, highestState, AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
 			}
@@ -5206,11 +5208,11 @@ public class BleDevice implements UsesCustomNull
 
 		if (explicit)
 		{
-			m_mngr.m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.INTENTIONAL, hitDisk);
+			getManager().m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.INTENTIONAL, hitDisk);
 		}
 		else
 		{
-			m_mngr.m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
+			getManager().m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 		}
 	}
 
@@ -5222,7 +5224,7 @@ public class BleDevice implements UsesCustomNull
 			m_logger.w("Disconnected Implicitly and attemptShortTermReconnect="+attemptShortTermReconnect);
 		}
 
-		m_lastDisconnectWasBecauseOfBleTurnOff = m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF);
+		m_lastDisconnectWasBecauseOfBleTurnOff = getManager().isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF);
 		m_lastConnectOrDisconnectWasUserExplicit = wasExplicit;
 
 		final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
@@ -5311,7 +5313,7 @@ public class BleDevice implements UsesCustomNull
 		final ConnectionFailListener.Status connectionFailReason_nullable;
 		if (!m_reconnectMngr_shortTerm.isRunning() && wasConnectingOverall)
 		{
-			if (m_mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF))
+			if (getManager().isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF))
 			{
 				connectionFailReason_nullable = ConnectionFailListener.Status.BLE_TURNING_OFF;
 			}
@@ -5399,6 +5401,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		m_dummyDisconnectTask.setOverrideOrdinal(overrideOrdinal);
 		m_queue.softlyCancelTasks(m_dummyDisconnectTask);
+		m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this);
 	}
 
 	private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final Double interval, final ReadWriteListener listener)
@@ -5461,7 +5464,7 @@ public class BleDevice implements UsesCustomNull
 
 		if (characteristic != null && is(CONNECTED))
 		{
-			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
+			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
 			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, wrappingListener));
 		}
 
@@ -5486,7 +5489,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		if (isAny(AUTHENTICATING, INITIALIZING))
 		{
-			m_mngr.ASSERT(m_txnMngr.getCurrent() != null);
+			getManager().ASSERT(m_txnMngr.getCurrent() != null);
 
 			return PE_TaskPriority.FOR_PRIORITY_READS_WRITES;
 		}

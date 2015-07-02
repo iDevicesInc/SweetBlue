@@ -4,26 +4,34 @@ import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Utils;
 
+import java.util.List;
+
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class P_BleManager_Listeners
 {
 	public static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
 	public static final String BluetoothDevice_ACTION_DISAPPEARED = "android.bluetooth.device.action.DISAPPEARED";
 	
-	final BluetoothAdapter.LeScanCallback m_scanCallback = new BluetoothAdapter.LeScanCallback()
+	final BluetoothAdapter.LeScanCallback m_scanCallback_preLollipop = new BluetoothAdapter.LeScanCallback()
 	{
 		@Override public void onLeScan(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord)
         {
-			m_mngr.getCrashResolver().notifyScannedDevice(device_native, m_scanCallback);
+			m_mngr.getCrashResolver().notifyScannedDevice(device_native, this);
 			
 			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
 			{

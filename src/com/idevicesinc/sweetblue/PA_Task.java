@@ -447,6 +447,11 @@ abstract class PA_Task
 	{
 		m_softlyCancelled = true;
 	}
+
+	public boolean wasSoftlyCancelled()
+	{
+		return m_softlyCancelled;
+	}
 	
 	protected String getToStringAddition()
 	{

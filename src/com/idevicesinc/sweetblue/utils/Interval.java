@@ -77,6 +77,14 @@ public class Interval extends Unit<Interval>
 	{
 		return new Interval(value, (long) (value*1000));
 	}
+
+	/**
+	 * Returns a new {@link Interval} representing the given number of minutes.
+	 */
+	public static Interval mins(final int value)
+	{
+		return secs(value*60);
+	}
 	
 	/**
 	 * Returns a new {@link Interval} representing the given number of milliseconds.
