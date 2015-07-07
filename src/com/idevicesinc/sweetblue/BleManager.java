@@ -123,10 +123,9 @@ public class BleManager
 {
 	/**
 	 * Provide an implementation to {@link com.idevicesinc.sweetblue.BleManager#setListener_Discovery(com.idevicesinc.sweetblue.BleManager.DiscoveryListener)} to receive
-	 * callbacks when a device is discovered after calling various {@link com.idevicesinc.sweetblue.BleManager#startScan()}
+	 * callbacks when a device is newly discovered, rediscovered, or undiscovered after calling various {@link com.idevicesinc.sweetblue.BleManager#startScan()}
 	 * or {@link com.idevicesinc.sweetblue.BleManager#startPeriodicScan(Interval, Interval)} methods. You can also provide this to various
 	 * overloads of {@link com.idevicesinc.sweetblue.BleManager#startScan()} and {@link com.idevicesinc.sweetblue.BleManager#startPeriodicScan(Interval, Interval)}.
-	 * <br><br>
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface DiscoveryListener
@@ -186,7 +185,7 @@ public class BleManager
 			public LifeCycle lifeCycle(){  return m_lifeCycle;  }
 			private final LifeCycle m_lifeCycle;
 			
-			public DiscoveryEvent(BleManager manager, BleDevice device, LifeCycle lifeCycle)
+			DiscoveryEvent(BleManager manager, BleDevice device, LifeCycle lifeCycle)
 			{
 				m_manager = manager;
 				m_device = device;
@@ -253,7 +252,7 @@ public class BleManager
 		public static class StateEvent extends State.ChangeEvent<BleManagerState>
 		{
 			/**
-			 * The manager undergoing the state change.
+			 * The singleton manager undergoing the state change.
 			 */
 			public BleManager manager(){  return m_manager;  }
 			private final BleManager m_manager;
@@ -546,7 +545,7 @@ public class BleManager
 	{
 		/**
 		 * Enumeration of the progress of the reset.
-		 * More entries will be added in the future.
+		 * More entries may be added in the future.
 		 */
 		public static enum Progress
 		{
@@ -665,7 +664,7 @@ public class BleManager
 	 * Create an instance or retrieve an already-created instance with default configuration options set.
 	 * If you call this after you call {@link #get(android.content.Context, BleManagerConfig)} (for example in another
 	 * {@link android.app.Activity}), the {@link BleManagerConfig} originally passed in will be used.
-	 * Otherwise this calls {@link #get(android.content.Context, BleManagerConfig)} with a {@link BleManagerConfig}
+	 * Otherwise, if a new instance is to be created, this calls {@link #get(android.content.Context, BleManagerConfig)} with a {@link BleManagerConfig}
 	 * instance created using the default constructor {@link BleManagerConfig#BleManagerConfig()}.
 	 */
 	public static BleManager get(Context context)
@@ -777,11 +776,14 @@ public class BleManager
         // Account for unit testing. When using robolectric, the bluetooth manager comes back null. However, it includes
         // shadow classes to simulate Bluetooth devices, so we shouldn't need the manager to run tests.
         BleManagerState nativeState;
-        if (m_btMngr == null) {
-            nativeState = BleManagerState.get(BluetoothAdapter.STATE_ON);
-        } else {
-            nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
-        }
+		if( m_btMngr == null )
+		{
+			nativeState = BleManagerState.get(BluetoothAdapter.STATE_ON);
+		}
+		else
+		{
+			nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
+		}
 		m_stateTracker = new P_BleStateTracker(this);
 		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
@@ -1342,8 +1344,9 @@ public class BleManager
 
 			if( m_assertionListener != null )
 			{
-				AssertListener.AssertEvent info = new AssertListener.AssertEvent(this, message, dummyException.getStackTrace());
-				m_assertionListener.onEvent(info);
+				final AssertListener.AssertEvent event = new AssertListener.AssertEvent(this, message, dummyException.getStackTrace());
+
+				m_assertionListener.onEvent(event);
 			}
 
 			return false;

@@ -144,7 +144,7 @@ class P_PollManager
 				usingNotify == m_usingNotify																			&&
 				(m_serviceUuid == null || serviceUuid == null || m_serviceUuid.equals(serviceUuid))						&&
 				charUuid.equals(m_charUuid)																				&&
-				(interval_nullable == null || interval_nullable == m_interval)											&&
+				(Interval.isDisabled(interval_nullable) || interval_nullable == m_interval)								&&
 				(readWriteListener_nullable == null || m_pollingReadListener.hasListener(readWriteListener_nullable))	 ;
 		}
 		

@@ -158,9 +158,9 @@ public class Interval extends Unit<Interval>
 	/**
 	 * Same as {@link #isDisabled(Interval)}.
 	 */
-	public static boolean isDisabled(double interval)
+	public static boolean isDisabled(Double interval_nullable)
 	{
-		return interval <= 0.0;
+		return interval_nullable == null || interval_nullable <= 0.0;
 	}
 	
 	@Override public String toString()

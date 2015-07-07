@@ -553,7 +553,11 @@ public class Utils
 		for( int i = 0; i < 4; i++ )
 		{
 			result <<= 8;
-			result |= (b[i] & 0xFF);
+
+			if( i < b.length )
+			{
+				result |= (b[i] & 0xFF);
+			}
 		}
 
 		return result;
