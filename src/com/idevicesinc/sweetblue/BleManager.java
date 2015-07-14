@@ -1158,7 +1158,7 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter)
 	{
-		startPeriodicScan(scanActiveTime, scanPauseTime, filter, (DiscoveryListener)null);
+		startPeriodicScan(scanActiveTime, scanPauseTime, filter, (DiscoveryListener) null);
 	}
 
 	/**
@@ -1212,7 +1212,7 @@ public class BleManager
 	 */
 	public void startScan(ScanFilter filter)
 	{
-		startScan(Interval.INFINITE, filter, (DiscoveryListener)null);
+		startScan(Interval.INFINITE, filter, (DiscoveryListener) null);
 	}
 
 	/**
@@ -1220,7 +1220,7 @@ public class BleManager
 	 */
 	public void startScan(DiscoveryListener discoveryListener)
 	{
-		startScan(Interval.INFINITE, (ScanFilter)null, discoveryListener);
+		startScan(Interval.INFINITE, (ScanFilter) null, discoveryListener);
 	}
 
 	/**
@@ -1228,7 +1228,7 @@ public class BleManager
 	 */
 	public void startScan(Interval scanTime, ScanFilter filter)
 	{
-		startScan(scanTime, filter, (DiscoveryListener)null);
+		startScan(scanTime, filter, (DiscoveryListener) null);
 	}
 
 	/**
@@ -1236,7 +1236,7 @@ public class BleManager
 	 */
 	public void startScan(Interval scanTime, DiscoveryListener discoveryListener)
 	{
-		startScan(scanTime, (ScanFilter)null, discoveryListener);
+		startScan(scanTime, (ScanFilter) null, discoveryListener);
 	}
 
 	/**
@@ -1259,6 +1259,11 @@ public class BleManager
 	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(com.idevicesinc.sweetblue.BleManager.DiscoveryListener)} for you.
 	 */
 	public void startScan(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener)
+	{
+		startScan_private(scanTime, filter, discoveryListener, /*isPoll=*/false);
+	}
+
+	public void startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
 	{
 		m_timeNotScanning = 0.0;
 		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
@@ -1286,7 +1291,7 @@ public class BleManager
 
 			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs()));
+			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs(), isPoll));
 		}
 	}
 
@@ -2498,7 +2503,7 @@ public class BleManager
 		{
 			if( doAutoScan() )
 			{
-				startScan(m_config.autoScanTime);
+				startScan_private(m_config.autoScanTime, null, null, /*isPoll=*/true);
 			}
 		}
 
@@ -2513,6 +2518,15 @@ public class BleManager
 				tryPurgingStaleDevices(scanTask.getAggregatedTimeArmedAndExecuting());
 			}
 		}
+	}
+
+	/**
+	 * Returns this manager's knowledge of the app's foreground state, which must be
+	 * controlled manually from appland through {@link #onResume()} and {@link #onPause()}.
+	 */
+	public boolean isForegrounded()
+	{
+		return m_isForegrounded;
 	}
 
 	private boolean doAutoScan()

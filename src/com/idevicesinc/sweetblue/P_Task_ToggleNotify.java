@@ -47,7 +47,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	static byte[] getWriteValue(BluetoothGattCharacteristic char_native, boolean enable)
 	{
-		Type type = null;
+		final Type type;
 		
 		if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0x0 )
 		{
@@ -100,18 +100,18 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		}
 		
 		m_writeValue = getWriteValue(char_native, m_enable);
-		
+
 		if( !descriptor.setValue(getWriteValue()) )
 		{
 			this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
-			
+
 			return;
 		}
-		
+
 		if( !getDevice().getNativeGatt().writeDescriptor(descriptor) )
 		{
 			this.fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
-			
+
 			return;
 		}
 	}

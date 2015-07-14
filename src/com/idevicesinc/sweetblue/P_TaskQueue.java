@@ -39,6 +39,11 @@ class P_TaskQueue
 	{
 		return m_currentOrdinal;
 	}
+
+	public PA_Task peek()
+	{
+		return m_queue.size() > 0 ? m_queue.get(0) : null;
+	}
 	
 	private void initHandler()
 	{

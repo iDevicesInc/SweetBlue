@@ -5083,19 +5083,19 @@ public class BleDevice implements UsesCustomNull
 		final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
 
 		tracker.set
-		(
-			intent,
-			gattStatus,
-			DISCOVERED,					true,
-			DISCONNECTED,				true,
-			BONDING,					m_nativeWrapper.isNativelyBonding(),
-			BONDED,						m_nativeWrapper.isNativelyBonded(),
-			UNBONDED,					m_nativeWrapper.isNativelyUnbonded(),
-			RECONNECTING_LONG_TERM,		attemptingReconnect_longTerm,
-			ADVERTISING,				!attemptingReconnect_longTerm,
+				(
+						intent,
+						gattStatus,
+						DISCOVERED, true,
+						DISCONNECTED, true,
+						BONDING, m_nativeWrapper.isNativelyBonding(),
+						BONDED, m_nativeWrapper.isNativelyBonded(),
+						UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+						RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
+						ADVERTISING, !attemptingReconnect_longTerm,
 
-			overrideBondingStates
-		);
+						overrideBondingStates
+				);
 
 		if( tracker != stateTracker_main() )
 		{
@@ -5153,15 +5153,18 @@ public class BleDevice implements UsesCustomNull
 //			bond_justAddTheTask(E_TransactionLockBehavior.DOES_NOT_PASS);
 //		}
 
-		if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
+//		if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
 		{
 			saveLastDisconnect(explicit);
 
 			final boolean saveLastDisconnectAfterTaskCompletes = connectionFailReasonIfConnecting != Status.ROGUE_DISCONNECT;
 
-			m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes));
+			if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
+			{
+				m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes));
 
-			m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this);
+				m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this);
+			}
 
 			final Object[] overrideBondingStates = m_bondMngr.getOverrideBondStatesForDisconnect(connectionFailReasonIfConnecting);
 			final boolean forceMainStateTracker = explicit;
@@ -5176,15 +5179,15 @@ public class BleDevice implements UsesCustomNull
 				m_reconnectMngr_longTerm.stop();
 			}
 		}
-		else
-		{
-			if (!attemptingReconnect_longTerm)
-			{
-				stateTracker().update(intent, gattStatus, RECONNECTING_LONG_TERM, false);
-
-				m_reconnectMngr_longTerm.stop();
-			}
-		}
+//		else
+//		{
+//			if (!attemptingReconnect_longTerm)
+//			{
+//				stateTracker().update(intent, gattStatus, RECONNECTING_LONG_TERM, false);
+//
+//				m_reconnectMngr_longTerm.stop();
+//			}
+//		}
 
 		if (wasConnecting)
 		{

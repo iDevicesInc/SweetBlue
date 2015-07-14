@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -24,11 +25,12 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	//TODO
 	private final boolean m_explicit = true;
+	private final boolean m_isPoll;
 	private final double m_scanTime;
 
 	private final int m_retryCountMax = 3;
 
-	private final ScanCallback m_scanCallback_postLollipop = Utils.isLollipop() ? new ScanCallback()
+	private final ScanCallback m_scanCallback_postLollipop = !Utils.isLollipop() ? null : new ScanCallback()
 	{
 		public void onScanResult(final int callbackType, final ScanResult result)
 		{
@@ -63,13 +65,14 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 		}
 
-	} : null;
+	};
 	
-	public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime)
+	public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, boolean isPoll)
 	{
 		super(manager, listener);
 		
 		m_scanTime = scanTime;
+		m_isPoll = isPoll;
 	}
 
 	public E_Intent getIntent()
@@ -120,7 +123,27 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private void startNativeScan_postLollipop()
 	{
-		getManager().getNativeAdapter().getBluetoothLeScanner().startScan(m_scanCallback_postLollipop);
+		final int scanMode;
+
+		if( getManager().isForegrounded() )
+		{
+			if( m_isPoll || m_scanTime == Double.POSITIVE_INFINITY )
+			{
+				scanMode = ScanSettings.SCAN_MODE_BALANCED;
+			}
+			else
+			{
+				scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+			}
+		}
+		else
+		{
+			scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
+		}
+
+		final ScanSettings scanSettings = !Utils.isLollipop() ? null : new ScanSettings.Builder().setScanMode(scanMode).build();
+
+		getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
 	}
 
 	private P_Task_Scan.E_Mode startNativeScan_preLollipop(final E_Intent intent)
@@ -252,7 +275,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		if( this.getState() == PE_TaskState.EXECUTING && getTimeout() == Interval.INFINITE.secs() )
 		{
-			if( getTotalTimeExecuting() >= getMinimumScanTime() && getQueue().getSize() > 0 )
+			if( getTotalTimeExecuting() >= getMinimumScanTime() && getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek()) )
 			{
 				selfInterrupt();
 			}
@@ -277,9 +300,11 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		return true;
 	}
-	
-	@Override public boolean isInterruptableBy(PA_Task otherTask)
+
+	private boolean isSelfInterruptableBy(final PA_Task otherTask)
 	{
+		//--- DRK > This logic used to be part of isInterruptableBy but removed because scan task being interruptable
+		//---		by reads/writes gives a small chance that a bunch of writes could go out of order.
 		if( otherTask instanceof P_Task_Read || otherTask instanceof P_Task_Write || otherTask instanceof P_Task_ReadRssi )
 		{
 			if( otherTask.getPriority().ordinal() > PE_TaskPriority.FOR_NORMAL_READS_WRITES.ordinal() )
@@ -293,12 +318,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 //				return getTimeout() == TIMEOUT_INFINITE && this.getTotalTimeExecuting() >= getManager().m_config.minimumScanTime;
 			}
 		}
-		else
-		{
-			return otherTask.getPriority().ordinal() > this.getPriority().ordinal();
-		}
-		
-		return super.isInterruptableBy(otherTask);
+
+		return false;
+	}
+	
+	@Override public boolean isInterruptableBy(PA_Task otherTask)
+	{
+		return otherTask.getPriority().ordinal() >= PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING.ordinal();
 	}
 	
 	@Override public boolean isExplicit()
