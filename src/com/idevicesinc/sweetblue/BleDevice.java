@@ -1841,6 +1841,7 @@ public class BleDevice implements UsesCustomNull
 	private final PA_Task.I_StateListener m_taskStateListener;
 
 	private final BleDeviceOrigin m_origin;
+	private BleDeviceOrigin m_origin_latest;
 
 	private int m_rssi = 0;
 	private Integer m_knownTxPower = null;
@@ -1874,6 +1875,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		m_mngr = mngr;
 		m_origin = origin;
+		m_origin_latest = m_origin;
 		m_isNull = isNull;
 
 		if (isNull)
@@ -4711,6 +4713,8 @@ public class BleDevice implements UsesCustomNull
 
 	void onNewlyDiscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
+		m_origin_latest = origin;
+
 		clear_discovery();
 
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
@@ -4720,9 +4724,11 @@ public class BleDevice implements UsesCustomNull
 
 	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
+		m_origin_latest = origin;
+
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
-		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY);
+		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), ADVERTISING, true);
 	}
 
 	void onUndiscovered(E_Intent intent)
@@ -5083,19 +5089,19 @@ public class BleDevice implements UsesCustomNull
 		final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
 
 		tracker.set
-				(
-						intent,
-						gattStatus,
-						DISCOVERED, true,
-						DISCONNECTED, true,
-						BONDING, m_nativeWrapper.isNativelyBonding(),
-						BONDED, m_nativeWrapper.isNativelyBonded(),
-						UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
-						RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
-						ADVERTISING, !attemptingReconnect_longTerm,
+		(
+				intent,
+				gattStatus,
+				DISCOVERED, true,
+				DISCONNECTED, true,
+				BONDING, m_nativeWrapper.isNativelyBonding(),
+				BONDED, m_nativeWrapper.isNativelyBonded(),
+				UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+				RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
+				ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY,
 
-						overrideBondingStates
-				);
+				overrideBondingStates
+		);
 
 		if( tracker != stateTracker_main() )
 		{
