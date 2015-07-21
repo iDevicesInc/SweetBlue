@@ -1861,7 +1861,7 @@ public class BleManager
 
 	/**
 	 * Returns whether we have any devices. For example if you have never called {@link #startScan()}
-	 * or {@link #newDevice(String)} (or similar) then this will return false.
+	 * or {@link #newDevice(String)} (or overloads) then this will return false.
 	 */
 	public boolean hasDevices()
 	{
