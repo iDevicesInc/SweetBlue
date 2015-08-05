@@ -10,6 +10,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
@@ -17,7 +18,9 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 {
 	public static final int MTU_LIMIT = 20;
 	
-	private final byte[] m_allDataToSend;
+	private byte[] m_allDataToSend;
+
+	private final FutureData m_futureData;
 	
 	private int m_offset = 0;
 	private byte[] m_maxChunkBuffer;
@@ -25,11 +28,11 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	
 	private byte[] m_lastChunkBufferSent;
 	
-	public P_Task_Write(BleDevice device, P_Characteristic characteristic, byte[] data, boolean requiresBonding, P_WrappingReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
+	public P_Task_Write(BleDevice device, P_Characteristic characteristic, final FutureData futureData, boolean requiresBonding, P_WrappingReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
 	{
 		super(device, characteristic, writeListener, requiresBonding, txn, priority);
-		
-		m_allDataToSend = data;
+
+		m_futureData = futureData;
 	}
 	
 	@Override protected ReadWriteEvent newReadWriteEvent(final Status status, final int gattStatus, final Target target, final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
@@ -48,6 +51,21 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	@Override public void execute()
 	{
 		super.execute();
+
+		m_allDataToSend = m_futureData.getData();
+
+		if( m_allDataToSend == null )
+		{
+			fail(Status.NULL_DATA, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+
+			return;
+		}
+		else if( m_allDataToSend.length == 0 )
+		{
+			fail(Status.EMPTY_DATA, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+
+			return;
+		}
 		
 		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
 		
