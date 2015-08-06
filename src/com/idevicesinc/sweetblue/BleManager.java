@@ -1973,6 +1973,17 @@ public class BleManager
 	}
 
 	/**
+	 *
+	 */
+	public BleServer newServer(RequestListener listener)
+	{
+		BleServer bleServer = new BleServer( this );
+		bleServer.openGattServer( m_context, gattServices, listener );
+		m_serverMngr.add( bleServer );
+		return bleServer;
+	}
+
+	/**
 	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
 	 * and passes a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
@@ -2565,11 +2576,5 @@ public class BleManager
 	@Override public String toString()
 	{
 		return m_stateTracker.toString();
-	}
-	public BleServer openBleServer( final List<BluetoothGattService> gattServices, RequestListener listener ) {
-		BleServer bleServer = new BleServer( this );
-		bleServer.openGattServer( m_context, gattServices, listener );
-		m_serverMngr.add( bleServer );
-		return bleServer;
 	}
 }

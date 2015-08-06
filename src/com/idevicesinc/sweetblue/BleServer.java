@@ -26,8 +26,9 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 /**
- * Wrapper for functionality exposed by {@link BluetoothGattServer}. For OS level less than 5.0, this
- * can only be created by piggybacking on existing {@link BleDevice} that is currently {@link BleDeviceState#CONNECTED}.
+ * Wrapper for functionality exposed by {@link BluetoothGattServer}. For OS levels less than 5.0, this
+ * is only useful by piggybacking on an existing {@link BleDevice} that is currently {@link BleDeviceState#CONNECTED}.
+ * For OS levels 5.0 and up a {@link BleServer} is capable of acting as an independent, advertising peripheral.
  */
 public class BleServer implements UsesCustomNull
 {
@@ -89,7 +90,7 @@ public class BleServer implements UsesCustomNull
 			private final UUID m_descUuid;
 
 			/**
-			 * The data sent from the client if {@link #type()} {@link Type#isRead()} is true.
+			 * The data sent from the client if {@link #type()} {@link Type#isWrite()} is true.
 			 * This will never be null, at worst an empty array.
 			 */
 			public byte[] data() {  return m_data; }
@@ -113,10 +114,16 @@ public class BleServer implements UsesCustomNull
 			public boolean responseNeeded()  {  return m_responseNeeded;  }
 			private final boolean m_responseNeeded;
 
-			RequestEvent(BleServer server, BluetoothDevice device, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
+			/**
+			 * Returns the mac address of the client peripheral that is requesting the read or write.
+			 */
+			public String macAddress()  {  return m_nativeDevice.getAddress(); }
+			private final BluetoothDevice m_nativeDevice;
+
+			RequestEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
 			{
 				m_server = server;
-				m_device = device;
+				m_nativeDevice = nativeDevice;
 				m_charUuid = charUuid_in != null ? charUuid_in : NON_APPLICABLE_UUID;;
 				m_descUuid = descUuid_in != null ? descUuid_in : NON_APPLICABLE_UUID;
 				m_type = type_in;
@@ -130,7 +137,32 @@ public class BleServer implements UsesCustomNull
 
 			@Override public String toString()
 			{
-				return "";
+				if( type().isRead() )
+				{
+					return Utils.toString
+					(
+						this.getClass(),
+						"type",				type(),
+						"target",			target(),
+						"macAddress",		macAddress(),
+						"charUuid",			server().getManager().getLogger().uuidName(charUuid()),
+						"requestId",		requestId()
+					);
+				}
+				else
+				{
+					return Utils.toString
+					(
+							this.getClass(),
+							"type",				type(),
+							"target",			target(),
+							"data",				data(),
+							"macAddress",		macAddress(),
+							"charUuid",			server().getManager().getLogger().uuidName(charUuid()),
+							"requestId",		requestId()
+					);
+				}
+
 			}
 		}
 
@@ -258,31 +290,15 @@ public class BleServer implements UsesCustomNull
 
 			@Override public String toString()
 			{
-//				if( server().is(RECONNECTING_SHORT_TERM) )
-//				{
-//					return Utils.toString
-//					(
-//						this.getClass(),
-//						"server", server().getName_debug(),
-//						"entered", Utils.toString(enterMask(), BleDeviceState.VALUES()),
-//						"exited", Utils.toString(exitMask(), BleDeviceState.VALUES()),
-//						"current", Utils.toString(newStateBits(), BleDeviceState.VALUES()),
-//						"current_native", Utils.toString(server().getNativeStateMask(), BleDeviceState.VALUES()),
-//						"gattStatus", server().m_logger.gattStatus(gattStatus())
-//					);
-//				}
-//				else
-				{
-					return Utils.toString
-					(
-						this.getClass(),
-						"server",			server().getName_debug(),
-						"entered",			Utils.toString(enterMask(),						BleServerState.VALUES()),
-						"exited", 			Utils.toString(exitMask(),						BleServerState.VALUES()),
-						"current",			Utils.toString(newStateBits(),					BleServerState.VALUES()),
-						"gattStatus",		server().m_logger.gattStatus(gattStatus())
-					);
-				}
+				return Utils.toString
+				(
+					this.getClass(),
+					"server",			server().getName_debug(),
+					"entered",			Utils.toString(enterMask(),						BleServerState.VALUES()),
+					"exited", 			Utils.toString(exitMask(),						BleServerState.VALUES()),
+					"current",			Utils.toString(newStateBits(),					BleServerState.VALUES()),
+					"gattStatus",		server().m_logger.gattStatus(gattStatus())
+				);
 			}
 		}
 
