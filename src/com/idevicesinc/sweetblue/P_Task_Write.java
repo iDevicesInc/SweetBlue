@@ -45,7 +45,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	
 	private boolean weBeChunkin()
 	{
-		return m_allDataToSend.length > m_maxChunkSize;
+		return m_allDataToSend != null && m_allDataToSend.length > m_maxChunkSize;
 	}
 
 	@Override public void execute()

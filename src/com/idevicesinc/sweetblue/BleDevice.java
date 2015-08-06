@@ -170,7 +170,10 @@ public class BleDevice implements UsesCustomNull
 			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means for
 			 * example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
 			 * returned a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted,
-			 * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}.
+			 * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}. {@link ReadWriteEvent#gattStatus()}
+			 * will most likely be non-zero, and you can check the static fields in {@link BleStatuses} for more information.
+			 *
+			 * @see ReadWriteEvent#gattStatus()
 			 */
 			REMOTE_GATT_FAILURE,
 
@@ -4101,6 +4104,19 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
+	 * Overload of {@link #clearHistoricalData(UUID)} that just calls that method multiple times.
+	 */
+	public void clearHistoricalData(final UUID ... uuids)
+	{
+		for( int i = 0; i < uuids.length; i++ )
+		{
+			final UUID ith = uuids[i];
+
+			clearHistoricalData(ith);
+		}
+	}
+
+	/**
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID}.
 	 *
@@ -4121,9 +4137,9 @@ public class BleDevice implements UsesCustomNull
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void clearHistoricalData(final UUID characteristicUuid, final EpochTimeRange range)
+	public void clearHistoricalData(final UUID uuid, final EpochTimeRange range)
 	{
-		clearHistoricalData(characteristicUuid, range, Long.MAX_VALUE);
+		clearHistoricalData(uuid, range, Long.MAX_VALUE);
 	}
 
 	/**
@@ -4134,11 +4150,11 @@ public class BleDevice implements UsesCustomNull
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void clearHistoricalData(final UUID characteristicUuid, final EpochTimeRange range, final long count)
+	public void clearHistoricalData(final UUID uuid, final EpochTimeRange range, final long count)
 	{
 		if( isNull() ) return;
 
-		m_historicalDataMngr.delete(characteristicUuid, range, count, /*memoryOnly=*/false);
+		m_historicalDataMngr.delete(uuid, range, count, /*memoryOnly=*/false);
 	}
 
 	/**
@@ -5338,6 +5354,8 @@ public class BleDevice implements UsesCustomNull
 		//--- DRK > Fringe case bail out in case user calls disconnect() in state change for short term reconnect.
 		if (isDisconnectedAfterReconnectingShortTermStateCallback)
 		{
+			m_txnMngr.cancelAllTransactions();
+			
 			return;
 		}
 
@@ -5351,6 +5369,8 @@ public class BleDevice implements UsesCustomNull
 			{
 				softlyCancelTasks(overrideOrdinal);
 			}
+
+			m_txnMngr.cancelAllTransactions();
 
 			return;
 		}

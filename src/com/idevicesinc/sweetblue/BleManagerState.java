@@ -61,7 +61,7 @@ public enum BleManagerState implements State
 	/**
 	 * Full bitwise mask made by ORing all {@link BleManagerState} instances together.
 	 */
-	public static final int FULL_MASK = Utils.calcFullMask(BleManagerState.values());
+	public static final int FULL_MASK = Utils.calcFullMask(VALUES());
 	
 	private BleManagerState()
 	{
