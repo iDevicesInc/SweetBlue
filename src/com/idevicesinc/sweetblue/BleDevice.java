@@ -4654,7 +4654,13 @@ public class BleDevice implements UsesCustomNull
 	public boolean performOta(final BleTransaction.Ota txn)
 	{
 		if( performTransaction_earlyOut(txn) )		return false;
-		if (is(PERFORMING_OTA))						return false;
+
+		if ( is(PERFORMING_OTA) )
+		{
+			//--- DRK > The strictest and maybe best way to early out here, but as far as expected behavior this may be better.
+			//---		In the end it's a judgement call, what's best API-wise with user expectations.
+			m_txnMngr.cancelOtaTransaction();
+		}
 
 		m_txnMngr.startOta(txn);
 
@@ -4686,7 +4692,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		if ( txn == null )							return true;
 		if (isNull())								return true;
-		if (!is(INITIALIZED))						return true;
+		if (!is_internal(INITIALIZED))				return true;
 		if ( m_txnMngr.getCurrent() != null )		return true;
 
 		return false;
@@ -4756,9 +4762,9 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	// PA_StateTracker getStateTracker(){ return m_stateTracker; }
-	BleTransaction getFirmwareUpdateTxn()
+	BleTransaction getOtaTxn()
 	{
-		return m_txnMngr.m_firmwareUpdateTxn;
+		return m_txnMngr.m_otaTxn;
 	}
 
 	P_PollManager getPollManager()

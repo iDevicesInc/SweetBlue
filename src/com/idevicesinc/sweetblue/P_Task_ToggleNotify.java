@@ -162,7 +162,9 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			if( !isConnected && Utils.isSuccess(status) )
 			{
 				//--- DRK > Trying to catch a case that I currently can't explain any other way.
-				getManager().ASSERT(false, "Successfully enabled notification but device isn't connected.");
+				//--- DRK > UPDATE: Nevermind, must have been tired when I wrote this assert, device can be
+				//---			explicitly disconnected while the notify enable write is out and this can get tripped.
+//				getManager().ASSERT(false, "Successfully enabled notification but device isn't connected.");
 
 				fail(Status.CANCELLED_FROM_DISCONNECT, status, Target.DESCRIPTOR, getCharUuid(), descUuid);
 			}
