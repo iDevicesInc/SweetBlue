@@ -3,24 +3,20 @@ package com.idevicesinc.sweetblue;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.FutureData;
 
-/**
- * 
- * 
- *
- */
 class P_ServiceManager
 {
 	private final BleDevice m_device;
@@ -44,7 +40,7 @@ class P_ServiceManager
 		return m_serviceMap.get(uuid);
 	}
 	
-	public P_Characteristic getCharacteristic(UUID uuid)
+	public P_Characteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID characteristicUuid)
 	{
 //		int properties = BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE;
 //		int permissions = BluetoothGattCharacteristic.PERMISSION_WRITE;
@@ -58,7 +54,10 @@ class P_ServiceManager
 		for( int i = 0; i < m_serviceList.size(); i++ )
 		{
 			P_Service ithService = m_serviceList.get(i);
-			P_Characteristic characteristic = ithService.get(uuid);
+
+			if( serviceUuid_nullable != null && !ithService.getUuid().equals(serviceUuid_nullable) )  continue;
+
+			P_Characteristic characteristic = ithService.get(characteristicUuid);
 			
 			if( characteristic != null )
 			{
@@ -101,7 +100,9 @@ class P_ServiceManager
 			//--- DRK > just a sanity check here...might still trip if GC is slow.
 			if( m_oldServices.size() > 100 )
 			{
-				m_device.getManager().ASSERT(false);
+				//--- DRK > NOTE: This did trip during some stress testing, so converting to warning now so it's quieter.
+//				m_device.getManager().ASSERT(false);
+				m_device.getManager().getLogger().w("Weak old services array is getting pretty big...GC lagging behind");
 			}
 			
 			m_serviceMap.clear();
@@ -109,22 +110,29 @@ class P_ServiceManager
 		}
 	}
 	
-	private BleDevice.ReadWriteListener.Result newNoMatchingTargetResult(Type type, byte[] data, UUID uuid)
+	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetEvent(Type type, byte[] data, UUID serviceUuid, UUID characteristicUuid)
 	{
-		int gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
-		return new Result(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0);
+		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
+		
+		return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0);
 	}
 	
-	BleDevice.ReadWriteListener.Result getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type)
+	BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, FutureData futureData, BleDevice.ReadWriteListener.Type type, final Target target)
 	{
-		Target target = uuid == Uuids.INVALID ? Target.RSSI : Target.CHARACTERISTIC;
-		final int gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
+		
+		if( m_device.isNull() )
+		{
+			ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, futureData.getData(), Status.NULL_DEVICE, gattStatus, 0.0, 0.0);
+			
+			return result;
+		}
 		
 		if( !m_device.is(BleDeviceState.CONNECTED) )
 		{
 			if( type != BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION && type != BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION)
 			{				
-				Result result = new Result(m_device, uuid, null, type, target, data, Status.NOT_CONNECTED, gattStatus, 0.0, 0.0);
+				ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, futureData.getData(), Status.NOT_CONNECTED, gattStatus, 0.0, 0.0);
 				
 				return result;
 			}
@@ -134,33 +142,33 @@ class P_ServiceManager
 			}
 		}
 		
-		if( type == Type.WRITE )
-		{
-			if( data == null )
-			{
-				return new Result(m_device, uuid, null, type, target, data, Status.NULL_DATA, gattStatus, 0.0, 0.0);
-			}
-			else if( data.length == 0 )
-			{
-				return new Result(m_device, uuid, null, type, target, data, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
-			}
-		}
-		
 		if( target == Target.RSSI )  return null;
 		
-		P_Characteristic characteristic = getCharacteristic(uuid);
+		final P_Characteristic characteristic = getCharacteristic(serviceUuid, characteristicUuid);
 		
 		if( characteristic == null )
 		{
-			return newNoMatchingTargetResult(type, data, uuid);
+			return newNoMatchingTargetEvent(type, futureData.getData(), serviceUuid, characteristicUuid);
 		}
 		
-		BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
+		final BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
 		type = modifyResultType(char_native, type);
 		
 		if( char_native == null )
 		{
-			return newNoMatchingTargetResult(type, data, uuid);
+			return newNoMatchingTargetEvent(type, futureData.getData(), serviceUuid, characteristicUuid);
+		}
+		
+		if( type != null && type.isWrite() )
+		{
+			if( futureData == null )
+			{
+				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, (byte[]) null, Status.NULL_DATA, gattStatus, 0.0, 0.0);
+			}
+//			else if( data.length == 0 )
+//			{
+//				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, data, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
+//			}
 		}
 		
 		int property = getProperty(type);
@@ -168,7 +176,7 @@ class P_ServiceManager
 		if( (char_native.getProperties() & property) == 0x0 )
 		{
 			//TODO: Use correct gatt status even though we never reach gatt layer?
-			Result result = new Result(m_device, uuid, null, type, target, data, Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0);
+			ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, futureData.getData(), Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0);
 			
 			return result;
 		}
@@ -176,7 +184,7 @@ class P_ServiceManager
 		return null;
 	}
 	
-	BleDevice.ReadWriteListener.Type modifyResultType(BluetoothGattCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
+	static BleDevice.ReadWriteListener.Type modifyResultType(BluetoothGattCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
 	{
 		if( char_native != null )
 		{
@@ -187,6 +195,20 @@ class P_ServiceManager
 					if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0x0 )
 					{
 						type = Type.INDICATION;
+					}
+				}
+			}
+			else if( type == Type.WRITE )
+			{
+				if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) == 0x0 )
+				{
+					if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0x0 )
+					{
+						type = Type.WRITE_NO_RESPONSE;
+					}
+					else if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) != 0x0 )
+					{
+						type = Type.WRITE_SIGNED;
 					}
 				}
 			}
@@ -201,14 +223,17 @@ class P_ServiceManager
 		{
 			case READ:
 			case POLL:
-			case PSUEDO_NOTIFICATION:	return BluetoothGattCharacteristic.PROPERTY_READ;
+			case PSUEDO_NOTIFICATION:	return		BluetoothGattCharacteristic.PROPERTY_READ;
 			
-			case WRITE:					return BluetoothGattCharacteristic.PROPERTY_WRITE;
-			
+            case WRITE_NO_RESPONSE:     return      BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
+            case WRITE_SIGNED:          return      BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE;
+            case WRITE:					return		BluetoothGattCharacteristic.PROPERTY_WRITE;
+    
 			case ENABLING_NOTIFICATION:
 			case DISABLING_NOTIFICATION:
 			case NOTIFICATION:
-			case INDICATION:			return BluetoothGattCharacteristic.PROPERTY_INDICATE | BluetoothGattCharacteristic.PROPERTY_NOTIFY;
+			case INDICATION:			return		BluetoothGattCharacteristic.PROPERTY_INDICATE			|
+													BluetoothGattCharacteristic.PROPERTY_NOTIFY				;
 		}
 		
 		return 0x0;
@@ -299,6 +324,64 @@ class P_ServiceManager
 				}
 			}
 		}
+	}
+	
+	private List<BluetoothGattService> newServiceList()
+	{
+		final ArrayList<BluetoothGattService> toReturn = new ArrayList<BluetoothGattService>();
+		for( int i = 0; i < m_serviceList.size(); i++ )
+		{
+			toReturn.add(m_serviceList.get(i).getNative());
+		}
+		
+		return toReturn;
+	}
+	
+	private List<BluetoothGattCharacteristic> newCharacteristicList(UUID uuid_nullable)
+	{
+		final ArrayList<BluetoothGattCharacteristic> toReturn = new ArrayList<BluetoothGattCharacteristic>();
+		for( int i = 0; i < m_serviceList.size(); i++ )
+		{
+			final P_Service service_ith = m_serviceList.get(i);
+			
+			if( uuid_nullable == null || uuid_nullable.equals(service_ith.getUuid()) )
+			{
+				service_ith.addToList(toReturn);
+			}
+		}
+		
+		return toReturn;
+	}
+	
+	
+	public Iterator<BluetoothGattService> getNativeServices()
+	{
+		return newServiceList().iterator();
+	}
+	
+	public List<BluetoothGattService> getNativeServices_List()
+	{
+		return newServiceList();
+	}
+	
+	public Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
+	{
+		return newCharacteristicList(null).iterator();
+	}
+	
+	public List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
+	{
+		return newCharacteristicList(null);
+	}
+	
+	public Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service)
+	{
+		return newCharacteristicList(service).iterator();
+	}
+	
+	public List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service)
+	{
+		return newCharacteristicList(service);
 	}
 }
 

@@ -8,14 +8,9 @@ import android.bluetooth.BluetoothDevice;
 
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
-import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Result;
+import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.ScanEvent;
 import com.idevicesinc.sweetblue.utils.State;
 
-/**
- * 
- * 
- *
- */
 class P_ScanFilterManager
 {
 	private final ArrayList<BleManagerConfig.ScanFilter> m_filters = new ArrayList<BleManagerConfig.ScanFilter>();
@@ -48,35 +43,39 @@ class P_ScanFilterManager
 		m_filters.add(filter);
 	}
 	
-	BleManagerConfig.ScanFilter.Please allow(BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent)
+	BleManagerConfig.ScanFilter.Please allow(P_Logger logger, BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent)
 	{
 		if( m_filters.size() == 0 && m_default == null )  return Please.acknowledge();
 		
-		Result result = null;
+		ScanEvent result = null;
 		
 		if( m_default != null )
 		{
-			result = new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			result = new ScanEvent(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
-			Please ack = m_default.onScanResult(result);
+			final Please please = m_default.onEvent(result);
 			
-			if( ack != null && ack.ack() )
+			logger.checkPlease(please, Please.class);
+			
+			if( please != null && please.ack() )
 			{
-				return ack;
+				return please;
 			}
 		}
 		
 		for( int i = 0; i < m_filters.size(); i++ )
 		{
-			result = result != null ? result : new Result(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			result = result != null ? result : new ScanEvent(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
 			ScanFilter ithFilter = m_filters.get(i);
 			
-			Please ack = ithFilter.onScanResult(result);
+			final Please please = ithFilter.onEvent(result);
 			
-			if( ack != null && ack.ack() )
+			logger.checkPlease(please, Please.class);
+			
+			if( please != null && please.ack() )
 			{
-				return ack;
+				return please;
 			}
 		}
 		

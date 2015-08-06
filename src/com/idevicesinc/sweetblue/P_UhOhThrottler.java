@@ -64,7 +64,7 @@ class P_UhOhThrottler
 		{
 			m_lastTimesCalled.put(reason, m_timeTracker);
 			UhOhEvent event = new UhOhEvent(m_mngr, reason);
-			m_uhOhListener.onUhOh(event);
+			m_uhOhListener.onEvent(event);
 		}
 	}
 	

@@ -7,21 +7,23 @@ import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
-import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener;
-import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener.Result;
+import com.idevicesinc.sweetblue.BleServer.RequestListener;
+import com.idevicesinc.sweetblue.BleServer.RequestListener.Result;
 import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
 
-public class P_Task_Notify extends PA_Task implements I_StateListener {
-
+public class P_Task_SendNotification extends PA_Task implements I_StateListener
+{
 	private final BleServer m_server;
 	private final BluetoothDevice m_device;
 	
-	private final ReadOrWriteRequestListener m_notifyListener;
+	private final RequestListener m_notifyListener;
 	private final byte[] m_data;
 	
 	private final BluetoothGattCharacteristic m_characteristic;
 	private final boolean m_confirm;
-	public P_Task_Notify( BleServer server, BluetoothDevice device, BluetoothGattCharacteristic characteristic, byte[] data, ReadOrWriteRequestListener statusListener, I_StateListener stateListener, boolean confirm ) {
+
+	public P_Task_SendNotification(BleServer server, BluetoothDevice device, BluetoothGattCharacteristic characteristic, byte[] data, RequestListener statusListener, I_StateListener stateListener, boolean confirm)
+	{
 		super( server, stateListener );
 		m_server = server;
 		m_device = device;
@@ -31,19 +33,23 @@ public class P_Task_Notify extends PA_Task implements I_StateListener {
 		m_confirm = confirm;
 	}
 
-	@Override
-	public void onStateChange( PA_Task task, PE_TaskState state ) {
-		// TODO Auto-generated method stub
 
+	@Override public void onStateChange( PA_Task task, PE_TaskState state )
+	{
 	}
 
-	protected Result newResult( Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid ) {
-		// TODO Auto-generated method stub
+	protected Result newResult( Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid )
+	{
 		return null;
 	}
 
-	@Override
-	void execute() {
+	@Override protected BleTask getTaskType()
+	{
+		return BleTask.SEND_NOTIFICATION;
+	}
+
+	@Override void execute()
+	{
 		if( !m_characteristic.setValue(m_data) )
 		{
 			fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, Result.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, m_characteristic.getUuid(), Result.NON_APPLICABLE_UUID);
@@ -58,9 +64,11 @@ public class P_Task_Notify extends PA_Task implements I_StateListener {
 		}
 	}
 	
-	public PE_TaskPriority getPriority() {
+	public PE_TaskPriority getPriority()
+	{
 		return PE_TaskPriority.FOR_NORMAL_READS_WRITES;
 	}
+
 	protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
 		if( m_notifyListener != null )
@@ -70,7 +78,9 @@ public class P_Task_Notify extends PA_Task implements I_StateListener {
 		
 		this.fail();
 	}
-	public ReadOrWriteRequestListener getListener() {
+
+	public RequestListener getListener()
+	{
 		return m_notifyListener;
 	}
 }

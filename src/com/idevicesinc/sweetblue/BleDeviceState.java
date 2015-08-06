@@ -3,9 +3,14 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.StateListener;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * An enumeration of the various states that a {@link BleDevice} can be in.
@@ -15,27 +20,41 @@ import com.idevicesinc.sweetblue.utils.Interval;
  * @see BleDevice.StateListener
  */
 public enum BleDeviceState implements State
-{	
+{
 	/**
 	 * Dummy value returned from any method that would otherwise return Java's built-in <code>null</code>.
-	 * A {@link BleDevice} will never be in this state.
+	 * A normal {@link BleDevice} will never be in this state, but this will be the sole state of {@link BleDevice#NULL}.
 	 */
 	NULL,
 	
 	/**
-	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener_Full#onDeviceUndiscovered(BleDevice)}.
+	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onEvent(DiscoveryEvent)}.
 	 * This means the object is effectively dead. {@link BleManager} has removed all references to it and you should do the same.
 	 */
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleDeviceConfig#reconnectRateLimiter} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleDeviceConfig#reconnectRequestFilter_longTerm} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
-	 * {@link BleDeviceConfig.ReconnectRateLimiter#CANCEL} from {@link BleDeviceConfig.ReconnectRateLimiter#getTimeToNextReconnect(BleDeviceConfig.ReconnectRateLimiter.Info)}
+	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
+	 * @see #RECONNECTING_SHORT_TERM
 	 */
-	ATTEMPTING_RECONNECT,
+	RECONNECTING_LONG_TERM,
+	
+	/**
+	 * If {@link BleDeviceConfig#reconnectRequestFilter_shortTerm} is set and the device implicitly disconnects this state will be entered.
+	 * Unlike with {@link #RECONNECTING_LONG_TERM}, entering this state does not mean that the {@link BleDevice} becomes {@link #DISCONNECTED}.
+	 * By all outward appearances the library treats the {@link BleDevice} as still being {@link #CONNECTED} while transparently trying
+	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectRequestFilter_shortTerm}. You can even perform
+	 * {@link BleDevice#read(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}, {@link BleDevice#write(java.util.UUID, byte[])}, etc.
+	 * and they will be queued up until the device *actually* reconnects under the hood.
+	 * 
+	 * @see #RECONNECTING_LONG_TERM
+	 */
+	@Advanced
+	RECONNECTING_SHORT_TERM,
 	
 	/**
 	 * The device will always be in this state unless it becomes {@link #UNDISCOVERED}.
@@ -43,8 +62,9 @@ public enum BleDeviceState implements State
 	DISCOVERED,
 	
 	/**
-	 * The device will always be in this state while {@link #CONNECTED} is not active. Note that this doesn't *necessarily* mean that the actual
-	 * physical device is advertising, just that it is assumed to be so.
+	 * When {@link BleDevice#getOrigin()} is {@link BleDeviceOrigin#FROM_DISCOVERY}, a device will always be in this state while {@link #CONNECTED}
+	 * is not active. Note that this doesn't *necessarily* mean that the actual physical device is advertising, just that it was {@link LifeCycle#DISCOVERED}
+	 * or {@link LifeCycle#REDISCOVERED} through a {@link BleManager#startScan()}, so it is still assumed to be advertising.
 	 */
 	ADVERTISING,
 	
@@ -60,6 +80,8 @@ public enum BleDeviceState implements State
 	
 	/**
 	 * Analogous to {@link BluetoothDevice#BOND_BONDING}. May not be relevant for your application if you don't use encrypted characteristics.
+	 * From this state, a device will either become {@link BleDeviceState#BONDED} (if successful) or {@link BleDeviceState#UNBONDED}.
+	 * If the latter, use {@link BleDevice.BondListener} to get further information on what happened.
 	 */
 	BONDING,
 	
@@ -70,7 +92,7 @@ public enum BleDeviceState implements State
 	
 	/**
 	 * A convenience flag for checking if the device is connecting in an overall sense. This state is active if any one of {@link #CONNECTING},
-	 * {@link #GETTING_SERVICES}, {@link #AUTHENTICATING}, or {@link #INITIALIZING} is also active.
+	 * {@link #DISCOVERING_SERVICES}, {@link #AUTHENTICATING}, or {@link #INITIALIZING} is also active.
 	 */
 	CONNECTING_OVERALL,
 	
@@ -89,24 +111,29 @@ public enum BleDeviceState implements State
 	/**
 	 * This state is active while we request a list of services from the native stack after becoming {@link #CONNECTED}.
 	 */
-	GETTING_SERVICES,
+	DISCOVERING_SERVICES,
 	
 	/**
-	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Auth)} or {@link BleDevice#connect(BleTransaction, BleTransaction)}
+	 * This state is active after {@link #DISCOVERING_SERVICES} completes successfully.
+	 */
+	SERVICES_DISCOVERED,
+	
+	/**
+	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Auth)} or {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)}
 	 * to start a connection with an authentication transaction.
 	 */
 	AUTHENTICATING,
 	
 	/**
 	 * This state becomes active either if the {@link BleTransaction} provided to {@link BleDevice#connect(BleTransaction.Auth)} or
-	 * {@link BleDevice#connect(BleTransaction, BleTransaction)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
+	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
 	 * {@link BleDevice#connect()} or {@link BleDevice#connect(BleTransaction.Init)} - i.e. you connect without authentication.
 	 * In the latter case the {@link #AUTHENTICATING} state is skipped and we go straight to being implicitly {@link #AUTHENTICATED}.
 	 */
 	AUTHENTICATED,
 	
 	/**
-	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Init)} or {@link BleDevice#connect(BleTransaction, BleTransaction)}
+	 * This state can only become active if you use {@link BleDevice#connect(BleTransaction.Init)} or {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)}
 	 * to start a connection with an initialization transaction.
 	 */
 	INITIALIZING,
@@ -116,14 +143,14 @@ public enum BleDeviceState implements State
 	 * basing it off of just {@link #CONNECTED}.
 	 * <br><br>
 	 * This state becomes active either if the {@link BleTransaction} provided to {@link BleDevice#connect(BleTransaction.Init)} or
-	 * {@link BleDevice#connect(BleTransaction, BleTransaction)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
+	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} succeeds with {@link BleTransaction#succeed()}, OR if you use 
 	 * {@link BleDevice#connect()} or {@link BleDevice#connect(BleTransaction.Auth)} or etc.- i.e. you connect without an initialization
 	 * transaction. In the latter case the {@link #INITIALIZING} state is skipped and we go straight to being implicitly {@link #INITIALIZED}.
 	 */
 	INITIALIZED,
 	
 	/**
-	 * This state for "over-the-air" updates becomes active when you call {@link BleDevice#performOta(BleTransaction)} and remains active until the provided
+	 * This state for "over-the-air" updates becomes active when you call {@link BleDevice#performOta(BleTransaction.Ota)} and remains active until the provided
 	 * {@link BleTransaction} calls {@link BleTransaction#succeed()} or {@link BleTransaction#fail()} (or of course if your {@link BleDevice}
 	 * becomes {@link #DISCONNECTED}).
 	 */
@@ -156,12 +183,30 @@ public enum BleDeviceState implements State
 		return this.bit() | state.bit();
 	}
 	
+	@Override public int or(int bits)
+	{
+		return this.bit() | bits;
+	}
+	
+	static BleDeviceState[] VALUES()
+	{
+		s_values = s_values != null ? s_values : values();
+		
+		return s_values;
+	}
+	private static BleDeviceState[] s_values = null;
+	
+	/**
+	 * Full bitwise mask made by ORing all {@link BleDeviceState} instances together.
+	 */
+	public static final int FULL_MASK = Utils.calcFullMask(VALUES());
+	
 	/**
 	 * A convenience for UI purposes, this returns the "highest" connection state representing
 	 * a transition from one state to another, so something with "ING" in the name (except {@link #PERFORMING_OTA}).
-	 * Chronologically this method returns {@link #CONNECTING}, {@link #GETTING_SERVICES},
+	 * Chronologically this method returns {@link #CONNECTING}, {@link #DISCOVERING_SERVICES},
 	 * {@link #AUTHENTICATING} (if {@link BleDevice#connect(BleTransaction.Auth)} or 
-	 * {@link BleDevice#connect(BleTransaction, BleTransaction)} is called), {@link #BONDING} (if relevant),
+	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} is called), {@link #BONDING} (if relevant),
 	 * and {@link #INITIALIZING}  (if {@link BleDevice#connect(BleTransaction.Init)} or 
 	 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} is called).
 	 * 
@@ -171,15 +216,18 @@ public enum BleDeviceState implements State
 	{
 		if( CONNECTED.overlaps(stateMask) )
 		{
-			if( INITIALIZING.overlaps(stateMask) )		return INITIALIZING;
-			if( BONDING.overlaps(stateMask) )			return BONDING;
-			if( AUTHENTICATING.overlaps(stateMask) )	return AUTHENTICATING;
-			if( GETTING_SERVICES.overlaps(stateMask) )	return GETTING_SERVICES;
+			if( INITIALIZING.overlaps(stateMask) )			return INITIALIZING;
+			if( BONDING.overlaps(stateMask) )				return BONDING;
+			if( AUTHENTICATING.overlaps(stateMask) )		return AUTHENTICATING;
+			if( DISCOVERING_SERVICES.overlaps(stateMask) )	return DISCOVERING_SERVICES;
 		}
 		else
 		{
-			if( CONNECTING.overlaps(stateMask) )		return CONNECTING;
+			if( BONDING.overlaps(stateMask) )				return BONDING;
+			if( CONNECTING.overlaps(stateMask) )			return CONNECTING;
 		}
+		
+		if( CONNECTING_OVERALL.overlaps(stateMask) )		return CONNECTING_OVERALL;
 		
 		return NULL;
 	}
@@ -188,12 +236,17 @@ public enum BleDeviceState implements State
 	{
 		switch(this)
 		{
-			case CONNECTING:			return  0;
-			case GETTING_SERVICES:		return  1;
-			case AUTHENTICATING:		return  2;
-			case BONDING:				return  3;
-			case INITIALIZING:			return  4;
-			default:					return -1;
+			case CONNECTING:				return  0;
+			case DISCOVERING_SERVICES:		return  1;
+			case AUTHENTICATING:			return  2;
+			case BONDING:					return  3;
+			case INITIALIZING:				return  4;
+			default:						return -1;
 		}
+	}
+
+	@Override public boolean isNull()
+	{
+		return this == NULL;
 	}
 }

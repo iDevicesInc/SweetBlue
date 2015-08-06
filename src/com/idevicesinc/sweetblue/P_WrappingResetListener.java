@@ -25,7 +25,7 @@ class P_WrappingResetListener extends PA_CallbackWrapper implements BleManager.R
 		m_listeners.add(listener);
 	}
 
-	@Override public void onResetEvent(final ResetEvent event)
+	@Override public void onEvent(final ResetEvent event)
 	{
 		final Runnable runnable = new Runnable()
 		{
@@ -33,7 +33,7 @@ class P_WrappingResetListener extends PA_CallbackWrapper implements BleManager.R
 			{
 				for( int i = 0; i < m_listeners.size(); i++ )
 				{
-					m_listeners.get(i).onResetEvent(event);
+					m_listeners.get(i).onEvent(event);
 				}
 			}
 		};

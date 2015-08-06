@@ -11,12 +11,12 @@ import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 
-import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener;
-import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener.Response;
-import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener.Result;
-import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener.Status;
-import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener.Target;
-import com.idevicesinc.sweetblue.BleServer.ReadOrWriteRequestListener.Type;
+import com.idevicesinc.sweetblue.BleServer.RequestListener;
+import com.idevicesinc.sweetblue.BleServer.RequestListener.Response;
+import com.idevicesinc.sweetblue.BleServer.RequestListener.Result;
+import com.idevicesinc.sweetblue.BleServer.RequestListener.Status;
+import com.idevicesinc.sweetblue.BleServer.RequestListener.Target;
+import com.idevicesinc.sweetblue.BleServer.RequestListener.Type;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 
 public class P_BleServer_Listeners extends BluetoothGattServerCallback {
@@ -37,6 +37,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
 		
 		public abstract void run_nested();
 	}
+
 	final PA_Task.I_StateListener m_taskStateListener = new PA_Task.I_StateListener()
 	{
 		@Override public void onStateChange(PA_Task task, PE_TaskState state)
@@ -49,7 +50,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
 		
 		private void onStateChange_synchronized(PA_Task task, PE_TaskState state)
 		{
-			if (task.getClass() == P_Task_ServerDisconnect.class)
+			if (task.getClass() == P_Task_DisconnectServer.class)
 			{
 				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT)
 				{
@@ -60,7 +61,9 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
 			}
 		}
 	};
-	public P_BleServer_Listeners( BleServer server ) {
+
+	public P_BleServer_Listeners( BleServer server )
+	{
 		m_server = server;
 		m_logger = m_server.getManager().getLogger();
 		m_queue = m_server.getTaskQueue();
@@ -98,7 +101,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
 		{
 			m_server.m_nativeWrapper.updateNativeConnectionState(device, newState);
 
-			if (!m_queue.succeed(P_Task_ServerDisconnect.class, m_server))
+			if (!m_queue.succeed(P_Task_DisconnectServer.class, m_server))
 			{
 				m_server.onNativeDisconnect(/*explicit=*/false);
 			}
@@ -128,7 +131,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
     public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattCharacteristic characteristic) {
     	try { 
         	final UUID uuid = characteristic.getUuid();
-    		final ReadOrWriteRequestListener listener = m_server.getReadOrWriteRequestListener();;
+    		final RequestListener listener = m_server.getReadOrWriteRequestListener();;
     		m_logger.i(m_logger.charName(uuid));
     		m_logger.log_status( BluetoothGatt.GATT_SUCCESS );
     		
@@ -169,7 +172,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
                                              final int offset, final byte[] value) {
     	try { 
         	final UUID uuid = characteristic.getUuid();
-        	final ReadOrWriteRequestListener listener = m_server.getReadOrWriteRequestListener();
+        	final RequestListener listener = m_server.getReadOrWriteRequestListener();
     		m_logger.i(m_logger.charName(uuid));
     		
     		UpdateLoop updater = m_server.getManager().getUpdateLoop();
@@ -205,7 +208,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
                                         final int offset, final BluetoothGattDescriptor descriptor) {
     	try { 
         	final UUID uuid = descriptor.getUuid();
-    		final ReadOrWriteRequestListener listener = m_server.getReadOrWriteRequestListener();;
+    		final RequestListener listener = m_server.getReadOrWriteRequestListener();;
     		m_logger.i(m_logger.charName(uuid));
     		m_logger.log_status( BluetoothGatt.GATT_SUCCESS );
     		
@@ -246,7 +249,7 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
                                           final int offset, final byte[] value) {
     	try { 
         	final UUID uuid = descriptor.getUuid();
-        	final ReadOrWriteRequestListener listener = m_server.getReadOrWriteRequestListener();;
+        	final RequestListener listener = m_server.getReadOrWriteRequestListener();;
     		m_logger.i(m_logger.charName(uuid));
     		
     		UpdateLoop updater = m_server.getManager().getUpdateLoop();
@@ -291,8 +294,8 @@ public class P_BleServer_Listeners extends BluetoothGattServerCallback {
 			@Override public void run_nested()
 			{
 				Status aStatus = Status.SUCCESS;
-				final P_Task_Notify task = m_server.getTaskQueue().getCurrent( P_Task_Notify.class, m_server );
-				final ReadOrWriteRequestListener listener = task.getListener(); 
+				final P_Task_SendNotification task = m_server.getTaskQueue().getCurrent( P_Task_SendNotification.class, m_server );
+				final RequestListener listener = task.getListener();
 		    	if ( status != BluetoothGatt.GATT_SUCCESS ) {
 		    		aStatus = Status.FAILED_TO_SEND_OUT;
 		    	}

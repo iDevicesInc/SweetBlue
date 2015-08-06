@@ -18,7 +18,7 @@ class P_WrappingUhOhListener extends PA_CallbackWrapper implements BleManager.Uh
 		m_listener = listener;
 	}
 
-	@Override public void onUhOh(final UhOhEvent event)
+	@Override public void onEvent(final UhOhEvent event)
 	{
 		if( postToMain() )
 		{
@@ -26,13 +26,13 @@ class P_WrappingUhOhListener extends PA_CallbackWrapper implements BleManager.Uh
 			{
 				@Override public void run()
 				{
-					m_listener.onUhOh(event);
+					m_listener.onEvent(event);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onUhOh(event);
+			m_listener.onEvent(event);
 		}
 	}
 }

@@ -22,7 +22,7 @@ public class Utils_ScanRecord extends Utils
 	{
 		List<UUID> uuids = new ArrayList<UUID>();
 		 
-		 if( scanRecord == null )  return uuids;
+		if( scanRecord == null )  return uuids;
 
 		int offset = 0;
 		while(offset < (scanRecord.length - 2))

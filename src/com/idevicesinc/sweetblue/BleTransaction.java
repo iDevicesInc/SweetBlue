@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -9,22 +11,23 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * provide subclass instances to the various overloads of {@link BleDevice#connect()}. Normally in your {@link #start(BleDevice)}
  * method you then do some reads/writes and call {@link #succeed()} or {@link #fail()} depending on the {@link Status} returned.
  * <br><br>
- * NOTE: Nested subclasses here are only tagging and don't yet provide any differing contracts or implementations. 
+ * NOTE: Nested subclasses here are only meant for tagging to enforce type-correctness and don't yet provide any differing contracts or implementations.
  * 
- * @see BleDevice#BleDevice(BleTransaction)
+ * @see BleDevice#performOta(BleTransaction.Ota)
  * @see BleDevice#connect(BleTransaction.Auth)
  * @see BleDevice#connect(BleTransaction.Init)
  * @see BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)
+ * @see BleDevice#performTransaction(BleTransaction)
  */
 public abstract class BleTransaction
 {
 	/**
-	 * Tagging subclass to force type-correctness on various {@link BleDevice#connect()} overloads.
+	 * Tagging subclass to force type-discrepancy for various {@link BleDevice#connect()} overloads.
 	 */
 	public abstract static class Init extends BleTransaction{}
 	
 	/**
-	 * Tagging subclass to force type-correctness on various {@link BleDevice#connect()} overloads.
+	 * Tagging subclass to force type-discrepancy on various {@link BleDevice#connect()} overloads.
 	 */
 	public abstract static class Auth extends BleTransaction{}
 	
@@ -45,7 +48,7 @@ public abstract class BleTransaction
 		
 		/**
 		 * The transaction's {@link BleDevice} became {@link BleDeviceState#DISCONNECTED}
-		 * or/and {@link BleManager} went {@link BleState#OFF}.
+		 * or/and {@link BleManager} went {@link BleManagerState#OFF}.
 		 */
 		CANCELLED,
 		
@@ -57,7 +60,7 @@ public abstract class BleTransaction
 	
 	static interface PI_EndListener
 	{
-		void onTransactionEnd(BleTransaction txn, EndReason reason);
+		void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.ReadWriteEvent failReason);
 	}
 	
 	private final double m_timeout;
@@ -65,7 +68,6 @@ public abstract class BleTransaction
 	private boolean m_isRunning;
 	private BleDevice m_device = null;
 	private PI_EndListener m_listener;
-	
 	
 	public BleTransaction()
 	{
@@ -136,7 +138,7 @@ public abstract class BleTransaction
 		start(m_device);
 	}
 	
-	private boolean end(final EndReason reason)
+	private boolean end(final EndReason reason, final ReadWriteListener.ReadWriteEvent failReason)
 	{
 		synchronized (m_device.m_threadLock )
 		{
@@ -148,13 +150,13 @@ public abstract class BleTransaction
 				return false;
 			}
 		
-			m_device.getManager().getLogger().i(reason.name());
+			m_device.getManager().getLogger().i("transaction " + reason.name());
 			
 			m_isRunning = false;
 			
 			if( m_listener != null )
 			{
-				m_listener.onTransactionEnd(this, reason);
+				m_listener.onTransactionEnd(this, reason, failReason);
 			}
 			
 			if( m_device.getManager().m_config.postCallbacksToMainThread && !Utils.isOnMainThread() )
@@ -178,21 +180,24 @@ public abstract class BleTransaction
 	
 	final void cancel()
 	{
-		end(EndReason.CANCELLED);
+		end(EndReason.CANCELLED, m_device.NULL_READWRITE_EVENT());
 	}
 	
 	/**
 	 * Call this from subclasses to indicate that the transaction has failed. Usually you call this in your
-	 * {@link BleDevice.ReadWriteListener#onResult(BleDevice.ReadWriteListener.Result)}
-	 * when {@link Status} is something other than {@link Status#SUCCESS}.
+	 * {@link BleDevice.ReadWriteListener#onEvent(BleDevice.ReadWriteListener.ReadWriteEvent)}
+	 * when {@link Status} is something other than {@link Status#SUCCESS}. If you do so,
+	 * {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} will be set.
 	 * 
-	 * @return {@link Boolean#FALSE} if the transaction wasn't running to begin with.
+	 * @return <code>false</code> if the transaction wasn't running to begin with.
 	 */
 	protected final boolean fail()
 	{
-		return end(EndReason.FAILED);
+		final ReadWriteListener.ReadWriteEvent failReason = m_device.m_txnMngr.m_failReason;
+		
+		return this.end(EndReason.FAILED, failReason);
 	}
-	
+		
 	/**
 	 * Call this from subclasses to indicate that the transaction has succeeded.
 	 * 
@@ -200,7 +205,7 @@ public abstract class BleTransaction
 	 */
 	protected final boolean succeed()
 	{
-		return end(EndReason.SUCCEEDED);
+		return end(EndReason.SUCCEEDED, m_device.NULL_READWRITE_EVENT());
 	}
 	
 	void update_internal(double timeStep)

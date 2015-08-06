@@ -2,7 +2,11 @@
 **/bin/*
 !**/bin/*.apk
 .svn
-
+**.DS_Store
+.gradle/
+build/
+scripts/build
+scripts/script_output/
 **/proguard/
 **/doc
 **/docs

@@ -1,18 +1,14 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.PE_Please;
 
 import android.bluetooth.BluetoothGatt;
 
-/**
- * 
- */
 class P_Task_Connect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
-	private int m_gattStatus = BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE;
+	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	private BluetoothGatt m_gatt = null;
 	
 	private AutoConnectUsage m_autoConnectUsage = AutoConnectUsage.UNKNOWN;
@@ -63,6 +59,12 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 				failImmediately();
 				
 				return;
+			}
+			else
+			{
+				//--- DRK > TODO: Don't really like this here...better would be if task listener handled this but I always
+				//---				want this gatt instance registered as soon as possible.
+				getDevice().m_nativeWrapper.updateGattInstance(getGatt());
 			}
 		}
 		else

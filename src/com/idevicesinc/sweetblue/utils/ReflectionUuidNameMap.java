@@ -24,7 +24,7 @@ public class ReflectionUuidNameMap implements UuidNameMap
 	{
 		for( Field field : classWithStaticUuids.getFields() )
 		{
-			String uuid = Utils.fieldStringValue(field);
+			String uuid = Utils_Reflection.fieldStringValue(field);
 			
 			m_dict.put(uuid, field.getName());
 		}

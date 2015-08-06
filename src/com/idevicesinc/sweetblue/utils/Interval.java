@@ -1,32 +1,49 @@
 package com.idevicesinc.sweetblue.utils;
 
-import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.*;
+import com.idevicesinc.sweetblue.annotations.*;
+import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 
 /**
  * Used to set time-based options in {@link BleManagerConfig} and {@link BleDeviceConfig} and
  * for various methods and callbacks of {@link BleManager} and {@link BleDevice}. An {@link Interval} is a
  * self-documenting and "type-comfortable" way of representing time instead of using naked numeric primitives.
  */
-public class Interval
+@Immutable
+public class Interval extends Unit<Interval>
 {
 	private static final double DISABLED_VALUE = -1.0;
 	
 	/**
 	 * Use this special value to disable options in {@link BleDeviceConfig} and {@link BleManagerConfig}.
 	 */
-	public static final Interval DISABLED = Interval.secs(DISABLED_VALUE);
+	public static final Interval DISABLED		= Interval.secs(DISABLED_VALUE);
 	
 	/**
 	 * Use this special value to signify positive infinite.
 	 */
-	public static final Interval INFINITE = Interval.secs(Double.POSITIVE_INFINITY);
+	public static final Interval INFINITE		= Interval.secs(Double.POSITIVE_INFINITY);
 	
 	/**
 	 * Convenience value for zero time.
 	 */
-	public static final Interval ZERO = Interval.secs(0.0);
+	public static final Interval ZERO			= Interval.secs(0.0);
+	
+	/**
+	 * Convenience value representing one second.
+	 */
+	public static final Interval ONE_SEC		= Interval.secs(1.0);
+	
+	/**
+	 * Convenience value representing five seconds.
+	 */
+	public static final Interval FIVE_SECS		= Interval.secs(5.0);
+	
+	/**
+	 * Convenience value representing ten seconds.
+	 */
+	public static final Interval TEN_SECS		= Interval.secs(10.0);
+	
 	
 	private final double m_secs;
 	private final long m_millis;
@@ -60,6 +77,14 @@ public class Interval
 	{
 		return new Interval(value, (long) (value*1000));
 	}
+
+	/**
+	 * Returns a new {@link Interval} representing the given number of minutes.
+	 */
+	public static Interval mins(final int value)
+	{
+		return secs(value*60);
+	}
 	
 	/**
 	 * Returns a new {@link Interval} representing the given number of milliseconds.
@@ -89,7 +114,7 @@ public class Interval
 	/**
 	 * Returns the double values as seconds from a given nullable {@link Interval}.
 	 */
-	public static double asDouble(Interval interval_nullable)
+	public static double secs(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
 		if( interval_nullable == null )
 		{
@@ -103,7 +128,7 @@ public class Interval
 	 * Returns true if the given {@link Interval} is not <code>null</code>
 	 * and its value is greater than zero.
 	 */
-	public static boolean isEnabled(Interval interval_nullable)
+	public static boolean isEnabled(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
 		return !isDisabled(interval_nullable);
 	}
@@ -120,7 +145,7 @@ public class Interval
 	 * Returns true if the given {@link Interval} is either <code>null</code>
 	 * or its value is less than or equal to zero.
 	 */
-	public static boolean isDisabled(Interval interval_nullable)
+	public static boolean isDisabled(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
 		if( interval_nullable == null )
 		{
@@ -133,23 +158,23 @@ public class Interval
 	/**
 	 * Same as {@link #isDisabled(Interval)}.
 	 */
-	public static boolean isDisabled(double interval)
+	public static boolean isDisabled(Double interval_nullable)
 	{
-		return interval <= 0.0;
-	}
-	
-	@Override public boolean equals(Object object)
-	{
-		if( object != null && object instanceof Interval )
-		{
-			return ((Interval)object).secs() == this.secs();
-		}
-		
-		return super.equals(object);
+		return interval_nullable == null || interval_nullable <= 0.0;
 	}
 	
 	@Override public String toString()
 	{
-		return secs()+"secs/"+millis()+"millis"; 
+		return Utils.toFixed(secs())+"secs/"+millis()+"millis"; 
+	}
+
+	@Override protected double getRawValue()
+	{
+		return m_secs;
+	}
+	
+	@Override protected Unit<Interval> newInstance(double rawValue)
+	{
+		return secs(rawValue);
 	}
 }

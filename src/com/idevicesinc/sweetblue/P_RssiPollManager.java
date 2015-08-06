@@ -3,13 +3,9 @@ package com.idevicesinc.sweetblue;
 import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 
-/**
- * 
- * 
- */
 class P_RssiPollManager
 {
 	private static class CustomListener extends P_WrappingReadWriteListener
@@ -23,7 +19,7 @@ class P_RssiPollManager
 			m_thisMngr = thisMngr;
 		}
 		
-		@Override public void onResult(final Result result)
+		@Override public void onEvent(final ReadWriteEvent event)
 		{
 			m_thisMngr.m_waitingOnResponse = false;
 			
@@ -32,7 +28,7 @@ class P_RssiPollManager
 				m_thisMngr.m_timeTracker = ENABLE_TIMER;
 			}
 			
-			super.onResult(result);
+			super.onEvent(event);
 		}
 	}
 	
@@ -62,7 +58,12 @@ class P_RssiPollManager
 		
 		m_timeTracker = ENABLE_TIMER;
 		m_interval = interval;
-		m_listener = new CustomListener(this, listener_nullable, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+		m_listener = new CustomListener(this, listener_nullable, m_device.getManager().m_mainThreadHandler, m_device.conf_mngr().postCallbacksToMainThread);
+	}
+	
+	boolean isRunning()
+	{
+		return m_timeTracker != DISABLE_TIMER;
 	}
 	
 	void stop()
@@ -81,7 +82,7 @@ class P_RssiPollManager
 		
 		if( m_timeTracker >= m_interval && !m_waitingOnResponse)
 		{
-			if( m_device.is(BleDeviceState.CONNECTED) )
+			if( m_device.is(BleDeviceState.INITIALIZED) )
 			{
 				m_waitingOnResponse = true;
 				m_device.readRssi_internal(Type.POLL, m_listener);	

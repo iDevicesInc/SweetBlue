@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue.utils;
 
+import com.idevicesinc.sweetblue.annotations.Lambda;
+
 import android.os.Handler;
 import android.os.Looper;
 
@@ -11,6 +13,7 @@ public class UpdateLoop
 	/**
 	 * A callback where you handle the update time step.
 	 */
+	@Lambda
 	public static interface Callback
 	{
 		/**
@@ -51,6 +54,17 @@ public class UpdateLoop
 	public static UpdateLoop newAnonThreadLoop(Callback callback)
 	{
 		return new UpdateLoop(callback, false);
+	}
+
+	public static UpdateLoop newAnonThreadLoop()
+	{
+		return new UpdateLoop(new Callback()
+		{
+			@Override public void onUpdate(double timestep)
+			{
+
+			}
+		}, false);
 	}
 	
 	private UpdateLoop(Callback callback, boolean runOnMainThread)

@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 
 class P_NativeDeviceWrapper
@@ -11,35 +12,74 @@ class P_NativeDeviceWrapper
 	private final BluetoothDevice m_native;
 	private	BluetoothGatt m_gatt;
 	private final String m_address;
-	private final String m_nativeName;
-	private final String m_normalizedName;
-	private final String m_debugName;
 	private final P_Logger m_logger;
 	private final BleManager m_mngr;
+
+	private String m_name_native;
+	private String m_name_normalized;
+	private String m_name_debug;
+	private String m_name_override;
 	
 	//--- DRK > We have to track connection state ourselves because using
 	//---		BluetoothManager.getConnectionState() is slightly out of date
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
 	private	Integer m_nativeConnectionState = null;
 	
-	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String normalizedName, String nativeName)
+	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String name_normalized, String name_native)
 	{
 		m_device = device;
 		m_native = device_native;
-		m_address = m_native.getAddress() == null ? "" : m_native.getAddress();
-		
-		nativeName = nativeName != null ? nativeName : "";
-		m_nativeName = nativeName;
-		
-		m_normalizedName = normalizedName;
-		
-		String[] address_split = m_address.split(":");
-		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
-		String debugName = m_normalizedName.length() == 0 ? "<no_name>" : m_normalizedName;
-		m_debugName = debugName + "_" + lastFourOfMac;
-		
+		m_address = m_native == null || m_native.getAddress() == null ? BleDevice.NULL_MAC() : m_native.getAddress();
 		m_logger = m_device.getManager().getLogger();
 		m_mngr = m_device.getManager();
+
+		updateName(name_native, name_normalized);
+
+		//--- DRK > Manager can be null for BleDevice.NULL.
+		final boolean hitDiskForOverrideName = true;
+		final String name_disk = m_mngr != null ? m_mngr.m_diskOptionsMngr.loadName(m_address, hitDiskForOverrideName) : null;
+
+		if( name_disk != null )
+		{
+			setName_override(name_disk);
+		}
+		else
+		{
+			setName_override(m_name_native);
+			final boolean saveToDisk = BleDeviceConfig.bool(m_device.conf_device().saveNameChangesToDisk, m_device.conf_mngr().saveNameChangesToDisk);
+			m_mngr.m_diskOptionsMngr.saveName(m_address, m_name_native, saveToDisk);
+		}
+	}
+
+	void setName_override(final String name)
+	{
+		m_name_override = name != null ? name : "";
+	}
+
+	void updateNativeName(final String name_native)
+	{
+		final String name_native_override = name_native != null ? name_native : "";
+		final String name_normalized = Utils.normalizeDeviceName(name_native_override);
+
+		updateName(name_native_override, name_normalized);
+	}
+
+	void clearName_override()
+	{
+		setName_override(m_name_native);
+	}
+
+	private void updateName(String name_native, String name_normalized)
+	{
+		name_native = name_native != null ? name_native : "";
+		m_name_native = name_native;
+
+		m_name_normalized = name_normalized;
+
+		String[] address_split = m_address.split(":");
+		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
+		String debugName = m_name_normalized.length() == 0 ? "<no_name>" : m_name_normalized;
+		m_name_debug = m_native != null ? debugName + "_" + lastFourOfMac : debugName;
 	}
 	
 	public String getAddress()
@@ -54,22 +94,34 @@ class P_NativeDeviceWrapper
 	
 	public String getNormalizedName()
 	{
-		return m_normalizedName;
+		return m_name_normalized;
 	}
 	
 	public String getNativeName()
 	{
-		return m_nativeName;
+		return m_name_native;
+	}
+
+	public String getName_override()
+	{
+		return m_name_override;
 	}
 	
 	public String getDebugName()
 	{
-		return m_debugName;
+		return m_name_debug;
 	}
 	
 	public BluetoothDevice getDevice()
 	{
-		return m_native;
+		if( m_device.isNull() )
+		{
+			return m_device.getManager().newNativeDevice(BleDevice.NULL_MAC());
+		}
+		else
+		{
+			return m_native;
+		}
 	}
 	
 	public BluetoothGatt getGatt()
@@ -120,7 +172,9 @@ class P_NativeDeviceWrapper
 	
 	public int getNativeBondState()
 	{
-		return m_native.getBondState();
+		final int bondState_native = m_native != null ? m_native.getBondState() : BluetoothDevice.BOND_NONE;
+		
+		return bondState_native;		
 	}
 	
 	boolean isNativelyBonding()
@@ -235,8 +289,36 @@ class P_NativeDeviceWrapper
 //			{
 //				m_gatt.disconnect();
 //			}
-			
-			m_gatt.close();
+
+			//--- DRK > This can randomly throw an NPE down stream...NOT from m_gatt being null, but a few methods downstream.
+			//---		See below for more info.
+			try
+			{
+				m_gatt.close();
+			}
+			catch(NullPointerException e)
+			{
+				//--- DRK > From Flurry crash reports...happened several times on S4 running 4.4.4 but was not able to reproduce.
+//				This error occurred: java.lang.NullPointerException
+//				android.os.Parcel.readException(Parcel.java:1546)
+//				android.os.Parcel.readException(Parcel.java:1493)
+//				android.bluetooth.IBluetoothGatt$Stub$Proxy.unregisterClient(IBluetoothGatt.java:905)
+//				android.bluetooth.BluetoothGatt.unregisterApp(BluetoothGatt.java:710)
+//				android.bluetooth.BluetoothGatt.close(BluetoothGatt.java:649)
+//				com.idevicesinc.sweetblue.P_NativeDeviceWrapper.closeGatt(P_NativeDeviceWrapper.java:238)
+//				com.idevicesinc.sweetblue.P_NativeDeviceWrapper.closeGattIfNeeded(P_NativeDeviceWrapper.java:221)
+//				com.idevicesinc.sweetblue.BleDevice.onNativeConnectFail(BleDevice.java:2193)
+//				com.idevicesinc.sweetblue.P_BleDevice_Listeners$1.onStateChange_synchronized(P_BleDevice_Listeners.java:78)
+//				com.idevicesinc.sweetblue.P_BleDevice_Listeners$1.onStateChange(P_BleDevice_Listeners.java:49)
+//				com.idevicesinc.sweetblue.PA_Task.setState(PA_Task.java:118)
+//				com.idevicesinc.sweetblue.PA_Task.setEndingState(PA_Task.java:242)
+//				com.idevicesinc.sweetblue.P_TaskQueue.endCurrentTask(P_TaskQueue.java:220)
+//				com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask(P_TaskQueue.java:267)
+//				com.idevicesinc.sweetblue.P_TaskQueue.fail(P_TaskQueue.java:260)
+//				com.idevicesinc.sweetblue.P_BleDevice_Listeners.onConnectionStateChange_synchronized(P_BleDevice_Listeners.java:168)
+				m_device.getManager().uhOh(UhOh.RANDOM_EXCEPTION);
+			}
+			m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			m_gatt = null;
 		}
 	}
@@ -249,12 +331,13 @@ class P_NativeDeviceWrapper
 			{
 				//--- DRK > This tripped with an S5 and iGrillv2 with low battery (not sure that matters).
 				//---		AV was able to replicate twice but was not attached to debugger and now can't replicate.
-				m_mngr.ASSERT(m_gatt == gatt);
+				//---		As a result of a brief audit, moved gatt object setting from the ending state
+				//---		handler of the connect task in P_BleDevice_Listeners to the execute method of the connect task itself.
+				//---		Doesn't solve any particular issue found, but seems more logical.
+				m_mngr.ASSERT(m_gatt == gatt, "Different gatt object set.");
 				
 				if( m_gatt != gatt )
 				{
-					m_mngr.ASSERT(false, "Different gatt object set.");
-					
 					closeGatt(/*disconnectAlso=*/false);
 				}
 				else

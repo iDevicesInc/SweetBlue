@@ -1,23 +1,19 @@
 package com.idevicesinc.sweetblue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 
-/**
- * 
- * 
- *
- */
 class P_CharacteristicManager
 {
 	private final P_Service m_service;
 	private final P_Logger m_logger;
 	
-	private final HashMap<UUID, P_Characteristic> m_characteristics = new HashMap<UUID, P_Characteristic>();
-	
+	private final HashMap<UUID, P_Characteristic> m_map = new HashMap<UUID, P_Characteristic>();
+	private final ArrayList<P_Characteristic> m_list = new ArrayList<P_Characteristic>();
 	
 	public P_CharacteristicManager(P_Service service)
 	{
@@ -30,9 +26,19 @@ class P_CharacteristicManager
 		return get(uuid) != null;
 	}
 	
+	public int getCount()
+	{
+		return m_list.size();
+	}
+	
+	public P_Characteristic get(final int index)
+	{
+		return m_list.get(index);
+	}
+	
 	public P_Characteristic get(UUID uuid)
 	{
-		return m_characteristics.get(uuid);
+		return m_map.get(uuid);
 	}
 	
 	private void put(P_Characteristic characteristic)
@@ -44,12 +50,14 @@ class P_CharacteristicManager
 			return;
 		}
 		
-		m_characteristics.put(characteristic.getUuid(), characteristic);
+		m_map.put(characteristic.getUuid(), characteristic);
+		m_list.add(characteristic);
 	}
 	
 	void clear()
 	{
-		m_characteristics.clear();
+		m_map.clear();
+		m_list.clear();
 	}
 	
 	public BleDevice getDevice()
@@ -93,7 +101,7 @@ class P_CharacteristicManager
 	{
 		String toReturn = "[";
 		boolean foundOne = false;
-		for( UUID uuid : m_characteristics.keySet() )
+		for( UUID uuid : m_map.keySet() )
 		{
 			foundOne = true;
 			toReturn += uuid +", ";

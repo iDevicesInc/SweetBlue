@@ -31,7 +31,7 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 		m_nativeListener = listener;
 	}
 
-	@Override public void onStateChange(final StateListener.ChangeEvent event)
+	@Override public void onEvent(final StateListener.StateEvent event)
 	{
 		if( postToMain() )
 		{
@@ -39,17 +39,17 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 			{
 				@Override public void run()
 				{
-					m_listener.onStateChange(event);
+					m_listener.onEvent(event);
 				}
 			});
 		}
 		else
 		{
-			m_listener.onStateChange(event);
+			m_listener.onEvent(event);
 		}
 	}
 
-	@Override public void onNativeStateChange(final NativeStateListener.ChangeEvent event)
+	@Override public void onEvent(final NativeStateListener.NativeStateEvent event)
 	{
 		if( postToMain() )
 		{
@@ -57,13 +57,13 @@ class P_WrappingBleStateListener extends PA_CallbackWrapper implements BleManage
 			{
 				@Override public void run()
 				{
-					m_nativeListener.onNativeStateChange(event);
+					m_nativeListener.onEvent(event);
 				}
 			});
 		}
 		else
 		{
-			m_nativeListener.onNativeStateChange(event);
+			m_nativeListener.onEvent(event);
 		}
 	}
 }

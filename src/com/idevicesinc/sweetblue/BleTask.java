@@ -1,10 +1,17 @@
 package com.idevicesinc.sweetblue;
 
+import android.bluetooth.BluetoothDevice;
+
+import com.idevicesinc.sweetblue.annotations.Advanced;
+
+import java.util.UUID;
+
 /**
  * Under the hood, SweetBlue uses a priority task queue to serialize all interaction with the native BLE stack.
  * This enumeration represents all the tasks that are used and lets you control various timing options in
- * {@link BleDeviceConfig} and {@link BleManagerConfig}, for example {@link BleDeviceConfig#timeouts}.
+ * {@link BleDeviceConfig} and {@link BleManagerConfig}, for example {@link BleDeviceConfig#timeoutRequestFilter}.
  */
+@Advanced
 public enum BleTask
 {
 	/**
@@ -33,7 +40,7 @@ public enum BleTask
 	DISCONNECT,
 	
 	/**
-	 * Associated with {@link BleDevice#bond()}.
+	 * Associated with {@link BleDevice#bond()} and {@link BleDeviceState#BONDING}.
 	 */
 	BOND,
 	
@@ -59,12 +66,64 @@ public enum BleTask
 	TOGGLE_NOTIFY,
 	
 	/**
-	 * Associated with {@link BleDevice#readRssi()}.
+	 * Associated with {@link BleDevice#readRssi()} and {@link BleDevice#startRssiPoll(com.idevicesinc.sweetblue.utils.Interval)} (and overloads thereof).
 	 */
 	READ_RSSI,
 	
 	/**
 	 * Associated with discovering services after a {@link BleDevice} becomes {@link BleDeviceState#CONNECTED}.
 	 */
-	DISCOVER_SERVICES;
+	DISCOVER_SERVICES,
+
+	/**
+	 * Associated with sending a notification to a remote client through {@link BleServer#notify(BluetoothDevice, UUID, UUID, byte[])} or overloads.
+	 */
+	SEND_NOTIFICATION,
+
+
+	DISCONNECT_SERVER,
+
+	SEND_READ_WRITE_RESPONSE;
+	
+	/**
+	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
+	 */
+	public boolean isDeviceSpecific()
+	{
+		switch(this)
+		{
+			case DISCONNECT_SERVER:
+			case SEND_NOTIFICATION:
+			case SEND_READ_WRITE_RESPONSE:
+			case TURN_BLE_OFF:
+			case TURN_BLE_ON:
+			case RESOLVE_CRASHES:	return false;
+
+			default:				return true;
+		}
+	}
+
+	/**
+	 * Returns whether <code>this</code> is associated with a {@link BleServer}.
+	 */
+	public boolean isServerSpecific()
+	{
+		return !isDeviceSpecific() && !isManagerSpecific();
+	}
+	
+	/**
+	 * Returns whether <code>this</code> is associated with {@link BleManager}.
+	 */
+	public boolean isManagerSpecific()
+	{
+		return !isDeviceSpecific() && !isServerSpecific();
+	}
+	
+	/**
+	 * Returns <code>true</code> if the task can have a characteristic UUID associated with it - for now {@link #READ}, {@link #WRITE} and {@link #TOGGLE_NOTIFY}.
+	 */
+	public boolean usesCharUuid()
+	{
+		return this == READ || this == WRITE || this == TOGGLE_NOTIFY;
+	}
 }

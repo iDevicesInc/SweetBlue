@@ -2,11 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 
-/**
- * 
- * 
- *
- */
 class P_Task_TxnLock extends PA_Task_RequiresBleOn
 {
 	private final BleTransaction m_txn;

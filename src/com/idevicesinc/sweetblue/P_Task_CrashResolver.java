@@ -1,11 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-/**
- * 
- * 
- *
- */
 class P_Task_CrashResolver extends PA_Task_RequiresBleOn 
 {
 	private final P_BluetoothCrashResolver m_resolver;
@@ -17,18 +12,11 @@ class P_Task_CrashResolver extends PA_Task_RequiresBleOn
 		m_resolver = resolver;
 	}
 	
-//	public BtTask_CrashResolver(BleManager manager, BluetoothCrashResolver resolver, I_StateListener listener, double timeout)
-//	{
-//		super(manager, listener, timeout);
-//		
-//		m_resolver = resolver;
-//	}
-	
 	@Override public void execute()
 	{
 		if( m_resolver.isRecoveryInProgress() )
 		{
-			succeed();
+			redundant();
 			
 			return;
 		}

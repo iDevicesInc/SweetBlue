@@ -383,7 +383,7 @@ class P_BluetoothCrashResolver {
                 }
             }
         } catch (IOException e) {
-            Log.w(TAG, "Can't write macs to "+DISTINCT_BLUETOOTH_ADDRESSES_FILE);
+//            Log.w(TAG, "Can't write macs to "+DISTINCT_BLUETOOTH_ADDRESSES_FILE);
         }
         finally {
             if (writer != null) {
@@ -430,7 +430,7 @@ class P_BluetoothCrashResolver {
             }
 
         } catch (IOException e) {
-            Log.w(TAG, "Can't read macs from "+DISTINCT_BLUETOOTH_ADDRESSES_FILE);
+//            Log.w(TAG, "Can't read macs from "+DISTINCT_BLUETOOTH_ADDRESSES_FILE);
         } catch (NumberFormatException e) {
             Log.w(TAG, "Can't parse file "+DISTINCT_BLUETOOTH_ADDRESSES_FILE);
         }

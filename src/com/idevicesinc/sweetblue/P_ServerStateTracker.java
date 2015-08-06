@@ -2,18 +2,17 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.State;
 
-public class P_ServerStateTracker extends PA_StateTracker {
+public class P_ServerStateTracker extends PA_StateTracker
+{
 
 	private BleServer.StateListener m_stateListener;
 	private final BleServer m_server;
 	
 	P_ServerStateTracker(BleServer server)
 	{
-		super(server.getManager().getLogger(), BleDeviceState.values());
+		super(BleServerState.values(), /*trackTimes=*/true);
 		
 		m_server = server;
-		
-		set(E_Intent.IMPLICIT, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true);
 	}
 	
 	public void setListener(BleServer.StateListener listener)
@@ -28,7 +27,7 @@ public class P_ServerStateTracker extends PA_StateTracker {
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask)
+	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
 	{
 		if( m_stateListener != null )
 		{

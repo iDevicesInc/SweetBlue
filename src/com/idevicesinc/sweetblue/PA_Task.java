@@ -1,23 +1,24 @@
 package com.idevicesinc.sweetblue;
 
+import java.util.UUID;
+
 import android.os.Handler;
 
+import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
-
-/**
- * 
- * 
- */
 abstract class PA_Task
 {
 	static interface I_StateListener
 	{
 		void onStateChange(PA_Task task, PE_TaskState state);
 	}
+
+	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
-	static final double TIMEOUT_DEFAULT = BleManagerConfig.DEFAULT_TASK_TIMEOUT;
-	static final double TIMEOUT_CONNECTION = BleManagerConfig.DEFAULT_TASK_TIMEOUT;
+	private final BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new TimeoutRequestEvent();
+
 	
 	private 	  BleDevice m_device;
 	private		  BleServer m_server;
@@ -51,6 +52,8 @@ abstract class PA_Task
 	private boolean m_softlyCancelled = false;
 	
 	protected final P_Logger m_logger;
+	
+	private int m_defaultOrdinal = ORDINAL_NOT_YET_ASSIGNED; // until added to the queue and assigned an actual ordinal.
 	
 	private final Runnable m_executeRunnable = new Runnable()
 	{
@@ -106,19 +109,28 @@ abstract class PA_Task
 		
 		if( taskType != null )
 		{
-			if( getDevice() != null )
-			{
-				return getDevice().getTaskTimeout(taskType).secs();
-			}
-			else
-			{
-				return getManager().getTaskTimeout(taskType).secs();
-			}
+			final BleDevice device = getDevice() != null ? getDevice() : BleDevice.NULL;
+			
+			s_timeoutRequestEvent.init(getManager(), device, taskType, getCharUuid(), getDescUuid());
+			
+			return BleDeviceConfig.getTimeout(s_timeoutRequestEvent);
 		}
 		else
 		{
-			return Interval.DISABLED.secs();
+			getManager().ASSERT(false, "BleTask type shouldn't be null.");
+			
+			return BleDeviceConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
 		}
+	}
+	
+	protected /*virtual*/ UUID getCharUuid()
+	{
+		return Uuids.INVALID;
+	}
+	
+	protected /*virtual*/ UUID getDescUuid()
+	{
+		return Uuids.INVALID;
 	}
 	
 	void init()
@@ -132,15 +144,22 @@ abstract class PA_Task
 		
 		m_state = newState;
 		
-		if( m_state.isEndingState() && m_logger.isEnabled() )
+		if( m_logger.isEnabled() )
 		{
-			String logText = this.toString();
-			if( m_queue != null )
+			if( m_state.isEndingState() )
 			{
-				logText += " - " + m_queue.getUpdateCount();
+				String logText = this.toString();
+				if( m_queue != null )
+				{
+					logText += " - " + m_queue.getUpdateCount();
+				}
+				
+				m_logger.i(logText);
 			}
-			
-			m_logger.i(logText);
+			else if (m_state == PE_TaskState.EXECUTING )
+			{
+				getQueue().print();
+			}
 		}
 		
 		if( m_stateListener != null )  m_stateListener.onStateChange(this, m_state);
@@ -149,6 +168,16 @@ abstract class PA_Task
 	PE_TaskState getState()
 	{
 		return m_state;
+	}
+	
+	int getOrdinal()
+	{
+		return m_defaultOrdinal;
+	}
+
+	void assignDefaultOrdinal(final P_TaskQueue queue)
+	{
+		m_defaultOrdinal = m_defaultOrdinal == ORDINAL_NOT_YET_ASSIGNED ? queue.assignOrdinal() : m_defaultOrdinal;
 	}
 	
 	void onAddedToQueue(P_TaskQueue queue)
@@ -244,6 +273,11 @@ abstract class PA_Task
 		return true;
 	}
 	
+	protected boolean isArmable()
+	{
+		return true;
+	}
+	
 	private void execute_wrapper()
 	{
 		m_resetableExecuteStartTime = System.currentTimeMillis();
@@ -256,7 +290,7 @@ abstract class PA_Task
 	
 	void setEndingState(PE_TaskState endingState)
 	{
-		if( m_softlyCancelled && endingState == PE_TaskState.SUCCEEDED )
+		if( m_softlyCancelled )
 		{
 			endingState = PE_TaskState.SOFTLY_CANCELLED;
 		}
@@ -362,6 +396,11 @@ abstract class PA_Task
 	{
 		return (System.currentTimeMillis() - m_timeCreated)/1000.0;
 	}
+
+	public double getAggregatedTimeArmedAndExecuting()
+	{
+		return m_totalTimeArmedAndExecuting;
+	}
 	
 	public BleDevice getDevice()
 	{
@@ -422,6 +461,11 @@ abstract class PA_Task
 	{
 		m_softlyCancelled = true;
 	}
+
+	public boolean wasSoftlyCancelled()
+	{
+		return m_softlyCancelled;
+	}
 	
 	protected String getToStringAddition()
 	{
@@ -437,8 +481,6 @@ abstract class PA_Task
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
 		return name + "(" + m_state.name() + deviceEntry + addition + ")";
 	}
-	
-	
 	
 	public boolean executeOnSeperateThread()
 	{

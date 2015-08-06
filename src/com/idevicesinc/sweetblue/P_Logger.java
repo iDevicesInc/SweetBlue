@@ -15,13 +15,10 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
+import com.idevicesinc.sweetblue.utils.UuidNameMap_ListWrapper;
 
-/**
- * 
- * 
- *
- */
 class P_Logger
 {
 	private String[] m_debugThreadNamePool;
@@ -33,12 +30,12 @@ class P_Logger
 	private HashMap<Integer, String> m_gattBondStates = null;
 	private HashMap<Integer, String> m_unbondReasonCodes = null;
 	private boolean m_enabled;
-	private final List<UuidNameMap> m_debugUuidNameDicts;
+	private final UuidNameMap_ListWrapper m_nameMap;
 	
 	public P_Logger(String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, boolean enabled)
 	{		
 		m_debugThreadNamePool = debugThreadNamePool;
-		m_debugUuidNameDicts = debugUuidNameDicts;
+		m_nameMap = new UuidNameMap_ListWrapper(debugUuidNameDicts);
 		m_enabled = enabled;
 		
 		//--- DRK > Most of the time this will give the first alphabetical thread name to the main thread.
@@ -58,7 +55,7 @@ class P_Logger
 		for( Field field : Build.class.getFields() )
 		{
 			String fieldName = field.getName();
-			String fieldValue = Utils.fieldStringValue(field);
+			String fieldValue = Utils_Reflection.fieldStringValue(field);
 			
 			this.log(level, fieldName + ": " + fieldValue);
 		}
@@ -277,6 +274,7 @@ class P_Logger
 
 		initFromReflection(BluetoothGatt.class, "GATT_", m_gattStatusCodes);
 		initFromReflection(BleDeviceConfig.class, "GATT_", m_gattStatusCodes);
+		initFromReflection(BleStatuses.class, "GATT_", m_gattStatusCodes);
 	}
 	
 	
@@ -395,7 +393,10 @@ class P_Logger
 //				e.printStackTrace();
 			}
 			
-			map.put(fieldValue, fieldName);
+			if( !map.containsKey(fieldValue) )
+			{
+				map.put(fieldValue, fieldName);
+			}
 		}
 	}
 	
@@ -431,17 +432,18 @@ class P_Logger
 	
 	public String uuidName(String uuid, String type)
 	{
-		String debugName = "NO_NAME";
+		String debugName = m_nameMap.getUuidName(uuid);
 		
-		if( m_debugUuidNameDicts != null )
+		return (type == null ? debugName : type+"="+debugName);
+	}
+	
+	<T> void checkPlease(final T please_nullable, final Class<T> please_class)
+	{
+		final Class<? extends Object> class_Listener = please_class.getEnclosingClass();
+		
+		if( please_nullable == null )
 		{
-			for(int i = 0; i < m_debugUuidNameDicts.size(); i++ )
-			{
-				String actualDebugName = m_debugUuidNameDicts.get(i).getUuidName(uuid);
-				debugName = actualDebugName != null ? actualDebugName : debugName;
-			}
+			w("WARNING: The " +please_class.getSimpleName() + " returned from " +class_Listener.getSimpleName() +".onEvent() is null. Consider returning a valid instance using static constructor methods.");
 		}
-		
-		return type == null ? debugName : type+"="+debugName+"("+uuid+")";
 	}
 }

@@ -4,27 +4,34 @@ import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.util.Log;
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-/**
- * 
- * 
- *
- */
+import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Utils;
+
+import java.util.List;
+
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class P_BleManager_Listeners
 {
-	final BluetoothAdapter.LeScanCallback m_scanCallback = new BluetoothAdapter.LeScanCallback()
+	public static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
+	public static final String BluetoothDevice_ACTION_DISAPPEARED = "android.bluetooth.device.action.DISAPPEARED";
+	
+	final BluetoothAdapter.LeScanCallback m_scanCallback_preLollipop = new BluetoothAdapter.LeScanCallback()
 	{
 		@Override public void onLeScan(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord)
         {
-			m_mngr.getCrashResolver().notifyScannedDevice(device_native, m_scanCallback);
+			m_mngr.getCrashResolver().notifyScannedDevice(device_native, this);
 			
 			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
 			{
@@ -49,7 +56,12 @@ class P_BleManager_Listeners
 			if( state.isEndingState() )
 			{
 				P_Task_Scan scanTask = (P_Task_Scan) task;
-				m_mngr.tryPurgingStaleDevices(scanTask.getTotalTimeExecuting());
+
+				if( state == PE_TaskState.INTERRUPTED || state == PE_TaskState.TIMED_OUT || state == PE_TaskState.SUCCEEDED )
+				{
+					m_mngr.tryPurgingStaleDevices(scanTask.getTotalTimeExecuting());
+				}
+
 				m_mngr.stopNativeScan(scanTask);
 				
 				if( state == PE_TaskState.INTERRUPTED )
@@ -58,7 +70,7 @@ class P_BleManager_Listeners
 				}
 				else
 				{
-					m_mngr.clearScanningRelatedMembers(scanTask.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT);
+					m_mngr.clearScanningRelatedMembers(scanTask.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
 				}
 			}
 		}
@@ -90,7 +102,7 @@ class P_BleManager_Listeners
 			
 			//--- DRK > This block doesn't do anything...just wrote it to see how these other events work and if they're useful.
 			//---		They don't seem to be but leaving it here for the future if needed anyway.
-			else if( action.contains("ACL") || action.equals(BluetoothDevice.ACTION_UUID) || action.equals(PS_GattStatus.BluetoothDevice_ACTION_DISAPPEARED) )
+			else if( action.contains("ACL") || action.equals(BluetoothDevice.ACTION_UUID) || action.equals(BluetoothDevice_ACTION_DISAPPEARED) )
 			{
 				final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 				
@@ -139,7 +151,7 @@ class P_BleManager_Listeners
 		intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
 		intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 		intentFilter.addAction(BluetoothDevice.ACTION_UUID);
-		intentFilter.addAction(PS_GattStatus.BluetoothDevice_ACTION_DISAPPEARED);
+		intentFilter.addAction(BluetoothDevice_ACTION_DISAPPEARED);
 		
 		m_mngr.getApplicationContext().registerReceiver(m_receiver, intentFilter);
 	}
@@ -208,7 +220,7 @@ class P_BleManager_Listeners
 		BluetoothAdapter bluetoothAdapter = m_mngr.getNative().getAdapter();
 		final int adapterState = bluetoothAdapter.getState();
 //		boolean inconsistentState = adapterState != newNativeState;
-		PA_StateTracker.E_Intent intent = E_Intent.EXPLICIT;
+		PA_StateTracker.E_Intent intent = E_Intent.INTENTIONAL;
 		final boolean hitErrorState = newNativeState == BluetoothAdapter.ERROR;
 		
 		if( hitErrorState )
@@ -226,7 +238,7 @@ class P_BleManager_Listeners
 			
 			m_taskQueue.fail(P_Task_TurnBleOn.class, m_mngr);
 			P_Task_TurnBleOff turnOffTask = m_taskQueue.getCurrent(P_Task_TurnBleOff.class, m_mngr);
-			intent = turnOffTask == null || turnOffTask.isImplicit() ? E_Intent.IMPLICIT : intent;
+			intent = turnOffTask == null || turnOffTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
 			m_taskQueue.succeed(P_Task_TurnBleOff.class, m_mngr);
 			
 			//--- DRK > Should have already been handled by the "turning off" event, but this is just to be 
@@ -239,7 +251,7 @@ class P_BleManager_Listeners
 			if( !m_taskQueue.isCurrent(P_Task_TurnBleOn.class, m_mngr) )
 			{
 				m_taskQueue.add(new P_Task_TurnBleOn(m_mngr, /*implicit=*/true));
-				intent = E_Intent.IMPLICIT;
+				intent = E_Intent.UNINTENTIONAL;
 			}
 			
 			m_taskQueue.fail(P_Task_TurnBleOff.class, m_mngr);
@@ -248,16 +260,16 @@ class P_BleManager_Listeners
 		{
 			m_taskQueue.fail(P_Task_TurnBleOff.class, m_mngr);
 			P_Task_TurnBleOn turnOnTask = m_taskQueue.getCurrent(P_Task_TurnBleOn.class, m_mngr);
-			intent = turnOnTask == null || turnOnTask.isImplicit() ? E_Intent.IMPLICIT : intent;
+			intent = turnOnTask == null || turnOnTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
 			m_taskQueue.succeed(P_Task_TurnBleOn.class, m_mngr);
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_TURNING_OFF )
 		{
 			if( !m_taskQueue.isCurrent(P_Task_TurnBleOff.class, m_mngr) )
 			{
-				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, E_Intent.IMPLICIT);
+				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, E_Intent.UNINTENTIONAL);
 				m_taskQueue.add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
-				intent = E_Intent.IMPLICIT;
+				intent = E_Intent.UNINTENTIONAL;
 			}
 			
 			m_taskQueue.fail(P_Task_TurnBleOn.class, m_mngr);
@@ -273,8 +285,8 @@ class P_BleManager_Listeners
 		BleManagerState previousState = BleManagerState.get(previousNativeState);
 		BleManagerState newState = BleManagerState.get(newNativeState);
 		
-		m_mngr.getNativeStateTracker().update(intent, previousState, false, newState, true);
-		m_mngr.getStateTracker().update(intent, previousState, false, newState, true);
+		m_mngr.getNativeStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
+		m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
 		
 		if( previousNativeState != BluetoothAdapter.STATE_ON && newNativeState == BluetoothAdapter.STATE_ON )
 		{
@@ -314,15 +326,15 @@ class P_BleManager_Listeners
 		if( newState == BluetoothDevice.BOND_NONE )
 		{
 			//--- DRK > Can't access BluetoothDevice.EXTRA_REASON cause of stupid @hide annotation, so hardcoding string here.
-			failReason = intent.getIntExtra(PS_GattStatus.BluetoothDevice_EXTRA_REASON, BluetoothDevice.ERROR);
-			if( failReason != PS_GattStatus.BluetoothDevice_BOND_SUCCESS )
+			failReason = intent.getIntExtra(BluetoothDevice_EXTRA_REASON, BluetoothDevice.ERROR);
+			if( failReason != BleStatuses.BOND_SUCCESS )
 			{
 				m_logger.w(m_logger.gattUnbondReason(failReason));
 			}
 		}
 		else
 		{
-			failReason = BleDeviceConfig.BOND_FAIL_REASON_NOT_APPLICABLE;
+			failReason = BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE;
 		}
 		
 		final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -368,7 +380,13 @@ class P_BleManager_Listeners
 		
 		if( device != null )
 		{
-			device.getListeners().onNativeBondStateChanged(previousState, newState, failReason);
+			//--- DRK > Got an NPE here when restarting the app through the debugger. Pretty sure it's an impossible case
+			//---		for actual app usage cause the listeners member of the device is final. So some memory corruption issue
+			//---		associated with debugging most likely...still gating it for the hell of it.
+			if( device.getListeners() != null )
+			{
+				device.getListeners().onNativeBondStateChanged(previousState, newState, failReason);
+			}
 		}
 		
 //		if( previousState == BluetoothDevice.BOND_BONDING && newState == BluetoothDevice.BOND_NONE )

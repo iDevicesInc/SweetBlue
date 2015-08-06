@@ -13,12 +13,12 @@ import com.idevicesinc.sweetblue.BleManagerState;
  * Implementations are {@link BleDeviceState} and {@link BleManagerState}.
  * Not intended for subclassing outside this library but go wild if you want.
  */
-public interface State
+public interface State extends UsesCustomNull
 {
 	/**
-	 * Abstract base class for {@link BleDevice.StateListener.ChangeEvent} and {@link BleManager.StateListener.ChangeEvent}.
+	 * Abstract base class for {@link com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent} and {@link com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent}.
 	 */
-	public static abstract class ChangeEvent
+	public static abstract class ChangeEvent<T_State extends State>
 	{
 		/**
 		 * The bitwise representation of the {@link BleDevice} or {@link BleManager}
@@ -42,7 +42,7 @@ public interface State
 		 * {@link BleDevice#disconnect()} in response to a button click, whereas unintentional would be if the device disconnected because it
 		 * went out of range. As much as possible these flags are meant to represent the actual app <i>user's</i> intent through the app, not
 		 * the intent of you the programmer, nor the intent of the user outside the bounds of the app, like disconnecting by turning the peripheral off.
-		 * For example after a disconnect you might be using {@link BleManagerConfig#reconnectLoop} to try periodically
+		 * For example after a disconnect you might be using {@link BleManagerConfig#reconnectRequestFilter_longTerm} to try periodically
 		 * reconnecting. From you the programmer's perspective a connect, if/when it happens, is arguably an intentional action. From the user's
 		 * perspective however the connect was unintentional. Therefore this mask is currently meant to serve an analytics or debugging role,
 		 * not to necessarily gate application logic.
@@ -58,9 +58,25 @@ public interface State
 		}
 		
 		/**
+		 * Returns all the states that were entered as a bit mask.
+		 */
+		public int enterMask()
+		{
+			return newStateBits() & ~oldStateBits();
+		}
+		
+		/**
+		 * Returns all the states that were exited as a bit mask.
+		 */
+		public int exitMask()
+		{
+			return oldStateBits() & ~newStateBits();
+		}
+		
+		/**
 		 * Convenience forwarding of {@link State#didEnter(int, int)}.
 		 */
-		public boolean didEnter(State state)
+		public boolean didEnter(T_State state)
 		{
 			return state.didEnter(oldStateBits(), newStateBits());
 		}
@@ -68,15 +84,15 @@ public interface State
 		/**
 		 * Convenience forwarding of {@link State#didExit(int, int)}.
 		 */
-		public boolean didExit(State state)
+		public boolean didExit(T_State state)
 		{
 			return state.didExit(oldStateBits(), newStateBits());
 		}
 		
 		/**
-		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns true on any of the {@link State} instances given.
+		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns <code>true</code> on any of the {@link State} instances given.
 		 */
-		public boolean didEnterAny(State ... states)
+		public boolean didEnterAny(T_State ... states)
 		{
 			for( int i = 0; i < states.length; i++ )
 			{
@@ -87,9 +103,9 @@ public interface State
 		}
 		
 		/**
-		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns true on any of the {@link State} instances given.
+		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns <code>true</code> on any of the {@link State} instances given.
 		 */
-		public boolean didExitAny(State ... states)
+		public boolean didExitAny(T_State ... states)
 		{
 			for( int i = 0; i < states.length; i++ )
 			{
@@ -100,10 +116,36 @@ public interface State
 		}
 		
 		/**
+		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns <code>true</code> for all the {@link State} instances given.
+		 */
+		public boolean didEnterAll(T_State ... states)
+		{
+			for( int i = 0; i < states.length; i++ )
+			{
+				if( !didEnter(states[i]) )  return false;
+			}
+			
+			return true;
+		}
+		
+		/**
+		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns <code>true</code> for all the {@link State} instances given.
+		 */
+		public boolean didExitAll(T_State ... states)
+		{
+			for( int i = 0; i < states.length; i++ )
+			{
+				if( !didExit(states[i]) )  return false;
+			}
+			
+			return true;
+		}
+		
+		/**
 		 * Returns the intention behind the state change, or {@link ChangeIntent#NULL} if no state
 		 * change for the given state occurred.
 		 */
-		public ChangeIntent getIntent(State state)
+		public ChangeIntent getIntent(T_State state)
 		{
 			if( (state.bit() & oldStateBits()) == (state.bit() & newStateBits()) )
 			{
@@ -113,11 +155,6 @@ public interface State
 			{
 				return state.overlaps(intentMask()) ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
 			}
-		}
-		
-		@Override public String toString()
-		{
-			return super.toString(); // TODO
 		}
 	}
 	
@@ -165,7 +202,7 @@ public interface State
 		public static int toDiskValue(final ChangeIntent intent_nullable)
 		{
 			if( intent_nullable == null )	return NULL.toDiskValue();
-			else					return intent_nullable.toDiskValue();
+			else							return intent_nullable.toDiskValue();
 		}
 		
 		/**
@@ -208,8 +245,8 @@ public interface State
 	String name();
 	
 	/**
-	 * Given an old and new state mask, for example from {@link BleDevice.StateListener#onStateChange(BleDevice.StateListener.ChangeEvent)}
-	 *  or {@link BleManager.StateListener#onStateChange(BleManager.StateListener.ChangeEvent)}, this method tells you whether the
+	 * Given an old and new state mask, for example from {@link com.idevicesinc.sweetblue.BleDevice.StateListener#onEvent(com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent)}
+	 *  or {@link com.idevicesinc.sweetblue.BleManager.StateListener#onEvent(com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent)}, this method tells you whether the
 	 * the 'this' state was appended.
 	 * 
 	 * @see #didExit(int, int)
@@ -227,4 +264,14 @@ public interface State
 	 * Does a bitwise OR for this state and the given state.
 	 */
 	int or(State state);
+	
+	/**
+	 * Does a bitwise OR for this state and the given bits.
+	 */
+	int or(int bits);
+	
+	/**
+	 * Returns <code>true</code> if this state is meant to stand in for Java's built-in <code>null</code>.
+	 */
+	boolean isNull();
 }

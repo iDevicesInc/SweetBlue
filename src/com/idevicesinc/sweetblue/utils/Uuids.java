@@ -14,7 +14,7 @@ public class Uuids
 	public static final UUID INVALID												= new UUID(0x0, 0x0);
 	
 	/**
-	 * The template for standard services, characteristics, and descriptors - see {@linkplain https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx}.
+	 * The template for standard services, characteristics, and descriptors - see <a href="https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx">https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx</a>
 	 * This is used to generate some of the other static {@link UUID} instances in this class using {@link #fromShort(String, String)}.
 	 */
 	public static final String STANDARD_UUID_TEMPLATE								= "00000000-0000-1000-8000-00805f9b34fb";
@@ -25,9 +25,41 @@ public class Uuids
 	public static final UUID BATTERY_SERVICE_UUID 									= fromShort("180f");
 	
 	public static final UUID DEVICE_NAME											= fromShort("2a00");
+
 	public static final UUID BATTERY_LEVEL											= fromShort("2a19");
+
+
+
+	public static final UUID MANUFACTURER_NAME										= fromShort("2a29");
+	public static final UUID MODEL_NUMBER											= fromShort("2a24");
+	public static final UUID SERIAL_NUMBER											= fromShort("2a25");
+	public static final UUID HARDWARE_REVISION										= fromShort("2a27");
+	public static final UUID FIRMWARE_REVISION										= fromShort("2a26");
+	public static final UUID SOFTWARE_REVISION										= fromShort("2a28");
+	public static final UUID SYSTEM_ID												= fromShort("2a23");
+
+	public static final UUID[] DEVICE_INFORMATION_UUIDS =
+	{
+		MANUFACTURER_NAME,
+		MODEL_NUMBER,
+		SERIAL_NUMBER,
+		HARDWARE_REVISION,
+		FIRMWARE_REVISION,
+		SOFTWARE_REVISION,
+		SYSTEM_ID
+	};
+
+
+
+//	public static final UUID MODEL_NUMBER											= fromShort("2a27");
+//	public static final UUID MANUFACTURER_NAME										= fromShort("2a27");
+//	public static final UUID MANUFACTURER_NAME										= fromShort("2a27");
+//	public static final UUID MANUFACTURER_NAME										= fromShort("2a27");
+//	public static final UUID MANUFACTURER_NAME										= fromShort("2a27");
 	
 	public static final UUID CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID	= fromShort("2902");
+	
+	protected final static String BLUETOOTH_CONNECTED_HASH = "dd79b7c69cf4e36b534a76d59e3379ac1bcb2ff4";
 	
 	/**
 	 * Convenience overload of {@link #fromShort(String, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
@@ -82,7 +114,7 @@ public class Uuids
 	/**
 	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
 	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
-	 * 
+	 *
 	 * @param assignedNumber	A {@link String} of length 4 as the hex representation of a 2-byte (short) value, for example "2a19".
 	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
 	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
@@ -90,9 +122,42 @@ public class Uuids
 	public static UUID fromShort(String assignedNumber, String uuidTemplate)
 	{
 		if( assignedNumber == null || assignedNumber.length() != 4 )  return INVALID;
-		
+
 		String uuid = uuidTemplate.substring(0, 4) + assignedNumber + uuidTemplate.substring(8, uuidTemplate.length());
-		
-		return UUID.fromString(uuid);
+
+		return fromString(uuid);
+	}
+
+	/**
+	 * Convenience overload of {@link #fromInt(String, String)}.
+	 */
+	public static UUID fromInt(int assignedNumber, String uuidTemplate)
+	{
+		return fromInt(assignedNumber, uuidTemplate);
+	}
+
+	/**
+	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
+	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
+	 *
+	 * @param assignedNumber	A {@link String} of length 8 as the hex representation of a 4-byte (int) value, for example "12630102".
+	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
+	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
+	 */
+	public static UUID fromInt(String assignedNumber, String uuidTemplate)
+	{
+		if( assignedNumber == null || assignedNumber.length() != 8 )  return INVALID;
+
+		String uuid = assignedNumber + uuidTemplate.substring(8, uuidTemplate.length());
+
+		return fromString(uuid);
+	}
+
+	/**
+	 * Convenience forwarding of {@link UUID#fromString(String)}.
+	 */
+	public static UUID fromString(final String value)
+	{
+		return UUID.fromString(value);
 	}
 }

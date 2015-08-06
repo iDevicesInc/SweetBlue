@@ -5,11 +5,6 @@ import java.util.ArrayList;
 import android.os.Handler;
 import android.os.Looper;
 
-/**
- * 
- * 
- *
- */
 class P_TaskQueue
 {
 	private final ArrayList<PA_Task> m_queue = new ArrayList<PA_Task>();
@@ -21,12 +16,33 @@ class P_TaskQueue
 	
 	private Handler m_executeHandler = null;
 	
+	private int m_currentOrdinal;
+	
 	P_TaskQueue(BleManager mngr)
 	{
 		m_mngr = mngr;
 		m_logger = mngr.getLogger();
 		
 		initHandler(); 
+	}
+	
+	int assignOrdinal()
+	{
+		final int toReturn = m_currentOrdinal;
+		
+		m_currentOrdinal++;
+		
+		return toReturn;
+	}
+	
+	int getCurrentOrdinal()
+	{
+		return m_currentOrdinal;
+	}
+
+	public PA_Task peek()
+	{
+		return m_queue.size() > 0 ? m_queue.get(0) : null;
 	}
 	
 	private void initHandler()
@@ -133,6 +149,8 @@ class P_TaskQueue
 			
 			index = m_queue.size()-1;
 		}
+
+		task.assignDefaultOrdinal(this);
 		
 		softlyCancelTasks(task);
 		
@@ -192,8 +210,19 @@ class P_TaskQueue
 		if( !m_mngr.ASSERT(m_current == null) )  return;
 		if( m_queue.size() == 0 )  return;
 		
-		m_current = m_queue.remove(0);
-		m_current.arm(m_executeHandler);
+		for( int i = 0; i < m_queue.size(); i++ )
+		{
+			PA_Task newPotentialCurrent = m_queue.get(i);
+			
+			if( newPotentialCurrent.isArmable() )
+			{
+				m_queue.remove(i);
+				m_current = newPotentialCurrent;
+				m_current.arm(m_executeHandler);
+				
+				break;
+			}
+		}
 		
 		print();
 	}
@@ -409,7 +438,15 @@ class P_TaskQueue
 	private void clearQueueOf$removeFromQueue(int index)
 	{
 		PA_Task task = m_queue.remove(index);
-		task.setEndingState(PE_TaskState.CLEARED_FROM_QUEUE);
+
+		if( task.wasSoftlyCancelled() )
+		{
+			task.setEndingState(PE_TaskState.SOFTLY_CANCELLED);
+		}
+		else
+		{
+			task.setEndingState(PE_TaskState.CLEARED_FROM_QUEUE);
+		}
 		
 		print();
 	}

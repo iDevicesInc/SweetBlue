@@ -4,12 +4,21 @@ import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
 
+import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
+import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
+import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.utils.State;
 
 class P_BondManager
 {
+	static final Object[] OVERRIDE_UNBONDED_STATES = {UNBONDED, true, BONDING, false, BONDED, false};
+	static final Object[] OVERRIDE_BONDING_STATES = {UNBONDED, false, BONDING, true, BONDED, false};
+	static final Object[] OVERRIDE_EMPTY_STATES = {};
+	
 	private final BleDevice m_device;
 	
 	private BleDevice.BondListener m_listener;
@@ -34,27 +43,49 @@ class P_BondManager
 		}
 	}
 	
-	void onBondTaskStateChange(PA_Task task, PE_TaskState state)
+	void onBondTaskStateChange(final PA_Task task, final PE_TaskState state)
 	{
-		E_Intent intent = task.isExplicit() ? E_Intent.EXPLICIT : E_Intent.IMPLICIT;
+		final E_Intent intent = task.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 		
 		if( task.getClass() == P_Task_Bond.class )
 		{
+			final P_Task_Bond bondTask = (P_Task_Bond) task;
+			
 			if( state.isEndingState() )
 			{
 				if( state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
 				{
 					this.onNativeBond(intent);
 				}
+				else if( state == PE_TaskState.SOFTLY_CANCELLED )
+				{
+					
+				}
 				else
 				{
-					this.onNativeBondFailed(intent);
+					final int failReason = bondTask.getFailReason();
+					final BondListener.Status status;
+					
+					if( state == PE_TaskState.TIMED_OUT )
+					{
+						status = Status.TIMED_OUT;
+					}
+					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
+					{
+						status = Status.FAILED_IMMEDIATELY;
+					}
+					else
+					{
+						status = Status.FAILED_EVENTUALLY;
+					}
+					
+					this.onNativeBondFailed(intent, status, failReason);
 				}
 			}
 		}
 		else if( task.getClass() == P_Task_Unbond.class )
 		{
-			if( state == PE_TaskState.SUCCEEDED )
+			if( state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
 			{
 				this.onNativeUnbond(intent);
 			}
@@ -65,24 +96,110 @@ class P_BondManager
 		}
 	}
 	
-	void onNativeUnbond(E_Intent intent)
+	void onNativeUnbond(final E_Intent intent)
 	{
-		m_device.getStateTracker().update(intent, BONDED, false, BONDING, false, UNBONDED, true);
+		m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
-	void onNativeBonding(E_Intent intent)
+	void onNativeBonding(final E_Intent intent)
 	{
-		m_device.getStateTracker().update(intent, BONDED, false, BONDING, true, UNBONDED, false);
+		m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, true, UNBONDED, false);
 	}
 	
-	void onNativeBond(E_Intent intent)
+	void onNativeBond(final E_Intent intent)
 	{
-		m_device.getStateTracker().update(intent, BONDED, true, BONDING, false, UNBONDED, false);
+		final boolean wasAlreadyBonded = m_device.is(BONDED);
+		
+		m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDED, true, BONDING, false, UNBONDED, false);
+		
+		if( !wasAlreadyBonded )
+		{
+			invokeCallback(Status.SUCCESS, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, intent.convert());
+		}
 	}
 	
-	void onNativeBondFailed(E_Intent intent)
+	private boolean failConnection(final BondListener.Status status)
 	{
-		m_device.getStateTracker().update(intent, BONDED, false, BONDING, false, UNBONDED, true);
+		if( status.canFailConnection() )
+		{
+			if( m_device.is_internal(BleDeviceState.CONNECTING_OVERALL) )
+			{
+				final boolean bondingFailFailsConnection = BleDeviceConfig.bool(m_device.conf_device().bondingFailFailsConnection, m_device.conf_mngr().bondingFailFailsConnection);
+				
+				if( bondingFailFailsConnection )
+				{
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	Object[] getOverrideBondStatesForDisconnect(ConnectionFailListener.Status connectionFailReasonIfConnecting)
+	{
+		final Object[] overrideBondingStates;
+		
+		if( connectionFailReasonIfConnecting == ConnectionFailListener.Status.BONDING_FAILED )
+		{
+			overrideBondingStates = OVERRIDE_UNBONDED_STATES;
+		}
+		else
+		{
+			overrideBondingStates = OVERRIDE_EMPTY_STATES;
+		}
+		
+		return overrideBondingStates;
+	}
+	
+	void onNativeBondFailed(final E_Intent intent, final BondListener.Status status, final int failReason)
+	{ 
+		if( isNativelyBondingOrBonded() )
+		{
+			//--- DRK > This is for cases where the bond task has timed out,
+			//--- or otherwise failed without actually resetting internal bond state.
+			m_device.unbond_justAddTheTask();
+		}
+		
+		if( m_device.is_internal(BleDeviceState.CONNECTED) || m_device.is_internal(BleDeviceState.CONNECTING) )
+		{
+			saveNeedsBondingIfDesired();
+		}
+		
+		if( failConnection(status) )
+		{
+			final boolean doingReconnect_shortTerm = m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM);
+			
+			m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.BONDING_FAILED, status.timing(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, failReason, m_device.NULL_READWRITE_EVENT());
+		}
+		else
+		{
+			onNativeBondFailed_common(intent);
+		}
+		
+		invokeCallback(status, failReason, intent.convert());
+		
+		if( status == Status.TIMED_OUT )
+		{
+			m_device.getManager().uhOh(UhOh.BOND_TIMED_OUT);
+		}
+	}
+	
+	void saveNeedsBondingIfDesired()
+	{
+		final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(m_device.conf_device().tryBondingWhileDisconnected, m_device.conf_mngr().tryBondingWhileDisconnected);
+		
+		if( tryBondingWhileDisconnected )
+		{
+			final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(m_device.conf_device().tryBondingWhileDisconnected_manageOnDisk, m_device.conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
+			
+			m_device.getManager().m_diskOptionsMngr.saveNeedsBonding(m_device.getMacAddress(), tryBondingWhileDisconnected_manageOnDisk);
+		}
+	}
+	
+	private void onNativeBondFailed_common(final E_Intent intent)
+	{
+		m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
 	boolean bondIfNeeded(final P_Characteristic characteristic, final BondFilter.CharacteristicEventType type)
@@ -93,7 +210,7 @@ class P_BondManager
 		
 		final BondFilter.CharacteristicEvent event = new BleDeviceConfig.BondFilter.CharacteristicEvent(m_device, characteristic.getUuid(), type);
 		
-		final BondFilter.Please please = bondFilter.onCharacteristicEvent(event);
+		final BondFilter.Please please = bondFilter.onEvent(event);
 		
 		return applyPlease_BondFilter(please);
 	}
@@ -124,7 +241,34 @@ class P_BondManager
 		return bond;
 	}
 	
-	private boolean isBondingOrBonded()
+	BondEvent invokeCallback(Status status, int failReason, State.ChangeIntent intent)
+	{
+		final BondEvent event = new BondEvent(m_device, status, failReason, intent);
+		
+		invokeCallback(event);
+		
+		return event;
+	}
+	
+	void invokeCallback(final BondEvent event)
+	{		
+		if( m_listener != null )
+		{
+			m_listener.onEvent(event);
+		}
+		
+		if( m_device.getManager().m_defaultBondListener != null )
+		{
+			m_device.getManager().m_defaultBondListener.onEvent(event);
+		}
+	}
+	
+	Object[] getNativeBondingStateOverrides()
+	{
+		return new Object[]{BONDING, m_device.m_nativeWrapper.isNativelyBonding(), BONDED, m_device.m_nativeWrapper.isNativelyBonded(), UNBONDED, m_device.m_nativeWrapper.isNativelyUnbonded()};
+	}
+	
+	private boolean isNativelyBondingOrBonded()
 	{
 		//--- DRK > These asserts are here because, as far as I could discern from logs, the abstracted
 		//---		state for bonding/bonded was true, but when we did an encrypted write, it kicked

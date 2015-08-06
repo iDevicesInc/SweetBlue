@@ -1,13 +1,25 @@
 package com.idevicesinc.sweetblue.utils;
 
+import java.text.DecimalFormat;
+
+import com.idevicesinc.sweetblue.annotations.*;
+
 /**
  * Wrapper for a positive-only physical distance supporting various units of measurement.
  */
-public class Distance
+@Immutable
+public class Distance extends Unit<Distance>
 {
 	public static final double FEET_PER_METER = 3.28084;
 	
+	/**
+	 * Convenience value for zero meters.
+	 */
 	public static final Distance ZERO		= meters(0.0);
+	
+	/**
+	 * Convenience value representing in invalid/impossible distance, arbitrarily chosen to be negative one meter.
+	 */
 	public static final Distance INVALID	= meters(-1.0);
 	
 	private final double m_meters;
@@ -49,8 +61,33 @@ public class Distance
 		return meters(feet/FEET_PER_METER);
 	}
 	
+	/**
+	 * Returns <code>true</code> if {@link #meters()} is >= 0.
+	 */
+	public boolean isValid()
+	{
+		return meters() >= 0.0;
+	}
+	
 	@Override public String toString()
 	{
-		return meters()+"meters/"+feet()+"feet"; 
+		if( !isValid() )
+		{
+			return "INVALID";
+		}
+		else
+		{
+			return Utils.toFixed(meters())+"meters/"+Utils.toFixed(feet())+"feet";
+		}
+	}
+
+	@Override protected double getRawValue()
+	{
+		return m_meters;
+	}
+
+	@Override protected Unit<Distance> newInstance(double rawValue)
+	{
+		return meters(rawValue);
 	}
 }

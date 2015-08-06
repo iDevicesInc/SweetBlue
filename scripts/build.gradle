@@ -1,0 +1,254 @@
+apply plugin: 'java'
+apply plugin: 'checkstyle'
+
+version = '1.0'
+
+// Set base variables
+ext.JAR_BASE_NAME = "sweetblue_${SEMVER}"
+ext.BUNDLE_FOLDER = STAGE + "/" + JAR_BASE_NAME
+ext.JAR_DIR = BUNDLE_FOLDER + "/jars"
+ext.JAR_NAME = JAR_BASE_NAME + ".jar"
+ext.JAVADOC_JAR_NAME = JAR_BASE_NAME + "-javadoc.jar"
+ext.SOURCES_JAR_NAME = JAR_BASE_NAME + "-sources.jar"
+ext.ANDROID_JAR = System.getenv("ANDROID_HOME") + "/platforms/android-" + ANDROID_API_LEVEL + "/android.jar"
+ext.AS_SUFFIX = "/android_studio/app/libs"
+ext.ECLIPSE_SUFFIX = "/eclipse/lib"
+
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+
+
+sourceSets {
+    main.java.srcDir '../src/'
+    test.java.srcDir '../test/'
+}
+
+repositories {
+    mavenCentral()
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "commons-codec:commons-codec:1.8"
+    }
+}
+dependencies {    
+    compile files("${ANDROID_JAR}")
+    testCompile 'junit:junit:4.10'
+    testCompile 'org.robolectric:robolectric:2.4'
+}
+
+import org.apache.commons.codec.digest.DigestUtils
+
+// Task definitions
+task checker(type: Checkstyle) {
+    configFile file("./config/checkstyle/checkstyle.xml")
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+    classpath = files()
+}
+
+// Creates Sweetblue jar
+jar {
+    archiveName = JAR_NAME
+    destinationDir = new File(JAR_DIR)
+}
+
+// Create the source Jar
+task sourceJar(type: Jar, dependsOn: jar) {
+    archiveName = SOURCES_JAR_NAME
+    classifier = 'sources'
+    from sourceSets.main.allSource
+    destinationDir = new File(JAR_DIR)
+}
+
+// disable the crazy super-strict doclint tool in Java 8
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+// Generate javadocs
+task gendocs(type: Javadoc) {
+    options.stylesheetFile = new File("./assets/doc_style.css")
+    options.windowTitle = "SweetBlue"
+    options.memberLevel = JavadocMemberLevel.PROTECTED
+    options.author = true
+    options.linksOffline('http://d.android.com/reference', System.getenv("ANDROID_HOME") + '/docs/reference')
+    String v = "${SEMVER}"
+    version = v.replace("_", '.')
+    destinationDir = new File("${BUNDLE_FOLDER}/docs/api")
+    source = sourceSets.main.allJava
+    classpath += configurations.compile
+}
+
+task copyJavaDoc(type: Copy, dependsOn: gendocs) {
+    checkDir("${BUNDLE_FOLDER}/docs/api")
+    from "docs/api"
+    into "${BUNDLE_FOLDER}/docs/api"
+}
+
+// Create javadoc jar file
+task javadocJar(type: Jar, dependsOn: copyJavaDoc) {
+    classifier = 'javadoc'
+    archiveName = JAVADOC_JAR_NAME
+    from gendocs.destinationDir
+    destinationDir = new File(JAR_DIR)
+}
+
+// Copy the src directory, and Readme file 
+task copyFiles << {
+    checkDir("${BUNDLE_FOLDER}")
+    copy {
+        from "../src"
+        into "${BUNDLE_FOLDER}/src"
+    }
+    copy {
+        from "../README.md"
+        into BUNDLE_FOLDER
+    }
+}
+
+def checkDir(String dir) {
+    File f = new File(dir)
+    if (!f.exists()) {
+        f.mkdirs()
+    }
+}
+
+// Pull down the samples repo
+task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
+    // If the directory already exists, wipe it out, and start over
+    // again, so this doesn't fail the build
+    File f = new File("${STAGE}/samples")
+    if (f.exists()) {
+        delete "${STAGE}/samples"
+    }
+
+    // When running on the build server, we need to inject the username and password
+    // otherwise it will pull the un/pw of the current user.
+    String gu = System.getenv("G_UNAME")
+    def r;
+    if (!gu || !gu.trim()) {
+        r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
+    } else {
+        String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples"
+        r = run.execute()                
+    }
+    r.waitFor()
+    String v = r.exitValue()
+    if (!v.equals("0")) {
+        throw new RuntimeException(r.errorStream.text)
+    }
+
+}
+
+
+ext.mainJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}.jar"
+ext.sourcesJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-sources.jar"
+ext.javadocJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-javadoc.jar"
+
+// Copy the samples to the bundle folder
+task copySamples(dependsOn: [copyFiles, getSamples] ) << {
+    String d = "${STAGE}/samples/samples"    
+    copy {
+        from d
+        into "${BUNDLE_FOLDER}/samples"
+    }
+}
+
+// Creates a new gradle build task for the input build.gradle file
+def buildSampleTask(buildDir) {
+    return tasks.create("build${buildDir}SampleTask", GradleBuild) {
+        buildFile = "${buildDir}/android_studio/app/build.gradle"
+        tasks = ['assemble']
+    }
+}
+
+// Copy the new sweetblue jar, sourcejar, and javadoc jars to each sample AS
+// project, and build 
+task copyAndRenameJars(dependsOn: copySamples) << {
+    File sampleDir = new File("${STAGE}/samples/samples")    
+    FileCollection collection = files { sampleDir.listFiles() }
+    collection.each { File file ->
+        copy {
+            from mainJar
+            into file.getAbsolutePath() + AS_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from mainJar
+            into file.getAbsolutePath() + ECLIPSE_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from sourcesJar
+            into file.getAbsolutePath() + AS_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from sourcesJar
+            into file.getAbsolutePath() + ECLIPSE_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from javadocJar
+            into file.getAbsolutePath() + AS_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        copy {
+            from javadocJar
+            into file.getAbsolutePath() + ECLIPSE_SUFFIX
+            rename("_${SEMVER}", "")
+        }
+        buildSampleTask(file.getAbsolutePath()).execute()
+    }
+}
+
+task copyGPL(dependsOn: copyAndRenameJars) << {
+    copy {
+        from "../LICENSE"
+        into "${BUNDLE_FOLDER}"
+    }
+}
+
+task zipTrial(type: Zip, dependsOn: copyGPL) {
+    from "${BUNDLE_FOLDER}"
+    archiveName = "sweetblue.zip"
+    destinationDir = new File("${STAGE}")
+}
+
+task zipJar(dependsOn: [zipTrial])
+
+task cleanFolders << {
+    delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
+}
+
+task updateReadmeVersion << {
+    String dver = SEMVER.replace("_", ".")
+    exec {
+        workingDir '../'
+        executable 'sed'
+        args "-i", "", "s/version-.*-blue/version-${dver}-blue/g", "README.md"
+    }
+    String hash = DigestUtils.sha1Hex("${SEMVER}")
+    exec {
+        workingDir '../src/com/idevicesinc/sweetblue/utils'
+        executable 'sed'
+        args "-i", "", "s/BLUETOOTH_CONNECTED_HASH = \".*\"/BLUETOOTH_CONNECTED_HASH = \"${hash}\"/g", "Uuids.java"
+    }
+}
+
+// Perform full build, but do not zip anything, and do not clean folders
+task bundleNoZip(dependsOn: [copyAndRenameJars, updateReadmeVersion])
+
+// Convenience task to run all zip operations
+task fullBuild(dependsOn: [copyAndRenameJars, zipJar, updateReadmeVersion])
+
+fullBuild.finalizedBy cleanFolders

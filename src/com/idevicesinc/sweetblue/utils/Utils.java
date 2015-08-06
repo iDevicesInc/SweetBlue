@@ -9,11 +9,15 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
+
+import com.idevicesinc.sweetblue.BleDeviceConfig;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
@@ -36,13 +40,34 @@ public class Utils
 		return false;
 	}
 	
+	private static final int FRACTION_DIGITS = 2;
+	
+	private static final DecimalFormat s_toFixedFormat = new DecimalFormat();
+	{
+		s_toFixedFormat.setMaximumFractionDigits(FRACTION_DIGITS);
+		s_toFixedFormat.setMinimumFractionDigits(FRACTION_DIGITS);
+	}
+
+	public static boolean isLollipop()
+	{
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+	}
+
+	public static String toFixed(final double value)
+	{
+		return s_toFixedFormat.format(value);
+	}
+	
 	/**
 	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
-	 * and so this method is used to set {@link #autoUnbond_onStateEnter}.
-	 */
+	 * and so this method is used in {@link com.idevicesinc.sweetblue.BleDeviceConfig.DefaultBondFilter}. 
+	 */ 
 	public static boolean phoneHasBondingIssues()
 	{
-		return Utils.isManufacturer("sony") || Utils.isManufacturer("motorola") && Utils.isProduct("ghost");
+		return
+				Utils.isManufacturer("sony")																		||
+				Utils.isManufacturer("motorola") && (Utils.isProduct("ghost") || Utils.isProduct("victara"))		||
+				Utils.isManufacturer("samsung") && (Utils.isProduct("degaswifiue"))									 ;
 	}
 	
 	public static boolean isManufacturer(String manufacturer)
@@ -77,6 +102,21 @@ public class Utils
 		return consistentName;
 	}
 
+	public static boolean contains(final Object[] uuids, final Object uuid)
+	{
+		for( int i = 0; i < uuids.length; i++ )
+		{
+			final Object ith = uuids[i];
+
+			if( ith.equals(uuid) )
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public static boolean haveMatchingIds(List<UUID> advertisedIds, Collection<UUID> lookedForIds)
 	{
 		if(lookedForIds != null && !lookedForIds.isEmpty())
@@ -104,40 +144,40 @@ public class Utils
 	private static final String SHORTHAND_UUID_TEMPLATE = "00000000-0000-1000-8000-00805f9b34fb";
 	private static final int SHORTHAND_LENGTH = 8;
 
-	/**
-	 * Get a UUID string by transforming shorthand ids into long form ids.
-	 * 
-	 * @param shorthandUuid Short of long form UUID string for a service/characteristic
-	 * @return UUID string.
-	 */
-	public static String uuidStringFromShorthand(String shorthandUuid)
-	{
-		// Check for shorthand form
-		if(shorthandUuid.length() <= SHORTHAND_LENGTH)
-		{
-			// Pad with any missing zeros
-			long l = Long.parseLong(shorthandUuid, 16);
-			shorthandUuid = String.format("%0" + SHORTHAND_LENGTH + "x", l);
-			// Overwrite the shorthand places in the template with those provided
-			String result = shorthandUuid + SHORTHAND_UUID_TEMPLATE.substring(SHORTHAND_LENGTH);
-			return result;
-		}
-		else
-		{
-			return shorthandUuid;
-		}
-	}
-
-	/**
-	 * Get a UUID by transforming shorthand ids into long form ids.
-	 * 
-	 * @param id Short of long form UUID string for a service/characteristic
-	 * @return UUID.
-	 */
-	static public UUID uuidFromShorthand(String shorthandUuid)
-	{
-		return UUID.fromString(uuidStringFromShorthand(shorthandUuid));
-	}
+//	/**
+//	 * Get a UUID string by transforming shorthand ids into long form ids.
+//	 * 
+//	 * @param shorthandUuid Short of long form UUID string for a service/characteristic
+//	 * @return UUID string.
+//	 */
+//	public static String uuidStringFromShorthand(String shorthandUuid)
+//	{
+//		// Check for shorthand form
+//		if(shorthandUuid.length() <= SHORTHAND_LENGTH)
+//		{
+//			// Pad with any missing zeros
+//			long l = Long.parseLong(shorthandUuid, 16);
+//			shorthandUuid = String.format("%0" + SHORTHAND_LENGTH + "x", l);
+//			// Overwrite the shorthand places in the template with those provided
+//			String result = shorthandUuid + SHORTHAND_UUID_TEMPLATE.substring(SHORTHAND_LENGTH);
+//			return result;
+//		}
+//		else
+//		{
+//			return shorthandUuid;
+//		}
+//	}
+//
+//	/**
+//	 * Get a UUID by transforming shorthand ids into long form ids.
+//	 * 
+//	 * @param shorthandUuid Short of long form UUID string for a service/characteristic
+//	 * @return UUID.
+//	 */
+//	static public UUID uuidFromShorthand(String shorthandUuid)
+//	{
+//		return UUID.fromString(uuidStringFromShorthand(shorthandUuid));
+//	}
 
 	public static byte[] hexStringToBytes(String string)
 	{
@@ -284,17 +324,17 @@ public class Utils
 
 		return value;
 	}
-
-	public static String getStringValue(byte[] data)
+	
+	public static String getStringValue(final byte[] data, final String charset)
 	{
-		String string = null;
+		String string = "";
 		byte[] value = data;
 
 		if(value != null && value.length > 0)
 		{
 			try
 			{
-				string = new String(value, "UTF-8");
+				string = new String(value, charset);
 			}
 			catch(UnsupportedEncodingException e)
 			{
@@ -305,6 +345,11 @@ public class Utils
 		}
 
 		return string;
+	}
+
+	public static String getStringValue(final byte[] data)
+	{
+		return getStringValue(data, "UTF-8");
 	}
 
 	private static class FlagOnStyle extends CharacterStyle
@@ -343,6 +388,8 @@ public class Utils
 
 		for(int i = 0; i < states.length; i++)
 		{
+			if( states[i].isNull() )  continue;
+			
 			String name = ((Enum) states[i]).name();
 			rawString += name + spacer;
 		}
@@ -352,6 +399,8 @@ public class Utils
 		int position = 0;
 		for(int i = 0; i < states.length; i++)
 		{
+			if( states[i].isNull() )  continue;
+			
 			String name = ((Enum) states[i]).name();
 
 			if(states[i].overlaps(stateMask))
@@ -381,57 +430,160 @@ public class Utils
 		return (short) (value & 0xff);
 	}
 	
-	public static String fieldStringValue(Field field)
+	public static String toString(int mask, State[] values)
 	{
-		Object uuid = staticFieldValue(field);
+		StringBuilder builder = new StringBuilder();
+		builder.append("[");
 		
-		String uuidString = "";
+		boolean foundFirst = false;
 		
-		if( uuid instanceof String )
+		for( int i = 0; i < values.length; i++ )
 		{
-			uuidString = (String) uuid;
-		}
-		else if( uuid instanceof UUID )
-		{
-			uuidString = uuid.toString();
+			if( values[i].overlaps(mask) )
+			{
+				if( foundFirst )
+				{
+					builder.append(", ");
+				}
+				else
+				{
+					foundFirst = true;
+				}
+				
+				builder.append(values[i]);
+			}
 		}
 		
-		uuidString = uuidString.toLowerCase();
+		builder.append("]");
 		
-		return uuidString;
+		return builder.toString();
 	}
 	
-	public static <T extends Object> T staticFieldValue(Field field)
+	public static int calcFullMask(final State[] values)
 	{
-		Object value = null;
+		int mask = 0x0;
 		
-		try {
-			value = field.get(null);
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-//			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-//			e.printStackTrace();
+		for( int i = 0; i < values.length; i++ )
+		{
+			mask |= values[i].bit();
 		}
 		
-		return (T) value;
+		return mask;
 	}
 	
-	public static String toString(Object ... values)
+	public static String toString(Class<?> type, Object ... values)
 	{
-		String toReturn = "";
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append(type.getSimpleName());
+		
+		int length_highest = 0;
+		for( int i = 0; i < values.length; i+=2 )
+		{
+			int length_ith = values[i].toString().length();
+			
+			if( length_ith > length_highest )
+			{
+				length_highest = length_ith;
+			}
+		}
 		
 		for( int i = 0; i < values.length; i+=2 )
 		{
-			if( i > 0 )
-			{
-				toReturn += " ";
-			}
+			builder.append("\n   ");
 			
-			toReturn += values[i] + "=" + values[i+1];
+			final int length_ith = values[i].toString().length();
+			final int spaceCount = length_highest - length_ith;
+			
+			builder.append(values[i]);
+			
+			for( int j = 0; j < spaceCount; j++ )
+			{
+				builder.append(" ");
+			}
+			builder.append(" = ");
+			builder.append(values[i+1]);
 		}
 		
-		return toReturn;
+		return builder.toString();
+	}
+
+	public static byte[] shortToBytes(short l)
+	{
+		byte[] result = new byte[2];
+		for( short i = 1; i >= 0; i-- )
+		{
+			result[i] = (byte) (l & 0xFF);
+			l >>= 8;
+		}
+		return result;
+	}
+
+	public static short bytesToShort(byte[] b)
+	{
+		short result = 0;
+		for( short i = 0; i < 2; i++ )
+		{
+			result <<= 8;
+			result |= (b[i] & 0xFF);
+		}
+
+		return result;
+	}
+
+	public static byte boolToByte(final boolean value)
+	{
+		return (byte) (value ? 0x1 : 0x0);
+	}
+
+	public static byte[] intToBytes(int l)
+	{
+		byte[] result = new byte[4];
+		for( int i = 3; i >= 0; i-- )
+		{
+			result[i] = (byte) (l & 0xFF);
+			l >>= 8;
+		}
+		return result;
+	}
+
+	public static int bytesToInt(byte[] b)
+	{
+		int result = 0;
+		for( int i = 0; i < 4; i++ )
+		{
+			result <<= 8;
+
+			if( i < b.length )
+			{
+				result |= (b[i] & 0xFF);
+			}
+		}
+
+		return result;
+	}
+
+
+
+	public static byte[] longToBytes(long l)
+	{
+		byte[] result = new byte[8];
+		for( int i = 7; i >= 0; i-- )
+		{
+			result[i] = (byte) (l & 0xFF);
+			l >>= 8;
+		}
+		return result;
+	}
+
+	public static long bytesToLong(byte[] b)
+	{
+		long result = 0;
+		for( int i = 0; i < 8; i++ )
+		{
+			result <<= 8;
+			result |= (b[i] & 0xFF);
+		}
+		return result;
 	}
 }

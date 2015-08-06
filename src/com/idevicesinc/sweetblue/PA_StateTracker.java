@@ -2,33 +2,49 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.State;
 
-/**
- * 
- * 
- *
- */
 abstract class PA_StateTracker
 {
-	private int m_stateMask = 0x0;
-	private final P_Logger m_logger;
-	
-	private final Object m_lock = new Object();
-	private final long[] m_timesInState;
-	
 	static enum E_Intent
 	{
-		EXPLICIT, IMPLICIT;
+		INTENTIONAL, UNINTENTIONAL;
 		
 		public int getMask()
 		{
-			return this == EXPLICIT ? 0xFFFFFFFF : 0x0;
+			return this == INTENTIONAL ? 0xFFFFFFFF : 0x0;
+		}
+		
+		public State.ChangeIntent convert()
+		{
+			switch(this)
+			{
+				case INTENTIONAL:	  return State.ChangeIntent.INTENTIONAL;
+				case UNINTENTIONAL:	  return State.ChangeIntent.UNINTENTIONAL;
+			}
+			
+			return State.ChangeIntent.NULL;
 		}
 	}
 	
-	PA_StateTracker(P_Logger logger, State[] enums)
+	private int m_stateMask = 0x0;
+	
+	private final Object m_lock = new Object();
+	private final long[] m_timesInState;
+	private final int m_stateCount;
+	
+	PA_StateTracker(final State[] enums, final boolean trackTimes)
 	{
-		m_logger = logger;
-		m_timesInState = new long[enums.length];
+		m_stateCount = enums.length;
+		m_timesInState = trackTimes ? new long[m_stateCount] : null;
+	}
+	
+	PA_StateTracker(final State[] enums)
+	{
+		this(enums, /*trackTimes=*/true);
+	}
+	
+	public boolean is(State state)
+	{
+		return checkBitMatch(state, true);
 	}
 	
 	public int getState()
@@ -44,7 +60,7 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	private int getMask(int currentStateMask, Object[] statesAndValues)
+	private int getMask(final int currentStateMask, final Object[] statesAndValues)
 	{
 		int newStateBits = currentStateMask;
 		
@@ -58,7 +74,6 @@ abstract class PA_StateTracker
 				
 				continue;
 			}
-			
 			
 			State state = (State) statesAndValues[i];
 			boolean append = true;
@@ -84,11 +99,7 @@ abstract class PA_StateTracker
 		return newStateBits;
 	}
 	
-	
-	
-	
-	
-	void append(State newState, E_Intent intent)
+	void append(State newState, E_Intent intent, int status)
 	{
 		synchronized ( m_lock )
 		{
@@ -101,15 +112,15 @@ abstract class PA_StateTracker
 			
 			append_assert(newState);
 			
-			setStateMask(m_stateMask | newState.bit(), intent == E_Intent.EXPLICIT ? newState.bit() : 0x0);
+			setStateMask(m_stateMask | newState.bit(), intent == E_Intent.INTENTIONAL ? newState.bit() : 0x0, status);
 		}
 	}
 	
-	void remove(State state, E_Intent intent)
+	void remove(State state, E_Intent intent, int status)
 	{
 		synchronized ( m_lock )
 		{
-			setStateMask(m_stateMask & ~state.bit(), intent == E_Intent.EXPLICIT ? state.bit() : 0x0);
+			setStateMask(m_stateMask & ~state.bit(), intent == E_Intent.INTENTIONAL ? state.bit() : 0x0, status);
 		}
 	}
 	
@@ -130,38 +141,40 @@ abstract class PA_StateTracker
 //		setStateMask(newStateBits);
 //	}
 	
-	void set(E_Intent intent, Object ... statesAndValues)
+	void set(final E_Intent intent, final int status, final Object ... statesAndValues)
 	{
-		set(intent.getMask(), statesAndValues);
+		set(intent.getMask(), status, statesAndValues);
 	}
 	
-	private void set(int intentMask, Object ... statesAndValues)
+	private void set(final int intentMask, final int status, final Object ... statesAndValues)
 	{
 		synchronized ( m_lock )
 		{
-			int newStateBits = getMask(0x0, statesAndValues);
+			final int newStateBits = getMask(0x0, statesAndValues);
 			
-			setStateMask(newStateBits, intentMask);
+			setStateMask(newStateBits, intentMask, status);
 		}
 	}
 	
-	void update(E_Intent intent, Object ... statesAndValues)
+	void update(E_Intent intent, int status, Object ... statesAndValues)
 	{
-		update(intent.getMask(), statesAndValues);
+		update(intent.getMask(), status, statesAndValues);
 	}
 	
-	private void update(int intentMask, Object ... statesAndValues)
+	private void update(int intentMask, int status, Object ... statesAndValues)
 	{
 		synchronized ( m_lock )
 		{
 			int newStateBits = getMask(m_stateMask, statesAndValues);
 		
-			setStateMask(newStateBits, intentMask);
+			setStateMask(newStateBits, intentMask, status);
 		}
 	}
 	
 	long getTimeInState(int stateOrdinal)
 	{
+		if( m_timesInState == null )  return 0;
+		
 		int bit = (0x1 << stateOrdinal);
 		
 		if( (bit & m_stateMask) != 0x0 )
@@ -174,7 +187,12 @@ abstract class PA_StateTracker
 		}
 	}
 	
-	private void setStateMask(int newStateBits, int intentMask)
+	protected void copy(PA_StateTracker stateTracker)
+	{
+		this.setStateMask(stateTracker.getState(), 0x0, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+	}
+	
+	private void setStateMask(final int newStateBits, int intentMask, final int status)
 	{
 		int oldStateBits = m_stateMask;
 		m_stateMask = newStateBits;
@@ -183,17 +201,23 @@ abstract class PA_StateTracker
 		//---		if other parts of the library are handling their state tracking sanely.
 		if( oldStateBits != newStateBits )
 		{
-			for( int i = 0, bit = 0x1; i < m_timesInState.length; i++, bit <<= 0x1 )
+			for( int i = 0, bit = 0x1; i < m_stateCount; i++, bit <<= 0x1 )
 			{
 				//--- DRK > State exited...
 				if( (oldStateBits & bit) != 0x0 && (newStateBits & bit) == 0x0 )
 				{
-					m_timesInState[i] = System.currentTimeMillis() - m_timesInState[i];
+					if( m_timesInState != null )
+					{
+						m_timesInState[i] = System.currentTimeMillis() - m_timesInState[i];
+					}
 				}
 				//--- DRK > State entered...
 				else if( (oldStateBits & bit) == 0x0 && (newStateBits & bit) != 0x0 )
 				{
-					m_timesInState[i] = System.currentTimeMillis();
+					if( m_timesInState != null )
+					{
+						m_timesInState[i] = System.currentTimeMillis();
+					}
 				}
 				else
 				{
@@ -206,12 +230,12 @@ abstract class PA_StateTracker
 			intentMask = 0x0;
 		}
 		
-		fireStateChange(oldStateBits, newStateBits, intentMask);
+		fireStateChange(oldStateBits, newStateBits, intentMask, status);
 	}
 	
-	protected abstract void onStateChange(int oldStateBits, int newStateBits, int intentMask);
+	protected abstract void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status);
 	
-	private void fireStateChange(int oldStateBits, int newStateBits, int intentMask)
+	private void fireStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
 	{
 		if( oldStateBits == newStateBits )
 		{
@@ -222,7 +246,7 @@ abstract class PA_StateTracker
 			return;
 		}
 		
-		onStateChange(oldStateBits, newStateBits, intentMask);
+		onStateChange(oldStateBits, newStateBits, intentMask, status);
 	}
 	
 	protected String toString(State[] enums)

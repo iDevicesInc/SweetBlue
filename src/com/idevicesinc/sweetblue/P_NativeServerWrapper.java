@@ -78,6 +78,7 @@ public class P_NativeServerWrapper {
 			setDevice(device);
 		}
 	}
+
 	private void setDevice(BluetoothDevice device)
 	{
 		synchronized (this)

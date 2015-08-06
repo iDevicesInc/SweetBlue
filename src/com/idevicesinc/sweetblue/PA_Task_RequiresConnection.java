@@ -1,10 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-/**
- * 
- * 
- *
- */
 abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 {
 	public PA_Task_RequiresConnection(BleDevice device, I_StateListener listener)
@@ -38,7 +33,12 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 	{
 		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
 		{
-			return true;
+			P_Task_Disconnect task_disconnect = (P_Task_Disconnect) task;
+			
+			if( task_disconnect.getOrdinal() > this.getOrdinal() )
+			{
+				return true;
+			}
 		}
 		
 		return super.isSoftlyCancellableBy(task);
@@ -62,7 +62,9 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 			
 			if( !task_cast.isExplicit() )
 			{
-				if( getState() == PE_TaskState.EXECUTING && !getDevice().is(BleDeviceState.CONNECTED) )
+				//--- DRK > Not sure why the "not is connected" qualifier was there..
+				//---		MAYBE something to do with onNativeDisconnect doing soft cancellation after state change.
+				if( getState() == PE_TaskState.EXECUTING )//&& !getDevice().is(BleDeviceState.CONNECTED) )
 				{
 					softlyCancel();
 				}

@@ -1,31 +1,34 @@
 package com.idevicesinc.sweetblue;
 
+import java.lang.reflect.Field;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothGatt;
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Result;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 
-/**
- * 
- * 
- */
-abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
+abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {
-	protected final P_Characteristic m_characteristic;
-	protected final P_WrappingReadWriteListener m_readWriteListener;
+	private static final String FIELD_NAME_AUTH_RETRY = "mAuthRetry";
 	
-	PA_Task_ReadOrWrite(P_Characteristic characteristic, P_WrappingReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+	protected final P_Characteristic m_characteristic;
+	protected final ReadWriteListener m_readWriteListener;
+	
+	private Boolean m_authRetryValue_onExecute = null;
+	private boolean m_triedToKickOffBond = false;
+	
+	PA_Task_ReadOrWrite(BleDevice device, P_Characteristic characteristic, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
 	{
-		super(characteristic.getDevice(), txn_nullable, requiresBonding, priority);
-		
+		super(device, txn_nullable, requiresBonding, priority);
+
 		m_characteristic = characteristic;
 		m_readWriteListener = readWriteListener;
 	}
 	
-	protected abstract Result newResult(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid);
+	protected abstract ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid);
 	
 	//--- DRK > Will have to be overridden in the future if we decide to support descriptor reads/writes.
 	protected Target getDefaultTarget()
@@ -36,15 +39,12 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 	//--- DRK > Will have to be overridden by read/write tasks if we ever support direct descriptor operations.
 	protected UUID getDescriptorUuid()
 	{
-		return Result.NON_APPLICABLE_UUID;
+		return ReadWriteEvent.NON_APPLICABLE_UUID;
 	}
 	
 	protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
-		if( m_readWriteListener != null )
-		{
-			m_readWriteListener.onResult(newResult(status, gattStatus, target, charUuid, descUuid));
-		}
+		getDevice().invokeReadWriteCallback(m_readWriteListener, newReadWriteEvent(status, gattStatus, target, getServiceUuid(), charUuid, descUuid));
 		
 		this.fail();
 	}
@@ -55,10 +55,8 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		
 		if( !super_isExecutable )
 		{
-			if( m_readWriteListener != null )
-			{
-				m_readWriteListener.onResult(newResult(Status.NOT_CONNECTED, BleDeviceConfig.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_characteristic.getUuid(), getDescriptorUuid()));
-			}
+			final ReadWriteEvent event = newReadWriteEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getServiceUuid(), getCharUuid(), getDescriptorUuid());
+			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 		}
 		
 		return super_isExecutable;
@@ -70,7 +68,8 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		 //---		 and we don't get a callback for the write (android bug), so we let this write task be interruptible
 		 //---		 by an implicit bond task. If on other devices we *do* get a callback, we ignore it so that this
 		 //---		 library's logic always follows the lowest common denominator that is the nexus 7.
-		 if( status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION || status == PS_GattStatus.UNKNOWN_STATUS_AFTER_GATT_INSUFFICIENT_AUTHENTICATION )
+		//---		NOTE: Also happens with tab 4, same thing as nexus 7.
+		 if( status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION || status == BleStatuses.GATT_AUTH_FAIL )
 		 {
 			 return false;
 		 }
@@ -78,13 +77,106 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable
 		 return true;
 	}
 	
+	private void checkIfBondingKickedOff()
+	{
+		if( getState() == PE_TaskState.EXECUTING )
+		{
+			if( m_triedToKickOffBond == false )
+			{
+				final Boolean authRetryValue_now = getAuthRetryValue();
+				
+				if( m_authRetryValue_onExecute != null && authRetryValue_now != null )
+				{
+					if( m_authRetryValue_onExecute == false && authRetryValue_now == true )
+					{
+						m_triedToKickOffBond = true;
+						
+						getManager().getLogger().i("Kicked off bond!");
+					}
+				}
+			}
+		}
+	}
+	
+	private boolean triedToKickOffBond()
+	{
+		return m_triedToKickOffBond;
+	}
+	
+	@Override public void execute()
+	{
+		m_authRetryValue_onExecute = getAuthRetryValue();
+	}
+	
+	@Override public void update(double timeStep)
+	{
+		checkIfBondingKickedOff();
+	}
+	
+	private Boolean getAuthRetryValue()
+	{
+		final BluetoothGatt gatt = getDevice().getNativeGatt();
+		
+		if( gatt != null )
+		{
+			try
+			{
+				final Field[] fields = gatt.getClass().getDeclaredFields();
+		        Field field = gatt.getClass().getDeclaredField(FIELD_NAME_AUTH_RETRY);
+		        final boolean isAccessible_saved = field.isAccessible();
+		        field.setAccessible(true);
+		        Boolean result = field.getBoolean(gatt);
+		        field.setAccessible(isAccessible_saved);
+		        
+		        return result;
+		    }
+			catch (Exception e)
+			{
+				getManager().ASSERT(false, "Problem getting value of " + gatt.getClass().getSimpleName() + "." + FIELD_NAME_AUTH_RETRY);
+		    }
+		}
+		else
+		{
+			getManager().ASSERT(false, "Expected gatt object to be not null");
+		}
+		
+		return null;
+	}
+	
+	@Override protected UUID getCharUuid()
+	{
+		return m_characteristic.getUuid();
+	}
+
+	protected UUID getServiceUuid()
+	{
+		return m_characteristic.getServiceUuid();
+	}
+	
 	protected boolean isFor(UUID uuid)
 	{
-		return uuid.equals(m_characteristic.getUuid());
+		return uuid.equals(getCharUuid());
 	}
 	
 	@Override protected String getToStringAddition()
 	{
-		return getManager().getLogger().uuidName(m_characteristic.getUuid());
+		final String txn = getTxn() != null ? " txn!=null" : " txn==null";
+		return getManager().getLogger().uuidName(getCharUuid()) + txn;
+	}
+	
+	@Override public void onStateChange(PA_Task task, PE_TaskState state)
+	{
+		if( state == PE_TaskState.TIMED_OUT )
+		{
+			checkIfBondingKickedOff();
+			
+			if( triedToKickOffBond() )
+			{
+				getDevice().notifyOfPossibleImplicitBondingAttempt();
+				getDevice().m_bondMngr.saveNeedsBondingIfDesired();
+				
+				getManager().getLogger().i("Kicked off bond and " + PE_TaskState.TIMED_OUT.name());
+			}
+		}
 	}
 }
