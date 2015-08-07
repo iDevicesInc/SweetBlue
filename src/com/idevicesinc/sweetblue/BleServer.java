@@ -39,25 +39,89 @@ public class BleServer implements UsesCustomNull
 	public static final BleServer NULL = new BleServer(null, /*isNull=*/true);
 
 	/**
-	 * You will need to provide an implementation of this to BleDevice
+	 * Tagging interface, not to be implemented directly as this is just the base interface to statically tie together
+	 * {@link BleServer.RequestListener} and {@link BleServer.ResponseListener} with common enums/structures.
 	 */
 	@Lambda
-	public static interface RequestListener
+	public static interface ExchangeListener
 	{
 		/**
-		 * Provides a bunch of information about a completed read, write, or notification.
+		 * The type of GATT object, provided by {@link ExchangeEvent#target()}.
 		 */
+		public static enum Target
+		{
+			/**
+			 * The {@link ExchangeEvent} returned has to do with a {@link BluetoothGattCharacteristic} under the hood.
+			 */
+			CHARACTERISTIC,
+
+			/**
+			 * The {@link ExchangeEvent} returned has to do with a {@link BluetoothGattDescriptor} under the hood.
+			 */
+			DESCRIPTOR;
+		}
+
+		/**
+		 * The type of exchange being executed.
+		 */
+		public static enum Type
+		{
+			/**
+			 * The client is requesting a read.
+			 */
+			READ,
+
+			/**
+			 * The client is requesting acceptance of a write.
+			 */
+			WRITE,
+
+			/**
+			 * The client is requesting acceptance of a prepared write.
+			 */
+			PREPARED_WRITE,
+
+			/**
+			 * Only for {@link BleServer#notify(BluetoothDevice, UUID, UUID, byte[])} or overloads.
+			 */
+			NOTIFICATION;
+
+			/**
+			 * Shorthand for checking if this equals {@link #READ}.
+			 */
+			public boolean isRead()
+			{
+				return this == READ;
+			}
+
+			/**
+			 * Shorthand for checking if this equals {@link #NOTIFICATION}.
+			 */
+			public boolean isNotification()
+			{
+				return this == NOTIFICATION;
+			}
+
+			/**
+			 * Shorthand for checking if this equals {@link #WRITE} or {@link #PREPARED_WRITE}.
+			 */
+			public boolean isWrite()
+			{
+				return this == WRITE || this == PREPARED_WRITE;
+			}
+		}
+
 		@Immutable
-		public static class RequestEvent
+		public static class ExchangeEvent
 		{
 			/**
 			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid()}
-			 * isn't used for the {@link RequestEvent} because {@link #target()} is {@link Target#CHARACTERISTIC}.
+			 * isn't used for the {@link ExchangeEvent} because {@link #target()} is {@link Target#CHARACTERISTIC}.
 			 */
 			public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
 
 			/**
-			 * The {@link BleServer} this {@link RequestEvent} is for.
+			 * The {@link BleServer} this {@link ExchangeEvent} is for.
 			 */
 			public BleServer server() {  return m_server;  }
 			private final BleServer m_server;
@@ -69,20 +133,20 @@ public class BleServer implements UsesCustomNull
 			private final Type m_type;
 
 			/**
-			 * The type of GATT object this {@link RequestEvent} is for, characteristic or descriptor.
+			 * The type of GATT object this {@link ExchangeEvent} is for, characteristic or descriptor.
 			 */
 			public Target target() {  return m_target; }
 			private final Target m_target;
 
 			/**
-			 * The {@link UUID} of the characteristic associated with this {@link RequestEvent}. This will always be
+			 * The {@link UUID} of the characteristic associated with this {@link ExchangeEvent}. This will always be
 			 * a valid {@link UUID}, even if {@link #target()} is {@link Target#DESCRIPTOR}.
 			 */
 			public UUID charUuid() {  return m_charUuid; }
 			private final UUID m_charUuid;
 
 			/**
-			 * The {@link UUID} of the descriptor associated with this {@link RequestEvent}. If {@link #target} is
+			 * The {@link UUID} of the descriptor associated with this {@link ExchangeEvent}. If {@link #target} is
 			 * {@link Target#CHARACTERISTIC} then this will be referentially equal (i.e. you can use == to compare)
 			 * to {@link #NON_APPLICABLE_UUID}.
 			 */
@@ -120,7 +184,7 @@ public class BleServer implements UsesCustomNull
 			public String macAddress()  {  return m_nativeDevice.getAddress(); }
 			private final BluetoothDevice m_nativeDevice;
 
-			RequestEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
+			ExchangeEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
 			{
 				m_server = server;
 				m_nativeDevice = nativeDevice;
@@ -153,100 +217,126 @@ public class BleServer implements UsesCustomNull
 				{
 					return Utils.toString
 					(
-							this.getClass(),
-							"type",				type(),
-							"target",			target(),
-							"data",				data(),
-							"macAddress",		macAddress(),
-							"charUuid",			server().getManager().getLogger().uuidName(charUuid()),
-							"requestId",		requestId()
+						this.getClass(),
+						"type",				type(),
+						"target",			target(),
+						"data",				data(),
+						"macAddress",		macAddress(),
+						"charUuid",			server().getManager().getLogger().uuidName(charUuid()),
+						"requestId",		requestId()
 					);
 				}
-
 			}
 		}
+	}
 
-		
+	/**
+	 *
+	 */
+	@Lambda
+	public static interface RequestListener extends ExchangeListener
+	{
 		/**
-		 * The type of operation being requested.
+		 *
 		 */
-		public static enum Type
+		@Immutable
+		public static class RequestEvent extends ExchangeEvent
 		{
-			/**
-			 * The client is requesting a read.
-			 */
-			READ,
-
-			/**
-			 * The client is requesting acceptance of a write.
-			 */
-			WRITE,
-
-			/**
-			 * The client is requesting acceptance of a prepared write.
-			 */
-			PREPARED_WRITE;
-
-			/**
-			 * Shorthand for checking if this equals {@link #READ}.
-			 */
-			public boolean isRead()
+			RequestEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
 			{
-				return this == READ;
+				super(server, nativeDevice, charUuid_in, descUuid_in, type_in, target_in, data_in, requestId, offset, responseNeeded);
 			}
-
-			/**
-			 * Shorthand for checking if this equals {@link #WRITE} or {@link #PREPARED_WRITE}.
-			 */
-			public boolean isWrite()
-			{
-				return this == WRITE || this == PREPARED_WRITE;
-			}
-		}
-		
-		/**
-		 * The type of GATT object, provided by {@link RequestEvent#target()}.
-		 */
-		public static enum Target
-		{
-			/**
-			 * The {@link RequestEvent} returned has to do with a {@link BluetoothGattCharacteristic} under the hood.
-			 */
-			CHARACTERISTIC,
-			
-			/**
-			 * The {@link RequestEvent} returned has to do with a {@link BluetoothGattDescriptor} under the hood.
-			 */
-			DESCRIPTOR;
 		}
 
 		/**
-		 * Struct returned from {@link com.idevicesinc.sweetblue.BleServer.RequestListener#onEvent(RequestEvent)}.
+		 * Struct returned from {@link BleServer.RequestListener#onEvent(RequestEvent)}.
 		 * Use the static constructor methods to create instances.
 		 */
 		@Immutable
 		public static class Please
 		{
-			final BluetoothDevice m_device;
 			final int m_status;
 			final int m_offset;
 			final byte[] m_data;
-			final UUID m_uuid;
 
-			private Please( BluetoothDevice device, UUID uuid, int status, int offset, byte[] value, boolean preparedWrite )
+			final boolean m_respond;
+
+			private Please(final byte[] data, final int status, final int offset)
 			{
-				m_device = device;
+				m_respond = true;
+
+				m_data = data;
 				m_status = status;
 				m_offset = offset;
-				m_data = value;
-				m_uuid = uuid;
+			}
+
+			private Please()
+			{
+				m_respond = false;
+
+				m_status = 0;
+				m_offset = 0;
+				m_data = null;
+			}
+
+			/**
+			 * Use this as the return value of {@link BleServer.RequestListener#onEvent(RequestEvent)}
+			 * when {@link RequestEvent#responseNeeded()} is <code>true</code>.
+			 */
+			public static Please doNotRespond()
+			{
+				return new Please();
+			}
+
+			/**
+			 * Use this as the return value of {@link BleServer.RequestListener#onEvent(RequestEvent)} when
+			 * {@link RequestEvent#type()} {@link Type#isRead()} is <code>true</code> and you can respect
+			 * the read request and respond with data.
+			 */
+			public static Please respondWithSuccess(final byte[] data)
+			{
+				return new Please(data, BleStatuses.GATT_SUCCESS, /*offset=*/0);
+			}
+
+			/**
+			 * Use this as the return value of {@link BleServer.RequestListener#onEvent(RequestEvent)}
+			 * when {@link RequestEvent#responseNeeded()} is <code>true</code> and {@link RequestEvent#type()}
+			 * {@link Type#isWrite()} is <code>true</code> and you consider the write successful.
+			 */
+			public static Please respondWithSuccess()
+			{
+				return new Please(EMPTY_BYTE_ARRAY, BleStatuses.GATT_SUCCESS, /*offset=*/0);
+			}
+
+			/**
+			 * Send an error/status code back to the client. See <code>static final int</code>
+			 * members of {@link BleStatuses} starting with GATT_ for possible values.
+			 */
+			public static Please respondWithError(final int gattStatus)
+			{
+				return new Please(EMPTY_BYTE_ARRAY, gattStatus, /*offset=*/0);
 			}
 		}
 		
 		/**
 		 * Called when a read or write from the client is requested.
 		 */
-		Please onEvent(RequestEvent event);
+		Please onEvent(final RequestEvent event);
+	}
+
+	public static interface ResponseListener extends ExchangeListener
+	{
+		/**
+		 *
+		 */
+		@Immutable
+		public static class ResponseEvent extends ExchangeEvent
+		{
+			ResponseEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
+			{
+				super(server, nativeDevice, charUuid_in, descUuid_in, type_in, target_in, data_in, requestId, offset, responseNeeded);
+			}
+		}
 	}
 
 	/**
@@ -315,7 +405,6 @@ public class BleServer implements UsesCustomNull
 	private final BleManager m_mngr;
 	private final P_TaskQueue m_queue;
 	final P_BleServer_Listeners m_listeners;
-	BluetoothGattServer m_serverNative;
 	final P_NativeServerWrapper m_nativeWrapper;
 	private RequestListener m_requestListener;
 	private final P_Logger m_logger;
