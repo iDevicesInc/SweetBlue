@@ -416,7 +416,7 @@ public class BleDevice implements UsesCustomNull
 			 * peripheral if {@link ReadWriteEvent#type} {@link Type#isRead()}. This will never be <code>null</code>. For error cases it will be a
 			 * zero-length array.
 			 */
-			public byte[] data() {  return m_data;  }
+			public @Nullable(Nullable.Prevalence.NEVER) byte[] data() {  return m_data;  }
 			private final byte[] m_data;
 
 			/**
@@ -653,7 +653,7 @@ public class BleDevice implements UsesCustomNull
 		/**
 		 * Called when a read or write is complete or when a notification comes in or when a notification is enabled/disabled.
 		 */
-		void onEvent(ReadWriteEvent e);
+		void onEvent(final ReadWriteEvent e);
 	}
 
 	/**
@@ -730,7 +730,7 @@ public class BleDevice implements UsesCustomNull
 		/**
 		 * Called when a device's bitwise {@link BleDeviceState} changes. As many bits as possible are flipped at the same time.
 		 */
-		void onEvent(StateEvent e);
+		void onEvent(final StateEvent e);
 	}
 
 	/**
@@ -1245,7 +1245,7 @@ public class BleDevice implements UsesCustomNull
 		 * The time parameters like {@link ConnectionFailEvent#attemptTime_latest()} are of optional use to you to decide if connecting again
 		 * is worth it. For example if you've been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
 		 */
-		Please onEvent(ConnectionFailEvent e);
+		Please onEvent(final ConnectionFailEvent e);
 	}
 
 	/**
@@ -1869,6 +1869,7 @@ public class BleDevice implements UsesCustomNull
 	 * The library does not touch or interact with this data in any way.
 	 *
 	 * @see BleManager#appData
+	 * @see BleServer#appData
 	 */
 	public Object appData;
 

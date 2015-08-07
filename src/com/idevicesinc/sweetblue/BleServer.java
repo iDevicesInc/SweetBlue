@@ -7,18 +7,16 @@ import java.util.List;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
+import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -62,12 +60,12 @@ public class BleServer implements UsesCustomNull
 		}
 
 		/**
-		 * The type of exchange being executed.
+		 * The type of exchange being executed, read, write, or notify.
 		 */
 		public static enum Type
 		{
 			/**
-			 * The client is requesting a read.
+			 * The client is requesting a read of some data from us, the server.
 			 */
 			READ,
 
@@ -82,7 +80,7 @@ public class BleServer implements UsesCustomNull
 			PREPARED_WRITE,
 
 			/**
-			 * Only for {@link BleServer#notify(BluetoothDevice, UUID, UUID, byte[])} or overloads.
+			 * Only for {@link BleServer#notify(String, UUID, byte[])} or overloads.
 			 */
 			NOTIFICATION;
 
@@ -111,8 +109,12 @@ public class BleServer implements UsesCustomNull
 			}
 		}
 
+		/**
+		 * Like {@link BleServer.ExchangeListener}, this class should not be used directly as this is just a base class to statically tie together
+		 * {@link BleServer.RequestListener.RequestEvent} and {@link BleServer.ResponseListener.ResponseEvent} with a common API.
+		 */
 		@Immutable
-		public static class ExchangeEvent
+		public abstract static class ExchangeEvent
 		{
 			/**
 			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid()}
@@ -125,6 +127,12 @@ public class BleServer implements UsesCustomNull
 			 */
 			public BleServer server() {  return m_server;  }
 			private final BleServer m_server;
+
+			/**
+			 * Returns the mac address of the client peripheral that we are exchanging data with.
+			 */
+			public String macAddress()  {  return m_nativeDevice.getAddress(); }
+			private final BluetoothDevice m_nativeDevice;
 
 			/**
 			 * The type of operation, read or write.
@@ -154,10 +162,12 @@ public class BleServer implements UsesCustomNull
 			private final UUID m_descUuid;
 
 			/**
-			 * The data sent from the client if {@link #type()} {@link Type#isWrite()} is true.
-			 * This will never be null, at worst an empty array.
+			 * Either the data sent from the client if {@link #type()} {@link Type#isWrite()} is true and we're handling a request,
+			 * or the data provided through {@link BleServer.RequestListener.Please#respondWithSuccess(byte[])} if
+			 * {@link #type()} {@link Type#isRead()}, or the data provided through {@link BleServer#notify(String, UUID, byte[])}
+			 * (or overloads). This will never be null, at worst it will be an empty array.
 			 */
-			public byte[] data() {  return m_data; }
+			public @Nullable(Nullable.Prevalence.NEVER) byte[] data() {  return m_data; }
 			private final byte[] m_data;
 
 			/**
@@ -177,12 +187,6 @@ public class BleServer implements UsesCustomNull
 			 */
 			public boolean responseNeeded()  {  return m_responseNeeded;  }
 			private final boolean m_responseNeeded;
-
-			/**
-			 * Returns the mac address of the client peripheral that is requesting the read or write.
-			 */
-			public String macAddress()  {  return m_nativeDevice.getAddress(); }
-			private final BluetoothDevice m_nativeDevice;
 
 			ExchangeEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
 			{
@@ -231,13 +235,14 @@ public class BleServer implements UsesCustomNull
 	}
 
 	/**
-	 *
+	 * Provide an instance through {@link BleManager#newServer(RequestListener)} or {@link BleServer#setListener_Request(RequestListener)}.
+	 * The return value of {@link BleServer.RequestListener#onEvent(RequestEvent)} is used to decide if/how to respond to a given {@link BleServer.RequestListener.RequestEvent}.
 	 */
 	@Lambda
 	public static interface RequestListener extends ExchangeListener
 	{
 		/**
-		 *
+		 * Struct passed to {@link {@link BleServer.RequestListener#onEvent(RequestEvent)}} that provides details about the client and what it wants from us, the server.
 		 */
 		@Immutable
 		public static class RequestEvent extends ExchangeEvent
@@ -258,25 +263,28 @@ public class BleServer implements UsesCustomNull
 			final int m_status;
 			final int m_offset;
 			final byte[] m_data;
+			final ResponseListener m_responseListener;
 
 			final boolean m_respond;
 
-			private Please(final byte[] data, final int status, final int offset)
+			private Please(final byte[] data, final int status, final int offset, final ResponseListener responseListener)
 			{
 				m_respond = true;
 
 				m_data = data;
 				m_status = status;
 				m_offset = offset;
+				m_responseListener = responseListener;
 			}
 
-			private Please()
+			private Please(final ResponseListener responseListener)
 			{
 				m_respond = false;
 
 				m_status = 0;
 				m_offset = 0;
 				m_data = null;
+				m_responseListener = responseListener;
 			}
 
 			/**
@@ -285,7 +293,17 @@ public class BleServer implements UsesCustomNull
 			 */
 			public static Please doNotRespond()
 			{
-				return new Please();
+				return doNotRespond(null);
+			}
+
+			/**
+			 * Same as {@link #doNotRespond()} but allows you to provide a listener specific to this response.
+			 *
+			 * @see BleServer#setListener_Response(ResponseListener)
+			 */
+			public static Please doNotRespond(final ResponseListener listener)
+			{
+				return new Please(listener);
 			}
 
 			/**
@@ -295,7 +313,17 @@ public class BleServer implements UsesCustomNull
 			 */
 			public static Please respondWithSuccess(final byte[] data)
 			{
-				return new Please(data, BleStatuses.GATT_SUCCESS, /*offset=*/0);
+				return respondWithSuccess(data, null);
+			}
+
+			/**
+			 * Same as {@link #respondWithSuccess(byte[])} but allows you to provide a listener specific to this response.
+			 *
+			 * @see BleServer#setListener_Response(ResponseListener)
+			 */
+			public static Please respondWithSuccess(final byte[] data, final ResponseListener listener)
+			{
+				return new Please(data, BleStatuses.GATT_SUCCESS, /*offset=*/0, listener);
 			}
 
 			/**
@@ -305,7 +333,17 @@ public class BleServer implements UsesCustomNull
 			 */
 			public static Please respondWithSuccess()
 			{
-				return new Please(EMPTY_BYTE_ARRAY, BleStatuses.GATT_SUCCESS, /*offset=*/0);
+				return respondWithSuccess((ResponseListener)null);
+			}
+
+			/**
+			 * Same as {@link #respondWithSuccess()} but allows you to provide a listener specific to this response.
+			 *
+			 * @see BleServer#setListener_Response(ResponseListener)
+			 */
+			public static Please respondWithSuccess(final ResponseListener listener)
+			{
+				return new Please(EMPTY_BYTE_ARRAY, BleStatuses.GATT_SUCCESS, /*offset=*/0, listener);
 			}
 
 			/**
@@ -314,7 +352,17 @@ public class BleServer implements UsesCustomNull
 			 */
 			public static Please respondWithError(final int gattStatus)
 			{
-				return new Please(EMPTY_BYTE_ARRAY, gattStatus, /*offset=*/0);
+				return respondWithError(gattStatus, null);
+			}
+
+			/**
+			 * Same as {@link #respondWithError(int)} but allows you to provide a listener specific to this response.
+			 *
+			 * @see BleServer#setListener_Response(ResponseListener)
+			 */
+			public static Please respondWithError(final int gattStatus, final ResponseListener listener)
+			{
+				return new Please(EMPTY_BYTE_ARRAY, gattStatus, /*offset=*/0, listener);
 			}
 		}
 		
@@ -324,19 +372,79 @@ public class BleServer implements UsesCustomNull
 		Please onEvent(final RequestEvent event);
 	}
 
+	/**
+	 * Provide an instance to various static methods of {@link BleServer.RequestListener.Please} such as
+	 * {@link BleServer.RequestListener.Please#respondWithSuccess(ResponseListener)}, or {@link BleServer#setListener_Response(ResponseListener)},
+	 * or {@link BleManager#setListener_Response(ResponseListener)}.
+	 */
 	public static interface ResponseListener extends ExchangeListener
 	{
 		/**
-		 *
+		 * Struct passed to {@link {@link BleServer.ResponseListener#onEvent(ResponseEvent)}} that provides details
+		 * about the original request that prompted the response, along with information on its success or failure.
 		 */
 		@Immutable
-		public static class ResponseEvent extends ExchangeEvent
+		public static class ResponseEvent extends ExchangeEvent implements UsesCustomNull
 		{
-			ResponseEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
+			/**
+			 * Returns the result of the response, or {@link BleServer.ResponseListener.Status#NO_RESPONSE_ATTEMPTED} if
+			 * for example {@link BleServer.RequestListener.Please#doNotRespond(ResponseListener)} was used.
+			 */
+			public Status status()  {  return m_status;  }
+			private final Status m_status;
+
+			ResponseEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded, final Status status)
 			{
 				super(server, nativeDevice, charUuid_in, descUuid_in, type_in, target_in, data_in, requestId, offset, responseNeeded);
+
+				m_status = status;
+			}
+
+			@Override public boolean isNull()
+			{
+				return status().isNull();
 			}
 		}
+
+		/**
+		 * Enumeration of the various success and error statuses possible for a response.
+		 */
+		public static enum Status implements UsesCustomNull
+		{
+			/**
+			 * Fulfills the soft contract of {@link UsesCustomNull}.
+			 */
+			NULL,
+
+			/**
+			 * The response to the client was successfully sent.
+			 */
+			SUCCESS,
+
+			/**
+			 * {@link BleServer.RequestListener.Please#doNotRespond(ResponseListener)} (or overloads)
+			 * were called or {@link RequestListener.RequestEvent#responseNeeded()} was <code>false</code>.
+			 */
+			NO_RESPONSE_ATTEMPTED,
+
+			/**
+			 * The underlying call to {@link BluetoothGattServer#sendResponse(BluetoothDevice, int, int, int, byte[])}
+			 * failed for reasons unknown.
+			 */
+			FAILED_TO_SEND_OUT,
+
+			NOT_CONNECTED;
+
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
+		}
+
+		/**
+		 * Called when a response to a request is fulfilled or failed.
+		 */
+		void onEvent(final ResponseEvent event);
 	}
 
 	/**
@@ -362,6 +470,12 @@ public class BleServer implements UsesCustomNull
 			private final BleServer m_server;
 
 			/**
+			 * Returns the mac address of the client that's undergoing the state change with this {@link #server()}.
+			 */
+			public String macAddress()  {  return m_nativeDevice.getAddress();  }
+			private final BluetoothDevice m_nativeDevice;
+
+			/**
 			 * The change in gattStatus that may have precipitated the state change, or {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
 			 * For example if {@link #didEnter(State)} with {@link BleServerState#DISCONNECTED} is <code>true</code> and
 			 * {@link #didExit(State)} with {@link BleServerState#CONNECTING} is also <code>true</code> then {@link #gattStatus()} may be greater
@@ -370,12 +484,13 @@ public class BleServer implements UsesCustomNull
 			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
-			StateEvent(BleServer server, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
+			StateEvent(BleServer server, BluetoothDevice nativeDevice, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 			{
 				super(oldStateBits, newStateBits, intentMask);
 
-				this.m_server = server;
-				this.m_gattStatus = gattStatus;
+				m_server = server;
+				m_gattStatus = gattStatus;
+				m_nativeDevice = nativeDevice;
 			}
 
 			@Override public String toString()
@@ -395,7 +510,7 @@ public class BleServer implements UsesCustomNull
 		/**
 		 * Called when a server's bitwise {@link BleServerState} changes. As many bits as possible are flipped at the same time.
 		 */
-		void onEvent(StateEvent e);
+		void onEvent(final StateEvent e);
 	}
 
 	static final byte[]				EMPTY_BYTE_ARRAY	= new byte[0];
@@ -407,8 +522,19 @@ public class BleServer implements UsesCustomNull
 	final P_BleServer_Listeners m_listeners;
 	final P_NativeServerWrapper m_nativeWrapper;
 	private RequestListener m_requestListener;
+	private ResponseListener m_responseListener_default;
 	private final P_Logger m_logger;
 	private final boolean m_isNull;
+
+	/**
+	 * Field for app to associate any data it wants with instances of this class
+	 * instead of having to subclass or manage associative hash maps or something.
+	 * The library does not touch or interact with this data in any way.
+	 *
+	 * @see BleManager#appData
+	 * @see BleDevice#appData
+	 */
+	public Object appData;
 
 	BleServer(final BleManager mngr, final boolean isNull)
 	{
@@ -436,16 +562,30 @@ public class BleServer implements UsesCustomNull
 	}
 	
 	/**
-	 * Set a listener here to be notified whenever this device's state changes.
+	 * Set a listener here to be notified whenever this server's state changes in relation to a specific client.
 	 */
 	public void setListener_State(final BleServer.StateListener listener)
 	{
 		m_stateTracker.setListener(listener);
 	}
 
+	/**
+	 * Set a listener here to override any listener provided previously either through this method or through {@link BleManager#newServer(RequestListener)} or otherwise.
+	 */
 	public void setListener_Request(final RequestListener listener)
 	{
 		m_requestListener = listener;
+	}
+
+	/**
+	 * This is a default catch-all convenience listener that will be called after any listener provided through
+	 * the static methods of {@link BleServer.RequestListener.Please} such as {@link BleServer.RequestListener.Please#respondWithSuccess(ResponseListener)}.
+	 *
+	 * @see BleManager#setListener_Response(ResponseListener)
+	 */
+	public void setListener_Response(final ResponseListener listener)
+	{
+		m_responseListener_default = listener;
 	}
 	
 	public BluetoothGattServer openGattServer( final Context context, final List<BluetoothGattService> gattServices, RequestListener listener )
@@ -459,24 +599,46 @@ public class BleServer implements UsesCustomNull
     			m_serverNative.addService( service );
     		}
 		}
-		m_nativeWrapper.setNative( m_serverNative );
+		m_nativeWrapper.setNative(m_serverNative);
 		return m_serverNative;
 	}
 
-
-	public void notify( BluetoothDevice device, UUID serviceUuid, UUID charaUuid, byte[] data )
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseListener.ResponseEvent notify( final String macAddress, UUID charUuid, byte[] data )
 	{
-		m_queue.add(new P_Task_SendNotification(this, device, m_serverNative.getService(serviceUuid).getCharacteristic(charaUuid), data, m_requestListener, m_taskStateListener, false ) );
+		return notify(macAddress, null, charUuid, data, (ResponseListener) null);
 	}
 
-	public void notify( BluetoothDevice device, UUID serviceUuid, UUID charaUuid, byte [] data, RequestListener listener )
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseListener.ResponseEvent notify( final String macAddress, UUID charUuid, byte[] data, ResponseListener listener)
 	{
-		m_queue.add( new P_Task_SendNotification( this, device, m_serverNative.getService( serviceUuid ).getCharacteristic( charaUuid ), data, listener, m_taskStateListener, true ) );
+		return notify(macAddress, (UUID) null, charUuid, data, listener);
 	}
 
-	public BluetoothGattServer getNative()
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseListener.ResponseEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data )
 	{
-		return m_serverNative;
+		return notify(macAddress, serviceUuid, charUuid, data, (ResponseListener) null);
+	}
+
+	/**
+	 * Use this method to send a notification to the client device with the given mac address to the given characteristic {@link UUID}.
+	 * If there is any kind of "early-out" issue then this method will return a {@link BleServer.ResponseListener.ResponseEvent} in addition
+	 * to passing it through the listener. Otherwise this method will return an instance with {@link ResponseListener.ResponseEvent#isNull()} being
+	 * <code>true</code>.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseListener.ResponseEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, byte [] data, ResponseListener listener )
+	{
+//		m_queue.add(new P_Task_SendNotification(this, device, m_serverNative.getService(serviceUuid).getCharacteristic(charaUuid), data, listener, m_taskStateListener, true));
+
+		return null;
+	}
+
+	/**
+	 * Provides just-in-case lower-level access to the native server instance.
+	 * See similar warning for {@link BleDevice#getNative()}.
+	 */
+	@Advanced
+	public @Nullable(Nullable.Prevalence.RARE) BluetoothGattServer getNative()
+	{
+		return m_nativeWrapper.getNative();
 	}
 
 	/**
@@ -484,10 +646,12 @@ public class BleServer implements UsesCustomNull
 	 * 
 	 * @see BleServerState
 	 */
+	@Advanced
 	public int getStateMask()
 	{
 		return m_stateTracker.getState();
 	}
+
 	/**
 	 * Returns this server's manager.
 	 */
@@ -496,7 +660,21 @@ public class BleServer implements UsesCustomNull
 		return m_mngr;
 	}
 
-	public void disconnect( BleServer.StateListener stateListener )
+	public void connect(final String macAddress)
+	{
+
+	}
+
+	public void disconnect(final String macAddress)
+	{
+
+	}
+
+	/**
+	 * Disconnects this server completely, disconnecting all connected clients and shutting things down.
+	 * To disconnect individual clients use {@link #disconnect(String)}.
+	 */
+	public void disconnect()
 	{
 		if( stateListener != null )
 		{

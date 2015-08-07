@@ -24,6 +24,11 @@ public class P_NativeServerWrapper
 		m_mngr = m_server.getManager();
 	}
 
+	BluetoothGattServer getNative()
+	{
+		return m_native;
+	}
+
 	void updateNativeConnectionState(BluetoothDevice device)
 	{
 		updateNativeConnectionState(device, null);

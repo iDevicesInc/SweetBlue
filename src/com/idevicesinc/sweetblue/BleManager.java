@@ -754,6 +754,7 @@ public class BleManager
 	private boolean m_triedToStartScanAfterResume = false;
 
     BleServer.StateListener m_defaultServerStateListener;
+	BleServer.ResponseListener m_defaultServerResponseListener;
     final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
@@ -766,6 +767,7 @@ public class BleManager
 	 * The library does not touch or interact with this data in any way.
 	 * 
 	 * @see BleDevice#appData
+	 * @see BleServer#appData
 	 */
 	public Object appData;
 
@@ -1076,15 +1078,27 @@ public class BleManager
 	}
 
 	/**
-	 * Convenience method to listen for all changes in {@link BleDeviceState} for all devices.
+	 * Convenience method to listen for all changes in {@link BleServerState} for all servers.
 	 * The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleDevice#setListener_State(BleDevice.StateListener)}.
+	 * to {@link BleServer#setListener_State(BleServer.StateListener)}.
 	 * 
-	 * @see BleDevice#setListener_State(BleDevice.StateListener)
+	 * @see BleServer#setListener_State(BleServer.StateListener)
 	 */
 	public void setListener_ServerState(BleServer.StateListener listener)
 	{
 		m_defaultServerStateListener = new P_WrappingServerStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+	}
+
+	/**
+	 * Convenience method to listen for completion of all responses to all requests received by all
+	 * {@link BleServer} instances. The listener provided will get called in addition to and after the listener, if any, provided
+	 * to {@link BleServer#setListener_Response(BleServer.ResponseListener)}.
+	 *
+	 * @see BleServer#setListener_Response(BleServer.ResponseListener)
+	 */
+	public void setListener_Response(BleServer.ResponseListener listener)
+	{
+		m_defaultServerResponseListener = listener;
 	}
 
 	/**
