@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.State;
 
-public class P_ServerStateTracker extends PA_StateTracker
+class P_ServerStateTracker extends PA_StateTracker
 {
 
 	private BleServer.StateListener m_stateListener;

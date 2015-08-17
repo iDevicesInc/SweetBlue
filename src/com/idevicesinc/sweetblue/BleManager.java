@@ -11,7 +11,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanCallback;
 import android.content.Context;
@@ -754,7 +753,7 @@ public class BleManager
 	private boolean m_triedToStartScanAfterResume = false;
 
     BleServer.StateListener m_defaultServerStateListener;
-	BleServer.ResponseListener m_defaultServerResponseListener;
+	BleServer.ResponseCompletionListener m_defaultServerResponseListener;
     final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
@@ -1092,11 +1091,11 @@ public class BleManager
 	/**
 	 * Convenience method to listen for completion of all responses to all requests received by all
 	 * {@link BleServer} instances. The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleServer#setListener_Response(BleServer.ResponseListener)}.
+	 * to {@link BleServer#setListener_Response(BleServer.ResponseCompletionListener)}.
 	 *
-	 * @see BleServer#setListener_Response(BleServer.ResponseListener)
+	 * @see BleServer#setListener_Response(BleServer.ResponseCompletionListener)
 	 */
-	public void setListener_Response(BleServer.ResponseListener listener)
+	public void setListener_Response(BleServer.ResponseCompletionListener listener)
 	{
 		m_defaultServerResponseListener = listener;
 	}
@@ -1987,9 +1986,17 @@ public class BleManager
 	}
 
 	/**
+	 * Overload of {@link #newServer(RequestListener)} without the {@link RequestListener} parameter.
+	 */
+	public BleServer newServer()
+	{
+		return newServer((RequestListener)null);
+	}
+
+	/**
 	 *
 	 */
-	public BleServer newServer(RequestListener listener)
+	public BleServer newServer(final BleServer.RequestListener requestListener)
 	{
 		BleServer bleServer = new BleServer( this );
 		bleServer.openGattServer( m_context, gattServices, listener );

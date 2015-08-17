@@ -11,7 +11,7 @@ import com.idevicesinc.sweetblue.BleServer.RequestListener;
 import com.idevicesinc.sweetblue.BleServer.RequestListener.Result;
 import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
 
-public class P_Task_SendNotification extends PA_Task implements I_StateListener
+class P_Task_SendNotification extends PA_Task implements I_StateListener
 {
 	private final BleServer m_server;
 	private final BluetoothDevice m_device;

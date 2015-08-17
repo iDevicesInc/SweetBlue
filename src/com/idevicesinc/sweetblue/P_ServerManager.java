@@ -6,7 +6,7 @@ import java.util.UUID;
 
 
 
-public class P_ServerManager
+class P_ServerManager
 {
 	private final HashMap<String, BleServer> m_map = new HashMap<String, BleServer>();
 	private final ArrayList<BleServer> m_list = new ArrayList<BleServer>();

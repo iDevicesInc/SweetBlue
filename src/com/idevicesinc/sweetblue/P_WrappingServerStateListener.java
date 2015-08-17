@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import android.os.Handler;
 
-public class P_WrappingServerStateListener extends PA_CallbackWrapper implements BleServer.StateListener {
+class P_WrappingServerStateListener extends PA_CallbackWrapper implements BleServer.StateListener {
 
 	private final BleServer.StateListener m_stateListener;
 	

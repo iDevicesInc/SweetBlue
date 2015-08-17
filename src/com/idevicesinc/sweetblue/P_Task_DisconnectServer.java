@@ -1,32 +1,20 @@
 package com.idevicesinc.sweetblue;
 
-public class P_Task_DisconnectServer extends PA_Task_RequiresBleOn
+class P_Task_DisconnectServer extends PA_Task_RequiresBleOn
 {
-	public P_Task_DisconnectServer(BleServer server, I_StateListener listener)
+	final String m_macAddress;
+
+	public P_Task_DisconnectServer(final BleServer server, final String macAddress, final I_StateListener listener)
 	{
 		super( server, listener );
+
+		m_macAddress = macAddress;
 	}
 
-	 @Override void execute() {
-		
-		if( getServer() == null )
-		{
-			m_logger.w("Already disconnected and server==null!");
-			
-			redundant();
-			
-			return;
-		}
-		
-//		if( getDevice().m_nativeWrapper./*already*/isNativelyDisconnecting() )
-//		{
-//			// nothing to do
-//
-//			return;
-//		}
+	 @Override void execute()
+	 {
 
-		getServer().getNative().cancelConnection(getServer().getDevice().getNative());
-	}
+	 }
 
 	@Override public PE_TaskPriority getPriority()
 	{

@@ -75,11 +75,13 @@ public enum BleTask
 	 */
 	DISCOVER_SERVICES,
 
+
 	/**
 	 * Associated with sending a notification to a remote client through {@link BleServer#notify(BluetoothDevice, UUID, UUID, byte[])} or overloads.
 	 */
 	SEND_NOTIFICATION,
 
+	CONNECT_SERVER,
 
 	DISCONNECT_SERVER,
 
@@ -92,12 +94,31 @@ public enum BleTask
 	{
 		switch(this)
 		{
+			//--- DRK > Server-specific.
+			case CONNECT_SERVER:
 			case DISCONNECT_SERVER:
 			case SEND_NOTIFICATION:
 			case SEND_READ_WRITE_RESPONSE:
+
+			//--- DRK > Manager-specific.
 			case TURN_BLE_OFF:
 			case TURN_BLE_ON:
 			case RESOLVE_CRASHES:	return false;
+
+			default:				return true;
+		}
+	}
+
+	/**
+	 * Returns whether <code>this</code> is associated with {@link BleManager}.
+	 */
+	public boolean isManagerSpecific()
+	{
+		switch(this)
+		{
+			case TURN_BLE_OFF:
+			case TURN_BLE_ON:
+			case RESOLVE_CRASHES:
 
 			default:				return true;
 		}
@@ -109,14 +130,6 @@ public enum BleTask
 	public boolean isServerSpecific()
 	{
 		return !isDeviceSpecific() && !isManagerSpecific();
-	}
-	
-	/**
-	 * Returns whether <code>this</code> is associated with {@link BleManager}.
-	 */
-	public boolean isManagerSpecific()
-	{
-		return !isDeviceSpecific() && !isServerSpecific();
 	}
 	
 	/**
