@@ -165,12 +165,15 @@ class P_TaskQueue
 		
 		m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
-						if	(	tryCancellingCurrentTask	(newTask)	){}
-				else	if	(	tryInterruptingCurrentTask	(newTask) 	){}
-				else	if	(	tryInsertingIntoQueue		(newTask) 	){}
-				else		{	addToBack					(newTask);	};;
+				if( tryCancellingCurrentTask(newTask) ) {}
+				else if( tryInterruptingCurrentTask(newTask) ) {}
+				else if( tryInsertingIntoQueue(newTask) ) {}
+				else { addToBack(newTask); }
+				;
+				;
 			}
 		});
 		
@@ -292,6 +295,11 @@ class P_TaskQueue
 	public boolean fail(Class<? extends PA_Task> taskClass, BleDevice device)
 	{
 		return tryEndingTask(taskClass, null, device, null, PE_TaskState.FAILED);
+	}
+
+	public boolean fail(Class<? extends PA_Task> taskClass, BleServer server)
+	{
+		return tryEndingTask(taskClass, null, null, server, PE_TaskState.FAILED);
 	}
 	
 	private boolean tryEndingTask(final Class<? extends PA_Task> taskClass, final BleManager mngr_nullable, final BleDevice device_nullable, final BleServer server_nullable, final PE_TaskState endingState)

@@ -24,6 +24,8 @@ import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
+import static com.idevicesinc.sweetblue.BleServerState.*;
+
 
 /**
  * Wrapper for functionality exposed by {@link BluetoothGattServer}. For OS levels less than 5.0, this
@@ -670,36 +672,18 @@ public class BleServer implements UsesCustomNull
 	{
 		m_responseListener_default = listener;
 	}
-	
-	public BluetoothGattServer openGattServer( final Context context, final List<BluetoothGattService> gattServices, RequestListener listener )
-	{
-		m_requestListener = listener;
-		m_serverNative = getManager().getNative().openGattServer(context, m_listeners);
 
-		if ( null != gattServices )
-		{
-    		for ( BluetoothGattService service : gattServices ) {
-    			m_serverNative.addService( service );
-    		}
-		}
-		m_nativeWrapper.setNative(m_serverNative);
-		return m_serverNative;
-	}
-
-	public @Nullable(Nullable.Prevalence.NEVER)
-	ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID charUuid, byte[] data )
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID charUuid, byte[] data )
 	{
 		return notify(macAddress, null, charUuid, data, (ResponseCompletionListener) null);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER)
-	ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID charUuid, byte[] data, ResponseCompletionListener listener)
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID charUuid, byte[] data, ResponseCompletionListener listener)
 	{
 		return notify(macAddress, (UUID) null, charUuid, data, listener);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER)
-	ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data )
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data )
 	{
 		return notify(macAddress, serviceUuid, charUuid, data, (ResponseCompletionListener) null);
 	}
@@ -729,14 +713,31 @@ public class BleServer implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the bitwise state mask representation of {@link BleServerState} for this device.
-	 * 
+	 * Returns the bitwise state mask representation of {@link BleServerState} for the given client mac address.
+	 *
 	 * @see BleServerState
 	 */
 	@Advanced
-	public int getStateMask()
+	public int getStateMask(final String macAddress)
 	{
-		return m_stateTracker.getState();
+		return 0x0;
+	}
+
+	public boolean is(final String macAddress, final BleServerState state)
+	{
+		return state.overlaps(getStateMask(macAddress));
+	}
+
+	public boolean isAny(final String macAddress, final BleServerState ... states )
+	{
+		final int stateMask = getStateMask(macAddress);
+
+		for( int i = 0; i < states.length; i++ )
+		{
+			if( states[i].overlaps(stateMask) )  return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -749,11 +750,16 @@ public class BleServer implements UsesCustomNull
 
 	public void connect(final String macAddress)
 	{
-
+		if( m_nativeWrapper.isConnectingOrConnected(macAddress) )
+		{
+			return
+		}
 	}
 
-	public void disconnect(final String macAddress)
+	public boolean disconnect(final String macAddress)
 	{
+		if( is(macAddress, DISCONNECTED) )  return false;
+
 
 	}
 
@@ -776,13 +782,14 @@ public class BleServer implements UsesCustomNull
 		return m_isNull;
 	}
 
-	void onNativeConnect() {
+	void onNativeConnect()
+	{
 		
 	}
 
-	void onNativeDisconnect( boolean explicit )
+	void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)
 	{
-		m_serverNative.close();
+
 	}
 
 	/**

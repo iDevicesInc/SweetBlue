@@ -416,7 +416,7 @@ public class BleDevice implements UsesCustomNull
 			 * peripheral if {@link ReadWriteEvent#type} {@link Type#isRead()}. This will never be <code>null</code>. For error cases it will be a
 			 * zero-length array.
 			 */
-			public @Nullable(Nullable.Prevalence.NEVER) byte[] data() {  return m_data;  }
+			public @Nullable(Nullable.Prevalence.NEVER)  byte[] data() {  return m_data;  }
 			private final byte[] m_data;
 
 			/**

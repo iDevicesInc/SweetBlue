@@ -13,6 +13,7 @@ import com.idevicesinc.sweetblue.BleServer.RequestListener;
 import static com.idevicesinc.sweetblue.BleServer.RequestListener.*;
 import static com.idevicesinc.sweetblue.BleServer.ResponseCompletionListener.*;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 class P_BleServer_Listeners extends BluetoothGattServerCallback
 {
@@ -28,9 +29,9 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 			{
 				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT)
 				{
-					P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
+					P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
 
-					m_server.onNativeDisconnect(task_cast.isExplicit());
+					m_server.onNativeDisconnect(task_cast.m_nativeDevice.getAddress(), task_cast.isExplicit(), task_cast.getGattStatus());
 				}
 			}
 		}
@@ -43,7 +44,47 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		m_queue = m_server.getManager().getTaskQueue();
 	}
 
-    @Override public void onConnectionStateChange(final BluetoothDevice device, final int status, final int newState)
+	private boolean hasCurrentDisconnectTaskFor(final BluetoothDevice device)
+	{
+		final P_Task_DisconnectServer disconnectTask = m_queue.getCurrent(P_Task_DisconnectServer.class, m_server);
+
+		return disconnectTask != null && disconnectTask.isFor(device.getAddress());
+	}
+
+	private boolean hasCurrentConnectTaskFor(final BluetoothDevice device)
+	{
+		final P_Task_ConnectServer connectTask = m_queue.getCurrent(P_Task_ConnectServer.class, m_server);
+
+		return connectTask != null && connectTask.isFor(device.getAddress());
+	}
+
+	private void failDisconnectTaskIfPossibleFor(final BluetoothDevice device)
+	{
+		final P_Task_DisconnectServer disconnectTask = m_queue.getCurrent(P_Task_DisconnectServer.class, m_server);
+
+		if( disconnectTask != null && disconnectTask.isFor(device.getAddress()) )
+		{
+			m_queue.fail(P_Task_DisconnectServer.class, m_server);
+		}
+	}
+
+	private boolean failConnectTaskIfPossibleFor(final BluetoothDevice device, final int gattStatus)
+	{
+		if( hasCurrentConnectTaskFor(device) )
+		{
+			final P_Task_ConnectServer connectTask = m_queue.getCurrent(P_Task_ConnectServer.class, m_server);
+
+			connectTask.onNativeFail(gattStatus);
+
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+    @Override public void onConnectionStateChange(final BluetoothDevice device, final int gattStatus, final int newState)
 	{
 		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
 
@@ -51,15 +92,90 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		{
 			@Override public void run()
 			{
-				m_logger.log_status(status, m_logger.gattConn(newState));
+				m_logger.log_status(gattStatus, m_logger.gattConn(newState));
 
-				m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
-
-				if (newState == BluetoothProfile.STATE_CONNECTED )
+				if (newState == BluetoothProfile.STATE_DISCONNECTED )
 				{
+					m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+
+					if( !failConnectTaskIfPossibleFor(device, gattStatus) )
+					{
+						if( hasCurrentDisconnectTaskFor(device) )
+						{
+							final P_Task_DisconnectServer disconnectTask = m_queue.getCurrent(P_Task_DisconnectServer.class, m_server);
+
+							disconnectTask.onNativeSuccess(gattStatus);
+						}
+						else
+						{
+							m_server.onNativeDisconnect(device.getAddress(), /*explicit=*/false, gattStatus);
+						}
+					}
 				}
-				else if (newState == BluetoothProfile.STATE_DISCONNECTED )
+				else if (newState == BluetoothProfile.STATE_CONNECTING)
 				{
+					if ( Utils.isSuccess(gattStatus))
+					{
+						m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+
+//						m_device.onConnecting(/*definitelyExplicit=*/false, /*isReconnect=*/false, P_BondManager.OVERRIDE_EMPTY_STATES, /*bleConnect=*/true);
+
+						failDisconnectTaskIfPossibleFor(device);
+
+						if( !hasCurrentConnectTaskFor(device) )
+						{
+							final P_Task_ConnectServer task = new P_Task_ConnectServer(m_server, device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
+
+							m_queue.add(task);
+						}
+					}
+					else
+					{
+						onNativeConnectFail(gatt, gattStatus);
+					}
+				}
+				else if (newState == BluetoothProfile.STATE_CONNECTED)
+				{
+					if (Utils.isSuccess(gattStatus))
+					{
+						m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+
+						failDisconnectTaskIfPossibleFor(device);
+
+						if( hasCurrentConnectTaskFor(device) )
+						{
+							m_queue.succeed(P_Task_ConnectServer.class, m_server);
+						}
+						else
+						{
+							m_server.onNativeConnect();
+						}
+					}
+					else
+					{
+						onNativeConnectFail(gatt, gattStatus);
+					}
+				}
+				//--- DRK > NOTE: never seen this case happen with BleDevice, we'll see if it happens with the server.
+				else if (newState == BluetoothProfile.STATE_DISCONNECTING)
+				{
+					m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+
+					//--- DRK > error level just so it's noticeable...never seen this with client connections so we'll see if it hits with server ones.
+					m_logger.e("Actually natively disconnecting server!");
+
+					if ( !hasCurrentDisconnectTaskFor(device) )
+					{
+						P_Task_DisconnectServer task = new P_Task_DisconnectServer(m_server, device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
+
+						m_queue.add(task);
+					}
+
+					failConnectTaskIfPossibleFor(device, gattStatus);
+				}
+				else
+				{
+					m_server.m_nativeWrapper.updateNativeConnectionState(device);
 				}
 			}
 		});

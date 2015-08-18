@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
  * An enumeration of the various states that a {@link BleServer} can be in.
- * Note that a server can and usually will be in multiple states simultaneously.
+ * Note that a server can be in multiple states simultaneously.
  * Use {@link BleServer#setListener_State(BleServer.StateListener)} to be notified of state changes.
  * 
  * @see BleServer.StateListener

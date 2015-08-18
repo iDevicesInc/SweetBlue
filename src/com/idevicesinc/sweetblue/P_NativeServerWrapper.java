@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattServer;
 
 import java.util.HashMap;
@@ -34,6 +33,82 @@ class P_NativeServerWrapper
 		}
 	}
 
+	public boolean openServer()
+	{
+		if( m_native != null )
+		{
+			m_mngr.ASSERT(false, "Native server is already not null!");
+
+			return true;
+		}
+		else
+		{
+			assertThatAllClientsAreDisconnected();
+
+			clearAllConnectionStates();
+
+			m_native = m_mngr.getNative().openGattServer(m_mngr.getApplicationContext(), m_server.m_listeners);
+
+			if( m_native == null )
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+	}
+
+	private void assertThatAllClientsAreDisconnected()
+	{
+		if( m_nativeConnectionStates.size() == 0 )  return;
+
+		for( String macAddress : m_nativeConnectionStates.keySet() )
+		{
+			final Integer state = m_nativeConnectionStates.get(macAddress);
+
+			if( state != null && state != BluetoothGattServer.STATE_DISCONNECTED )
+			{
+				m_mngr.ASSERT(false, "Found a server connection state that is not disconnected when it should be.");
+
+				return;
+			}
+		}
+	}
+
+	public boolean isDisconnecting(final String macAddress)
+	{
+		return getNativeState(macAddress) == BluetoothGattServer.STATE_DISCONNECTING;
+	}
+
+	public boolean isDisconnected(final String macAddress)
+	{
+		return getNativeState(macAddress) == BluetoothGattServer.STATE_DISCONNECTED;
+	}
+
+	public boolean isConnected(final String macAddress)
+	{
+		return getNativeState(macAddress) == BluetoothGattServer.STATE_CONNECTED;
+	}
+
+	public boolean isConnecting(final String macAddress)
+	{
+		return getNativeState(macAddress) == BluetoothGattServer.STATE_CONNECTING;
+	}
+
+	public boolean isConnectingOrConnected(final String macAddress)
+	{
+		final int  nativeState = getNativeState(macAddress);
+
+		return nativeState == BluetoothGattServer.STATE_CONNECTING || nativeState == BluetoothGattServer.STATE_CONNECTED;
+	}
+
+	private void clearAllConnectionStates()
+	{
+		m_nativeConnectionStates.clear();
+	}
+
 	public int getNativeState(final String macAddress)
 	{
 		if( m_nativeConnectionStates.containsKey(macAddress) )
@@ -54,5 +129,19 @@ class P_NativeServerWrapper
 	void updateNativeConnectionState(final String macAddress, final int state)
 	{
 		m_nativeConnectionStates.put(macAddress, state);
+	}
+
+	void updateNativeConnectionState(final BluetoothDevice device)
+	{
+		if( m_native == null )
+		{
+			m_mngr.ASSERT(false, "Did not expect native server to be null when implicitly refreshing state.");
+		}
+		else
+		{
+			final int nativeState = m_native.getConnectionState(device);
+
+			updateNativeConnectionState(device.getAddress(), nativeState);
+		}
 	}
 }
