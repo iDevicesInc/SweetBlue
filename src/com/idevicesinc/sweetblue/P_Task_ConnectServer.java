@@ -3,21 +3,11 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattServer;
 
-class P_Task_ConnectServer extends PA_Task_RequiresBleOn
+class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 {
-	private final PE_TaskPriority m_priority;
-	private final boolean m_explicit;
-	final BluetoothDevice m_nativeDevice;
-
-	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
-
 	public P_Task_ConnectServer(BleServer server, BluetoothDevice nativeDevice, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
 	{
-		super(server, listener);
-
-		m_nativeDevice = nativeDevice;
-		m_explicit = explicit;
-		m_priority = priority == null ? PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING : priority;
+		super(server, nativeDevice, listener, explicit, priority);
 	}
 
 	@Override public void execute()
@@ -46,13 +36,13 @@ class P_Task_ConnectServer extends PA_Task_RequiresBleOn
 		{
 			if( getServer().m_nativeWrapper.isDisconnected(m_nativeDevice.getAddress()) )
 			{
-				if( !server_native.connect(m_nativeDevice, false) )
+				if( server_native.connect(m_nativeDevice, false) )
 				{
-					failImmediately();
+					// SUCCESS! At least, we will wait and see.
 				}
 				else
 				{
-					// SUCCESS! At least, we will wait and see.
+					failImmediately();
 				}
 			}
 			else
@@ -71,6 +61,12 @@ class P_Task_ConnectServer extends PA_Task_RequiresBleOn
 				else if( getServer().m_nativeWrapper.isConnected(m_nativeDevice.getAddress()) )
 				{
 					redundant();
+				}
+				else
+				{
+					getManager().ASSERT(false, "Native server state didn't match any expected values.");
+
+					failImmediately();
 				}
 			}
 		}
@@ -127,21 +123,6 @@ class P_Task_ConnectServer extends PA_Task_RequiresBleOn
 		m_gattStatus = gattStatus;
 
 		fail();
-	}
-
-	public boolean isFor(final String macAddress)
-	{
-		return macAddress.equals(m_nativeDevice.getAddress());
-	}
-
-	@Override public PE_TaskPriority getPriority()
-	{
-		return m_priority;
-	}
-
-	@Override public boolean isExplicit()
-	{
-		return m_explicit;
 	}
 
 	@Override protected BleTask getTaskType()

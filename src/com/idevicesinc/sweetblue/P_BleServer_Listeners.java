@@ -25,13 +25,25 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 	{
 		@Override public void onStateChange(PA_Task task, PE_TaskState state)
 		{
-			if (task.getClass() == P_Task_DisconnectServer.class)
+			if ( task.getClass() == P_Task_DisconnectServer.class )
 			{
-				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT)
+				if (state == PE_TaskState.SUCCEEDED )
 				{
-					P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
+					final P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
 
 					m_server.onNativeDisconnect(task_cast.m_nativeDevice.getAddress(), task_cast.isExplicit(), task_cast.getGattStatus());
+				}
+			}
+			else
+			{
+				if( task.getClass() == P_Task_ConnectServer.class )
+				{
+					if( state == PE_TaskState.SUCCEEDED )
+					{
+						final P_Task_ConnectServer task_cast = (P_Task_ConnectServer) task;
+
+						m_server.onNativeConnect(task_cast.m_nativeDevice.getAddress(), task_cast.isExplicit());
+					}
 				}
 			}
 		}

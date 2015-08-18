@@ -1,16 +1,18 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.Utils;
 
-class P_ServerStateTracker extends PA_StateTracker
+import java.util.List;
+
+class P_ServerStateTracker
 {
-
 	private BleServer.StateListener m_stateListener;
 	private final BleServer m_server;
 	
 	P_ServerStateTracker(BleServer server)
 	{
-		super(BleServerState.values(), /*trackTimes=*/true);
+//		super(BleServerState.values(), /*trackTimes=*/true);
 		
 		m_server = server;
 	}
@@ -27,35 +29,97 @@ class P_ServerStateTracker extends PA_StateTracker
 		}
 	}
 
-	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
+	void flipStateOn(final String macAddress, final BleServerState oldState, final BleServerState newState, final State.ChangeIntent intent, final int gattStatus)
+	{
+		final int oldState_bit = oldState != BleServerState.NULL ? oldState.bit() : 0x0;
+		final int newState_bit = newState.bit();
+
+		final int intentBits = intent == State.ChangeIntent.INTENTIONAL ? 0xFFFFFFFF : 0x00000000;
+		final int currentBits = m_server.getStateMask(macAddress);
+		final int oldBits = (currentBits | oldState_bit) & ~newState_bit;
+		final int newBits = (currentBits | newState_bit) & ~oldState_bit;
+		final int intentMask = (oldBits | newBits) & intentBits;
+
+		final BleServer.StateListener.StateEvent e = new BleServer.StateListener.StateEvent(m_server, macAddress, oldBits, newBits, intentMask, gattStatus);
+
+		fireEvent(e);
+	}
+
+	private void fireEvent(final BleServer.StateListener.StateEvent e)
 	{
 		if( m_stateListener != null )
 		{
-			m_stateListener.onStateChange(m_server, oldStateBits, newStateBits);
+			m_stateListener.onEvent(e);
 		}
-		
+
 		if( m_server.getManager().m_defaultServerStateListener != null )
 		{
-			m_server.getManager().m_defaultServerStateListener.onStateChange(m_server, oldStateBits, newStateBits);
+			m_server.getManager().m_defaultServerStateListener.onEvent(e);
 		}
-		
-//		m_device.getManager().getLogger().e(this.toString());
 	}
 
-	@Override protected void append_assert(State newState)
+	public int getStateMask(final String macAddress)
 	{
-		if( newState.ordinal() > BleDeviceState.CONNECTING.ordinal() )
+		final List<PA_Task> rawQueue = m_server.getManager().getTaskQueue().getRaw();
+
+		if( m_server.m_nativeWrapper.isConnectingOrConnected(macAddress) )
 		{
-			//--- DRK > No longer valid...during the connection flow a rogue disconnect can come in.
-			//---		This immediately changes the native state of the device but the actual callback
-			//---		for the disconnect is sent to the update thread so for a brief time we can be
-			//---		abstractly connected/connecting but actually not natively connected. 
-//			m_device.getManager().ASSERT(m_device.m_nativeWrapper.isNativelyConnected());
+			for( int i = rawQueue.size()-1; i >= 0; i++ )
+			{
+				final PA_Task ith = rawQueue.get(i);
+
+				if( ith.isFor(P_Task_ConnectServer.class, m_server, macAddress) )
+				{
+					return BleServerState.CONNECTING.bit();
+				}
+
+				if( ith.isFor(P_Task_DisconnectServer.class, m_server, macAddress) )
+				{
+					return BleServerState.DISCONNECTED.bit();
+				}
+			}
+
+			if( m_server.m_nativeWrapper.isConnected(macAddress) )
+			{
+				return BleServerState.CONNECTED.bit();
+			}
+			else if( m_server.m_nativeWrapper.isConnecting(macAddress) )
+			{
+				return BleServerState.CONNECTING.bit();
+			}
+			else
+			{
+				m_server.getManager().ASSERT(false, "Expected to be connecting or connected when getting state mask for server.");
+
+				return BleServerState.NULL.bit();
+			}
 		}
-	}
-	
-	@Override public String toString()
-	{
-		return super.toString(BleDeviceState.values());
+		else if( m_server.m_nativeWrapper.isDisconnectingOrDisconnected(macAddress) )
+		{
+			for( int i = rawQueue.size()-1; i >= 0; i++ )
+			{
+				final PA_Task ith = rawQueue.get(i);
+
+				sdsdsdif( ith.getClass() == P_Task_DisconnectServer.class )  break;
+
+				if( ith.getClass() == P_Task_ConnectServer.class && ith.getServer().equals(this) )
+				{
+					final P_Task_ConnectServer ith_cast = (P_Task_ConnectServer) ith;
+
+					if( ith_cast.isFor(macAddress) )
+					{
+						return BleServerState.CONNECTING.bit();
+					}
+				}
+			}
+
+			return BleServerState.DISCONNECTED.bit();
+		}
+		else
+		{
+			m_server.getManager().ASSERT(false, "Native server is in a bad state");
+
+			return BleServerState.NULL.bit();
+		}
 	}
 }

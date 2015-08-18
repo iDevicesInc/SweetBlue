@@ -1,37 +1,55 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattServer;
 
-class P_Task_DisconnectServer extends PA_Task_RequiresBleOn
+class P_Task_DisconnectServer extends PA_Task_ConnectOrDisconnectServer
 {
-	final BluetoothDevice m_nativeDevice;
-	private final PE_TaskPriority m_priority;
-	private final boolean m_explicit;
-
-	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
-
 	public P_Task_DisconnectServer(final BleServer server, final BluetoothDevice nativeDevice, final I_StateListener listener, final boolean explicit, PE_TaskPriority priority)
 	{
-		super( server, listener );
-
-		m_nativeDevice = nativeDevice;
-		m_priority = priority;
-		m_explicit = explicit;
+		super( server, nativeDevice, listener, explicit, priority );
 	}
 
 	@Override void execute()
 	{
+		final BluetoothGattServer server_native = getServer().getNative();
 
-	}
+		if( server_native == null )
+		{
+			getManager().ASSERT(false, "Tried to disconnect client from server but native server is null.");
 
-	public int getGattStatus()
-	{
-		return m_gattStatus;
-	}
+			failImmediately();
+		}
+		else
+		{
+			if( getServer().m_nativeWrapper.isDisconnected(m_nativeDevice.getAddress()) )
+			{
+				redundant();
+			}
+			else if( getServer().m_nativeWrapper.isConnecting(m_nativeDevice.getAddress()) )
+			{
+				getManager().ASSERT(false, "Server is currently connecting a client when we're trying to disconnect.");
 
-	@Override public boolean isExplicit()
-	{
-		return m_explicit;
+				failImmediately();
+			}
+			else if( getServer().m_nativeWrapper.isDisconnecting(m_nativeDevice.getAddress()) )
+			{
+				//--- DRK > We don't fail out, but this is a good sign that something's amiss upstream.
+				getManager().ASSERT(false, "Server is already disconnecting from the given client.");
+			}
+			else if( getServer().m_nativeWrapper.isConnected(m_nativeDevice.getAddress()) )
+			{
+				server_native.cancelConnection(m_nativeDevice);
+
+				// SUCCESS!
+			}
+			else
+			{
+				getManager().ASSERT(false, "Native server state didn't match any expected values.");
+
+				failImmediately();
+			}
+		}
 	}
 
 	public void onNativeSuccess(int gattStatus)
@@ -39,16 +57,6 @@ class P_Task_DisconnectServer extends PA_Task_RequiresBleOn
 		m_gattStatus = gattStatus;
 
 		succeed();
-	}
-
-	public boolean isFor(final String macAddress)
-	{
-		return macAddress.equals(m_nativeDevice.getAddress());
-	}
-
-	@Override public PE_TaskPriority getPriority()
-	{
-		return m_priority;
 	}
 
 	@Override protected BleTask getTaskType()

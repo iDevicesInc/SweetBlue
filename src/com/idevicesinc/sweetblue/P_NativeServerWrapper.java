@@ -104,6 +104,13 @@ class P_NativeServerWrapper
 		return nativeState == BluetoothGattServer.STATE_CONNECTING || nativeState == BluetoothGattServer.STATE_CONNECTED;
 	}
 
+	public boolean isDisconnectingOrDisconnected(final String macAddress)
+	{
+		final int  nativeState = getNativeState(macAddress);
+
+		return nativeState == BluetoothGattServer.STATE_DISCONNECTING || nativeState == BluetoothGattServer.STATE_DISCONNECTED;
+	}
+
 	private void clearAllConnectionStates()
 	{
 		m_nativeConnectionStates.clear();

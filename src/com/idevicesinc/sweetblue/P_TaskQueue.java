@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -168,7 +169,10 @@ class P_TaskQueue
 			@Override
 			public void run()
 			{
-				if( tryCancellingCurrentTask(newTask) ) {}
+				if( tryCancellingCurrentTask(newTask) )
+				{
+					dequeue();
+				}
 				else if( tryInterruptingCurrentTask(newTask) ) {}
 				else if( tryInsertingIntoQueue(newTask) ) {}
 				else { addToBack(newTask); }
@@ -197,7 +201,7 @@ class P_TaskQueue
 
 		if( m_current == null )
 		{
-			update_dequeue();
+			dequeue();
 		}
 		
 		if( getCurrent() != null )
@@ -208,7 +212,7 @@ class P_TaskQueue
 		m_updateCount++;
 	}
 	
-	private void update_dequeue()
+	private void dequeue()
 	{
 		if( !m_mngr.ASSERT(m_current == null) )  return;
 		if( m_queue.size() == 0 )  return;
@@ -365,6 +369,11 @@ class P_TaskQueue
 	public int getSize()
 	{
 		return m_queue.size();
+	}
+
+	public List<PA_Task> getRaw()
+	{
+		return m_queue;
 	}
 	
 	public boolean isInQueue(Class<? extends PA_Task> taskClass, BleManager mngr)

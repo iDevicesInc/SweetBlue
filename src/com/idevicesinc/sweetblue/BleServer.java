@@ -25,6 +25,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import static com.idevicesinc.sweetblue.BleServerState.*;
+import static com.idevicesinc.sweetblue.BleServerState.NULL;
 
 
 /**
@@ -545,8 +546,8 @@ public class BleServer implements UsesCustomNull
 			/**
 			 * Returns the mac address of the client that's undergoing the state change with this {@link #server()}.
 			 */
-			public String macAddress()  {  return m_nativeDevice.getAddress();  }
-			private final BluetoothDevice m_nativeDevice;
+			public String macAddress()  {  return m_macAddress;  }
+			private final String m_macAddress;
 
 			/**
 			 * The change in gattStatus that may have precipitated the state change, or {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
@@ -557,13 +558,13 @@ public class BleServer implements UsesCustomNull
 			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
-			StateEvent(BleServer server, BluetoothDevice nativeDevice, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
+			StateEvent(BleServer server, String macAddress, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 			{
 				super(oldStateBits, newStateBits, intentMask);
 
 				m_server = server;
 				m_gattStatus = gattStatus;
-				m_nativeDevice = nativeDevice;
+				m_macAddress = macAddress;
 			}
 
 			@Override public String toString()
@@ -720,7 +721,7 @@ public class BleServer implements UsesCustomNull
 	@Advanced
 	public int getStateMask(final String macAddress)
 	{
-		return 0x0;
+		return m_stateTracker.getStateMask(macAddress);
 	}
 
 	public boolean is(final String macAddress, final BleServerState state)
@@ -750,17 +751,51 @@ public class BleServer implements UsesCustomNull
 
 	public void connect(final String macAddress)
 	{
-		if( m_nativeWrapper.isConnectingOrConnected(macAddress) )
+		if( isAny(macAddress, CONNECTING, CONNECTED) )
 		{
-			return
+			return;
 		}
+
+		final BluetoothDevice nativeDevice = getManager().getNativeAdapter().getRemoteDevice(macAddress);
+		final P_Task_ConnectServer task = new P_Task_ConnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
+		m_queue.add(task);
+
+		m_stateTracker.flipStateOn(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+	}
+
+	private boolean isDisconnecting(final String macAddress)
+	{
+		return false; // TODO
 	}
 
 	public boolean disconnect(final String macAddress)
 	{
-		if( is(macAddress, DISCONNECTED) )  return false;
+		if( is(macAddress, DISCONNECTED) || isDisconnecting(macAddress) )  return false;
 
+		final BleServerState oldConnectionState;
 
+		if( is(macAddress, CONNECTING) )
+		{
+			oldConnectionState = CONNECTING;
+		}
+		else if( is(macAddress, CONNECTED) )
+		{
+			oldConnectionState = CONNECTED;
+		}
+		else
+		{
+			getManager().ASSERT(false, "Expected to be connecting or connected for an explicit disconnect.");
+
+			return false;
+		}
+
+		final BluetoothDevice nativeDevice = getManager().getNativeAdapter().getRemoteDevice(macAddress);
+		final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
+		m_queue.add(task);
+
+		m_stateTracker.flipStateOn(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		return true;
 	}
 
 	/**
@@ -782,7 +817,7 @@ public class BleServer implements UsesCustomNull
 		return m_isNull;
 	}
 
-	void onNativeConnect()
+	void onNativeConnect(final String macAddress, final boolean explicit)
 	{
 		
 	}

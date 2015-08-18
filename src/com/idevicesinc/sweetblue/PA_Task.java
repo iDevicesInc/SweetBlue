@@ -401,6 +401,20 @@ abstract class PA_Task
 	{
 		return m_totalTimeArmedAndExecuting;
 	}
+
+	public boolean isFor(final Class<? extends PA_Task_ConnectOrDisconnectServer> taskClass, final BleServer server, final String macAddress)
+	{
+		if( taskClass.isAssignableFrom(this.getClass()) )
+		{
+			final PA_Task_ConnectOrDisconnectServer this_cast = (PA_Task_ConnectOrDisconnectServer) this;
+
+			return this_cast.isFor(server, macAddress);
+		}
+		else
+		{
+			return false;
+		}
+	}
 	
 	public BleDevice getDevice()
 	{
