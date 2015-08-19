@@ -22,7 +22,6 @@ enum PE_TaskState
 	FAILED,
 	CLEARED_FROM_QUEUE,
 	REDUNDANT,
-	NO_OP,
 	FAILED_IMMEDIATELY;		// same as FAILED but to indicate that operation couldn't even be sent off, presumably due to very exceptional conditions.
 	
 	public boolean isEndingState()

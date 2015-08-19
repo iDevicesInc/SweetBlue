@@ -60,13 +60,16 @@ class P_ServerStateTracker
 
 	public int getStateMask(final String macAddress)
 	{
-		final List<PA_Task> rawQueue = m_server.getManager().getTaskQueue().getRaw();
+		final P_TaskQueue queue = m_server.getManager().getTaskQueue();
+		final List<PA_Task> queue_raw = queue.getRaw();
+		final int bitForUnknownState = BleServerState.DISCONNECTED.bit();
+		final PA_Task current = queue.getCurrent();
 
 		if( m_server.m_nativeWrapper.isConnectingOrConnected(macAddress) )
 		{
-			for( int i = rawQueue.size()-1; i >= 0; i++ )
+			for( int i = queue_raw.size()-1; i >= 0; i-- )
 			{
-				final PA_Task ith = rawQueue.get(i);
+				final PA_Task ith = queue_raw.get(i);
 
 				if( ith.isFor(P_Task_ConnectServer.class, m_server, macAddress) )
 				{
@@ -79,7 +82,11 @@ class P_ServerStateTracker
 				}
 			}
 
-			if( m_server.m_nativeWrapper.isConnected(macAddress) )
+			if( current != null && current.isFor(P_Task_DisconnectServer.class, m_server, macAddress) )
+			{
+				return BleServerState.DISCONNECTED.bit();
+			}
+			else if( m_server.m_nativeWrapper.isConnected(macAddress) )
 			{
 				return BleServerState.CONNECTED.bit();
 			}
@@ -91,35 +98,40 @@ class P_ServerStateTracker
 			{
 				m_server.getManager().ASSERT(false, "Expected to be connecting or connected when getting state mask for server.");
 
-				return BleServerState.NULL.bit();
+				return bitForUnknownState;
 			}
 		}
 		else if( m_server.m_nativeWrapper.isDisconnectingOrDisconnected(macAddress) )
 		{
-			for( int i = rawQueue.size()-1; i >= 0; i++ )
+			for( int i = queue_raw.size()-1; i >= 0; i-- )
 			{
-				final PA_Task ith = rawQueue.get(i);
+				final PA_Task ith = queue_raw.get(i);
 
-				sdsdsdif( ith.getClass() == P_Task_DisconnectServer.class )  break;
-
-				if( ith.getClass() == P_Task_ConnectServer.class && ith.getServer().equals(this) )
+				if( ith.isFor(P_Task_DisconnectServer.class, m_server, macAddress) )
 				{
-					final P_Task_ConnectServer ith_cast = (P_Task_ConnectServer) ith;
+					return BleServerState.DISCONNECTED.bit();
+				}
 
-					if( ith_cast.isFor(macAddress) )
-					{
-						return BleServerState.CONNECTING.bit();
-					}
+				if( ith.isFor(P_Task_ConnectServer.class, m_server, macAddress) )
+				{
+					return BleServerState.CONNECTING.bit();
 				}
 			}
 
-			return BleServerState.DISCONNECTED.bit();
+			if( current != null && current.isFor(P_Task_ConnectServer.class, m_server, macAddress) )
+			{
+				return BleServerState.CONNECTING.bit();
+			}
+			else
+			{
+				return BleServerState.DISCONNECTED.bit();
+			}
 		}
 		else
 		{
-			m_server.getManager().ASSERT(false, "Native server is in a bad state");
+			m_server.getManager().ASSERT(false, "Native server is in an unknown state.");
 
-			return BleServerState.NULL.bit();
+			return bitForUnknownState;
 		}
 	}
 }

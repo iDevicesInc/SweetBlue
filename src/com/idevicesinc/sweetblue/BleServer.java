@@ -3,6 +3,7 @@
  */
 package com.idevicesinc.sweetblue;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.UUID;
 
@@ -587,6 +588,17 @@ public class BleServer implements UsesCustomNull
 		void onEvent(final StateEvent e);
 	}
 
+	/**
+	 * Provide an implementation of this callback to {@link BleServer#setListener_ConnectionFail(ConnectionFailListener)}.
+	 *
+	 * @see BleServer#setListener_ConnectionFail(ConnectionFailListener)
+	 */
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	public static interface ConnectionFailListener
+	{
+
+	}
+
 	private static final ResponseCompletionListener NULL_RESPONSE_LISTENER = new ResponseCompletionListener()
 	{
 		@Override public void onEvent(ResponseCompletionEvent event)
@@ -603,9 +615,9 @@ public class BleServer implements UsesCustomNull
 	final P_NativeServerWrapper m_nativeWrapper;
 	private RequestListener m_requestListener;
 	private ResponseCompletionListener m_responseListener_default;
+	private ConnectionFailListener m_connectionFailListener;
 	private final P_Logger m_logger;
 	private final boolean m_isNull;
-
 
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -627,7 +639,6 @@ public class BleServer implements UsesCustomNull
 			m_queue = null;
 			m_logger = null;
 			m_stateTracker = new P_ServerStateTracker(this);
-			m_stateTracker.set(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleServerState.NULL, true);
 			m_listeners = null;
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 		}
@@ -636,7 +647,6 @@ public class BleServer implements UsesCustomNull
 			m_queue = m_mngr.getTaskQueue();
 			m_logger = m_mngr.getLogger();
 			m_stateTracker = new P_ServerStateTracker(this);
-			m_stateTracker.set(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleServerState.DISCONNECTED, true);
 			m_listeners = new P_BleServer_Listeners(this);
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 		}
@@ -672,6 +682,11 @@ public class BleServer implements UsesCustomNull
 	public void setListener_Response(final ResponseCompletionListener listener)
 	{
 		m_responseListener_default = listener;
+	}
+
+	public void setListener_ConnectionFail(final ConnectionFailListener listener)
+	{
+		m_connectionFailListener = listener;
 	}
 
 	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID charUuid, byte[] data )
@@ -751,6 +766,7 @@ public class BleServer implements UsesCustomNull
 
 	public void connect(final String macAddress)
 	{
+
 		if( isAny(macAddress, CONNECTING, CONNECTED) )
 		{
 			return;
@@ -763,22 +779,18 @@ public class BleServer implements UsesCustomNull
 		m_stateTracker.flipStateOn(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	private boolean isDisconnecting(final String macAddress)
-	{
-		return false; // TODO
-	}
-
 	public boolean disconnect(final String macAddress)
 	{
-		if( is(macAddress, DISCONNECTED) || isDisconnecting(macAddress) )  return false;
+		if( is(macAddress, DISCONNECTED) )  return false;
 
 		final BleServerState oldConnectionState;
+		final int stateMask = getStateMask(macAddress);
 
-		if( is(macAddress, CONNECTING) )
+		if( BleServerState.CONNECTING.overlaps(stateMask) )
 		{
 			oldConnectionState = CONNECTING;
 		}
-		else if( is(macAddress, CONNECTED) )
+		else if( BleServerState.CONNECTED.overlaps(stateMask) )
 		{
 			oldConnectionState = CONNECTED;
 		}
@@ -809,7 +821,7 @@ public class BleServer implements UsesCustomNull
 			setListener_State(stateListener);
 		}
 
-		m_queue.add( new P_Task_DisconnectServer( this, m_taskStateListener ) );
+		m_queue.add(new P_Task_DisconnectServer(this, m_taskStateListener));
 	}
 
 	@Override public boolean isNull()
@@ -817,14 +829,32 @@ public class BleServer implements UsesCustomNull
 		return m_isNull;
 	}
 
+	void onNativeConnecting(final String macAddress, final boolean explicit)
+	{
+		if( !explicit )
+		{
+			m_stateTracker.flipStateOn(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		}
+	}
+
 	void onNativeConnect(final String macAddress, final boolean explicit)
 	{
-		
+		m_stateTracker.flipStateOn(macAddress, BleServerState.CONNECTING /* ==> */, BleServerState.CONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+	}
+
+	void onNativeConnectFail(final String macAddress, final int gattStatus)
+	{
+
 	}
 
 	void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)
 	{
+		if( !explicit )
+		{
+			m_stateTracker.flipStateOn(macAddress, BleServerState.CONNECTED /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		}
 
+		//TODO: Connection fail listener callback
 	}
 
 	/**

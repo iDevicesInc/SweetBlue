@@ -239,7 +239,7 @@ class P_TaskQueue
 		return m_updateCount;
 	}
 	
-	private PA_Task getCurrent()
+	public PA_Task getCurrent()
 	{
 //		return m_pendingEndingStateForCurrentTask != null ? null : m_current;
 		return m_current;

@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattServer;
 
 import java.util.HashMap;
@@ -146,7 +147,9 @@ class P_NativeServerWrapper
 		}
 		else
 		{
-			final int nativeState = m_native.getConnectionState(device);
+//			final int nativeState = m_native.getConnectionState(device);
+
+			final int nativeState = m_server.getManager().getNative().getConnectionState( device, BluetoothGatt.GATT );
 
 			updateNativeConnectionState(device.getAddress(), nativeState);
 		}

@@ -77,7 +77,6 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			//---		In that case it doesn't make sense to fail again (even though listeners
 			//---		should be and currently are defensive about that case).
 //			this.fail();
-			this.noOp();
 		}
 	}
 	

@@ -225,11 +225,6 @@ abstract class PA_Task
 		m_queue.tryEndingTask(this, PE_TaskState.FAILED_IMMEDIATELY);
 	}
 	
-	protected void noOp()
-	{
-		m_queue.tryEndingTask(this, PE_TaskState.NO_OP);
-	}
-	
 	protected void selfInterrupt()
 	{
 		boolean wasExecuting = this.getState() == PE_TaskState.EXECUTING || this.getState() == PE_TaskState.ARMED;

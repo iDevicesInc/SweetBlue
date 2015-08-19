@@ -71,7 +71,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else if (task.getClass() == P_Task_Disconnect.class)
 			{
-				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT || state == PE_TaskState.NO_OP)
+				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
 				{
 					P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 

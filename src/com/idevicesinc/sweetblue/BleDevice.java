@@ -5047,7 +5047,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */true);
 
-		if (state == PE_TaskState.SOFTLY_CANCELLED || state == PE_TaskState.NO_OP)	return;
+		if (state == PE_TaskState.SOFTLY_CANCELLED )	return;
 
 		boolean attemptingReconnect = is(RECONNECTING_LONG_TERM);
 		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
