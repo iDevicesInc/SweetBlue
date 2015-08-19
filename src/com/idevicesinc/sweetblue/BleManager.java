@@ -741,6 +741,7 @@ public class BleManager
 	private AssertListener m_assertionListener;
 			BleDevice.StateListener m_defaultDeviceStateListener;
 			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
+			BleServer.ConnectionFailListener m_defaultConnectionFailListener_server;
 			BleDevice.BondListener m_defaultBondListener;
 			BleDevice.ReadWriteListener m_defaultReadWriteListener;
 	final P_DiskOptionsManager m_diskOptionsMngr;
@@ -754,6 +755,7 @@ public class BleManager
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.ResponseCompletionListener m_defaultServerResponseListener;
+	BleServer.RequestListener m_defaultServerRequestListener;
     final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
@@ -1076,6 +1078,25 @@ public class BleManager
 		}
 	}
 
+	public void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) BleServer.ConnectionFailListener listener_nullable)
+	{
+		m_defaultConnectionFailListener_server = listener_nullable;
+	}
+
+	/**
+	 * Convenience method to handle server request events at the manager level. The listener provided
+	 * will only get called if the server receiving a request doesn't have a listener provided to
+	 * {@link BleServer#setListener_Request(RequestListener)} . This is unlike the behavior (for example)
+	 * behind {@link #setListener_ResponseCompletion(BleServer.ResponseCompletionListener)} because
+	 * {@link BleServer.RequestListener#onEvent(RequestListener.RequestEvent)} requires a return value.
+	 *
+	 * @see BleServer#setListener_Request(BleServer.RequestListener)
+	 */
+	public void setListener_Request(@Nullable(Prevalence.NORMAL) BleServer.RequestListener listener_nullable)
+	{
+		m_defaultServerRequestListener = listener_nullable;
+	}
+
 	/**
 	 * Convenience method to listen for all changes in {@link BleServerState} for all servers.
 	 * The listener provided will get called in addition to and after the listener, if any, provided
@@ -1083,29 +1104,29 @@ public class BleManager
 	 * 
 	 * @see BleServer#setListener_State(BleServer.StateListener)
 	 */
-	public void setListener_ServerState(BleServer.StateListener listener)
+	public void setListener_ServerState(@Nullable(Prevalence.NORMAL) BleServer.StateListener listener_nullable)
 	{
-		m_defaultServerStateListener = new P_WrappingServerStateListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+		m_defaultServerStateListener = listener_nullable;
 	}
 
 	/**
 	 * Convenience method to listen for completion of all responses to all requests received by all
 	 * {@link BleServer} instances. The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleServer#setListener_Response(BleServer.ResponseCompletionListener)}.
+	 * to {@link BleServer#setListener_ResponseCompletion(BleServer.ResponseCompletionListener)}.
 	 *
-	 * @see BleServer#setListener_Response(BleServer.ResponseCompletionListener)
+	 * @see BleServer#setListener_ResponseCompletion(BleServer.ResponseCompletionListener)
 	 */
-	public void setListener_Response(BleServer.ResponseCompletionListener listener)
+	public void setListener_ResponseCompletion(@Nullable(Prevalence.NORMAL) BleServer.ResponseCompletionListener listener_nullable)
 	{
-		m_defaultServerResponseListener = listener;
+		m_defaultServerResponseListener = listener_nullable;
 	}
 
 	/**
 	 * Convenience method to handle connection fail events at the manager level. The listener provided
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
 	 * {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)}. This is unlike the behavior
-	 * behind {@link #setListener_DeviceState(BleDevice.StateListener)} because {@link BleDevice.ConnectionFailListener}
-	 * requires a return value.
+	 * behind {@link #setListener_DeviceState(BleDevice.StateListener)} because
+	 * {@link BleDevice.ConnectionFailListener#onEvent(ConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
 	 * @see BleDevice#setListener_ConnectionFail(BleDevice.ConnectionFailListener)
 	 */

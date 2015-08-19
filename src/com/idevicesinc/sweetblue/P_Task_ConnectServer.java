@@ -80,7 +80,7 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 			{
 				final P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
 
-				if( task_cast.m_macAddress.equals(m_nativeDevice.getAddress()) )
+				if( task_cast.m_nativeDevice.getAddress().equals(m_nativeDevice.getAddress()) )
 				{
 					//--- DRK > If an implicit disconnect comes in we have no choice but to bail.
 					//---		Otherwise we let the connection task run its course then we'll
@@ -106,7 +106,7 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 		{
 			final P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
 
-			if( task_cast.m_macAddress.equals(m_nativeDevice.getAddress()) )
+			if( task_cast.m_nativeDevice.getAddress().equals(m_nativeDevice.getAddress()) )
 			{
 				if( this.isExplicit() )
 				{

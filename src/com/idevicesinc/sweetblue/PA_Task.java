@@ -110,16 +110,17 @@ abstract class PA_Task
 		if( taskType != null )
 		{
 			final BleDevice device = getDevice() != null ? getDevice() : BleDevice.NULL;
+			final BleServer server = getServer() != null ? getServer() : BleServer.NULL;
 			
-			s_timeoutRequestEvent.init(getManager(), device, taskType, getCharUuid(), getDescUuid());
+			s_timeoutRequestEvent.init(getManager(), device, server, taskType, getCharUuid(), getDescUuid());
 			
-			return BleDeviceConfig.getTimeout(s_timeoutRequestEvent);
+			return BleServerConfig.getTimeout(s_timeoutRequestEvent);
 		}
 		else
 		{
 			getManager().ASSERT(false, "BleTask type shouldn't be null.");
 			
-			return BleDeviceConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
+			return BleServerConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
 		}
 	}
 	

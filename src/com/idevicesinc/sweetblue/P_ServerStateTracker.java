@@ -19,17 +19,10 @@ class P_ServerStateTracker
 	
 	public void setListener(BleServer.StateListener listener)
 	{
-		if( listener != null )
-		{
-			m_stateListener = new P_WrappingServerStateListener(listener, m_server.getManager().m_mainThreadHandler, m_server.getManager().m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_stateListener = null;
-		}
+		m_stateListener = listener;
 	}
 
-	void flipStateOn(final String macAddress, final BleServerState oldState, final BleServerState newState, final State.ChangeIntent intent, final int gattStatus)
+	void doStateTransition(final String macAddress, final BleServerState oldState, final BleServerState newState, final State.ChangeIntent intent, final int gattStatus)
 	{
 		final int oldState_bit = oldState != BleServerState.NULL ? oldState.bit() : 0x0;
 		final int newState_bit = newState.bit();

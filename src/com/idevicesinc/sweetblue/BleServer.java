@@ -3,15 +3,15 @@
  */
 package com.idevicesinc.sweetblue;
 
-import java.sql.Connection;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
-import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
@@ -19,6 +19,7 @@ import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
@@ -26,7 +27,6 @@ import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import static com.idevicesinc.sweetblue.BleServerState.*;
-import static com.idevicesinc.sweetblue.BleServerState.NULL;
 
 
 /**
@@ -312,7 +312,7 @@ public class BleServer implements UsesCustomNull
 			 * Your {@link ResponseCompletionListener#onEvent(ResponseCompletionListener.ResponseCompletionEvent)} will simply be called
 			 * with {@link ResponseCompletionListener.Status#NO_RESPONSE_ATTEMPTED}.
 			 *
-			 * @see BleServer#setListener_Response(ResponseCompletionListener)
+			 * @see BleServer#setListener_ResponseCompletion(ResponseCompletionListener)
 			 */
 			public static Please doNotRespond(final ResponseCompletionListener listener)
 			{
@@ -348,7 +348,7 @@ public class BleServer implements UsesCustomNull
 			/**
 			 * Same as {@link #respondWithSuccess(byte[])} but allows you to provide a listener specific to this response.
 			 *
-			 * @see BleServer#setListener_Response(ResponseCompletionListener)
+			 * @see BleServer#setListener_ResponseCompletion(ResponseCompletionListener)
 			 */
 			public static Please respondWithSuccess(final byte[] data, final ResponseCompletionListener listener)
 			{
@@ -368,7 +368,7 @@ public class BleServer implements UsesCustomNull
 			/**
 			 * Same as {@link #respondWithSuccess()} but allows you to provide a listener specific to this response.
 			 *
-			 * @see BleServer#setListener_Response(ResponseCompletionListener)
+			 * @see BleServer#setListener_ResponseCompletion(ResponseCompletionListener)
 			 */
 			public static Please respondWithSuccess(final ResponseCompletionListener listener)
 			{
@@ -387,7 +387,7 @@ public class BleServer implements UsesCustomNull
 			/**
 			 * Same as {@link #respondWithError(int)} but allows you to provide a listener specific to this response.
 			 *
-			 * @see BleServer#setListener_Response(ResponseCompletionListener)
+			 * @see BleServer#setListener_ResponseCompletion(ResponseCompletionListener)
 			 */
 			public static Please respondWithError(final int gattStatus, final ResponseCompletionListener listener)
 			{
@@ -403,8 +403,8 @@ public class BleServer implements UsesCustomNull
 
 	/**
 	 * Provide an instance to various static methods of {@link BleServer.RequestListener.Please} such as
-	 * {@link BleServer.RequestListener.Please#respondWithSuccess(ResponseCompletionListener)}, or {@link BleServer#setListener_Response(ResponseCompletionListener)},
-	 * or {@link BleManager#setListener_Response(ResponseCompletionListener)}.
+	 * {@link BleServer.RequestListener.Please#respondWithSuccess(ResponseCompletionListener)}, or {@link BleServer#setListener_ResponseCompletion(ResponseCompletionListener)},
+	 * or {@link BleManager#setListener_ResponseCompletion(ResponseCompletionListener)}.
 	 */
 	public static interface ResponseCompletionListener extends ExchangeListener
 	{
@@ -596,7 +596,435 @@ public class BleServer implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface ConnectionFailListener
 	{
+		/**
+		 * The reason for the connection failure.
+		 */
+		public static enum Status implements UsesCustomNull
+		{
+			/**
+			 * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link ConnectionFailEvent#status()} given
+			 * to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} will *never* be {@link ConnectionFailListener.Status#NULL}.
+			 */
+			NULL,
 
+			/**
+			 * A call was made to {@link BleDevice#connect()} or its overloads
+			 * but {@link ConnectionFailEvent#device()} is already
+			 * {@link BleDeviceState#CONNECTING} or {@link BleDeviceState#CONNECTED}.
+			 */
+			ALREADY_CONNECTING_OR_CONNECTED,
+
+			/**
+			 * {@link BleDevice#connect()} (or various overloads) was called on {@link BleDevice#NULL}.
+			 */
+			NULL_DEVICE,
+
+			/**
+			 * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
+			 * because it (a) {@link Timing#IMMEDIATELY} returned <code>null</code>, (b) {@link Timing#EVENTUALLY} returned a bad
+			 * {@link ConnectionFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
+			 */
+			NATIVE_CONNECTION_FAILED,
+
+			/**
+			 * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
+			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
+			 */
+			DISCOVERING_SERVICES_FAILED,
+
+			/**
+			 * {@link BluetoothDevice#createBond()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
+			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#bondFailReason()}, or (c) {@link Timing#TIMED_OUT}.
+			 * <br><br>
+			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Status} to be applicable.
+			 *
+			 * @see BondListener
+			 */
+			BONDING_FAILED,
+
+			/**
+			 * The {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Auth)} or
+			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} failed through {@link BleTransaction#fail()}.
+			 *
+			 */
+			AUTHENTICATION_FAILED,
+
+			/**
+			 * {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Init)} or
+			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} failed through {@link BleTransaction#fail()}.
+			 *
+			 */
+			INITIALIZATION_FAILED,
+
+			/**
+			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
+			 * but only occurs after the device is {@link BleDeviceState#CONNECTED} and we're going through
+			 * {@link BleDeviceState#DISCOVERING_SERVICES}, or {@link BleDeviceState#AUTHENTICATING}, or what have you. It might
+			 * be from the device turning off, or going out of range, or any other random reason.
+			 */
+			ROGUE_DISCONNECT,
+
+			/**
+			 * {@link BleDevice#disconnect()} was called sometime during the connection process.
+			 */
+			EXPLICIT_DISCONNECT,
+
+			/**
+			 * {@link BleManager#reset()} or {@link BleManager#turnOff()} (or
+			 * overloads) were called sometime during the connection process.
+			 * Basic testing reveals that this value will also be used when a
+			 * user turns off BLE by going through their OS settings, airplane
+			 * mode, etc., but it's not absolutely *certain* that this behavior
+			 * is consistent across phones. For example there might be a phone
+			 * that kills all connections before going through the ble turn-off
+			 * process, in which case SweetBlue doesn't know the difference and
+			 * {@link #ROGUE_DISCONNECT} will be used.
+			 */
+			BLE_TURNING_OFF;
+
+			/**
+			 * Returns true for {@link #EXPLICIT_DISCONNECT} or {@link #BLE_TURNING_OFF}.
+			 */
+			public boolean wasCancelled()
+			{
+				return this == EXPLICIT_DISCONNECT || this == BLE_TURNING_OFF;
+			}
+
+			/**
+			 * Same as {@link #wasCancelled()}, at least for now, but just being more "explicit", no pun intended.
+			 */
+			boolean wasExplicit()
+			{
+				return wasCancelled();
+			}
+
+			/**
+			 * Whether this reason honors a {@link Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
+			 * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
+			 */
+			public boolean allowsRetry()
+			{
+				return !this.wasCancelled() && this != ALREADY_CONNECTING_OR_CONNECTED;
+			}
+
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
+
+			/**
+			 * Convenience method that returns whether this status is something that your app user would usually care about.
+			 * If this returns <code>true</code> then perhaps you should pop up a {@link android.widget.Toast} or something of that nature.
+			 */
+			public boolean shouldBeReportedToUser()
+			{
+				return	this == NATIVE_CONNECTION_FAILED		||
+						this == DISCOVERING_SERVICES_FAILED		||
+						this == BONDING_FAILED					||
+						this == AUTHENTICATION_FAILED			||
+						this == INITIALIZATION_FAILED			||
+						this == ROGUE_DISCONNECT				 ;
+			}
+		}
+
+		/**
+		 * Structure passed to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
+		 */
+		@Immutable
+		public static class ConnectionFailEvent implements UsesCustomNull
+		{
+			/**
+			 * The {@link BleDevice} this {@link ConnectionFailEvent} is for.
+			 */
+			public BleDevice device() {  return m_device;  }
+			private final BleDevice m_device;
+
+			/**
+			 * General reason why the connection failed.
+			 */
+			public Status status() {  return m_status;  }
+			private final Status m_status;
+
+			/**
+			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
+			 */
+			public int failureCountSoFar() {  return m_failureCountSoFar;  }
+			private final int m_failureCountSoFar;
+
+			/**
+			 * How long the last connection attempt took before failing.
+			 */
+			public Interval attemptTime_latest() {  return m_latestAttemptTime;  }
+			private final Interval m_latestAttemptTime;
+
+			/**
+			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
+			 */
+			public Interval attemptTime_total() {  return m_totalAttemptTime;  }
+			private final Interval m_totalAttemptTime;
+
+			/**
+			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
+			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
+			 * If not applicable, for example if {@link ConnectionFailEvent#status()} is {@link Status#EXPLICIT_DISCONNECT}, then this is set to
+			 * {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
+			 * <br><br>
+			 * See {@link ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
+			 *
+			 * @see ReadWriteEvent#gattStatus
+			 */
+			public int gattStatus() {  return m_gattStatus;  }
+			private final int m_gattStatus;
+
+			/**
+			 * See {@link BondEvent#failReason()}.
+			 */
+			public int bondFailReason() {  return m_bondFailReason;  }
+			private final int m_bondFailReason;
+
+			/**
+			 * The highest state reached by the latest connection attempt.
+			 */
+			public BleDeviceState highestStateReached_latest() {  return m_highestStateReached_latest;  }
+			private final BleDeviceState m_highestStateReached_latest;
+
+			/**
+			 * The highest state reached during the whole connection attempt cycle.
+			 * <br><br>
+			 * TIP: You can use this to keep the visual feedback in your connection progress UI "bookmarked" while the connection retries
+			 * and goes through previous states again.
+			 */
+			public BleDeviceState highestStateReached_total() {  return m_highestStateReached_total;  }
+			private final BleDeviceState m_highestStateReached_total;
+
+			/**
+			 * Whether <code>autoConnect=true</code> was passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
+			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
+			 */
+			@com.idevicesinc.sweetblue.annotations.Advanced
+			public AutoConnectUsage autoConnectUsage() {  return m_autoConnectUsage;  }
+			private final AutoConnectUsage m_autoConnectUsage;
+
+			/**
+			 * Further timing information for {@link Status#NATIVE_CONNECTION_FAILED}, {@link Status#BONDING_FAILED}, and {@link Status#DISCOVERING_SERVICES_FAILED}.
+			 */
+			public Timing timing() {  return m_timing;  }
+			private final Timing m_timing;
+
+			/**
+			 * If {@link ConnectionFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or
+			 * {@link Status#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called somewhere in or
+			 * downstream of {@link ReadWriteListener#onEvent(ReadWriteEvent)}, then the {@link ReadWriteEvent} passed there will be returned
+			 * here. Otherwise, this will return a {@link ReadWriteEvent} for which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
+			 */
+			public ReadWriteListener.ReadWriteEvent txnFailReason() {  return m_txnFailReason;  }
+			private final ReadWriteListener.ReadWriteEvent m_txnFailReason;
+
+			/**
+			 * Returns a chronologically-ordered list of all {@link ConnectionFailEvent} instances returned through
+			 * {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} since the first call to {@link BleDevice#connect()},
+			 * including the current instance. Thus this list will always have at least a length of one (except if {@link #isNull()} is <code>true</code>).
+			 * The list length is "reset" back to one whenever a {@link BleDeviceState#CONNECTING_OVERALL} operation completes, either
+			 * through becoming {@link BleDeviceState#INITIALIZED}, or {@link BleDeviceState#DISCONNECTED} for good.
+			 */
+			public ConnectionFailEvent[] history()  {  return m_history;  }
+			private final ConnectionFailEvent[] m_history;
+
+			ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason, ArrayList<ConnectionFailEvent> history)
+			{
+				this.m_device = device;
+				this.m_status = reason;
+				this.m_timing = timing;
+				this.m_failureCountSoFar = failureCountSoFar;
+				this.m_latestAttemptTime = latestAttemptTime;
+				this.m_totalAttemptTime = totalAttemptTime;
+				this.m_gattStatus = gattStatus;
+				this.m_highestStateReached_latest = highestStateReached != null ? highestStateReached : BleDeviceState.NULL;
+				this.m_highestStateReached_total = highestStateReached_total != null ? highestStateReached_total : BleDeviceState.NULL;
+				this.m_autoConnectUsage = autoConnectUsage;
+				this.m_bondFailReason = bondFailReason;
+				this.m_txnFailReason = txnFailReason;
+
+				if( history == null )
+				{
+					this.m_history = EMPTY_HISTORY();
+				}
+				else
+				{
+					this.m_history = new ConnectionFailEvent[history.size()+1];
+					for( int i = 0; i < history.size(); i++ )
+					{
+						this.m_history[i] = history.get(i);
+					}
+
+					this.m_history[this.m_history.length-1] = this;
+				}
+
+				m_device.getManager().ASSERT(highestStateReached != null, "highestState_latest shouldn't be null.");
+				m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
+			}
+
+			private static ConnectionFailEvent[] s_emptyHistory = null;
+			static ConnectionFailEvent[] EMPTY_HISTORY()
+			{
+				s_emptyHistory = s_emptyHistory != null ? s_emptyHistory : new ConnectionFailEvent[]{};
+
+				return s_emptyHistory;
+			}
+
+			static ConnectionFailEvent NULL(BleDevice device)
+			{
+				return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
+			}
+
+			static ConnectionFailEvent DUMMY(BleDevice device, Status reason)
+			{
+				return new ConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
+			}
+
+			/**
+			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
+			 * {@link BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent#connectionFailInfo()} in certain situations.
+			 */
+			@Override public boolean isNull()
+			{
+				return status().isNull();
+			}
+
+			/**
+			 * Forwards {@link com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status#shouldBeReportedToUser()}
+			 * using {@link #status()}.
+			 */
+			public boolean shouldBeReportedToUser()
+			{
+				return status().shouldBeReportedToUser();
+			}
+
+			@Override public String toString()
+			{
+				if (isNull())
+				{
+					return Status.NULL.name();
+				}
+				else
+				{
+					if( status() == Status.BONDING_FAILED )
+					{
+						return Utils.toString
+								(
+										this.getClass(),
+										"status", 				status(),
+										"bondFailReason",		device().getManager().getLogger().gattUnbondReason(bondFailReason()),
+										"failureCountSoFar",	failureCountSoFar()
+								);
+					}
+					else
+					{
+						return Utils.toString
+								(
+										this.getClass(),
+										"status", 				status(),
+										"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
+										"failureCountSoFar",	failureCountSoFar()
+								);
+					}
+				}
+			}
+		}
+
+		/**
+		 * Return value for {@link ConnectionFailListener#onEvent(ConnectionFailEvent)}.
+		 * Generally you will only return {@link #retry()} or {@link #doNotRetry()}, but there are more advanced options as well.
+		 */
+		@Immutable
+		public static class Please
+		{
+			static enum PE_Please
+			{
+				RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
+
+				boolean isRetry()
+				{
+					return this != DO_NOT_RETRY;
+				}
+			}
+
+			private final PE_Please m_please;
+
+			private Please(PE_Please please)
+			{
+				m_please = please;
+			}
+
+			PE_Please please()
+			{
+				return m_please;
+			}
+
+			/**
+			 * Return this to retry the connection, continuing the connection fail retry loop. <code>autoConnect</code> passed to
+			 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
+			 * will be false or true based on what has worked in the past, or on {@link BleServerConfig#alwaysUseAutoConnect}.
+			 */
+			public static Please retry()
+			{
+				return new Please(PE_Please.RETRY);
+			}
+
+			/**
+			 * Returns {@link #retry()} if the given condition holds <code>true</code>, {@link #doNotRetry()} otherwise.
+			 */
+			public static Please retryIf(boolean condition)
+			{
+				return condition ? retry() : doNotRetry();
+			}
+
+			/**
+			 * Return this to stop the connection fail retry loop.
+			 */
+			public static Please doNotRetry()
+			{
+				return new Please(PE_Please.DO_NOT_RETRY);
+			}
+
+			/**
+			 * Returns {@link #doNotRetry()} if the given condition holds <code>true</code>, {@link #retry()} otherwise.
+			 */
+			public static Please doNotRetryIf(boolean condition)
+			{
+				return condition ? doNotRetry() : retry();
+			}
+
+			/**
+			 * Same as {@link #retry()}, but <code>autoConnect=true</code> will be passed to
+			 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}.
+			 * See more discussion at {@link BleServerConfig#alwaysUseAutoConnect}.
+			 */
+			@com.idevicesinc.sweetblue.annotations.Advanced
+			public static Please retryWithAutoConnectTrue()
+			{
+				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_TRUE);
+			}
+
+			/**
+			 * Opposite of{@link #retryWithAutoConnectTrue()}.
+			 */
+			@com.idevicesinc.sweetblue.annotations.Advanced
+			public static Please retryWithAutoConnectFalse()
+			{
+				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_FALSE);
+			}
+
+			/**
+			 * Returns <code>true</code> for everything except {@link #doNotRetry()}.
+			 */
+			public boolean isRetry()
+			{
+				return m_please != null && m_please.isRetry();
+			}
+		}
+
+		Please onEvent(final ConnectionFailEvent e);
 	}
 
 	private static final ResponseCompletionListener NULL_RESPONSE_LISTENER = new ResponseCompletionListener()
@@ -618,6 +1046,7 @@ public class BleServer implements UsesCustomNull
 	private ConnectionFailListener m_connectionFailListener;
 	private final P_Logger m_logger;
 	private final boolean m_isNull;
+	private BleServerConfig m_config = null;
 
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -651,6 +1080,28 @@ public class BleServer implements UsesCustomNull
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 		}
 	}
+
+	public void setConfig(final BleServerConfig config)
+	{
+		m_config = config;
+	}
+
+	BleServerConfig conf_server()
+	{
+		return m_config != null ? m_config : conf_mngr();
+	}
+
+	BleManagerConfig conf_mngr()
+	{
+		if (getManager() != null)
+		{
+			return getManager().m_config;
+		}
+		else
+		{
+			return BleManagerConfig.NULL;
+		}
+	}
 	
 	/**
 	 * Set a listener here to be notified whenever this server's state changes in relation to a specific client.
@@ -677,9 +1128,9 @@ public class BleServer implements UsesCustomNull
 	 * This is a default catch-all convenience listener that will be called after any listener provided through
 	 * the static methods of {@link BleServer.RequestListener.Please} such as {@link BleServer.RequestListener.Please#respondWithSuccess(ResponseCompletionListener)}.
 	 *
-	 * @see BleManager#setListener_Response(ResponseCompletionListener)
+	 * @see BleManager#setListener_ResponseCompletion(ResponseCompletionListener)
 	 */
-	public void setListener_Response(final ResponseCompletionListener listener)
+	public void setListener_ResponseCompletion(final ResponseCompletionListener listener)
 	{
 		m_responseListener_default = listener;
 	}
@@ -764,8 +1215,17 @@ public class BleServer implements UsesCustomNull
 		return m_mngr;
 	}
 
-	public void connect(final String macAddress)
+	public void connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
+		if( stateListener != null )
+		{
+			setListener_State(stateListener);
+		}
+
+		if( connectionFailListener != null )
+		{
+			setListener_ConnectionFail(connectionFailListener);
+		}
 
 		if( isAny(macAddress, CONNECTING, CONNECTED) )
 		{
@@ -776,7 +1236,7 @@ public class BleServer implements UsesCustomNull
 		final P_Task_ConnectServer task = new P_Task_ConnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		m_queue.add(task);
 
-		m_stateTracker.flipStateOn(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.doStateTransition(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	public boolean disconnect(final String macAddress)
@@ -805,7 +1265,7 @@ public class BleServer implements UsesCustomNull
 		final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		m_queue.add(task);
 
-		m_stateTracker.flipStateOn(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.doStateTransition(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		return true;
 	}
@@ -829,32 +1289,35 @@ public class BleServer implements UsesCustomNull
 		return m_isNull;
 	}
 
-	void onNativeConnecting(final String macAddress, final boolean explicit)
+	void onNativeConnecting_implicit(final String macAddress)
 	{
-		if( !explicit )
-		{
-			m_stateTracker.flipStateOn(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-		}
+		m_stateTracker.doStateTransition(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	void onNativeConnect(final String macAddress, final boolean explicit)
 	{
-		m_stateTracker.flipStateOn(macAddress, BleServerState.CONNECTING /* ==> */, BleServerState.CONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		final ChangeIntent intent = explicit ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
+
+		m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTING /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	void onNativeConnectFail(final String macAddress, final int gattStatus)
 	{
+		m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTING /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
+		//TODO: Connection fail listener callback
 	}
 
 	void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)
 	{
 		if( !explicit )
 		{
-			m_stateTracker.flipStateOn(macAddress, BleServerState.CONNECTED /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTED /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
-
-		//TODO: Connection fail listener callback
+		else
+		{
+			// explicit case gets handled immediately by the disconnect method.
+		}
 	}
 
 	/**

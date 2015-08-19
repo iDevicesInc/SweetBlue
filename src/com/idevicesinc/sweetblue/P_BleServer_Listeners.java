@@ -3,7 +3,6 @@ package com.idevicesinc.sweetblue;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServerCallback;
@@ -28,22 +27,36 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		{
 			if ( task.getClass() == P_Task_DisconnectServer.class )
 			{
-				if (state == PE_TaskState.SUCCEEDED )
+				if( state.isEndingState() )
 				{
-					final P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
+					if( state == PE_TaskState.SUCCEEDED )
+					{
+						final P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
 
-					m_server.onNativeDisconnect(task_cast.m_nativeDevice.getAddress(), task_cast.isExplicit(), task_cast.getGattStatus());
+						m_server.onNativeDisconnect(task_cast.m_nativeDevice.getAddress(), task_cast.isExplicit(), task_cast.getGattStatus());
+					}
 				}
 			}
 			else
 			{
 				if( task.getClass() == P_Task_ConnectServer.class )
 				{
-					if( state == PE_TaskState.SUCCEEDED )
+					if( state.isEndingState() )
 					{
 						final P_Task_ConnectServer task_cast = (P_Task_ConnectServer) task;
 
-						m_server.onNativeConnect(task_cast.m_nativeDevice.getAddress(), task_cast.isExplicit());
+						if( state == PE_TaskState.SUCCEEDED )
+						{
+							m_server.onNativeConnect(task_cast.m_nativeDevice.getAddress(), task_cast.isExplicit());
+						}
+						else if( state == PE_TaskState.REDUNDANT )
+						{
+							// nothing to do, but maybe should assert?
+						}
+						else
+						{
+							m_server.onNativeConnectFail(task_cast.m_nativeDevice.getAddress(), task_cast.getGattStatus());
+						}
 					}
 				}
 			}
@@ -163,6 +176,10 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 							m_queue.add(task);
 						}
+						else
+						{
+							m_server.onNativeConnecting_implicit(device.getAddress());
+						}
 					}
 					else
 					{
@@ -236,7 +253,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 	{
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 
-		final RequestListener listener = m_server.getListener_Request();
+		final RequestListener listener = m_server.getListener_Request() != null ? m_server.getListener_Request() : m_server.getManager().m_defaultServerRequestListener;
 
 		if( listener == null )
 		{
@@ -315,7 +332,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 		final Type type = preparedWrite ? Type.PREPARED_WRITE : Type.WRITE;
 
-		final RequestListener listener = m_server.getListener_Request();
+		final RequestListener listener = m_server.getListener_Request() != null ? m_server.getListener_Request() : m_server.getManager().m_defaultServerRequestListener;
 
 		if( listener == null )
 		{
