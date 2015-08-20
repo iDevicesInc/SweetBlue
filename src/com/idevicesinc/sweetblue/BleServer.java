@@ -4,7 +4,10 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -13,6 +16,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
+import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
@@ -130,6 +134,11 @@ public class BleServer implements UsesCustomNull
 			public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
 
 			/**
+			 * Return value of {@link #requestId()} if {@link #type()} is {@link Type#NOTIFICATION}.
+			 */
+			public static final int NON_APPLICABLE_REQUEST_ID = -1;
+
+			/**
 			 * The {@link BleServer} this {@link ExchangeEvent} is for.
 			 */
 			public BleServer server() {  return m_server;  }
@@ -157,6 +166,12 @@ public class BleServer implements UsesCustomNull
 			 */
 			public Target target() {  return m_target; }
 			private final Target m_target;
+
+			/**
+			 * The {@link UUID} of the service associated with this {@link ExchangeEvent}.
+			 */
+			public UUID serviceUuid() {  return m_serviceUuid; }
+			private final UUID m_serviceUuid;
 
 			/**
 			 * The {@link UUID} of the characteristic associated with this {@link ExchangeEvent}. This will always be
@@ -200,10 +215,11 @@ public class BleServer implements UsesCustomNull
 			public boolean responseNeeded()  {  return m_responseNeeded;  }
 			private final boolean m_responseNeeded;
 
-			ExchangeEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
+			ExchangeEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
 			{
 				m_server = server;
 				m_nativeDevice = nativeDevice;
+				m_serviceUuid = serviceUuid_in != null ? serviceUuid_in: NON_APPLICABLE_UUID;;
 				m_charUuid = charUuid_in != null ? charUuid_in : NON_APPLICABLE_UUID;;
 				m_descUuid = descUuid_in != null ? descUuid_in : NON_APPLICABLE_UUID;
 				m_type = type_in;
@@ -259,9 +275,9 @@ public class BleServer implements UsesCustomNull
 		@Immutable
 		public static class RequestEvent extends ExchangeEvent
 		{
-			RequestEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
+			RequestEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
 			{
-				super(server, nativeDevice, charUuid_in, descUuid_in, type_in, target_in, data_in, requestId, offset, responseNeeded);
+				super(server, nativeDevice, serviceUuid_in, charUuid_in, descUuid_in, type_in, target_in, data_in, requestId, offset, responseNeeded);
 			}
 		}
 
@@ -429,9 +445,9 @@ public class BleServer implements UsesCustomNull
 			public byte[] data_sent()  {  return m_data_sent;  }
 			private final byte[] m_data_sent;
 
-			ResponseCompletionEvent(BleServer server, BluetoothDevice nativeDevice, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_received, byte[] data_sent, int requestId, int offset, final boolean responseNeeded, final Status status)
+			ResponseCompletionEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_received, byte[] data_sent, int requestId, int offset, final boolean responseNeeded, final Status status)
 			{
-				super(server, nativeDevice, charUuid_in, descUuid_in, type_in, target_in, data_received, requestId, offset, responseNeeded);
+				super(server, nativeDevice, serviceUuid_in, charUuid_in, descUuid_in, type_in, target_in, data_received, requestId, offset, responseNeeded);
 
 				m_status = status;
 				m_data_sent = data_sent;
@@ -439,10 +455,24 @@ public class BleServer implements UsesCustomNull
 
 			ResponseCompletionEvent(final RequestListener.RequestEvent e, final byte[] data_sent, final Status status)
 			{
-				super(e.server(), e.nativeDevice(), e.charUuid(), e.descUuid(), e.type(), e.target(), e.data_received(), e.requestId(), e.offset(), e.responseNeeded());
+				super(e.server(), e.nativeDevice(), e.serviceUuid(), e.charUuid(), e.descUuid(), e.type(), e.target(), e.data_received(), e.requestId(), e.offset(), e.responseNeeded());
 
 				m_status = status;
 				m_data_sent = data_sent;
+			}
+
+			static ResponseCompletionEvent EARLY_OUT__NOTIFICATION(final BleServer server, final BluetoothDevice nativeDevice, final UUID serviceUuid, final UUID charUuid, final FutureData data, final Status status)
+			{
+				return new ResponseCompletionEvent
+				(
+					server, nativeDevice, serviceUuid, charUuid, NON_APPLICABLE_UUID, Type.NOTIFICATION,
+					Target.CHARACTERISTIC, EMPTY_BYTE_ARRAY, data.getData(), NON_APPLICABLE_REQUEST_ID, 0, false, status
+				);
+			}
+
+			static ResponseCompletionEvent NULL__NOTIFICATION(final BleServer server, final BluetoothDevice nativeDevice, final UUID serviceUuid, final UUID charUuid)
+			{
+				return EARLY_OUT__NOTIFICATION(server, nativeDevice, serviceUuid, charUuid, BleServer.EMPTY_FUTURE_DATA, Status.NULL);
 			}
 
 			/**
@@ -483,10 +513,30 @@ public class BleServer implements UsesCustomNull
 			NO_REQUEST_LISTENER_SET,
 
 			/**
+			 * Couldn't find a matching {@link ResponseCompletionEvent#target()} for {@link ResponseCompletionEvent#charUuid()}.
+			 */
+			NO_MATCHING_TARGET,
+
+			/**
+			 * For now only relevant if {@link ResponseCompletionEvent#type()} is {@link Type#NOTIFICATION} -
+			 * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of its overloads) returned <code>false</code>.
+			 */
+			FAILED_TO_SET_VALUE_ON_TARGET,
+
+			/**
 			 * The underlying call to {@link BluetoothGattServer#sendResponse(BluetoothDevice, int, int, int, byte[])}
 			 * failed for reasons unknown.
 			 */
 			FAILED_TO_SEND_OUT,
+
+			/**
+			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means for
+			 * example that {@link BluetoothGattServer#notifyCharacteristicChanged(BluetoothDevice, BluetoothGattCharacteristic, boolean)}
+			 * returned a status code through {@link BluetoothGattServerCallback#onNotificationSent(BluetoothDevice, int)} that was not zero.
+			 * This could mean the device went out of range, was turned off, signal was disrupted, whatever. Often this means that the
+			 * client is about to become {@link BleServerState#DISCONNECTED}.
+			 */
+			REMOTE_GATT_FAILURE,
 
 			/**
 			 * The operation was cancelled by the client/server becoming {@link BleServerState#DISCONNECTED}.
@@ -1066,6 +1116,7 @@ public class BleServer implements UsesCustomNull
 	};
 
 	static final byte[]				EMPTY_BYTE_ARRAY	= new byte[0];
+	static final FutureData			EMPTY_FUTURE_DATA 	= new PresentData(EMPTY_BYTE_ARRAY);
 
 	private final P_ServerStateTracker m_stateTracker;
 	private final BleManager m_mngr;
@@ -1188,18 +1239,61 @@ public class BleServer implements UsesCustomNull
 		return notify(macAddress, serviceUuid, charUuid, data, (ResponseCompletionListener) null);
 	}
 
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, ResponseCompletionListener listener )
+	{
+		return notify(macAddress, serviceUuid, charUuid, new PresentData(data), listener);
+	}
+
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, final UUID charUuid, final FutureData futureData)
+	{
+		return notify(macAddress, null, charUuid, futureData, (ResponseCompletionListener) null);
+	}
+
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, final UUID charUuid, final FutureData futureData, ResponseCompletionListener listener)
+	{
+		return notify(macAddress, (UUID) null, charUuid, futureData, listener);
+	}
+
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData )
+	{
+		return notify(macAddress, serviceUuid, charUuid, futureData, (ResponseCompletionListener) null);
+	}
+
 	/**
 	 * Use this method to send a notification to the client device with the given mac address to the given characteristic {@link UUID}.
 	 * If there is any kind of "early-out" issue then this method will return a {@link ResponseCompletionListener.ResponseCompletionEvent} in addition
 	 * to passing it through the listener. Otherwise this method will return an instance with {@link ResponseCompletionListener.ResponseCompletionEvent#isNull()} being
 	 * <code>true</code>.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER)
-	ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, byte [] data, ResponseCompletionListener listener )
+	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, ResponseCompletionListener listener )
 	{
-//		m_queue.add(new P_Task_SendNotification(this, device, m_serverNative.getService(serviceUuid).getCharacteristic(charaUuid), data, listener, m_taskStateListener, true));
+		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
 
-		return null;
+		if( !is(macAddress, CONNECTED ) )
+		{
+			final ResponseCompletionListener.ResponseCompletionEvent e = ResponseCompletionListener.ResponseCompletionEvent.EARLY_OUT__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid, futureData, ResponseCompletionListener.Status.NOT_CONNECTED);
+
+			invokeResponseListeners(e, listener);
+
+			return e;
+		}
+
+		final BluetoothGattCharacteristic char_native = getNativeCharacteristic(serviceUuid, charUuid);
+
+		if( char_native == null )
+		{
+			final ResponseCompletionListener.ResponseCompletionEvent e = ResponseCompletionListener.ResponseCompletionEvent.EARLY_OUT__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid, futureData, ResponseCompletionListener.Status.NO_MATCHING_TARGET);
+
+			invokeResponseListeners(e, listener);
+
+			return e;
+		}
+
+		final boolean confirm;
+		final P_Task_SendNotification task = P_Task_SendNotification(this, nativeDevice, serviceUuid, charUuid, futureData, confirm, listener);
+		m_queue.add(task);
+
+		return ResponseCompletionListener.ResponseCompletionEvent.NULL__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid);
 	}
 
 	/**
@@ -1462,5 +1556,135 @@ public class BleServer implements UsesCustomNull
 		{
 			m_mngr.m_defaultServerResponseListener.onEvent(e);
 		}
+	}
+
+	/**
+	 * Returns the native descriptor for the given UUID in case you need lower-level access.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID charUuid, final UUID descUUID)
+	{
+		final UUID serviceUuid = null;
+
+		final BluetoothGattCharacteristic char_native = getNativeCharacteristic(serviceUuid, charUuid);
+
+		if( char_native == null )  return null;
+
+		final BluetoothGattDescriptor desc_native = char_native.getDescriptor(descUUID);
+
+		return desc_native;
+	}
+
+	/**
+	 * Returns the native characteristic for the given UUID in case you need lower-level access.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID characteristicUuid)
+	{
+		final UUID serviceUuid = null;
+
+		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+
+		if (characteristic == null)  return null;
+
+		return characteristic.getGuaranteedNative();
+	}
+
+	/**
+	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
+	{
+		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+
+		if (characteristic == null)  return null;
+
+		return characteristic.getGuaranteedNative();
+	}
+
+	/**
+	 * Returns the native service for the given UUID.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NORMAL)
+	BluetoothGattService getNativeService(final UUID uuid)
+	{
+		final P_Service service = m_serviceMngr.get(uuid);
+
+		if (service == null)  return null;
+
+		return service.getNative();
+	}
+
+	/**
+	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
+	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER)
+	Iterator<BluetoothGattService> getNativeServices()
+	{
+		return m_serviceMngr.getNativeServices();
+	}
+
+	/**
+	 * Convenience overload of {@link #getNativeServices()} that returns a {@link List}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
+	{
+		return m_serviceMngr.getNativeServices_List();
+	}
+
+	/**
+	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
+	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
+	{
+		return m_serviceMngr.getNativeCharacteristics();
+	}
+
+	/**
+	 * Convenience overload of {@link #getNativeCharacteristics()} that returns a {@link List}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
+	{
+		return m_serviceMngr.getNativeCharacteristics_List();
+	}
+
+	/**
+	 * Same as {@link #getNativeCharacteristics()} but you can filter on the service {@link UUID}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service)
+	{
+		return m_serviceMngr.getNativeCharacteristics(service);
+	}
+
+	/**
+	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
+	 * <br><br>
+	 * WARNING: Please see the WARNING for {@link #getNative()}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service)
+	{
+		return m_serviceMngr.getNativeCharacteristics_List(service);
 	}
 }

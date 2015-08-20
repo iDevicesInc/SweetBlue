@@ -45,7 +45,7 @@ abstract class PA_Task_RequiresServerConnection extends PA_Task_RequiresBleOn
 		{
 			final P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
 
-			if( task_cast.m_macAddress != null && task_cast.m_macAddress.equals(m_macAddress) )
+			if( task_cast.m_nativeDevice != null && task_cast.m_nativeDevice.getAddress().equals(m_macAddress) )
 			{
 				if( task_cast.getOrdinal() > this.getOrdinal() )
 				{
@@ -73,7 +73,7 @@ abstract class PA_Task_RequiresServerConnection extends PA_Task_RequiresBleOn
 		{
 			final P_Task_DisconnectServer task_cast = (P_Task_DisconnectServer) task;
 
-			if( task_cast.m_macAddress != null && task_cast.m_macAddress.equals(m_macAddress) )
+			if( task_cast.m_nativeDevice != null && task_cast.m_nativeDevice.getAddress().equals(m_macAddress) )
 			{
 				if( !task_cast.isExplicit() )
 				{
