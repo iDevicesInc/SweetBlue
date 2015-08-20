@@ -5,9 +5,16 @@ import android.bluetooth.BluetoothGattServer;
 
 class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 {
+	private BleServer.ConnectionFailListener.Status m_status = BleServer.ConnectionFailListener.Status.NULL;
+
 	public P_Task_ConnectServer(BleServer server, BluetoothDevice nativeDevice, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
 	{
 		super(server, nativeDevice, listener, explicit, priority);
+	}
+
+	public BleServer.ConnectionFailListener.Status getStatus()
+	{
+		return m_status;
 	}
 
 	@Override public void execute()
@@ -18,6 +25,8 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 		{
 			if( !getServer().m_nativeWrapper.openServer() )
 			{
+				m_status = BleServer.ConnectionFailListener.Status.SERVER_OPENING_FAILED;
+
 				failImmediately();
 
 				return;
@@ -29,6 +38,8 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 		if( server_native /*still*/ == null )
 		{
 			getManager().ASSERT(false, "Server should not be null after successfully opening!");
+
+			m_status = BleServer.ConnectionFailListener.Status.SERVER_OPENING_FAILED;
 
 			failImmediately();
 		}
@@ -42,6 +53,8 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				}
 				else
 				{
+					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
+
 					failImmediately();
 				}
 			}
@@ -50,6 +63,8 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				if( getServer().m_nativeWrapper.isDisconnecting(m_nativeDevice.getAddress()) )
 				{
 					getManager().ASSERT(false, "Server is currently disconnecting a client when we're trying to connect.");
+
+					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
 
 					failImmediately();
 				}
@@ -60,6 +75,8 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				}
 				else if( getServer().m_nativeWrapper.isConnected(m_nativeDevice.getAddress()) )
 				{
+					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
+
 					redundant();
 				}
 				else

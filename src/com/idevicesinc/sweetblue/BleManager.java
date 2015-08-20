@@ -2020,7 +2020,6 @@ public class BleManager
 	public BleServer newServer(final BleServer.RequestListener requestListener)
 	{
 		BleServer bleServer = new BleServer( this );
-		bleServer.openGattServer( m_context, gattServices, listener );
 		m_serverMngr.add( bleServer );
 		return bleServer;
 	}

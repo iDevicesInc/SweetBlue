@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import android.os.Handler;
 
-import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -17,7 +16,7 @@ abstract class PA_Task
 
 	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
-	private final BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new TimeoutRequestEvent();
+	private final BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent();
 
 	
 	private 	  BleDevice m_device;

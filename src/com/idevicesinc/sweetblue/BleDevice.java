@@ -1177,7 +1177,7 @@ public class BleDevice implements UsesCustomNull
 				return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
 			}
 
-			static ConnectionFailEvent DUMMY(BleDevice device, Status reason)
+			static ConnectionFailEvent EARLY_OUT(BleDevice device, Status reason)
 			{
 				return new ConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
 			}
@@ -1213,6 +1213,7 @@ public class BleDevice implements UsesCustomNull
 						return Utils.toString
 						(
 							this.getClass(),
+							"device",				device().getName_debug(),
 							"status", 				status(),
 							"bondFailReason",		device().getManager().getLogger().gattUnbondReason(bondFailReason()),
 							"failureCountSoFar",	failureCountSoFar()
@@ -1223,6 +1224,7 @@ public class BleDevice implements UsesCustomNull
 						return Utils.toString
 						(
 							this.getClass(),
+							"device",				device().getName_debug(),
 							"status", 				status(),
 							"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
 							"failureCountSoFar",	failureCountSoFar()
@@ -3040,7 +3042,7 @@ public class BleDevice implements UsesCustomNull
 			//--- DRK > Making a judgement call that an explicit connect call here means we bail out of the long term reconnect state.
 			stateTracker_main().remove(RECONNECTING_LONG_TERM, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			final ConnectionFailListener.ConnectionFailEvent info_alreadyConnected = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
+			final ConnectionFailListener.ConnectionFailEvent info_alreadyConnected = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
 
 			m_connectionFailMngr.invokeCallback(info_alreadyConnected);
 
@@ -4851,11 +4853,11 @@ public class BleDevice implements UsesCustomNull
 	{
 		if (isNull())
 		{
-			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.NULL_DEVICE);
+			final ConnectionFailListener.ConnectionFailEvent e = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, Status.NULL_DEVICE);
 
-			m_connectionFailMngr.invokeCallback(info);
+			m_connectionFailMngr.invokeCallback(e);
 
-			return info;
+			return e;
 		}
 
 		return null;
@@ -4869,7 +4871,7 @@ public class BleDevice implements UsesCustomNull
 
 		if (isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
-			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
+			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
 
 			m_connectionFailMngr.invokeCallback(info);
 
@@ -5081,7 +5083,7 @@ public class BleDevice implements UsesCustomNull
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(connectionFailStatus, timing, attemptingReconnect, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_EVENT());
+			final Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(connectionFailStatus, timing, attemptingReconnect, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_EVENT());
 
 			if (!attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_TRUE)
 			{

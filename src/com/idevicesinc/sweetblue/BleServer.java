@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattServerCallback;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
@@ -608,61 +609,40 @@ public class BleServer implements UsesCustomNull
 			NULL,
 
 			/**
-			 * A call was made to {@link BleDevice#connect()} or its overloads
-			 * but {@link ConnectionFailEvent#device()} is already
-			 * {@link BleDeviceState#CONNECTING} or {@link BleDeviceState#CONNECTED}.
+			 * A call was made to {@link BleServer#connect(String)} or its overloads
+			 * but {@link ConnectionFailEvent#server()} is already
+			 * {@link BleServerState#CONNECTING} or {@link BleServerState#CONNECTED} for the given client.
 			 */
 			ALREADY_CONNECTING_OR_CONNECTED,
 
 			/**
-			 * {@link BleDevice#connect()} (or various overloads) was called on {@link BleDevice#NULL}.
+			 * {@link BleServer#connect(String)} (or various overloads) was called on {@link BleServer#NULL}.
 			 */
-			NULL_DEVICE,
+			NULL_SERVER,
 
 			/**
-			 * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
-			 * because it (a) {@link Timing#IMMEDIATELY} returned <code>null</code>, (b) {@link Timing#EVENTUALLY} returned a bad
-			 * {@link ConnectionFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
+			 * The call to {@link android.bluetooth.BluetoothManager#openGattServer(Context, BluetoothGattServerCallback)} returned
+			 * a <code>null</code> object instance, so we could not proceed.
 			 */
-			NATIVE_CONNECTION_FAILED,
+			SERVER_OPENING_FAILED,
 
 			/**
-			 * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
-			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
+			 * Couldn't connect through {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
+			 * because it returned <code>false</code>.
 			 */
-			DISCOVERING_SERVICES_FAILED,
+			NATIVE_CONNECTION_FAILED_IMMEDIATELY,
 
 			/**
-			 * {@link BluetoothDevice#createBond()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
-			 * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#bondFailReason()}, or (c) {@link Timing#TIMED_OUT}.
-			 * <br><br>
-			 * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Status} to be applicable.
-			 *
-			 * @see BondListener
+			 * Couldn't connect through {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
+			 * because we eventually got a bad status code through {@link BluetoothGattServerCallback#onConnectionStateChange(BluetoothDevice, int, int)}.
 			 */
-			BONDING_FAILED,
+			NATIVE_CONNECTION_FAILED_EVENTUALLY,
 
 			/**
-			 * The {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Auth)} or
-			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} failed through {@link BleTransaction#fail()}.
-			 *
+			 * Couldn't connect through {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
+			 * because the operation took longer than the time dictated by {@link BleDeviceConfig#timeoutRequestFilter}.
 			 */
-			AUTHENTICATION_FAILED,
-
-			/**
-			 * {@link BleTransaction} instance passed to {@link BleDevice#connect(BleTransaction.Init)} or
-			 * {@link BleDevice#connect(BleTransaction.Auth, BleTransaction.Init)} failed through {@link BleTransaction#fail()}.
-			 *
-			 */
-			INITIALIZATION_FAILED,
-
-			/**
-			 * Remote peripheral randomly disconnected sometime during the connection process. Similar to {@link #NATIVE_CONNECTION_FAILED}
-			 * but only occurs after the device is {@link BleDeviceState#CONNECTED} and we're going through
-			 * {@link BleDeviceState#DISCOVERING_SERVICES}, or {@link BleDeviceState#AUTHENTICATING}, or what have you. It might
-			 * be from the device turning off, or going out of range, or any other random reason.
-			 */
-			ROGUE_DISCONNECT,
+			NATIVE_CONNECTION_TIMED_OUT,
 
 			/**
 			 * {@link BleDevice#disconnect()} was called sometime during the connection process.
@@ -677,8 +657,7 @@ public class BleServer implements UsesCustomNull
 			 * mode, etc., but it's not absolutely *certain* that this behavior
 			 * is consistent across phones. For example there might be a phone
 			 * that kills all connections before going through the ble turn-off
-			 * process, in which case SweetBlue doesn't know the difference and
-			 * {@link #ROGUE_DISCONNECT} will be used.
+			 * process.
 			 */
 			BLE_TURNING_OFF;
 
@@ -718,13 +697,41 @@ public class BleServer implements UsesCustomNull
 			 */
 			public boolean shouldBeReportedToUser()
 			{
-				return	this == NATIVE_CONNECTION_FAILED		||
-						this == DISCOVERING_SERVICES_FAILED		||
-						this == BONDING_FAILED					||
-						this == AUTHENTICATION_FAILED			||
-						this == INITIALIZATION_FAILED			||
-						this == ROGUE_DISCONNECT				 ;
+				return	this == SERVER_OPENING_FAILED					||
+						this == NATIVE_CONNECTION_FAILED_IMMEDIATELY	||
+						this == NATIVE_CONNECTION_FAILED_EVENTUALLY		||
+						this == NATIVE_CONNECTION_TIMED_OUT				 ;
 			}
+		}
+
+		/**
+		 * Describes usage of the <code>autoConnect</code> parameter for
+		 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}.
+		 */
+		@com.idevicesinc.sweetblue.annotations.Advanced
+		public static enum AutoConnectUsage
+		{
+			/**
+			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen, for example after
+			 * SweetBlue considers a connect timed out based on {@link BleManagerConfig#timeoutRequestFilter} but then it somehow
+			 * does come in (shouldn't happen but who knows).
+			 */
+			UNKNOWN,
+
+			/**
+			 * Usage is not applicable to the{@link ConnectionFailEvent#status()} given.
+			 */
+			NOT_APPLICABLE,
+
+			/**
+			 * <code>autoConnect</code> was used.
+			 */
+			USED,
+
+			/**
+			 * <code>autoConnect</code> was not used.
+			 */
+			NOT_USED;
 		}
 
 		/**
@@ -734,10 +741,21 @@ public class BleServer implements UsesCustomNull
 		public static class ConnectionFailEvent implements UsesCustomNull
 		{
 			/**
-			 * The {@link BleDevice} this {@link ConnectionFailEvent} is for.
+			 * The {@link BleServer} this {@link ConnectionFailEvent} is for.
 			 */
-			public BleDevice device() {  return m_device;  }
-			private final BleDevice m_device;
+			public BleServer server() {  return m_server;  }
+			private final BleServer m_server;
+
+			/**
+			 * The native {@link BluetoothDevice} client this {@link ConnectionFailEvent} is for.
+			 */
+			public BluetoothDevice nativeDevice() {  return m_nativeDevice;  }
+			private final BluetoothDevice m_nativeDevice;
+
+			/**
+			 * Returns the mac address of the client that's undergoing the state change with this {@link #server()}.
+			 */
+			public String macAddress()  {  return m_nativeDevice.getAddress();  }
 
 			/**
 			 * General reason why the connection failed.
@@ -769,33 +787,12 @@ public class BleServer implements UsesCustomNull
 			 * If not applicable, for example if {@link ConnectionFailEvent#status()} is {@link Status#EXPLICIT_DISCONNECT}, then this is set to
 			 * {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 * <br><br>
-			 * See {@link ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
+			 * See {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
 			 *
-			 * @see ReadWriteEvent#gattStatus
+			 * @see BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()
 			 */
 			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
-
-			/**
-			 * See {@link BondEvent#failReason()}.
-			 */
-			public int bondFailReason() {  return m_bondFailReason;  }
-			private final int m_bondFailReason;
-
-			/**
-			 * The highest state reached by the latest connection attempt.
-			 */
-			public BleDeviceState highestStateReached_latest() {  return m_highestStateReached_latest;  }
-			private final BleDeviceState m_highestStateReached_latest;
-
-			/**
-			 * The highest state reached during the whole connection attempt cycle.
-			 * <br><br>
-			 * TIP: You can use this to keep the visual feedback in your connection progress UI "bookmarked" while the connection retries
-			 * and goes through previous states again.
-			 */
-			public BleDeviceState highestStateReached_total() {  return m_highestStateReached_total;  }
-			private final BleDeviceState m_highestStateReached_total;
 
 			/**
 			 * Whether <code>autoConnect=true</code> was passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
@@ -804,21 +801,6 @@ public class BleServer implements UsesCustomNull
 			@com.idevicesinc.sweetblue.annotations.Advanced
 			public AutoConnectUsage autoConnectUsage() {  return m_autoConnectUsage;  }
 			private final AutoConnectUsage m_autoConnectUsage;
-
-			/**
-			 * Further timing information for {@link Status#NATIVE_CONNECTION_FAILED}, {@link Status#BONDING_FAILED}, and {@link Status#DISCOVERING_SERVICES_FAILED}.
-			 */
-			public Timing timing() {  return m_timing;  }
-			private final Timing m_timing;
-
-			/**
-			 * If {@link ConnectionFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or
-			 * {@link Status#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called somewhere in or
-			 * downstream of {@link ReadWriteListener#onEvent(ReadWriteEvent)}, then the {@link ReadWriteEvent} passed there will be returned
-			 * here. Otherwise, this will return a {@link ReadWriteEvent} for which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
-			 */
-			public ReadWriteListener.ReadWriteEvent txnFailReason() {  return m_txnFailReason;  }
-			private final ReadWriteListener.ReadWriteEvent m_txnFailReason;
 
 			/**
 			 * Returns a chronologically-ordered list of all {@link ConnectionFailEvent} instances returned through
@@ -830,20 +812,16 @@ public class BleServer implements UsesCustomNull
 			public ConnectionFailEvent[] history()  {  return m_history;  }
 			private final ConnectionFailEvent[] m_history;
 
-			ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason, ArrayList<ConnectionFailEvent> history)
+			ConnectionFailEvent(BleServer server, final BluetoothDevice nativeDevice, Status status, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, AutoConnectUsage autoConnectUsage, ArrayList<ConnectionFailEvent> history)
 			{
-				this.m_device = device;
-				this.m_status = reason;
-				this.m_timing = timing;
+				this.m_server = server;
+				this.m_nativeDevice = nativeDevice;
+				this.m_status = status;
 				this.m_failureCountSoFar = failureCountSoFar;
 				this.m_latestAttemptTime = latestAttemptTime;
 				this.m_totalAttemptTime = totalAttemptTime;
 				this.m_gattStatus = gattStatus;
-				this.m_highestStateReached_latest = highestStateReached != null ? highestStateReached : BleDeviceState.NULL;
-				this.m_highestStateReached_total = highestStateReached_total != null ? highestStateReached_total : BleDeviceState.NULL;
 				this.m_autoConnectUsage = autoConnectUsage;
-				this.m_bondFailReason = bondFailReason;
-				this.m_txnFailReason = txnFailReason;
 
 				if( history == null )
 				{
@@ -859,27 +837,24 @@ public class BleServer implements UsesCustomNull
 
 					this.m_history[this.m_history.length-1] = this;
 				}
-
-				m_device.getManager().ASSERT(highestStateReached != null, "highestState_latest shouldn't be null.");
-				m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
 			}
 
 			private static ConnectionFailEvent[] s_emptyHistory = null;
 			static ConnectionFailEvent[] EMPTY_HISTORY()
 			{
-				s_emptyHistory = s_emptyHistory != null ? s_emptyHistory : new ConnectionFailEvent[]{};
+				s_emptyHistory = s_emptyHistory != null ? s_emptyHistory : new ConnectionFailEvent[0];
 
 				return s_emptyHistory;
 			}
 
-			static ConnectionFailEvent NULL(BleDevice device)
+			static ConnectionFailEvent NULL(BleServer server, BluetoothDevice nativeDevice)
 			{
-				return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
+				return new ConnectionFailEvent(server, nativeDevice, Status.NULL, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AutoConnectUsage.NOT_APPLICABLE, null);
 			}
 
-			static ConnectionFailEvent DUMMY(BleDevice device, Status reason)
+			static ConnectionFailEvent EARLY_OUT(BleServer server, BluetoothDevice nativeDevice, Status status)
 			{
-				return new ConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
+				return new ConnectionFailListener.ConnectionFailEvent(server, nativeDevice, status, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AutoConnectUsage.NOT_APPLICABLE, null);
 			}
 
 			/**
@@ -908,26 +883,15 @@ public class BleServer implements UsesCustomNull
 				}
 				else
 				{
-					if( status() == Status.BONDING_FAILED )
-					{
-						return Utils.toString
-								(
-										this.getClass(),
-										"status", 				status(),
-										"bondFailReason",		device().getManager().getLogger().gattUnbondReason(bondFailReason()),
-										"failureCountSoFar",	failureCountSoFar()
-								);
-					}
-					else
-					{
-						return Utils.toString
-								(
-										this.getClass(),
-										"status", 				status(),
-										"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
-										"failureCountSoFar",	failureCountSoFar()
-								);
-					}
+					return Utils.toString
+					(
+						this.getClass(),
+						"server",				server(),
+						"macAddress",			macAddress(),
+						"status", 				status(),
+						"gattStatus",			server().getManager().getLogger().gattStatus(gattStatus()),
+						"failureCountSoFar",	failureCountSoFar()
+					);
 				}
 			}
 		}
@@ -1027,6 +991,73 @@ public class BleServer implements UsesCustomNull
 		Please onEvent(final ConnectionFailEvent e);
 	}
 
+	/**
+	 * Default implementation of {@link ConnectionFailListener} that attempts a certain number of retries. An instance of this class is set by default
+	 * for all new {@link BleServer} instances using {@link BleServer.DefaultConnectionFailListener#DEFAULT_CONNECTION_FAIL_RETRY_COUNT}.
+	 * Use {@link BleServer#setListener_ConnectionFail(ConnectionFailListener)} to override the default behavior.
+	 *
+	 * @see ConnectionFailListener
+	 * @see BleServer#setListener_ConnectionFail(ConnectionFailListener)
+	 */
+	@Immutable
+	public static class DefaultConnectionFailListener implements ConnectionFailListener
+	{
+		/**
+		 * The default retry count provided to {@link DefaultConnectionFailListener}.
+		 * So if you were to call {@link BleDevice#connect()} and all connections failed, in total the
+		 * library would try to connect {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
+		 *
+		 * @see DefaultConnectionFailListener
+		 */
+		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
+
+		/**
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#retryWithAutoConnectTrue()}.
+		 */
+		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
+
+		/**
+		 * The maximum amount of time to keep trying if connection is failing due to (what usually are) transient bonding failures
+		 */
+		public static final Interval MAX_RETRY_TIME_FOR_BOND_FAILURE = Interval.secs(120.0);
+
+		private final int m_retryCount;
+		private final int m_failCountBeforeUsingAutoConnect;
+
+		public DefaultConnectionFailListener()
+		{
+			this(DEFAULT_CONNECTION_FAIL_RETRY_COUNT, DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT);
+		}
+
+		public DefaultConnectionFailListener(int retryCount, int failCountBeforeUsingAutoConnect)
+		{
+			m_retryCount = retryCount;
+			m_failCountBeforeUsingAutoConnect = failCountBeforeUsingAutoConnect;
+		}
+
+		public int getRetryCount()
+		{
+			return m_retryCount;
+		}
+
+		@Override public Please onEvent(ConnectionFailEvent e)
+		{
+			//--- DRK > Not necessary to check this ourselves, just being explicit.
+			if (!e.status().allowsRetry() )
+			{
+				return Please.doNotRetry();
+			}
+			if (e.failureCountSoFar() <= m_retryCount)
+			{
+				return Please.retry();
+			}
+			else
+			{
+				return Please.doNotRetry();
+			}
+		}
+	}
+
 	private static final ResponseCompletionListener NULL_RESPONSE_LISTENER = new ResponseCompletionListener()
 	{
 		@Override public void onEvent(ResponseCompletionEvent event)
@@ -1043,10 +1074,10 @@ public class BleServer implements UsesCustomNull
 	final P_NativeServerWrapper m_nativeWrapper;
 	private RequestListener m_requestListener;
 	private ResponseCompletionListener m_responseListener_default;
-	private ConnectionFailListener m_connectionFailListener;
 	private final P_Logger m_logger;
 	private final boolean m_isNull;
 	private BleServerConfig m_config = null;
+	private final P_ServerConnectionFailManager m_connectionFailMngr;
 
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -1070,6 +1101,7 @@ public class BleServer implements UsesCustomNull
 			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = null;
 			m_nativeWrapper = new P_NativeServerWrapper(this);
+			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 		}
 		else
 		{
@@ -1078,6 +1110,7 @@ public class BleServer implements UsesCustomNull
 			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = new P_BleServer_Listeners(this);
 			m_nativeWrapper = new P_NativeServerWrapper(this);
+			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 		}
 	}
 
@@ -1137,7 +1170,7 @@ public class BleServer implements UsesCustomNull
 
 	public void setListener_ConnectionFail(final ConnectionFailListener listener)
 	{
-		m_connectionFailListener = listener;
+		m_connectionFailMngr.setListener(listener);
 	}
 
 	public @Nullable(Nullable.Prevalence.NEVER) ResponseCompletionListener.ResponseCompletionEvent notify( final String macAddress, UUID charUuid, byte[] data )
@@ -1215,8 +1248,42 @@ public class BleServer implements UsesCustomNull
 		return m_mngr;
 	}
 
-	public void connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
+	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
 	{
+		return connect(macAddress, null, null);
+	}
+
+	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener)
+	{
+		return connect(macAddress, stateListener, null);
+	}
+
+	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ConnectionFailListener connectionFailListener)
+	{
+		return connect(macAddress, null, connectionFailListener);
+	}
+
+	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
+	{
+		return connect_internal(newNativeDevice(macAddress), stateListener, connectionFailListener);
+	}
+
+	ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice)
+	{
+		return connect_internal(nativeDevice, null, null);
+	}
+
+	ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
+	{
+		if( isNull() )
+		{
+			final ConnectionFailListener.ConnectionFailEvent e = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, nativeDevice, ConnectionFailListener.Status.NULL_SERVER);
+
+			m_connectionFailMngr.invokeCallback(e);
+
+			return e;
+		}
+
 		if( stateListener != null )
 		{
 			setListener_State(stateListener);
@@ -1227,24 +1294,40 @@ public class BleServer implements UsesCustomNull
 			setListener_ConnectionFail(connectionFailListener);
 		}
 
-		if( isAny(macAddress, CONNECTING, CONNECTED) )
+		m_connectionFailMngr.onExplicitConnectionStarted();
+
+		if( isAny(nativeDevice.getAddress(), CONNECTING, CONNECTED) )
 		{
-			return;
+			final ConnectionFailListener.ConnectionFailEvent e = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, nativeDevice, ConnectionFailListener.Status.ALREADY_CONNECTING_OR_CONNECTED);
+
+			m_connectionFailMngr.invokeCallback(e);
+
+			return e;
 		}
 
-		final BluetoothDevice nativeDevice = getManager().getNativeAdapter().getRemoteDevice(macAddress);
 		final P_Task_ConnectServer task = new P_Task_ConnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		m_queue.add(task);
 
-		m_stateTracker.doStateTransition(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		return ConnectionFailListener.ConnectionFailEvent.NULL(this, nativeDevice);
+	}
+
+	private BluetoothDevice newNativeDevice(final String macAddress)
+	{
+		final BleManager mngr = getManager();
+
+		return mngr == null ? null : mngr.newNativeDevice(macAddress);
 	}
 
 	public boolean disconnect(final String macAddress)
 	{
+		m_connectionFailMngr.onExplicitDisconnect();
+
 		if( is(macAddress, DISCONNECTED) )  return false;
 
-		final BleServerState oldConnectionState;
 		final int stateMask = getStateMask(macAddress);
+		final BleServerState oldConnectionState;
 
 		if( BleServerState.CONNECTING.overlaps(stateMask) )
 		{
@@ -1261,11 +1344,16 @@ public class BleServer implements UsesCustomNull
 			return false;
 		}
 
-		final BluetoothDevice nativeDevice = getManager().getNativeAdapter().getRemoteDevice(macAddress);
+		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
 		final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		m_queue.add(task);
 
 		m_stateTracker.doStateTransition(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		if( oldConnectionState == CONNECTING )
+		{
+			m_connectionFailMngr.onNativeConnectFail(nativeDevice, ConnectionFailListener.Status.EXPLICIT_DISCONNECT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		}
 
 		return true;
 	}
@@ -1301,11 +1389,17 @@ public class BleServer implements UsesCustomNull
 		m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTING /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	void onNativeConnectFail(final String macAddress, final int gattStatus)
+	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ConnectionFailListener.Status status, final int gattStatus)
 	{
-		m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTING /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		if( status == ConnectionFailListener.Status.NATIVE_CONNECTION_TIMED_OUT )
+		{
+			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
+			m_queue.add(task);
+		}
 
-		//TODO: Connection fail listener callback
+		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.CONNECTING /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		m_connectionFailMngr.onNativeConnectFail(nativeDevice, status, gattStatus);
 	}
 
 	void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)

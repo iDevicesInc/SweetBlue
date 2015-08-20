@@ -53,9 +53,38 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 						{
 							// nothing to do, but maybe should assert?
 						}
+						else if( state == PE_TaskState.FAILED_IMMEDIATELY )
+						{
+							final BleServer.ConnectionFailListener.Status status = task_cast.getStatus();
+
+							if( status == BleServer.ConnectionFailListener.Status.SERVER_OPENING_FAILED || status == BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY )
+							{
+								m_server.onNativeConnectFail(task_cast.m_nativeDevice, status, task_cast.getGattStatus());
+							}
+							else
+							{
+								m_server.getManager().ASSERT(false, "Didn't expect server failed-immediately status to be something else.");
+
+								m_server.onNativeConnectFail(task_cast.m_nativeDevice, BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY, task_cast.getGattStatus());
+							}
+						}
+						else if( state == PE_TaskState.FAILED )
+						{
+							m_server.onNativeConnectFail(task_cast.m_nativeDevice, BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
+						}
+						else if( state == PE_TaskState.TIMED_OUT )
+						{
+							m_server.onNativeConnectFail(task_cast.m_nativeDevice, BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_TIMED_OUT, task_cast.getGattStatus());
+						}
+						else if( state == PE_TaskState.SOFTLY_CANCELLED )
+						{
+							// do nothing...this was handled upstream back in time
+						}
 						else
 						{
-							m_server.onNativeConnectFail(task_cast.m_nativeDevice.getAddress(), task_cast.getGattStatus());
+							m_server.getManager().ASSERT(false, "Did not expect ending state " + state + " for connect task failure.");
+
+							m_server.onNativeConnectFail(task_cast.m_nativeDevice, BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
 						}
 					}
 				}

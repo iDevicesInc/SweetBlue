@@ -70,13 +70,13 @@ class P_ConnectionFailManager
 	{
 		if( reason_nullable == null )  return PE_Please.DO_NOT_RETRY;
 		
-		long currentTime = System.currentTimeMillis();
+		final long currentTime = System.currentTimeMillis();
 		
 		//--- DRK > Can be null if this is a spontaneous connect (can happen with autoConnect sometimes for example).
 		m_timeOfFirstConnect = m_timeOfFirstConnect != null ? m_timeOfFirstConnect : currentTime;
-		Long timeOfLastConnectFail = m_timeOfLastConnectFail != null ? m_timeOfLastConnectFail : m_timeOfFirstConnect;
-		Interval attemptTime_latest = Interval.delta(timeOfLastConnectFail, currentTime);
-		Interval attemptTime_total = Interval.delta(m_timeOfFirstConnect, currentTime);
+		final Long timeOfLastConnectFail = m_timeOfLastConnectFail != null ? m_timeOfLastConnectFail : m_timeOfFirstConnect;
+		final Interval attemptTime_latest = Interval.delta(timeOfLastConnectFail, currentTime);
+		final Interval attemptTime_total = Interval.delta(m_timeOfFirstConnect, currentTime);
 		
 		m_device.getManager().getLogger().w(reason_nullable+", timing="+timing);
 		
