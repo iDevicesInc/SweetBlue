@@ -22,6 +22,8 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
+import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
@@ -90,9 +92,14 @@ public class BleServer implements UsesCustomNull
 			PREPARED_WRITE,
 
 			/**
-			 * Only for {@link BleServer#notify(String, UUID, byte[])} or overloads.
+			 * Only for {@link BleServer#sendNotification(String, UUID, byte[])} or overloads.
 			 */
-			NOTIFICATION;
+			NOTIFICATION,
+
+			/**
+			 * Only for {@link BleServer#sendIndication(String, UUID, byte[])} or overloads.
+			 */
+			INDICATION;
 
 			/**
 			 * Shorthand for checking if this equals {@link #READ}.
@@ -103,11 +110,11 @@ public class BleServer implements UsesCustomNull
 			}
 
 			/**
-			 * Shorthand for checking if this equals {@link #NOTIFICATION}.
+			 * Shorthand for checking if this equals {@link #NOTIFICATION} or {@link #INDICATION}.
 			 */
-			public boolean isNotification()
+			public boolean isNotificationOrIndication()
 			{
-				return this == NOTIFICATION;
+				return this == NOTIFICATION || this == INDICATION;
 			}
 
 			/**
@@ -198,21 +205,21 @@ public class BleServer implements UsesCustomNull
 
 			/**
 			 * The request id forwarded from the native stack. See various methods of {@link android.bluetooth.BluetoothGattServerCallback} for explanation.
-			 * Not relevant if {@link #type()} {@link Type#isNotification()} is <code>true</code>.
+			 * Not relevant if {@link #type()} {@link Type#isNotificationOrIndication()} is <code>true</code>.
 			 */
 			public int requestId()  {  return m_requestId;  }
 			private final int m_requestId;
 
 			/**
 			 * The offset forwarded from the native stack. See various methods of {@link android.bluetooth.BluetoothGattServerCallback} for explanation.
-			 * Not relevant if {@link #type()} {@link Type#isNotification()} is <code>true</code>.
+			 * Not relevant if {@link #type()} {@link Type#isNotificationOrIndication()} is <code>true</code>.
 			 */
 			public int offset()  {  return m_offset;  }
 			private final int m_offset;
 
 			/**
 			 * Dictates whether a response is needed.
-			 * Not relevant if {@link #type()} {@link Type#isNotification()} is <code>true</code>.
+			 * Not relevant if {@link #type()} {@link Type#isNotificationOrIndication()} is <code>true</code>.
 			 */
 			public boolean responseNeeded()  {  return m_responseNeeded;  }
 			private final boolean m_responseNeeded;
@@ -479,7 +486,7 @@ public class BleServer implements UsesCustomNull
 
 			/**
 			 * Will return true in certain early-out cases when there is no issue and the response can continue.
-			 * See {@link BleServer#notify(String, UUID, UUID, byte[], OutgoingListener)} for more information.
+			 * See {@link BleServer#sendNotification(String, UUID, UUID, byte[], OutgoingListener)} for more information.
 			 */
 			@Override public boolean isNull()
 			{
@@ -1226,39 +1233,129 @@ public class BleServer implements UsesCustomNull
 		m_connectionFailMngr.setListener(listener);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent notify( final String macAddress, UUID charUuid, byte[] data )
+
+
+
+
+
+	/**
+	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID charUuid, byte[] data)
 	{
-		return notify(macAddress, null, charUuid, data, (OutgoingListener) null);
+		return sendIndication(macAddress, null, charUuid, data, (OutgoingListener) null);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent notify( final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
+	/**
+	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
-		return notify(macAddress, (UUID) null, charUuid, data, listener);
+		return sendIndication(macAddress, (UUID) null, charUuid, data, listener);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data )
+	/**
+	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data)
 	{
-		return notify(macAddress, serviceUuid, charUuid, data, (OutgoingListener) null);
+		return sendIndication(macAddress, serviceUuid, charUuid, data, (OutgoingListener) null);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener )
+	/**
+	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
-		return notify(macAddress, serviceUuid, charUuid, new PresentData(data), listener);
+		return sendIndication(macAddress, serviceUuid, charUuid, new PresentData(data), listener);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent notify( final String macAddress, final UUID charUuid, final FutureData futureData)
+	/**
+	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID charUuid, final FutureData futureData)
 	{
-		return notify(macAddress, null, charUuid, futureData, (OutgoingListener) null);
+		return sendIndication(macAddress, null, charUuid, futureData, (OutgoingListener) null);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent notify( final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
+	/**
+	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
-		return notify(macAddress, (UUID) null, charUuid, futureData, listener);
+		return sendIndication(macAddress, (UUID) null, charUuid, futureData, listener);
 	}
 
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent notify( final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData )
+	/**
+	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData)
 	{
-		return notify(macAddress, serviceUuid, charUuid, futureData, (OutgoingListener) null);
+		return sendIndication(macAddress, serviceUuid, charUuid, futureData, (OutgoingListener) null);
+	}
+
+	/**
+	 * Same as {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)} but sends an indication instead.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener)
+	{
+		return sendNotification_private(macAddress, serviceUuid, charUuid, futureData, listener, /*isIndication=*/true);
+	}
+
+	/**
+	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID charUuid, byte[] data)
+	{
+		return sendNotification(macAddress, null, charUuid, data, (OutgoingListener) null);
+	}
+
+	/**
+	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
+	{
+		return sendNotification(macAddress, (UUID) null, charUuid, data, listener);
+	}
+
+	/**
+	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data)
+	{
+		return sendNotification(macAddress, serviceUuid, charUuid, data, (OutgoingListener) null);
+	}
+
+	/**
+	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener)
+	{
+		return sendNotification(macAddress, serviceUuid, charUuid, new PresentData(data), listener);
+	}
+
+	/**
+	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID charUuid, final FutureData futureData)
+	{
+		return sendNotification(macAddress, null, charUuid, futureData, (OutgoingListener) null);
+	}
+
+	/**
+	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
+	{
+		return sendNotification(macAddress, (UUID) null, charUuid, futureData, listener);
+	}
+
+	/**
+	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData)
+	{
+		return sendNotification(macAddress, serviceUuid, charUuid, futureData, (OutgoingListener) null);
 	}
 
 	/**
@@ -1267,8 +1364,12 @@ public class BleServer implements UsesCustomNull
 	 * to passing it through the listener. Otherwise this method will return an instance with {@link OutgoingListener.OutgoingEvent#isNull()} being
 	 * <code>true</code>.
 	 */
+	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener)
+	{
+		return sendNotification_private(macAddress, serviceUuid, charUuid, futureData, listener, /*isIndication=*/false);
+	}
 
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent notify( final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener )
+	private OutgoingListener.OutgoingEvent sendNotification_private(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData, final OutgoingListener listener, final boolean isIndication)
 	{
 		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
 
@@ -1292,8 +1393,8 @@ public class BleServer implements UsesCustomNull
 			return e;
 		}
 
-		final boolean confirm;
-		final P_Task_SendNotification task = P_Task_SendNotification(this, nativeDevice, serviceUuid, charUuid, futureData, confirm, listener);
+		final boolean confirm = isIndication;
+		final P_Task_SendNotification task = new P_Task_SendNotification(this, nativeDevice, serviceUuid, charUuid, futureData, confirm, listener);
 		m_queue.add(task);
 
 		return OutgoingListener.OutgoingEvent.NULL__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid);
@@ -1372,15 +1473,6 @@ public class BleServer implements UsesCustomNull
 
 	ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
-		if( isNull() )
-		{
-			final ConnectionFailListener.ConnectionFailEvent e = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, nativeDevice, ConnectionFailListener.Status.NULL_SERVER);
-
-			m_connectionFailMngr.invokeCallback(e);
-
-			return e;
-		}
-
 		if( stateListener != null )
 		{
 			setListener_State(stateListener);
@@ -1389,6 +1481,15 @@ public class BleServer implements UsesCustomNull
 		if( connectionFailListener != null )
 		{
 			setListener_ConnectionFail(connectionFailListener);
+		}
+
+		if( isNull() )
+		{
+			final ConnectionFailListener.ConnectionFailEvent e = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, nativeDevice, ConnectionFailListener.Status.NULL_SERVER);
+
+			m_connectionFailMngr.invokeCallback(e);
+
+			return e;
 		}
 
 		m_connectionFailMngr.onExplicitConnectionStarted();
@@ -1689,5 +1790,97 @@ public class BleServer implements UsesCustomNull
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service)
 	{
 		return m_serviceMngr.getNativeCharacteristics_List(service);
+	}
+
+
+
+
+
+
+
+
+
+
+	/**
+	 * Offers a more "functional" means of iterating through the internal list of clients instead of
+	 * using {@link #getClients()} or {@link #getClients_List()}.
+	 */
+	public void getClients(final ForEach_Void<String> forEach)
+	{
+	}
+
+	/**
+	 * Same as {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Void)} but will only return clients
+	 * in the given state provided.
+	 */
+	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
+	{
+	}
+
+	/**
+	 * Overload of {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Void)}
+	 * if you need to break out of the iteration at any point.
+	 */
+	public void getClients(final ForEach_Breakable<String> forEach)
+	{
+	}
+
+	/**
+	 * Overload of {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Void, BleServerState)}
+	 * if you need to break out of the iteration at any point.
+	 */
+	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
+	{
+	}
+
+	/**
+	 * Returns all the clients connected or connecting to this server.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients()
+	{
+	}
+
+	/**
+	 * Returns all the clients connected or connecting to this server.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
+	{
+	}
+
+	/**
+	 * Overload of {@link #getClients()} that returns a {@link java.util.List} for you.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<BleDevice> getClients_List()
+	{
+	}
+
+	/**
+	 * Returns the total number of clients this server is connecting or connected to.
+	 */
+	public int getClientCount()
+	{
+	}
+
+	/**
+	 * Returns the number of clients that are in the current state.
+	 */
+	public int getClientCount(final BleServerState state)
+	{
+	}
+
+	/**
+	 * Returns <code>true</code> if this server has any connected or connecting clients.
+	 */
+	public boolean hasClients()
+	{
+		return getClientCount() > 0;
+	}
+
+	/**
+	 * Returns <code>true</code> if this server has any connected or connecting clients.
+	 */
+	public boolean hasClients(final BleServerState state)
+	{
+
 	}
 }

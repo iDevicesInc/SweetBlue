@@ -33,11 +33,6 @@ class P_ServerConnectionFailManager
 		resetFailCount();
 	}
 
-	void onFullyInitialized()
-	{
-		resetFailCount();
-	}
-
 	void onExplicitConnectionStarted()
 	{
 		resetFailCount();

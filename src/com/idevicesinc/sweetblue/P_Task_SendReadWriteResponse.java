@@ -41,7 +41,7 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 
 		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
 
-		this.fail();
+		super.fail();
 	}
 
 	@Override protected void succeed()

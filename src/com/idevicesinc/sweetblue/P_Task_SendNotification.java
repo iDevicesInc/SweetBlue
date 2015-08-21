@@ -3,9 +3,9 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 
-import com.idevicesinc.sweetblue.BleServer.IncomingListener.Result;
 import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.UUID;
 
@@ -80,18 +80,49 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 		}
 	}
 
+	private BleServer.ExchangeListener.Type getType()
+	{
+		return m_confirm ? BleServer.ExchangeListener.Type.INDICATION : BleServer.ExchangeListener.Type.NOTIFICATION;
+	}
+
 	private void fail(final BleServer.OutgoingListener.Status status)
 	{
 		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
 		(
-			getServer(), m_nativeDevice, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, BleServer.ExchangeListener.Type.NOTIFICATION,
+			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
 			BleServer.ExchangeListener.Target.CHARACTERISTIC, BleServer.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
 			/*offset=*/0, /*responseNeeded=*/false, status
 		);
 
 		getServer().invokeOutgoingListeners(e, m_responseListener);
 
-		this.fail();
+		super.fail();
+	}
+
+	@Override protected void succeed()
+	{
+		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
+		(
+			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
+			BleServer.ExchangeListener.Target.CHARACTERISTIC, BleServer.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
+			/*offset=*/0, /*responseNeeded=*/false, BleServer.OutgoingListener.Status.SUCCESS
+		);
+
+		getServer().invokeOutgoingListeners(e, m_responseListener);
+
+		super.succeed();
+	}
+
+	void onNotificationSent(final BluetoothDevice device, final int gattStatus)
+	{
+		if( Utils.isSuccess(gattStatus) )
+		{
+			succeed();
+		}
+		else
+		{
+			fail(BleServer.OutgoingListener.Status.REMOTE_GATT_FAILURE);
+		}
 	}
 
 	public PE_TaskPriority getPriority()

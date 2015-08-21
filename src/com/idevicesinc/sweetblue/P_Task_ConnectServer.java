@@ -53,7 +53,7 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				}
 				else
 				{
-					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
+					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 				}
@@ -64,7 +64,7 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				{
 					getManager().ASSERT(false, "Server is currently disconnecting a client when we're trying to connect.");
 
-					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
+					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 				}
@@ -75,13 +75,15 @@ class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				}
 				else if( getServer().m_nativeWrapper.isConnected(m_nativeDevice.getAddress()) )
 				{
-					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
+					m_status = BleServer.ConnectionFailListener.Status.ALREADY_CONNECTING_OR_CONNECTED;
 
 					redundant();
 				}
 				else
 				{
 					getManager().ASSERT(false, "Native server state didn't match any expected values.");
+
+					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 				}

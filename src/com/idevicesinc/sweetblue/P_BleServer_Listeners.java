@@ -308,6 +308,8 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 				if( attemptResponse )
 				{
 					final P_Task_SendReadWriteResponse responseTask = new P_Task_SendReadWriteResponse(m_server, requestEvent, please);
+
+					m_queue.add(responseTask);
 				}
 				else
 				{
@@ -387,6 +389,8 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 				if( attemptResponse )
 				{
 					final P_Task_SendReadWriteResponse responseTask = new P_Task_SendReadWriteResponse(m_server, requestEvent, please);
+
+					m_queue.add(responseTask);
 				}
 				else
 				{
@@ -426,14 +430,26 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 	{
     }
 
-	@Override public void onNotificationSent( final BluetoothDevice device, final int status )
+	@Override public void onNotificationSent( final BluetoothDevice device, final int gattStatus )
 	{
-		UpdateLoop updater = m_server.getManager().getUpdateLoop();
+		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
 		
-		updater.postIfNeeded(new Runnable()
+		updateLoop.postIfNeeded(new Runnable()
 		{
 			@Override public void run()
 			{
+				final P_Task_SendNotification task = m_queue.getCurrent(P_Task_SendNotification.class, m_server);
+
+				if( task != null && task.m_macAddress.equals(device.getAddress()) )
+				{
+					task.onNotificationSent(device, gattStatus);
+				}
+				else
+				{
+					// DRK > For now not doing anything...the most-likely scenario I can see is if sending out a notification takes
+					// longer than the timeout so we kill the task but then this comes in and there's no task there. Since we already
+					// sent the callback to appland for the timeout it's tricky whether we should send another callback.
+				}
 			}
 		});
     }
