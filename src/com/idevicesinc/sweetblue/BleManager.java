@@ -662,7 +662,7 @@ public class BleManager
 	};
 
 	/**
-	 * Create an instance or retrieve an already-created instance with default configuration options set.
+	 * Create the singleton instance or retrieve the already-created singleton instance with default configuration options set.
 	 * If you call this after you call {@link #get(android.content.Context, BleManagerConfig)} (for example in another
 	 * {@link android.app.Activity}), the {@link BleManagerConfig} originally passed in will be used.
 	 * Otherwise, if a new instance is to be created, this calls {@link #get(android.content.Context, BleManagerConfig)} with a {@link BleManagerConfig}
@@ -683,7 +683,7 @@ public class BleManager
 	}
 
 	/**
-	 * Create an instance or retrieve an already-created instance with custom configuration options set.
+	 * Create the singleton instance or retrieve the already-created singleton instance with custom configuration options set.
 	 * If you call this more than once (for example from a different {@link android.app.Activity}
 	 * with different {@link BleManagerConfig} options set then the newer options overwrite the older options.
 	 */
