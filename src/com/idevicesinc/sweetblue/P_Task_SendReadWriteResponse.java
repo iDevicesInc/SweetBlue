@@ -1,18 +1,15 @@
 package com.idevicesinc.sweetblue;
 
-import android.bluetooth.BluetoothDevice;
-
 import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
-import com.idevicesinc.sweetblue.utils.Interval;
 
 class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection implements I_StateListener
 {
-	private final BleServer.RequestListener.RequestEvent m_requestEvent;
-	private final BleServer.RequestListener.Please m_please;
+	private final BleServer.IncomingListener.IncomingEvent m_requestEvent;
+	private final BleServer.IncomingListener.Please m_please;
 
 	private byte[] m_data_sent = null;
 
-	public P_Task_SendReadWriteResponse(BleServer server, final BleServer.RequestListener.RequestEvent requestEvent, BleServer.RequestListener.Please please)
+	public P_Task_SendReadWriteResponse(BleServer server, final BleServer.IncomingListener.IncomingEvent requestEvent, BleServer.IncomingListener.Please please)
 	{
 		super( server, requestEvent.macAddress());
 
@@ -38,20 +35,20 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 		}
 	}
 
-	private void fail(final BleServer.ResponseCompletionListener.Status status)
+	private void fail(final BleServer.OutgoingListener.Status status)
 	{
-		final BleServer.ResponseCompletionListener.ResponseCompletionEvent e = new BleServer.ResponseCompletionListener.ResponseCompletionEvent(m_requestEvent, data_sent(), status);
+		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), status);
 
-		getServer().invokeResponseListeners(e, m_please.m_responseListener);
+		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
 
 		this.fail();
 	}
 
 	@Override protected void succeed()
 	{
-		final BleServer.ResponseCompletionListener.ResponseCompletionEvent e = new BleServer.ResponseCompletionListener.ResponseCompletionEvent(m_requestEvent, data_sent(), BleServer.ResponseCompletionListener.Status.SUCCESS);
+		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), BleServer.OutgoingListener.Status.SUCCESS);
 
-		getServer().invokeResponseListeners(e, m_please.m_responseListener);
+		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
 
 		super.succeed();
 	}
@@ -60,7 +57,7 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 	{
 		if( !getServer().getNative().sendResponse(m_requestEvent.nativeDevice(), m_requestEvent.requestId(), m_please.m_gattStatus, m_requestEvent.offset(), data_sent()) )
 		{
-			fail(BleServer.ResponseCompletionListener.Status.FAILED_TO_SEND_OUT);
+			fail(BleServer.OutgoingListener.Status.FAILED_TO_SEND_OUT);
 		}
 	}
 

@@ -29,7 +29,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 
-import com.idevicesinc.sweetblue.BleServer.RequestListener;
+import com.idevicesinc.sweetblue.BleServer.IncomingListener;
 import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
@@ -754,8 +754,8 @@ public class BleManager
 	private boolean m_triedToStartScanAfterResume = false;
 
     BleServer.StateListener m_defaultServerStateListener;
-	BleServer.ResponseCompletionListener m_defaultServerResponseListener;
-	BleServer.RequestListener m_defaultServerRequestListener;
+	BleServer.OutgoingListener m_defaultServerOutgoingListener;
+	IncomingListener m_defaultServerIncomingListener;
     final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
@@ -1086,15 +1086,15 @@ public class BleManager
 	/**
 	 * Convenience method to handle server request events at the manager level. The listener provided
 	 * will only get called if the server receiving a request doesn't have a listener provided to
-	 * {@link BleServer#setListener_Request(RequestListener)} . This is unlike the behavior (for example)
-	 * behind {@link #setListener_ResponseCompletion(BleServer.ResponseCompletionListener)} because
-	 * {@link BleServer.RequestListener#onEvent(RequestListener.RequestEvent)} requires a return value.
+	 * {@link BleServer#setListener_Incoming(IncomingListener)} . This is unlike the behavior (for example)
+	 * behind {@link #setListener_Outgoing(BleServer.OutgoingListener)} because
+	 * {@link IncomingListener#onEvent(IncomingListener.IncomingEvent)} requires a return value.
 	 *
-	 * @see BleServer#setListener_Request(BleServer.RequestListener)
+	 * @see BleServer#setListener_Incoming(IncomingListener)
 	 */
-	public void setListener_Request(@Nullable(Prevalence.NORMAL) BleServer.RequestListener listener_nullable)
+	public void setListener_Incoming(@Nullable(Prevalence.NORMAL) IncomingListener listener_nullable)
 	{
-		m_defaultServerRequestListener = listener_nullable;
+		m_defaultServerIncomingListener = listener_nullable;
 	}
 
 	/**
@@ -1110,15 +1110,15 @@ public class BleManager
 	}
 
 	/**
-	 * Convenience method to listen for completion of all responses to all requests received by all
+	 * Convenience method to listen for completion of all outgoing messages from
 	 * {@link BleServer} instances. The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleServer#setListener_ResponseCompletion(BleServer.ResponseCompletionListener)}.
+	 * to {@link BleServer#setListener_Outgoing(BleServer.OutgoingListener)}.
 	 *
-	 * @see BleServer#setListener_ResponseCompletion(BleServer.ResponseCompletionListener)
+	 * @see BleServer#setListener_Outgoing(BleServer.OutgoingListener)
 	 */
-	public void setListener_ResponseCompletion(@Nullable(Prevalence.NORMAL) BleServer.ResponseCompletionListener listener_nullable)
+	public void setListener_Outgoing(@Nullable(Prevalence.NORMAL) BleServer.OutgoingListener listener_nullable)
 	{
-		m_defaultServerResponseListener = listener_nullable;
+		m_defaultServerOutgoingListener = listener_nullable;
 	}
 
 	/**
@@ -2007,17 +2007,17 @@ public class BleManager
 	}
 
 	/**
-	 * Overload of {@link #newServer(RequestListener)} without the {@link RequestListener} parameter.
+	 * Overload of {@link #newServer(IncomingListener)} without the {@link IncomingListener} parameter.
 	 */
 	public BleServer newServer()
 	{
-		return newServer((RequestListener)null);
+		return newServer((IncomingListener)null);
 	}
 
 	/**
 	 *
 	 */
-	public BleServer newServer(final BleServer.RequestListener requestListener)
+	public BleServer newServer(final IncomingListener incomingListener)
 	{
 		BleServer bleServer = new BleServer( this );
 		m_serverMngr.add( bleServer );

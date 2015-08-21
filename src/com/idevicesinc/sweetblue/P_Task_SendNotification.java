@@ -3,11 +3,9 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 
-import com.idevicesinc.sweetblue.BleServer.RequestListener;
-import com.idevicesinc.sweetblue.BleServer.RequestListener.Result;
+import com.idevicesinc.sweetblue.BleServer.IncomingListener.Result;
 import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
 import com.idevicesinc.sweetblue.utils.FutureData;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.UUID;
 
@@ -16,7 +14,7 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 	private final BleServer m_server;
 	private final BluetoothDevice m_nativeDevice;
 
-	private final BleServer.ResponseCompletionListener m_responseListener;
+	private final BleServer.OutgoingListener m_responseListener;
 	private final FutureData m_futureData;
 
 	private final UUID m_charUuid;
@@ -26,7 +24,7 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 
 	private byte[] m_data_sent = null;
 
-	public P_Task_SendNotification(BleServer server, BluetoothDevice device, final UUID serviceUuid, final UUID charUuid, final FutureData futureData, boolean confirm, final BleServer.ResponseCompletionListener responseListener)
+	public P_Task_SendNotification(BleServer server, BluetoothDevice device, final UUID serviceUuid, final UUID charUuid, final FutureData futureData, boolean confirm, final BleServer.OutgoingListener responseListener)
 	{
 		super(server, device.getAddress());
 
@@ -60,38 +58,38 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 
 		if( characteristic == null )
 		{
-			fail(BleServer.ResponseCompletionListener.Status.NO_MATCHING_TARGET);
+			fail(BleServer.OutgoingListener.Status.NO_MATCHING_TARGET);
 		}
 		else
 		{
 			if( !characteristic.setValue(data_sent()) )
 			{
-				fail(BleServer.ResponseCompletionListener.Status.FAILED_TO_SET_VALUE_ON_TARGET);
+				fail(BleServer.OutgoingListener.Status.FAILED_TO_SET_VALUE_ON_TARGET);
 			}
 			else
 			{
 				if( !getServer().getNative().notifyCharacteristicChanged(m_nativeDevice, characteristic, m_confirm) )
 				{
-					fail(BleServer.ResponseCompletionListener.Status.FAILED_TO_SEND_OUT);
+					fail(BleServer.OutgoingListener.Status.FAILED_TO_SEND_OUT);
 				}
 				else
 				{
-					// SUCCESS, at least so far, we will see
+					// SUCCESS, at least so far...we will see
 				}
 			}
 		}
 	}
 
-	private void fail(final BleServer.ResponseCompletionListener.Status status)
+	private void fail(final BleServer.OutgoingListener.Status status)
 	{
-		final BleServer.ResponseCompletionListener.ResponseCompletionEvent e = new BleServer.ResponseCompletionListener.ResponseCompletionEvent
+		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
 		(
 			getServer(), m_nativeDevice, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, BleServer.ExchangeListener.Type.NOTIFICATION,
 			BleServer.ExchangeListener.Target.CHARACTERISTIC, BleServer.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
 			/*offset=*/0, /*responseNeeded=*/false, status
 		);
 
-		getServer().invokeResponseListeners(e, m_responseListener);
+		getServer().invokeOutgoingListeners(e, m_responseListener);
 
 		this.fail();
 	}
