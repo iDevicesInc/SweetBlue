@@ -4777,20 +4777,24 @@ public class BleDevice implements UsesCustomNull
 		return m_serviceMngr;
 	}
 
-	void onNewlyDiscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+	void onNewlyDiscovered(final BluetoothDevice device_native, List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		m_origin_latest = origin;
 
 		clear_discovery();
+
+		m_nativeWrapper.updateNativeDevice(device_native);
 
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
 		stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
 	}
 
-	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+	void onRediscovered(final BluetoothDevice device_native, List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		m_origin_latest = origin;
+
+		m_nativeWrapper.updateNativeDevice(device_native);
 
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 

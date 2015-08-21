@@ -2024,7 +2024,7 @@ public class BleManager
 			newDevice.setName(name);
 		}
 		
-		onDiscovered_wrapItUp(newDevice, /*newlyDiscovered=*/true, null, null, 0, BleDeviceOrigin.EXPLICIT);
+		onDiscovered_wrapItUp(newDevice, device_native, /*newlyDiscovered=*/true, null, null, 0, BleDeviceOrigin.EXPLICIT);
 
 		return newDevice;
 	}
@@ -2278,13 +2278,12 @@ public class BleManager
 
 		List<UUID> services_nullable = null;
 
-		String normalizedDeviceName = "";
+		final String normalizedDeviceName = Utils.normalizeDeviceName(rawDeviceName);
 		
 		final Please please;
 
 		if( device == null )
 		{
-			normalizedDeviceName = Utils.normalizeDeviceName(rawDeviceName);
 	    	services_nullable = Utils_ScanRecord.parseServiceUuids(scanRecord_nullable);
 	    	byte[] scanRecord = scanRecord_nullable != null ? scanRecord_nullable : BleDevice.EMPTY_BYTE_ARRAY;
 	    	String deviceName = rawDeviceName;
@@ -2311,7 +2310,7 @@ public class BleManager
     		newlyDiscovered = true;
     	}
 
-    	onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY);
+    	onDiscovered_wrapItUp(device, device_native, newlyDiscovered, services_nullable, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY);
 	}
 
 	private BleDevice newDevice_private(final BluetoothDevice device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
@@ -2350,14 +2349,14 @@ public class BleManager
 			m_deviceMngr.add(device);
 		}
 		
-		onDiscovered_wrapItUp(device, newlyDiscovered, services_nullable, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY);
+		onDiscovered_wrapItUp(device, device.getNative(), newlyDiscovered, services_nullable, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY);
 	}
 
-    private void onDiscovered_wrapItUp(final BleDevice device, final boolean newlyDiscovered, final List<UUID> services_nullable, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin)
+    private void onDiscovered_wrapItUp(final BleDevice device, final BluetoothDevice device_native, final boolean newlyDiscovered, final List<UUID> services_nullable, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin)
     {
     	if( newlyDiscovered )
     	{
-    		device.onNewlyDiscovered(services_nullable, rssi, scanRecord_nullable, origin);
+    		device.onNewlyDiscovered(device_native, services_nullable, rssi, scanRecord_nullable, origin);
 
     		if( m_discoveryListener != null )
     		{
@@ -2367,7 +2366,7 @@ public class BleManager
     	}
     	else
     	{
-    		device.onRediscovered(services_nullable, rssi, scanRecord_nullable, BleDeviceOrigin.FROM_DISCOVERY);
+    		device.onRediscovered(device_native, services_nullable, rssi, scanRecord_nullable, BleDeviceOrigin.FROM_DISCOVERY);
 
     		if( m_discoveryListener != null )
     		{
