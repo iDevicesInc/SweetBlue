@@ -34,6 +34,21 @@ class P_NativeServerWrapper
 		}
 	}
 
+	public void closeServer()
+	{
+		if( m_native == null )
+		{
+			m_mngr.ASSERT(false, "Native server is already closed and nulled out.");
+
+			return;
+		}
+
+		m_native.clearServices();
+		m_native.close();
+
+		m_native = null;
+	}
+
 	public boolean openServer()
 	{
 		if( m_native != null )

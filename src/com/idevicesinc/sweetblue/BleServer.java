@@ -704,7 +704,7 @@ public class BleServer implements UsesCustomNull
 			NATIVE_CONNECTION_TIMED_OUT,
 
 			/**
-			 * {@link BleDevice#disconnect()} was called sometime during the connection process.
+			 * {@link BleServer#disconnect()} was called sometime during the connection process.
 			 */
 			EXPLICIT_DISCONNECT,
 
@@ -1138,6 +1138,7 @@ public class BleServer implements UsesCustomNull
 	private final boolean m_isNull;
 	private BleServerConfig m_config = null;
 	private final P_ServerConnectionFailManager m_connectionFailMngr;
+	private final P_ClientManager m_clientMngr;
 
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -1503,6 +1504,8 @@ public class BleServer implements UsesCustomNull
 			return e;
 		}
 
+		m_clientMngr.onConnecting(nativeDevice.getAddress());
+
 		final P_Task_ConnectServer task = new P_Task_ConnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 		m_queue.add(task);
 
@@ -1562,12 +1565,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void disconnect()
 	{
-		if( stateListener != null )
-		{
-			setListener_State(stateListener);
-		}
-
-		m_queue.add(new P_Task_DisconnectServer(this, m_taskStateListener));
+		m_nativeWrapper.closeServer();
 	}
 
 	@Override public boolean isNull()
@@ -1577,11 +1575,15 @@ public class BleServer implements UsesCustomNull
 
 	void onNativeConnecting_implicit(final String macAddress)
 	{
+		m_clientMngr.onConnecting(macAddress);
+
 		m_stateTracker.doStateTransition(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	void onNativeConnect(final String macAddress, final boolean explicit)
 	{
+		m_clientMngr.onConnected(macAddress);
+
 		final ChangeIntent intent = explicit ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
 
 		m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTING /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -1807,6 +1809,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach)
 	{
+		m_clientMngr.getClients(forEach);
 	}
 
 	/**
@@ -1815,6 +1818,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
 	{
+		m_clientMngr.getClients(forEach, state);
 	}
 
 	/**
@@ -1823,6 +1827,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach)
 	{
+		m_clientMngr.getClients(forEach);
 	}
 
 	/**
@@ -1831,34 +1836,47 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
 	{
+		m_clientMngr.getClients(forEach, state);
 	}
 
 	/**
-	 * Returns all the clients connected or connecting to this server.
+	 * Returns all the clients connected or connecting (or previously so) to this server.
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients()
 	{
+		return m_clientMngr.getClients();
 	}
 
 	/**
-	 * Returns all the clients connected or connecting to this server.
+	 * Returns all the clients connected or connecting (or previously so) to this server.
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
 	{
+		return m_clientMngr.getClients(state);
 	}
 
 	/**
 	 * Overload of {@link #getClients()} that returns a {@link java.util.List} for you.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<BleDevice> getClients_List()
+	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List()
 	{
+		return m_clientMngr.getClients_List();
 	}
 
 	/**
-	 * Returns the total number of clients this server is connecting or connected to.
+	 * Overload of {@link #getClients()} that returns a {@link java.util.List} for you.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState state)
+	{
+		return m_clientMngr.getClients_List(state);
+	}
+
+	/**
+	 * Returns the total number of clients this server is connecting or connected to (or previously so).
 	 */
 	public int getClientCount()
 	{
+		return m_clientMngr.getClientCount();
 	}
 
 	/**
@@ -1866,10 +1884,11 @@ public class BleServer implements UsesCustomNull
 	 */
 	public int getClientCount(final BleServerState state)
 	{
+		return m_clientMngr.getClientCount(state);
 	}
 
 	/**
-	 * Returns <code>true</code> if this server has any connected or connecting clients.
+	 * Returns <code>true</code> if this server has any connected or connecting clients (or previously so).
 	 */
 	public boolean hasClients()
 	{
@@ -1877,10 +1896,23 @@ public class BleServer implements UsesCustomNull
 	}
 
 	/**
-	 * Returns <code>true</code> if this server has any connected or connecting clients.
+	 * Returns <code>true</code> if this server has any clients in the given state.
 	 */
-	public boolean hasClients(final BleServerState state)
+	public boolean hasClient(final BleServerState state)
 	{
+		return getClientCount(state) > 0;
+	}
 
+	/**
+	 * Returns <code>true</code> if this server has any clients in any of the given states.
+	 */
+	public boolean hasClient(final BleServerState ... states)
+	{
+		for( int i = 0; i < states.length; i++ )
+		{
+			if( hasClient(states[i]) )  return true;
+		}
+
+		return false;
 	}
 }
