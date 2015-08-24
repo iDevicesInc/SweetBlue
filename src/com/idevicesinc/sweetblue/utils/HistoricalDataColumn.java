@@ -18,7 +18,7 @@ public enum HistoricalDataColumn
 	}
 
 	/**
-	 * Gets the name of this database column - you can use this for example to do raw queries through {@link com.idevicesinc.sweetblue.BleDevice#queryHistoricalData(UUID, String)}.
+	 * Gets the name of this database column - you can use this for example to do raw queries through {@link com.idevicesinc.sweetblue.BleDevice#queryHistoricalData(String)}.
 	 */
 	public String getColumnName()
 	{
@@ -27,7 +27,7 @@ public enum HistoricalDataColumn
 
 	/**
 	 * Gets the name of this database column - you can use this for example to help navigate the {@link android.database.Cursor}
-	 * returned by {@link com.idevicesinc.sweetblue.BleDevice#queryHistoricalData(UUID, String)}.
+	 * returned by {@link com.idevicesinc.sweetblue.BleDevice#queryHistoricalData(String)}.
 	 */
 	public int getColumnIndex()
 	{

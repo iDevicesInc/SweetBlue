@@ -13,6 +13,7 @@ import com.idevicesinc.sweetblue.utils.EpochTimeRange;
 import com.idevicesinc.sweetblue.utils.ForEach_Returning;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
+import com.idevicesinc.sweetblue.utils.UpdateLoop;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,6 +28,7 @@ class P_HistoricalDataManager
 
 	private final HashMap<UUID, Backend_HistoricalDataList> m_lists = new HashMap<UUID, Backend_HistoricalDataList>();
 	private final BleDevice m_device;
+	private final UpdateLoop m_updateLoop = UpdateLoop.newAnonThreadLoop();
 
 	private BleDevice.HistoricalDataLoadListener m_defaultListener = null;
 
@@ -74,7 +76,7 @@ class P_HistoricalDataManager
 				if( tableExists )
 				{
 					final String uuidName = m_device.getManager().getLogger().charName(uuid);
-					final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_device.getMacAddress(), uuid, uuidName, tableExists);
+					final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_updateLoop, m_device.getMacAddress(), uuid, uuidName, tableExists);
 					m_lists.put(uuid, newList);
 
 					return newList;
@@ -97,7 +99,7 @@ class P_HistoricalDataManager
 				final boolean tableExists = getDatabase().doesDataExist(m_device.getMacAddress(), uuid);
 				final String uuidName = m_device.getManager().getLogger().charName(uuid);
 
-				final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_device.getMacAddress(), uuid, uuidName, tableExists);
+				final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_updateLoop, m_device.getMacAddress(), uuid, uuidName, tableExists);
 				m_lists.put(uuid, newList);
 
 				return newList;
@@ -216,6 +218,14 @@ class P_HistoricalDataManager
 				getDatabase().delete_singleUuid_inRange(m_device.getMacAddress(), uuid, range, limit);
 			}
 		}
+	}
+
+	// GOOD
+	public void clearEverything()
+	{
+		delete_all(EpochTimeRange.FROM_MIN_TO_MAX, Long.MAX_VALUE, false);
+
+		m_previousUuidsWithDataAdded.clearAll();
 	}
 
 	//GOOD
@@ -537,5 +547,10 @@ class P_HistoricalDataManager
 	public String getTableName(final UUID uuid)
 	{
 		return getDatabase().getTableName(m_device.getMacAddress(), uuid);
+	}
+
+	public void post(final Runnable runnable)
+	{
+		m_updateLoop.forcePost(runnable);
 	}
 }

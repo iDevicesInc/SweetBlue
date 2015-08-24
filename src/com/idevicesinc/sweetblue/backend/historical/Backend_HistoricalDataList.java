@@ -7,6 +7,7 @@ import com.idevicesinc.sweetblue.utils.ForEach_Returning;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
+import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 
 import java.util.Iterator;
@@ -21,12 +22,13 @@ public interface Backend_HistoricalDataList
 	public static int LOAD_STATE__NOT_LOADED	= 0;
 	public static int LOAD_STATE__LOADING		= 1;
 	public static int LOAD_STATE__LOADED		= 2;
+
 	public interface AsyncLoadCallback
 	{
 		void onDone();
 	}
 
-	void init(final Backend_HistoricalDatabase database, final String macAddress, final UUID uuid, final String uuidName, final boolean hasExistingTable);
+	void init(final Backend_HistoricalDatabase database, final UpdateLoop updateLoop, final String macAddress, final UUID uuid, final String uuidName, final boolean hasExistingTable);
 
 	void add_single(final HistoricalData historicalData, final BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel logChoice, final long limit);
 

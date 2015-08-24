@@ -1,13 +1,9 @@
 package com.idevicesinc.sweetblue;
 
-import java.util.UUID;
-
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -28,7 +24,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		m_type = type;
 	}
 	
-	private ReadWriteEvent newResult(Status status, int gattStatus, int rssi)
+	private ReadWriteEvent newEvent(Status status, int gattStatus, int rssi)
 	{
 		return new ReadWriteEvent(getDevice(), m_type, /*rssi=*/rssi, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
@@ -39,7 +35,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		
 		if( !super_isExecutable )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 		
 		return super_isExecutable;
@@ -47,7 +43,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	private void fail(Status status, int gattStatus)
 	{
-		getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(status, gattStatus, 0));
+		getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(status, gattStatus, 0));
 		
 		this.fail();
 	}
@@ -62,7 +58,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	private void succeed(int gattStatus, int rssi)
 	{
-		ReadWriteEvent result = newResult(Status.SUCCESS, gattStatus, rssi);
+		ReadWriteEvent result = newEvent(Status.SUCCESS, gattStatus, rssi);
 		
 		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
 		 
@@ -87,11 +83,11 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		if( state == PE_TaskState.TIMED_OUT )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newResult(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
+			getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
 		}
 	}
 	

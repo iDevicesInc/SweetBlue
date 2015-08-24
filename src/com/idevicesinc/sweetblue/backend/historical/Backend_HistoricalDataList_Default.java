@@ -11,6 +11,7 @@ import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
 import com.idevicesinc.sweetblue.utils.SingleElementIterator;
+import com.idevicesinc.sweetblue.utils.UpdateLoop;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,7 +34,7 @@ public class Backend_HistoricalDataList_Default implements Backend_HistoricalDat
 	{
 	}
 
-	@Override public void init(final Backend_HistoricalDatabase database, final String macAddress, final UUID uuid, final String uuidName, final boolean hasExistingTable)
+	@Override public void init(final Backend_HistoricalDatabase database, final UpdateLoop updateLoop, final String macAddress, final UUID uuid, final String uuidName, final boolean hasExistingTable)
 	{
 		m_database = database;
 		m_macAddress = macAddress;

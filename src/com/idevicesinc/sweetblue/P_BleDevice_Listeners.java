@@ -454,14 +454,15 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 	
 	@Override public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
 	{
-		final UUID uuid = characteristic.getUuid();
+		final UUID characteristicUuid = characteristic.getUuid();
+		final UUID serviceUuid = characteristic.getService().getUuid();
 		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
 		
 		m_device.getManager().getUpdateLoop().postIfNeeded(new SynchronizedRunnable()
 		{
 			@Override public void run_nested()
 			{
-				m_device.getPollManager().onCharacteristicChangedFromNativeNotify(uuid, value);
+				m_device.getPollManager().onCharacteristicChangedFromNativeNotify(serviceUuid, characteristicUuid, value);
 			}
 		});
 	}

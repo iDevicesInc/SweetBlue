@@ -616,7 +616,7 @@ public class BleDeviceConfig implements Cloneable
 	public static class DefaultReconnectPersistFilter implements ReconnectPersistFilter
 	{
 		public static final Interval SHORT_TERM_TIMEOUT = Interval.FIVE_SECS;
-		public static final Interval LONG_TERM_TIMEOUT = Interval.INFINITE;
+		public static final Interval LONG_TERM_TIMEOUT = Interval.mins(5);
 		
 		private final Interval m_timeout;
 		
@@ -906,7 +906,17 @@ public class BleDeviceConfig implements Cloneable
 
 		static enum PersistenceLevel
 		{
-			NONE, MEMORY, DISK
+			NONE, MEMORY, DISK, BOTH;
+
+			public boolean includesMemory()
+			{
+				return this == MEMORY || this == BOTH;
+			}
+
+			public boolean includesDisk()
+			{
+				return this == DISK || this == BOTH;
+			}
 		}
 
 		/**
@@ -988,7 +998,7 @@ public class BleDeviceConfig implements Cloneable
 			}
 
 			/**
-			 * Will log the data to disk, currently through SQLite. Data is preserved across app sessions
+			 * Will log the data to disk only, currently through SQLite. Data is preserved across app sessions
 			 * until (a) the user uninstalls the app, (b) the user clears the app's data, or (c) you call
 			 * one of the {@link com.idevicesinc.sweetblue.BleDevice#clearHistoricalData()} overloads.
 			 */
@@ -1003,6 +1013,14 @@ public class BleDeviceConfig implements Cloneable
 			public static Please logToMemory()
 			{
 				return new Please(PersistenceLevel.MEMORY);
+			}
+
+			/**
+			 * Will log the data to both memory and disk - combination of {@link #logToMemory()} and {@link #logToDisk()}.
+			 */
+			public static Please logToMemoryAndDisk()
+			{
+				return new Please(PersistenceLevel.BOTH);
 			}
 
 			/**
@@ -1084,7 +1102,7 @@ public class BleDeviceConfig implements Cloneable
 	 * even across app restarts.
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Boolean saveNameChangesToDisk						= false;
+	public Boolean saveNameChangesToDisk						= true;
 	
 	/**
 	 * Default is <code>true</code> - whether to automatically get services immediately after a {@link BleDevice} is

@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 class P_NativeDeviceWrapper
 {
 	private final BleDevice m_device;
-	private final BluetoothDevice m_native;
+	private BluetoothDevice m_device_native;
 	private	BluetoothGatt m_gatt;
 	private final String m_address;
 	private final P_Logger m_logger;
@@ -28,8 +28,8 @@ class P_NativeDeviceWrapper
 	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String name_normalized, String name_native)
 	{
 		m_device = device;
-		m_native = device_native;
-		m_address = m_native == null || m_native.getAddress() == null ? BleDevice.NULL_MAC() : m_native.getAddress();
+		m_device_native = device_native;
+		m_address = m_device_native == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
 		m_logger = m_device.getManager().getLogger();
 		m_mngr = m_device.getManager();
 
@@ -37,7 +37,7 @@ class P_NativeDeviceWrapper
 
 		//--- DRK > Manager can be null for BleDevice.NULL.
 		final boolean hitDiskForOverrideName = true;
-		final String name_disk = m_mngr == null ? m_mngr.m_diskOptionsMngr.loadName(m_device.getMacAddress(), hitDiskForOverrideName) : null;
+		final String name_disk = m_mngr != null ? m_mngr.m_diskOptionsMngr.loadName(m_address, hitDiskForOverrideName) : null;
 
 		if( name_disk != null )
 		{
@@ -46,7 +46,18 @@ class P_NativeDeviceWrapper
 		else
 		{
 			setName_override(m_name_native);
+			final boolean saveToDisk = BleDeviceConfig.bool(m_device.conf_device().saveNameChangesToDisk, m_device.conf_mngr().saveNameChangesToDisk);
+			m_mngr.m_diskOptionsMngr.saveName(m_address, m_name_native, saveToDisk);
 		}
+	}
+
+	void updateNativeDevice(final BluetoothDevice device_native)
+	{
+		final String name_native = device_native.getName();
+
+		updateNativeName(name_native);
+
+		m_device_native = device_native;
 	}
 
 	void setName_override(final String name)
@@ -62,6 +73,11 @@ class P_NativeDeviceWrapper
 		updateName(name_native_override, name_normalized);
 	}
 
+	void clearName_override()
+	{
+		setName_override(m_name_native);
+	}
+
 	private void updateName(String name_native, String name_normalized)
 	{
 		name_native = name_native != null ? name_native : "";
@@ -72,14 +88,14 @@ class P_NativeDeviceWrapper
 		String[] address_split = m_address.split(":");
 		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
 		String debugName = m_name_normalized.length() == 0 ? "<no_name>" : m_name_normalized;
-		m_name_debug = m_native != null ? debugName + "_" + lastFourOfMac : debugName;
+		m_name_debug = m_device_native != null ? debugName + "_" + lastFourOfMac : debugName;
 	}
 	
 	public String getAddress()
 	{
-		if( m_native != null )
+		if( m_device_native != null )
 		{
-			m_device.getManager().ASSERT(m_address.equals(m_native.getAddress()));
+			m_device.getManager().ASSERT(m_address.equals(m_device_native.getAddress()));
 		}
 		
 		return m_address;
@@ -113,7 +129,7 @@ class P_NativeDeviceWrapper
 		}
 		else
 		{
-			return m_native;
+			return m_device_native;
 		}
 	}
 	
@@ -165,7 +181,7 @@ class P_NativeDeviceWrapper
 	
 	public int getNativeBondState()
 	{
-		final int bondState_native = m_native != null ? m_native.getBondState() : BluetoothDevice.BOND_NONE;
+		final int bondState_native = m_device_native != null ? m_device_native.getBondState() : BluetoothDevice.BOND_NONE;
 		
 		return bondState_native;		
 	}
@@ -205,7 +221,7 @@ class P_NativeDeviceWrapper
 	
 	public int getNativeConnectionState()
 	{
-		return m_device.getManager().getNative().getConnectionState( m_native, BluetoothGatt.GATT_SERVER );
+		return m_device.getManager().getNative().getConnectionState(m_device_native, BluetoothGatt.GATT_SERVER );
 	}
 	
 	public int getConnectionState()

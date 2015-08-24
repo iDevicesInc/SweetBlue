@@ -9,6 +9,7 @@ import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase_Default;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.EpochTimeRange;
+import com.idevicesinc.sweetblue.utils.UpdateLoop;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
@@ -17,7 +18,7 @@ class PU_HistoricalData
 {
 	private static final BleDeviceConfig.HistoricalDataLogFilter.Please DO_NOT_LOG = BleDeviceConfig.HistoricalDataLogFilter.Please.doNotLog();
 
-	static Backend_HistoricalDataList newList(final Backend_HistoricalDatabase database, final String macAddress, UUID uuid, final String uuidName, final boolean doesTableExist)
+	static Backend_HistoricalDataList newList(final Backend_HistoricalDatabase database, final UpdateLoop updateLoop, final String macAddress, UUID uuid, final String uuidName, final boolean doesTableExist)
 	{
 		final Class<? extends Backend_HistoricalDataList> listClass = Backend_Modules.HISTORICAL_DATA_LIST;
 
@@ -39,7 +40,7 @@ class PU_HistoricalData
 
 		newList = newList != null ? newList : new Backend_HistoricalDataList_Default();
 
-		newList.init(database, macAddress, uuid, uuidName, doesTableExist);
+		newList.init(database, updateLoop, macAddress, uuid, uuidName, doesTableExist);
 
 		return newList;
 	}

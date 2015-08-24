@@ -39,6 +39,11 @@ class P_TaskQueue
 	{
 		return m_currentOrdinal;
 	}
+
+	public PA_Task peek()
+	{
+		return m_queue.size() > 0 ? m_queue.get(0) : null;
+	}
 	
 	private void initHandler()
 	{
@@ -409,7 +414,15 @@ class P_TaskQueue
 	private void clearQueueOf$removeFromQueue(int index)
 	{
 		PA_Task task = m_queue.remove(index);
-		task.setEndingState(PE_TaskState.CLEARED_FROM_QUEUE);
+
+		if( task.wasSoftlyCancelled() )
+		{
+			task.setEndingState(PE_TaskState.SOFTLY_CANCELLED);
+		}
+		else
+		{
+			task.setEndingState(PE_TaskState.CLEARED_FROM_QUEUE);
+		}
 		
 		print();
 	}

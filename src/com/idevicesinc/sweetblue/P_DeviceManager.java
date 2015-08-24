@@ -453,7 +453,7 @@ class P_DeviceManager
 				
 				if( !device.is(BleDeviceState.DISCOVERED) )
 				{
-					device.onNewlyDiscovered(null, device.getRssi(), null, device.getOrigin());
+					device.onNewlyDiscovered(device.getNative(), null, device.getRssi(), null, device.getOrigin());
 					
 					if( m_mngr.m_discoveryListener != null )
 		    		{
@@ -564,7 +564,7 @@ class P_DeviceManager
 
 						if( scanTime < Interval.secs(minScanTimeToInvokeUndiscovery) )  continue;
 						
-						boolean purgeable = device.getOrigin() != BleDeviceOrigin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
+						final boolean purgeable = device.getOrigin() != BleDeviceOrigin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
 						
 						if( purgeable )
 						{

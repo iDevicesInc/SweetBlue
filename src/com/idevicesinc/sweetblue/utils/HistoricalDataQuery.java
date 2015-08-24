@@ -270,15 +270,7 @@ public class HistoricalDataQuery
 			return e_earlyOut;
 		}
 
-		return go_private();
-	}
-
-	private BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent go_private()
-	{
-		final String query = makeQuery();
-		final Cursor cursor = m_database.query(query);
-
-		return new BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent(m_device, getUuidOrInvalid(), cursor, BleDevice.HistoricalDataQueryListener.Status.SUCCESS, query);
+		return m_device.queryHistoricalData(makeQuery());
 	}
 
 	public void go(final BleDevice.HistoricalDataQueryListener listener)
@@ -292,21 +284,6 @@ public class HistoricalDataQuery
 			return;
 		}
 
-		new Thread()
-		{
-			@Override public void run()
-			{
-				final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = go_private();
-
-				m_device.getManager().getUpdateLoop().postIfNeeded(new Runnable()
-				{
-					@Override public void run()
-					{
-						listener.onEvent(e);
-					}
-				});
-			}
-
-		}.start();
+		m_device.queryHistoricalData(makeQuery(), listener);
 	}
 }

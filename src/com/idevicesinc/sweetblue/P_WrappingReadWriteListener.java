@@ -19,7 +19,7 @@ class P_WrappingReadWriteListener extends PA_CallbackWrapper implements ReadWrit
 		m_listener = listener;
 	}
 	
-	protected void onResult(final ReadWriteListener listener, final ReadWriteEvent result)
+	protected void onEvent(final ReadWriteListener listener, final ReadWriteEvent result)
 	{
 		if( listener == null )  return;
 		
@@ -41,6 +41,6 @@ class P_WrappingReadWriteListener extends PA_CallbackWrapper implements ReadWrit
 	
 	@Override public void onEvent(final ReadWriteEvent result)
 	{
-		onResult(m_listener, result);
+		onEvent(m_listener, result);
 	}
 }

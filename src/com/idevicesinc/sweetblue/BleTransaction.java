@@ -11,7 +11,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * provide subclass instances to the various overloads of {@link BleDevice#connect()}. Normally in your {@link #start(BleDevice)}
  * method you then do some reads/writes and call {@link #succeed()} or {@link #fail()} depending on the {@link Status} returned.
  * <br><br>
- * NOTE: Nested subclasses here are only tagging and don't yet provide any differing contracts or implementations. 
+ * NOTE: Nested subclasses here are only meant for tagging to enforce type-correctness and don't yet provide any differing contracts or implementations.
  * 
  * @see BleDevice#performOta(BleTransaction.Ota)
  * @see BleDevice#connect(BleTransaction.Auth)

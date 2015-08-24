@@ -77,6 +77,14 @@ public class Interval extends Unit<Interval>
 	{
 		return new Interval(value, (long) (value*1000));
 	}
+
+	/**
+	 * Returns a new {@link Interval} representing the given number of minutes.
+	 */
+	public static Interval mins(final int value)
+	{
+		return secs(value*60);
+	}
 	
 	/**
 	 * Returns a new {@link Interval} representing the given number of milliseconds.
@@ -150,9 +158,9 @@ public class Interval extends Unit<Interval>
 	/**
 	 * Same as {@link #isDisabled(Interval)}.
 	 */
-	public static boolean isDisabled(double interval)
+	public static boolean isDisabled(Double interval_nullable)
 	{
-		return interval <= 0.0;
+		return interval_nullable == null || interval_nullable <= 0.0;
 	}
 	
 	@Override public String toString()

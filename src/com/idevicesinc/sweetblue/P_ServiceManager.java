@@ -14,10 +14,8 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
-import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.FutureData;
 
 class P_ServiceManager
 {
@@ -42,7 +40,7 @@ class P_ServiceManager
 		return m_serviceMap.get(uuid);
 	}
 	
-	public P_Characteristic getCharacteristic(UUID uuid)
+	public P_Characteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID characteristicUuid)
 	{
 //		int properties = BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE;
 //		int permissions = BluetoothGattCharacteristic.PERMISSION_WRITE;
@@ -56,7 +54,10 @@ class P_ServiceManager
 		for( int i = 0; i < m_serviceList.size(); i++ )
 		{
 			P_Service ithService = m_serviceList.get(i);
-			P_Characteristic characteristic = ithService.get(uuid);
+
+			if( serviceUuid_nullable != null && !ithService.getUuid().equals(serviceUuid_nullable) )  continue;
+
+			P_Characteristic characteristic = ithService.get(characteristicUuid);
 			
 			if( characteristic != null )
 			{
@@ -109,20 +110,20 @@ class P_ServiceManager
 		}
 	}
 	
-	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetResult(Type type, byte[] data, UUID uuid)
+	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetEvent(Type type, byte[] data, UUID serviceUuid, UUID characteristicUuid)
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
-		return new ReadWriteEvent(m_device, uuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0);
+		return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, Target.CHARACTERISTIC, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0);
 	}
 	
-	BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutResult(UUID uuid, byte[] data, BleDevice.ReadWriteListener.Type type, final Target target)
+	BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, FutureData futureData, BleDevice.ReadWriteListener.Type type, final Target target)
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
 		if( m_device.isNull() )
 		{
-			ReadWriteEvent result = new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.NULL_DEVICE, gattStatus, 0.0, 0.0);
+			ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, futureData.getData(), Status.NULL_DEVICE, gattStatus, 0.0, 0.0);
 			
 			return result;
 		}
@@ -131,7 +132,7 @@ class P_ServiceManager
 		{
 			if( type != BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION && type != BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION)
 			{				
-				ReadWriteEvent result = new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.NOT_CONNECTED, gattStatus, 0.0, 0.0);
+				ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, futureData.getData(), Status.NOT_CONNECTED, gattStatus, 0.0, 0.0);
 				
 				return result;
 			}
@@ -143,11 +144,11 @@ class P_ServiceManager
 		
 		if( target == Target.RSSI )  return null;
 		
-		final P_Characteristic characteristic = getCharacteristic(uuid);
+		final P_Characteristic characteristic = getCharacteristic(serviceUuid, characteristicUuid);
 		
 		if( characteristic == null )
 		{
-			return newNoMatchingTargetResult(type, data, uuid);
+			return newNoMatchingTargetEvent(type, futureData.getData(), serviceUuid, characteristicUuid);
 		}
 		
 		final BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
@@ -155,19 +156,19 @@ class P_ServiceManager
 		
 		if( char_native == null )
 		{
-			return newNoMatchingTargetResult(type, data, uuid);
+			return newNoMatchingTargetEvent(type, futureData.getData(), serviceUuid, characteristicUuid);
 		}
 		
 		if( type != null && type.isWrite() )
 		{
-			if( data == null )
+			if( futureData == null )
 			{
-				return new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.NULL_DATA, gattStatus, 0.0, 0.0);
+				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, (byte[]) null, Status.NULL_DATA, gattStatus, 0.0, 0.0);
 			}
-			else if( data.length == 0 )
-			{
-				return new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
-			}
+//			else if( data.length == 0 )
+//			{
+//				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, data, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
+//			}
 		}
 		
 		int property = getProperty(type);
@@ -175,7 +176,7 @@ class P_ServiceManager
 		if( (char_native.getProperties() & property) == 0x0 )
 		{
 			//TODO: Use correct gatt status even though we never reach gatt layer?
-			ReadWriteEvent result = new ReadWriteEvent(m_device, uuid, null, type, target, data, Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0);
+			ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, futureData.getData(), Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0);
 			
 			return result;
 		}

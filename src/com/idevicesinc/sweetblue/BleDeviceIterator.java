@@ -7,7 +7,6 @@ import java.util.NoSuchElementException;
 
 /**
  * Implementation of {@link Iterator} for {@link BleDevice} instances, returned from {@link BleManager#getDevices()} and its overloads.
- * {@link #remove()} has no effect, for now at least.
  */
 public class BleDeviceIterator implements Iterator<BleDevice>
 {
