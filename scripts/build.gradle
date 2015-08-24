@@ -245,6 +245,17 @@ task updateReadmeVersion << {
     }
 }
 
+def checkStyleWarningsFile = 'build/reports/checkstyle/checkstyle.xml'
+
+task verifyNoCheckstyleWarnings(type: GradleBuild) {
+    doLast {
+        File warningsFile = file(checkStyleWarningsFile)
+        if (warningsFile.exists() && warningsFile.text.contains("<error ")) {
+            throw new GradleException("Checkstyle detected warnings! For more info, check $warningsFile")
+        }
+    }
+}
+
 // Perform full build, but do not zip anything, and do not clean folders
 task bundleNoZip(dependsOn: [copyAndRenameJars, updateReadmeVersion])
 
