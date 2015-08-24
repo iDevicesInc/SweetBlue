@@ -44,22 +44,18 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 	
 	protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
-		getDevice().invokeReadWriteCallback(m_readWriteListener, newReadWriteEvent(status, gattStatus, target, getServiceUuid(), charUuid, descUuid));
-		
 		this.fail();
+
+		getDevice().invokeReadWriteCallback(m_readWriteListener, newReadWriteEvent(status, gattStatus, target, getServiceUuid(), charUuid, descUuid));
 	}
-	
-	@Override protected boolean isExecutable()
+
+	@Override protected void onNotExecutable()
 	{
-		boolean super_isExecutable = super.isExecutable();
-		
-		if( !super_isExecutable )
-		{
-			final ReadWriteEvent event = newReadWriteEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getServiceUuid(), getCharUuid(), getDescriptorUuid());
-			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
-		}
-		
-		return super_isExecutable;
+		super.onNotExecutable();
+
+		final ReadWriteEvent event = newReadWriteEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getServiceUuid(), getCharUuid(), getDescriptorUuid());
+
+		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 	}
 	
 	protected boolean acknowledgeCallback(int status)

@@ -57,12 +57,12 @@ class P_Task_Read extends PA_Task_ReadOrWrite
 	
 	private void succeed(byte[] value, Target target)
 	{
-		ReadWriteEvent result = newReadWriteEvent(value, target, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-		getDevice().addReadTime(result.time_total().secs());
-		
-		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
-		 
 		super.succeed();
+
+		final ReadWriteEvent event = newReadWriteEvent(value, target, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+		getDevice().addReadTime(event.time_total().secs());
+		
+		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 	}
 	
 	public void onCharacteristicRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus)

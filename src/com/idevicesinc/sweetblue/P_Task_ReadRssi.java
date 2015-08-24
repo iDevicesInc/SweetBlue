@@ -28,24 +28,19 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	{
 		return new ReadWriteEvent(getDevice(), m_type, /*rssi=*/rssi, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
-	
-	@Override protected boolean isExecutable()
+
+	@Override protected void onNotExecutable()
 	{
-		boolean super_isExecutable = super.isExecutable();
-		
-		if( !super_isExecutable )
-		{
-			getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
-		}
-		
-		return super_isExecutable;
+		super.onNotExecutable();
+
+		getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0));
 	}
 	
 	private void fail(Status status, int gattStatus)
 	{
-		getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(status, gattStatus, 0));
-		
 		this.fail();
+
+		getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(status, gattStatus, 0));
 	}
 
 	@Override public void execute()
@@ -58,11 +53,11 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	private void succeed(int gattStatus, int rssi)
 	{
-		ReadWriteEvent result = newEvent(Status.SUCCESS, gattStatus, rssi);
-		
-		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
-		 
 		super.succeed();
+
+		final ReadWriteEvent event = newEvent(Status.SUCCESS, gattStatus, rssi);
+		
+		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 	}
 	
 	public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)

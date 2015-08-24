@@ -134,11 +134,11 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	
 	@Override protected void succeed()
 	{
-		ReadWriteEvent result = newReadWriteEvent(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getDefaultTarget(), getServiceUuid(), getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-		getDevice().addWriteTime(result.time_total().secs());
-		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
-		 
 		super.succeed();
+
+		final ReadWriteEvent event = newReadWriteEvent(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getDefaultTarget(), getServiceUuid(), getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+		getDevice().addWriteTime(event.time_total().secs());
+		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 	}
 	
 	public void onCharacteristicWrite(final BluetoothGatt gatt, final UUID uuid, final int gattStatus)
