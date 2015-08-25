@@ -174,7 +174,7 @@ def buildSampleTask(buildDir) {
 // Copy the new sweetblue jar, sourcejar, and javadoc jars to each sample AS
 // project, and build 
 task copyAndRenameJars(dependsOn: copySamples) << {
-    File sampleDir = new File("${STAGE}/samples/samples")    
+    File sampleDir = new File("${BUNDLE_FOLDER}/samples/")    
     FileCollection collection = files { sampleDir.listFiles() }
     collection.each { File file ->
         copy {
@@ -245,10 +245,26 @@ task updateReadmeVersion << {
     }
 }
 
-// Perform full build, but do not zip anything, and do not clean folders
-task bundleNoZip(dependsOn: [copyAndRenameJars, updateReadmeVersion])
+def checkStyleWarningsFile = 'build/reports/checkstyle/checkstyle.xml'
 
-// Convenience task to run all zip operations
-task fullBuild(dependsOn: [copyAndRenameJars, zipJar, updateReadmeVersion])
+task verifyNoCheckstyleWarnings(type: GradleBuild) {
+    doLast {
+        File warningsFile = file(checkStyleWarningsFile)
+        if (warningsFile.exists() && warningsFile.text.contains("<error ")) {
+            throw new GradleException("Checkstyle detected warnings! For more info, check $warningsFile")
+        }
+    }
+}
 
-fullBuild.finalizedBy cleanFolders
+def buildAliases = [
+    'bundleNoZip' : ['copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'updateReadmeVersion' ],
+    'fullBuild' : [ 'copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'zipJar', 'updateReadmeVersion', 'cleanFolders' ]    
+]
+
+def expandedTaskList = []
+
+gradle.startParameter.taskNames.each {
+    expandedTaskList << (buildAliases[it] ? buildAliases[it] : it)
+}
+
+gradle.startParameter.taskNames = expandedTaskList.flatten()

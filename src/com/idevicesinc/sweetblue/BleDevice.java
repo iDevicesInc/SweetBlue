@@ -170,7 +170,10 @@ public class BleDevice implements UsesCustomNull
 			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means for
 			 * example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
 			 * returned a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted,
-			 * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}.
+			 * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}. {@link ReadWriteEvent#gattStatus()}
+			 * will most likely be non-zero, and you can check the static fields in {@link BleStatuses} for more information.
+			 *
+			 * @see ReadWriteEvent#gattStatus()
 			 */
 			REMOTE_GATT_FAILURE,
 
@@ -4104,6 +4107,19 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	/**
+	 * Overload of {@link #clearHistoricalData(UUID)} that just calls that method multiple times.
+	 */
+	public void clearHistoricalData(final UUID ... uuids)
+	{
+		for( int i = 0; i < uuids.length; i++ )
+		{
+			final UUID ith = uuids[i];
+
+			clearHistoricalData(ith);
+		}
+	}
+
+	/**
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID}.
 	 *
@@ -4124,9 +4140,9 @@ public class BleDevice implements UsesCustomNull
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void clearHistoricalData(final UUID characteristicUuid, final EpochTimeRange range)
+	public void clearHistoricalData(final UUID uuid, final EpochTimeRange range)
 	{
-		clearHistoricalData(characteristicUuid, range, Long.MAX_VALUE);
+		clearHistoricalData(uuid, range, Long.MAX_VALUE);
 	}
 
 	/**
@@ -4137,11 +4153,11 @@ public class BleDevice implements UsesCustomNull
 	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void clearHistoricalData(final UUID characteristicUuid, final EpochTimeRange range, final long count)
+	public void clearHistoricalData(final UUID uuid, final EpochTimeRange range, final long count)
 	{
 		if( isNull() ) return;
 
-		m_historicalDataMngr.delete(characteristicUuid, range, count, /*memoryOnly=*/false);
+		m_historicalDataMngr.delete(uuid, range, count, /*memoryOnly=*/false);
 	}
 
 	/**
@@ -4641,7 +4657,13 @@ public class BleDevice implements UsesCustomNull
 	public boolean performOta(final BleTransaction.Ota txn)
 	{
 		if( performTransaction_earlyOut(txn) )		return false;
-		if (is(PERFORMING_OTA))						return false;
+
+		if ( is(PERFORMING_OTA) )
+		{
+			//--- DRK > The strictest and maybe best way to early out here, but as far as expected behavior this may be better.
+			//---		In the end it's a judgement call, what's best API-wise with user expectations.
+			m_txnMngr.cancelOtaTransaction();
+		}
 
 		m_txnMngr.startOta(txn);
 
@@ -4673,7 +4695,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		if ( txn == null )							return true;
 		if (isNull())								return true;
-		if (!is(INITIALIZED))						return true;
+		if (!is_internal(INITIALIZED))				return true;
 		if ( m_txnMngr.getCurrent() != null )		return true;
 
 		return false;
@@ -4743,9 +4765,9 @@ public class BleDevice implements UsesCustomNull
 	}
 
 	// PA_StateTracker getStateTracker(){ return m_stateTracker; }
-	BleTransaction getFirmwareUpdateTxn()
+	BleTransaction getOtaTxn()
 	{
-		return m_txnMngr.m_firmwareUpdateTxn;
+		return m_txnMngr.m_otaTxn;
 	}
 
 	P_PollManager getPollManager()
@@ -4758,20 +4780,24 @@ public class BleDevice implements UsesCustomNull
 		return m_serviceMngr;
 	}
 
-	void onNewlyDiscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+	void onNewlyDiscovered(final BluetoothDevice device_native, List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		m_origin_latest = origin;
 
 		clear_discovery();
+
+		m_nativeWrapper.updateNativeDevice(device_native);
 
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
 		stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
 	}
 
-	void onRediscovered(List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+	void onRediscovered(final BluetoothDevice device_native, List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		m_origin_latest = origin;
+
+		m_nativeWrapper.updateNativeDevice(device_native);
 
 		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
 
@@ -5341,6 +5367,8 @@ public class BleDevice implements UsesCustomNull
 		//--- DRK > Fringe case bail out in case user calls disconnect() in state change for short term reconnect.
 		if (isDisconnectedAfterReconnectingShortTermStateCallback)
 		{
+			m_txnMngr.cancelAllTransactions();
+			
 			return;
 		}
 
@@ -5354,6 +5382,8 @@ public class BleDevice implements UsesCustomNull
 			{
 				softlyCancelTasks(overrideOrdinal);
 			}
+
+			m_txnMngr.cancelAllTransactions();
 
 			return;
 		}

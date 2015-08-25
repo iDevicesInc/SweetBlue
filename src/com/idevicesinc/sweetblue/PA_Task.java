@@ -354,8 +354,8 @@ abstract class PA_Task
 						}
 						else
 						{
-							failWithoutRetry();
-							
+							onNotExecutable();
+
 							return;
 						}
 					}
@@ -378,6 +378,11 @@ abstract class PA_Task
 			
 			this.update(timeStep);
 		}
+	}
+
+	protected void onNotExecutable()
+	{
+		failWithoutRetry();
 	}
 	
 	protected void update(double timeStep){}

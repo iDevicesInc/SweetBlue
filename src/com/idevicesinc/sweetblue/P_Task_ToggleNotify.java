@@ -71,7 +71,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	{
 		super.execute();
 		
-		BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
+		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
 		
 		if( char_native == null )
 		{
@@ -87,7 +87,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			return;
 		}
 		
-		BluetoothGattDescriptor descriptor = char_native.getDescriptor(m_descUuid);
+		final BluetoothGattDescriptor descriptor = char_native.getDescriptor(m_descUuid);
 		
 		if( descriptor == null )
 		{
@@ -118,17 +118,16 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	@Override protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
+		super.fail(status, gattStatus, target, charUuid, descUuid);
+
 		if( m_enable )
 		{
 			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), charUuid, E_NotifyState.NOT_ENABLED);
 		}
-		
-		super.fail(status, gattStatus, target, charUuid, descUuid);
 	}
 	
 	@Override protected void succeed()
 	{
-		ReadWriteEvent result = newReadWriteEvent(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, Target.DESCRIPTOR, getServiceUuid(), getCharUuid(), m_descUuid);
 //		getDevice().addWriteTime(result.totalTime);
 		
 		if( m_enable )
@@ -139,10 +138,11 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		{
 			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), E_NotifyState.NOT_ENABLED);
 		}
-		
-		getDevice().invokeReadWriteCallback(m_readWriteListener, result);
-		 
+
 		super.succeed();
+
+		final ReadWriteEvent event = newReadWriteEvent(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, Target.DESCRIPTOR, getServiceUuid(), getCharUuid(), m_descUuid);
+		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 	}
 
 	public void onDescriptorWrite(BluetoothGatt gatt, UUID descUuid, int status)
@@ -162,7 +162,9 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			if( !isConnected && Utils.isSuccess(status) )
 			{
 				//--- DRK > Trying to catch a case that I currently can't explain any other way.
-				getManager().ASSERT(false, "Successfully enabled notification but device isn't connected.");
+				//--- DRK > UPDATE: Nevermind, must have been tired when I wrote this assert, device can be
+				//---			explicitly disconnected while the notify enable write is out and this can get tripped.
+//				getManager().ASSERT(false, "Successfully enabled notification but device isn't connected.");
 
 				fail(Status.CANCELLED_FROM_DISCONNECT, status, Target.DESCRIPTOR, getCharUuid(), descUuid);
 			}

@@ -81,7 +81,7 @@ class P_TransactionManager
 					m_device.disconnectWithReason(Status.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
-			else if (txn == m_device.getFirmwareUpdateTxn())
+			else if (txn == m_device.getOtaTxn())
 			{
 //				m_device.m_txnMngr.clearFirmwareUpdateTxn();
 				E_Intent intent = E_Intent.UNINTENTIONAL;
@@ -107,7 +107,7 @@ class P_TransactionManager
 	
 	BleTransaction.Auth m_authTxn;
 	BleTransaction.Init m_initTxn;
-	BleTransaction.Ota m_firmwareUpdateTxn;
+	BleTransaction.Ota m_otaTxn;
 	BleTransaction m_anonTxn;
 	
 	BleTransaction m_current;
@@ -197,21 +197,21 @@ class P_TransactionManager
 //	{
 //		synchronized (m_threadLock)
 //		{
-//			if( m_firmwareUpdateTxn != null )
+//			if( m_otaTxn != null )
 //			{
-//				m_firmwareUpdateTxn.deinit();
-//				m_firmwareUpdateTxn = null;
+//				m_otaTxn.deinit();
+//				m_otaTxn = null;
 //			}
 //		}
 //	}
 	
-	void cancelFirmwareUpdateTxn()
+	void cancelOtaTransaction()
 	{
 		synchronized (m_threadLock)
 		{
-			if( m_firmwareUpdateTxn != null && m_firmwareUpdateTxn.isRunning() )
+			if( m_otaTxn != null && m_otaTxn.isRunning() )
 			{
-				m_firmwareUpdateTxn.cancel();
+				m_otaTxn.cancel();
 			}
 		}
 	}
@@ -230,7 +230,7 @@ class P_TransactionManager
 				m_initTxn.cancel();
 			}
 			
-			cancelFirmwareUpdateTxn();
+			cancelOtaTransaction();
 			
 			if( m_anonTxn != null && m_anonTxn.isRunning() )
 			{
@@ -262,9 +262,9 @@ class P_TransactionManager
 				m_initTxn.update_internal(timeStep);
 			}
 			
-			if( m_firmwareUpdateTxn != null && m_firmwareUpdateTxn.isRunning() )
+			if( m_otaTxn != null && m_otaTxn.isRunning() )
 			{
-				m_firmwareUpdateTxn.update_internal(timeStep);
+				m_otaTxn.update_internal(timeStep);
 			}
 			
 			if( m_anonTxn != null && m_anonTxn.isRunning() )
@@ -320,14 +320,14 @@ class P_TransactionManager
 	{
 		synchronized (m_threadLock)
 		{
-//			m_device.getManager().ASSERT(m_firmwareUpdateTxn == null);
+//			m_device.getManager().ASSERT(m_otaTxn == null);
 			
-			m_firmwareUpdateTxn = txn;
-			m_firmwareUpdateTxn.init(m_device, m_txnEndListener);
+			m_otaTxn = txn;
+			m_otaTxn.init(m_device, m_txnEndListener);
 			
 			m_device.stateTracker_main().append(PERFORMING_OTA, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			
-			start(m_firmwareUpdateTxn);
+			start(m_otaTxn);
 		}
 	}
 	
