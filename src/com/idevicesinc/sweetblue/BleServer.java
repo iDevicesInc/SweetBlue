@@ -1163,6 +1163,7 @@ public class BleServer implements UsesCustomNull
 			m_listeners = null;
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
+			m_clientMngr = new P_ClientManager(this);
 		}
 		else
 		{
@@ -1172,6 +1173,7 @@ public class BleServer implements UsesCustomNull
 			m_listeners = new P_BleServer_Listeners(this);
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
+			m_clientMngr = new P_ClientManager(this);
 		}
 	}
 
