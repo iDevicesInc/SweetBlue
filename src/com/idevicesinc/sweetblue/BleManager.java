@@ -1186,8 +1186,8 @@ public class BleManager
 	}
 
 	/**
-	 * Same as {@link #stopPeriodicScan()} but will also unregister any {@link ScanFilter} provided
-	 * through {@link #startPeriodicScan(Interval, Interval, ScanFilter)} or other overloads.
+	 * Same as {@link #stopPeriodicScan()} but will also unregister any {@link BleManagerConfig.ScanFilter} provided
+	 * through {@link #startPeriodicScan(Interval, Interval, BleManagerConfig.ScanFilter)} or other overloads.
 	 */
 	public void stopPeriodicScan(final ScanFilter filter)
 	{
