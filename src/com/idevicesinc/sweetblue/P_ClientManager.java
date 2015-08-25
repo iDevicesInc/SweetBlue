@@ -39,14 +39,10 @@ class P_ClientManager
 //		m_allConnectingOrConnectedClients.remove(macAddress);
 //	}
 
-	public void getClients(final ForEach_Void<String> forEach)
-	{
-		getClients_private(forEach, getClients());
-	}
 
-	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
+	public void getClients(final ForEach_Void<String> forEach, final int stateMask)
 	{
-		getClients_private(forEach, getClients(state));
+		getClients_private(forEach, getClients(stateMask));
 	}
 
 	private void getClients_private(final ForEach_Void<String> forEach, final Iterator<String> iterator)
@@ -59,14 +55,9 @@ class P_ClientManager
 		}
 	}
 
-	public void getClients(final ForEach_Breakable<String> forEach)
+	public void getClients(final ForEach_Breakable<String> forEach, final int stateMask)
 	{
-		getClients_private(forEach, getClients());
-	}
-
-	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
-	{
-		getClients_private(forEach, getClients(state));
+		getClients_private(forEach, getClients(stateMask));
 	}
 
 	private void getClients_private(final ForEach_Breakable<String> forEach, final Iterator<String> iterator)
@@ -84,22 +75,12 @@ class P_ClientManager
 		}
 	}
 
-	public Iterator<String> getClients()
+	public Iterator<String> getClients(final int stateMask)
 	{
-		return new ClientIterator(null);
+		return new ClientIterator(stateMask);
 	}
 
-	public Iterator<String> getClients(final BleServerState state)
-	{
-		return new ClientIterator(state);
-	}
-
-	public List<String> getClients_List()
-	{
-		return getClientCount() == 0 ? newEmptyList() : new ArrayList(m_allConnectingOrConnectedClients);
-	}
-
-	public List<String> getClients_List(final BleServerState state)
+	public List<String> getClients_List(final int stateMask)
 	{
 		if( getClientCount() == 0 )
 		{
@@ -107,7 +88,7 @@ class P_ClientManager
 		}
 		else
 		{
-			final Iterator<String> iterator = getClients(state);
+			final Iterator<String> iterator = getClients(stateMask);
 			final ArrayList<String> toReturn = new ArrayList<String>();
 
 			while( iterator.hasNext() )
@@ -124,9 +105,9 @@ class P_ClientManager
 		return m_allConnectingOrConnectedClients.size();
 	}
 
-	public int getClientCount(final BleServerState state)
+	public int getClientCount(final int stateMask)
 	{
-		final Iterator<String> iterator = getClients(state);
+		final Iterator<String> iterator = getClients(stateMask);
 		int count = 0;
 
 		while( iterator.hasNext() )
@@ -146,16 +127,16 @@ class P_ClientManager
 
 	private class ClientIterator implements Iterator<String>
 	{
-		private final BleServerState m_state_nullable;
+		private final int m_stateMask;
 
 		private String m_next = null;
 		private String m_returned = null;
 
-		private final Iterator<String> m_all = getClients();
+		private final Iterator<String> m_all = m_allConnectingOrConnectedClients.iterator();
 
-		ClientIterator(final BleServerState state_nullable)
+		ClientIterator(final int stateMask)
 		{
-			m_state_nullable = state_nullable;
+			m_stateMask = stateMask;
 
 			findNext();
 		}
@@ -166,7 +147,7 @@ class P_ClientManager
 			{
 				final String client = m_all.next();
 
-				if( m_state_nullable != null && m_server.is(client, m_state_nullable) )
+				if( m_stateMask != 0x0 && m_server.is(client, m_stateMask) )
 				{
 					m_next = client;
 

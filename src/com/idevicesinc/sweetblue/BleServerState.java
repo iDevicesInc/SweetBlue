@@ -12,8 +12,8 @@ import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
- * An enumeration of the various states that a {@link BleServer} can be in.
- * Note that unlike a {@link BleDevice}, a {@link BleServer} can only be in one state at a time.
+ * An enumeration of the various states that a {@link BleServer} can be in on a per-client (mac address) basis.
+ * Note that unlike a {@link BleDevice}, a {@link BleServer} can only be in one state at a time for a given client
  * Use {@link BleServer#setListener_State(BleServer.StateListener)} to be notified of state changes.
  * 
  * @see BleServer.StateListener
@@ -35,6 +35,17 @@ public enum BleServerState implements State
 	CONNECTED;
 
 
+	public static int toBits(BleServerState ... states)
+	{
+		int bits = 0x0;
+
+		for( int i = 0; i < states.length; i++ )
+		{
+			bits |= states[i].bit();
+		}
+
+		return bits;
+	}
 	
 	@Override public boolean overlaps(int mask)
 	{

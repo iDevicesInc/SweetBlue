@@ -5,6 +5,9 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.List;
 
+import static com.idevicesinc.sweetblue.BleServerState.CONNECTED;
+import static com.idevicesinc.sweetblue.BleServerState.CONNECTING;
+
 class P_ServerStateTracker
 {
 	private BleServer.StateListener m_stateListener;
@@ -12,14 +15,32 @@ class P_ServerStateTracker
 	
 	P_ServerStateTracker(BleServer server)
 	{
-//		super(BleServerState.values(), /*trackTimes=*/true);
-		
 		m_server = server;
 	}
 	
 	public void setListener(BleServer.StateListener listener)
 	{
 		m_stateListener = listener;
+	}
+
+	BleServerState getOldConnectionState(final String macAddress)
+	{
+		final int stateMask = getStateMask(macAddress);
+
+		if( BleServerState.CONNECTING.overlaps(stateMask) )
+		{
+			return CONNECTING;
+		}
+		else if( BleServerState.CONNECTED.overlaps(stateMask) )
+		{
+			return CONNECTED;
+		}
+		else
+		{
+			m_server.getManager().ASSERT(false, "Expected to be connecting or connected for an explicit disconnect.");
+
+			return BleServerState.NULL;
+		}
 	}
 
 	void doStateTransition(final String macAddress, final BleServerState oldState, final BleServerState newState, final State.ChangeIntent intent, final int gattStatus)

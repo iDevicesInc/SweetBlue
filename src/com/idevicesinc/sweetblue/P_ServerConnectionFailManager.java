@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 class P_ServerConnectionFailManager
 {
@@ -12,39 +13,41 @@ class P_ServerConnectionFailManager
 
 	final BleServer m_server;
 
-	private int m_failCount = 0;
-
-	private Long m_timeOfFirstConnect = null;
-	private Long m_timeOfLastConnectFail = null;
-
-	private final ArrayList<BleServer.ConnectionFailListener.ConnectionFailEvent> m_history = new ArrayList<BleServer.ConnectionFailListener.ConnectionFailEvent>();
-
 	private BleServer.ConnectionFailListener m_connectionFailListener = DEFAULT_CONNECTION_FAIL_LISTENER;
+
+	private final HashMap<String, P_ServerConnectionFailEntry> m_entries = new HashMap<>();
 
 	P_ServerConnectionFailManager(final BleServer server)
 	{
 		m_server = server;
-
-		resetFailCount();
 	}
 
-	void onExplicitDisconnect()
+	private P_ServerConnectionFailEntry getOrCreateEntry(final String macAddress)
 	{
-		resetFailCount();
+		final P_ServerConnectionFailEntry entry_nullable = m_entries.get(macAddress);
+
+		if( entry_nullable != null )
+		{
+			return entry_nullable;
+		}
+		else
+		{
+			final P_ServerConnectionFailEntry entry = new P_ServerConnectionFailEntry(this);
+
+			m_entries.put(macAddress, entry);
+
+			return entry;
+		}
 	}
 
-	void onExplicitConnectionStarted()
+	void onExplicitDisconnect(final String macAddress)
 	{
-		resetFailCount();
-
-		m_timeOfFirstConnect = System.currentTimeMillis();
+		getOrCreateEntry(macAddress).onExplicitDisconnect();
 	}
 
-	private void resetFailCount()
+	void onExplicitConnectionStarted(final String macAddress)
 	{
-		m_failCount = 0;
-		m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
-		m_history.clear();
+		getOrCreateEntry(macAddress).onExplicitConnectionStarted();
 	}
 
 	public void setListener(BleServer.ConnectionFailListener listener)
@@ -52,36 +55,14 @@ class P_ServerConnectionFailManager
 		m_connectionFailListener = listener;
 	}
 
+	public BleServer.ConnectionFailListener getListener()
+	{
+		return m_connectionFailListener;
+	}
+
 	void onNativeConnectFail(final BluetoothDevice nativeDevice, final BleServer.ConnectionFailListener.Status status, final int gattStatus)
 	{
-		final long currentTime = System.currentTimeMillis();
-
-		//--- DRK > Can be null if this is a spontaneous connect (can happen with autoConnect sometimes for example).
-		m_timeOfFirstConnect = m_timeOfFirstConnect != null ? m_timeOfFirstConnect : currentTime;
-		final Long timeOfLastConnectFail = m_timeOfLastConnectFail != null ? m_timeOfLastConnectFail : m_timeOfFirstConnect;
-		final Interval attemptTime_latest = Interval.delta(timeOfLastConnectFail, currentTime);
-		final Interval attemptTime_total = Interval.delta(m_timeOfFirstConnect, currentTime);
-
-		m_failCount++;
-
-		final BleServer.ConnectionFailListener.ConnectionFailEvent e = new BleServer.ConnectionFailListener.ConnectionFailEvent
-		(
-			m_server, nativeDevice, status, m_failCount, attemptTime_latest, attemptTime_total,
-			gattStatus, BleServer.ConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, m_history
-		);
-
-		m_history.add(e);
-
-		final BleServer.ConnectionFailListener.Please.PE_Please ePlease = invokeCallback(e);
-
-		if( ePlease.isRetry() )
-		{
-			m_server.connect_internal(nativeDevice);
-		}
-		else
-		{
-			resetFailCount();
-		}
+		getOrCreateEntry(nativeDevice.getAddress()).onNativeConnectFail(nativeDevice, status, gattStatus);
 	}
 
 	BleServer.ConnectionFailListener.Please.PE_Please invokeCallback(final BleServer.ConnectionFailListener.ConnectionFailEvent e)

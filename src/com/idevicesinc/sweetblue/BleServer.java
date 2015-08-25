@@ -33,6 +33,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import static com.idevicesinc.sweetblue.BleServerState.*;
+import static com.idevicesinc.sweetblue.BleServerState.NULL;
 
 
 /**
@@ -1424,6 +1425,11 @@ public class BleServer implements UsesCustomNull
 		return m_stateTracker.getStateMask(macAddress);
 	}
 
+	public boolean is(final String macAddress, final int mask_BleServerState)
+	{
+		return (getStateMask(macAddress) & mask_BleServerState) != 0x0;
+	}
+
 	public boolean is(final String macAddress, final BleServerState state)
 	{
 		return state.overlaps(getStateMask(macAddress));
@@ -1495,7 +1501,7 @@ public class BleServer implements UsesCustomNull
 			return e;
 		}
 
-		m_connectionFailMngr.onExplicitConnectionStarted();
+		m_connectionFailMngr.onExplicitConnectionStarted(nativeDevice.getAddress());
 
 		if( isAny(nativeDevice.getAddress(), CONNECTING, CONNECTED) )
 		{
@@ -1525,27 +1531,11 @@ public class BleServer implements UsesCustomNull
 
 	public boolean disconnect(final String macAddress)
 	{
-		m_connectionFailMngr.onExplicitDisconnect();
+		m_connectionFailMngr.onExplicitDisconnect(macAddress);
 
 		if( is(macAddress, DISCONNECTED) )  return false;
 
-		final int stateMask = getStateMask(macAddress);
-		final BleServerState oldConnectionState;
-
-		if( BleServerState.CONNECTING.overlaps(stateMask) )
-		{
-			oldConnectionState = CONNECTING;
-		}
-		else if( BleServerState.CONNECTED.overlaps(stateMask) )
-		{
-			oldConnectionState = CONNECTED;
-		}
-		else
-		{
-			getManager().ASSERT(false, "Expected to be connecting or connected for an explicit disconnect.");
-
-			return false;
-		}
+		final BleServerState oldConnectionState = m_stateTracker.getOldConnectionState(macAddress);
 
 		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
 		final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
@@ -1567,6 +1557,15 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void disconnect()
 	{
+		getClients(new ForEach_Void<String>()
+		{
+			@Override public void next(final String next)
+			{
+				disconnect(next);
+			}
+
+		}, CONNECTING, CONNECTED);
+
 		m_nativeWrapper.closeServer();
 	}
 
@@ -1811,7 +1810,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach)
 	{
-		m_clientMngr.getClients(forEach);
+		m_clientMngr.getClients(forEach, 0x0);
 	}
 
 	/**
@@ -1820,7 +1819,12 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
 	{
-		m_clientMngr.getClients(forEach, state);
+		m_clientMngr.getClients(forEach, state.bit());
+	}
+
+	public void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
+	{
+		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
 
 	/**
@@ -1829,7 +1833,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach)
 	{
-		m_clientMngr.getClients(forEach);
+		m_clientMngr.getClients(forEach, 0x0);
 	}
 
 	/**
@@ -1838,7 +1842,12 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
 	{
-		m_clientMngr.getClients(forEach, state);
+		m_clientMngr.getClients(forEach, state.bit());
+	}
+
+	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)
+	{
+		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
 
 	/**
@@ -1846,7 +1855,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients()
 	{
-		return m_clientMngr.getClients();
+		return m_clientMngr.getClients(0x0);
 	}
 
 	/**
@@ -1854,7 +1863,15 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
 	{
-		return m_clientMngr.getClients(state);
+		return m_clientMngr.getClients(state.bit());
+	}
+
+	/**
+	 * Returns all the clients connected or connecting (or previously so) to this server.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState ... states)
+	{
+		return m_clientMngr.getClients(BleServerState.toBits(states));
 	}
 
 	/**
@@ -1862,15 +1879,23 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List()
 	{
-		return m_clientMngr.getClients_List();
+		return m_clientMngr.getClients_List(0x0);
 	}
 
 	/**
-	 * Overload of {@link #getClients()} that returns a {@link java.util.List} for you.
+	 * Overload of {@link #getClients(BleServerState)} that returns a {@link java.util.List} for you.
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState state)
 	{
-		return m_clientMngr.getClients_List(state);
+		return m_clientMngr.getClients_List(state.bit());
+	}
+
+	/**
+	 * Overload of {@link #getClients(BleServerState[])} that returns a {@link java.util.List} for you.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState ... states)
+	{
+		return m_clientMngr.getClients_List(BleServerState.toBits(states));
 	}
 
 	/**
@@ -1886,7 +1911,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public int getClientCount(final BleServerState state)
 	{
-		return m_clientMngr.getClientCount(state);
+		return m_clientMngr.getClientCount(state.bit());
 	}
 
 	/**
