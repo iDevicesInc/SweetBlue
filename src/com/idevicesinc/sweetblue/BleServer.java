@@ -1692,15 +1692,6 @@ public class BleServer implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID charUuid, final UUID descUUID)
 	{
-		final UUID serviceUuid = null;
-
-		final BluetoothGattCharacteristic char_native = getNativeCharacteristic(serviceUuid, charUuid);
-
-		if( char_native == null )  return null;
-
-		final BluetoothGattDescriptor desc_native = char_native.getDescriptor(descUUID);
-
-		return desc_native;
 	}
 
 	/**
@@ -1711,13 +1702,6 @@ public class BleServer implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID characteristicUuid)
 	{
-		final UUID serviceUuid = null;
-
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
-
-		if (characteristic == null)  return null;
-
-		return characteristic.getGuaranteedNative();
 	}
 
 	/**
@@ -1726,11 +1710,6 @@ public class BleServer implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
 	{
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
-
-		if (characteristic == null)  return null;
-
-		return characteristic.getGuaranteedNative();
 	}
 
 	/**
@@ -1742,11 +1721,6 @@ public class BleServer implements UsesCustomNull
 	public @Nullable(Nullable.Prevalence.NORMAL)
 	BluetoothGattService getNativeService(final UUID uuid)
 	{
-		final P_Service service = m_serviceMngr.get(uuid);
-
-		if (service == null)  return null;
-
-		return service.getNative();
 	}
 
 	/**
@@ -1759,7 +1733,6 @@ public class BleServer implements UsesCustomNull
 	public @Nullable(Nullable.Prevalence.NEVER)
 	Iterator<BluetoothGattService> getNativeServices()
 	{
-		return m_serviceMngr.getNativeServices();
 	}
 
 	/**

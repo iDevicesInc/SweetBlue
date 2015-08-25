@@ -39,14 +39,15 @@ class P_NativeServerWrapper
 		if( m_native == null )
 		{
 			m_mngr.ASSERT(false, "Native server is already closed and nulled out.");
-
-			return;
 		}
+		else
+		{
+			final BluetoothGattServer native_local = m_native;
+			m_native = null;
 
-		m_native.clearServices();
-		m_native.close();
-
-		m_native = null;
+			native_local.clearServices();
+			native_local.close();
+		}
 	}
 
 	public boolean openServer()

@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.utils.FutureData;
 
 import java.util.UUID;
 
@@ -77,7 +78,7 @@ public enum BleTask
 
 
 	/**
-	 * Associated with sending a notification to a remote client through {@link BleServer#notify(BluetoothDevice, UUID, UUID, byte[])} or overloads.
+	 * Associated with sending a notification to a remote client through {@link BleServer#sendNotification(String, UUID, UUID, FutureData, BleServer.OutgoingListener)} or overloads.
 	 */
 	SEND_NOTIFICATION,
 
@@ -85,7 +86,9 @@ public enum BleTask
 
 	DISCONNECT_SERVER,
 
-	SEND_READ_WRITE_RESPONSE;
+	SEND_READ_WRITE_RESPONSE,
+
+	ADD_SERVICE;
 	
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
