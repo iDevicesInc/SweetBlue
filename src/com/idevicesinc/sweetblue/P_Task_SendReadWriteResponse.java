@@ -37,7 +37,7 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 
 	private void fail(final BleServer.OutgoingListener.Status status)
 	{
-		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), status);
+		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), status, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
 
@@ -46,7 +46,7 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 
 	@Override protected void succeed()
 	{
-		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), BleServer.OutgoingListener.Status.SUCCESS);
+		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), BleServer.OutgoingListener.Status.SUCCESS, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
 

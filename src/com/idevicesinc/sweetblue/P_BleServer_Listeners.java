@@ -272,7 +272,8 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 		final OutgoingEvent e = new OutgoingEvent
 		(
-			m_server, device, serviceUuid, charUuid, descUuid_nullable, Type.READ, target, BleServer.EMPTY_BYTE_ARRAY, BleServer.EMPTY_BYTE_ARRAY, requestId, offset, /*responseNeeded=*/true, status
+			m_server, device, serviceUuid, charUuid, descUuid_nullable, Type.READ, target, BleServer.EMPTY_BYTE_ARRAY, BleServer.EMPTY_BYTE_ARRAY,
+			requestId, offset, /*responseNeeded=*/true, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE
 		);
 
 		return e;
@@ -351,7 +352,8 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 		final OutgoingEvent e = new OutgoingEvent
 		(
-			m_server, device, serviceUuid, charUuid, descUuid_nullable, type, target, BleServer.EMPTY_BYTE_ARRAY, BleServer.EMPTY_BYTE_ARRAY, requestId, offset, /*responseNeeded=*/true, status
+			m_server, device, serviceUuid, charUuid, descUuid_nullable, type, target, BleServer.EMPTY_BYTE_ARRAY, BleServer.EMPTY_BYTE_ARRAY,
+			requestId, offset, /*responseNeeded=*/true, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE
 		);
 
 		return e;

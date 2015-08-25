@@ -455,28 +455,46 @@ public class BleServer implements UsesCustomNull
 			public byte[] data_sent()  {  return m_data_sent;  }
 			private final byte[] m_data_sent;
 
-			OutgoingEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_received, byte[] data_sent, int requestId, int offset, final boolean responseNeeded, final Status status)
+			/**
+			 * The gattStatus sent to the client, provided to static methods of {@link com.idevicesinc.sweetblue.BleServer.IncomingListener.Please}
+			 * if {@link #type()} is {@link Type#READ} or {@link Type#WRITE} - otherwise this will equal {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
+			 */
+			public int gattStatus_sent()  {  return m_gattStatus_sent;  }
+			private final int m_gattStatus_sent;
+
+			/**
+			 * The gattStatus received from an attempted communication with the client. For now this is only relevant if {@link #type()}
+			 * {@link Type#isNotificationOrIndication()} is <code>true</code> - otherwise this will equal {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
+			 */
+			public int gattStatus_received()  {  return m_gattStatus_received;  }
+			private final int m_gattStatus_received;
+
+			OutgoingEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_received, byte[] data_sent, int requestId, int offset, final boolean responseNeeded, final Status status, final int gattStatus_sent, final int gattStatus_received)
 			{
 				super(server, nativeDevice, serviceUuid_in, charUuid_in, descUuid_in, type_in, target_in, data_received, requestId, offset, responseNeeded);
 
 				m_status = status;
 				m_data_sent = data_sent;
+				m_gattStatus_received = gattStatus_received;
+				m_gattStatus_sent = gattStatus_sent;
 			}
 
-			OutgoingEvent(final IncomingListener.IncomingEvent e, final byte[] data_sent, final Status status)
+			OutgoingEvent(final IncomingListener.IncomingEvent e, final byte[] data_sent, final Status status, final int gattStatus_sent, final int gattStatus_received)
 			{
 				super(e.server(), e.nativeDevice(), e.serviceUuid(), e.charUuid(), e.descUuid(), e.type(), e.target(), e.data_received(), e.requestId(), e.offset(), e.responseNeeded());
 
 				m_status = status;
 				m_data_sent = data_sent;
+				m_gattStatus_received = gattStatus_received;
+				m_gattStatus_sent = gattStatus_sent;
 			}
 
 			static OutgoingEvent EARLY_OUT__NOTIFICATION(final BleServer server, final BluetoothDevice nativeDevice, final UUID serviceUuid, final UUID charUuid, final FutureData data, final Status status)
 			{
 				return new OutgoingEvent
 				(
-					server, nativeDevice, serviceUuid, charUuid, NON_APPLICABLE_UUID, Type.NOTIFICATION,
-					Target.CHARACTERISTIC, EMPTY_BYTE_ARRAY, data.getData(), NON_APPLICABLE_REQUEST_ID, 0, false, status
+					server, nativeDevice, serviceUuid, charUuid, NON_APPLICABLE_UUID, Type.NOTIFICATION, Target.CHARACTERISTIC,
+					EMPTY_BYTE_ARRAY, data.getData(), NON_APPLICABLE_REQUEST_ID, 0, false, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE
 				);
 			}
 
@@ -1559,7 +1577,8 @@ public class BleServer implements UsesCustomNull
 	{
 		getClients(new ForEach_Void<String>()
 		{
-			@Override public void next(final String next)
+			@Override
+			public void next(final String next)
 			{
 				disconnect(next);
 			}
@@ -1912,6 +1931,14 @@ public class BleServer implements UsesCustomNull
 	public int getClientCount(final BleServerState state)
 	{
 		return m_clientMngr.getClientCount(state.bit());
+	}
+
+	/**
+	 * Returns the number of clients that are in the current state.
+	 */
+	public int getClientCount(final BleServerState ... states)
+	{
+		return m_clientMngr.getClientCount(BleServerState.toBits(states));
 	}
 
 	/**
