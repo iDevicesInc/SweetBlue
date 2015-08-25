@@ -529,6 +529,13 @@ public class BleServer implements UsesCustomNull
 			SUCCESS,
 
 			/**
+			 * {@link BleServer#sendNotification(String, UUID, UUID, FutureData, OutgoingListener)} or
+			 * {@link BleServer#sendIndication(String, UUID, byte[])} (or various overloads) was called
+			 * on {@link BleServer#NULL}.
+			 */
+			NULL_SERVER,
+
+			/**
 			 * {@link IncomingListener.Please#doNotRespond(OutgoingListener)} (or overloads)
 			 * were called or {@link IncomingListener.IncomingEvent#responseNeeded()} was <code>false</code>.
 			 */
@@ -1395,6 +1402,15 @@ public class BleServer implements UsesCustomNull
 	{
 		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
 
+		if( isNull() )
+		{
+			final OutgoingListener.OutgoingEvent e = OutgoingListener.OutgoingEvent.EARLY_OUT__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid, futureData, OutgoingListener.Status.NULL_SERVER);
+
+			invokeOutgoingListeners(e, listener);
+
+			return e;
+		}
+
 		if( !is(macAddress, CONNECTED ) )
 		{
 			final OutgoingListener.OutgoingEvent e = OutgoingListener.OutgoingEvent.EARLY_OUT__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid, futureData, OutgoingListener.Status.NOT_CONNECTED);
@@ -1689,7 +1705,6 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID charUuid, final UUID descUUID)
 	{
 	}
@@ -1699,7 +1714,6 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID characteristicUuid)
 	{
 	}
@@ -1707,7 +1721,6 @@ public class BleServer implements UsesCustomNull
 	/**
 	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
 	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
 	{
 	}
@@ -1717,7 +1730,6 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL)
 	BluetoothGattService getNativeService(final UUID uuid)
 	{
@@ -1729,7 +1741,6 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NEVER)
 	Iterator<BluetoothGattService> getNativeServices()
 	{
@@ -1740,7 +1751,6 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
 	{
 		return m_serviceMngr.getNativeServices_List();
@@ -1907,7 +1917,7 @@ public class BleServer implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the number of clients that are in the current state.
+	 * Returns the number of clients that are in any of the given states.
 	 */
 	public int getClientCount(final BleServerState ... states)
 	{
@@ -1935,11 +1945,6 @@ public class BleServer implements UsesCustomNull
 	 */
 	public boolean hasClient(final BleServerState ... states)
 	{
-		for( int i = 0; i < states.length; i++ )
-		{
-			if( hasClient(states[i]) )  return true;
-		}
-
-		return false;
+		return getClientCount(states) > 0;
 	}
 }

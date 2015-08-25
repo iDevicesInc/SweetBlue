@@ -80,6 +80,11 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 		}
 	}
 
+	@Override protected void onNotExecutable()
+	{
+		fail(BleServer.OutgoingListener.Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+	}
+
 	private BleServer.ExchangeListener.Type getType()
 	{
 		return m_confirm ? BleServer.ExchangeListener.Type.INDICATION : BleServer.ExchangeListener.Type.NOTIFICATION;
@@ -87,6 +92,8 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 
 	private void fail(final BleServer.OutgoingListener.Status status, final int gattStatus_received)
 	{
+		super.fail();
+
 		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
 		(
 			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
@@ -95,12 +102,12 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 		);
 
 		getServer().invokeOutgoingListeners(e, m_responseListener);
-
-		super.fail();
 	}
 
 	protected void succeed(final int gattStatus)
 	{
+		super.succeed();
+
 		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
 		(
 			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
@@ -109,8 +116,6 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 		);
 
 		getServer().invokeOutgoingListeners(e, m_responseListener);
-
-		super.succeed();
 	}
 
 	void onNotificationSent(final BluetoothDevice device, final int gattStatus)

@@ -37,20 +37,20 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 
 	private void fail(final BleServer.OutgoingListener.Status status)
 	{
+		super.fail();
+
 		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), status, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
-
-		super.fail();
 	}
 
 	@Override protected void succeed()
 	{
+		super.succeed();
+
 		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), BleServer.OutgoingListener.Status.SUCCESS, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
-
-		super.succeed();
 	}
 
 	@Override void execute()
@@ -59,6 +59,11 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 		{
 			fail(BleServer.OutgoingListener.Status.FAILED_TO_SEND_OUT);
 		}
+	}
+
+	@Override protected void onNotExecutable()
+	{
+		fail(BleServer.OutgoingListener.Status.NOT_CONNECTED);
 	}
 
 	@Override protected void update(double timeStep)
