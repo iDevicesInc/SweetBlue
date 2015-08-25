@@ -57,6 +57,18 @@ public class Utils
 	{
 		return s_toFixedFormat.format(value);
 	}
+
+	public static int toBits(final BitwiseEnum ... enums)
+	{
+		int bits = 0x0;
+
+		for( int i = 0; i < enums.length; i++ )
+		{
+			bits |= enums[i].bit();
+		}
+
+		return bits;
+	}
 	
 	/**
 	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
@@ -65,9 +77,9 @@ public class Utils
 	public static boolean phoneHasBondingIssues()
 	{
 		return
-				Utils.isManufacturer("sony")																		||
-				Utils.isManufacturer("motorola") && (Utils.isProduct("ghost") || Utils.isProduct("victara"))		||
-				Utils.isManufacturer("samsung") && (Utils.isProduct("degaswifiue"))									 ;
+			Utils.isManufacturer("sony")																		||
+			Utils.isManufacturer("motorola") && (Utils.isProduct("ghost") || Utils.isProduct("victara"))		||
+			Utils.isManufacturer("samsung") && (Utils.isProduct("degaswifiue"))									 ;
 	}
 	
 	public static boolean isManufacturer(String manufacturer)

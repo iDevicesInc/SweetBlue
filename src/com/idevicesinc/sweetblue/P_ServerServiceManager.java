@@ -13,6 +13,6 @@ class P_ServerServiceManager
 
 	public void addService_native(final BluetoothGattService service)
 	{
-
+		m_server.getNative().add
 	}
 }

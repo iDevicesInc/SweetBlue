@@ -8,6 +8,7 @@ import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -178,7 +179,7 @@ public enum BleDeviceState implements State
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}
 	
-	@Override public int or(State state)
+	@Override public int or(BitwiseEnum state)
 	{
 		return this.bit() | state.bit();
 	}

@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 
+import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -116,7 +117,7 @@ public enum BleManagerState implements State
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}
 	
-	@Override public int or(State state)
+	@Override public int or(BitwiseEnum state)
 	{
 		return this.bit() | state.bit();
 	}

@@ -1132,7 +1132,7 @@ public class BleServer implements UsesCustomNull
 			{
 				return Please.doNotRetry();
 			}
-			if (e.failureCountSoFar() <= m_retryCount)
+			else if (e.failureCountSoFar() <= m_retryCount)
 			{
 				return Please.retry();
 			}
@@ -1141,6 +1141,59 @@ public class BleServer implements UsesCustomNull
 				return Please.doNotRetry();
 			}
 		}
+	}
+
+	/**
+	 * Provide an implementation of this callback to {@link BleServer#setListener_ServiceAdd(ServiceAddListener)}.
+	 *
+	 * @see BleServer#setListener_ServiceAdd(ServiceAddListener)
+	 */
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	public static interface ServiceAddListener
+	{
+		public static enum Status implements UsesCustomNull
+		{
+			NULL,
+
+			SUCCESS,
+
+			NULL_SERVER,
+
+			SERVER_OPENING_FAILED,
+
+			FAILED_EVENTUALLY,
+
+			TIMED_OUT;
+
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
+		}
+
+		@Immutable
+		public static class ServiceAddEvent
+		{
+			/**
+			 * The server to which the service is being added.
+			 */
+			public BleServer server()  {  return m_server;  }
+			private final BleServer m_server;
+
+			/**
+			 * The service being added to {@link #server()}.
+			 */
+			public BluetoothGattService service()  {  return m_service;  }
+			private final BluetoothGattService m_service;
+
+			ServiceAddEvent(final BleServer server, final BluetoothGattService service)
+			{
+				m_server = server;
+				m_service = service;
+			}
+		}
+
+		void onEvent(final ServiceAddEvent e);
 	}
 
 	private static final OutgoingListener NULL_OUTGOING_LISTENER = new OutgoingListener()
@@ -1796,11 +1849,6 @@ public class BleServer implements UsesCustomNull
 	{
 		return m_serviceMngr.getNativeCharacteristics_List(service);
 	}
-
-
-
-
-
 
 
 

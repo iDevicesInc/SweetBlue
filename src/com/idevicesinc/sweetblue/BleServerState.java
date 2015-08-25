@@ -8,6 +8,7 @@ import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -37,14 +38,7 @@ public enum BleServerState implements State
 
 	public static int toBits(BleServerState ... states)
 	{
-		int bits = 0x0;
-
-		for( int i = 0; i < states.length; i++ )
-		{
-			bits |= states[i].bit();
-		}
-
-		return bits;
+		return Utils.toBits(states);
 	}
 	
 	@Override public boolean overlaps(int mask)
@@ -67,7 +61,7 @@ public enum BleServerState implements State
 		return this.overlaps(oldStateBits) && !this.overlaps(newStateBits);
 	}
 	
-	@Override public int or(State state)
+	@Override public int or(BitwiseEnum state)
 	{
 		return this.bit() | state.bit();
 	}
