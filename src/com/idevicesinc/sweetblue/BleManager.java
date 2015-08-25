@@ -1186,6 +1186,17 @@ public class BleManager
 	}
 
 	/**
+	 * Same as {@link #stopPeriodicScan()} but will also unregister any {@link ScanFilter} provided
+	 * through {@link #startPeriodicScan(Interval, Interval, ScanFilter)} or other overloads.
+	 */
+	public void stopPeriodicScan(final ScanFilter filter)
+	{
+		m_filterMngr.remove(filter);
+
+		stopPeriodicScan();
+	}
+
+	/**
 	 * Stops a periodic scan previously started either explicitly with {@link #startPeriodicScan(Interval, Interval)} or through
 	 * the {@link BleManagerConfig#autoScanTime} and {@link BleManagerConfig#autoScanInterval} config options.
 	 */
