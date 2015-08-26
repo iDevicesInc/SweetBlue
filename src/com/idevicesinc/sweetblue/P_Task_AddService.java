@@ -8,7 +8,6 @@ import com.idevicesinc.sweetblue.utils.Utils;
 class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_StateListener
 {
 	private final BluetoothGattService m_service;
-	private BleServer.ServiceAddListener.Status m_status = BleServer.ServiceAddListener.Status.NULL;
 	private final BleServer.ServiceAddListener m_addListener;
 
 	public P_Task_AddService(BleServer server, final BluetoothGattService service, final BleServer.ServiceAddListener addListener)
@@ -27,9 +26,7 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 		{
 			if( !getServer().m_nativeWrapper.openServer() )
 			{
-				m_status = BleServer.ServiceAddListener.Status.SERVER_OPENING_FAILED;
-
-				failImmediately();
+				failImmediately(BleServer.ServiceAddListener.Status.SERVER_OPENING_FAILED);
 
 				return;
 			}
@@ -39,9 +36,7 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 
 		if( server_native /*still*/ == null )
 		{
-			m_status = BleServer.ServiceAddListener.Status.SERVER_OPENING_FAILED;
-
-			failImmediately();
+			failImmediately(BleServer.ServiceAddListener.Status.SERVER_OPENING_FAILED);
 
 			getManager().ASSERT(false, "Server should not be null after successfully opening!");
 		}
@@ -53,9 +48,7 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 			}
 			else
 			{
-				m_status = BleServer.ServiceAddListener.Status.FAILED_IMMEDIATELY;
-
-				failImmediately();
+				failImmediately(BleServer.ServiceAddListener.Status.FAILED_IMMEDIATELY);
 			}
 		}
 	}
@@ -69,6 +62,18 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 	{
 		super.fail();
 
+		invokeFailCallback(status, gattStatus);
+	}
+
+	private void failImmediately(final BleServer.ServiceAddListener.Status status)
+	{
+		super.failImmediately();
+
+		invokeFailCallback(status, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+	}
+
+	private void invokeFailCallback(final BleServer.ServiceAddListener.Status status, final int gattStatus)
+	{
 		final BleServer.ServiceAddListener.ServiceAddEvent e = new BleServer.ServiceAddListener.ServiceAddEvent
 		(
 			getServer(), m_service, status, gattStatus
@@ -83,7 +88,7 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 
 		final BleServer.ServiceAddListener.ServiceAddEvent e = new BleServer.ServiceAddListener.ServiceAddEvent
 		(
-				getServer(), m_service, BleServer.ServiceAddListener.Status.SUCCESS, BleStatuses.GATT_SUCCESS
+			getServer(), m_service, BleServer.ServiceAddListener.Status.SUCCESS, BleStatuses.GATT_SUCCESS
 		);
 
 		getServer().m_serviceMngr.invokeListeners(e, m_addListener);
@@ -125,16 +130,15 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 		return BleTask.ADD_SERVICE;
 	}
 
-
 	@Override public void onStateChange(PA_Task task, PE_TaskState state)
 	{
 		if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			fail(getCancelStatusType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			invokeFailCallback(getCancelStatusType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 		else if( state == PE_TaskState.TIMED_OUT )
 		{
-			fail(BleServer.ServiceAddListener.Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			invokeFailCallback(BleServer.ServiceAddListener.Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 	}
 }

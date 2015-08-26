@@ -12,7 +12,7 @@ import java.util.UUID;
  */
 public class BleService
 {
-	private final BluetoothGattService m_native;
+	final BluetoothGattService m_native;
 
 	public BleService(final UUID uuid, final BleCharacteristic... characteristics)
 	{
@@ -29,5 +29,13 @@ public class BleService
 		{
 			m_native.addCharacteristic(characteristics[i].m_native);
 		}
+	}
+
+	void init()
+	{
+		if( m_native != null )  return;
+
+		// DRK > nothing for now but may do actual instantiation of native service here in the future so SweetBlue
+		// can implicitly determine whether a service is primary or secondary.
 	}
 }

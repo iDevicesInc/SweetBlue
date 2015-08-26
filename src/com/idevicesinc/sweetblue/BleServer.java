@@ -1825,6 +1825,16 @@ public class BleServer implements UsesCustomNull
 		}
 	}
 
+	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service)
+	{
+		return this.addService(service, null);
+	}
+
+	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
+	{
+		return m_serviceMngr.addService(service, listener);
+	}
+
 	/**
 	 * Returns the native descriptor for the given UUID in case you need lower-level access.
 	 * <br><br>
@@ -1855,8 +1865,8 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NORMAL)
-	BluetoothGattService getNativeService(final UUID uuid)
+
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
 	{
 	}
 
@@ -1866,8 +1876,7 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER)
-	Iterator<BluetoothGattService> getNativeServices()
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
 	{
 	}
 

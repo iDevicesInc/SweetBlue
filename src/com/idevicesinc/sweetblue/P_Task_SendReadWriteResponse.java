@@ -31,11 +31,11 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 	{
 		if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			fail(getCancelStatusType());
+			invokeFailCallback(getCancelStatusType());
 		}
 		else if( state == PE_TaskState.TIMED_OUT )
 		{
-			fail(BleServer.OutgoingListener.Status.TIMED_OUT);
+			invokeFailCallback(BleServer.OutgoingListener.Status.TIMED_OUT);
 		}
 	}
 
@@ -43,6 +43,11 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 	{
 		super.fail();
 
+		invokeFailCallback(status);
+	}
+
+	private void invokeFailCallback(BleServer.OutgoingListener.Status status)
+	{
 		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), status, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);

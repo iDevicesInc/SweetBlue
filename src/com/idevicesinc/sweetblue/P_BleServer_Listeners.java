@@ -275,9 +275,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 				}
 				else
 				{
-					// DRK > For now not doing anything...the most-likely scenario I can see is if sending out a notification takes
-					// longer than the timeout so we kill the task but then this comes in and there's no task there. Since we already
-					// sent the callback to appland for the timeout it's tricky whether we should send another callback.
+					// TODO: Perhaps call callback anyway
 				}
 			}
 		});
