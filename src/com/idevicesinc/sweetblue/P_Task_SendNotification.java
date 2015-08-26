@@ -141,5 +141,9 @@ class P_Task_SendNotification extends PA_Task_RequiresServerConnection implement
 		{
 			fail(getCancelStatusType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
+		else if( state == PE_TaskState.TIMED_OUT )
+		{
+			fail(BleServer.OutgoingListener.Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		}
 	}
 }

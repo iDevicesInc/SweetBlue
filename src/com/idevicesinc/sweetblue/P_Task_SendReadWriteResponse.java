@@ -33,6 +33,10 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 		{
 			fail(getCancelStatusType());
 		}
+		else if( state == PE_TaskState.TIMED_OUT )
+		{
+			fail(BleServer.OutgoingListener.Status.TIMED_OUT);
+		}
 	}
 
 	private void fail(final BleServer.OutgoingListener.Status status)

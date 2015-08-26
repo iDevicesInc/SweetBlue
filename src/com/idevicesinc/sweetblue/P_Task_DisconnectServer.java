@@ -16,9 +16,9 @@ class P_Task_DisconnectServer extends PA_Task_ConnectOrDisconnectServer
 
 		if( server_native == null )
 		{
-			getManager().ASSERT(false, "Tried to disconnect client from server but native server is null.");
-
 			failImmediately();
+
+			getManager().ASSERT(false, "Tried to disconnect client from server but native server is null.");
 		}
 		else
 		{
@@ -28,9 +28,9 @@ class P_Task_DisconnectServer extends PA_Task_ConnectOrDisconnectServer
 			}
 			else if( getServer().m_nativeWrapper.isConnecting(m_nativeDevice.getAddress()) )
 			{
-				getManager().ASSERT(false, "Server is currently connecting a client when we're trying to disconnect.");
-
 				failImmediately();
+
+				getManager().ASSERT(false, "Server is currently connecting a client when we're trying to disconnect.");
 			}
 			else if( getServer().m_nativeWrapper.isDisconnecting(m_nativeDevice.getAddress()) )
 			{
@@ -45,9 +45,9 @@ class P_Task_DisconnectServer extends PA_Task_ConnectOrDisconnectServer
 			}
 			else
 			{
-				getManager().ASSERT(false, "Native server state didn't match any expected values.");
-
 				failImmediately();
+
+				getManager().ASSERT(false, "Native server state didn't match any expected values.");
 			}
 		}
 	}

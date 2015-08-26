@@ -9,6 +9,7 @@ import java.util.UUID;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -756,6 +757,7 @@ public class BleManager
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
 	IncomingListener m_defaultServerIncomingListener;
+	BleServer.ServiceAddListener m_serviceAddListener;
     final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
@@ -1095,6 +1097,18 @@ public class BleManager
 	public void setListener_Incoming(@Nullable(Prevalence.NORMAL) IncomingListener listener_nullable)
 	{
 		m_defaultServerIncomingListener = listener_nullable;
+	}
+
+	/**
+	 * Convenience method to listen for all service addition events for all servers.
+	 * The listener provided will get called in addition to and after the listener, if any, provided
+	 * to {@link BleServer#setListener_ServiceAdd(BleServer.ServiceAddListener)}.
+	 *
+	 * @see BleServer#setListener_ServiceAdd(BleServer.ServiceAddListener)
+	 */
+	public void setListener_ServiceAdd(@Nullable(Prevalence.NORMAL)BleServer.ServiceAddListener listener_nullable)
+	{
+		m_serviceAddListener = listener_nullable;
 	}
 
 	/**

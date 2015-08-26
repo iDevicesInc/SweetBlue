@@ -16,10 +16,10 @@ public class BleService
 
 	public BleService(final UUID uuid, final BleCharacteristic... characteristics)
 	{
-		this(uuid, true, characteristics);
+		this(uuid, characteristics, true);
 	}
 
-	private BleService(final UUID uuid, final boolean constructorOverloadEnabler2000, final BleCharacteristic[] characteristics)
+	private BleService(final UUID uuid, final BleCharacteristic[] characteristics, final boolean constructorOverloadEnabler2000)
 	{
 		final int serviceType = BluetoothGattService.SERVICE_TYPE_PRIMARY;
 

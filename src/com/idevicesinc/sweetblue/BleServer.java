@@ -33,7 +33,6 @@ import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import static com.idevicesinc.sweetblue.BleServerState.*;
-import static com.idevicesinc.sweetblue.BleServerState.NULL;
 
 
 /**
@@ -579,12 +578,18 @@ public class BleServer implements UsesCustomNull
 			CANCELLED_FROM_DISCONNECT,
 
 			/**
+			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}
+			 * so we had to cut her loose.
+			 */
+			TIMED_OUT,
+
+			/**
 			 * The operation was cancelled because {@link BleManager} went {@link BleManagerState#TURNING_OFF} and/or
 			 * {@link BleManagerState#OFF}. Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then
 			 * {@link OutgoingEvent#status()} could potentially be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
 			 * the disconnect callback before the turning off callback. Basic testing has revealed that this is *not* the case, but you never know.
 			 * <br><br>
-			 * Either way, the device was or will be disconnected.
+			 * Either way, the client was or will be disconnected.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF,
 
@@ -725,9 +730,9 @@ public class BleServer implements UsesCustomNull
 
 			/**
 			 * Couldn't connect through {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
-			 * because the operation took longer than the time dictated by {@link BleDeviceConfig#timeoutRequestFilter}.
+			 * because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}.
 			 */
-			NATIVE_CONNECTION_TIMED_OUT,
+			TIMED_OUT,
 
 			/**
 			 * {@link BleServer#disconnect()} was called sometime during the connection process.
@@ -785,7 +790,7 @@ public class BleServer implements UsesCustomNull
 				return	this == SERVER_OPENING_FAILED					||
 						this == NATIVE_CONNECTION_FAILED_IMMEDIATELY	||
 						this == NATIVE_CONNECTION_FAILED_EVENTUALLY		||
-						this == NATIVE_CONNECTION_TIMED_OUT				 ;
+						this == TIMED_OUT;
 			}
 		}
 
@@ -1159,11 +1164,38 @@ public class BleServer implements UsesCustomNull
 
 			NULL_SERVER,
 
+			DUPLICATE,
+
 			SERVER_OPENING_FAILED,
+
+			FAILED_IMMEDIATELY,
 
 			FAILED_EVENTUALLY,
 
-			TIMED_OUT;
+			TIMED_OUT,
+
+			/**
+			 * The operation was cancelled because {@link BleServer#disconnect()} was called before the operation completed.
+			 */
+			CANCELLED_FROM_DISCONNECT,
+
+			/**
+			 * The operation was cancelled because {@link BleManager} went {@link BleManagerState#TURNING_OFF} and/or
+			 * {@link BleManagerState#OFF}. Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then
+			 * {@link ServiceAddEvent#status()} could potentially be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
+			 * the disconnect callback before the turning off callback. Basic testing has revealed that this is *not* the case, but you never know.
+			 * <br><br>
+			 * Either way, the device was or will be disconnected.
+			 */
+			CANCELLED_FROM_BLE_TURNING_OFF;
+
+			/**
+			 * Returns true if <code>this</code> equals {@link #SUCCESS}.
+			 */
+			public boolean wasSuccess()
+			{
+				return this == Status.SUCCESS;
+			}
 
 			@Override public boolean isNull()
 			{
@@ -1186,10 +1218,42 @@ public class BleServer implements UsesCustomNull
 			public BluetoothGattService service()  {  return m_service;  }
 			private final BluetoothGattService m_service;
 
-			ServiceAddEvent(final BleServer server, final BluetoothGattService service)
+			/**
+			 * Should only be relevant if {@link #status()} is {@link Status#FAILED_EVENTUALLY}.
+			 */
+			public int gattStatus()  {  return m_gattStatus;  }
+			private final int m_gattStatus;
+
+			/**
+			 * Indicates the success or reason for failure for adding the service.
+			 */
+			public Status status()  {  return m_status;  }
+			private final Status m_status;
+
+			ServiceAddEvent(final BleServer server, final BluetoothGattService service, final Status status, final int gattStatus)
 			{
 				m_server = server;
 				m_service = service;
+				m_status = status;
+				m_gattStatus = gattStatus;
+			}
+
+			/**
+			 * Convenience forwarding of {@link Status#wasSuccess()}.
+			 */
+			public boolean wasSuccess()
+			{
+				return status().wasSuccess();
+			}
+
+			static ServiceAddEvent NULL(BleServer server, BluetoothGattService service)
+			{
+				return EARLY_OUT(server, service, Status.NULL);
+			}
+
+			static ServiceAddEvent EARLY_OUT(BleServer server, BluetoothGattService service, Status status)
+			{
+				return new ServiceAddEvent(server, service, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}
 		}
 
@@ -1218,6 +1282,7 @@ public class BleServer implements UsesCustomNull
 	private BleServerConfig m_config = null;
 	private final P_ServerConnectionFailManager m_connectionFailMngr;
 	private final P_ClientManager m_clientMngr;
+	final P_ServerServiceManager m_serviceMngr;
 
 	/**
 	 * Field for app to associate any data it wants with instances of this class
@@ -1243,6 +1308,7 @@ public class BleServer implements UsesCustomNull
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 			m_clientMngr = new P_ClientManager(this);
+			m_serviceMngr = new P_ServerServiceManager(this);
 		}
 		else
 		{
@@ -1253,6 +1319,7 @@ public class BleServer implements UsesCustomNull
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 			m_clientMngr = new P_ClientManager(this);
+			m_serviceMngr = new P_ServerServiceManager(this);
 		}
 	}
 
@@ -1281,17 +1348,22 @@ public class BleServer implements UsesCustomNull
 	/**
 	 * Set a listener here to be notified whenever this server's state changes in relation to a specific client.
 	 */
-	public void setListener_State(final BleServer.StateListener listener)
+	public void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.StateListener listener_nullable)
 	{
-		m_stateTracker.setListener(listener);
+		m_stateTracker.setListener(listener_nullable);
 	}
 
 	/**
 	 * Set a listener here to override any listener provided previously either through this method or through {@link BleManager#newServer(IncomingListener)} or otherwise.
 	 */
-	public void setListener_Incoming(final IncomingListener listener)
+	public void setListener_Incoming(@Nullable(Nullable.Prevalence.NORMAL) final IncomingListener listener_nullable)
 	{
-		m_incomingListener = listener;
+		m_incomingListener = listener_nullable;
+	}
+
+	public void setListener_ServiceAdd(@Nullable(Nullable.Prevalence.NORMAL) final ServiceAddListener listener_nullable)
+	{
+		m_serviceMngr.setListener(listener_nullable);
 	}
 
 	public @Nullable(Nullable.Prevalence.RARE) IncomingListener getListener_Incoming()
@@ -1680,7 +1752,7 @@ public class BleServer implements UsesCustomNull
 
 	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ConnectionFailListener.Status status, final int gattStatus)
 	{
-		if( status == ConnectionFailListener.Status.NATIVE_CONNECTION_TIMED_OUT )
+		if( status == ConnectionFailListener.Status.TIMED_OUT )
 		{
 			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 			m_queue.add(task);
