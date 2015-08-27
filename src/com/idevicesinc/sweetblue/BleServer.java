@@ -1835,13 +1835,29 @@ public class BleServer implements UsesCustomNull
 		return m_serviceMngr.addService(service, listener);
 	}
 
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID descUuid)
+	{
+		return m_serviceMngr.getDescriptor(null, null, descUuid);
+	}
+
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inChar(final UUID charUuid, final UUID descUuid)
+	{
+		return m_serviceMngr.getDescriptor(null, charUuid, descUuid);
+	}
+
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inService(final UUID serviceUuid, final UUID descUuid)
+	{
+		return m_serviceMngr.getDescriptor(serviceUuid, null, descUuid);
+	}
+
 	/**
 	 * Returns the native descriptor for the given UUID in case you need lower-level access.
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID charUuid, final UUID descUUID)
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
 	{
+		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
 	}
 
 	/**
@@ -1851,6 +1867,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID characteristicUuid)
 	{
+		return m_serviceMngr.getCharacteristic(null, characteristicUuid);
 	}
 
 	/**
@@ -1858,6 +1875,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
 	{
+		return m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 	}
 
 	/**
@@ -1868,6 +1886,7 @@ public class BleServer implements UsesCustomNull
 
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
 	{
+		return m_serviceMngr.getService(uuid);
 	}
 
 	/**
@@ -1878,6 +1897,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
 	{
+		return m_serviceMngr.getServices();
 	}
 
 	/**
@@ -1887,7 +1907,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
 	{
-		return m_serviceMngr.getNativeServices_List();
+		return m_serviceMngr.getServices_List();
 	}
 
 	/**
@@ -1898,7 +1918,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
 	{
-		return m_serviceMngr.getNativeCharacteristics();
+		return m_serviceMngr.getCharacteristics(null);
 	}
 
 	/**
@@ -1908,7 +1928,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
 	{
-		return m_serviceMngr.getNativeCharacteristics_List();
+		return m_serviceMngr.getCharacteristics_List(null);
 	}
 
 	/**
@@ -1916,9 +1936,9 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service)
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(final UUID serviceUuid)
 	{
-		return m_serviceMngr.getNativeCharacteristics(service);
+		return m_serviceMngr.getCharacteristics(serviceUuid);
 	}
 
 	/**
@@ -1926,9 +1946,9 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service)
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(final UUID serviceUuid)
 	{
-		return m_serviceMngr.getNativeCharacteristics_List(service);
+		return m_serviceMngr.getCharacteristics_List(serviceUuid);
 	}
 
 
