@@ -503,6 +503,14 @@ public class BleServer implements UsesCustomNull
 			}
 
 			/**
+			 * Checks if {@link #status()} is {@link Status#SUCCESS}.
+			 */
+			public boolean wasSuccess()
+			{
+				return status() == Status.SUCCESS;
+			}
+
+			/**
 			 * Will return true in certain early-out cases when there is no issue and the response can continue.
 			 * See {@link BleServer#sendNotification(String, UUID, UUID, byte[], OutgoingListener)} for more information.
 			 */
