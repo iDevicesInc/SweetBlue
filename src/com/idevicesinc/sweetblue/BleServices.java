@@ -16,6 +16,7 @@ public class BleServices
 			Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID,
 			BleDescriptorPermission.READ, BleDescriptorPermission.WRITE
 		);
+
 		final BleCharacteristic characteristic_currentTime	= new BleCharacteristic
 		(
 			Uuids.CURRENT_TIME_SERVICE__CURRENT_TIME
@@ -23,15 +24,17 @@ public class BleServices
 			BleCharacteristicPermission.READ,
 			BleCharacteristicProperty.READ, BleCharacteristicProperty.NOTIFY
 		);
+
 		final BleCharacteristic characteristic_localTime	= new BleCharacteristic
 		(
 			Uuids.CURRENT_TIME_SERVICE__LOCAL_TIME_INFO,
 			BleCharacteristicPermission.READ,
 			BleCharacteristicProperty.READ
 		);
+
 		final BleService currentTimeService					= new BleService
 		(
-			Uuids.CURRENT_TIME_SERVICE
+			Uuids.CURRENT_TIME_SERVICE,
 			characteristic_currentTime, characteristic_localTime
 		);
 
