@@ -133,7 +133,7 @@ class P_ServerServiceManager
 	{
 		final List<BluetoothGattService> list_native = getNativeServiceList_original();
 
-		return list_native == EMPTY_SERVICE_LIST ? list_native : new ArrayList<>(list_native);
+		return list_native == EMPTY_SERVICE_LIST ? list_native : new ArrayList<BluetoothGattService>(list_native);
 	}
 
 	private List<BluetoothGattCharacteristic> getNativeCharacteristicList_original(final BluetoothGattService service)
@@ -147,7 +147,7 @@ class P_ServerServiceManager
 	{
 		final List<BluetoothGattCharacteristic> list_native = getNativeCharacteristicList_original(service);
 
-		return list_native == EMPTY_CHARACTERISTIC_LIST ? list_native : new ArrayList<>(list_native);
+		return list_native == EMPTY_CHARACTERISTIC_LIST ? list_native : new ArrayList<BluetoothGattCharacteristic>(list_native);
 	}
 
 	private List<BluetoothGattDescriptor> getNativeDescriptorList_original(final BluetoothGattCharacteristic characteristic)
@@ -161,12 +161,12 @@ class P_ServerServiceManager
 	{
 		final List<BluetoothGattDescriptor> list_native = getNativeDescriptorList_original(characteristic);
 
-		return list_native == EMPTY_DESCRIPTOR_LIST ? list_native : new ArrayList<>(list_native);
+		return list_native == EMPTY_DESCRIPTOR_LIST ? list_native : new ArrayList<BluetoothGattDescriptor>(list_native);
 	}
 
 	private List<BluetoothGattCharacteristic> collectAllNativeCharacteristics(final UUID serviceUuid_nullable)
 	{
-		final ArrayList<BluetoothGattCharacteristic> characteristics = new ArrayList<>();
+		final ArrayList<BluetoothGattCharacteristic> characteristics = new ArrayList<BluetoothGattCharacteristic>();
 		final List<BluetoothGattService> serviceList_native = getNativeServiceList_original();
 
 		for( int i = 0; i < serviceList_native.size(); i++ )
@@ -184,7 +184,7 @@ class P_ServerServiceManager
 
 	private List<BluetoothGattDescriptor> collectAllNativeDescriptors(final UUID serviceUuid_nullable, final UUID charUuid_nullable)
 	{
-		final ArrayList<BluetoothGattDescriptor> toReturn = new ArrayList<>();
+		final ArrayList<BluetoothGattDescriptor> toReturn = new ArrayList<BluetoothGattDescriptor>();
 		final List<BluetoothGattService> serviceList_native = getNativeServiceList_original();
 
 		for( int i = 0; i < serviceList_native.size(); i++ )
