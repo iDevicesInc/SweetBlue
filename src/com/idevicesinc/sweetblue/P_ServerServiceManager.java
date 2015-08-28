@@ -349,13 +349,16 @@ class P_ServerServiceManager
 
 		final PA_Task current = queue.getCurrent();
 
-		if( current.getClass() == P_Task_AddService.class && m_server.equals(current.getServer()) )
+		if( current != null )
 		{
-			final P_Task_AddService current_cast = (P_Task_AddService) current;
-
-			if( !current_cast.cancelledInTheMiddleOfExecuting() )
+			if( current.getClass() == P_Task_AddService.class && m_server.equals(current.getServer()) )
 			{
-				forEach.next(current_cast);
+				final P_Task_AddService current_cast = (P_Task_AddService) current;
+
+				if( !current_cast.cancelledInTheMiddleOfExecuting() )
+				{
+					forEach.next(current_cast);
+				}
 			}
 		}
 	}
