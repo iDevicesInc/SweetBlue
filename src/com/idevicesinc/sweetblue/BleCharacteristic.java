@@ -19,6 +19,16 @@ public class BleCharacteristic
 		this(uuid, property.bit(), permission.bit(), descriptors);
 	}
 
+	public BleCharacteristic(final UUID uuid, final BleDescriptor descriptor, final BleCharacteristicPermission permission, final BleCharacteristicProperty ... properties)
+	{
+		this(uuid, Utils.toBits(properties), permission.bit(), new BleDescriptor[]{descriptor});
+	}
+
+	public BleCharacteristic(final UUID uuid, final BleDescriptor descriptor, final BleCharacteristicProperty property, final BleCharacteristicPermission ... permissions)
+	{
+		this(uuid, property.bit(), Utils.toBits(permissions), new BleDescriptor[]{descriptor});
+	}
+
 	public BleCharacteristic(final UUID uuid, final BleCharacteristicPermission permission, final BleCharacteristicProperty property, final BleDescriptor ... descriptors)
 	{
 		this(uuid, property.bit(), permission.bit(), descriptors);

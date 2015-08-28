@@ -250,7 +250,7 @@ class P_Logger
 	
 	public String gattStatus(int code)
 	{
-		String errorName = "UNKNOWN_STATUS";
+		String errorName = "GATT_STATUS_NOT_APPLICABLE";
 		
 		if( m_gattStatusCodes == null && m_enabled )
 		{
