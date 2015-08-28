@@ -14,7 +14,7 @@ public class Utils_Time extends Utils
 	/**
 	 * Returns the current time as a byte array, useful for implementing {@link BleServices#currentTime()} for example.
 	 */
-	private static byte[] getCurrentTime()
+	public static byte[] getCurrentTime()
 	{
 		final byte[] time = new byte[10];
 		final byte adjustReason = 0;
@@ -41,10 +41,10 @@ public class Utils_Time extends Utils
 	/**
 	 * Returns the local time info as a byte array, useful for implementing {@link BleServices#currentTime()} for example.
 	 */
-	private static byte[] getLocalTimeInfo()
+	public static byte[] getLocalTimeInfo()
 	{
 		final byte[] info = new byte[2];
-		TimeZone timeZone = TimeZone.getDefault();
+		final TimeZone timeZone = TimeZone.getDefault();
 		int offset = timeZone.getOffset( System.currentTimeMillis() );
 		offset /= 1800000; // see CTS spec for why this is like this: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.time_zone.xml
 		offset *= 2;
