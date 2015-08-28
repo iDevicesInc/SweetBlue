@@ -424,7 +424,7 @@ public class BleServer implements UsesCustomNull
 		/**
 		 * Called when a read or write from the client is requested.
 		 */
-		Please onEvent(final IncomingEvent event);
+		Please onEvent(final IncomingEvent e);
 	}
 
 	/**
@@ -610,7 +610,7 @@ public class BleServer implements UsesCustomNull
 		/**
 		 * Called when a notification or a response to a request is fulfilled or failed.
 		 */
-		void onEvent(final OutgoingEvent event);
+		void onEvent(final OutgoingEvent e);
 	}
 
 	/**
@@ -1264,7 +1264,7 @@ public class BleServer implements UsesCustomNull
 
 	private static final OutgoingListener NULL_OUTGOING_LISTENER = new OutgoingListener()
 	{
-		@Override public void onEvent(OutgoingEvent event)
+		@Override public void onEvent(OutgoingEvent e)
 		{
 		}
 	};
