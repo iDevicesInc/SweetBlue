@@ -77,5 +77,4 @@ public enum BleDescriptorPermission implements BitwiseEnum
 	{
 		return (m_bit & mask) != 0x0;
 	}
-
 }

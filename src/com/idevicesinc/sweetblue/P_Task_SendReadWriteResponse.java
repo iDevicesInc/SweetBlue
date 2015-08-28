@@ -22,6 +22,7 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 		if( m_data_sent == null )
 		{
 			m_data_sent = m_please.m_futureData != null ? m_please.m_futureData.getData() : BleDevice.EMPTY_BYTE_ARRAY;
+			m_data_sent = m_data_sent != null ? m_data_sent : BleDevice.EMPTY_BYTE_ARRAY;
 		}
 
 		return m_data_sent;
