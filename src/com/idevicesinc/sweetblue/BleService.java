@@ -9,6 +9,8 @@ import java.util.UUID;
 /**
  * Proxy of {@link BluetoothGattService} to force stricter compile-time checks and order of operations
  * when creating services for {@link BleServer}.
+ *
+ * @see BleServices
  */
 public class BleService
 {

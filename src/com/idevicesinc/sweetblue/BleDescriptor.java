@@ -9,6 +9,8 @@ import java.util.UUID;
 /**
  * Proxy of {@link android.bluetooth.BluetoothGattDescriptor} to force stricter compile-time checks and order of operations
  * when creating descriptors for {@link BleServer}.
+ *
+ * @see BleServices
  */
 public class BleDescriptor
 {

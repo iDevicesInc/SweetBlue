@@ -9,6 +9,9 @@ public class BleServices
 {
 	private BleServices(){}
 
+	/**
+	 * Returns service conforming to the "Current Time Service" specificiation.
+	 */
 	public static BleService currentTime()
 	{
 		final BleDescriptor descriptor						= new BleDescriptor
@@ -19,7 +22,7 @@ public class BleServices
 
 		final BleCharacteristic characteristic_currentTime	= new BleCharacteristic
 		(
-			Uuids.CURRENT_TIME_SERVICE__CURRENT_TIME
+			Uuids.CURRENT_TIME_SERVICE__CURRENT_TIME,
 			descriptor,
 			BleCharacteristicPermission.READ,
 			BleCharacteristicProperty.READ, BleCharacteristicProperty.NOTIFY

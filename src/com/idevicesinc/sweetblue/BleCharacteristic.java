@@ -9,6 +9,8 @@ import java.util.UUID;
 /**
  * Proxy of {@link android.bluetooth.BluetoothGattCharacteristic} to force stricter compile-time checks and order of operations
  * when creating characteristics for {@link BleServer}.
+ *
+ * @see BleServices
  */
 public class BleCharacteristic
 {
