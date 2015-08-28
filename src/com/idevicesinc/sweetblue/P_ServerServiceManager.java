@@ -17,7 +17,7 @@ import java.util.UUID;
 
 class P_ServerServiceManager
 {
-	private static final Iterator<BluetoothGattService> EMPTY_SERVICE_ITERATOR = new EmptyIterator<>();
+	private static final Iterator<BluetoothGattService> EMPTY_SERVICE_ITERATOR = new EmptyIterator<BluetoothGattService>();
 
 	private static final List<BluetoothGattService> EMPTY_SERVICE_LIST = new ArrayList<BluetoothGattService>()
 	{
@@ -27,10 +27,10 @@ class P_ServerServiceManager
 		}
 	};
 
-	private static final List<BluetoothGattCharacteristic> EMPTY_CHARACTERISTIC_LIST = new ArrayList<>();
-	private static final Iterator<BluetoothGattCharacteristic> EMPTY_CHARACTERISTIC_ITERATOR = new EmptyIterator<>();
+	private static final List<BluetoothGattCharacteristic> EMPTY_CHARACTERISTIC_LIST = new ArrayList<BluetoothGattCharacteristic>();
+	private static final Iterator<BluetoothGattCharacteristic> EMPTY_CHARACTERISTIC_ITERATOR = new EmptyIterator<BluetoothGattCharacteristic>();
 
-	private static final List<BluetoothGattDescriptor> EMPTY_DESCRIPTOR_LIST = new ArrayList<>();
+	private static final List<BluetoothGattDescriptor> EMPTY_DESCRIPTOR_LIST = new ArrayList<BluetoothGattDescriptor>();
 
 	private final BleServer m_server;
 

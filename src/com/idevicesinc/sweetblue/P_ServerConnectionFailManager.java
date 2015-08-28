@@ -15,7 +15,7 @@ class P_ServerConnectionFailManager
 
 	private BleServer.ConnectionFailListener m_connectionFailListener = DEFAULT_CONNECTION_FAIL_LISTENER;
 
-	private final HashMap<String, P_ServerConnectionFailEntry> m_entries = new HashMap<>();
+	private final HashMap<String, P_ServerConnectionFailEntry> m_entries = new HashMap<String, P_ServerConnectionFailEntry>();
 
 	P_ServerConnectionFailManager(final BleServer server)
 	{
