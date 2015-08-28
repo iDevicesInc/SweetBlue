@@ -22,6 +22,11 @@ public interface ForEach_Breakable<T>
 			return m_continue;
 		}
 
+		public boolean shouldBreak()
+		{
+			return !shouldContinue();
+		}
+
 		public static Please doContinue()
 		{
 			return CONTINUE;

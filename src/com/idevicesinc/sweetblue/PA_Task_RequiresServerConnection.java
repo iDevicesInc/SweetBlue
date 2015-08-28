@@ -17,7 +17,7 @@ abstract class PA_Task_RequiresServerConnection extends PA_Task_RequiresBleOn
 	{
 		BleManager mngr = this.getManager();
 
-		if( mngr.is(BleManagerState.TURNING_OFF) )
+		if( mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
 		{
 			return BleServer.OutgoingListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
 		}

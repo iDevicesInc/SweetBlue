@@ -758,7 +758,7 @@ public class BleManager
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
 	IncomingListener m_defaultServerIncomingListener;
 	BleServer.ServiceAddListener m_serviceAddListener;
-    final P_ServerManager m_serverMngr;
+//    final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
 	
@@ -802,7 +802,7 @@ public class BleManager
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
 		m_deviceMngr = new P_DeviceManager(this);
-		m_serverMngr = new P_ServerManager(this);
+//		m_serverMngr = new P_ServerManager(this);
 		m_deviceMngr_cache = new P_DeviceManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
 
@@ -1329,7 +1329,7 @@ public class BleManager
 	 */
 	public void startScan(Interval scanTime)
 	{
-		startScan(scanTime, (ScanFilter)null, (DiscoveryListener) null);
+		startScan(scanTime, (ScanFilter) null, (DiscoveryListener) null);
 	}
 
 	/**
@@ -2032,20 +2032,39 @@ public class BleManager
 	}
 
 	/**
-	 * Overload of {@link #newServer(IncomingListener)} without the {@link IncomingListener} parameter.
+	 * Overload of {@link #newServer(BleServerConfig, IncomingListener)} without any initial set-up parameters.
 	 */
 	public BleServer newServer()
 	{
-		return newServer((IncomingListener)null);
+		return newServer((BleServerConfig) null, (IncomingListener) null);
+	}
+
+	/**
+	 * Overload of {@link #newServer(BleServerConfig, IncomingListener)} without the listener.
+	 */
+	public BleServer newServer(final BleServerConfig config)
+	{
+		return newServer(config, (IncomingListener) null);
+	}
+
+	/**
+	 * Overload of {@link #newServer(BleServerConfig, IncomingListener)} without the listener.
+	 */
+	public BleServer newServer(final IncomingListener incomingListener)
+	{
+		return newServer((BleServerConfig)null, incomingListener);
 	}
 
 	/**
 	 *
 	 */
-	public BleServer newServer(final IncomingListener incomingListener)
+	public BleServer newServer(final BleServerConfig config, final IncomingListener incomingListener)
 	{
-		BleServer bleServer = new BleServer( this );
-		m_serverMngr.add( bleServer );
+		final BleServer bleServer = new BleServer(this, /*isNull=*/false);
+
+		bleServer.setConfig(config);
+		bleServer.setListener_Incoming(incomingListener);
+
 		return bleServer;
 	}
 

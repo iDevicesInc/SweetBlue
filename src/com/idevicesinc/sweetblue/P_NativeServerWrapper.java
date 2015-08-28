@@ -9,7 +9,6 @@ import java.util.HashMap;
 class P_NativeServerWrapper
 {
 	private final BleServer m_server;
-	private final P_Logger m_logger;
 	private final BleManager m_mngr;
 
 	private BluetoothGattServer m_native;
@@ -20,7 +19,6 @@ class P_NativeServerWrapper
 	public P_NativeServerWrapper(BleServer server )
 	{
 		m_server = server;
-		m_logger = m_server.getManager().getLogger();
 		m_mngr = m_server.getManager();
 
 		if( server.isNull() )
@@ -43,9 +41,9 @@ class P_NativeServerWrapper
 		else
 		{
 			final BluetoothGattServer native_local = m_native;
+
 			m_native = null;
 
-			native_local.clearServices();
 			native_local.close();
 		}
 	}

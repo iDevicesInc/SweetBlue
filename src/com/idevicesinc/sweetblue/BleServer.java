@@ -664,11 +664,11 @@ public class BleServer implements UsesCustomNull
 				return Utils.toString
 				(
 					this.getClass(),
-					"server",			server().getName_debug(),
+//					"server",			server().getName_debug(),
 					"entered",			Utils.toString(enterMask(),						BleServerState.VALUES()),
 					"exited", 			Utils.toString(exitMask(),						BleServerState.VALUES()),
 					"current",			Utils.toString(newStateBits(),					BleServerState.VALUES()),
-					"gattStatus",		server().m_logger.gattStatus(gattStatus())
+					"gattStatus",		server().getManager().getLogger().gattStatus(gattStatus())
 				);
 			}
 		}
@@ -1164,7 +1164,7 @@ public class BleServer implements UsesCustomNull
 
 			NULL_SERVER,
 
-			DUPLICATE,
+			DUPLICATE_SERVICE,
 
 			SERVER_OPENING_FAILED,
 
@@ -1173,6 +1173,8 @@ public class BleServer implements UsesCustomNull
 			FAILED_EVENTUALLY,
 
 			TIMED_OUT,
+
+			CANCELLED_FROM_REMOVAL,
 
 			/**
 			 * The operation was cancelled because {@link BleServer#disconnect()} was called before the operation completed.
@@ -1277,7 +1279,6 @@ public class BleServer implements UsesCustomNull
 	final P_NativeServerWrapper m_nativeWrapper;
 	private IncomingListener m_incomingListener;
 	private OutgoingListener m_outgoingListener_default;
-	private final P_Logger m_logger;
 	private final boolean m_isNull;
 	private BleServerConfig m_config = null;
 	private final P_ServerConnectionFailManager m_connectionFailMngr;
@@ -1302,7 +1303,6 @@ public class BleServer implements UsesCustomNull
 		if( isNull )
 		{
 			m_queue = null;
-			m_logger = null;
 			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = null;
 			m_nativeWrapper = new P_NativeServerWrapper(this);
@@ -1313,7 +1313,6 @@ public class BleServer implements UsesCustomNull
 		else
 		{
 			m_queue = m_mngr.getTaskQueue();
-			m_logger = m_mngr.getLogger();
 			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = new P_BleServer_Listeners(this);
 			m_nativeWrapper = new P_NativeServerWrapper(this);
@@ -1718,8 +1717,7 @@ public class BleServer implements UsesCustomNull
 	{
 		getClients(new ForEach_Void<String>()
 		{
-			@Override
-			public void next(final String next)
+			@Override public void next(final String next)
 			{
 				disconnect(next);
 			}
@@ -1727,6 +1725,8 @@ public class BleServer implements UsesCustomNull
 		}, CONNECTING, CONNECTED);
 
 		m_nativeWrapper.closeServer();
+
+		m_serviceMngr.removeAll(ServiceAddListener.Status.CANCELLED_FROM_DISCONNECT);
 	}
 
 	@Override public boolean isNull()
@@ -1819,9 +1819,9 @@ public class BleServer implements UsesCustomNull
 			m_outgoingListener_default.onEvent(e);
 		}
 
-		if( m_mngr.m_defaultServerOutgoingListener != null )
+		if( getManager().m_defaultServerOutgoingListener != null )
 		{
-			m_mngr.m_defaultServerOutgoingListener.onEvent(e);
+			getManager().m_defaultServerOutgoingListener.onEvent(e);
 		}
 	}
 
@@ -1833,6 +1833,16 @@ public class BleServer implements UsesCustomNull
 	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
 	{
 		return m_serviceMngr.addService(service, listener);
+	}
+
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService removeService(final UUID serviceUuid)
+	{
+		return m_serviceMngr.remove(serviceUuid);
+	}
+
+	public void removeAllServices()
+	{
+		m_serviceMngr.removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
 	}
 
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID descUuid)
@@ -1886,7 +1896,7 @@ public class BleServer implements UsesCustomNull
 
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
 	{
-		return m_serviceMngr.getService(uuid);
+		return m_serviceMngr.getServiceDirectlyFromNativeServer(uuid);
 	}
 
 	/**

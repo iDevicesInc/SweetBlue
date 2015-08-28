@@ -219,6 +219,18 @@ abstract class PA_Task
 	{
 		m_queue.tryEndingTask(this, PE_TaskState.FAILED);
 	}
+
+	protected void clearFromQueue()
+	{
+		if( this.getState() == PE_TaskState.ARMED || this.getState() == PE_TaskState.EXECUTING )
+		{
+			getManager().ASSERT(false, "Tried to clear a task from queue while its armed or executing.");
+		}
+		else
+		{
+			m_queue.tryEndingTask(this, PE_TaskState.CLEARED_FROM_QUEUE);
+		}
+	}
 	
 	protected void failImmediately()
 	{

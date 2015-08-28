@@ -10,6 +10,8 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 	private final BluetoothGattService m_service;
 	private final BleServer.ServiceAddListener m_addListener;
 
+	private boolean m_cancelledInTheMiddleOfExecuting = false;
+
 	public P_Task_AddService(BleServer server, final BluetoothGattService service, final BleServer.ServiceAddListener addListener)
 	{
 		super(server, null);
@@ -94,23 +96,63 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 		getServer().m_serviceMngr.invokeListeners(e, m_addListener);
 	}
 
+	public boolean cancelledInTheMiddleOfExecuting()
+	{
+		return m_cancelledInTheMiddleOfExecuting;
+	}
+
 	public void onServiceAdded(final int gattStatus, final BluetoothGattService service)
 	{
-		if( Utils.isSuccess(gattStatus) )
+		if( m_cancelledInTheMiddleOfExecuting )
 		{
-			succeed();
+			final BluetoothGattServer server_native_nullable = getServer().getNative();
+
+			if( server_native_nullable != null )
+			{
+				server_native_nullable.removeService(service);
+			}
+
+			//--- DRK > Not invoking appland callback because it was already send in call to cancel() back in time.
+			fail();
 		}
 		else
 		{
-			fail(BleServer.ServiceAddListener.Status.FAILED_EVENTUALLY, gattStatus);
+			if( Utils.isSuccess(gattStatus) )
+			{
+				succeed();
+			}
+			else
+			{
+				fail(BleServer.ServiceAddListener.Status.FAILED_EVENTUALLY, gattStatus);
+			}
 		}
+	}
+
+	public void cancel(final BleServer.ServiceAddListener.Status status)
+	{
+		if( this.getState() == PE_TaskState.ARMED )
+		{
+			fail();
+		}
+		else if( this.getState() == PE_TaskState.EXECUTING )
+		{
+			//--- DRK > We don't actually fail the task here because we let it run
+			//--- 		its course until we get a callback from the native stack.
+			m_cancelledInTheMiddleOfExecuting = true;
+		}
+		else
+		{
+			clearFromQueue();
+		}
+
+		invokeFailCallback(status, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	protected final BleServer.ServiceAddListener.Status getCancelStatusType()
 	{
 		BleManager mngr = this.getManager();
 
-		if( mngr.is(BleManagerState.TURNING_OFF) )
+		if( mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
 		{
 			return BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
 		}
