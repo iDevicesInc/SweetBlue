@@ -12,6 +12,20 @@ import java.util.TimeZone;
 public class Utils_Time extends Utils
 {
 	/**
+	 * {@link FutureData} wrapper of {@link #getCurrentTime()}.
+	 */
+	public static FutureData getFutureTime()
+	{
+		return new FutureData()
+		{
+			@Override public byte[] getData()
+			{
+				return getCurrentTime();
+			}
+		};
+	}
+
+	/**
 	 * Returns the current time as a byte array, useful for implementing {@link BleServices#currentTime()} for example.
 	 */
 	public static byte[] getCurrentTime()
@@ -36,6 +50,20 @@ public class Utils_Time extends Utils
 		time[9] = adjustReason;
 
 		return time;
+	}
+
+	/**
+	 * {@link FutureData} wrapper of {@link #getLocalTimeInfo()}.
+	 */
+	public static FutureData getFutureLocalTimeInfo()
+	{
+		return new FutureData()
+		{
+			@Override public byte[] getData()
+			{
+				return getLocalTimeInfo();
+			}
+		};
 	}
 
 	/**

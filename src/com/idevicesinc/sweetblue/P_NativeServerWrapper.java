@@ -64,6 +64,8 @@ class P_NativeServerWrapper
 
 			m_native = m_mngr.getNative().openGattServer(m_mngr.getApplicationContext(), m_server.m_listeners);
 
+			final BluetoothGattServer another = m_mngr.getNative().openGattServer(m_mngr.getApplicationContext(), m_server.m_listeners);
+
 			if( m_native == null )
 			{
 				return false;
