@@ -116,7 +116,7 @@ Getting Started
     ```java
     BleManager.get(this).startScan(new ScanFilter()
     {
-    	@Override public Please onEvent(final ScanEvent e)
+    	@Override public Please onEvent(ScanEvent e)
     	{
     		return Please.acknowledgeIf(e.name_normalized().contains("my_device")).andStopScan();
     	}
