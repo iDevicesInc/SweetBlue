@@ -10,7 +10,7 @@ public class BleServices
 	private BleServices(){}
 
 	/**
-	 * Returns service conforming to the "Current Time Service" specificiation.
+	 * Returns a new service conforming to the "Current Time Service" specification.
 	 */
 	public static BleService currentTime()
 	{

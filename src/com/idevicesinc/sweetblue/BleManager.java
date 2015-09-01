@@ -761,6 +761,8 @@ public class BleManager
 //    final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
+
+	private BleServer m_server = null;
 	
 	static BleManager s_instance = null;
 	
@@ -781,7 +783,7 @@ public class BleManager
 		initLogger();
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
-		m_filterMngr = new P_ScanFilterManager(m_config.defaultScanFilter);
+		m_filterMngr = new P_ScanFilterManager(this, m_config.defaultScanFilter);
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
         // Account for unit testing. When using robolectric, the bluetooth manager comes back null. However, it includes
         // shadow classes to simulate Bluetooth devices, so we shouldn't need the manager to run tests.
@@ -2032,40 +2034,24 @@ public class BleManager
 	}
 
 	/**
-	 * Overload of {@link #newServer(BleServerConfig, IncomingListener)} without any initial set-up parameters.
+	 * Overload of {@link #getServer(IncomingListener)} without any initial set-up parameters.
 	 */
-	public BleServer newServer()
+	public BleServer getServer()
 	{
-		return newServer((BleServerConfig) null, (IncomingListener) null);
+		return getServer((IncomingListener) null);
 	}
 
 	/**
-	 * Overload of {@link #newServer(BleServerConfig, IncomingListener)} without the listener.
+	 * Returns a {@link BleServer} instance. which for now at least is a singleton.
 	 */
-	public BleServer newServer(final BleServerConfig config)
+	public BleServer getServer(final IncomingListener incomingListener)
 	{
-		return newServer(config, (IncomingListener) null);
-	}
+		m_server = m_server != null ? m_server : new BleServer(this, /*isNull=*/false);
 
-	/**
-	 * Overload of {@link #newServer(BleServerConfig, IncomingListener)} without the listener.
-	 */
-	public BleServer newServer(final IncomingListener incomingListener)
-	{
-		return newServer((BleServerConfig)null, incomingListener);
-	}
+//		bleServer.setConfig(config);
+		m_server.setListener_Incoming(incomingListener);
 
-	/**
-	 *
-	 */
-	public BleServer newServer(final BleServerConfig config, final IncomingListener incomingListener)
-	{
-		final BleServer bleServer = new BleServer(this, /*isNull=*/false);
-
-		bleServer.setConfig(config);
-		bleServer.setListener_Incoming(incomingListener);
-
-		return bleServer;
+		return m_server;
 	}
 
 	/**

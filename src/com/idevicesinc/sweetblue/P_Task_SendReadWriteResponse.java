@@ -80,7 +80,7 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 	{
 		final double timeToSuccess = .5d; //TODO
 
-		if( getTotalTimeExecuting() >= timeToSuccess )
+		if( getState() == PE_TaskState.EXECUTING && getTotalTimeExecuting() >= timeToSuccess )
 		{
 			succeed();
 		}

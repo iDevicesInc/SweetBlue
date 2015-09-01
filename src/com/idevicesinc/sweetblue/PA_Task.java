@@ -212,6 +212,7 @@ abstract class PA_Task
 	
 	protected void succeed()
 	{
+
 		m_queue.tryEndingTask(this, PE_TaskState.SUCCEEDED);
 	}
 	

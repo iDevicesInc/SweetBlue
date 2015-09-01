@@ -18,7 +18,7 @@ public class Distance extends Unit<Distance>
 	public static final Distance ZERO		= meters(0.0);
 	
 	/**
-	 * Convenience value representing in invalid/impossible distance, arbitrarily chosen to be negative one meter.
+	 * Convenience value representing an invalid/impossible distance, arbitrarily chosen to be negative one meter.
 	 */
 	public static final Distance INVALID	= meters(-1.0);
 	

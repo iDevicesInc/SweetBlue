@@ -272,7 +272,7 @@ public class BleServer implements UsesCustomNull
 	}
 
 	/**
-	 * Provide an instance through {@link BleManager#newServer(IncomingListener)} or {@link BleServer#setListener_Incoming(IncomingListener)}.
+	 * Provide an instance through {@link BleServer#setListener_Incoming(IncomingListener)}.
 	 * The return value of {@link IncomingListener#onEvent(IncomingEvent)} is used to decide if/how to respond to a given {@link IncomingEvent}.
 	 */
 	@Lambda
@@ -517,6 +517,37 @@ public class BleServer implements UsesCustomNull
 			@Override public boolean isNull()
 			{
 				return status().isNull();
+			}
+
+			@Override public String toString()
+			{
+				if( type().isRead() )
+				{
+					return Utils.toString
+					(
+						this.getClass(),
+						"status",			status(),
+						"type",				type(),
+						"target",			target(),
+						"macAddress",		macAddress(),
+						"charUuid",			server().getManager().getLogger().uuidName(charUuid()),
+						"requestId",		requestId()
+					);
+				}
+				else
+				{
+					return Utils.toString
+					(
+						this.getClass(),
+						"status",			status(),
+						"type",				type(),
+						"target",			target(),
+						"data_received",	data_received(),
+						"macAddress",		macAddress(),
+						"charUuid",			server().getManager().getLogger().uuidName(charUuid()),
+						"requestId",		requestId()
+					);
+				}
 			}
 		}
 
@@ -1361,7 +1392,7 @@ public class BleServer implements UsesCustomNull
 	}
 
 	/**
-	 * Set a listener here to override any listener provided previously either through this method or through {@link BleManager#newServer(IncomingListener)} or otherwise.
+	 * Set a listener here to override any listener provided previously.
 	 */
 	public void setListener_Incoming(@Nullable(Nullable.Prevalence.NORMAL) final IncomingListener listener_nullable)
 	{
@@ -1755,7 +1786,14 @@ public class BleServer implements UsesCustomNull
 
 		final ChangeIntent intent = explicit ? ChangeIntent.INTENTIONAL : ChangeIntent.UNINTENTIONAL;
 
-		m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTING /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		//--- DRK > Testing and source code inspection reveals that it's impossible for the native stack to report server->client CONNECTING.
+		//---		In other words for both implicit and explicit connects it always jumps from DISCONNECTED to CONNECTED.
+		//---		For explicit connects through SweetBlue we can thus fake the CONNECTING state cause we know a task was in the queue, etc.
+		//---		For implicit connects the decision is made here to reflect what happens in the native stack, cause as far as SweetBlue
+		//---		is concerned we were never in the CONNECTING state either.
+		final BleServerState previousState = explicit ? BleServerState.DISCONNECTED : BleServerState.CONNECTING;
+
+		m_stateTracker.doStateTransition(macAddress, previousState /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ConnectionFailListener.Status status, final int gattStatus)
