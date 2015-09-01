@@ -118,7 +118,8 @@ Getting Started
     {
     	@Override public Please onEvent(ScanEvent e)
     	{
-    		return Please.acknowledgeIf(e.name_normalized().contains("my_device")).andStopScan();
+    		return Please.acknowledgeIf(e.name_normalized().contains("my_device"))
+    		             .andStopScan();
     	}
     },
     
