@@ -153,9 +153,11 @@ class P_ClientManager
 
 					break;
 				}
-				else
+				else if( m_stateMask == 0x0 )
 				{
 					m_next = client;
+
+					break;
 				}
 			}
 		}
@@ -174,6 +176,7 @@ class P_ClientManager
 				throw new NoSuchElementException("No more clients associated with this server.");
 			}
 
+			m_next = null;
 			findNext();
 
 			return m_returned;

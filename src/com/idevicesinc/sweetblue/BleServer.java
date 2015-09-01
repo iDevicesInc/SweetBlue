@@ -1195,24 +1195,57 @@ public class BleServer implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface ServiceAddListener
 	{
+		/**
+		 * Enumeration of the different ways that service addition can fail (and one way for it to succeed),
+		 * provided through {@link OutgoingListener.OutgoingEvent#status()}.
+		 */
 		public static enum Status implements UsesCustomNull
 		{
+			/**
+			 * Fulfills the soft contract of {@link UsesCustomNull}.
+			 */
 			NULL,
 
+			/**
+			 * Service was added successfully.
+			 */
 			SUCCESS,
 
+			/**
+			 * Tried to add a service to {@link BleServer#NULL}.
+			 */
 			NULL_SERVER,
 
+			/**
+			 * Tried to add the same service reference twice.
+			 */
 			DUPLICATE_SERVICE,
 
+			/**
+			 * Adding this service required that a native {@link BluetoothGattServer} to be created,
+			 * but it could not be created for some reason.
+			 */
 			SERVER_OPENING_FAILED,
 
+			/**
+			 * The call to {@link BluetoothGattServer#addService(BluetoothGattService)} returned <code>false</code>.
+			 */
 			FAILED_IMMEDIATELY,
 
+			/**
+			 * {@link BluetoothGattServerCallback#onServiceAdded(int, BluetoothGattService)} reported a bad gatt status
+			 * for the service addition, which is provided through {@link OutgoingListener.OutgoingEvent#gattStatus_received()}.
+			 */
 			FAILED_EVENTUALLY,
 
+			/**
+			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}.
+			 */
 			TIMED_OUT,
 
+			/**
+			 * {@link #removeService(UUID)} or {@link #removeAllServices()} was called before the service could be fully added.
+			 */
 			CANCELLED_FROM_REMOVAL,
 
 			/**
@@ -1244,6 +1277,10 @@ public class BleServer implements UsesCustomNull
 			}
 		}
 
+		/**
+		 * Event struct passed to {@link #onEvent(ServiceAddEvent)} to give you information about the success
+		 * of a service addition or the reason(s) for its failure.
+		 */
 		@Immutable
 		public static class ServiceAddEvent
 		{
@@ -1296,8 +1333,22 @@ public class BleServer implements UsesCustomNull
 			{
 				return new ServiceAddEvent(server, service, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}
+
+			public String toString()
+			{
+				return Utils.toString
+				(
+					this.getClass(),
+					"status",			status(),
+					"service",			server().getManager().getLogger().serviceName(service().getUuid()),
+					"gattStatus",		server().getManager().getLogger().gattStatus(gattStatus())
+				);
+			}
 		}
 
+		/**
+		 * Called when a service has finished being added or failed to be added.
+		 */
 		void onEvent(final ServiceAddEvent e);
 	}
 
@@ -2178,5 +2229,10 @@ public class BleServer implements UsesCustomNull
 	public boolean hasClient(final BleServerState ... states)
 	{
 		return getClientCount(states) > 0;
+	}
+
+	public String toString()
+	{
+		return this.getClass().getSimpleName() + " with " + getClientCount(CONNECTING, CONNECTED) + " connected/ing clients.";
 	}
 }

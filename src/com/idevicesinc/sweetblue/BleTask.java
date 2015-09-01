@@ -76,18 +76,31 @@ public enum BleTask
 	 */
 	DISCOVER_SERVICES,
 
-
 	/**
-	 * Associated with sending a notification to a remote client through {@link BleServer#sendNotification(String, UUID, UUID, FutureData, BleServer.OutgoingListener)} or overloads.
+	 * Associated with sending a notification to a remote client through {@link BleServer#sendNotification(String, UUID, UUID, FutureData, BleServer.OutgoingListener)}
+	 * or {@link BleServer#sendIndication(String, UUID, UUID, FutureData, BleServer.OutgoingListener)} overloads.
 	 */
 	SEND_NOTIFICATION,
 
+	/**
+	 * Associated with {@link BleServer#connect(String)} or overloads.
+	 */
 	CONNECT_SERVER,
 
+	/**
+	 * Associated with {@link BleServer#disconnect(String)}.
+	 */
 	DISCONNECT_SERVER,
 
+	/**
+	 * Associated with {@link BleServer.IncomingListener.Please#respondWithSuccess()}, {@link BleServer.IncomingListener.Please#respondWithError(int)},
+	 * or various other static methods of {@link BleServer.IncomingListener.Please}.
+	 */
 	SEND_READ_WRITE_RESPONSE,
 
+	/**
+	 * Associated with {@link BleServer#addService(BleService, BleServer.ServiceAddListener)} or overloads.
+	 */
 	ADD_SERVICE;
 	
 	/**
