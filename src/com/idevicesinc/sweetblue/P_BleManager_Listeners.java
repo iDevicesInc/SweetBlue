@@ -17,6 +17,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.List;
@@ -269,6 +270,12 @@ class P_BleManager_Listeners
 			{
 				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, E_Intent.UNINTENTIONAL);
 				m_taskQueue.add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
+
+				if( m_mngr.m_server != null )
+				{
+					m_mngr.m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.BLE_TURNING_OFF, State.ChangeIntent.UNINTENTIONAL);
+				}
+
 				intent = E_Intent.UNINTENTIONAL;
 			}
 			

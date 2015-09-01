@@ -762,7 +762,7 @@ public class BleManager
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
 
-	private BleServer m_server = null;
+	BleServer m_server = null;
 	
 	static BleManager s_instance = null;
 	
@@ -2225,10 +2225,14 @@ public class BleManager
 			m_deviceMngr.unbondAll(PE_TaskPriority.CRITICAL, BondListener.Status.CANCELLED_FROM_BLE_TURNING_OFF);
 		}
 
-		P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		if( m_server != null )
 		{
-			@Override
-			public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.BLE_TURNING_OFF, ChangeIntent.INTENTIONAL);
+		}
+
+		final P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		{
+			@Override public void onStateChange(PA_Task taskClass, PE_TaskState state)
 			{
 				if( state == PE_TaskState.EXECUTING )
 				{

@@ -239,6 +239,26 @@ public class BleServer implements UsesCustomNull
 
 				m_data_received = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
 			}
+		}
+	}
+
+	/**
+	 * Provide an instance through {@link BleServer#setListener_Incoming(IncomingListener)}.
+	 * The return value of {@link IncomingListener#onEvent(IncomingEvent)} is used to decide if/how to respond to a given {@link IncomingEvent}.
+	 */
+	@Lambda
+	public static interface IncomingListener extends ExchangeListener
+	{
+		/**
+		 * Struct passed to {@link {@link IncomingListener#onEvent(IncomingEvent)}} that provides details about the client and what it wants from us, the server.
+		 */
+		@Immutable
+		public static class IncomingEvent extends ExchangeEvent
+		{
+			IncomingEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
+			{
+				super(server, nativeDevice, serviceUuid_in, charUuid_in, descUuid_in, type_in, target_in, data_in, requestId, offset, responseNeeded);
+			}
 
 			@Override public String toString()
 			{
@@ -267,26 +287,6 @@ public class BleServer implements UsesCustomNull
 						"requestId",		requestId()
 					);
 				}
-			}
-		}
-	}
-
-	/**
-	 * Provide an instance through {@link BleServer#setListener_Incoming(IncomingListener)}.
-	 * The return value of {@link IncomingListener#onEvent(IncomingEvent)} is used to decide if/how to respond to a given {@link IncomingEvent}.
-	 */
-	@Lambda
-	public static interface IncomingListener extends ExchangeListener
-	{
-		/**
-		 * Struct passed to {@link {@link IncomingListener#onEvent(IncomingEvent)}} that provides details about the client and what it wants from us, the server.
-		 */
-		@Immutable
-		public static class IncomingEvent extends ExchangeEvent
-		{
-			IncomingEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
-			{
-				super(server, nativeDevice, serviceUuid_in, charUuid_in, descUuid_in, type_in, target_in, data_in, requestId, offset, responseNeeded);
 			}
 		}
 
@@ -1679,6 +1679,8 @@ public class BleServer implements UsesCustomNull
 
 	ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
+		m_nativeWrapper.clearImplicitDisconnectIgnoring(nativeDevice.getAddress());
+
 		if( stateListener != null )
 		{
 			setListener_State(stateListener);
@@ -1728,6 +1730,13 @@ public class BleServer implements UsesCustomNull
 
 	public boolean disconnect(final String macAddress)
 	{
+		return disconnect_private(macAddress, ConnectionFailListener.Status.EXPLICIT_DISCONNECT, ChangeIntent.INTENTIONAL);
+	}
+
+	private boolean disconnect_private(final String macAddress, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
+	{
+		final boolean addTask = true;
+
 		m_connectionFailMngr.onExplicitDisconnect(macAddress);
 
 		if( is(macAddress, DISCONNECTED) )  return false;
@@ -1735,17 +1744,41 @@ public class BleServer implements UsesCustomNull
 		final BleServerState oldConnectionState = m_stateTracker.getOldConnectionState(macAddress);
 
 		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
-		final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-		m_queue.add(task);
 
-		m_stateTracker.doStateTransition(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		if( addTask )
+		{
+			//--- DRK > Purposely doing explicit=true here without regarding the intent.
+			final boolean explicit = true;
+			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
+			m_queue.add(task);
+		}
+
+		m_stateTracker.doStateTransition(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		if( oldConnectionState == CONNECTING )
 		{
-			m_connectionFailMngr.onNativeConnectFail(nativeDevice, ConnectionFailListener.Status.EXPLICIT_DISCONNECT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			m_connectionFailMngr.onNativeConnectFail(nativeDevice, status_connectionFail, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 
 		return true;
+	}
+
+	void disconnect_internal(final ServiceAddListener.Status status_serviceAdd, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
+	{
+		getClients(new ForEach_Void<String>()
+		{
+			@Override public void next(final String next)
+			{
+				disconnect_private(next, status_connectionFail, intent);
+
+				m_nativeWrapper.ignoreNextImplicitDisconnect(next);
+			}
+
+		}, CONNECTING, CONNECTED);
+
+		m_nativeWrapper.closeServer();
+
+		m_serviceMngr.removeAll(status_serviceAdd);
 	}
 
 	/**
@@ -1754,18 +1787,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void disconnect()
 	{
-		getClients(new ForEach_Void<String>()
-		{
-			@Override public void next(final String next)
-			{
-				disconnect(next);
-			}
-
-		}, CONNECTING, CONNECTED);
-
-		m_nativeWrapper.closeServer();
-
-		m_serviceMngr.removeAll(ServiceAddListener.Status.CANCELLED_FROM_DISCONNECT);
+		disconnect_internal(ServiceAddListener.Status.CANCELLED_FROM_DISCONNECT, ConnectionFailListener.Status.EXPLICIT_DISCONNECT, ChangeIntent.INTENTIONAL);
 	}
 
 	@Override public boolean isNull()
@@ -1791,7 +1813,7 @@ public class BleServer implements UsesCustomNull
 		//---		For explicit connects through SweetBlue we can thus fake the CONNECTING state cause we know a task was in the queue, etc.
 		//---		For implicit connects the decision is made here to reflect what happens in the native stack, cause as far as SweetBlue
 		//---		is concerned we were never in the CONNECTING state either.
-		final BleServerState previousState = explicit ? BleServerState.DISCONNECTED : BleServerState.CONNECTING;
+		final BleServerState previousState = explicit ? BleServerState.CONNECTING : BleServerState.DISCONNECTED;
 
 		m_stateTracker.doStateTransition(macAddress, previousState /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
@@ -1811,9 +1833,14 @@ public class BleServer implements UsesCustomNull
 
 	void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)
 	{
-		if( !explicit )
+		final boolean ignore = m_nativeWrapper.shouldIgnoreImplicitDisconnect(macAddress);
+
+		if( explicit == false )
 		{
-			m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTED /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			if( ignore == false )
+			{
+				m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTED /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			}
 		}
 		else
 		{

@@ -161,8 +161,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 		updateLoop.postIfNeeded(new Runnable()
 		{
-			@Override
-			public void run()
+			@Override public void run()
 			{
 				m_logger.log_status(gattStatus, m_logger.gattConn(newState));
 

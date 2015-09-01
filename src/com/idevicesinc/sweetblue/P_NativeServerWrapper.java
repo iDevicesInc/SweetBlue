@@ -11,6 +11,7 @@ import android.bluetooth.le.ScanResult;
 import android.os.Build;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 class P_NativeServerWrapper
 {
@@ -21,6 +22,7 @@ class P_NativeServerWrapper
 	private String m_name = "";
 
 	private final HashMap<String, Integer> m_nativeConnectionStates = new HashMap<String, Integer>();
+	private final HashSet<String> m_ignoredDisconnects = new HashSet<String>();
 	
 	public P_NativeServerWrapper(BleServer server )
 	{
@@ -37,6 +39,27 @@ class P_NativeServerWrapper
 			m_name = ""; //TODO
 		}
 	}
+
+	public void ignoreNextImplicitDisconnect(final String macAddress)
+	{
+		m_ignoredDisconnects.add(macAddress);
+	}
+
+	public boolean shouldIgnoreImplicitDisconnect(final String macAddress)
+	{
+		final boolean toReturn = m_ignoredDisconnects.contains(macAddress);
+
+		clearImplicitDisconnectIgnoring(macAddress);
+
+		return toReturn;
+	}
+
+	public void clearImplicitDisconnectIgnoring(final String macAddress)
+	{
+		m_ignoredDisconnects.remove(macAddress);
+	}
+
+
 
 	public void closeServer()
 	{

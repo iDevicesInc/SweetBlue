@@ -172,7 +172,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * Shorthand for calling {@link BleManager#stopScan(ScanFilter)}.
 			 */
-			public Please andStopScan()
+			public Please thenStopScan()
 			{
 				m_stopScanOptions |= STOP_SCAN;
 
@@ -182,9 +182,20 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * Shorthand for calling {@link BleManager#stopPeriodicScan(ScanFilter)}.
 			 */
-			public Please andStopPeriodicScan()
+			public Please thenStopPeriodicScan()
 			{
 				m_stopScanOptions |= STOP_PERIODIC_SCAN;
+
+				return this;
+			}
+
+			/**
+			 * Shorthand for calling both {@link BleManager#stopScan(ScanFilter)} and {@link BleManager#stopPeriodicScan(ScanFilter)}.
+			 */
+			public Please thenStopAllScanning()
+			{
+				thenStopScan();
+				thenStopPeriodicScan();
 
 				return this;
 			}
