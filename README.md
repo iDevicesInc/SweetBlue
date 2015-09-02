@@ -114,7 +114,16 @@ Getting Started
         
 4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
     ```java
-    BleManager.get(this).startScan(new DiscoveryListener()
+    BleManager.get(this).startScan(new ScanFilter()
+    {
+    	@Override public Please onEvent(ScanEvent e)
+    	{
+    		return Please.acknowledgeIf(e.name_normalized().contains("my_device"))
+    		             .thenStopScan();
+    	}
+    },
+    
+    new DiscoveryListener()
     {
     	@Override public void onEvent(DiscoveryEvent e)
     	{
