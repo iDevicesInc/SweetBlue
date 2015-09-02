@@ -27,7 +27,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 	{
 		BleManager mngr = this.getManager();
 		
-		if( mngr.is(BleManagerState.TURNING_OFF) )
+		if( mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
 		{
 			return BleDevice.ReadWriteListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
 		}

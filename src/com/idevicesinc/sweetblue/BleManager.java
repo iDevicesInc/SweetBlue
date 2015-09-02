@@ -28,12 +28,13 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+
+import com.idevicesinc.sweetblue.BleServer.IncomingListener;
 import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
-import com.idevicesinc.sweetblue.P_Task_Scan.E_Mode;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -661,7 +662,7 @@ public class BleManager
 	};
 
 	/**
-	 * Create an instance or retrieve an already-created instance with default configuration options set.
+	 * Create the singleton instance or retrieve the already-created singleton instance with default configuration options set.
 	 * If you call this after you call {@link #get(android.content.Context, BleManagerConfig)} (for example in another
 	 * {@link android.app.Activity}), the {@link BleManagerConfig} originally passed in will be used.
 	 * Otherwise, if a new instance is to be created, this calls {@link #get(android.content.Context, BleManagerConfig)} with a {@link BleManagerConfig}
@@ -682,7 +683,7 @@ public class BleManager
 	}
 
 	/**
-	 * Create an instance or retrieve an already-created instance with custom configuration options set.
+	 * Create the singleton instance or retrieve the already-created singleton instance with custom configuration options set.
 	 * If you call this more than once (for example from a different {@link android.app.Activity}
 	 * with different {@link BleManagerConfig} options set then the newer options overwrite the older options.
 	 */
@@ -740,6 +741,7 @@ public class BleManager
 	private AssertListener m_assertionListener;
 			BleDevice.StateListener m_defaultDeviceStateListener;
 			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
+			BleServer.ConnectionFailListener m_defaultConnectionFailListener_server;
 			BleDevice.BondListener m_defaultBondListener;
 			BleDevice.ReadWriteListener m_defaultReadWriteListener;
 	final P_DiskOptionsManager m_diskOptionsMngr;
@@ -751,7 +753,15 @@ public class BleManager
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
 
+    BleServer.StateListener m_defaultServerStateListener;
+	BleServer.OutgoingListener m_defaultServerOutgoingListener;
+	IncomingListener m_defaultServerIncomingListener;
+	BleServer.ServiceAddListener m_serviceAddListener;
+//    final P_ServerManager m_serverMngr;
+
 	final Backend_HistoricalDatabase m_historicalDatabase;
+
+	BleServer m_server = null;
 	
 	static BleManager s_instance = null;
 	
@@ -761,6 +771,7 @@ public class BleManager
 	 * The library does not touch or interact with this data in any way.
 	 * 
 	 * @see BleDevice#appData
+	 * @see BleServer#appData
 	 */
 	public Object appData;
 
@@ -771,7 +782,7 @@ public class BleManager
 		initLogger();
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
-		m_filterMngr = new P_ScanFilterManager(m_config.defaultScanFilter);
+		m_filterMngr = new P_ScanFilterManager(this, m_config.defaultScanFilter);
 		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
         // Account for unit testing. When using robolectric, the bluetooth manager comes back null. However, it includes
         // shadow classes to simulate Bluetooth devices, so we shouldn't need the manager to run tests.
@@ -792,6 +803,7 @@ public class BleManager
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
 		m_deviceMngr = new P_DeviceManager(this);
+//		m_serverMngr = new P_ServerManager(this);
 		m_deviceMngr_cache = new P_DeviceManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
 
@@ -1069,12 +1081,67 @@ public class BleManager
 		}
 	}
 
+	public void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) BleServer.ConnectionFailListener listener_nullable)
+	{
+		m_defaultConnectionFailListener_server = listener_nullable;
+	}
+
+	/**
+	 * Convenience method to handle server request events at the manager level. The listener provided
+	 * will only get called if the server receiving a request doesn't have a listener provided to
+	 * {@link BleServer#setListener_Incoming(IncomingListener)} . This is unlike the behavior (for example)
+	 * behind {@link #setListener_Outgoing(BleServer.OutgoingListener)} because
+	 * {@link IncomingListener#onEvent(IncomingListener.IncomingEvent)} requires a return value.
+	 *
+	 * @see BleServer#setListener_Incoming(IncomingListener)
+	 */
+	public void setListener_Incoming(@Nullable(Prevalence.NORMAL) IncomingListener listener_nullable)
+	{
+		m_defaultServerIncomingListener = listener_nullable;
+	}
+
+	/**
+	 * Convenience method to listen for all service addition events for all servers.
+	 * The listener provided will get called in addition to and after the listener, if any, provided
+	 * to {@link BleServer#setListener_ServiceAdd(BleServer.ServiceAddListener)}.
+	 *
+	 * @see BleServer#setListener_ServiceAdd(BleServer.ServiceAddListener)
+	 */
+	public void setListener_ServiceAdd(@Nullable(Prevalence.NORMAL)BleServer.ServiceAddListener listener_nullable)
+	{
+		m_serviceAddListener = listener_nullable;
+	}
+
+	/**
+	 * Convenience method to listen for all changes in {@link BleServerState} for all servers.
+	 * The listener provided will get called in addition to and after the listener, if any, provided
+	 * to {@link BleServer#setListener_State(BleServer.StateListener)}.
+	 * 
+	 * @see BleServer#setListener_State(BleServer.StateListener)
+	 */
+	public void setListener_ServerState(@Nullable(Prevalence.NORMAL) BleServer.StateListener listener_nullable)
+	{
+		m_defaultServerStateListener = listener_nullable;
+	}
+
+	/**
+	 * Convenience method to listen for completion of all outgoing messages from
+	 * {@link BleServer} instances. The listener provided will get called in addition to and after the listener, if any, provided
+	 * to {@link BleServer#setListener_Outgoing(BleServer.OutgoingListener)}.
+	 *
+	 * @see BleServer#setListener_Outgoing(BleServer.OutgoingListener)
+	 */
+	public void setListener_Outgoing(@Nullable(Prevalence.NORMAL) BleServer.OutgoingListener listener_nullable)
+	{
+		m_defaultServerOutgoingListener = listener_nullable;
+	}
+
 	/**
 	 * Convenience method to handle connection fail events at the manager level. The listener provided
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
 	 * {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)}. This is unlike the behavior
-	 * behind {@link #setListener_DeviceState(BleDevice.StateListener)} because {@link BleDevice.ConnectionFailListener}
-	 * requires a return value.
+	 * behind {@link #setListener_DeviceState(BleDevice.StateListener)} because
+	 * {@link BleDevice.ConnectionFailListener#onEvent(ConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
 	 * @see BleDevice#setListener_ConnectionFail(BleDevice.ConnectionFailListener)
 	 */
@@ -1263,7 +1330,7 @@ public class BleManager
 	 */
 	public void startScan(Interval scanTime)
 	{
-		startScan(scanTime, (ScanFilter)null, (DiscoveryListener) null);
+		startScan(scanTime, (ScanFilter) null, (DiscoveryListener) null);
 	}
 
 	/**
@@ -1966,6 +2033,27 @@ public class BleManager
 	}
 
 	/**
+	 * Overload of {@link #getServer(IncomingListener)} without any initial set-up parameters.
+	 */
+	public BleServer getServer()
+	{
+		return getServer((IncomingListener) null);
+	}
+
+	/**
+	 * Returns a {@link BleServer} instance. which for now at least is a singleton.
+	 */
+	public BleServer getServer(final IncomingListener incomingListener)
+	{
+		m_server = m_server != null ? m_server : new BleServer(this, /*isNull=*/false);
+
+//		bleServer.setConfig(config);
+		m_server.setListener_Incoming(incomingListener);
+
+		return m_server;
+	}
+
+	/**
 	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
 	 * and passes a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
@@ -2136,10 +2224,14 @@ public class BleManager
 			m_deviceMngr.unbondAll(PE_TaskPriority.CRITICAL, BondListener.Status.CANCELLED_FROM_BLE_TURNING_OFF);
 		}
 
-		P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		if( m_server != null )
 		{
-			@Override
-			public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ChangeIntent.INTENTIONAL);
+		}
+
+		final P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		{
+			@Override public void onStateChange(PA_Task taskClass, PE_TaskState state)
 			{
 				if( state == PE_TaskState.EXECUTING )
 				{

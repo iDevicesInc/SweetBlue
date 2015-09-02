@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.BleManagerState;
  * Implementations are {@link BleDeviceState} and {@link BleManagerState}.
  * Not intended for subclassing outside this library but go wild if you want.
  */
-public interface State extends UsesCustomNull
+public interface State extends UsesCustomNull, BitwiseEnum
 {
 	/**
 	 * Abstract base class for {@link com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent} and {@link com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent}.
@@ -225,26 +225,6 @@ public interface State extends UsesCustomNull
 	}
 	
 	/**
-	 * Returns the bit (0x1, 0x2, 0x4, etc.) this enum represents based on the {@link #ordinal()}.
-	 */
-	int bit();
-	
-	/**
-	 * Convenience method for checking if <code>({@link #bit()} & mask) != 0x0</code>.
-	 */
-	boolean overlaps(int mask);
-	
-	/**
-	 * Same as {@link Enum#ordinal()}.
-	 */
-	int ordinal();
-	
-	/**
-	 * Same as {@link Enum#name()}.
-	 */
-	String name();
-	
-	/**
 	 * Given an old and new state mask, for example from {@link com.idevicesinc.sweetblue.BleDevice.StateListener#onEvent(com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent)}
 	 *  or {@link com.idevicesinc.sweetblue.BleManager.StateListener#onEvent(com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent)}, this method tells you whether the
 	 * the 'this' state was appended.
@@ -259,16 +239,6 @@ public interface State extends UsesCustomNull
 	 * @see #didEnter(int, int)
 	 */
 	boolean didExit(int oldStateBits, int newStateBits);
-	
-	/**
-	 * Does a bitwise OR for this state and the given state.
-	 */
-	int or(State state);
-	
-	/**
-	 * Does a bitwise OR for this state and the given bits.
-	 */
-	int or(int bits);
 	
 	/**
 	 * Returns <code>true</code> if this state is meant to stand in for Java's built-in <code>null</code>.

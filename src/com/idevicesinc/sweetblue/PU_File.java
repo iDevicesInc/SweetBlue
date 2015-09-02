@@ -6,7 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.UUID;
 
-public class PU_File
+class PU_File
 {
 	private static String EXTENSION = "history";
 	private static String FILENAME_DELIMITER = "_";

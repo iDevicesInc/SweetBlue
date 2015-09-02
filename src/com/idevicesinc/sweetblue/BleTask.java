@@ -1,6 +1,11 @@
 package com.idevicesinc.sweetblue;
 
+import android.bluetooth.BluetoothDevice;
+
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.utils.FutureData;
+
+import java.util.UUID;
 
 /**
  * Under the hood, SweetBlue uses a priority task queue to serialize all interaction with the native BLE stack.
@@ -69,7 +74,34 @@ public enum BleTask
 	/**
 	 * Associated with discovering services after a {@link BleDevice} becomes {@link BleDeviceState#CONNECTED}.
 	 */
-	DISCOVER_SERVICES;
+	DISCOVER_SERVICES,
+
+	/**
+	 * Associated with sending a notification to a remote client through {@link BleServer#sendNotification(String, UUID, UUID, FutureData, BleServer.OutgoingListener)}
+	 * or {@link BleServer#sendIndication(String, UUID, UUID, FutureData, BleServer.OutgoingListener)} overloads.
+	 */
+	SEND_NOTIFICATION,
+
+	/**
+	 * Associated with {@link BleServer#connect(String)} or overloads.
+	 */
+	CONNECT_SERVER,
+
+	/**
+	 * Associated with {@link BleServer#disconnect(String)}.
+	 */
+	DISCONNECT_SERVER,
+
+	/**
+	 * Associated with {@link BleServer.IncomingListener.Please#respondWithSuccess()}, {@link BleServer.IncomingListener.Please#respondWithError(int)},
+	 * or various other static methods of {@link BleServer.IncomingListener.Please}.
+	 */
+	SEND_READ_WRITE_RESPONSE,
+
+	/**
+	 * Associated with {@link BleServer#addService(BleService, BleServer.ServiceAddListener)} or overloads.
+	 */
+	ADD_SERVICE;
 	
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
@@ -78,19 +110,42 @@ public enum BleTask
 	{
 		switch(this)
 		{
+			//--- DRK > Server-specific.
+			case CONNECT_SERVER:
+			case DISCONNECT_SERVER:
+			case SEND_NOTIFICATION:
+			case SEND_READ_WRITE_RESPONSE:
+
+			//--- DRK > Manager-specific.
 			case TURN_BLE_OFF:
 			case TURN_BLE_ON:
 			case RESOLVE_CRASHES:	return false;
+
 			default:				return true;
 		}
 	}
-	
+
 	/**
 	 * Returns whether <code>this</code> is associated with {@link BleManager}.
 	 */
 	public boolean isManagerSpecific()
 	{
-		return !isDeviceSpecific();
+		switch(this)
+		{
+			case TURN_BLE_OFF:
+			case TURN_BLE_ON:
+			case RESOLVE_CRASHES:
+
+			default:				return true;
+		}
+	}
+
+	/**
+	 * Returns whether <code>this</code> is associated with a {@link BleServer}.
+	 */
+	public boolean isServerSpecific()
+	{
+		return !isDeviceSpecific() && !isManagerSpecific();
 	}
 	
 	/**

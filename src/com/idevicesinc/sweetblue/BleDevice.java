@@ -419,7 +419,7 @@ public class BleDevice implements UsesCustomNull
 			 * peripheral if {@link ReadWriteEvent#type} {@link Type#isRead()}. This will never be <code>null</code>. For error cases it will be a
 			 * zero-length array.
 			 */
-			public byte[] data() {  return m_data;  }
+			public @Nullable(Nullable.Prevalence.NEVER)  byte[] data() {  return m_data;  }
 			private final byte[] m_data;
 
 			/**
@@ -656,7 +656,7 @@ public class BleDevice implements UsesCustomNull
 		/**
 		 * Called when a read or write is complete or when a notification comes in or when a notification is enabled/disabled.
 		 */
-		void onEvent(ReadWriteEvent e);
+		void onEvent(final ReadWriteEvent e);
 	}
 
 	/**
@@ -733,7 +733,7 @@ public class BleDevice implements UsesCustomNull
 		/**
 		 * Called when a device's bitwise {@link BleDeviceState} changes. As many bits as possible are flipped at the same time.
 		 */
-		void onEvent(StateEvent e);
+		void onEvent(final StateEvent e);
 	}
 
 	/**
@@ -1180,7 +1180,7 @@ public class BleDevice implements UsesCustomNull
 				return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
 			}
 
-			static ConnectionFailEvent DUMMY(BleDevice device, Status reason)
+			static ConnectionFailEvent EARLY_OUT(BleDevice device, Status reason)
 			{
 				return new ConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
 			}
@@ -1216,6 +1216,7 @@ public class BleDevice implements UsesCustomNull
 						return Utils.toString
 						(
 							this.getClass(),
+							"device",				device().getName_debug(),
 							"status", 				status(),
 							"bondFailReason",		device().getManager().getLogger().gattUnbondReason(bondFailReason()),
 							"failureCountSoFar",	failureCountSoFar()
@@ -1226,6 +1227,7 @@ public class BleDevice implements UsesCustomNull
 						return Utils.toString
 						(
 							this.getClass(),
+							"device",				device().getName_debug(),
 							"status", 				status(),
 							"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
 							"failureCountSoFar",	failureCountSoFar()
@@ -1248,7 +1250,7 @@ public class BleDevice implements UsesCustomNull
 		 * The time parameters like {@link ConnectionFailEvent#attemptTime_latest()} are of optional use to you to decide if connecting again
 		 * is worth it. For example if you've been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
 		 */
-		Please onEvent(ConnectionFailEvent e);
+		Please onEvent(final ConnectionFailEvent e);
 	}
 
 	/**
@@ -1872,6 +1874,7 @@ public class BleDevice implements UsesCustomNull
 	 * The library does not touch or interact with this data in any way.
 	 *
 	 * @see BleManager#appData
+	 * @see BleServer#appData
 	 */
 	public Object appData;
 
@@ -3042,7 +3045,7 @@ public class BleDevice implements UsesCustomNull
 			//--- DRK > Making a judgement call that an explicit connect call here means we bail out of the long term reconnect state.
 			stateTracker_main().remove(RECONNECTING_LONG_TERM, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			final ConnectionFailListener.ConnectionFailEvent info_alreadyConnected = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
+			final ConnectionFailListener.ConnectionFailEvent info_alreadyConnected = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
 
 			m_connectionFailMngr.invokeCallback(info_alreadyConnected);
 
@@ -4876,11 +4879,11 @@ public class BleDevice implements UsesCustomNull
 	{
 		if (isNull())
 		{
-			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.NULL_DEVICE);
+			final ConnectionFailListener.ConnectionFailEvent e = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, Status.NULL_DEVICE);
 
-			m_connectionFailMngr.invokeCallback(info);
+			m_connectionFailMngr.invokeCallback(e);
 
-			return info;
+			return e;
 		}
 
 		return null;
@@ -4894,7 +4897,7 @@ public class BleDevice implements UsesCustomNull
 
 		if (isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 		{
-			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.DUMMY(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
+			final ConnectionFailListener.ConnectionFailEvent info = ConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, Status.ALREADY_CONNECTING_OR_CONNECTED);
 
 			m_connectionFailMngr.invokeCallback(info);
 
@@ -5072,7 +5075,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */true);
 
-		if (state == PE_TaskState.SOFTLY_CANCELLED || state == PE_TaskState.NO_OP)	return;
+		if (state == PE_TaskState.SOFTLY_CANCELLED )	return;
 
 		boolean attemptingReconnect = is(RECONNECTING_LONG_TERM);
 		BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
@@ -5106,7 +5109,7 @@ public class BleDevice implements UsesCustomNull
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(connectionFailStatus, timing, attemptingReconnect, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_EVENT());
+			final Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(connectionFailStatus, timing, attemptingReconnect, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_EVENT());
 
 			if (!attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_TRUE)
 			{

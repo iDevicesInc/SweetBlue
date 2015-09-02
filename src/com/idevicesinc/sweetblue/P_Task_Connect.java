@@ -77,7 +77,6 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			//---		In that case it doesn't make sense to fail again (even though listeners
 			//---		should be and currently are defensive about that case).
 //			this.fail();
-			this.noOp();
 		}
 	}
 	
@@ -118,13 +117,16 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		if( task instanceof P_Task_Disconnect )
 		{
 			P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
-			
-			//--- DRK > If an implicit disconnect comes in we have no choice but to bail.
-			//---		Otherwise we let the connection task run its course then we'll
-			//---		disconnect afterwards all nice and orderly-like.
-			if( !task_cast.isExplicit() )
+
+			if( task_cast.getDevice().equals(getDevice()) )
 			{
-				return true;
+				//--- DRK > If an implicit disconnect comes in we have no choice but to bail.
+				//---		Otherwise we let the connection task run its course then we'll
+				//---		disconnect afterwards all nice and orderly-like.
+				if( !task_cast.isExplicit() )
+				{
+					return true;
+				}
 			}
 		}
 		else if( task instanceof P_Task_TurnBleOff )

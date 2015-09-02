@@ -49,6 +49,10 @@ public class Uuids
 		SYSTEM_ID
 	};
 
+	public static final UUID CURRENT_TIME_SERVICE = Uuids.fromShort(0x1805);
+	public static final UUID CURRENT_TIME_SERVICE__CURRENT_TIME = Uuids.fromShort(0x2a2b);
+	public static final UUID CURRENT_TIME_SERVICE__LOCAL_TIME_INFO = Uuids.fromShort(0x2a0f);
+
 
 
 //	public static final UUID MODEL_NUMBER											= fromShort("2a27");

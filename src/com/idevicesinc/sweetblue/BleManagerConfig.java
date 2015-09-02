@@ -144,11 +144,14 @@ public class BleManagerConfig extends BleDeviceConfig
 		 * Small struct passed back from {@link ScanFilter#onEvent(ScanEvent)}.
 		 * Use static constructor methods to create an instance.
 		 */
-		@Immutable
 		public static class Please
 		{
+			static int STOP_SCAN			= 0x1;
+			static int STOP_PERIODIC_SCAN	= 0x2;
+
 			private final boolean m_ack;
 			private final BleDeviceConfig m_config;
+			int m_stopScanOptions;
 			
 			private Please(boolean ack, BleDeviceConfig config_nullable)
 			{
@@ -164,6 +167,37 @@ public class BleManagerConfig extends BleDeviceConfig
 			BleDeviceConfig getConfig()
 			{
 				return m_config;
+			}
+
+			/**
+			 * Shorthand for calling {@link BleManager#stopScan(ScanFilter)}.
+			 */
+			public Please thenStopScan()
+			{
+				m_stopScanOptions |= STOP_SCAN;
+
+				return this;
+			}
+
+			/**
+			 * Shorthand for calling {@link BleManager#stopPeriodicScan(ScanFilter)}.
+			 */
+			public Please thenStopPeriodicScan()
+			{
+				m_stopScanOptions |= STOP_PERIODIC_SCAN;
+
+				return this;
+			}
+
+			/**
+			 * Shorthand for calling both {@link BleManager#stopScan(ScanFilter)} and {@link BleManager#stopPeriodicScan(ScanFilter)}.
+			 */
+			public Please thenStopAllScanning()
+			{
+				thenStopScan();
+				thenStopPeriodicScan();
+
+				return this;
 			}
 			
 			/**

@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 abstract class PA_StateTracker
 {
@@ -253,21 +254,7 @@ abstract class PA_StateTracker
 	{
 		synchronized ( m_lock )
 		{
-			String toReturn = "";
-			
-			for( int i = 0; i < enums.length; i++ )
-			{
-				if( enums[i].overlaps(m_stateMask) )
-				{
-					toReturn += " " + enums[i].name().toUpperCase();
-				}
-				else
-				{
-//					toReturn += enums[i].name().toLowerCase();
-				}
-			}
-			
-			return toReturn;
+			return Utils.toString(m_stateMask, enums);
 		}
 	}
 }

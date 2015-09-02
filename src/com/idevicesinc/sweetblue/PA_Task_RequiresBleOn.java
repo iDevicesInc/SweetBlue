@@ -6,7 +6,12 @@ package com.idevicesinc.sweetblue;
  *
  */
 abstract class PA_Task_RequiresBleOn extends PA_Task
-{	
+{
+	public PA_Task_RequiresBleOn(BleServer server, I_StateListener listener)
+	{
+		super(server, listener);
+	}
+	
 	public PA_Task_RequiresBleOn(BleManager manager, I_StateListener listener)
 	{
 		super(manager, listener);

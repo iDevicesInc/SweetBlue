@@ -33,9 +33,9 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 	{
 		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
 		{
-			P_Task_Disconnect task_disconnect = (P_Task_Disconnect) task;
+			P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 			
-			if( task_disconnect.getOrdinal() > this.getOrdinal() )
+			if( task_cast.getOrdinal() > this.getOrdinal() )
 			{
 				return true;
 			}
@@ -56,7 +56,7 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 		//---		* getting services task was still executing until it timed out, prompting another connection fail callback even though we already failed from the root cause.
 		//---		NOTE that this was only directly observed for discovering services, but who knows, maybe it can happen for reads/writes/etc. as well. Normally, I'm pretty sure,
 		//---		reads/writes fail first then you get the disconnect callback.
-		if( task instanceof P_Task_Disconnect )
+		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
 		{
 			P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 			

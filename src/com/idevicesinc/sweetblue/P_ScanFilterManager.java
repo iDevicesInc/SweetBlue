@@ -15,9 +15,11 @@ class P_ScanFilterManager
 {
 	private final ArrayList<BleManagerConfig.ScanFilter> m_filters = new ArrayList<BleManagerConfig.ScanFilter>();
 	private final ScanFilter m_default;
+	private final BleManager m_mngr;
 	
-	P_ScanFilterManager(ScanFilter defaultFilter)
+	P_ScanFilterManager(final BleManager mngr, final ScanFilter defaultFilter)
 	{
+		m_mngr = mngr;
 		m_default = defaultFilter;
 	}
 	
@@ -56,6 +58,8 @@ class P_ScanFilterManager
 			final Please please = m_default.onEvent(result);
 			
 			logger.checkPlease(please, Please.class);
+
+			stopScanningIfNeeded(m_default, please);
 			
 			if( please != null && please.ack() )
 			{
@@ -67,11 +71,13 @@ class P_ScanFilterManager
 		{
 			result = result != null ? result : new ScanEvent(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
 			
-			ScanFilter ithFilter = m_filters.get(i);
+			final ScanFilter ithFilter = m_filters.get(i);
 			
 			final Please please = ithFilter.onEvent(result);
 			
 			logger.checkPlease(please, Please.class);
+
+			stopScanningIfNeeded(ithFilter, please);
 			
 			if( please != null && please.ack() )
 			{
@@ -80,5 +86,24 @@ class P_ScanFilterManager
 		}
 		
 		return BleManagerConfig.ScanFilter.Please.ignore();
+	}
+
+	private void stopScanningIfNeeded(final ScanFilter filter, final BleManagerConfig.ScanFilter.Please please_nullable)
+	{
+		if( please_nullable != null )
+		{
+			if( please_nullable.ack() )
+			{
+				if( (please_nullable.m_stopScanOptions & Please.STOP_PERIODIC_SCAN) != 0x0 )
+				{
+					m_mngr.stopPeriodicScan(filter);
+				}
+
+				if( (please_nullable.m_stopScanOptions & Please.STOP_SCAN) != 0x0 )
+				{
+					m_mngr.stopScan(filter);
+				}
+			}
+		}
 	}
 }

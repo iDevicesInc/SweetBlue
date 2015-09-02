@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import android.os.Handler;
 
-import com.idevicesinc.sweetblue.BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -17,9 +16,11 @@ abstract class PA_Task
 
 	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
-	private final BleDeviceConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new TimeoutRequestEvent();
+	private final BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent();
+
 	
-	private 	  BleDevice m_device; 
+	private 	  BleDevice m_device;
+	private		  BleServer m_server;
 	private final BleManager m_manager;
 	
 	private double m_timeout;
@@ -65,7 +66,14 @@ abstract class PA_Task
 			}
 		}
 	};
-	
+
+    public PA_Task(BleServer server, I_StateListener listener)
+    {
+        this(server.getManager(), listener);
+
+        m_server = server;
+    }
+
 	public PA_Task(BleDevice device, I_StateListener listener)
 	{
 		this(device.getManager(), listener);
@@ -101,16 +109,17 @@ abstract class PA_Task
 		if( taskType != null )
 		{
 			final BleDevice device = getDevice() != null ? getDevice() : BleDevice.NULL;
+			final BleServer server = getServer() != null ? getServer() : BleServer.NULL;
 			
-			s_timeoutRequestEvent.init(getManager(), device, taskType, getCharUuid(), getDescUuid());
+			s_timeoutRequestEvent.init(getManager(), device, server, taskType, getCharUuid(), getDescUuid());
 			
-			return BleDeviceConfig.getTimeout(s_timeoutRequestEvent);
+			return BleServerConfig.getTimeout(s_timeoutRequestEvent);
 		}
 		else
 		{
 			getManager().ASSERT(false, "BleTask type shouldn't be null.");
 			
-			return BleDeviceConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
+			return BleServerConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
 		}
 	}
 	
@@ -203,6 +212,7 @@ abstract class PA_Task
 	
 	protected void succeed()
 	{
+
 		m_queue.tryEndingTask(this, PE_TaskState.SUCCEEDED);
 	}
 	
@@ -210,15 +220,22 @@ abstract class PA_Task
 	{
 		m_queue.tryEndingTask(this, PE_TaskState.FAILED);
 	}
+
+	protected void clearFromQueue()
+	{
+		if( this.getState() == PE_TaskState.ARMED || this.getState() == PE_TaskState.EXECUTING )
+		{
+			getManager().ASSERT(false, "Tried to clear a task from queue while its armed or executing.");
+		}
+		else
+		{
+			m_queue.tryEndingTask(this, PE_TaskState.CLEARED_FROM_QUEUE);
+		}
+	}
 	
 	protected void failImmediately()
 	{
 		m_queue.tryEndingTask(this, PE_TaskState.FAILED_IMMEDIATELY);
-	}
-	
-	protected void noOp()
-	{
-		m_queue.tryEndingTask(this, PE_TaskState.NO_OP);
 	}
 	
 	protected void selfInterrupt()
@@ -397,10 +414,29 @@ abstract class PA_Task
 	{
 		return m_totalTimeArmedAndExecuting;
 	}
+
+	public boolean isFor(final Class<? extends PA_Task_ConnectOrDisconnectServer> taskClass, final BleServer server, final String macAddress)
+	{
+		if( taskClass.isAssignableFrom(this.getClass()) )
+		{
+			final PA_Task_ConnectOrDisconnectServer this_cast = (PA_Task_ConnectOrDisconnectServer) this;
+
+			return this_cast.isFor(server, macAddress);
+		}
+		else
+		{
+			return false;
+		}
+	}
 	
 	public BleDevice getDevice()
 	{
 		return m_device;
+	}
+	
+	public BleServer getServer()
+	{
+		return m_server;
 	}
 	
 	public BleManager getManager()
