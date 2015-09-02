@@ -175,7 +175,12 @@ def buildSampleTask(buildDir) {
 // project, and build 
 task copyAndRenameJars(dependsOn: copySamples) << {
     File sampleDir = new File("${BUNDLE_FOLDER}/samples/")    
-    FileCollection collection = files { sampleDir.listFiles() }
+    FileCollection collection = files { sampleDir.listFiles(new FileFilter() {
+    @Override
+    public boolean accept(File file) {
+        return !file.isHidden();
+    }
+}) }
     collection.each { File file ->
         copy {
             from mainJar

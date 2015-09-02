@@ -1081,6 +1081,15 @@ public class BleManager
 		}
 	}
 
+	/**
+	 * Convenience method to handle server connection fail events at the manager level. The listener provided
+	 * will only get called if the server whose connection failed doesn't have a listener provided to
+	 * {@link BleServer#setListener_ConnectionFail(BleServer.ConnectionFailListener)}. This is unlike the behavior
+	 * behind (for example) {@link #setListener_ServerState(BleServer.StateListener)} because
+	 * {@link BleServer.ConnectionFailListener#onEvent(BleServer.ConnectionFailListener.ConnectionFailEvent)} requires a return value.
+	 *
+	 * @see BleServer#setListener_ConnectionFail(BleServer.ConnectionFailListener)
+	 */
 	public void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) BleServer.ConnectionFailListener listener_nullable)
 	{
 		m_defaultConnectionFailListener_server = listener_nullable;
@@ -1089,9 +1098,9 @@ public class BleManager
 	/**
 	 * Convenience method to handle server request events at the manager level. The listener provided
 	 * will only get called if the server receiving a request doesn't have a listener provided to
-	 * {@link BleServer#setListener_Incoming(IncomingListener)} . This is unlike the behavior (for example)
+	 * {@link BleServer#setListener_Incoming(BleServer.IncomingListener)} . This is unlike the behavior (for example)
 	 * behind {@link #setListener_Outgoing(BleServer.OutgoingListener)} because
-	 * {@link IncomingListener#onEvent(IncomingListener.IncomingEvent)} requires a return value.
+	 * {@link BleServer.IncomingListener#onEvent(BleServer.IncomingListener.IncomingEvent)} requires a return value.
 	 *
 	 * @see BleServer#setListener_Incoming(IncomingListener)
 	 */
@@ -1141,7 +1150,7 @@ public class BleManager
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
 	 * {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)}. This is unlike the behavior
 	 * behind {@link #setListener_DeviceState(BleDevice.StateListener)} because
-	 * {@link BleDevice.ConnectionFailListener#onEvent(ConnectionFailListener.ConnectionFailEvent)} requires a return value.
+	 * {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
 	 * @see BleDevice#setListener_ConnectionFail(BleDevice.ConnectionFailListener)
 	 */
@@ -2033,7 +2042,7 @@ public class BleManager
 	}
 
 	/**
-	 * Overload of {@link #getServer(IncomingListener)} without any initial set-up parameters.
+	 * Overload of {@link #getServer(BleServer.IncomingListener)} without any initial set-up parameters.
 	 */
 	public BleServer getServer()
 	{

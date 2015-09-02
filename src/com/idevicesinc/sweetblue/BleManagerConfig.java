@@ -170,7 +170,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			}
 
 			/**
-			 * Shorthand for calling {@link BleManager#stopScan(ScanFilter)}.
+			 * Shorthand for calling {@link BleManager#stopScan(BleManagerConfig.ScanFilter)}.
 			 */
 			public Please thenStopScan()
 			{
@@ -180,7 +180,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			}
 
 			/**
-			 * Shorthand for calling {@link BleManager#stopPeriodicScan(ScanFilter)}.
+			 * Shorthand for calling {@link BleManager#stopPeriodicScan(BleManagerConfig.ScanFilter)}.
 			 */
 			public Please thenStopPeriodicScan()
 			{
@@ -190,7 +190,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			}
 
 			/**
-			 * Shorthand for calling both {@link BleManager#stopScan(ScanFilter)} and {@link BleManager#stopPeriodicScan(ScanFilter)}.
+			 * Shorthand for calling both {@link BleManager#stopScan(BleManagerConfig.ScanFilter)} and {@link BleManager#stopPeriodicScan(BleManagerConfig.ScanFilter)}.
 			 */
 			public Please thenStopAllScanning()
 			{

@@ -250,7 +250,7 @@ public class BleServer implements UsesCustomNull
 	public static interface IncomingListener extends ExchangeListener
 	{
 		/**
-		 * Struct passed to {@link {@link IncomingListener#onEvent(IncomingEvent)}} that provides details about the client and what it wants from us, the server.
+		 * Struct passed to {@link BleServer.IncomingListener#onEvent(BleServer.IncomingListener.IncomingEvent)}} that provides details about the client and what it wants from us, the server.
 		 */
 		@Immutable
 		public static class IncomingEvent extends ExchangeEvent
@@ -335,10 +335,10 @@ public class BleServer implements UsesCustomNull
 
 			/**
 			 * Same as {@link #doNotRespond()} but allows you to provide a listener specific to this (non-)response.
-			 * Your {@link OutgoingListener#onEvent(OutgoingListener.OutgoingEvent)} will simply be called
-			 * with {@link OutgoingListener.Status#NO_RESPONSE_ATTEMPTED}.
+			 * Your {@link BleServer.OutgoingListener#onEvent(BleServer.OutgoingListener.OutgoingEvent)} will simply be called
+			 * with {@link BleServer.OutgoingListener.Status#NO_RESPONSE_ATTEMPTED}.
 			 *
-			 * @see BleServer#setListener_Outgoing(OutgoingListener)
+			 * @see BleServer#setListener_Outgoing(BleServer.OutgoingListener)
 			 */
 			public static Please doNotRespond(final OutgoingListener listener)
 			{
@@ -346,7 +346,7 @@ public class BleServer implements UsesCustomNull
 			}
 
 			/**
-			 * Overload of {@link #respondWithSuccess(byte[]) - see {@link FutureData} for why/when you would want to use this.
+			 * Overload of {@link #respondWithSuccess(byte[])} - see {@link FutureData} for why/when you would want to use this.
 			 */
 			public static Please respondWithSuccess(final FutureData futureData)
 			{
@@ -354,7 +354,7 @@ public class BleServer implements UsesCustomNull
 			}
 
 			/**
-			 * Overload of {@link #respondWithSuccess(byte[], OutgoingListener) - see {@link FutureData} for why/when you would want to use this.
+			 * Overload of {@link #respondWithSuccess(byte[], BleServer.OutgoingListener)} - see {@link FutureData} for why/when you would want to use this.
 			 */
 			public static Please respondWithSuccess(final FutureData futureData, final OutgoingListener listener)
 			{
@@ -429,21 +429,21 @@ public class BleServer implements UsesCustomNull
 
 	/**
 	 * Provide an instance to various static methods of {@link IncomingListener.Please} such as
-	 * {@link IncomingListener.Please#respondWithSuccess(OutgoingListener)}, or {@link BleServer#setListener_Outgoing(OutgoingListener)},
-	 * or {@link BleManager#setListener_Outgoing(OutgoingListener)}.
+	 * {@link BleServer.IncomingListener.Please#respondWithSuccess(BleServer.OutgoingListener)}, or {@link BleServer#setListener_Outgoing(OutgoingListener)},
+	 * or {@link BleManager#setListener_Outgoing(BleServer.OutgoingListener)}.
 	 */
 	public static interface OutgoingListener extends ExchangeListener
 	{
 		/**
-		 * Struct passed to {@link {@link OutgoingListener#onEvent(OutgoingEvent)}}
+		 * Struct passed to {@link BleServer.OutgoingListener#onEvent(BleServer.OutgoingListener.OutgoingEvent)}
 		 * that provides details of what was sent to the client and if it succeeded.
 		 */
 		@Immutable
 		public static class OutgoingEvent extends ExchangeEvent implements UsesCustomNull
 		{
 			/**
-			 * Returns the result of the response, or {@link OutgoingListener.Status#NO_RESPONSE_ATTEMPTED} if
-			 * for example {@link IncomingListener.Please#doNotRespond(OutgoingListener)} was used.
+			 * Returns the result of the response, or {@link BleServer.OutgoingListener.Status#NO_RESPONSE_ATTEMPTED} if
+			 * for example {@link BleServer.IncomingListener.Please#doNotRespond(BleServer.OutgoingListener)} was used.
 			 */
 			public Status status()  {  return m_status;  }
 			private final Status m_status;
@@ -455,7 +455,7 @@ public class BleServer implements UsesCustomNull
 			private final byte[] m_data_sent;
 
 			/**
-			 * The gattStatus sent to the client, provided to static methods of {@link com.idevicesinc.sweetblue.BleServer.IncomingListener.Please}
+			 * The gattStatus sent to the client, provided to static methods of {@link BleServer.IncomingListener.Please}
 			 * if {@link #type()} is {@link Type#READ} or {@link Type#WRITE} - otherwise this will equal {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 */
 			public int gattStatus_sent()  {  return m_gattStatus_sent;  }
@@ -574,8 +574,8 @@ public class BleServer implements UsesCustomNull
 			NULL_SERVER,
 
 			/**
-			 * {@link IncomingListener.Please#doNotRespond(OutgoingListener)} (or overloads)
-			 * were called or {@link IncomingListener.IncomingEvent#responseNeeded()} was <code>false</code>.
+			 * {@link BleServer.IncomingListener.Please#doNotRespond(BleServer.OutgoingListener)} (or overloads)
+			 * were called or {@link BleServer.IncomingListener.IncomingEvent#responseNeeded()} was <code>false</code>.
 			 */
 			NO_RESPONSE_ATTEMPTED,
 
@@ -787,7 +787,7 @@ public class BleServer implements UsesCustomNull
 			 * mode, etc., but it's not absolutely *certain* that this behavior
 			 * is consistent across phones. For example there might be a phone
 			 * that kills all connections *before* going through the ble turn-off
-			 * process, thus {@link}
+			 * process, thus {@link #NATIVE_CONNECTION_FAILED_EVENTUALLY} would probably be seen.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF;
 
@@ -808,7 +808,7 @@ public class BleServer implements UsesCustomNull
 			}
 
 			/**
-			 * Whether this reason honors a {@link Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
+			 * Whether this reason honors a {@link BleServer.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
 			 * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
 			 */
 			public boolean allowsRetry()
@@ -1101,7 +1101,7 @@ public class BleServer implements UsesCustomNull
 			}
 
 			/**
-			 * Opposite of{@link #retryWithAutoConnectTrue()}.
+			 * Opposite of {@link #retryWithAutoConnectTrue()}.
 			 */
 			@com.idevicesinc.sweetblue.annotations.Advanced
 			public static Please retryWithAutoConnectFalse()
@@ -1142,7 +1142,7 @@ public class BleServer implements UsesCustomNull
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#retryWithAutoConnectTrue()}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link ConnectionFailListener.Please#retryWithAutoConnectTrue()}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 
@@ -1298,7 +1298,7 @@ public class BleServer implements UsesCustomNull
 			private final BluetoothGattService m_service;
 
 			/**
-			 * Should only be relevant if {@link #status()} is {@link Status#FAILED_EVENTUALLY}.
+			 * Should only be relevant if {@link #status()} is {@link BleServer.ServiceAddListener.Status#FAILED_EVENTUALLY}.
 			 */
 			public int gattStatus()  {  return m_gattStatus;  }
 			private final int m_gattStatus;
@@ -1318,7 +1318,7 @@ public class BleServer implements UsesCustomNull
 			}
 
 			/**
-			 * Convenience forwarding of {@link Status#wasSuccess()}.
+			 * Convenience forwarding of {@link BleServer.ServiceAddListener.Status#wasSuccess()}.
 			 */
 			public boolean wasSuccess()
 			{
@@ -1463,9 +1463,9 @@ public class BleServer implements UsesCustomNull
 
 	/**
 	 * This is a default catch-all convenience listener that will be called after any listener provided through
-	 * the static methods of {@link IncomingListener.Please} such as {@link IncomingListener.Please#respondWithSuccess(OutgoingListener)}.
+	 * the static methods of {@link BleServer.IncomingListener.Please} such as {@link BleServer.IncomingListener.Please#respondWithSuccess(BleServer.OutgoingListener)}.
 	 *
-	 * @see BleManager#setListener_Outgoing(OutgoingListener)
+	 * @see BleManager#setListener_Outgoing(BleServer.OutgoingListener)
 	 */
 	public void setListener_Outgoing(final OutgoingListener listener)
 	{
