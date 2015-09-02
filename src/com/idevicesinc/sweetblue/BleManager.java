@@ -9,7 +9,6 @@ import java.util.UUID;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
-import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -2227,7 +2226,7 @@ public class BleManager
 
 		if( m_server != null )
 		{
-			m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.BLE_TURNING_OFF, ChangeIntent.INTENTIONAL);
+			m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ChangeIntent.INTENTIONAL);
 		}
 
 		final P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()

@@ -7,8 +7,6 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -18,9 +16,6 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.State;
-import com.idevicesinc.sweetblue.utils.Utils;
-
-import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class P_BleManager_Listeners
@@ -273,7 +268,7 @@ class P_BleManager_Listeners
 
 				if( m_mngr.m_server != null )
 				{
-					m_mngr.m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.BLE_TURNING_OFF, State.ChangeIntent.UNINTENTIONAL);
+					m_mngr.m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, State.ChangeIntent.UNINTENTIONAL);
 				}
 
 				intent = E_Intent.UNINTENTIONAL;

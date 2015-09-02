@@ -598,6 +598,7 @@ public class BleServer implements UsesCustomNull
 
 			/**
 			 * The underlying call to {@link BluetoothGattServer#sendResponse(BluetoothDevice, int, int, int, byte[])}
+			 * or {@link BluetoothGattServer#notifyCharacteristicChanged(BluetoothDevice, BluetoothGattCharacteristic, boolean)}
 			 * failed for reasons unknown.
 			 */
 			FAILED_TO_SEND_OUT,
@@ -617,12 +618,6 @@ public class BleServer implements UsesCustomNull
 			CANCELLED_FROM_DISCONNECT,
 
 			/**
-			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}
-			 * so we had to cut her loose.
-			 */
-			TIMED_OUT,
-
-			/**
 			 * The operation was cancelled because {@link BleManager} went {@link BleManagerState#TURNING_OFF} and/or
 			 * {@link BleManagerState#OFF}. Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then
 			 * {@link OutgoingEvent#status()} could potentially be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
@@ -631,6 +626,12 @@ public class BleServer implements UsesCustomNull
 			 * Either way, the client was or will be disconnected.
 			 */
 			CANCELLED_FROM_BLE_TURNING_OFF,
+
+			/**
+			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}
+			 * so we had to cut her loose.
+			 */
+			TIMED_OUT,
 
 			/**
 			 * Could not communicate with the client device because the server is not currently {@link BleServerState#CONNECTED}.
@@ -774,9 +775,9 @@ public class BleServer implements UsesCustomNull
 			TIMED_OUT,
 
 			/**
-			 * {@link BleServer#disconnect()} was called sometime during the connection process.
+			 * {@link BleServer#disconnect()} or overloads was called sometime during the connection process.
 			 */
-			EXPLICIT_DISCONNECT,
+			CANCELLED_FROM_DISCONNECT,
 
 			/**
 			 * {@link BleManager#reset()} or {@link BleManager#turnOff()} (or
@@ -785,17 +786,17 @@ public class BleServer implements UsesCustomNull
 			 * user turns off BLE by going through their OS settings, airplane
 			 * mode, etc., but it's not absolutely *certain* that this behavior
 			 * is consistent across phones. For example there might be a phone
-			 * that kills all connections before going through the ble turn-off
-			 * process.
+			 * that kills all connections *before* going through the ble turn-off
+			 * process, thus {@link}
 			 */
-			BLE_TURNING_OFF;
+			CANCELLED_FROM_BLE_TURNING_OFF;
 
 			/**
-			 * Returns true for {@link #EXPLICIT_DISCONNECT} or {@link #BLE_TURNING_OFF}.
+			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
 			 */
 			public boolean wasCancelled()
 			{
-				return this == EXPLICIT_DISCONNECT || this == BLE_TURNING_OFF;
+				return this == CANCELLED_FROM_DISCONNECT || this == CANCELLED_FROM_BLE_TURNING_OFF;
 			}
 
 			/**
@@ -913,7 +914,7 @@ public class BleServer implements UsesCustomNull
 			/**
 			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
 			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
-			 * If not applicable, for example if {@link ConnectionFailEvent#status()} is {@link Status#EXPLICIT_DISCONNECT}, then this is set to
+			 * If not applicable, for example if {@link ConnectionFailEvent#status()} is {@link Status#CANCELLED_FROM_DISCONNECT}, then this is set to
 			 * {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 * <br><br>
 			 * See {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
@@ -1781,7 +1782,7 @@ public class BleServer implements UsesCustomNull
 
 	public boolean disconnect(final String macAddress)
 	{
-		return disconnect_private(macAddress, ConnectionFailListener.Status.EXPLICIT_DISCONNECT, ChangeIntent.INTENTIONAL);
+		return disconnect_private(macAddress, ConnectionFailListener.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
 	}
 
 	private boolean disconnect_private(final String macAddress, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
@@ -1838,7 +1839,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void disconnect()
 	{
-		disconnect_internal(ServiceAddListener.Status.CANCELLED_FROM_DISCONNECT, ConnectionFailListener.Status.EXPLICIT_DISCONNECT, ChangeIntent.INTENTIONAL);
+		disconnect_internal(ServiceAddListener.Status.CANCELLED_FROM_DISCONNECT, ConnectionFailListener.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
 	}
 
 	@Override public boolean isNull()
