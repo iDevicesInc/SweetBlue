@@ -47,8 +47,6 @@ class P_TransactionManager
 			{
 				if (reason == EndReason.SUCCEEDED)
 				{
-					m_device.getPollManager().enableNotifications_assumesWeAreConnected();
-					
 					if ( m_initTxn != null)
 					{
 						m_device.stateTracker().update
@@ -59,6 +57,8 @@ class P_TransactionManager
 						);
 
 						start(m_initTxn);
+
+						m_device.getPollManager().enableNotifications_assumesWeAreConnected();
 					}
 					else
 					{

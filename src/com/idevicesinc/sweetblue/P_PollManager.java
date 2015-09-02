@@ -398,7 +398,7 @@ class P_PollManager
 						m_device.m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 						
 						P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(ithEntry.m_pollingReadListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
-						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, characteristic, /*enable=*/true, wrappingListener));
+						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, characteristic, /*enable=*/true, wrappingListener, m_device.getOverrideReadWritePriority()));
 						
 						notifyState = E_NotifyState.ENABLING;
 					}

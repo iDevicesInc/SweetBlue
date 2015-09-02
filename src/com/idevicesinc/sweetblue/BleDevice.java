@@ -4480,7 +4480,7 @@ public class BleDevice implements UsesCustomNull
 			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
-			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, wrappingListener));
+			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, wrappingListener, getOverrideReadWritePriority()));
 
 			m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, E_NotifyState.ENABLING);
 
@@ -5551,7 +5551,7 @@ public class BleDevice implements UsesCustomNull
 		if (characteristic != null && is(CONNECTED))
 		{
 			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
-			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, wrappingListener));
+			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, wrappingListener, getOverrideReadWritePriority()));
 		}
 
 		m_pollMngr.stopPoll(serviceUuid, characteristicUuid, forceReadTimeout, listener, /* usingNotify= */true);
@@ -5571,7 +5571,7 @@ public class BleDevice implements UsesCustomNull
 		}
 	}
 
-	private PE_TaskPriority getOverrideReadWritePriority()
+	PE_TaskPriority getOverrideReadWritePriority()
 	{
 		if (isAny(AUTHENTICATING, INITIALIZING))
 		{

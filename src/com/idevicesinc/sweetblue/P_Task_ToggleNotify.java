@@ -27,12 +27,12 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	private byte[] m_writeValue = null;
 	
-	public P_Task_ToggleNotify(BleDevice device, P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener)
-	{
-		this(device, characteristic, enable, writeListener, null);
-	}
-	
-	private P_Task_ToggleNotify(BleDevice device, P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener, PE_TaskPriority priority)
+//	public P_Task_ToggleNotify(BleDevice device, P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener)
+//	{
+//		this(device, characteristic, enable, writeListener, null);
+//	}
+
+	public P_Task_ToggleNotify(BleDevice device, P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener, PE_TaskPriority priority)
 	{
 		super(device, characteristic, writeListener, false, null, priority);
 		
