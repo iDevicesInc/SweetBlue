@@ -1492,7 +1492,7 @@ public class BleDevice implements UsesCustomNull
 			 * If {@link #status()} is {@link BondListener.Status#FAILED_EVENTUALLY}, this integer will
 			 * be one of the values enumerated in {@link BluetoothDevice} that start with <code>UNBOND_REASON</code> such as
 			 * {@link BleStatuses#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
-			 * See also a publically accessible list in {@link BleStatuses}.
+			 * See also a publicly accessible list in {@link BleStatuses}.
 			 */
 			public int failReason() {  return m_failReason;  }
 			private final int m_failReason;
