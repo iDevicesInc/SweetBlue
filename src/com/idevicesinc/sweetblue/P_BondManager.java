@@ -30,17 +30,7 @@ class P_BondManager
 	
 	public void setListener(BleDevice.BondListener listener_nullable)
 	{
-		synchronized (m_device.m_threadLock)
-		{
-			if( listener_nullable != null )
-			{
-				m_listener = new P_WrappingBondListener(listener_nullable, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
-			}
-			else
-			{
-				m_listener = null;
-			}
-		}
+		m_listener = listener_nullable;
 	}
 	
 	void onBondTaskStateChange(final PA_Task task, final PE_TaskState state)

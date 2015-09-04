@@ -13,14 +13,15 @@ import com.idevicesinc.sweetblue.utils.Utils;
  */
 class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {	
-	protected final P_WrappingReadWriteListener m_readWriteListener;
+	protected final BleDevice.ReadWriteListener m_readWriteListener;
 	private final Type m_type;
 	
-	public P_Task_ReadRssi(BleDevice device, P_WrappingReadWriteListener readListener, BleTransaction txn_nullable, PE_TaskPriority priority, Type type)
+	public P_Task_ReadRssi(BleDevice device, BleDevice.ReadWriteListener readWriteListener, BleTransaction txn_nullable, PE_TaskPriority priority, Type type)
 	{
 		super(device, txn_nullable, false, priority);
 		
-		m_readWriteListener = readListener;
+		m_readWriteListener = readWriteListener;
+
 		m_type = type;
 	}
 	

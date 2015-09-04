@@ -2151,14 +2151,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		if( isNull() )  return;
 
-		if (listener_nullable != null)
-		{
-			m_defaultReadWriteListener = new P_WrappingReadWriteListener(listener_nullable, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_defaultReadWriteListener = null;
-		}
+		m_defaultReadWriteListener = listener_nullable;
 	}
 
 	/**
@@ -3392,7 +3385,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
 	{
-		return write(serviceUuid, characteristicUuid, new PresentData(data), new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread));
+		return write(serviceUuid, characteristicUuid, new PresentData(data), listener);
 	}
 
 
@@ -3435,7 +3428,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
 	{
-		return write_internal(serviceUuid, characteristicUuid, futureData, new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread));
+		return write_internal(serviceUuid, characteristicUuid, futureData, listener);
 	}
 
 	/**
@@ -3467,8 +3460,7 @@ public class BleDevice implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		P_WrappingReadWriteListener wrappingListener = listener != null ? new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread) : null;
-		readRssi_internal(Type.READ, wrappingListener);
+		readRssi_internal(Type.READ, listener);
 
 		return NULL_READWRITE_EVENT();
 	}
@@ -3516,7 +3508,7 @@ public class BleDevice implements UsesCustomNull
 		}
 	}
 
-	void readRssi_internal(Type type, P_WrappingReadWriteListener listener)
+	void readRssi_internal(Type type, ReadWriteListener listener)
 	{
 		m_queue.add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
 	}
@@ -4284,11 +4276,9 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final ReadWriteListener listener)
 	{
-		final ReadWriteListener listener_override = getManager() == null ? listener : new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
-
 		final UUID serviceUuid = null;
 
-		return read_internal(serviceUuid, characteristicUuid, Type.READ, listener_override);
+		return read_internal(serviceUuid, characteristicUuid, Type.READ, listener);
 	}
 
 	/**
@@ -4304,9 +4294,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
 	{
-		final ReadWriteListener listener_override = getManager() == null ? listener : new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
-
-		return read_internal(serviceUuid, characteristicUuid, Type.READ, listener_override);
+		return read_internal(serviceUuid, characteristicUuid, Type.READ, listener);
 	}
 
 	/**
@@ -4479,8 +4467,7 @@ public class BleDevice implements UsesCustomNull
 		{
 			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 
-			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
-			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, wrappingListener, getOverrideReadWritePriority()));
+			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, listener, getOverrideReadWritePriority()));
 
 			m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, E_NotifyState.ENABLING);
 
@@ -5534,7 +5521,7 @@ public class BleDevice implements UsesCustomNull
 		return NULL_READWRITE_EVENT();
 	}
 
-	ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final FutureData data, final P_WrappingReadWriteListener listener)
+	ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final FutureData data, final ReadWriteListener listener)
 	{
 		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -5569,8 +5556,7 @@ public class BleDevice implements UsesCustomNull
 
 		if (characteristic != null && is(CONNECTED))
 		{
-			P_WrappingReadWriteListener wrappingListener = new P_WrappingReadWriteListener(listener, getManager().m_mainThreadHandler, getManager().m_config.postCallbacksToMainThread);
-			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, wrappingListener, getOverrideReadWritePriority()));
+			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, listener, getOverrideReadWritePriority()));
 		}
 
 		m_pollMngr.stopPoll(serviceUuid, characteristicUuid, forceReadTimeout, listener, /* usingNotify= */true);

@@ -184,16 +184,6 @@ class P_ConnectionFailManager
 	
 	public void setListener(ConnectionFailListener listener)
 	{
-		synchronized (m_device.m_threadLock)
-		{
-			if( listener != null )
-			{
-				m_connectionFailListener = new P_WrappingDeviceStateListener(listener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
-			}
-			else
-			{
-				m_connectionFailListener = null;
-			}
-		}
+		m_connectionFailListener = listener;
 	}
 }

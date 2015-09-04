@@ -28,7 +28,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	
 	private byte[] m_lastChunkBufferSent;
 	
-	public P_Task_Write(BleDevice device, P_Characteristic characteristic, final FutureData futureData, boolean requiresBonding, P_WrappingReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
+	public P_Task_Write(BleDevice device, P_Characteristic characteristic, final FutureData futureData, boolean requiresBonding, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
 	{
 		super(device, characteristic, writeListener, requiresBonding, txn, priority);
 

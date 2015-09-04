@@ -17,14 +17,7 @@ class P_NativeBleStateTracker extends PA_StateTracker
 	
 	public void setListener(BleManager.NativeStateListener listener)
 	{
-		if( listener != null )
-		{
-			m_stateListener = new P_WrappingBleStateListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_stateListener = null;
-		}
+		m_stateListener = listener;
 	}
 
 	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
@@ -32,6 +25,7 @@ class P_NativeBleStateTracker extends PA_StateTracker
 		if( m_stateListener != null )
 		{
 			final NativeStateEvent event = new NativeStateEvent(m_mngr, oldStateBits, newStateBits, intentMask);
+
 			m_stateListener.onEvent(event);
 		}
 	}

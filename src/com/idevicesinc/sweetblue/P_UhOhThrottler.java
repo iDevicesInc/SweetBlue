@@ -28,14 +28,7 @@ class P_UhOhThrottler
 	
 	public synchronized void setListener(UhOhListener listener)
 	{
-		if( listener != null )
-		{
-			m_uhOhListener = new P_WrappingUhOhListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_uhOhListener = null;
-		}
+		m_uhOhListener = listener;
 	}
 	
 	void uhOh(UhOh reason)

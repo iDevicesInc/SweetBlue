@@ -40,7 +40,7 @@ class P_RssiPollManager
 	private double m_interval = 0.0;
 	private boolean m_waitingOnResponse = false;
 	
-	private P_WrappingReadWriteListener m_listener;
+	private ReadWriteListener m_listener;
 	
 	P_RssiPollManager(BleDevice device)
 	{

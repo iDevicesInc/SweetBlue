@@ -23,14 +23,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 	
 	public void setListener(StateListener listener)
 	{
-		if( listener != null )
-		{
-			m_stateListener = new P_WrappingDeviceStateListener(listener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_stateListener = null;
-		}
+		m_stateListener = listener;
 	}
 	
 	void sync(P_DeviceStateTracker otherTracker)

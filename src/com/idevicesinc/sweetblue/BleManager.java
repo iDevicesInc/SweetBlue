@@ -1015,14 +1015,7 @@ public class BleManager
 	 */
 	public void setListener_Assert(@Nullable(Prevalence.NORMAL) AssertListener listener_nullable)
 	{
-		if( listener_nullable != null )
-		{
-			m_assertionListener = new P_WrappingAssertionListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_assertionListener = null;
-		}
+		m_assertionListener = listener_nullable;
 	}
 
 	/**
@@ -1030,14 +1023,7 @@ public class BleManager
 	 */
 	public void setListener_Discovery(@Nullable(Prevalence.NORMAL) DiscoveryListener listener_nullable)
 	{
-		if( listener_nullable != null )
-		{
-			m_discoveryListener = new P_WrappingDiscoveryListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_discoveryListener = null;
-		}
+		m_discoveryListener = listener_nullable;
 	}
 
 	/**
@@ -1046,12 +1032,7 @@ public class BleManager
 	 */
 	public DiscoveryListener getListener_Discovery()
 	{
-		if( m_discoveryListener != null )
-		{
-			return ((P_WrappingDiscoveryListener)m_discoveryListener).m_listener;
-		}
-
-		return null;
+		return m_discoveryListener;
 	}
 
 	/**
@@ -1071,14 +1052,7 @@ public class BleManager
 	 */
 	public void setListener_DeviceState(@Nullable(Prevalence.NORMAL) BleDevice.StateListener listener_nullable)
 	{
-		if( listener_nullable != null )
-		{
-			m_defaultDeviceStateListener = new P_WrappingDeviceStateListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_defaultDeviceStateListener = null;
-		}
+		m_defaultDeviceStateListener = listener_nullable;
 	}
 
 	/**
@@ -1156,15 +1130,7 @@ public class BleManager
 	 */
 	public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) BleDevice.ConnectionFailListener listener_nullable)
 	{
-		if( listener_nullable != null )
-		{
-			m_defaultConnectionFailListener = new P_WrappingDeviceStateListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_defaultConnectionFailListener = null;
-		}
-		
+		m_defaultConnectionFailListener = listener_nullable;
 	}
 	
 	/**
@@ -1172,14 +1138,7 @@ public class BleManager
 	 */
 	public void setListener_Bond(@Nullable(Prevalence.NORMAL) BleDevice.BondListener listener_nullable)
 	{
-		if( listener_nullable != null )
-		{
-			m_defaultBondListener = new P_WrappingBondListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_defaultBondListener = null;
-		}
+		m_defaultBondListener = listener_nullable;
 	}
 	
 	/**
@@ -1189,14 +1148,7 @@ public class BleManager
 	 */
 	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) ReadWriteListener listener_nullable)
 	{
-		if( listener_nullable != null )
-		{
-			m_defaultReadWriteListener = new P_WrappingReadWriteListener(listener_nullable, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_defaultReadWriteListener = null;
-		}
+		m_defaultReadWriteListener = listener_nullable;
 	}
 
 	/**

@@ -18,14 +18,7 @@ class P_BleStateTracker extends PA_StateTracker
 	
 	public void setListener(BleManager.StateListener listener)
 	{
-		if( listener != null )
-		{
-			m_stateListener = new P_WrappingBleStateListener(listener, m_mngr.m_mainThreadHandler, m_mngr.m_config.postCallbacksToMainThread);
-		}
-		else
-		{
-			m_stateListener = null;
-		}
+		m_stateListener = listener;
 	}
 
 	@Override protected void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
