@@ -31,7 +31,8 @@ class P_WakeLockManager
 				return;
 			}
 			
-			PowerManager powerMngr = (PowerManager) m_mngr.getApplicationContext().getSystemService(Context.POWER_SERVICE);
+			final PowerManager powerMngr = (PowerManager) m_mngr.getApplicationContext().getSystemService(Context.POWER_SERVICE);
+
 			m_wakeLock = powerMngr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG);
 		}
 		else
