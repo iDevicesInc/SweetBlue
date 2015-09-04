@@ -110,11 +110,11 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		return m_gattStatus;
 	}
 	
-	@Override public boolean isCancellableBy(PA_Task task)
+	@Override public boolean isCancellableBy(final PA_Task task)
 	{
 		if( task instanceof P_Task_Disconnect )
 		{
-			P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
+			final P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 
 			if( task_cast.getDevice().equals(getDevice()) )
 			{
@@ -135,7 +135,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		return super.isCancellableBy(task);
 	}
 	
-	@Override protected boolean isSoftlyCancellableBy(PA_Task task)
+	@Override protected boolean isSoftlyCancellableBy(final PA_Task task)
 	{
 		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
 		{

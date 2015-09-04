@@ -747,7 +747,7 @@ public class BleDeviceConfig extends BleServerConfig implements Cloneable
 		 * Use the static methods of {@link Please} as return values to stop reconnection ({@link Please#stopRetrying()}), try again
 		 * instantly ({@link Please#retryInstantly()}), or after some amount of time {@link Please#retryIn(Interval)}.
 		 */
-		Please onEvent(ReconnectRequestEvent e);
+		Please onEvent(final ReconnectRequestEvent e);
 	}
 
 	/**
@@ -880,7 +880,7 @@ public class BleDeviceConfig extends BleServerConfig implements Cloneable
 		 * are active. Currently the rate at which this is called is the same as {@link BleManagerConfig#autoUpdateRate}. If {@link BleManagerConfig#autoUpdateRate}
 		 * is {@link Interval#DISABLED} (it should rarely be) then it will be called however often {@link BleManager#update(double)} is called.
 		 */
-		Please onEvent(ReconnectPersistEvent e);
+		Please onEvent(final ReconnectPersistEvent e);
 	}
 
 	/**
@@ -904,11 +904,11 @@ public class BleDeviceConfig extends BleServerConfig implements Cloneable
 			m_timeout = timeout != null ? timeout : Interval.INFINITE;
 		}
 
-		@Override public Please onEvent(ReconnectPersistEvent e)
+		@Override public Please onEvent(final ReconnectPersistEvent e)
 		{
 			final boolean definitelyPersist =
 					BleDeviceState.CONNECTING_OVERALL.overlaps(e.device().getNativeStateMask()) &&
-							BleDeviceState.CONNECTED.overlaps(e.device().getNativeStateMask())			;;
+					BleDeviceState.CONNECTED.overlaps(e.device().getNativeStateMask())			;;
 
 			//--- DRK > We don't interrupt if we're in the middle of connecting
 			//---		but this will be the last attempt if it fails.

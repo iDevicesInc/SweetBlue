@@ -2324,11 +2324,6 @@ public class BleManager
 
 	void onDiscovered(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
-		onDiscovered_synchronized(device_native, rssi, scanRecord_nullable);
-	}
-
-	private void onDiscovered_synchronized(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
-	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
 		//---		discover another device or two. We're checking the enum state as opposed to the native

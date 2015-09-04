@@ -157,12 +157,17 @@ public class UpdateLoop
 		
 		m_handler.postDelayed(runnable, 1);
 	}
+
+	public boolean postNeeded()
+	{
+		return m_handler.getLooper().getThread() != Thread.currentThread();
+	}
 	
 	public void postIfNeeded(Runnable runnable)
 	{
 		waitForHandler();
 		
-		if( m_handler.getLooper().getThread() == Thread.currentThread() )
+		if( false == postNeeded() )
 		{
 			runnable.run();
 		}

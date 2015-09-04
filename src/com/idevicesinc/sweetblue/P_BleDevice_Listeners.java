@@ -14,7 +14,6 @@ import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
-import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -23,19 +22,6 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 	private final BleDevice m_device;
 	private final P_Logger m_logger;
 	private final P_TaskQueue m_queue;
-	
-	abstract class SynchronizedRunnable implements Runnable
-	{
-		@Override public void run()
-		{
-			synchronized (m_device.m_threadLock)
-			{
-				run_nested();
-			}
-		}
-		
-		public abstract void run_nested();
-	}
 
 	final PA_Task.I_StateListener m_taskStateListener = new PA_Task.I_StateListener()
 	{
@@ -51,7 +37,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			if (task.getClass() == P_Task_Connect.class)
 			{
-				P_Task_Connect connectTask = (P_Task_Connect) task;
+				final P_Task_Connect connectTask = (P_Task_Connect) task;
 				
 				if (state.isEndingState())
 				{
@@ -64,7 +50,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 						if( state == PE_TaskState.REDUNDANT )
 						{
-							Log.e("", "redundant");
+//							Log.e("", "redundant");
 						}
 						
 						m_device.onNativeConnect(connectTask.isExplicit());
@@ -86,7 +72,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else if (task.getClass() == P_Task_DiscoverServices.class)
 			{
-				P_Task_DiscoverServices discoverTask = (P_Task_DiscoverServices) task;
+				final P_Task_DiscoverServices discoverTask = (P_Task_DiscoverServices) task;
+
 				if (state == PE_TaskState.EXECUTING)
 				{
 					// m_stateTracker.append(GETTING_SERVICES);
@@ -138,26 +125,43 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		m_queue = m_device.getTaskQueue();
 	}
 
+	private void post(final Runnable runnable)
+	{
+		final UpdateLoop updateLoop = m_device.getManager().getUpdateLoop();
+
+		updateLoop.postIfNeeded(runnable);
+	}
+
+	private boolean postNeeded()
+	{
+		return m_device.getManager().getUpdateLoop().postNeeded();
+	}
+
 	@Override public void onConnectionStateChange(final BluetoothGatt gatt, final int gattStatus, final int newState)
+	{
+		if( postNeeded() )
+		{
+			post(new Runnable()
+			{
+				@Override public void run()
+				{
+					onConnectionStateChange_mainThread(gatt, gattStatus, newState);
+				}
+			});
+		}
+		else
+		{
+			onConnectionStateChange_mainThread(gatt, gattStatus, newState);
+		}
+	}
+	
+	private void onConnectionStateChange_mainThread(final BluetoothGatt gatt, final int gattStatus, final int newState)
 	{
 		//--- DRK > NOTE: For some devices disconnecting by turning off the peripheral comes back with a status of 8, which is BluetoothGatt.GATT_SERVER.
 		//---				For that same device disconnecting from the app the status is 0. Just an FYI to future developers in case they want to distinguish
 		//---				between the two as far as user intent or something.
 		m_logger.log_status(gattStatus, m_logger.gattConn(newState));
-		
-		UpdateLoop updater = m_device.getManager().getUpdateLoop();
-		
-		updater.postIfNeeded(new SynchronizedRunnable()
-		{
-			@Override public void run_nested()
-			{
-				onConnectionStateChange_synchronized(gatt, gattStatus, newState);
-			}
-		});
-	}
-	
-	private void onConnectionStateChange_synchronized(final BluetoothGatt gatt, final int gattStatus, final int newState)
-	{
+
 		if (newState == BluetoothProfile.STATE_DISCONNECTED )
 		{
 			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
@@ -303,7 +307,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		//---				be assumed that it will eventually go to STATE_DISCONNECTED, so SweetBlue library logic is sounder "living under the lie" for a bit regardless.
 		m_device.m_nativeWrapper.updateNativeConnectionState(gatt, BluetoothProfile.STATE_DISCONNECTED);
 		
-		P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
+		final P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
 		
 		if( connectTask != null )
 		{
@@ -311,174 +315,257 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			m_device.onNativeConnectFail( (PE_TaskState)null, gattStatus, AutoConnectUsage.UNKNOWN);
+			m_device.onNativeConnectFail((PE_TaskState) null, gattStatus, AutoConnectUsage.UNKNOWN);
 		}
 	}
-	
-	private final Runnable m_servicesDiscoveredSuccessRunnable = new SynchronizedRunnable()
-	{
-		@Override public void run_nested()
-		{
-			m_queue.succeed(P_Task_DiscoverServices.class, m_device);
-		}
-	};
 
-	@Override public void onServicesDiscovered(BluetoothGatt gatt, final int gattStatus)
+	@Override public void onServicesDiscovered(final BluetoothGatt gatt, final int gattStatus)
 	{
-		m_logger.log_status(gattStatus);
-		
-		UpdateLoop updater = m_device.getManager().getUpdateLoop();
-
-		if( Utils.isSuccess(gattStatus) )
+		if( postNeeded() )
 		{
-			updater.postIfNeeded(m_servicesDiscoveredSuccessRunnable);
-		}
-		else
-		{
-			updater.postIfNeeded(new Runnable()
+			post(new Runnable()
 			{
 				@Override public void run()
 				{
-					synchronized (m_device.m_threadLock)
-					{
-						P_Task_DiscoverServices task = m_queue.getCurrent(P_Task_DiscoverServices.class, m_device);
-						
-						if( task != null )
-						{
-							task.onNativeFail(gattStatus);
-						}
-					}
+					onServicesDiscovered_mainThread(gatt, gattStatus);
 				}
 			});
 		}
-	}
-	
-	@Override public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status)
-	{
-		final UUID uuid = characteristic.getUuid();
-		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
-		m_logger.i(m_logger.charName(uuid));
-		m_logger.log_status(status);
-		
-		UpdateLoop updater = m_device.getManager().getUpdateLoop();
-		
-		updater.postIfNeeded(new SynchronizedRunnable()
+		else
 		{
-			@Override public void run_nested()
-			{
-				P_Task_Read readTask = m_queue.getCurrent(P_Task_Read.class, m_device);
-		
-				if (readTask == null)  return;
-		
-				readTask.onCharacteristicRead(gatt, uuid, value, status);
-			}
-		});
+			onServicesDiscovered_mainThread(gatt, gattStatus);
+		}
 	}
 
-	@Override public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status)
+	private void onServicesDiscovered_mainThread(final BluetoothGatt gatt, final int gattStatus)
+	{
+		m_logger.log_status(gattStatus);
+
+		if( Utils.isSuccess(gattStatus) )
+		{
+			m_queue.succeed(P_Task_DiscoverServices.class, m_device);
+		}
+		else
+		{
+			final P_Task_DiscoverServices task = m_queue.getCurrent(P_Task_DiscoverServices.class, m_device);
+
+			if( task != null )
+			{
+				task.onNativeFail(gattStatus);
+			}
+		}
+	}
+	
+	@Override public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
+	{
+		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
+
+		if( postNeeded() )
+		{
+			post(new Runnable()
+			{
+				@Override public void run()
+				{
+					onCharacteristicRead_mainThread(gatt, characteristic, gattStatus, value);
+				}
+			});
+		}
+		else
+		{
+			onCharacteristicRead_mainThread(gatt, characteristic, gattStatus, value);
+		}
+	}
+
+	private void onCharacteristicRead_mainThread(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus, final byte[] value)
 	{
 		final UUID uuid = characteristic.getUuid();
 		m_logger.i(m_logger.charName(uuid));
-		m_logger.log_status(status);
-		
-		UpdateLoop updater = m_device.getManager().getUpdateLoop();
-		
-		updater.postIfNeeded(new SynchronizedRunnable()
+		m_logger.log_status(gattStatus);
+
+		final P_Task_Read readTask = m_queue.getCurrent(P_Task_Read.class, m_device);
+
+		if( readTask != null )
 		{
-			@Override public void run_nested()
+			readTask.onCharacteristicRead(gatt, characteristic.getUuid(), value, gattStatus);
+		}
+		else
+		{
+			/// fire unsolicited
+		}
+	}
+
+	@Override public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
+	{
+		if( postNeeded() )
+		{
+			post(new Runnable()
 			{
-				P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
-		
-				if (task == null)  return;
-		
-				task.onCharacteristicWrite(gatt, uuid, status);
-			}
-		});
+				@Override public void run()
+				{
+					onCharacteristicWrite_mainThread(gatt, characteristic, gattStatus);
+				}
+			});
+		}
+		else
+		{
+			onCharacteristicWrite_mainThread(gatt, characteristic, gattStatus);
+		}
+	}
+
+	private void onCharacteristicWrite_mainThread(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
+	{
+		final UUID uuid = characteristic.getUuid();
+		m_logger.i(m_logger.charName(uuid));
+		m_logger.log_status(gattStatus);
+
+		final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
+
+		if (task != null )
+		{
+			task.onCharacteristicWrite(gatt, characteristic.getUuid(), gattStatus);
+		}
+		else
+		{
+			// fire unsoliicted event
+		}
 	}
 	
-	@Override public void onReliableWriteCompleted(final BluetoothGatt gatt, final int status)
+	@Override public void onReliableWriteCompleted(final BluetoothGatt gatt, final int gattStatus)
 	{
-		m_logger.log_status(status);
-		
-		UpdateLoop updater = m_device.getManager().getUpdateLoop();
-		
-		updater.postIfNeeded(new SynchronizedRunnable()
+		if( postNeeded() )
 		{
-			@Override public void run_nested()
+			post(new Runnable()
 			{
-				P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
-		
-				if (task == null)  return;
-		
-				task.onReliableWriteCompleted(gatt, status);
-			}
-		});
+				@Override public void run()
+				{
+					onReliableWriteCompleted_mainThread(gatt, gattStatus);
+				}
+			});
+		}
+		else
+		{
+			onReliableWriteCompleted_mainThread(gatt, gattStatus);
+		}
     }
+
+	private void onReliableWriteCompleted_mainThread(final BluetoothGatt gatt, final int gattStatus)
+	{
+		m_logger.log_status(gattStatus);
+
+		final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
+
+		if( task != null )
+		{
+			task.onReliableWriteCompleted(gatt, gattStatus);
+		}
+		else
+		{
+			// fire unsolicited event
+		}
+	}
 	
 	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
 	{
-		UpdateLoop updater = m_device.getManager().getUpdateLoop();
-		
-		updater.postIfNeeded(new SynchronizedRunnable()
+		if( postNeeded() )
 		{
-			@Override public void run_nested()
+			post(new Runnable()
 			{
-				if( Utils.isSuccess(gattStatus) )
+				@Override public void run()
 				{
-					m_device.updateRssi(rssi);
+					onReadRemoteRssi_mainThread(gatt, rssi, gattStatus);
 				}
-				
-				P_Task_ReadRssi task = m_queue.getCurrent(P_Task_ReadRssi.class, m_device);
-				
-				if (task == null)  return;
-		
-				task.onReadRemoteRssi(gatt, rssi, gattStatus);
-			}
-		});
+			});
+		}
+		else
+		{
+			onReadRemoteRssi_mainThread(gatt, rssi, gattStatus);
+		}
+	}
+
+	private void onReadRemoteRssi_mainThread(final BluetoothGatt gatt, final int rssi, final int gattStatus)
+	{
+		if( Utils.isSuccess(gattStatus) )
+		{
+			m_device.updateRssi(rssi);
+		}
+
+		final P_Task_ReadRssi task = m_queue.getCurrent(P_Task_ReadRssi.class, m_device);
+
+		if( task != null )
+		{
+			task.onReadRemoteRssi(gatt, rssi, gattStatus);
+		}
+		else
+		{
+			// fire unsolicited
+		}
 	}
 	
-	@Override public void onDescriptorWrite(final BluetoothGatt gatt, BluetoothGattDescriptor descriptor, final int status)
+	@Override public void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
+	{
+		if( postNeeded() )
+		{
+			post(new Runnable()
+			{
+				@Override public void run()
+				{
+					onDescriptorWrite_mainThread(gatt, descriptor, gattStatus);
+				}
+			});
+		}
+		else
+		{
+			onDescriptorWrite_mainThread(gatt, descriptor, gattStatus);
+		}
+	}
+
+	private void onDescriptorWrite_mainThread(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
 	{
 		final UUID uuid = descriptor.getUuid();
 		m_logger.i(m_logger.descriptorName(uuid));
-		m_logger.log_status(status);
-		
-		UpdateLoop updater = m_device.getManager().getUpdateLoop();
-		
-		updater.postIfNeeded(new SynchronizedRunnable()
+		m_logger.log_status(gattStatus);
+
+		final P_Task_ToggleNotify task = m_queue.getCurrent(P_Task_ToggleNotify.class, m_device);
+
+		if( task != null )
 		{
-			@Override public void run_nested()
-			{
-				P_Task_ToggleNotify task = m_queue.getCurrent(P_Task_ToggleNotify.class, m_device);
-		
-				if (task == null)  return;
-		
-				task.onDescriptorWrite(gatt, uuid, status);
-			}
-		});
+			task.onDescriptorWrite(gatt, uuid, gattStatus);
+		}
+		else
+		{
+			// fire unsolicited gatt event
+		}
 	}
 	
-	@Override public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
+	@Override public void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)
+	{
+		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
+
+		if( postNeeded() )
+		{
+			post(new Runnable()
+			{
+				@Override public void run()
+				{
+					onCharacteristicChanged_mainThread(gatt, characteristic, value);
+				}
+			});
+		}
+		else
+		{
+			onCharacteristicChanged_mainThread(gatt, characteristic, value);
+		}
+	}
+
+	private void onCharacteristicChanged_mainThread(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final byte[] value)
 	{
 		final UUID characteristicUuid = characteristic.getUuid();
 		final UUID serviceUuid = characteristic.getService().getUuid();
-		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
-		
-		m_device.getManager().getUpdateLoop().postIfNeeded(new SynchronizedRunnable()
-		{
-			@Override public void run_nested()
-			{
-				m_device.getPollManager().onCharacteristicChangedFromNativeNotify(serviceUuid, characteristicUuid, value);
-			}
-		});
+
+		m_device.getPollManager().onCharacteristicChangedFromNativeNotify(serviceUuid, characteristicUuid, value);
 	}
 
-	void onNativeBondStateChanged(int previousState, int newState, int failReason)
-	{
-		onNativeBondStateChanged_private(previousState, newState, failReason);
-	}
-	
-	private void onNativeBondStateChanged_private(final int previousState, final int newState, final int failReason)
+	public void onNativeBondStateChanged_mainThread(int previousState, int newState, int failReason)
 	{
 		if (newState == BluetoothDevice.ERROR)
 		{
@@ -526,7 +613,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			m_queue.fail(P_Task_Unbond.class, m_device);
 
-			if (!m_queue.succeed(P_Task_Bond.class, m_device))
+			if( false == m_queue.succeed(P_Task_Bond.class, m_device) )
 			{
 				m_device.m_bondMngr.onNativeBond(E_Intent.UNINTENTIONAL);
 			}

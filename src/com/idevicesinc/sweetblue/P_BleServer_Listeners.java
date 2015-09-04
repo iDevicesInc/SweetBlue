@@ -96,6 +96,18 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		m_queue = m_server.getManager().getTaskQueue();
 	}
 
+	private void post(final Runnable runnable)
+	{
+		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
+
+		updateLoop.postIfNeeded(runnable);
+	}
+
+	private boolean postNeeded()
+	{
+		return m_server.getManager().getUpdateLoop().postNeeded();
+	}
+
 	private boolean hasCurrentDisconnectTaskFor(final BluetoothDevice device)
 	{
 		final P_Task_DisconnectServer disconnectTask = m_queue.getCurrent(P_Task_DisconnectServer.class, m_server);
@@ -155,127 +167,149 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		}
 	}
 
-    @Override public void onConnectionStateChange(final BluetoothDevice device, final int gattStatus, final int newState)
+	@Override public void onConnectionStateChange(final BluetoothDevice device, final int gattStatus, final int newState)
 	{
-		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+		if( postNeeded() )
 		{
-			@Override
-			public void run()
+			post(new Runnable()
 			{
-				m_logger.log_status(gattStatus, m_logger.gattConn(newState));
-
-				if( newState == BluetoothProfile.STATE_DISCONNECTED )
+				@Override public void run()
 				{
-					m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
-
-					final boolean wasConnecting = hasCurrentConnectTaskFor(device);
-
-					if( !failConnectTaskIfPossibleFor(device, gattStatus) )
-					{
-						if( hasCurrentDisconnectTaskFor(device) )
-						{
-							final P_Task_DisconnectServer disconnectTask = m_queue.getCurrent(P_Task_DisconnectServer.class, m_server);
-
-							disconnectTask.onNativeSuccess(gattStatus);
-						}
-						else
-						{
-							m_server.onNativeDisconnect(device.getAddress(), /*explicit=*/false, gattStatus);
-						}
-					}
+					onConnectionStateChange_mainThread(device, gattStatus, newState);
 				}
-				else if( newState == BluetoothProfile.STATE_CONNECTING )
+			});
+		}
+		else
+		{
+			onConnectionStateChange_mainThread(device, gattStatus, newState);
+		}
+	}
+
+    private void onConnectionStateChange_mainThread(final BluetoothDevice device, final int gattStatus, final int newState)
+	{
+		m_logger.log_status(gattStatus, m_logger.gattConn(newState));
+
+		if( newState == BluetoothProfile.STATE_DISCONNECTED )
+		{
+			m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+
+			final boolean wasConnecting = hasCurrentConnectTaskFor(device);
+
+			if( !failConnectTaskIfPossibleFor(device, gattStatus) )
+			{
+				if( hasCurrentDisconnectTaskFor(device) )
 				{
-					if( Utils.isSuccess(gattStatus) )
-					{
-						m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+					final P_Task_DisconnectServer disconnectTask = m_queue.getCurrent(P_Task_DisconnectServer.class, m_server);
 
-//						m_device.onConnecting(/*definitelyExplicit=*/false, /*isReconnect=*/false, P_BondManager.OVERRIDE_EMPTY_STATES, /*bleConnect=*/true);
-
-						failDisconnectTaskIfPossibleFor(device);
-
-						if( !hasCurrentConnectTaskFor(device) )
-						{
-							final P_Task_ConnectServer task = new P_Task_ConnectServer(m_server, device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
-
-							m_queue.add(task);
-						}
-						else
-						{
-							m_server.onNativeConnecting_implicit(device.getAddress());
-						}
-					}
-					else
-					{
-						onNativeConnectFail(device, gattStatus);
-					}
-				}
-				else if( newState == BluetoothProfile.STATE_CONNECTED )
-				{
-					if( Utils.isSuccess(gattStatus) )
-					{
-						m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
-
-						failDisconnectTaskIfPossibleFor(device);
-
-						if( hasCurrentConnectTaskFor(device) )
-						{
-							m_queue.succeed(P_Task_ConnectServer.class, m_server);
-						}
-						else
-						{
-							m_server.onNativeConnect(device.getAddress(), /*explicit=*/false);
-						}
-					}
-					else
-					{
-						onNativeConnectFail(device, gattStatus);
-					}
-				}
-				//--- DRK > NOTE: never seen this case happen with BleDevice, we'll see if it happens with the server.
-				else if( newState == BluetoothProfile.STATE_DISCONNECTING )
-				{
-					m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
-
-					//--- DRK > error level just so it's noticeable...never seen this with client connections so we'll see if it hits with server ones.
-					m_logger.e("Actually natively disconnecting server!");
-
-					if( !hasCurrentDisconnectTaskFor(device) )
-					{
-						P_Task_DisconnectServer task = new P_Task_DisconnectServer(m_server, device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
-
-						m_queue.add(task);
-					}
-
-					failConnectTaskIfPossibleFor(device, gattStatus);
+					disconnectTask.onNativeSuccess(gattStatus);
 				}
 				else
 				{
-					m_server.m_nativeWrapper.updateNativeConnectionState(device);
+					m_server.onNativeDisconnect(device.getAddress(), /*explicit=*/false, gattStatus);
 				}
 			}
-		});
+		}
+		else if( newState == BluetoothProfile.STATE_CONNECTING )
+		{
+			if( Utils.isSuccess(gattStatus) )
+			{
+				m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+
+//						m_device.onConnecting(/*definitelyExplicit=*/false, /*isReconnect=*/false, P_BondManager.OVERRIDE_EMPTY_STATES, /*bleConnect=*/true);
+
+				failDisconnectTaskIfPossibleFor(device);
+
+				if( !hasCurrentConnectTaskFor(device) )
+				{
+					final P_Task_ConnectServer task = new P_Task_ConnectServer(m_server, device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
+
+					m_queue.add(task);
+				}
+				else
+				{
+					m_server.onNativeConnecting_implicit(device.getAddress());
+				}
+			}
+			else
+			{
+				onNativeConnectFail(device, gattStatus);
+			}
+		}
+		else if( newState == BluetoothProfile.STATE_CONNECTED )
+		{
+			if( Utils.isSuccess(gattStatus) )
+			{
+				m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+
+				failDisconnectTaskIfPossibleFor(device);
+
+				if( hasCurrentConnectTaskFor(device) )
+				{
+					m_queue.succeed(P_Task_ConnectServer.class, m_server);
+				}
+				else
+				{
+					m_server.onNativeConnect(device.getAddress(), /*explicit=*/false);
+				}
+			}
+			else
+			{
+				onNativeConnectFail(device, gattStatus);
+			}
+		}
+		//--- DRK > NOTE: never seen this case happen with BleDevice, we'll see if it happens with the server.
+		else if( newState == BluetoothProfile.STATE_DISCONNECTING )
+		{
+			m_server.m_nativeWrapper.updateNativeConnectionState(device.getAddress(), newState);
+
+			//--- DRK > error level just so it's noticeable...never seen this with client connections so we'll see if it hits with server ones.
+			m_logger.e("Actually natively disconnecting server!");
+
+			if( !hasCurrentDisconnectTaskFor(device) )
+			{
+				P_Task_DisconnectServer task = new P_Task_DisconnectServer(m_server, device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
+
+				m_queue.add(task);
+			}
+
+			failConnectTaskIfPossibleFor(device, gattStatus);
+		}
+		else
+		{
+			m_server.m_nativeWrapper.updateNativeConnectionState(device);
+		}
     }
 
 	@Override public void onServiceAdded(final int gattStatus, final BluetoothGattService service)
 	{
-		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+		if( postNeeded() )
 		{
-			@Override
-			public void run()
+			post(new Runnable()
 			{
-				final P_Task_AddService task = m_queue.getCurrent(P_Task_AddService.class, m_server);
+				@Override public void run()
+				{
+					onServiceAdded_mainThread(gattStatus, service);
+				}
+			});
+		}
+		else
+		{
+			onServiceAdded_mainThread(gattStatus, service);
+		}
+	}
 
-				if( task != null && task.getService().equals(service) )
-				{
-					task.onServiceAdded(gattStatus, service);
-				}
-				else
-				{
-					// TODO: Perhaps call callback anyway
-				}
-			}
-		});
+	private void onServiceAdded_mainThread(final int gattStatus, final BluetoothGattService service)
+	{
+		final P_Task_AddService task = m_queue.getCurrent(P_Task_AddService.class, m_server);
+
+		if( task != null && task.getService().equals(service) )
+		{
+			task.onServiceAdded(gattStatus, service);
+		}
+		else
+		{
+			// TODO: Perhaps call callback anyway
+		}
     }
 
 	private OutgoingEvent newEarlyOutResponse_Read(final BluetoothDevice device, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable, final int requestId, final int offset, final BleServer.OutgoingListener.Status status)
@@ -291,7 +325,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		return e;
 	}
 
-	private void onReadRequest(final BluetoothDevice device, final int requestId, final int offset, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
+	private void onReadRequest_mainThread(final BluetoothDevice device, final int requestId, final int offset, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
 	{
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 
@@ -334,24 +368,38 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattCharacteristic characteristic)
 	{
-		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+		if( postNeeded() )
 		{
-			@Override public void run()
+			post(new Runnable()
 			{
-				onReadRequest(device, requestId, offset, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
-			}
-		});
+				@Override public void run()
+				{
+					onReadRequest_mainThread(device, requestId, offset, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
+				}
+			});
+		}
+		else
+		{
+			onReadRequest_mainThread(device, requestId, offset, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
+		}
     }
 
 	@Override public void onDescriptorReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattDescriptor descriptor)
 	{
-		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+		if( postNeeded() )
 		{
-			@Override public void run()
+			post(new Runnable()
 			{
-				onReadRequest(device, requestId, offset, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
-			}
-		});
+				@Override public void run()
+				{
+					onReadRequest_mainThread(device, requestId, offset, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
+				}
+			});
+		}
+		else
+		{
+			onReadRequest_mainThread(device, requestId, offset, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
+		}
 	}
 
 	private OutgoingEvent newEarlyOutResponse_Write(final BluetoothDevice device, final Type type, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable, final int requestId, final int offset, final BleServer.OutgoingListener.Status status)
@@ -367,8 +415,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		return e;
 	}
 
-
-	private void onWriteRequest(final BluetoothDevice device, final int requestId, final int offset, final boolean preparedWrite, final boolean responseNeeded, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
+	private void onWriteRequest_mainThread(final BluetoothDevice device, final int requestId, final int offset, final boolean preparedWrite, final boolean responseNeeded, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
 	{
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 		final Type type = preparedWrite ? Type.PREPARED_WRITE : Type.WRITE;
@@ -412,24 +459,38 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onCharacteristicWriteRequest(final BluetoothDevice device, final int requestId, final BluetoothGattCharacteristic characteristic, final boolean preparedWrite, final boolean responseNeeded, final int offset, final byte[] value)
 	{
-		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+		if( postNeeded() )
 		{
-			@Override public void run()
+			post(new Runnable()
 			{
-				onWriteRequest(device, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
-			}
-		});
+				@Override public void run()
+				{
+					onWriteRequest_mainThread(device, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
+				}
+			});
+		}
+		else
+		{
+			onWriteRequest_mainThread(device, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
+		}
     }
 
 	@Override public void onDescriptorWriteRequest( final BluetoothDevice device, final int requestId, final BluetoothGattDescriptor descriptor, final boolean preparedWrite, final boolean responseNeeded, final int offset, final byte[] value)
 	{
-		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+		if( postNeeded() )
 		{
-			@Override public void run()
+			post(new Runnable()
 			{
-				onWriteRequest(device, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
-			}
-		});
+				@Override public void run()
+				{
+					onWriteRequest_mainThread(device, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
+				}
+			});
+		}
+		else
+		{
+			onWriteRequest_mainThread(device, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
+		}
     }
 
 	@Override public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute)
@@ -438,24 +499,36 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onNotificationSent( final BluetoothDevice device, final int gattStatus )
 	{
-		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+		if( postNeeded() )
 		{
-			@Override public void run()
+			post(new Runnable()
 			{
-				final P_Task_SendNotification task = m_queue.getCurrent(P_Task_SendNotification.class, m_server);
+				@Override public void run()
+				{
+					onNotificationSent_mainThread(device, gattStatus);
+				}
+			});
+		}
+		else
+		{
+			onNotificationSent_mainThread(device, gattStatus);
+		}
+	}
 
-				if( task != null && task.m_macAddress.equals(device.getAddress()) )
-				{
-					task.onNotificationSent(device, gattStatus);
-				}
-				else
-				{
-					// DRK > For now not doing anything...the most-likely scenario I can see is if sending out a notification takes
-					// longer than the timeout so we kill the task but then this comes in and there's no task there. Since we already
-					// sent the callback to appland for the timeout it's tricky whether we should send another callback.
-					// UPDATE: Gonna call the callback anyway
-				}
-			}
-		});
+	private void onNotificationSent_mainThread(final BluetoothDevice device, final int gattStatus)
+	{
+		final P_Task_SendNotification task = m_queue.getCurrent(P_Task_SendNotification.class, m_server);
+
+		if( task != null && task.m_macAddress.equals(device.getAddress()) )
+		{
+			task.onNotificationSent(device, gattStatus);
+		}
+		else
+		{
+			// DRK > For now not doing anything...the most-likely scenario I can see is if sending out a notification takes
+			// longer than the timeout so we kill the task but then this comes in and there's no task there. Since we already
+			// sent the callback to appland for the timeout it's tricky whether we should send another callback.
+			// UPDATE: Gonna call the callback anyway
+		}
     }
 }
