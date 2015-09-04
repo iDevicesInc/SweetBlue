@@ -157,11 +157,10 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
     @Override public void onConnectionStateChange(final BluetoothDevice device, final int gattStatus, final int newState)
 	{
-		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
-
-		updateLoop.postIfNeeded(new Runnable()
+		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				m_logger.log_status(gattStatus, m_logger.gattConn(newState));
 
@@ -260,11 +259,10 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onServiceAdded(final int gattStatus, final BluetoothGattService service)
 	{
-		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
-
-		updateLoop.postIfNeeded(new Runnable()
+		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				final P_Task_AddService task = m_queue.getCurrent(P_Task_AddService.class, m_server);
 
@@ -336,9 +334,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattCharacteristic characteristic)
 	{
-		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
-
-		updateLoop.postIfNeeded(new Runnable()
+		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -349,9 +345,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onDescriptorReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattDescriptor descriptor)
 	{
-		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
-
-		updateLoop.postIfNeeded(new Runnable()
+		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -418,9 +412,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onCharacteristicWriteRequest(final BluetoothDevice device, final int requestId, final BluetoothGattCharacteristic characteristic, final boolean preparedWrite, final boolean responseNeeded, final int offset, final byte[] value)
 	{
-		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
-
-		updateLoop.postIfNeeded(new Runnable()
+		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -431,9 +423,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onDescriptorWriteRequest( final BluetoothDevice device, final int requestId, final BluetoothGattDescriptor descriptor, final boolean preparedWrite, final boolean responseNeeded, final int offset, final byte[] value)
 	{
-		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
-
-		updateLoop.postIfNeeded(new Runnable()
+		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -448,9 +438,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onNotificationSent( final BluetoothDevice device, final int gattStatus )
 	{
-		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
-		
-		updateLoop.postIfNeeded(new Runnable()
+		m_server.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 		{
 			@Override public void run()
 			{

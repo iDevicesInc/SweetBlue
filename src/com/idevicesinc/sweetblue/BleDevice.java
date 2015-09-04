@@ -5162,19 +5162,19 @@ public class BleDevice implements UsesCustomNull
 		final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
 
 		tracker.set
-		(
-				intent,
-				gattStatus,
-				DISCOVERED, true,
-				DISCONNECTED, true,
-				BONDING, m_nativeWrapper.isNativelyBonding(),
-				BONDED, m_nativeWrapper.isNativelyBonded(),
-				UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
-				RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
-				ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY,
+				(
+						intent,
+						gattStatus,
+						DISCOVERED, true,
+						DISCONNECTED, true,
+						BONDING, m_nativeWrapper.isNativelyBonding(),
+						BONDED, m_nativeWrapper.isNativelyBonded(),
+						UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+						RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
+						ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY,
 
-				overrideBondingStates
-		);
+						overrideBondingStates
+				);
 
 		if( tracker != stateTracker_main() )
 		{
@@ -5238,11 +5238,26 @@ public class BleDevice implements UsesCustomNull
 
 			final boolean saveLastDisconnectAfterTaskCompletes = connectionFailReasonIfConnecting != Status.ROGUE_DISCONNECT;
 
+			final int taskOrdinal;
+			final boolean clearQueue;
+
 			if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
 			{
-				m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes));
+				final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
+				m_queue.add(disconnectTask);
 
-				m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this);
+				taskOrdinal = disconnectTask.getOrdinal();
+				clearQueue = true;
+
+				//--- DRK > Taking this out because the problem is this invokes
+				//---		callbacks to appland for e.g. a read failing because of EXPLICIT_DISCONNECT before the BleDeviceState change below.
+				//---		This is now moved to the clearQueue if block below so that callbacks to appland get sent *after* disconnect state change.
+//				m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this);
+			}
+			else
+			{
+				taskOrdinal = -1;
+				clearQueue = false;
 			}
 
 			final Object[] overrideBondingStates = m_bondMngr.getOverrideBondStatesForDisconnect(connectionFailReasonIfConnecting);
@@ -5251,7 +5266,11 @@ public class BleDevice implements UsesCustomNull
 			setStateToDisconnected(attemptingReconnect_longTerm, intent, gattStatus, forceMainStateTracker, overrideBondingStates);
 
 			m_txnMngr.cancelAllTransactions();
-			// m_txnMngr.clearAllTxns();
+
+			if( clearQueue )
+			{
+				m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this, taskOrdinal);
+			}
 
 			if (!attemptingReconnect_longTerm)
 			{
@@ -5479,7 +5498,7 @@ public class BleDevice implements UsesCustomNull
 		//--- TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
 		if (!isConnectingOverall_2 && retrying == Please.PE_Please.DO_NOT_RETRY)
 		{
-			m_queue.clearQueueOf(P_Task_Connect.class, this);
+			m_queue.clearQueueOf(P_Task_Connect.class, this, -1);
 		}
 	}
 
@@ -5487,7 +5506,7 @@ public class BleDevice implements UsesCustomNull
 	{
 		m_dummyDisconnectTask.setOverrideOrdinal(overrideOrdinal);
 		m_queue.softlyCancelTasks(m_dummyDisconnectTask);
-		m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this);
+		m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this, overrideOrdinal);
 	}
 
 	private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final Double interval, final ReadWriteListener listener)

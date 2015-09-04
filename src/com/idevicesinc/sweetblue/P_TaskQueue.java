@@ -166,8 +166,7 @@ class P_TaskQueue
 		
 		m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
 		{
-			@Override
-			public void run()
+			@Override public void run()
 			{
 				if( tryCancellingCurrentTask(newTask) )
 				{
@@ -176,8 +175,6 @@ class P_TaskQueue
 				else if( tryInterruptingCurrentTask(newTask) ) {}
 				else if( tryInsertingIntoQueue(newTask) ) {}
 				else { addToBack(newTask); }
-				;
-				;
 			}
 		});
 		
@@ -479,13 +476,18 @@ class P_TaskQueue
 		}
 	}
 	
-	public void clearQueueOf(Class<? extends PA_Task> taskClass, BleDevice device)
+	public void clearQueueOf(Class<? extends PA_Task> taskClass, BleDevice device, final int ordinal)
 	{
 		for( int i = m_queue.size()-1; i >= 0; i-- )
 		{
-			if( PU_TaskQueue.isMatch(m_queue.get(i), taskClass, null, device, null) )
+			final PA_Task task_ith = m_queue.get(i);
+
+			if( ordinal <= -1 || ordinal >= 0 && task_ith.getOrdinal() <= ordinal )
 			{
-				clearQueueOf$removeFromQueue(i);
+				if( PU_TaskQueue.isMatch(task_ith, taskClass, null, device, null) )
+				{
+					clearQueueOf$removeFromQueue(i);
+				}
 			}
 		}
 	}
@@ -500,6 +502,7 @@ class P_TaskQueue
 			}
 		}
 	}
+
 	@Override public String toString()
 	{
 		final String current = m_current != null ? m_current.toString() : "no current task";

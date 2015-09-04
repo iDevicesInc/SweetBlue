@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
+import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
@@ -59,6 +60,11 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 						if( state == PE_TaskState.SUCCEEDED )
 						{
 							m_device.setToAlwaysUseAutoConnectIfItWorked();
+						}
+
+						if( state == PE_TaskState.REDUNDANT )
+						{
+							Log.e("", "redundant");
 						}
 						
 						m_device.onNativeConnect(connectTask.isExplicit());

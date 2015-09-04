@@ -165,7 +165,7 @@ class P_TransactionManager
 			{
 				if( !m_device.getManager().getTaskQueue().succeed(P_Task_TxnLock.class, m_device) )
 				{
-					m_device.getManager().getTaskQueue().clearQueueOf(P_Task_TxnLock.class, m_device);
+					m_device.getManager().getTaskQueue().clearQueueOf(P_Task_TxnLock.class, m_device, -1);
 				}
 			}
 		});

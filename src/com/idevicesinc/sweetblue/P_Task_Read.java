@@ -38,20 +38,22 @@ class P_Task_Read extends PA_Task_ReadOrWrite
 	{
 		super.execute();
 		
-		BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
+		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
 		
 		if( char_native == null )
 		{
 			fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-			
-			return;
 		}
-		
-		if( !getDevice().getNativeGatt().readCharacteristic(char_native) )
+		else
 		{
-			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-			
-			return;
+			if( false == getDevice().getNativeGatt().readCharacteristic(char_native) )
+			{
+				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+			}
+			else
+			{
+				// DRK > SUCCESS, for now...
+			}
 		}
 	}
 	

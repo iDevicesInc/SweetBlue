@@ -72,24 +72,24 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 		if( char_native == null )
 		{
 			fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-			
-			return;
-		}
-		
-		if( !weBeChunkin() )
-		{
-			write(m_allDataToSend, char_native);
 		}
 		else
 		{
-			if( !getDevice().getNativeGatt().beginReliableWrite() )
+			if( false == weBeChunkin() )
 			{
-				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-				
-				return;
+				write(m_allDataToSend, char_native);
 			}
-			
-			writeNextChunk();
+			else
+			{
+				if( false == getDevice().getNativeGatt().beginReliableWrite() )
+				{
+					fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+				}
+				else
+				{
+					writeNextChunk();
+				}
+			}
 		}
 	}
 	
@@ -117,18 +117,20 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	
 	private void write(final byte[] data, final BluetoothGattCharacteristic char_native)
 	{
-		if( !char_native.setValue(data) )
+		if( false == char_native.setValue(data) )
 		{
 			fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-			
-			return;
 		}
-		
-		if( !getDevice().getNativeGatt().writeCharacteristic(char_native) )
+		else
 		{
-			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-			
-			return;
+			if( false == getDevice().getNativeGatt().writeCharacteristic(char_native) )
+			{
+				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+			}
+			else
+			{
+				// SUCCESS, for now...
+			}
 		}
 	}
 	

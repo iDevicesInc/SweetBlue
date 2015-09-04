@@ -48,7 +48,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 		
 		if( m_explicit )
 		{
-			boolean useAutoConnect = getDevice().shouldUseAutoConnect();
+			final boolean useAutoConnect = getDevice().shouldUseAutoConnect();
 			
 			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
 			
@@ -57,8 +57,6 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			if( m_gatt == null )
 			{
 				failImmediately();
-				
-				return;
 			}
 			else
 			{
