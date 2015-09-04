@@ -971,7 +971,7 @@ public class BleManager
 	 */
 	public void turnOff()
 	{
-		turnOff(false);
+		turnOff_private(false);
 	}
 
 	/**
@@ -1463,7 +1463,52 @@ public class BleManager
 	 */
 	public void reset(ResetListener listener)
 	{
-		reset_synchronized(listener);
+		if( listener != null )
+		{
+			if( m_resetListeners != null )
+			{
+				m_resetListeners.addListener(listener);
+			}
+			else
+			{
+				m_resetListeners = new P_WrappingResetListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+			}
+		}
+
+		if( is(BleManagerState.RESETTING) )
+		{
+			return;
+		}
+
+		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		if( m_config.enableCrashResolverForReset )
+		{
+			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
+		}
+
+		turnOff_private(/*removeAllBonds=*/true);
+
+		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		{
+			@Override
+			public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			{
+				if( state.isEndingState() )
+				{
+					ResetListener nukeListeners = m_resetListeners;
+					m_resetListeners = null;
+					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+					if( nukeListeners != null )
+					{
+						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
+						nukeListeners.onEvent(event);
+					}
+				}
+			}
+		}));
 	}
 
 	/**
@@ -2164,12 +2209,7 @@ public class BleManager
 	P_Logger					getLogger(){					return m_logger;					}
 
 
-	private void turnOff(final boolean removeAllBonds)
-	{
-		turnOff_synchronized(removeAllBonds);
-	}
-
-	private void turnOff_synchronized(final boolean removeAllBonds)
+	private void turnOff_private(final boolean removeAllBonds)
 	{
 		if( isAny(TURNING_OFF, OFF) )  return;
 
@@ -2207,55 +2247,6 @@ public class BleManager
 		});
 
 		m_taskQueue.add(task);
-	}
-
-	private void reset_synchronized(final ResetListener listener)
-	{
-		if( listener != null )
-		{
-			if( m_resetListeners != null )
-			{
-				m_resetListeners.addListener(listener);
-			}
-			else
-			{
-				m_resetListeners = new P_WrappingResetListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
-			}
-		}
-
-		if( is(BleManagerState.RESETTING) )
-		{
-			return;
-		}
-
-		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-		if( m_config.enableCrashResolverForReset )
-		{
-			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
-		}
-
-		turnOff(/*removeAllBonds=*/true);
-
-		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
-		{
-			@Override public void onStateChange(PA_Task taskClass, PE_TaskState state)
-			{
-				if( state.isEndingState() )
-				{
-					ResetListener nukeListeners = m_resetListeners;
-					m_resetListeners = null;
-					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-					if( nukeListeners != null )
-					{
-						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
-						nukeListeners.onEvent(event);
-					}
-				}
-			}
-		}));
 	}
 
 	void startAutoUpdate(final double updateRate)
@@ -2509,28 +2500,23 @@ public class BleManager
 	@Advanced
 	public void update(final double timeStep_seconds)
 	{
-		update_synchronized(timeStep_seconds);
-	}
-
-	private void update_synchronized(final double timeStep)
-	{
-		m_uhOhThrottler.update(timeStep);
-		m_taskQueue.update(timeStep);
+		m_uhOhThrottler.update(timeStep_seconds);
+		m_taskQueue.update(timeStep_seconds);
 
 		if( m_isForegrounded )
 		{
-			m_timeForegrounded += timeStep;
+			m_timeForegrounded += timeStep_seconds;
 		}
 		else
 		{
 			m_timeForegrounded = 0.0;
 		}
 
-		m_deviceMngr.update(timeStep);
+		m_deviceMngr.update(timeStep_seconds);
 
 		if( !is(SCANNING) )
 		{
-			m_timeNotScanning += timeStep;
+			m_timeNotScanning += timeStep_seconds;
 		}
 
 		boolean startScan = false;
