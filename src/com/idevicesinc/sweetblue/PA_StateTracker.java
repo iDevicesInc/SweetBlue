@@ -27,8 +27,7 @@ abstract class PA_StateTracker
 	}
 	
 	private int m_stateMask = 0x0;
-	
-	private final Object m_lock = new Object();
+
 	private final long[] m_timesInState;
 	private final int m_stateCount;
 	
@@ -55,10 +54,7 @@ abstract class PA_StateTracker
 	
 	boolean checkBitMatch(State flag, boolean value)
 	{
-		synchronized ( m_lock )
-		{
-			return ((flag.bit() & m_stateMask) != 0) == value;
-		}
+		return ((flag.bit() & m_stateMask) != 0) == value;
 	}
 	
 	private int getMask(final int currentStateMask, final Object[] statesAndValues)
@@ -102,27 +98,21 @@ abstract class PA_StateTracker
 	
 	void append(State newState, E_Intent intent, int status)
 	{
-		synchronized ( m_lock )
+		if( newState./*already*/overlaps(m_stateMask) )
 		{
-			if( newState./*already*/overlaps(m_stateMask) )
-			{
-	//			m_logger.w("Already in state: " + newState);
-				
-				return;
-			}
-			
-			append_assert(newState);
-			
-			setStateMask(m_stateMask | newState.bit(), intent == E_Intent.INTENTIONAL ? newState.bit() : 0x0, status);
+//			m_logger.w("Already in state: " + newState);
+
+			return;
 		}
+
+		append_assert(newState);
+
+		setStateMask(m_stateMask | newState.bit(), intent == E_Intent.INTENTIONAL ? newState.bit() : 0x0, status);
 	}
 	
 	void remove(State state, E_Intent intent, int status)
 	{
-		synchronized ( m_lock )
-		{
-			setStateMask(m_stateMask & ~state.bit(), intent == E_Intent.INTENTIONAL ? state.bit() : 0x0, status);
-		}
+		setStateMask(m_stateMask & ~state.bit(), intent == E_Intent.INTENTIONAL ? state.bit() : 0x0, status);
 	}
 	
 	protected void append_assert(State newState){}
@@ -149,12 +139,9 @@ abstract class PA_StateTracker
 	
 	private void set(final int intentMask, final int status, final Object ... statesAndValues)
 	{
-		synchronized ( m_lock )
-		{
-			final int newStateBits = getMask(0x0, statesAndValues);
-			
-			setStateMask(newStateBits, intentMask, status);
-		}
+		final int newStateBits = getMask(0x0, statesAndValues);
+
+		setStateMask(newStateBits, intentMask, status);
 	}
 	
 	void update(E_Intent intent, int status, Object ... statesAndValues)
@@ -164,12 +151,9 @@ abstract class PA_StateTracker
 	
 	private void update(int intentMask, int status, Object ... statesAndValues)
 	{
-		synchronized ( m_lock )
-		{
-			int newStateBits = getMask(m_stateMask, statesAndValues);
-		
-			setStateMask(newStateBits, intentMask, status);
-		}
+		int newStateBits = getMask(m_stateMask, statesAndValues);
+
+		setStateMask(newStateBits, intentMask, status);
 	}
 	
 	long getTimeInState(int stateOrdinal)
@@ -252,9 +236,6 @@ abstract class PA_StateTracker
 	
 	protected String toString(State[] enums)
 	{
-		synchronized ( m_lock )
-		{
-			return Utils.toString(m_stateMask, enums);
-		}
+		return Utils.toString(m_stateMask, enums);
 	}
 }

@@ -3,29 +3,28 @@ package com.idevicesinc.sweetblue;
 import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 
 class P_RssiPollManager
 {
 	private static class CustomListener extends P_WrappingReadWriteListener
 	{
-		private final P_RssiPollManager m_thisMngr;
+		private final P_RssiPollManager m_pollMngr;
 		
 		CustomListener(P_RssiPollManager thisMngr, ReadWriteListener listener, Handler handler, boolean postToMain)
 		{
 			super(listener, handler, postToMain);
 			
-			m_thisMngr = thisMngr;
+			m_pollMngr = thisMngr;
 		}
 		
 		@Override public void onEvent(final ReadWriteEvent event)
 		{
-			m_thisMngr.m_waitingOnResponse = false;
+			m_pollMngr.m_waitingOnResponse = false;
 			
-			if( m_thisMngr.m_timeTracker >= ENABLE_TIMER )
+			if( m_pollMngr.m_timeTracker >= ENABLE_TIMER )
 			{
-				m_thisMngr.m_timeTracker = ENABLE_TIMER;
+				m_pollMngr.m_timeTracker = ENABLE_TIMER;
 			}
 			
 			super.onEvent(event);
@@ -51,14 +50,12 @@ class P_RssiPollManager
 	
 	void start(double interval, ReadWriteListener listener_nullable)
 	{
-		if( interval <= 0.0 )
+		if( interval > 0.0 )
 		{
-			return;
+			m_timeTracker = ENABLE_TIMER;
+			m_interval = interval;
+			m_listener = new CustomListener(this, listener_nullable, m_device.getManager().m_mainThreadHandler, m_device.conf_mngr().postCallbacksToMainThread);
 		}
-		
-		m_timeTracker = ENABLE_TIMER;
-		m_interval = interval;
-		m_listener = new CustomListener(this, listener_nullable, m_device.getManager().m_mainThreadHandler, m_device.conf_mngr().postCallbacksToMainThread);
 	}
 	
 	boolean isRunning()
@@ -76,16 +73,17 @@ class P_RssiPollManager
 	
 	void update(double timestep)
 	{
-		if( m_timeTracker == DISABLE_TIMER )  return;
-		
-		m_timeTracker += timestep;
-		
-		if( m_timeTracker >= m_interval && !m_waitingOnResponse)
+		if( m_timeTracker != DISABLE_TIMER )
 		{
-			if( m_device.is(BleDeviceState.INITIALIZED) )
+			m_timeTracker += timestep;
+
+			if( m_timeTracker >= m_interval && !m_waitingOnResponse )
 			{
-				m_waitingOnResponse = true;
-				m_device.readRssi_internal(Type.POLL, m_listener);	
+				if( m_device.is(BleDeviceState.INITIALIZED) )
+				{
+					m_waitingOnResponse = true;
+					m_device.readRssi_internal(Type.POLL, m_listener);
+				}
 			}
 		}
 	}

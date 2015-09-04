@@ -27,12 +27,12 @@ public abstract class BleTransaction
 	public abstract static class Init extends BleTransaction{}
 	
 	/**
-	 * Tagging subclass to force type-discrepancy on various {@link BleDevice#connect()} overloads.
+	 * Tagging subclass to force type-discrepancy for various {@link BleDevice#connect()} overloads.
 	 */
 	public abstract static class Auth extends BleTransaction{}
 	
 	/**
-	 * Tagging subclass to force type-correctness on {@link BleDevice#performOta(BleTransaction.Ota)}.
+	 * Tagging subclass to force type-correctness for {@link BleDevice#performOta(BleTransaction.Ota)}.
 	 */
 	public abstract static class Ota extends BleTransaction{}
 	

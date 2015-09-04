@@ -36,9 +36,9 @@ import static com.idevicesinc.sweetblue.BleServerState.*;
 
 
 /**
- * Wrapper for functionality exposed by {@link BluetoothGattServer}. For OS levels less than 5.0, this
+ * Get an instance from {@link BleManager#getServer()}. Wrapper for functionality exposed by {@link BluetoothGattServer}. For OS levels less than 5.0, this
  * is only useful by piggybacking on an existing {@link BleDevice} that is currently {@link BleDeviceState#CONNECTED}.
- * For OS levels 5.0 and up a {@link BleServer} is capable of acting as an independent, advertising peripheral.
+ * For OS levels 5.0 and up a {@link BleServer} is capable of acting as an independent peripheral.
  */
 public class BleServer implements UsesCustomNull
 {

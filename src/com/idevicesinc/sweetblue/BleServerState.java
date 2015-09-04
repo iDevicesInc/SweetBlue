@@ -27,12 +27,19 @@ public enum BleServerState implements State
 	 */
 	NULL,
 
+	/**
+	 * SweetBlue equivalent of {@link android.bluetooth.BluetoothGattServer#STATE_DISCONNECTED}.
+	 */
 	DISCONNECTED,
 
-
+	/**
+	 * SweetBlue equivalent of {@link android.bluetooth.BluetoothGattServer#STATE_CONNECTING}.
+	 */
 	CONNECTING,
-	
 
+	/**
+	 * SweetBlue equivalent of {@link android.bluetooth.BluetoothGattServer#STATE_CONNECTED}.
+	 */
 	CONNECTED;
 
 
