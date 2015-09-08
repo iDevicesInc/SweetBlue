@@ -61,7 +61,7 @@ class P_UhOhThrottler
 		}
 	}
 	
-	synchronized void update(double timeStep)
+	void update(double timeStep)
 	{
 		m_timeTracker += timeStep;
 	}

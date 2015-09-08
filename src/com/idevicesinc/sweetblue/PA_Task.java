@@ -179,11 +179,8 @@ abstract class PA_Task
 	{
 		//--- DRK > Can be called upstream from different thread than the update loop,
 		//---		so preventing clashes here with this.update method.
-		synchronized (this)
-		{
-			m_timeout = newTimeout;
-			m_resetableExecuteStartTime = System.currentTimeMillis();
-		}
+		m_timeout = newTimeout;
+		m_resetableExecuteStartTime = System.currentTimeMillis();
 	}
 	
 	protected void timeout()

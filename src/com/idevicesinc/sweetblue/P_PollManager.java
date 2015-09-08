@@ -405,7 +405,7 @@ class P_PollManager
 				
 				if( notifyState == E_NotifyState.ENABLED && ithEntry.m_notifyState != E_NotifyState.ENABLED )
 				{
-					ReadWriteEvent result = newAlreadyEnabledResult(characteristic, ithEntry.m_serviceUuid, ithEntry.m_charUuid);
+					ReadWriteEvent result = newAlreadyEnabledEvent(characteristic, ithEntry.m_serviceUuid, ithEntry.m_charUuid);
 					ithEntry.m_pollingReadListener.onEvent(result);
 				}
 				
@@ -414,7 +414,7 @@ class P_PollManager
 		}
 	}
 	
-	ReadWriteEvent newAlreadyEnabledResult(P_Characteristic characteristic, final UUID serviceUuid, final UUID characteristicUuid)
+	ReadWriteEvent newAlreadyEnabledEvent(P_Characteristic characteristic, final UUID serviceUuid, final UUID characteristicUuid)
 	{
 		//--- DRK > Just being anal with the null check here.
 		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic.getNative(), /*enable=*/true) : BleDevice.EMPTY_BYTE_ARRAY;

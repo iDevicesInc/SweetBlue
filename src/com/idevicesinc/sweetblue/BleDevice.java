@@ -4479,7 +4479,7 @@ public class BleDevice implements UsesCustomNull
 		{
 			if (listener != null && isConnected )
 			{
-				result = m_pollMngr.newAlreadyEnabledResult(characteristic, serviceUuid, characteristicUuid);
+				result = m_pollMngr.newAlreadyEnabledEvent(characteristic, serviceUuid, characteristicUuid);
 
 				invokeReadWriteCallback(listener, result);
 			}

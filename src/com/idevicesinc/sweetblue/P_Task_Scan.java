@@ -227,13 +227,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				}
 			}
 
-			try
-			{
-				Thread.sleep(10);
-			}
-			catch (InterruptedException e)
-			{
-			}
+//			try
+//			{
+//				Thread.sleep(10);
+//			}
+//			catch (InterruptedException e)
+//			{
+//			}
 		}
 
 		if( retryCount > m_retryCountMax )

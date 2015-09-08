@@ -27,14 +27,6 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		@Override public void onStateChange(PA_Task task, PE_TaskState state)
 		{
-			synchronized (m_device.m_threadLock)
-			{
-				onStateChange_synchronized(task, state);
-			}
-		}
-		
-		private void onStateChange_synchronized(PA_Task task, PE_TaskState state)
-		{
 			if (task.getClass() == P_Task_Connect.class)
 			{
 				final P_Task_Connect connectTask = (P_Task_Connect) task;

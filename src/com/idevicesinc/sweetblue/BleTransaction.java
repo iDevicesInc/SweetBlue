@@ -140,39 +140,36 @@ public abstract class BleTransaction
 	
 	private boolean end(final EndReason reason, final ReadWriteListener.ReadWriteEvent failReason)
 	{
-		synchronized (m_device.m_threadLock )
+		if( !m_isRunning )
 		{
-			if( !m_isRunning )
-			{
-				//--- DRK > Can be due to a legitimate race condition, so warning might be a little much.
+			//--- DRK > Can be due to a legitimate race condition, so warning might be a little much.
 //				m_device.getManager().getLogger().w("Transaction is already ended!");
-				
-				return false;
-			}
-		
-			m_device.getManager().getLogger().i("transaction " + reason.name());
-			
-			m_isRunning = false;
-			
-			if( m_listener != null )
+
+			return false;
+		}
+
+		m_device.getManager().getLogger().i("transaction " + reason.name());
+
+		m_isRunning = false;
+
+		if( m_listener != null )
+		{
+			m_listener.onTransactionEnd(this, reason, failReason);
+		}
+
+		if( m_device.getManager().m_config.postCallbacksToMainThread && !Utils.isOnMainThread() )
+		{
+			m_device.getManager().m_mainThreadHandler.post(new Runnable()
 			{
-				m_listener.onTransactionEnd(this, reason, failReason);
-			}
-			
-			if( m_device.getManager().m_config.postCallbacksToMainThread && !Utils.isOnMainThread() )
-			{
-				m_device.getManager().m_mainThreadHandler.post(new Runnable()
+				@Override public void run()
 				{
-					@Override public void run()
-					{
-						onEnd(m_device, reason);
-					}
-				});
-			}
-			else
-			{
-				onEnd(m_device, reason);
-			}
+					onEnd(m_device, reason);
+				}
+			});
+		}
+		else
+		{
+			onEnd(m_device, reason);
 		}
 		
 		return true;
