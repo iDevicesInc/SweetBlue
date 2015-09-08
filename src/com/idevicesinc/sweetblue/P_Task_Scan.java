@@ -34,24 +34,54 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		public void onScanResult(final int callbackType, final ScanResult result)
 		{
+			if( getManager().getUpdateLoop().postNeeded() )
+			{
+				getManager().getUpdateLoop().postIfNeeded(new Runnable()
+				{
+					@Override public void run()
+					{
+						onScanResult_mainThread(callbackType, result);
+					}
+				});
+			}
+			else
+			{
+				onScanResult_mainThread(callbackType, result);
+			}
+		}
+
+		private void onScanResult_mainThread(final int callbackType, final ScanResult result)
+		{
 			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			getManager().getUpdateLoop().postIfNeeded(new Runnable()
-			{
-				@Override public void run()
-				{
-					final ScanRecord scanRecord = result.getScanRecord();
+			final ScanRecord scanRecord = result.getScanRecord();
 
-					getManager().onDiscovered(result.getDevice(), result.getRssi(), scanRecord.getBytes());
-				}
-			});
+			getManager().onDiscovered(result.getDevice(), result.getRssi(), scanRecord.getBytes());
 		}
 
 		public void onBatchScanResults(List<ScanResult> results)
 		{
 		}
 
-		public void onScanFailed(int errorCode)
+		public void onScanFailed(final int errorCode)
+		{
+			if( getManager().getUpdateLoop().postNeeded() )
+			{
+				getManager().getUpdateLoop().postIfNeeded(new Runnable()
+				{
+					@Override public void run()
+					{
+						onScanFailed_mainThread(errorCode);
+					}
+				});
+			}
+			else
+			{
+				onScanFailed_mainThread(errorCode);
+			}
+		}
+
+		private void onScanFailed_mainThread(final int errorCode)
 		{
 			if( errorCode != SCAN_FAILED_ALREADY_STARTED )
 			{
@@ -64,7 +94,6 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				m_mode = E_Mode.CLASSIC;
 			}
 		}
-
 	};
 	
 	public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, boolean isPoll)
@@ -99,24 +128,24 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		if( !getManager().getNative().getAdapter().isEnabled() )
 		{
 			fail();
-
-			return;
-		}
-
-		if( Utils.isLollipop() )
-		{
-			m_mode = E_Mode.BLE;
-			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-			startNativeScan_postLollipop();
 		}
 		else
 		{
-			m_mode = startNativeScan_preLollipop(getIntent());
-
-			if( m_mode == null )
+			if( Utils.isLollipop() )
 			{
-				fail();
+				m_mode = E_Mode.BLE;
+				getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+				startNativeScan_postLollipop();
+			}
+			else
+			{
+				m_mode = startNativeScan_preLollipop(getIntent());
+
+				if( m_mode == null )
+				{
+					fail();
+				}
 			}
 		}
 	}
@@ -294,11 +323,6 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	public E_Mode getMode()
 	{
 		return m_mode;
-	}
-	
-	@Override public boolean executeOnSeperateThread()
-	{
-		return true;
 	}
 
 	private boolean isSelfInterruptableBy(final PA_Task otherTask)

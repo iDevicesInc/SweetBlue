@@ -153,22 +153,28 @@ class P_TransactionManager
 	
 	void clearQueueLock()
 	{
-		//--- DRK > Kind of a band-aid hack to prevent deadlock when this is called upstream from
-		//---		main thread. A queue addition comes in on the heartbeat thread, which takes the
-		//---		queue lock. At the same time we call disconnect from the main thread, which takes
-		//---		the device lock, which then cascades here and would wait on the queue lock for
-		//---		succeed or clear. Meanwhile queue calls device.equals which used to take device lock.
-		//---		It doesn't anymore, but still putting this behind a runnabel just in case.
-		m_device.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+		if( m_device.getManager().getUpdateLoop().postNeeded() )
 		{
-			@Override public void run()
+			m_device.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 			{
-				if( !m_device.getManager().getTaskQueue().succeed(P_Task_TxnLock.class, m_device) )
+				@Override public void run()
 				{
-					m_device.getManager().getTaskQueue().clearQueueOf(P_Task_TxnLock.class, m_device, -1);
+					clearQueueLock_mainThread();
 				}
-			}
-		});
+			});
+		}
+		else
+		{
+			clearQueueLock_mainThread();
+		}
+	}
+
+	private void clearQueueLock_mainThread()
+	{
+		if( !m_device.getManager().getTaskQueue().succeed(P_Task_TxnLock.class, m_device) )
+		{
+			m_device.getManager().getTaskQueue().clearQueueOf(P_Task_TxnLock.class, m_device, -1);
+		}
 	}
 	
 //	void clearAllTxns()

@@ -38,7 +38,6 @@ abstract class PA_Task
 	private PE_TaskState m_state = null;
 	
 	private P_TaskQueue m_queue;
-	private Handler m_executeHandler;
 	
 //	private int m_maxRetries;
 //	private int m_retryCount;
@@ -53,19 +52,6 @@ abstract class PA_Task
 	protected final P_Logger m_logger;
 	
 	private int m_defaultOrdinal = ORDINAL_NOT_YET_ASSIGNED; // until added to the queue and assigned an actual ordinal.
-	
-	private final Runnable m_executeRunnable = new Runnable()
-	{
-		@Override public void run()
-		{
-			//--- DRK > Theoretically the task could be ended externally before
-			//---		we actually make it here.
-			if( m_state /*still*/== PE_TaskState.EXECUTING )
-			{
-				execute_wrapper();
-			}
-		}
-	};
 
     public PA_Task(BleServer server, I_StateListener listener)
     {
@@ -262,11 +248,10 @@ abstract class PA_Task
 		fail();
 	}
 
-	void arm(Handler executeHandler)
+	void arm()
 	{
 		setState(PE_TaskState.ARMED);
-		
-		m_executeHandler = executeHandler;
+
 //		m_totalTimeQueuedAndArmedAndExecuting = m_queue.getTime() - m_addedToQueueTime;
 		m_totalTimeArmedAndExecuting = 0.0;
 //		m_totalTimeExecuting = 0.0;
@@ -315,82 +300,69 @@ abstract class PA_Task
 	
 	void update_internal(double timeStep)
 	{
-		synchronized (this)
-		{
-			m_totalTimeArmedAndExecuting += timeStep;
+		m_totalTimeArmedAndExecuting += timeStep;
 //			m_totalTimeQueuedAndArmedAndExecuting += timeStep;
-			m_updateCount++;
-			
-			if( m_totalTimeArmedAndExecuting >= m_executionDelay )
-			{
-				if( m_state == PE_TaskState.ARMED )
-				{
-					//--- DRK > Force at least one time step between becoming armed and executing.
-					//---		TODO: Possibly gate this with an optional time requirement.
-					//---				For example we might want to give the ble stack time to "settle" after
-					//---				a heavy operation...yes i know how ridiculous that sounds...
-					if( m_updateCount > 1 )
-					{
-						//--- DRK > Debug code to delay reads and writes and such.
-	//					if( m_device != null && m_device.is(E_DeviceState.INITIALIZED) )
-	//					{
-	//						if( m_totalTimeArmedAndExecuting < 2.0 )
-	//						{
-	//							return;
-	//						}
-	//					}
-						
-						if( m_softlyCancelled )
-						{
-							softlyCancel();
-							
-							return;
-						}
-						
-						if( isExecutable() )
-						{
-							setState(PE_TaskState.EXECUTING);
-							
-							if( executeOnSeperateThread() )
-							{
-								//--- DRK > Executing on separate thread in case this method is called on the main thread,
-								//---		or a synchronization block in BtTaskQueue indirectly blocks the main thread.
-								//---		Some things like a failing scan call can block its thread for several seconds.
-								m_executeHandler.post(m_executeRunnable);
-							}
-							else
-							{
-								execute_wrapper();
-							}
-							
-							return;
-						}
-						else
-						{
-							onNotExecutable();
+		m_updateCount++;
 
-							return;
-						}
-					}
-				}
-				else if( m_state == PE_TaskState.EXECUTING )
-				{					
-					if( !Interval.isDisabled(m_timeout) && m_timeout != Interval.INFINITE.secs() )
+		if( m_totalTimeArmedAndExecuting >= m_executionDelay )
+		{
+			if( m_state == PE_TaskState.ARMED )
+			{
+				//--- DRK > Force at least one time step between becoming armed and executing.
+				//---		TODO: Possibly gate this with an optional time requirement.
+				//---				For example we might want to give the ble stack time to "settle" after
+				//---				a heavy operation...yes i know how ridiculous that sounds...
+				if( m_updateCount > 1 )
+				{
+					//--- DRK > Debug code to delay reads and writes and such.
+//					if( m_device != null && m_device.is(E_DeviceState.INITIALIZED) )
+//					{
+//						if( m_totalTimeArmedAndExecuting < 2.0 )
+//						{
+//							return;
+//						}
+//					}
+
+					if( m_softlyCancelled )
 					{
-						double timeExecuting = (System.currentTimeMillis() - m_resetableExecuteStartTime)/1000.0;
-						
-						if( timeExecuting >= m_timeout )
-						{
-							timeout();
-							
-							return;
-						}
+						softlyCancel();
+
+						return;
+					}
+
+					if( isExecutable() )
+					{
+						setState(PE_TaskState.EXECUTING);
+
+						execute_wrapper();
+
+						return;
+					}
+					else
+					{
+						onNotExecutable();
+
+						return;
 					}
 				}
 			}
-			
-			this.update(timeStep);
+			else if( m_state == PE_TaskState.EXECUTING )
+			{
+				if( !Interval.isDisabled(m_timeout) && m_timeout != Interval.INFINITE.secs() )
+				{
+					double timeExecuting = (System.currentTimeMillis() - m_resetableExecuteStartTime)/1000.0;
+
+					if( timeExecuting >= m_timeout )
+					{
+						timeout();
+
+						return;
+					}
+				}
+			}
 		}
+
+		this.update(timeStep);
 	}
 
 	protected void onNotExecutable()
@@ -507,11 +479,6 @@ abstract class PA_Task
 		String deviceEntry = getDevice() != null ? " " + getDevice().getName_debug(): "";
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
 		return name + "(" + m_state.name() + deviceEntry + addition + ")";
-	}
-	
-	public boolean executeOnSeperateThread()
-	{
-		return false;
 	}
 	
 	public boolean isExplicit()

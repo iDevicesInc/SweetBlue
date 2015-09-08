@@ -35,6 +35,11 @@ class P_TaskQueue
 		
 		return toReturn;
 	}
+
+	public Handler getExecuteHandler()
+	{
+		return m_executeHandler;
+	}
 	
 	int getCurrentOrdinal()
 	{
@@ -163,21 +168,32 @@ class P_TaskQueue
 	public void add(final PA_Task newTask)
 	{
 		newTask.init();
-		
-		m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
+
+		if( m_mngr.getUpdateLoop().postNeeded() )
 		{
-			@Override public void run()
+			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
 			{
-				if( tryCancellingCurrentTask(newTask) )
+				@Override public void run()
 				{
-					dequeue();
+					add_mainThread(newTask);
 				}
-				else if( tryInterruptingCurrentTask(newTask) ) {}
-				else if( tryInsertingIntoQueue(newTask) ) {}
-				else { addToBack(newTask); }
-			}
-		});
-		
+			});
+		}
+		else
+		{
+			add_mainThread(newTask);
+		}
+	}
+
+	private void add_mainThread(final PA_Task newTask)
+	{
+		if( tryCancellingCurrentTask(newTask) )
+		{
+			dequeue();
+		}
+		else if( tryInterruptingCurrentTask(newTask) ) {}
+		else if( tryInsertingIntoQueue(newTask) ) {}
+		else { addToBack(newTask); }
 	}
 	
 	double getTime()
@@ -222,7 +238,7 @@ class P_TaskQueue
 			{
 				m_queue.remove(i);
 				m_current = newPotentialCurrent;
-				m_current.arm(m_executeHandler);
+				m_current.arm();
 				
 				break;
 			}
@@ -315,25 +331,31 @@ class P_TaskQueue
 	
 	void tryEndingTask(final PA_Task task, final PE_TaskState endingState)
 	{
-		//--- DRK > Collapsing down to heartbeat thread because this can come in from tasks' execution thread.
-		//---		Just making things a little more deterministic by keeping everything queue-related on the heartbeat
-		//---		thread as much as possible.
-		m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
+		if( m_mngr.getUpdateLoop().postNeeded() )
 		{
-			@Override public void run()
+			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
 			{
-				synchronized (P_TaskQueue.this)
+				@Override public void run()
 				{
-					if( task != null && task == getCurrent())
-					{
-						if( !endCurrentTask(endingState) )
-						{
-							m_mngr.ASSERT(false);
-						}
-					}
+					tryEndingTask_mainThread(task, endingState);
 				}
+			});
+		}
+		else
+		{
+			tryEndingTask_mainThread(task, endingState);
+		}
+	}
+
+	private void tryEndingTask_mainThread(final PA_Task task, final PE_TaskState endingState)
+	{
+		if( task != null && task == getCurrent() )
+		{
+			if( !endCurrentTask(endingState) )
+			{
+				m_mngr.ASSERT(false);
 			}
-		});
+		}
 	}
 	
 	public boolean isCurrent(Class<? extends PA_Task> taskClass, BleManager mngr)

@@ -3925,6 +3925,8 @@ public class BleDevice implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean hasHistoricalData(final UUID uuid, final EpochTimeRange range)
 	{
+		if( isNull() ) return false;
+
 		return m_historicalDataMngr.hasHistoricalData(uuid, range);
 	}
 
