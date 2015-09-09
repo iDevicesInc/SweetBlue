@@ -173,7 +173,8 @@ class P_TaskQueue
 		{
 			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					add_mainThread(newTask);
 				}
@@ -194,6 +195,11 @@ class P_TaskQueue
 		else if( tryInterruptingCurrentTask(newTask) ) {}
 		else if( tryInsertingIntoQueue(newTask) ) {}
 		else { addToBack(newTask); }
+
+		while( getCurrent() == null && m_queue.size() > 0 )
+		{
+			dequeue();
+		}
 	}
 	
 	double getTime()
@@ -239,6 +245,7 @@ class P_TaskQueue
 				m_queue.remove(i);
 				m_current = newPotentialCurrent;
 				m_current.arm();
+				m_current.tryExecuting();
 				
 				break;
 			}
@@ -267,6 +274,28 @@ class P_TaskQueue
 		PA_Task current_saved = m_current;
 		m_current = null;
 		current_saved.setEndingState(endingState);
+
+		if( m_queue.size() > 0 && getCurrent() == null )
+		{
+			if( endingState.canGoToNextTaskImmediately() )
+			{
+				dequeue();
+			}
+			else
+			{
+				//--- DRK > Posting to prevent potential stack overflow if queue is really big and all tasks are failing in a row.
+				m_mngr.getUpdateLoop().forcePost(new Runnable()
+				{
+					@Override public void run()
+					{
+						if( m_queue.size() > 0 && getCurrent() == null )
+						{
+							dequeue();
+						}
+					}
+				});
+			}
+		}
 		
 		print();
 		

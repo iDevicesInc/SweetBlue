@@ -30,7 +30,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	{
 		if( getDevice().m_nativeWrapper.isNativelyConnected() )
 		{
-			m_logger.w("Already connected!");
+			getLogger().w("Already connected!");
 			
 			redundant();
 			

@@ -16,7 +16,7 @@ abstract class PA_Task
 
 	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
-	private final BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent();
+	private static final BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent();
 
 	
 	private 	  BleDevice m_device;
@@ -31,8 +31,6 @@ abstract class PA_Task
 	private double m_totalTimeArmedAndExecuting = 0.0;
 //	private double m_totalTimeQueuedAndArmedAndExecuting = 0.0;
 	
-	private double m_addedToQueueTime = -1.0;
-	
 	private final I_StateListener m_stateListener;
 	
 	private PE_TaskState m_state = null;
@@ -42,14 +40,10 @@ abstract class PA_Task
 //	private int m_maxRetries;
 //	private int m_retryCount;
 	
-	private int m_updateCount = 0;
-	
 	private long m_timeCreated;
 	private long m_timeExecuted;
 	
 	private boolean m_softlyCancelled = false;
-	
-	protected final P_Logger m_logger;
 	
 	private int m_defaultOrdinal = ORDINAL_NOT_YET_ASSIGNED; // until added to the queue and assigned an actual ordinal.
 
@@ -72,7 +66,6 @@ abstract class PA_Task
 		m_device = null;
 		m_manager = manager;
 //		m_maxRetries = 0;
-		m_logger = m_manager.getLogger();
 		m_timeCreated = System.currentTimeMillis();
 		
 		if( listener == null && this instanceof I_StateListener )
@@ -123,6 +116,11 @@ abstract class PA_Task
 	{
 		setState(PE_TaskState.CREATED);
 	}
+
+	protected P_Logger getLogger()
+	{
+		return getManager().getLogger();
+	}
 	
 	private void setState(PE_TaskState newState)
 	{
@@ -130,7 +128,7 @@ abstract class PA_Task
 		
 		m_state = newState;
 		
-		if( m_logger.isEnabled() )
+		if( getLogger().isEnabled() )
 		{
 			if( m_state.isEndingState() )
 			{
@@ -139,8 +137,8 @@ abstract class PA_Task
 				{
 					logText += " - " + m_queue.getUpdateCount();
 				}
-				
-				m_logger.i(logText);
+
+				getLogger().i(logText);
 			}
 			else if (m_state == PE_TaskState.EXECUTING )
 			{
@@ -171,8 +169,6 @@ abstract class PA_Task
 		m_queue = queue;
 		setState(PE_TaskState.QUEUED);
 //		m_retryCount = 0;
-		m_updateCount = 0;
-		m_addedToQueueTime = m_addedToQueueTime == -1.0 ? m_queue.getTime() : m_addedToQueueTime;
 	}
 	
 	void resetTimeout(double newTimeout)
@@ -254,7 +250,6 @@ abstract class PA_Task
 //		m_totalTimeExecuting = 0.0;
 		m_resetableExecuteStartTime = System.currentTimeMillis();
 //		m_retryCount = 0;
-		m_updateCount = 0;
 		m_timeout = getInitialTimeout();
 	}
 	
@@ -294,24 +289,18 @@ abstract class PA_Task
 
 		setState(endingState);
 	}
-	
-	void update_internal(double timeStep)
-	{
-		m_totalTimeArmedAndExecuting += timeStep;
-//			m_totalTimeQueuedAndArmedAndExecuting += timeStep;
-		m_updateCount++;
 
-		if( m_totalTimeArmedAndExecuting >= m_executionDelay )
+	public void tryExecuting()
+	{
+		if( m_state == PE_TaskState.ARMED )
 		{
-			if( m_state == PE_TaskState.ARMED )
+			//--- DRK > Force at least one time step between becoming armed and executing.
+			//---		TODO: Possibly gate this with an optional time requirement.
+			//---				For example we might want to give the ble stack time to "settle" after
+			//---				a heavy operation...yes i know how ridiculous that sounds...
+//			if( m_updateCount > 1 )
 			{
-				//--- DRK > Force at least one time step between becoming armed and executing.
-				//---		TODO: Possibly gate this with an optional time requirement.
-				//---				For example we might want to give the ble stack time to "settle" after
-				//---				a heavy operation...yes i know how ridiculous that sounds...
-				if( m_updateCount > 1 )
-				{
-					//--- DRK > Debug code to delay reads and writes and such.
+				//--- DRK > Debug code to delay reads and writes and such.
 //					if( m_device != null && m_device.is(E_DeviceState.INITIALIZED) )
 //					{
 //						if( m_totalTimeArmedAndExecuting < 2.0 )
@@ -320,28 +309,41 @@ abstract class PA_Task
 //						}
 //					}
 
-					if( m_softlyCancelled )
-					{
-						softlyCancel();
+				if( m_softlyCancelled )
+				{
+					softlyCancel();
 
-						return;
-					}
-
-					if( isExecutable() )
-					{
-						setState(PE_TaskState.EXECUTING);
-
-						execute_wrapper();
-
-						return;
-					}
-					else
-					{
-						onNotExecutable();
-
-						return;
-					}
+					return;
 				}
+
+				if( isExecutable() )
+				{
+					setState(PE_TaskState.EXECUTING);
+
+					execute_wrapper();
+
+					return;
+				}
+				else
+				{
+					onNotExecutable();
+
+					return;
+				}
+			}
+		}
+	}
+	
+	void update_internal(double timeStep)
+	{
+		m_totalTimeArmedAndExecuting += timeStep;
+//			m_totalTimeQueuedAndArmedAndExecuting += timeStep;
+
+		if( m_totalTimeArmedAndExecuting >= m_executionDelay )
+		{
+			if( m_state == PE_TaskState.ARMED )
+			{
+				tryExecuting();
 			}
 			else if( m_state == PE_TaskState.EXECUTING )
 			{

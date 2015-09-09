@@ -15,7 +15,7 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 		{
 			if( getDevice().getNativeGatt() == null )
 			{
-				m_logger.e("Device says we're natively connected but gatt==null");
+				getLogger().e("Device says we're natively connected but gatt==null");
 				getManager().ASSERT(false);
 				
 				return false;
@@ -33,7 +33,7 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 	{
 		if( task.getClass() == P_Task_Disconnect.class && this.getDevice().equals(task.getDevice()) )
 		{
-			P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
+			final P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 			
 			if( task_cast.getOrdinal() > this.getOrdinal() )
 			{

@@ -25,7 +25,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	private int m_offset = 0;
 	private byte[] m_maxChunkBuffer;
 	private final int m_maxChunkSize = MTU_LIMIT;
-	
+
 	private byte[] m_lastChunkBufferSent;
 	
 	public P_Task_Write(BleDevice device, P_Characteristic characteristic, final FutureData futureData, boolean requiresBonding, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
@@ -238,7 +238,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 		
 		if( state == PE_TaskState.TIMED_OUT )
 		{
-			m_logger.w(m_logger.charName(getCharUuid()) + " write timed out!");
+			getLogger().w(getLogger().charName(getCharUuid()) + " write timed out!");
 			
 			abortReliableWriteIfNeeded();
 			

@@ -49,7 +49,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 		//---		UPDATE: No, it doesn't appear this works...Android lies even to itself, so commenting this back in.
 		if( getDevice().m_nativeWrapper.isNativelyBonded() )
 		{
-			m_logger.w("Already bonded!");
+			getLogger().w("Already bonded!");
 			
 			succeed();
 			
@@ -70,8 +70,8 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 		else if( !getDevice().getNative().createBond() )
 		{
 			failImmediately();
-			
-			m_logger.w("Bond failed immediately.");
+
+			getLogger().w("Bond failed immediately.");
 		}
 	}
 	

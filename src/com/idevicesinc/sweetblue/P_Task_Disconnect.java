@@ -57,7 +57,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 	{
 		if( !getDevice().m_nativeWrapper.isNativelyConnected() )
 		{
-			m_logger.w("Already disconnected!");
+			getLogger().w("Already disconnected!");
 			
 			redundant();
 			
@@ -66,7 +66,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 		
 		if( getDevice().getNativeGatt() == null )
 		{
-			m_logger.w("Already disconnected and gatt==null!");
+			getLogger().w("Already disconnected and gatt==null!");
 			
 			redundant();
 			

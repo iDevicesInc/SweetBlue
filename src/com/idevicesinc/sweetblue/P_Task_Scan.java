@@ -158,7 +158,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			if( m_isPoll || m_scanTime == Double.POSITIVE_INFINITY )
 			{
-				scanMode = ScanSettings.SCAN_MODE_BALANCED;
+//				scanMode = ScanSettings.SCAN_MODE_BALANCED;
+				scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
 			}
 			else
 			{
@@ -209,7 +210,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				if( retryCount == 1 )
 				{
-					m_logger.w("Failed first startLeScan() attempt. Calling stopLeScan() then trying again...");
+					getLogger().w("Failed first startLeScan() attempt. Calling stopLeScan() then trying again...");
 
 					//--- DRK > It's been observed that right on app start up startLeScan can fail with a log
 					//---		message saying it's already started...not sure if it's my fault or not but throwing
@@ -223,7 +224,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				}
 				else
 				{
-					m_logger.w("Failed startLeScan() attempt number " + retryCount + ". Trying again...");
+					getLogger().w("Failed startLeScan() attempt number " + retryCount + ". Trying again...");
 				}
 			}
 
@@ -238,7 +239,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 		if( retryCount > m_retryCountMax )
 		{
-			m_logger.w("Pre-Lollipop LeScan totally failed to start!");
+			getLogger().w("Pre-Lollipop LeScan totally failed to start!");
 
 			tryClassicDiscovery(intent);
 
@@ -248,7 +249,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			if( retryCount > 0 )
 			{
-				m_logger.w("Started native scan with " + (retryCount+1) + " attempts.");
+				getLogger().w("Started native scan with " + (retryCount + 1) + " attempts.");
 			}
 
 			if( getManager().m_config.enableCrashResolver )
@@ -268,7 +269,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			if( !getManager().getNativeAdapter().startDiscovery() )
 			{
-				m_logger.w("Classic discovery failed to start!");
+				getLogger().w("Classic discovery failed to start!");
 
 				fail();
 

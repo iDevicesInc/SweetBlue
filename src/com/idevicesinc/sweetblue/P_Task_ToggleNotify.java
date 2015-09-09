@@ -182,7 +182,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( state == PE_TaskState.TIMED_OUT )
 		{
-			m_logger.w(m_logger.charName(getCharUuid()) + " descriptor write timed out!");
+			getLogger().w(getLogger().charName(getCharUuid()) + " descriptor write timed out!");
 
 			final ReadWriteEvent event = newReadWriteEvent(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getServiceUuid(), getCharUuid(), m_descUuid);
 			getDevice().invokeReadWriteCallback(m_readWriteListener, event);

@@ -28,5 +28,10 @@ enum PE_TaskState
 	{
 		return this.ordinal() > EXECUTING.ordinal();
 	}
+
+	public boolean canGoToNextTaskImmediately()
+	{
+		return this == SUCCEEDED || this == TIMED_OUT;
+	}
 }
 	
