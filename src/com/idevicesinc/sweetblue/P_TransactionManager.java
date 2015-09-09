@@ -17,14 +17,6 @@ class P_TransactionManager
 	{
 		@Override public void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.ReadWriteEvent txnFailReason)
 		{
-			synchronized (m_device.m_threadLock)
-			{
-				onTransactionEnd_private(txn, reason, txnFailReason);
-			}
-		}
-		
-		private void onTransactionEnd_private(BleTransaction txn, EndReason reason, ReadWriteListener.ReadWriteEvent txnFailReason)
-		{
 			clearQueueLock();
 
 			m_current = null;
@@ -101,7 +93,6 @@ class P_TransactionManager
 			}
 		}
 	};
-	private final Object m_threadLock = new Object();
 	
 	private final BleDevice m_device;
 	
@@ -123,17 +114,14 @@ class P_TransactionManager
 	
 	void start(final BleTransaction txn)
 	{
-		synchronized (m_threadLock)
+		if( m_current != null )
 		{
-			if( m_current != null )
-			{
-				m_device.getManager().ASSERT(false, "Old: " + m_current.getClass().getSimpleName() + " New: " + txn.getClass().getSimpleName());
-			}
-			
-			m_current = txn;
-			
-			start_common(m_device, txn);
+			m_device.getManager().ASSERT(false, "Old: " + m_current.getClass().getSimpleName() + " New: " + txn.getClass().getSimpleName());
 		}
+
+		m_current = txn;
+
+		start_common(m_device, txn);
 	}
 	
 	static void start_common(final BleDevice device, final BleTransaction txn)
@@ -213,89 +201,77 @@ class P_TransactionManager
 	
 	void cancelOtaTransaction()
 	{
-		synchronized (m_threadLock)
+		if( m_otaTxn != null && m_otaTxn.isRunning() )
 		{
-			if( m_otaTxn != null && m_otaTxn.isRunning() )
-			{
-				m_otaTxn.cancel();
-			}
+			m_otaTxn.cancel();
 		}
 	}
 	
 	void cancelAllTransactions()
 	{
-		synchronized (m_threadLock)
+		if( m_authTxn != null && m_authTxn.isRunning() )
 		{
-			if( m_authTxn != null && m_authTxn.isRunning() )
-			{
-				m_authTxn.cancel();
-			}
-			
-			if( m_initTxn != null && m_initTxn.isRunning() )
-			{
-				m_initTxn.cancel();
-			}
-			
-			cancelOtaTransaction();
-			
-			if( m_anonTxn != null && m_anonTxn.isRunning() )
-			{
-				m_anonTxn.cancel();
-				m_anonTxn = null;
-			}
-			
-			if( m_current != null )
-			{
-				m_device.getManager().ASSERT(false, "Expected current transaction to be null.");
-				
-				m_current.cancel();
-				m_current = null;
-			}
+			m_authTxn.cancel();
+		}
+
+		if( m_initTxn != null && m_initTxn.isRunning() )
+		{
+			m_initTxn.cancel();
+		}
+
+		cancelOtaTransaction();
+
+		if( m_anonTxn != null && m_anonTxn.isRunning() )
+		{
+			m_anonTxn.cancel();
+			m_anonTxn = null;
+		}
+
+		if( m_current != null )
+		{
+			m_device.getManager().ASSERT(false, "Expected current transaction to be null.");
+
+			m_current.cancel();
+			m_current = null;
 		}
 	}
 	
 	void update(double timeStep)
 	{
-		synchronized (m_threadLock)
+		if( m_authTxn != null && m_authTxn.isRunning() )
 		{
-			if( m_authTxn != null && m_authTxn.isRunning() )
-			{
-				m_authTxn.update_internal(timeStep);
-			}
-			
-			if( m_initTxn != null && m_initTxn.isRunning() )
-			{
-				m_initTxn.update_internal(timeStep);
-			}
-			
-			if( m_otaTxn != null && m_otaTxn.isRunning() )
-			{
-				m_otaTxn.update_internal(timeStep);
-			}
-			
-			if( m_anonTxn != null && m_anonTxn.isRunning() )
-			{
-				m_anonTxn.update_internal(timeStep);
-			}
+			m_authTxn.update_internal(timeStep);
+		}
+
+		if( m_initTxn != null && m_initTxn.isRunning() )
+		{
+			m_initTxn.update_internal(timeStep);
+		}
+
+		if( m_otaTxn != null && m_otaTxn.isRunning() )
+		{
+			m_otaTxn.update_internal(timeStep);
+		}
+
+		if( m_anonTxn != null && m_anonTxn.isRunning() )
+		{
+			m_anonTxn.update_internal(timeStep);
 		}
 	}
 	
 	void onConnect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn)
 	{
-		synchronized (m_threadLock)
+		m_authTxn = authenticationTxn;
+		m_initTxn = initTxn;
+
+		if( m_authTxn != null )
 		{
-			m_authTxn = authenticationTxn;
-			m_initTxn = initTxn;
-			
-			if( m_authTxn != null )
-			{
-				m_authTxn.init(m_device, m_txnEndListener);
-			}
-			
-			if( m_initTxn != null )
-			{
-				m_initTxn.init(m_device, m_txnEndListener);
-			}
+			m_authTxn.init(m_device, m_txnEndListener);
+		}
+
+		if( m_initTxn != null )
+		{
+			m_initTxn.init(m_device, m_txnEndListener);
 		}
 	}
 	
@@ -324,17 +300,14 @@ class P_TransactionManager
 	
 	void startOta(BleTransaction.Ota txn)
 	{
-		synchronized (m_threadLock)
-		{
 //			m_device.getManager().ASSERT(m_otaTxn == null);
-			
-			m_otaTxn = txn;
-			m_otaTxn.init(m_device, m_txnEndListener);
-			
-			m_device.stateTracker_main().append(PERFORMING_OTA, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-			
-			start(m_otaTxn);
-		}
+
+		m_otaTxn = txn;
+		m_otaTxn.init(m_device, m_txnEndListener);
+
+		m_device.stateTracker_main().append(PERFORMING_OTA, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		start(m_otaTxn);
 	}
 	
 	void performAnonTransaction(BleTransaction txn)
@@ -347,29 +320,26 @@ class P_TransactionManager
 	
 	void runAuthOrInitTxnIfNeeded(final int gattStatus, Object ... extraFlags)
 	{
-		synchronized (m_threadLock)
+		E_Intent intent = m_device.lastConnectDisconnectIntent();
+		if( m_authTxn == null && m_initTxn == null )
 		{
-			E_Intent intent = m_device.lastConnectDisconnectIntent();
-			if( m_authTxn == null && m_initTxn == null )
-			{
-				m_device.getPollManager().enableNotifications_assumesWeAreConnected();
-				
-				m_device.onFullyInitialized(gattStatus, extraFlags);
-			}
-			else if( m_authTxn != null )
-			{
-				m_device.stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATING, true);
-				
-				start(m_authTxn);
-			}
-			else if( m_initTxn != null )
-			{
-				m_device.getPollManager().enableNotifications_assumesWeAreConnected();
-				
-				m_device.stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATED, true, INITIALIZING, true);
-				
-				start(m_initTxn);
-			}
+			m_device.getPollManager().enableNotifications_assumesWeAreConnected();
+
+			m_device.onFullyInitialized(gattStatus, extraFlags);
+		}
+		else if( m_authTxn != null )
+		{
+			m_device.stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATING, true);
+
+			start(m_authTxn);
+		}
+		else if( m_initTxn != null )
+		{
+			m_device.getPollManager().enableNotifications_assumesWeAreConnected();
+
+			m_device.stateTracker().update(intent, BluetoothGatt.GATT_SUCCESS, extraFlags, AUTHENTICATED, true, INITIALIZING, true);
+
+			start(m_initTxn);
 		}
 	}
 }

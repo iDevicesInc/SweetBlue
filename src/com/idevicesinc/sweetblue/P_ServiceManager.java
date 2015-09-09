@@ -80,34 +80,31 @@ class P_ServiceManager
 	
 	void clear()
 	{
-		synchronized (m_serviceMap)
+		for( int i = m_oldServices.size()-1; i >= 0; i-- )
 		{
-			for( int i = m_oldServices.size()-1; i >= 0; i-- )
+			WeakReference<BluetoothGattService> ithReference = m_oldServices.get(i);
+
+			if( ithReference.get() == null )
 			{
-				WeakReference<BluetoothGattService> ithReference = m_oldServices.get(i);
-				
-				if( ithReference.get() == null )
-				{
-					m_oldServices.remove(i);
-				}
+				m_oldServices.remove(i);
 			}
-			
-			for( int i = 0; i < m_serviceList.size(); i++ )
-			{
-				m_oldServices.add(new WeakReference<BluetoothGattService>(m_serviceList.get(i).getNative()));
-			}
-			
-			//--- DRK > just a sanity check here...might still trip if GC is slow.
-			if( m_oldServices.size() > 100 )
-			{
-				//--- DRK > NOTE: This did trip during some stress testing, so converting to warning now so it's quieter.
-//				m_device.getManager().ASSERT(false);
-				m_device.getManager().getLogger().w("Weak old services array is getting pretty big...GC lagging behind");
-			}
-			
-			m_serviceMap.clear();
-			m_serviceList.clear();			
 		}
+
+		for( int i = 0; i < m_serviceList.size(); i++ )
+		{
+			m_oldServices.add(new WeakReference<BluetoothGattService>(m_serviceList.get(i).getNative()));
+		}
+
+		//--- DRK > just a sanity check here...might still trip if GC is slow.
+		if( m_oldServices.size() > 100 )
+		{
+			//--- DRK > NOTE: This did trip during some stress testing, so converting to warning now so it's quieter.
+//				m_device.getManager().ASSERT(false);
+			m_device.getManager().getLogger().w("Weak old services array is getting pretty big...GC lagging behind");
+		}
+
+		m_serviceMap.clear();
+		m_serviceList.clear();
 	}
 	
 	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetEvent(Type type, byte[] data, UUID serviceUuid, UUID characteristicUuid)
@@ -256,72 +253,69 @@ class P_ServiceManager
 	
 	void loadDiscoveredServices()
 	{
-		synchronized (m_serviceMap)
+		if( !m_device.getManager().ASSERT(m_device.getNativeGatt() != null) )  return;
+
+		//--- DRK > Observed a random concurrent modification exception a few times, so
+		//---		applying this blanket fix to at least avoid that.
+		List<BluetoothGattService> services = m_device.getNativeGatt().getServices();
+		Object[] raw = services.toArray();
+
+		for( int i = 0; i < raw.length; i++ )
 		{
-			if( !m_device.getManager().ASSERT(m_device.getNativeGatt() != null) )  return;
-			
-			//--- DRK > Observed a random concurrent modification exception a few times, so
-			//---		applying this blanket fix to at least avoid that.
-			List<BluetoothGattService> services = m_device.getNativeGatt().getServices();
-			Object[] raw = services.toArray();
-			
-			for( int i = 0; i < raw.length; i++ )
+			BluetoothGattService ithService_native = (BluetoothGattService) raw[i];
+
+			if( ithService_native == null )  continue;
+
+			boolean alreadySeenIth = hasOldService(ithService_native);
+
+			if( alreadySeenIth )
 			{
-				BluetoothGattService ithService_native = (BluetoothGattService) raw[i];
-				
-				if( ithService_native == null )  continue;
-				
-				boolean alreadySeenIth = hasOldService(ithService_native);
-				
-				if( alreadySeenIth )
-				{
-					m_device.getManager().uhOh(UhOh.OLD_DUPLICATE_SERVICE_FOUND);
-				}
-				
+				m_device.getManager().uhOh(UhOh.OLD_DUPLICATE_SERVICE_FOUND);
+			}
+
 //				Log.i(TAG, BluetoothUtils.debugThread() + "loadDiscoveredServices()_"+i+" for " + BluetoothUtils.debugServiceUUID(service.getUuid()));
-				
-				P_Service existingService = get(ithService_native.getUuid());
-				
-				if( existingService != null )
+
+			P_Service existingService = get(ithService_native.getUuid());
+
+			if( existingService != null )
+			{
+				BluetoothGattService existingService_native = existingService.getNative();
+
+				boolean alreadySeenExisting = hasOldService(existingService_native);
+
+				if( alreadySeenExisting )
 				{
-					BluetoothGattService existingService_native = existingService.getNative();
-					
-					boolean alreadySeenExisting = hasOldService(existingService_native);
-					
-					if( alreadySeenExisting )
+					if( alreadySeenIth )
 					{
-						if( alreadySeenIth )
-						{
-							//--- DRK > worst case of weirdness...just keep using the first old service found.
-						}
-						else
-						{
-							m_serviceList.remove(existingService);
-							
-							put(ithService_native);
-						}
+						//--- DRK > worst case of weirdness...just keep using the first old service found.
 					}
 					else
 					{
-						if( alreadySeenIth )
-						{
-							//--- DRK > second-worst case of weirdness...just keep using the first old service found.
-						}
-						else
-						{
-							//--- DRK > Haven't seen either service so BluetoothGatt just decided to create two new fresh instances
-							//---		for some reason. We arbitrarily use the "latest" one.
-							m_serviceList.remove(existingService);
-							put(ithService_native);
-						}
+						m_serviceList.remove(existingService);
+
+						put(ithService_native);
 					}
-					
-					m_device.getManager().uhOh(UhOh.DUPLICATE_SERVICE_FOUND);
 				}
 				else
 				{
-					put(ithService_native);
+					if( alreadySeenIth )
+					{
+						//--- DRK > second-worst case of weirdness...just keep using the first old service found.
+					}
+					else
+					{
+						//--- DRK > Haven't seen either service so BluetoothGatt just decided to create two new fresh instances
+						//---		for some reason. We arbitrarily use the "latest" one.
+						m_serviceList.remove(existingService);
+						put(ithService_native);
+					}
 				}
+
+				m_device.getManager().uhOh(UhOh.DUPLICATE_SERVICE_FOUND);
+			}
+			else
+			{
+				put(ithService_native);
 			}
 		}
 	}
