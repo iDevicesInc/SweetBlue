@@ -295,29 +295,23 @@ class P_PollManager
 	
 	void update(double timeStep)
 	{
-		synchronized (m_entries)
+		for( int i = 0; i < m_entries.size(); i++ )
 		{
-			for( int i = 0; i < m_entries.size(); i++ )
-			{
-				CallbackEntry ithEntry = m_entries.get(i);
-				
-				ithEntry.update(timeStep);
-			}
+			CallbackEntry ithEntry = m_entries.get(i);
+
+			ithEntry.update(timeStep);
 		}
 	}
 	
 	void onCharacteristicChangedFromNativeNotify(final UUID serviceUuid, final UUID charUuid, byte[] value)
 	{
-		synchronized (m_entries)
+		for( int i = 0; i < m_entries.size(); i++ )
 		{
-			for( int i = 0; i < m_entries.size(); i++ )
+			CallbackEntry ithEntry = m_entries.get(i);
+
+			if( ithEntry.isFor(serviceUuid, charUuid) && ithEntry.usingNotify() )
 			{
-				CallbackEntry ithEntry = m_entries.get(i);
-				
-				if( ithEntry.isFor(serviceUuid, charUuid) && ithEntry.usingNotify() )
-				{
-					ithEntry.onCharacteristicChangedFromNativeNotify(value);
-				}
+				ithEntry.onCharacteristicChangedFromNativeNotify(value);
 			}
 		}
 	}
