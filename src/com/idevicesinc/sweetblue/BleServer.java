@@ -183,7 +183,7 @@ public class BleServer implements UsesCustomNull
 			 * The {@link UUID} of the characteristic associated with this {@link ExchangeEvent}. This will always be
 			 * a valid {@link UUID}, even if {@link #target()} is {@link Target#DESCRIPTOR}.
 			 */
-			public UUID charUuid() {  return m_charUuid; }
+			public @Nullable(Nullable.Prevalence.NEVER) UUID charUuid() {  return m_charUuid; }
 			private final UUID m_charUuid;
 
 			/**
@@ -191,7 +191,7 @@ public class BleServer implements UsesCustomNull
 			 * {@link Target#CHARACTERISTIC} then this will be referentially equal (i.e. you can use == to compare)
 			 * to {@link #NON_APPLICABLE_UUID}.
 			 */
-			public UUID descUuid() {  return m_descUuid; }
+			public @Nullable(Nullable.Prevalence.NEVER) UUID descUuid() {  return m_descUuid; }
 			private final UUID m_descUuid;
 
 			/**
@@ -430,7 +430,9 @@ public class BleServer implements UsesCustomNull
 	/**
 	 * Provide an instance to various static methods of {@link IncomingListener.Please} such as
 	 * {@link BleServer.IncomingListener.Please#respondWithSuccess(BleServer.OutgoingListener)}, or {@link BleServer#setListener_Outgoing(OutgoingListener)},
-	 * or {@link BleManager#setListener_Outgoing(BleServer.OutgoingListener)}.
+	 * or {@link BleManager#setListener_Outgoing(BleServer.OutgoingListener)}. Also used to callback the success or failure of
+	 * notifications through {@link BleServer#sendNotification(String, UUID, UUID, FutureData, OutgoingListener)},
+	 * {@link BleServer#sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}, or various overloads thereof.
 	 */
 	public static interface OutgoingListener extends ExchangeListener
 	{
@@ -690,7 +692,7 @@ public class BleServer implements UsesCustomNull
 			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
-			StateEvent(BleServer server, String macAddress, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
+			/*package*/ StateEvent(BleServer server, String macAddress, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 			{
 				super(oldStateBits, newStateBits, intentMask);
 
@@ -970,19 +972,19 @@ public class BleServer implements UsesCustomNull
 			}
 
 			private static ConnectionFailEvent[] s_emptyHistory = null;
-			static ConnectionFailEvent[] EMPTY_HISTORY()
+			/*package*/ static ConnectionFailEvent[] EMPTY_HISTORY()
 			{
 				s_emptyHistory = s_emptyHistory != null ? s_emptyHistory : new ConnectionFailEvent[0];
 
 				return s_emptyHistory;
 			}
 
-			static ConnectionFailEvent NULL(BleServer server, BluetoothDevice nativeDevice)
+			/*package*/ static ConnectionFailEvent NULL(BleServer server, BluetoothDevice nativeDevice)
 			{
 				return new ConnectionFailEvent(server, nativeDevice, Status.NULL, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AutoConnectUsage.NOT_APPLICABLE, null);
 			}
 
-			static ConnectionFailEvent EARLY_OUT(BleServer server, BluetoothDevice nativeDevice, Status status)
+			/*package*/ static ConnectionFailEvent EARLY_OUT(BleServer server, BluetoothDevice nativeDevice, Status status)
 			{
 				return new ConnectionFailListener.ConnectionFailEvent(server, nativeDevice, status, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AutoConnectUsage.NOT_APPLICABLE, null);
 			}
@@ -1050,7 +1052,7 @@ public class BleServer implements UsesCustomNull
 				m_please = please;
 			}
 
-			PE_Please please()
+			/*package*/ PE_Please please()
 			{
 				return m_please;
 			}
@@ -1309,7 +1311,7 @@ public class BleServer implements UsesCustomNull
 			public Status status()  {  return m_status;  }
 			private final Status m_status;
 
-			ServiceAddEvent(final BleServer server, final BluetoothGattService service, final Status status, final int gattStatus)
+			/*package*/ ServiceAddEvent(final BleServer server, final BluetoothGattService service, final Status status, final int gattStatus)
 			{
 				m_server = server;
 				m_service = service;
@@ -1325,12 +1327,12 @@ public class BleServer implements UsesCustomNull
 				return status().wasSuccess();
 			}
 
-			static ServiceAddEvent NULL(BleServer server, BluetoothGattService service)
+			/*package*/ static ServiceAddEvent NULL(BleServer server, BluetoothGattService service)
 			{
 				return EARLY_OUT(server, service, Status.NULL);
 			}
 
-			static ServiceAddEvent EARLY_OUT(BleServer server, BluetoothGattService service, Status status)
+			/*package*/ static ServiceAddEvent EARLY_OUT(BleServer server, BluetoothGattService service, Status status)
 			{
 				return new ServiceAddEvent(server, service, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}
@@ -1386,7 +1388,7 @@ public class BleServer implements UsesCustomNull
 	 */
 	public Object appData;
 
-	BleServer(final BleManager mngr, final boolean isNull)
+	/*package*/ BleServer(final BleManager mngr, final boolean isNull)
 	{
 		m_mngr = mngr;
 		m_isNull = isNull;
@@ -1413,17 +1415,21 @@ public class BleServer implements UsesCustomNull
 		}
 	}
 
+	/**
+	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
+	 * for this individual server.
+	 */
 	public void setConfig(final BleServerConfig config)
 	{
 		m_config = config;
 	}
 
-	BleServerConfig conf_server()
+	/*package*/ BleServerConfig conf_server()
 	{
 		return m_config != null ? m_config : conf_mngr();
 	}
 
-	BleManagerConfig conf_mngr()
+	/*package*/ BleManagerConfig conf_mngr()
 	{
 		if (getManager() != null)
 		{
@@ -1451,11 +1457,18 @@ public class BleServer implements UsesCustomNull
 		m_incomingListener = listener_nullable;
 	}
 
+	/**
+	 * Set a listener here to override any listener provided previously and provide a default backup that will be called
+	 * after any listener provided to {@link #addService(BleService, ServiceAddListener)}.
+	 */
 	public void setListener_ServiceAdd(@Nullable(Nullable.Prevalence.NORMAL) final ServiceAddListener listener_nullable)
 	{
 		m_serviceMngr.setListener(listener_nullable);
 	}
 
+	/**
+	 * Returns the listener provided to {@link #setListener_Incoming(IncomingListener)}.
+	 */
 	public @Nullable(Nullable.Prevalence.RARE) IncomingListener getListener_Incoming()
 	{
 		return m_incomingListener;
@@ -1472,15 +1485,13 @@ public class BleServer implements UsesCustomNull
 		m_outgoingListener_default = listener;
 	}
 
+	/**
+	 * Set a listener here to override any listener provided previously.
+	 */
 	public void setListener_ConnectionFail(final ConnectionFailListener listener)
 	{
 		m_connectionFailMngr.setListener(listener);
 	}
-
-
-
-
-
 
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
@@ -1674,16 +1685,46 @@ public class BleServer implements UsesCustomNull
 		return m_stateTracker.getStateMask(macAddress);
 	}
 
+	/**
+	 * @deprecated Use {@link #isAny(String, int)} instead.
+	 */
 	public boolean is(final String macAddress, final int mask_BleServerState)
+	{
+		return isAny(macAddress, mask_BleServerState);
+	}
+
+	/**
+	 * Returns <code>true</code> if there is any bitwise overlap between the provided value and {@link #getStateMask(String)}.
+	 *
+	 * @see #isAll(String, int)
+	 */
+	public boolean isAny(final String macAddress, final int mask_BleServerState)
 	{
 		return (getStateMask(macAddress) & mask_BleServerState) != 0x0;
 	}
 
+	/**
+	 * Returns <code>true</code> if there is complete bitwise overlap between the provided value and {@link #getStateMask(String)}.
+	 *
+	 * @see #isAny(String, int)
+	 *
+	 */
+	public boolean isAll(final String macAddress, final int mask_BleServerState)
+	{
+		return (getStateMask(macAddress) & mask_BleServerState) == mask_BleServerState;
+	}
+
+	/**
+	 * Returns true if the given client is in the state provided.
+	 */
 	public boolean is(final String macAddress, final BleServerState state)
 	{
 		return state.overlaps(getStateMask(macAddress));
 	}
 
+	/**
+	 * Returns true if the given client is in any of the states provided.
+	 */
 	public boolean isAny(final String macAddress, final BleServerState ... states )
 	{
 		final int stateMask = getStateMask(macAddress);
@@ -1704,32 +1745,45 @@ public class BleServer implements UsesCustomNull
 		return m_mngr;
 	}
 
+	/**
+	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with no listeners.
+	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
 	{
 		return connect(macAddress, null, null);
 	}
 
+	/**
+	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with only one listener.
+	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener)
 	{
 		return connect(macAddress, stateListener, null);
 	}
 
+	/**
+	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with only one listener.
+	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ConnectionFailListener connectionFailListener)
 	{
 		return connect(macAddress, null, connectionFailListener);
 	}
 
+	/**
+	 * Connect to the given client mac address and provided listeners that are shorthand for calling {@link #setListener_State(StateListener)}
+	 * {@link #setListener_ConnectionFail(ConnectionFailListener)}.
+	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
 		return connect_internal(newNativeDevice(macAddress), stateListener, connectionFailListener);
 	}
 
-	ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice)
+	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice)
 	{
 		return connect_internal(nativeDevice, null, null);
 	}
 
-	ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
+	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
 		m_nativeWrapper.clearImplicitDisconnectIgnoring(nativeDevice.getAddress());
 
@@ -1815,11 +1869,12 @@ public class BleServer implements UsesCustomNull
 		return true;
 	}
 
-	void disconnect_internal(final ServiceAddListener.Status status_serviceAdd, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
+	/*package*/ void disconnect_internal(final ServiceAddListener.Status status_serviceAdd, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
 	{
 		getClients(new ForEach_Void<String>()
 		{
-			@Override public void next(final String next)
+			@Override
+			public void next(final String next)
 			{
 				disconnect_private(next, status_connectionFail, intent);
 
@@ -1847,14 +1902,14 @@ public class BleServer implements UsesCustomNull
 		return m_isNull;
 	}
 
-	void onNativeConnecting_implicit(final String macAddress)
+	/*package*/ void onNativeConnecting_implicit(final String macAddress)
 	{
 		m_clientMngr.onConnecting(macAddress);
 
 		m_stateTracker.doStateTransition(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	void onNativeConnect(final String macAddress, final boolean explicit)
+	/*package*/ void onNativeConnect(final String macAddress, final boolean explicit)
 	{
 		m_clientMngr.onConnected(macAddress);
 
@@ -1870,7 +1925,7 @@ public class BleServer implements UsesCustomNull
 		m_stateTracker.doStateTransition(macAddress, previousState /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ConnectionFailListener.Status status, final int gattStatus)
+	/*package*/ void onNativeConnectFail(final BluetoothDevice nativeDevice, final ConnectionFailListener.Status status, final int gattStatus)
 	{
 		if( status == ConnectionFailListener.Status.TIMED_OUT )
 		{
@@ -1883,16 +1938,13 @@ public class BleServer implements UsesCustomNull
 		m_connectionFailMngr.onNativeConnectFail(nativeDevice, status, gattStatus);
 	}
 
-	void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)
+	/*package*/ void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)
 	{
 		final boolean ignore = m_nativeWrapper.shouldIgnoreImplicitDisconnect(macAddress);
 
-		if( explicit == false )
+		if( explicit == false && ignore == false )
 		{
-			if( ignore == false )
-			{
-				m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTED /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-			}
+			m_stateTracker.doStateTransition(macAddress, BleServerState.CONNECTED /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 		else
 		{
@@ -1910,7 +1962,7 @@ public class BleServer implements UsesCustomNull
 		if (server_nullable.getNative() == null || this.getNative() == null)		return false;
 		if( this.isNull() && server_nullable.isNull() )								return true;
 
-		return server_nullable.getNative().equals(this.getNative());
+		return server_nullable == this;
 	}
 
 	/**
@@ -1924,7 +1976,7 @@ public class BleServer implements UsesCustomNull
 
 		if (object_nullable instanceof BleServer)
 		{
-			BleServer object_cast = (BleServer) object_nullable;
+			final BleServer object_cast = (BleServer) object_nullable;
 
 			return this.equals(object_cast);
 		}
@@ -1932,7 +1984,7 @@ public class BleServer implements UsesCustomNull
 		return false;
 	}
 
-	void invokeOutgoingListeners(final OutgoingListener.OutgoingEvent e, final OutgoingListener listener_specific_nullable)
+	/*package*/ void invokeOutgoingListeners(final OutgoingListener.OutgoingEvent e, final OutgoingListener listener_specific_nullable)
 	{
 		if( listener_specific_nullable != null )
 		{
@@ -1950,36 +2002,62 @@ public class BleServer implements UsesCustomNull
 		}
 	}
 
+	/**
+	 * Overload of {@link #addService(BleService, ServiceAddListener)} without the listener.
+	 */
 	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service)
 	{
 		return this.addService(service, null);
 	}
 
+	/**
+	 * Starts the process of adding a service to this server. The provided listener will be called when the service is added or there is a problem.
+	 */
 	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
 	{
 		return m_serviceMngr.addService(service, listener);
 	}
 
+	/**
+	 * Remove any service previously provided to {@link #addService(BleService, ServiceAddListener)} or overloads. This can be safely called
+	 * even if the call to {@link #addService(BleService, ServiceAddListener)} hasn't resulted in a callback to the provided listener yet, in which
+	 * case it will be called with {@link BleServer.ServiceAddListener.Status#CANCELLED_FROM_REMOVAL}.
+	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService removeService(final UUID serviceUuid)
 	{
 		return m_serviceMngr.remove(serviceUuid);
 	}
 
+	/**
+	 * Convenience to remove all services previously added with {@link #addService(BleService, ServiceAddListener)} (or overloads). This is slightly more performant too.
+	 */
 	public void removeAllServices()
 	{
 		m_serviceMngr.removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
 	}
 
+	/**
+	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
+	 * matching the given {@link UUID}.
+	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID descUuid)
 	{
 		return m_serviceMngr.getDescriptor(null, null, descUuid);
 	}
 
+	/**
+	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
+	 * inside the given characteristic matching the given {@link UUID}.
+	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inChar(final UUID charUuid, final UUID descUuid)
 	{
 		return m_serviceMngr.getDescriptor(null, charUuid, descUuid);
 	}
 
+	/**
+	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
+	 * inside the given service matching the given {@link UUID}.
+	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inService(final UUID serviceUuid, final UUID descUuid)
 	{
 		return m_serviceMngr.getDescriptor(serviceUuid, null, descUuid);
@@ -2086,10 +2164,6 @@ public class BleServer implements UsesCustomNull
 		return m_serviceMngr.getCharacteristics_List(serviceUuid);
 	}
 
-
-
-
-
 	/**
 	 * Offers a more "functional" means of iterating through the internal list of clients instead of
 	 * using {@link #getClients()} or {@link #getClients_List()}.
@@ -2108,6 +2182,10 @@ public class BleServer implements UsesCustomNull
 		m_clientMngr.getClients(forEach, state.bit());
 	}
 
+	/**
+	 * Same as {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Void)} but will only return clients
+	 * in any of the given states provided.
+	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
 	{
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
@@ -2131,6 +2209,10 @@ public class BleServer implements UsesCustomNull
 		m_clientMngr.getClients(forEach, state.bit());
 	}
 
+	/**
+	 * Same as {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Breakable)} but will only return clients
+	 * in any of the given states provided.
+	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)
 	{
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
@@ -2232,6 +2314,9 @@ public class BleServer implements UsesCustomNull
 		return getClientCount(states) > 0;
 	}
 
+	/**
+	 * Pretty-prints the list of connecting or connected clients.
+	 */
 	public String toString()
 	{
 		return this.getClass().getSimpleName() + " with " + getClientCount(CONNECTING, CONNECTED) + " connected/ing clients.";

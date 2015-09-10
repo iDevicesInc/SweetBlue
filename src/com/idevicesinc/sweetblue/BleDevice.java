@@ -2379,11 +2379,11 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public boolean is(final int mask_BleDeviceState)
 	{
-		return (getStateMask() & mask_BleDeviceState) != 0x0;
+		return isAny(mask_BleDeviceState);
 	}
 
 	/**
-	 * Returns <code>true</code> if there is partial bitwise overlap between the provided value and {@link #getStateMask()}.
+	 * Returns <code>true</code> if there is any bitwise overlap between the provided value and {@link #getStateMask()}.
 	 *
 	 * @see #isAll(int)
 	 */
