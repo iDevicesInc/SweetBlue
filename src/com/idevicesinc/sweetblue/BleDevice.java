@@ -528,12 +528,12 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			}
 
 			/**
-			 * Forwards {@link BleDevice#getNativeDescriptor(UUID, UUID)}, which will be non=null
+			 * Forwards {@link BleDevice#getNativeDescriptor_inChar(UUID, UUID)}, which will be non=null
 			 * if {@link #target()} is {@link Target#DESCRIPTOR}.
 			 */
 			public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor descriptor()
 			{
-				return device().getNativeDescriptor(charUuid(), descUuid());
+				return device().getNativeDescriptor_inChar(charUuid(), descUuid());
 			}
 
 			/**
@@ -912,7 +912,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		 * Structure passed to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
 		 */
 		@Immutable
-		public static class ConnectionFailEvent implements UsesCustomNull
+		public static class ConnectionFailEvent extends BleEndpoint.ConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
 		{
 			/**
 			 * The {@link BleDevice} this {@link ConnectionFailEvent} is for.
@@ -925,37 +925,6 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			 */
 			public Status status() {  return m_status;  }
 			private final Status m_status;
-
-			/**
-			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
-			 */
-			public int failureCountSoFar() {  return m_failureCountSoFar;  }
-			private final int m_failureCountSoFar;
-
-			/**
-			 * How long the last connection attempt took before failing.
-			 */
-			public Interval attemptTime_latest() {  return m_latestAttemptTime;  }
-			private final Interval m_latestAttemptTime;
-
-			/**
-			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
-			 */
-			public Interval attemptTime_total() {  return m_totalAttemptTime;  }
-			private final Interval m_totalAttemptTime;
-
-			/**
-			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
-			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
-			 * If not applicable, for example if {@link ConnectionFailEvent#status()} is {@link Status#EXPLICIT_DISCONNECT}, then this is set to
-			 * {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
-			 * <br><br>
-			 * See {@link ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
-			 *
-			 * @see ReadWriteEvent#gattStatus
-			 */
-			public int gattStatus() {  return m_gattStatus;  }
-			private final int m_gattStatus;
 
 			/**
 			 * See {@link BondEvent#failReason()}.
@@ -977,14 +946,6 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			 */
 			public BleDeviceState highestStateReached_total() {  return m_highestStateReached_total;  }
 			private final BleDeviceState m_highestStateReached_total;
-
-			/**
-			 * Whether <code>autoConnect=true</code> was passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
-			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public AutoConnectUsage autoConnectUsage() {  return m_autoConnectUsage;  }
-			private final AutoConnectUsage m_autoConnectUsage;
 
 			/**
 			 * Further timing information for {@link Status#NATIVE_CONNECTION_FAILED}, {@link Status#BONDING_FAILED}, and {@link Status#DISCOVERING_SERVICES_FAILED}.
@@ -1013,16 +974,13 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 			ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason, ArrayList<ConnectionFailEvent> history)
 			{
+				super(failureCountSoFar, latestAttemptTime, totalAttemptTime, gattStatus, autoConnectUsage);
+
 				this.m_device = device;
 				this.m_status = reason;
 				this.m_timing = timing;
-				this.m_failureCountSoFar = failureCountSoFar;
-				this.m_latestAttemptTime = latestAttemptTime;
-				this.m_totalAttemptTime = totalAttemptTime;
-				this.m_gattStatus = gattStatus;
 				this.m_highestStateReached_latest = highestStateReached != null ? highestStateReached : BleDeviceState.NULL;
 				this.m_highestStateReached_total = highestStateReached_total != null ? highestStateReached_total : BleDeviceState.NULL;
-				this.m_autoConnectUsage = autoConnectUsage;
 				this.m_bondFailReason = bondFailReason;
 				this.m_txnFailReason = txnFailReason;
 
@@ -2468,10 +2426,8 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID charUuid, final UUID descUUID)
+	public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUUID)
 	{
-		final UUID serviceUuid = null;
-
 		final BluetoothGattCharacteristic char_native = getNativeCharacteristic(serviceUuid, charUuid);
 
 		if( char_native == null )  return null;
@@ -2482,28 +2438,10 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the native characteristic for the given UUID in case you need lower-level access. You should only call this after
-	 * {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID characteristicUuid)
-	{
-		final UUID serviceUuid = null;
-
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
-
-		if (characteristic == null)  return null;
-
-		return characteristic.getGuaranteedNative();
-	}
-
-	/**
 	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
+	@Override public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
 	{
 		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 
@@ -2519,7 +2457,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
+	@Override public @Nullable(Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
 	{
 		final P_Service service = m_serviceMngr.get(uuid);
 

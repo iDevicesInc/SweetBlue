@@ -840,7 +840,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 		 * Structure passed to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
 		 */
 		@Immutable
-		public static class ConnectionFailEvent implements UsesCustomNull
+		public static class ConnectionFailEvent extends BleEndpoint.ConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
 		{
 			/**
 			 * The {@link BleServer} this {@link ConnectionFailEvent} is for.
@@ -866,45 +866,6 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 			private final Status m_status;
 
 			/**
-			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
-			 */
-			public int failureCountSoFar() {  return m_failureCountSoFar;  }
-			private final int m_failureCountSoFar;
-
-			/**
-			 * How long the last connection attempt took before failing.
-			 */
-			public Interval attemptTime_latest() {  return m_latestAttemptTime;  }
-			private final Interval m_latestAttemptTime;
-
-			/**
-			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
-			 */
-			public Interval attemptTime_total() {  return m_totalAttemptTime;  }
-			private final Interval m_totalAttemptTime;
-
-			/**
-			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
-			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
-			 * If not applicable, for example if {@link ConnectionFailEvent#status()} is {@link Status#CANCELLED_FROM_DISCONNECT}, then this is set to
-			 * {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
-			 * <br><br>
-			 * See {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
-			 *
-			 * @see BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()
-			 */
-			public int gattStatus() {  return m_gattStatus;  }
-			private final int m_gattStatus;
-
-			/**
-			 * Whether <code>autoConnect=true</code> was passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
-			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public AutoConnectUsage autoConnectUsage() {  return m_autoConnectUsage;  }
-			private final AutoConnectUsage m_autoConnectUsage;
-
-			/**
 			 * Returns a chronologically-ordered list of all {@link ConnectionFailEvent} instances returned through
 			 * {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} since the first call to {@link BleDevice#connect()},
 			 * including the current instance. Thus this list will always have at least a length of one (except if {@link #isNull()} is <code>true</code>).
@@ -916,14 +877,11 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 
 			ConnectionFailEvent(BleServer server, final BluetoothDevice nativeDevice, Status status, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, AutoConnectUsage autoConnectUsage, ArrayList<ConnectionFailEvent> history)
 			{
+				super(failureCountSoFar, latestAttemptTime, totalAttemptTime, gattStatus, autoConnectUsage);
+
 				this.m_server = server;
 				this.m_nativeDevice = nativeDevice;
 				this.m_status = status;
-				this.m_failureCountSoFar = failureCountSoFar;
-				this.m_latestAttemptTime = latestAttemptTime;
-				this.m_totalAttemptTime = totalAttemptTime;
-				this.m_gattStatus = gattStatus;
-				this.m_autoConnectUsage = autoConnectUsage;
 
 				if( history == null )
 				{
@@ -1914,57 +1872,21 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 		m_serviceMngr.removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
 	}
 
-	/**
-	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
-	 * matching the given {@link UUID}.
-	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID descUuid)
-	{
-		return m_serviceMngr.getDescriptor(null, null, descUuid);
-	}
-
-	/**
-	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
-	 * inside the given characteristic matching the given {@link UUID}.
-	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inChar(final UUID charUuid, final UUID descUuid)
-	{
-		return m_serviceMngr.getDescriptor(null, charUuid, descUuid);
-	}
-
-	/**
-	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
-	 * inside the given service matching the given {@link UUID}.
-	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inService(final UUID serviceUuid, final UUID descUuid)
-	{
-		return m_serviceMngr.getDescriptor(serviceUuid, null, descUuid);
-	}
 
 	/**
 	 * Returns the native descriptor for the given UUID in case you need lower-level access.
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
+	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
 	{
 		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
 	}
 
 	/**
-	 * Returns the native characteristic for the given UUID in case you need lower-level access.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID characteristicUuid)
-	{
-		return m_serviceMngr.getCharacteristic(null, characteristicUuid);
-	}
-
-	/**
 	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
 	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
+	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
 	{
 		return m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 	}
@@ -1975,7 +1897,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
+	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
 	{
 		return m_serviceMngr.getServiceDirectlyFromNativeServer(uuid);
 	}
@@ -1986,7 +1908,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
+	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
 	{
 		return m_serviceMngr.getServices();
 	}
@@ -1996,7 +1918,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
+	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
 	{
 		return m_serviceMngr.getServices_List();
 	}
@@ -2007,7 +1929,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
+	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
 	{
 		return m_serviceMngr.getCharacteristics(null);
 	}
@@ -2017,7 +1939,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
+	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
 	{
 		return m_serviceMngr.getCharacteristics_List(null);
 	}
@@ -2027,7 +1949,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(final UUID serviceUuid)
+	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(final UUID serviceUuid)
 	{
 		return m_serviceMngr.getCharacteristics(serviceUuid);
 	}
@@ -2037,7 +1959,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(final UUID serviceUuid)
+	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(final UUID serviceUuid)
 	{
 		return m_serviceMngr.getCharacteristics_List(serviceUuid);
 	}

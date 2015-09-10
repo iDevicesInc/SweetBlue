@@ -1,10 +1,24 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.annotations.Immutable;
+import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.UsesCustomNull;
+import com.idevicesinc.sweetblue.utils.Utils;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Abstract base class for {@link BleDevice} and {@link BleServer}, mostly just to statically tie their APIs together
@@ -46,6 +60,62 @@ public abstract class BleEndpoint
 			 * <code>autoConnect</code> was not used.
 			 */
 			NOT_USED;
+		}
+
+		/**
+		 * Abstract base class for structures passed to {@link BleServer.ConnectionFailListener#onEvent(BleServer.ConnectionFailListener.ConnectionFailEvent)}
+		 * and {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} to provide more info about how/why a connection failed.
+		 */
+		@Immutable
+		public abstract static class ConnectionFailEvent implements UsesCustomNull
+		{
+			/**
+			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
+			 */
+			public int failureCountSoFar() {  return m_failureCountSoFar;  }
+			private final int m_failureCountSoFar;
+
+			/**
+			 * How long the last connection attempt took before failing.
+			 */
+			public Interval attemptTime_latest() {  return m_latestAttemptTime;  }
+			private final Interval m_latestAttemptTime;
+
+			/**
+			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
+			 */
+			public Interval attemptTime_total() {  return m_totalAttemptTime;  }
+			private final Interval m_totalAttemptTime;
+
+			/**
+			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
+			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
+			 * If not applicable, for example if {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#status()} is {@link BleDevice.ConnectionFailListener.Status#EXPLICIT_DISCONNECT},
+			 * then this is set to {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
+			 * <br><br>
+			 * See {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
+			 *
+			 * @see BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()
+			 */
+			public int gattStatus() {  return m_gattStatus;  }
+			private final int m_gattStatus;
+
+			/**
+			 * Whether <code>autoConnect=true</code> was passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
+			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
+			 */
+			@com.idevicesinc.sweetblue.annotations.Advanced
+			public AutoConnectUsage autoConnectUsage() {  return m_autoConnectUsage;  }
+			private final AutoConnectUsage m_autoConnectUsage;
+
+			ConnectionFailEvent(int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, AutoConnectUsage autoConnectUsage)
+			{
+				this.m_failureCountSoFar = failureCountSoFar;
+				this.m_latestAttemptTime = latestAttemptTime;
+				this.m_totalAttemptTime = totalAttemptTime;
+				this.m_gattStatus = gattStatus;
+				this.m_autoConnectUsage = autoConnectUsage;
+			}
 		}
 
 		/**
@@ -142,4 +212,90 @@ public abstract class BleEndpoint
 			}
 		}
 	}
+
+	/**
+	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
+	 * matching the given {@link UUID}.
+	 */
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID descUuid)
+	{
+		return getNativeDescriptor(null, null, descUuid);
+	}
+
+	/**
+	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
+	 * inside the given characteristic matching the given {@link UUID}.
+	 */
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inChar(final UUID charUuid, final UUID descUuid)
+	{
+		return getNativeDescriptor(null, charUuid, descUuid);
+	}
+
+	/**
+	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
+	 * inside the given service matching the given {@link UUID}.
+	 */
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inService(final UUID serviceUuid, final UUID descUuid)
+	{
+		return getNativeDescriptor(serviceUuid, null, descUuid);
+	}
+
+	/**
+	 * Returns the native descriptor for the given UUID in case you need lower-level access.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public abstract @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUUID);
+
+	/**
+	 * Returns the native characteristic for the given UUID in case you need lower-level access.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID uuid)
+	{
+		return getNativeCharacteristic(null, uuid);
+	}
+
+	/**
+	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public abstract @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid);
+
+	/**
+	 * Returns the native service for the given UUID in case you need lower-level access.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public abstract @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid);
+
+	/**
+	 * Returns all {@link BluetoothGattService} instances.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public abstract @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices();
+
+	/**
+	 * Convenience overload of {@link #getNativeServices()} that returns a {@link List}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public abstract @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List();
+
+	/**
+	 * Returns all {@link BluetoothGattCharacteristic} instances.
+	 */
+	public abstract @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics();
+
+	/**
+	 * Convenience overload of {@link #getNativeCharacteristics()} that returns a {@link List}.
+	 */
+	public abstract @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List();
+
+	/**
+	 * Same as {@link #getNativeCharacteristics()} but you can filter on the service {@link UUID}.
+	 */
+	public abstract @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service);
+
+	/**
+	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
+	 */
+	public abstract @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service);
 }
