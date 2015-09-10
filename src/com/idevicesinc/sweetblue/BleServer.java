@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
@@ -29,7 +27,6 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
-import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -631,7 +628,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 			CANCELLED_FROM_BLE_TURNING_OFF,
 
 			/**
-			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}
+			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleEndpointConfig#timeoutRequestFilter}
 			 * so we had to cut her loose.
 			 */
 			TIMED_OUT,
@@ -773,7 +770,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 
 			/**
 			 * Couldn't connect through {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
-			 * because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}.
+			 * because the operation took longer than the time dictated by {@link BleEndpointConfig#timeoutRequestFilter}.
 			 */
 			TIMED_OUT,
 
@@ -1079,7 +1076,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 			FAILED_EVENTUALLY,
 
 			/**
-			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}.
+			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleEndpointConfig#timeoutRequestFilter}.
 			 */
 			TIMED_OUT,
 
@@ -1199,18 +1196,13 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 		}
 	};
 
-	static final byte[]				EMPTY_BYTE_ARRAY	= new byte[0];
-	static final FutureData			EMPTY_FUTURE_DATA 	= new PresentData(EMPTY_BYTE_ARRAY);
-
 	private final P_ServerStateTracker m_stateTracker;
-	private final BleManager m_mngr;
-	private final P_TaskQueue m_queue;
 	final P_BleServer_Listeners m_listeners;
 	final P_NativeServerWrapper m_nativeWrapper;
 	private IncomingListener m_incomingListener;
 	private OutgoingListener m_outgoingListener_default;
 	private final boolean m_isNull;
-	private BleServerConfig m_config = null;
+	private BleEndpointConfig m_config = null;
 	private final P_ServerConnectionFailManager m_connectionFailMngr;
 	private final P_ClientManager m_clientMngr;
 	final P_ServerServiceManager m_serviceMngr;
@@ -1227,12 +1219,12 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 
 	/*package*/ BleServer(final BleManager mngr, final boolean isNull)
 	{
-		m_mngr = mngr;
+		super(mngr);
+
 		m_isNull = isNull;
 
 		if( isNull )
 		{
-			m_queue = null;
 			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = null;
 			m_nativeWrapper = new P_NativeServerWrapper(this);
@@ -1242,7 +1234,6 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 		}
 		else
 		{
-			m_queue = m_mngr.getTaskQueue();
 			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = new P_BleServer_Listeners(this);
 			m_nativeWrapper = new P_NativeServerWrapper(this);
@@ -1256,26 +1247,19 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual server.
 	 */
-	public void setConfig(final BleServerConfig config)
+	public void setConfig(final BleEndpointConfig config)
 	{
 		m_config = config;
 	}
 
-	/*package*/ BleServerConfig conf_server()
+	/*package*/ BleEndpointConfig conf_server()
 	{
 		return m_config != null ? m_config : conf_mngr();
 	}
 
-	/*package*/ BleManagerConfig conf_mngr()
+	@Override BleEndpointConfig conf_endpoint()
 	{
-		if (getManager() != null)
-		{
-			return getManager().m_config;
-		}
-		else
-		{
-			return BleManagerConfig.NULL;
-		}
+		return conf_server();
 	}
 	
 	/**
@@ -1496,7 +1480,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 
 		final boolean confirm = isIndication;
 		final P_Task_SendNotification task = new P_Task_SendNotification(this, nativeDevice, serviceUuid, charUuid, futureData, confirm, listener);
-		m_queue.add(task);
+		queue().add(task);
 
 		return OutgoingListener.OutgoingEvent.NULL__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid);
 	}
@@ -1575,14 +1559,6 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	}
 
 	/**
-	 * Returns this server's manager.
-	 */
-	public BleManager getManager()
-	{
-		return m_mngr;
-	}
-
-	/**
 	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with no listeners.
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
@@ -1657,7 +1633,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 		m_clientMngr.onConnecting(nativeDevice.getAddress());
 
 		final P_Task_ConnectServer task = new P_Task_ConnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-		m_queue.add(task);
+		queue().add(task);
 
 		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
@@ -1693,7 +1669,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 			//--- DRK > Purposely doing explicit=true here without regarding the intent.
 			final boolean explicit = true;
 			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-			m_queue.add(task);
+			queue().add(task);
 		}
 
 		m_stateTracker.doStateTransition(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -1710,8 +1686,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	{
 		getClients(new ForEach_Void<String>()
 		{
-			@Override
-			public void next(final String next)
+			@Override public void next(final String next)
 			{
 				disconnect_private(next, status_connectionFail, intent);
 
@@ -1767,7 +1742,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 		if( status == ConnectionFailListener.Status.TIMED_OUT )
 		{
 			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-			m_queue.add(task);
+			queue().add(task);
 		}
 
 		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.CONNECTING /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);

@@ -712,7 +712,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 						"exited", 			Utils_String.toString(exitMask(),						BleDeviceState.VALUES()),
 						"current",			Utils_String.toString(newStateBits(),					BleDeviceState.VALUES()),
 						"current_native",	Utils_String.toString(device().getNativeStateMask(),	BleDeviceState.VALUES()),
-						"gattStatus",		device().m_logger.gattStatus(gattStatus())
+						"gattStatus",		device().logger().gattStatus(gattStatus())
 					);
 				}
 				else
@@ -724,7 +724,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 						"entered",			Utils_String.toString(enterMask(),						BleDeviceState.VALUES()),
 						"exited", 			Utils_String.toString(exitMask(),						BleDeviceState.VALUES()),
 						"current",			Utils_String.toString(newStateBits(),					BleDeviceState.VALUES()),
-						"gattStatus",		device().m_logger.gattStatus(gattStatus())
+						"gattStatus",		device().logger().gattStatus(gattStatus())
 					);
 				}
 			}
@@ -1405,253 +1405,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		void onEvent(BondEvent e);
 	}
 
-	/**
-	 * A callback that is used by various overloads of {@link BleDevice#loadHistoricalData()} that accept instances hereof.
-	 * You can also set default listeners on {@link BleDevice#setListener_HistoricalDataLoad(HistoricalDataLoadListener)}
-	 * and {@link BleManager#setListener_HistoricalDataLoad(BleDevice.HistoricalDataLoadListener)}.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface HistoricalDataLoadListener
-	{
-		/**
-		 * Enumerates the status codes for operations kicked off from {@link BleDevice#loadHistoricalData()} (or overloads).
-		 */
-		public static enum Status implements UsesCustomNull
-		{
-			/**
-			 * Fulfills soft contract of {@link UsesCustomNull}.
-			 */
-			NULL,
-
-			/**
-			 * Historical data is fully loaded to memory and ready to access synchronously (without blocking current thread)
-			 * through {@link BleDevice#getHistoricalData_iterator(UUID)} (or overloads).
-			 */
-			LOADED,
-
-			/**
-			 * {@link BleDevice#loadHistoricalData()} (or overloads) was called but the data was already loaded to memory.
-			 */
-			ALREADY_LOADED,
-
-			/**
-			 * {@link BleDevice#loadHistoricalData()} (or overloads) was called but there was no data available to load to memory.
-			 */
-			NOTHING_TO_LOAD,
-
-			/**
-			 * {@link BleDevice#loadHistoricalData()} (or overloads) was called and the operation was successfully started -
-			 * expect another {@link HistoricalDataLoadEvent} with {@link HistoricalDataLoadEvent#status()} being {@link #LOADED} shortly.
-			 */
-			STARTED_LOADING,
-
-			/**
-			 * Same idea as {@link #STARTED_LOADING}, not an error status, but letting you know that the load was already in progress
-			 * when {@link BleDevice#loadHistoricalData()} (or overloads) was called a second time. This doesn't
-			 * affect the actual loading process at all, and {@link #LOADED} will eventually be returned for both callbacks.
-			 */
-			ALREADY_LOADING;
-
-			/**
-			 * Returns true if <code>this==</code> {@link #NULL}.
-			 */
-			@Override public boolean isNull()
-			{
-				return this == NULL;
-			}
-		}
-
-		/**
-		 * Event struct passed to {@link HistoricalDataLoadListener#onEvent(HistoricalDataLoadEvent)} that provides
-		 * further information about the status of a historical data load to memory using {@link BleDevice#loadHistoricalData()}
-		 * (or overloads).
-		 */
-		@com.idevicesinc.sweetblue.annotations.Immutable
-		public static class HistoricalDataLoadEvent
-		{
-			/**
-			 * The {@link BleDevice} that the data is being loaded for.
-			 */
-			public BleDevice device() {  return m_device; }
-			private final BleDevice m_device;
-
-			/**
-			 * The {@link UUID} that the data is being loaded for.
-			 */
-			public UUID uuid() {  return m_uuid;  }
-			private final UUID m_uuid;
-
-			/**
-			 * The resulting time range spanning all of the data loaded to memory, or {@link EpochTimeRange#NULL} if not applicable.
-			 */
-			public EpochTimeRange range() {  return m_range; }
-			private final EpochTimeRange m_range;
-
-			/**
-			 * The general status of the load operation.
-			 */
-			public Status status() {  return m_status; }
-			private final Status m_status;
-
-			HistoricalDataLoadEvent(final BleDevice device, final UUID uuid, final EpochTimeRange range, final Status status)
-			{
-				m_device = device;
-				m_uuid = uuid;
-				m_range = range;
-				m_status = status;
-			}
-
-			/**
-			 * Returns <code>true</code> if {@link #status()} is either {@link HistoricalDataLoadListener.Status#LOADED} or
-			 *  {@link HistoricalDataLoadListener.Status#ALREADY_LOADED}.
-			 */
-			public boolean wasSuccess()
-			{
-				return status() == Status.LOADED || status() == Status.ALREADY_LOADED;
-			}
-
-			@Override public String toString()
-			{
-				return Utils_String.toString
-				(
-					this.getClass(),
-					"device", device().getName_debug(),
-					"uuid", device().getManager().getLogger().uuidName(uuid()),
-					"status", status()
-				);
-			}
-		}
-
-		/**
-		 * Called when the historical data for a given characteristic {@link UUID} is done loading from disk.
-		 */
-		void onEvent(final HistoricalDataLoadEvent e);
-	}
-
-	/**
-	 * A callback that is used by {@link BleDevice#select()} to listen for when a database query is done processing.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Alpha
-	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface HistoricalDataQueryListener
-	{
-		/**
-		 * Enumerates the status codes for operations kicked off from {@link BleDevice#select()}.
-		 */
-		public static enum Status implements UsesCustomNull
-		{
-			/**
-			 * Fulfills soft contract of {@link UsesCustomNull}.
-			 */
-			NULL,
-
-			/**
-			 * Query completed successfully - {@link HistoricalDataQueryEvent#cursor()} may be empty but there were no exceptions or anything.
-			 */
-			SUCCESS,
-
-			/**
-			 * There is no backing table for the given {@link UUID}.
-			 */
-			NO_TABLE,
-
-			/**
-			 * General failure - this feature is still in {@link com.idevicesinc.sweetblue.annotations.Alpha} so expect more detailed error statuses in the future.
-			 */
-			ERROR;
-
-			/**
-			 * Returns true if <code>this==</code> {@link #NULL}.
-			 */
-			@Override public boolean isNull()
-			{
-				return this == NULL;
-			}
-		}
-
-		/**
-		 * Event struct passed to {@link HistoricalDataQueryListener#onEvent(HistoricalDataQueryEvent)} that provides
-		 * further information about the status of a historical data load to memory using {@link BleDevice#loadHistoricalData()}
-		 * (or overloads).
-		 */
-		@com.idevicesinc.sweetblue.annotations.Immutable
-		public static class HistoricalDataQueryEvent
-		{
-			/**
-			 * The {@link BleDevice} that the data is being queried for.
-			 */
-			public BleDevice device() {  return m_device; }
-			private final BleDevice m_device;
-
-			/**
-			 * The {@link UUID} that the data is being queried for.
-			 */
-			public UUID uuid() {  return m_uuid;  }
-			private final UUID m_uuid;
-
-			/**
-			 * The general status of the query operation.
-			 */
-			public Status status() {  return m_status; }
-			private final Status m_status;
-
-			/**
-			 * The resulting {@link Cursor} from the database query. This will never be null, just an empty cursor if anything goes wrong.
-			 */
-			public @Nullable(Prevalence.NEVER) Cursor cursor() {  return m_cursor; }
-			private final Cursor m_cursor;
-
-			/**
-			 * The resulting {@link Cursor} from the database query. This will never be null, just an empty cursor if anything goes wrong.
-			 */
-			public @Nullable(Prevalence.NEVER) String rawQuery() {  return m_rawQuery; }
-			private final String m_rawQuery;
-
-			public HistoricalDataQueryEvent(final BleDevice device, final UUID uuid, final Cursor cursor, final Status status, final String rawQuery)
-			{
-				m_device = device;
-				m_uuid = uuid;
-				m_cursor = cursor;
-				m_status = status;
-				m_rawQuery = rawQuery;
-			}
-
-			/**
-			 * Returns <code>true</code> if {@link #status()} is {@link HistoricalDataQueryListener.Status#SUCCESS}.
-			 */
-			public boolean wasSuccess()
-			{
-				return status() == Status.SUCCESS;
-			}
-
-			@Override public String toString()
-			{
-				return Utils_String.toString
-				(
-					this.getClass(),
-					"device",			device().getName_debug(),
-					"uuid",				device().getManager().getLogger().uuidName(uuid()),
-					"status",			status()
-				);
-			}
-		}
-
-		/**
-		 * Called when the historical data for a given characteristic {@link UUID} is done querying.
-		 */
-		void onEvent(final HistoricalDataQueryEvent e);
-	}
-
 	static ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener();
-
-	//--- DRK > Some reusable empty-array-type instances so we don't have to create them from scratch over and over on demand.
-	private static final UUID[] EMPTY_UUID_ARRAY = new UUID[0];
-	private static final ArrayList<UUID> EMPTY_LIST = new ArrayList<UUID>();
-
-	static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-	static final FutureData EMPTY_FUTURE_DATA = new PresentData(EMPTY_BYTE_ARRAY);
-
-	final Object m_threadLock = new Object();
 
 	final P_NativeDeviceWrapper m_nativeWrapper;
 
@@ -1664,9 +1418,6 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 	private final P_DeviceStateTracker m_stateTracker_shortTermReconnect;
 	private final P_PollManager m_pollMngr;
 
-	private final BleManager m_mngr;
-	private final P_Logger m_logger;
-	private final P_TaskQueue m_queue;
 	final P_TransactionManager m_txnMngr;
 	private final P_ReconnectManager m_reconnectMngr_longTerm;
 	private final P_ReconnectManager m_reconnectMngr_shortTerm;
@@ -1706,19 +1457,12 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 	private final boolean m_isNull;
 
-	/**
-	 * Field for app to associate any data it wants with instances of this class
-	 * instead of having to subclass or manage associative hash maps or something.
-	 * The library does not touch or interact with this data in any way.
-	 *
-	 * @see BleManager#appData
-	 * @see BleServer#appData
-	 */
-	public Object appData;
+
 
 	BleDevice(BleManager mngr, BluetoothDevice device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
 	{
-		m_mngr = mngr;
+		super(mngr);
+
 		m_origin = origin;
 		m_origin_latest = m_origin;
 		m_isNull = isNull;
@@ -1729,9 +1473,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			m_rssiPollMngr_auto = null;
 			// setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
-			m_queue = null;
 			m_listeners = null;
-			m_logger = null;
 			m_serviceMngr = new P_ServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = null;
@@ -1752,9 +1494,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			m_rssiPollMngr_auto = new P_RssiPollManager(this);
 			setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
-			m_queue = m_mngr != null ? getManager().getTaskQueue() : null;
 			m_listeners = new P_BleDevice_Listeners(this);
-			m_logger = m_mngr != null ? getManager().getLogger() : null;
 			m_serviceMngr = new P_ServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
@@ -1767,7 +1507,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			m_reconnectMngr_shortTerm = new P_ReconnectManager(this, /*isShortTerm=*/true);
 			m_connectionFailMngr = new P_ConnectionFailManager(this);
 			m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING, /*cancellable=*/true);
-			m_historicalDataMngr = new P_HistoricalDataManager(this);
+			m_historicalDataMngr = new P_HistoricalDataManager(this, getMacAddress());
 		}
 	}
 
@@ -1871,10 +1611,10 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 	private void initEstimators()
 	{
-		Integer nForAverageRunningWriteTime = BleDeviceConfig.integer(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
+		final Integer nForAverageRunningWriteTime = BleDeviceConfig.integer(conf_device().nForAverageRunningWriteTime, conf_mngr().nForAverageRunningWriteTime);
 		m_writeTimeEstimator = nForAverageRunningWriteTime == null ? null : new TimeEstimator(nForAverageRunningWriteTime);
 
-		Integer nForAverageRunningReadTime = BleDeviceConfig.integer(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
+		final Integer nForAverageRunningReadTime = BleDeviceConfig.integer(conf_device().nForAverageRunningReadTime, conf_mngr().nForAverageRunningReadTime);
 		m_readTimeEstimator = nForAverageRunningReadTime == null ? null : new TimeEstimator(nForAverageRunningReadTime);
 	}
 
@@ -1883,16 +1623,9 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		return m_config != null ? m_config : conf_mngr();
 	}
 
-	BleManagerConfig conf_mngr()
+	@Override BleEndpointConfig conf_endpoint()
 	{
-		if (getManager() != null)
-		{
-			return getManager().m_config;
-		}
-		else
-		{
-			return BleManagerConfig.NULL;
-		}
+		return conf_device();
 	}
 
 	/**
@@ -2153,6 +1886,505 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 	{
 		UUID[] toReturn = m_advertisedServices.size() > 0 ? new UUID[m_advertisedServices.size()] : EMPTY_UUID_ARRAY;
 		return m_advertisedServices.toArray(toReturn);
+	}
+
+	/**
+	 * Returns the database table name for the underlying store of historical data for the given {@link UUID}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) String getHistoricalDataTableName(final UUID uuid)
+	{
+		return getManager().m_historicalDatabase.getTableName(getMacAddress(), uuid);
+	}
+
+	/**
+	 * Provides a means to perform a raw SQL query on the database storing the historical data for this device. Use {@link #getHistoricalDataTableName(UUID)}
+	 * to generate table names and {@link HistoricalDataColumn} to get column names.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataQueryListener.HistoricalDataQueryEvent queryHistoricalData(final String query)
+	{
+		if( isNull() )
+		{
+			return new HistoricalDataQueryListener.HistoricalDataQueryEvent(this, getMacAddress(), Uuids.INVALID, new EmptyCursor(), HistoricalDataQueryListener.Status.NULL_ENDPOINT, query);
+		}
+		else
+		{
+			final Cursor cursor = getManager().m_historicalDatabase.query(query);
+
+			return new BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent(this, getMacAddress(), Uuids.INVALID, cursor, BleDevice.HistoricalDataQueryListener.Status.SUCCESS, query);
+		}
+	}
+
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	public void queryHistoricalData(final String query, final HistoricalDataQueryListener listener)
+	{
+		if( isNull() )
+		{
+			listener.onEvent(new HistoricalDataQueryListener.HistoricalDataQueryEvent(this, getMacAddress(), Uuids.INVALID, new EmptyCursor(), HistoricalDataQueryListener.Status.NULL_ENDPOINT, query));
+		}
+		else
+		{
+			m_historicalDataMngr.post(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = queryHistoricalData(query);
+
+					BleDevice.this.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							listener.onEvent(e);
+						}
+					});
+				}
+			});
+		}
+	}
+
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataQuery.Part_Select select()
+	{
+		final HistoricalDataQuery.Part_Select select = HistoricalDataQuery.select(this, getManager().m_historicalDatabase);
+
+		return select;
+	}
+
+	/**
+	 * Returns a cursor capable of random access to the database-persisted historical data for this device.
+	 * Unlike calls to methods like {@link #getHistoricalData_iterator(UUID)} and other overloads,
+	 * this call does not force bulk data load into memory.
+	 * <br><br>
+	 * NOTE: You must call {@link HistoricalDataCursor#close()} when you are done with the data.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid)
+	{
+		return getHistoricalData_cursor(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
+	}
+
+	/**
+	 * Same as {@link #getHistoricalData_cursor(UUID)} but constrains the results to the given time range.
+	 * <br><br>
+	 * NOTE: You must call {@link HistoricalDataCursor#close()} when you are done with the data.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid, final EpochTimeRange range)
+	{
+		return m_historicalDataMngr.getCursor(uuid, range);
+	}
+
+	/**
+	 * Loads all historical data to memory for this device.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void loadHistoricalData()
+	{
+		loadHistoricalData(null, null);
+	}
+
+	/**
+	 * Loads all historical data to memory for this device for the given {@link UUID}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void loadHistoricalData(final UUID uuid)
+	{
+		loadHistoricalData(uuid, null);
+	}
+
+	/**
+	 * Loads all historical data to memory for this device with a callback for when it's complete.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void loadHistoricalData(final HistoricalDataLoadListener listener)
+	{
+		loadHistoricalData(null, listener);
+	}
+
+	/**
+	 * Loads all historical data to memory for this device for the given {@link UUID}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void loadHistoricalData(final UUID uuid, final HistoricalDataLoadListener listener)
+	{
+		if( isNull() )  return;
+
+		m_historicalDataMngr.load(uuid, listener);
+	}
+
+	/**
+	 * Returns whether the device is currently loading any historical data to memory, either through
+	 * {@link #loadHistoricalData()} (or overloads) or {@link #getHistoricalData_iterator(UUID)} (or overloads).
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean isHistoricalDataLoading()
+	{
+		return m_historicalDataMngr.isLoading(null);
+	}
+
+	/**
+	 * Returns whether the device is currently loading any historical data to memory for the given uuid, either through
+	 * {@link #loadHistoricalData()} (or overloads) or {@link #getHistoricalData_iterator(UUID)} (or overloads).
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean isHistoricalDataLoading(final UUID uuid)
+	{
+		return m_historicalDataMngr.isLoading(uuid);
+	}
+
+	/**
+	 * Returns <code>true</code> if the historical data for all historical data for
+	 * this device is loaded into memory.
+	 * Use {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener}
+	 * to listen for when the load actually completes. If {@link #hasHistoricalData(UUID)}
+	 * returns <code>false</code> then this will also always return <code>false</code>.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean isHistoricalDataLoaded()
+	{
+		return m_historicalDataMngr.isLoaded(null);
+	}
+
+	/**
+	 * Returns <code>true</code> if the historical data for a given uuid is loaded into memory.
+	 * Use {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener}
+	 * to listen for when the load actually completes. If {@link #hasHistoricalData(UUID)}
+	 * returns <code>false</code> then this will also always return <code>false</code>.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean isHistoricalDataLoaded(final UUID uuid)
+	{
+		return m_historicalDataMngr.isLoaded(uuid);
+	}
+
+	/**
+	 * Returns the cached data from the lastest successful read or notify received for a given uuid.
+	 * Basically if you receive a {@link ReadWriteListener.ReadWriteEvent} for which {@link ReadWriteListener.ReadWriteEvent#isRead()}
+	 * and {@link ReadWriteListener.ReadWriteEvent#wasSuccess()} both return <code>true</code> then {@link ReadWriteListener.ReadWriteEvent#data()},
+	 * will be cached and is retrievable by this method.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 *
+	 * @return The cached value from a previous read or notify, or {@link HistoricalData#NULL} otherwise.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_latest(final UUID uuid)
+	{
+		return getHistoricalData_atOffset(uuid, getHistoricalDataCount(uuid) - 1);
+	}
+
+	/**
+	 * Returns an iterator that will iterate through all {@link HistoricalData} entries.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid)
+	{
+		return getHistoricalData_iterator(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
+	}
+
+	/**
+	 * Returns an iterator that will iterate through all {@link HistoricalData} entries within the range provided.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid, final EpochTimeRange range)
+	{
+		if( isNull() ) return new EmptyIterator<HistoricalData>();
+
+		return m_historicalDataMngr.getIterator(uuid, EpochTimeRange.denull(range));
+	}
+
+	/**
+	 * Provides all historical data through the "for each" provided.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 *
+	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean getHistoricalData_forEach(final UUID uuid, final ForEach_Void<HistoricalData> forEach)
+	{
+		return getHistoricalData_forEach(uuid, EpochTimeRange.FROM_MIN_TO_MAX, forEach);
+	}
+
+	/**
+	 * Provides all historical data through the "for each" provided within the range provided.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 *
+	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Void<HistoricalData> forEach)
+	{
+		if( isNull() ) return false;
+
+		return m_historicalDataMngr.doForEach(uuid, EpochTimeRange.denull(range), forEach);
+	}
+
+	/**
+	 * Provides all historical data through the "for each" provided.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 *
+	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean getHistoricalData_forEach(final UUID uuid, final ForEach_Breakable<HistoricalData> forEach)
+	{
+		return getHistoricalData_forEach(uuid, EpochTimeRange.FROM_MIN_TO_MAX, forEach);
+	}
+
+	/**
+	 * Provides all historical data through the "for each" provided within the range provided.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 *
+	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Breakable<HistoricalData> forEach)
+	{
+		if( isNull() ) return false;
+
+		return m_historicalDataMngr.doForEach(uuid, EpochTimeRange.denull(range), forEach);
+	}
+
+	/**
+	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but returns the data from the chronological offset, i.e. <code>offsetFromStart=0</code>
+	 * will return the earliest {@link HistoricalData}. Use in combination with {@link #getHistoricalDataCount(java.util.UUID)} to iterate
+	 * "manually" through this device's historical data for the given characteristic.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final int offsetFromStart)
+	{
+		return getHistoricalData_atOffset(uuid, EpochTimeRange.FROM_MIN_TO_MAX, offsetFromStart);
+	}
+
+	/**
+	 * Same as {@link #getHistoricalData_atOffset(java.util.UUID, int)} but offset is relative to the time range provided.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final EpochTimeRange range, final int offsetFromStart)
+	{
+		if( isNull() ) return HistoricalData.NULL;
+
+		return m_historicalDataMngr.getWithOffset(uuid, EpochTimeRange.denull(range), offsetFromStart);
+	}
+
+	/**
+	 * Returns the number of historical data entries that have been logged for the device's given characteristic.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public int getHistoricalDataCount(final UUID uuid)
+	{
+		return getHistoricalDataCount(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
+	}
+
+	/**
+	 * Returns the number of historical data entries that have been logged
+	 * for the device's given characteristic within the range provided.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public int getHistoricalDataCount(final UUID uuid, final EpochTimeRange range)
+	{
+		if( isNull() ) return 0;
+
+		return m_historicalDataMngr.getCount(uuid, EpochTimeRange.denull(range));
+	}
+
+	/**
+	 * Returns <code>true</code> if there is any historical data at all for this device.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean hasHistoricalData()
+	{
+		return hasHistoricalData(EpochTimeRange.FROM_MIN_TO_MAX);
+	}
+
+	/**
+	 * Returns <code>true</code> if there is any historical data at all for this device within the given range.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean hasHistoricalData(final EpochTimeRange range)
+	{
+		if( isNull() ) return false;
+
+		return m_historicalDataMngr.hasHistoricalData(range);
+	}
+
+	/**
+	 * Returns <code>true</code> if there is any historical data for the given uuid.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean hasHistoricalData(final UUID uuid)
+	{
+		return hasHistoricalData(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
+	}
+
+	/**
+	 * Returns <code>true</code> if there is any historical data for any of the given uuids.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean hasHistoricalData(final UUID[] uuids)
+	{
+		for( int i = 0; i < uuids.length; i++ )
+		{
+			if( hasHistoricalData(uuids[i], EpochTimeRange.FROM_MIN_TO_MAX) )
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Returns <code>true</code> if there is any historical data for the given uuid within the given range.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean hasHistoricalData(final UUID uuid, final EpochTimeRange range)
+	{
+		if( isNull() ) return false;
+
+		return m_historicalDataMngr.hasHistoricalData(uuid, range);
+	}
+
+	/**
+	 * Manual way to add data to the historical data list managed by this device. You may want to use this if,
+	 * for example, your remote BLE device is capable of taking and caching independent readings while not connected.
+	 * After you connect with this device and download the log you can add it manually here.
+	 * Really you can use this for any arbitrary historical data though, even if it's not associated with a characteristic.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void addHistoricalData(final UUID uuid, final byte[] data, final EpochTime epochTime)
+	{
+		if( isNull() ) return;
+
+		m_historicalDataMngr.add_single(uuid, data, epochTime, BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
+	}
+
+	/**
+	 * Just an overload of {@link #addHistoricalData(UUID, byte[], EpochTime)} with the data and epochTime parameters switched around.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void addHistoricalData(final UUID uuid, final EpochTime epochTime, final byte[] data)
+	{
+		this.addHistoricalData(uuid, data, epochTime);
+	}
+
+	/**
+	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but uses {@link System#currentTimeMillis()} for the timestamp.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void addHistoricalData(final UUID uuid, final byte[] data)
+	{
+		if( isNull() ) return;
+
+		m_historicalDataMngr.add_single(uuid, data, new EpochTime(), BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
+	}
+
+	/**
+	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)}.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void addHistoricalData(final UUID uuid, final HistoricalData historicalData)
+	{
+		if( isNull() ) return;
+
+		m_historicalDataMngr.add_single(uuid, historicalData, BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
+	}
+
+	/**
+	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void addHistoricalData(final UUID uuid, final Iterator<HistoricalData> historicalData)
+	{
+		if( isNull() ) return;
+
+		m_historicalDataMngr.add_multiple(uuid, historicalData);
+	}
+
+	/**
+	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void addHistoricalData(final UUID uuid, final List<HistoricalData> historicalData)
+	{
+		addHistoricalData(uuid, historicalData.iterator());
+	}
+
+	/**
+	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
+	 *
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public void addHistoricalData(final UUID uuid, final ForEach_Returning<HistoricalData> historicalData)
+	{
+		if( isNull() ) return;
+
+		m_historicalDataMngr.add_multiple(uuid, historicalData);
 	}
 
 	/**
@@ -2541,21 +2773,6 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 	public @Nullable(Prevalence.NORMAL) BluetoothGatt getNativeGatt()
 	{
 		return m_nativeWrapper.getGatt();
-	}
-
-	/**
-	 * Returns this devices's manager.
-	 */
-	public BleManager getManager()
-	{
-		if (isNull())
-		{
-			return BleManager.s_instance;
-		}
-		else
-		{
-			return m_mngr;
-		}
 	}
 
 	/**
@@ -3295,519 +3512,10 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 	void readRssi_internal(Type type, ReadWriteListener listener)
 	{
-		m_queue.add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
+		queue().add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
 	}
 
-	/**
-	 * Returns a new {@link com.idevicesinc.sweetblue.utils.HistoricalData} instance using
-	 * {@link com.idevicesinc.sweetblue.BleDeviceConfig#historicalDataFactory} if available.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime)
-	{
-		final BleDeviceConfig.HistoricalDataFactory factory_device = conf_device().historicalDataFactory;
-		final BleDeviceConfig.HistoricalDataFactory factory_mngr = conf_mngr().historicalDataFactory;
-		final BleDeviceConfig.HistoricalDataFactory factory = factory_device != null ? factory_device : factory_mngr;
 
-		if( factory != null )
-		{
-			return factory.newHistoricalData(data, epochTime);
-		}
-		else
-		{
-			return new HistoricalData(data, epochTime);
-		}
-	}
-
-	/**
-	 * Returns the database table name for the underlying store of historical data for the given {@link UUID}.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NEVER) String getHistoricalDataTableName(final UUID uuid)
-	{
-		return getManager().m_historicalDatabase.getTableName(getMacAddress(), uuid);
-	}
-
-	/**
-	 * Provides a means to perform a raw SQL query on the database storing the historical data for this device. Use {@link #getHistoricalDataTableName(UUID)}
-	 * to generate table names and {@link HistoricalDataColumn} to get column names.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	@com.idevicesinc.sweetblue.annotations.Alpha
-	public @Nullable(Prevalence.NEVER) HistoricalDataQueryListener.HistoricalDataQueryEvent queryHistoricalData(final String query)
-	{
-		final Cursor cursor = getManager().m_historicalDatabase.query(query);
-
-		return new BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent(this, Uuids.INVALID, cursor, BleDevice.HistoricalDataQueryListener.Status.SUCCESS, query);
-	}
-
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	@com.idevicesinc.sweetblue.annotations.Alpha
-	public void queryHistoricalData(final String query, final HistoricalDataQueryListener listener)
-	{
-		if( isNull() )
-		{
-			listener.onEvent(new HistoricalDataQueryListener.HistoricalDataQueryEvent(this, Uuids.INVALID, new EmptyCursor(), HistoricalDataQueryListener.Status.NULL, query));
-
-			return;
-		}
-
-		m_historicalDataMngr.post(new Runnable()
-		{
-			@Override public void run()
-			{
-				final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = queryHistoricalData(query);
-
-				BleDevice.this.getManager().getUpdateLoop().postIfNeeded(new Runnable()
-				{
-					@Override public void run()
-					{
-						listener.onEvent(e);
-					}
-				});
-			}
-		});
-	}
-
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	@com.idevicesinc.sweetblue.annotations.Alpha
-	public @Nullable(Prevalence.NEVER) HistoricalDataQuery.Part_Select select()
-	{
-		final HistoricalDataQuery.Part_Select select = HistoricalDataQuery.select(this, getManager().m_historicalDatabase);
-
-		return select;
-	}
-
-	/**
-	 * Returns a cursor capable of random access to the database-persisted historical data for this device.
-	 * Unlike calls to methods like {@link #getHistoricalData_iterator(UUID)} and other overloads,
-	 * this call does not force bulk data load into memory.
-	 * <br><br>
-	 * NOTE: You must call {@link HistoricalDataCursor#close()} when you are done with the data.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid)
-	{
-		return getHistoricalData_cursor(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
-	}
-
-	/**
-	 * Same as {@link #getHistoricalData_cursor(UUID)} but constrains the results to the given time range.
-	 * <br><br>
-	 * NOTE: You must call {@link HistoricalDataCursor#close()} when you are done with the data.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid, final EpochTimeRange range)
-	{
-		return m_historicalDataMngr.getCursor(uuid, range);
-	}
-
-	/**
-	 * Loads all historical data to memory for this device.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void loadHistoricalData()
-	{
-		loadHistoricalData(null, null);
-	}
-
-	/**
-	 * Loads all historical data to memory for this device for the given {@link UUID}.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void loadHistoricalData(final UUID uuid)
-	{
-		loadHistoricalData(uuid, null);
-	}
-
-	/**
-	 * Loads all historical data to memory for this device with a callback for when it's complete.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void loadHistoricalData(final HistoricalDataLoadListener listener)
-	{
-		loadHistoricalData(null, listener);
-	}
-
-	/**
-	 * Loads all historical data to memory for this device for the given {@link UUID}.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void loadHistoricalData(final UUID uuid, final HistoricalDataLoadListener listener)
-	{
-		if( isNull() )  return;
-
-		m_historicalDataMngr.load(uuid, listener);
-	}
-
-	/**
-	 * Returns whether the device is currently loading any historical data to memory, either through
-	 * {@link #loadHistoricalData()} (or overloads) or {@link #getHistoricalData_iterator(UUID)} (or overloads).
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean isHistoricalDataLoading()
-	{
-		return m_historicalDataMngr.isLoading(null);
-	}
-
-	/**
-	 * Returns whether the device is currently loading any historical data to memory for the given uuid, either through
-	 * {@link #loadHistoricalData()} (or overloads) or {@link #getHistoricalData_iterator(UUID)} (or overloads).
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean isHistoricalDataLoading(final UUID uuid)
-	{
-		return m_historicalDataMngr.isLoading(uuid);
-	}
-
-	/**
-	 * Returns <code>true</code> if the historical data for all historical data for
-	 * this device is loaded into memory.
-	 * Use {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener}
-	 * to listen for when the load actually completes. If {@link #hasHistoricalData(UUID)}
-	 * returns <code>false</code> then this will also always return <code>false</code>.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean isHistoricalDataLoaded()
-	{
-		return m_historicalDataMngr.isLoaded(null);
-	}
-
-	/**
-	 * Returns <code>true</code> if the historical data for a given uuid is loaded into memory.
-	 * Use {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener}
-	 * to listen for when the load actually completes. If {@link #hasHistoricalData(UUID)}
-	 * returns <code>false</code> then this will also always return <code>false</code>.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean isHistoricalDataLoaded(final UUID uuid)
-	{
-		return m_historicalDataMngr.isLoaded(uuid);
-	}
-
-	/**
-	 * Returns the cached data from the lastest successful read or notify received for a given uuid.
-	 * Basically if you receive a {@link ReadWriteListener.ReadWriteEvent} for which {@link ReadWriteListener.ReadWriteEvent#isRead()}
-	 * and {@link ReadWriteListener.ReadWriteEvent#wasSuccess()} both return <code>true</code> then {@link ReadWriteListener.ReadWriteEvent#data()},
-	 * will be cached and is retrievable by this method.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 *
-	 * @return The cached value from a previous read or notify, or {@link HistoricalData#NULL} otherwise.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NEVER) HistoricalData getHistoricalData_latest(final UUID uuid)
-	{
-		return getHistoricalData_atOffset(uuid, getHistoricalDataCount(uuid) - 1);
-	}
-
-	/**
-	 * Returns an iterator that will iterate through all {@link HistoricalData} entries.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid)
-	{
-		return getHistoricalData_iterator(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
-	}
-
-	/**
-	 * Returns an iterator that will iterate through all {@link HistoricalData} entries within the range provided.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid, final EpochTimeRange range)
-	{
-		if( isNull() ) return new EmptyIterator<HistoricalData>();
-
-		return m_historicalDataMngr.getIterator(uuid, EpochTimeRange.denull(range));
-	}
-
-	/**
-	 * Provides all historical data through the "for each" provided.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 *
-	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean getHistoricalData_forEach(final UUID uuid, final ForEach_Void<HistoricalData> forEach)
-	{
-		return getHistoricalData_forEach(uuid, EpochTimeRange.FROM_MIN_TO_MAX, forEach);
-	}
-
-	/**
-	 * Provides all historical data through the "for each" provided within the range provided.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 *
-	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Void<HistoricalData> forEach)
-	{
-		if( isNull() ) return false;
-
-		return m_historicalDataMngr.doForEach(uuid, EpochTimeRange.denull(range), forEach);
-	}
-
-	/**
-	 * Provides all historical data through the "for each" provided.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 *
-	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean getHistoricalData_forEach(final UUID uuid, final ForEach_Breakable<HistoricalData> forEach)
-	{
-		return getHistoricalData_forEach(uuid, EpochTimeRange.FROM_MIN_TO_MAX, forEach);
-	}
-
-	/**
-	 * Provides all historical data through the "for each" provided within the range provided.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 *
-	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Breakable<HistoricalData> forEach)
-	{
-		if( isNull() ) return false;
-
-		return m_historicalDataMngr.doForEach(uuid, EpochTimeRange.denull(range), forEach);
-	}
-
-	/**
-	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but returns the data from the chronological offset, i.e. <code>offsetFromStart=0</code>
-	 * will return the earliest {@link HistoricalData}. Use in combination with {@link #getHistoricalDataCount(java.util.UUID)} to iterate
-	 * "manually" through this device's historical data for the given characteristic.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final int offsetFromStart)
-	{
-		return getHistoricalData_atOffset(uuid, EpochTimeRange.FROM_MIN_TO_MAX, offsetFromStart);
-	}
-
-	/**
-	 * Same as {@link #getHistoricalData_atOffset(java.util.UUID, int)} but offset is relative to the time range provided.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final EpochTimeRange range, final int offsetFromStart)
-	{
-		if( isNull() ) return HistoricalData.NULL;
-
-		return m_historicalDataMngr.getWithOffset(uuid, EpochTimeRange.denull(range), offsetFromStart);
-	}
-
-	/**
-	 * Returns the number of historical data entries that have been logged for the device's given characteristic.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public int getHistoricalDataCount(final UUID uuid)
-	{
-		return getHistoricalDataCount(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
-	}
-
-	/**
-	 * Returns the number of historical data entries that have been logged
-	 * for the device's given characteristic within the range provided.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public int getHistoricalDataCount(final UUID uuid, final EpochTimeRange range)
-	{
-		if( isNull() ) return 0;
-
-		return m_historicalDataMngr.getCount(uuid, EpochTimeRange.denull(range));
-	}
-
-	/**
-	 * Returns <code>true</code> if there is any historical data at all for this device.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean hasHistoricalData()
-	{
-		return hasHistoricalData(EpochTimeRange.FROM_MIN_TO_MAX);
-	}
-
-	/**
-	 * Returns <code>true</code> if there is any historical data at all for this device within the given range.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean hasHistoricalData(final EpochTimeRange range)
-	{
-		if( isNull() ) return false;
-
-		return m_historicalDataMngr.hasHistoricalData(range);
-	}
-
-	/**
-	 * Returns <code>true</code> if there is any historical data for the given uuid.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean hasHistoricalData(final UUID uuid)
-	{
-		return hasHistoricalData(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
-	}
-
-	/**
-	 * Returns <code>true</code> if there is any historical data for any of the given uuids.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean hasHistoricalData(final UUID[] uuids)
-	{
-		for( int i = 0; i < uuids.length; i++ )
-		{
-			if( hasHistoricalData(uuids[i], EpochTimeRange.FROM_MIN_TO_MAX) )
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Returns <code>true</code> if there is any historical data for the given uuid within the given range.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean hasHistoricalData(final UUID uuid, final EpochTimeRange range)
-	{
-		if( isNull() ) return false;
-
-		return m_historicalDataMngr.hasHistoricalData(uuid, range);
-	}
-
-	/**
-	 * Manual way to add data to the historical data list managed by this device. You may want to use this if,
-	 * for example, your remote BLE device is capable of taking and caching independent readings while not connected.
-	 * After you connect with this device and download the log you can add it manually here.
-	 * Really you can use this for any arbitrary historical data though, even if it's not associated with a characteristic.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void addHistoricalData(final UUID uuid, final byte[] data, final EpochTime epochTime)
-	{
-		if( isNull() ) return;
-
-		m_historicalDataMngr.add_single(uuid, data, epochTime, BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
-	}
-
-	/**
-	 * Just an overload of {@link #addHistoricalData(UUID, byte[], EpochTime)} with the data and epochTime parameters switched around.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void addHistoricalData(final UUID uuid, final EpochTime epochTime, final byte[] data)
-	{
-		this.addHistoricalData(uuid, data, epochTime);
-	}
-
-	/**
-	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but uses {@link System#currentTimeMillis()} for the timestamp.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void addHistoricalData(final UUID uuid, final byte[] data)
-	{
-		if( isNull() ) return;
-
-		m_historicalDataMngr.add_single(uuid, data, new EpochTime(), BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
-	}
-
-	/**
-	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)}.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void addHistoricalData(final UUID uuid, final HistoricalData historicalData)
-	{
-		if( isNull() ) return;
-
-		m_historicalDataMngr.add_single(uuid, historicalData, BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
-	}
-
-	/**
-	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void addHistoricalData(final UUID uuid, final Iterator<HistoricalData> historicalData)
-	{
-		if( isNull() ) return;
-
-		m_historicalDataMngr.add_multiple(uuid, historicalData);
-	}
-
-	/**
-	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void addHistoricalData(final UUID uuid, final List<HistoricalData> historicalData)
-	{
-		addHistoricalData(uuid, historicalData.iterator());
-	}
-
-	/**
-	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
-	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public void addHistoricalData(final UUID uuid, final ForEach_Returning<HistoricalData> historicalData)
-	{
-		if( isNull() ) return;
-
-		m_historicalDataMngr.add_multiple(uuid, historicalData);
-	}
 
 	/**
 	 * One method to remove absolutely all "metadata" related to this device that is stored on disk and/or cached in memory in any way.
@@ -4254,7 +3962,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		{
 			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 
-			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, listener, getOverrideReadWritePriority()));
+			queue().add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, listener, getOverrideReadWritePriority()));
 
 			m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, E_NotifyState.ENABLING);
 
@@ -4535,7 +4243,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 	P_TaskQueue getTaskQueue()
 	{
-		return m_queue;
+		return queue();
 	}
 
 	// PA_StateTracker getStateTracker(){ return m_stateTracker; }
@@ -4622,7 +4330,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 	void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior)
 	{
-		m_queue.add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
+		queue().add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
 	}
 
 	void unbond_justAddTheTask()
@@ -4632,7 +4340,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 	void unbond_justAddTheTask(final PE_TaskPriority priority_nullable)
 	{
-		m_queue.add(new P_Task_Unbond(this, m_taskStateListener, priority_nullable));
+		queue().add(new P_Task_Unbond(this, m_taskStateListener, priority_nullable));
 	}
 
 	void unbond_internal(final PE_TaskPriority priority_nullable, final BondListener.Status status)
@@ -4723,7 +4431,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			return;
 		}
 
-		m_queue.add(new P_Task_Connect(this, m_taskStateListener));
+		queue().add(new P_Task_Connect(this, m_taskStateListener));
 
 		onConnecting(/* definitelyExplicit= */true, isReconnect, extraBondingStates, /*bleConnect=*/true);
 	}
@@ -4782,7 +4490,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			//--- Also possible to get here for example on connection fail retries, where we queue a disconnect
 			//--- but that gets immediately soft-cancelled by what will be a redundant connect task.
 			//--- OVERALL, This assert is here because I'm just curious how it hits (it does).
-			String message = "nativelyConnected=" + m_logger.gattConn(m_nativeWrapper.getConnectionState()) + " gatt==" + m_nativeWrapper.getGatt();
+			String message = "nativelyConnected=" + logger().gattConn(m_nativeWrapper.getConnectionState()) + " gatt==" + m_nativeWrapper.getGatt();
 			// getManager().ASSERT(false, message);
 			getManager().ASSERT(m_nativeWrapper.isNativelyConnected(), message);
 
@@ -4813,7 +4521,8 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			//--- This is not about finding a logic error in my code.
 			getManager().ASSERT(getManager().getNative().getAdapter().getBondedDevices().contains(m_nativeWrapper.getDevice()));
 		}
-		m_logger.d(m_logger.gattBondState(m_nativeWrapper.getNativeBondState()));
+
+		logger().d(logger().gattBondState(m_nativeWrapper.getNativeBondState()));
 
 		boolean autoGetServices = BleDeviceConfig.bool(conf_device().autoGetServices, conf_mngr().autoGetServices);
 		if (autoGetServices)
@@ -4834,7 +4543,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		}
 
 		m_serviceMngr.clear();
-		m_queue.add(new P_Task_DiscoverServices(this, m_taskStateListener));
+		queue().add(new P_Task_DiscoverServices(this, m_taskStateListener));
 
 		//--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
 		//--- Even without this check the library should still be in a goodish state. Might send some weird state
@@ -4936,19 +4645,19 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
 
 		tracker.set
-				(
-						intent,
-						gattStatus,
-						DISCOVERED, true,
-						DISCONNECTED, true,
-						BONDING, m_nativeWrapper.isNativelyBonding(),
-						BONDED, m_nativeWrapper.isNativelyBonded(),
-						UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
-						RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
-						ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY,
+		(
+			intent,
+			gattStatus,
+			DISCOVERED, true,
+			DISCONNECTED, true,
+			BONDING, m_nativeWrapper.isNativelyBonding(),
+			BONDED, m_nativeWrapper.isNativelyBonded(),
+			UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+			RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
+			ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY,
 
-						overrideBondingStates
-				);
+			overrideBondingStates
+		);
 
 		if( tracker != stateTracker_main() )
 		{
@@ -5018,7 +4727,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
 			{
 				final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
-				m_queue.add(disconnectTask);
+				queue().add(disconnectTask);
 
 				taskOrdinal = disconnectTask.getOrdinal();
 				clearQueue = true;
@@ -5043,7 +4752,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 			if( clearQueue )
 			{
-				m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this, taskOrdinal);
+				queue().clearQueueOf(PA_Task_RequiresConnection.class, this, taskOrdinal);
 			}
 
 			if (!attemptingReconnect_longTerm)
@@ -5096,7 +4805,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		if (!wasExplicit && !attemptShortTermReconnect)
 		{
 			//--- DRK > Just here so it's easy to filter out in logs.
-			m_logger.w("Disconnected Implicitly and attemptShortTermReconnect="+attemptShortTermReconnect);
+			logger().w("Disconnected Implicitly and attemptShortTermReconnect=" + attemptShortTermReconnect);
 		}
 
 		m_lastDisconnectWasBecauseOfBleTurnOff = getManager().isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF);
@@ -5264,7 +4973,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		{
 			if( m_nativeWrapper.isNativelyConnecting() ||  m_nativeWrapper.isNativelyConnected() )
 			{
-				m_queue.add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/false, null, /*cancellable=*/true));
+				queue().add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/false, null, /*cancellable=*/true));
 			}
 		}
 
@@ -5273,15 +4982,15 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		//--- TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
 		if (!isConnectingOverall_2 && retrying__PE_Please == ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
 		{
-			m_queue.clearQueueOf(P_Task_Connect.class, this, -1);
+			queue().clearQueueOf(P_Task_Connect.class, this, -1);
 		}
 	}
 
 	private void softlyCancelTasks(final int overrideOrdinal)
 	{
 		m_dummyDisconnectTask.setOverrideOrdinal(overrideOrdinal);
-		m_queue.softlyCancelTasks(m_dummyDisconnectTask);
-		m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this, overrideOrdinal);
+		queue().softlyCancelTasks(m_dummyDisconnectTask);
+		queue().clearQueueOf(PA_Task_RequiresConnection.class, this, overrideOrdinal);
 	}
 
 	private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final Double interval, final ReadWriteListener listener)
@@ -5304,7 +5013,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
 
-		m_queue.add(new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		queue().add(new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
 		return NULL_READWRITE_EVENT();
 	}
@@ -5324,7 +5033,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.WRITE);
 
-		m_queue.add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		queue().add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
 		return NULL_READWRITE_EVENT();
 	}
@@ -5344,7 +5053,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 		if (characteristic != null && is(CONNECTED))
 		{
-			m_queue.add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, listener, getOverrideReadWritePriority()));
+			queue().add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, listener, getOverrideReadWritePriority()));
 		}
 
 		m_pollMngr.stopPoll(serviceUuid, characteristicUuid, forceReadTimeout, listener, /* usingNotify= */true);
@@ -5450,14 +5159,6 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 	@Override public boolean isNull()
 	{
 		return m_isNull;
-	}
-
-	/**
-	 * Convenience method that casts {@link #appData} for you.
-	 */
-	public <T> T appData()
-	{
-		return (T) appData;
 	}
 
 	/**

@@ -8,12 +8,28 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.utils.EmptyCursor;
+import com.idevicesinc.sweetblue.utils.EmptyIterator;
+import com.idevicesinc.sweetblue.utils.EpochTime;
+import com.idevicesinc.sweetblue.utils.EpochTimeRange;
+import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
+import com.idevicesinc.sweetblue.utils.ForEach_Returning;
+import com.idevicesinc.sweetblue.utils.ForEach_Void;
+import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.HistoricalData;
+import com.idevicesinc.sweetblue.utils.HistoricalDataColumn;
+import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
+import com.idevicesinc.sweetblue.utils.HistoricalDataQuery;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,7 +40,7 @@ import java.util.UUID;
  * Abstract base class for {@link BleDevice} and {@link BleServer}, mostly just to statically tie their APIs together
  * wherever possible. That is, not much actual shared implementation exists in this class as of this writing.
  */
-public abstract class BleEndpoint
+public abstract class BleEndpoint implements UsesCustomNull
 {
 	/**
 	 * Base interface for {@link BleDevice.ConnectionFailListener} and {@link BleServer.ConnectionFailListener}.
@@ -214,6 +230,278 @@ public abstract class BleEndpoint
 	}
 
 	/**
+	 * A callback that is used by various overloads of {@link BleDevice#loadHistoricalData()} that accept instances hereof.
+	 * You can also set default listeners on {@link BleDevice#setListener_HistoricalDataLoad(HistoricalDataLoadListener)}
+	 * and {@link BleManager#setListener_HistoricalDataLoad(BleDevice.HistoricalDataLoadListener)}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	public static interface HistoricalDataLoadListener
+	{
+		/**
+		 * Enumerates the status codes for operations kicked off from {@link BleDevice#loadHistoricalData()} (or overloads).
+		 */
+		public static enum Status implements UsesCustomNull
+		{
+			/**
+			 * Fulfills soft contract of {@link UsesCustomNull}.
+			 */
+			NULL,
+
+			/**
+			 * Historical data is fully loaded to memory and ready to access synchronously (without blocking current thread)
+			 * through {@link BleDevice#getHistoricalData_iterator(UUID)} (or overloads).
+			 */
+			LOADED,
+
+			/**
+			 * {@link BleDevice#loadHistoricalData()} (or overloads) was called but the data was already loaded to memory.
+			 */
+			ALREADY_LOADED,
+
+			/**
+			 * {@link BleDevice#loadHistoricalData()} (or overloads) was called but there was no data available to load to memory.
+			 */
+			NOTHING_TO_LOAD,
+
+			/**
+			 * {@link BleDevice#loadHistoricalData()} (or overloads) was called and the operation was successfully started -
+			 * expect another {@link HistoricalDataLoadEvent} with {@link HistoricalDataLoadEvent#status()} being {@link #LOADED} shortly.
+			 */
+			STARTED_LOADING,
+
+			/**
+			 * Same idea as {@link #STARTED_LOADING}, not an error status, but letting you know that the load was already in progress
+			 * when {@link BleDevice#loadHistoricalData()} (or overloads) was called a second time. This doesn't
+			 * affect the actual loading process at all, and {@link #LOADED} will eventually be returned for both callbacks.
+			 */
+			ALREADY_LOADING;
+
+			/**
+			 * Returns true if <code>this==</code> {@link #NULL}.
+			 */
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
+		}
+
+		/**
+		 * Event struct passed to {@link HistoricalDataLoadListener#onEvent(HistoricalDataLoadEvent)} that provides
+		 * further information about the status of a historical data load to memory using {@link BleDevice#loadHistoricalData()}
+		 * (or overloads).
+		 */
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class HistoricalDataLoadEvent
+		{
+			/**
+			 * The mac address that the data is being queried for.
+			 */
+			public String macAddress() {  return m_macAddress; }
+			private final String m_macAddress;
+
+			/**
+			 * The {@link UUID} that the data is being loaded for.
+			 */
+			public UUID uuid() {  return m_uuid;  }
+			private final UUID m_uuid;
+
+			/**
+			 * The resulting time range spanning all of the data loaded to memory, or {@link EpochTimeRange#NULL} if not applicable.
+			 */
+			public EpochTimeRange range() {  return m_range; }
+			private final EpochTimeRange m_range;
+
+			/**
+			 * The general status of the load operation.
+			 */
+			public Status status() {  return m_status; }
+			private final Status m_status;
+
+			private final BleEndpoint m_endpoint;
+
+			HistoricalDataLoadEvent(final BleEndpoint endpoint, final String macAddress, final UUID uuid, final EpochTimeRange range, final Status status)
+			{
+				m_endpoint = endpoint;
+				m_macAddress = macAddress;
+				m_uuid = uuid;
+				m_range = range;
+				m_status = status;
+			}
+
+			/**
+			 * Returns <code>true</code> if {@link #status()} is either {@link HistoricalDataLoadListener.Status#LOADED} or
+			 *  {@link HistoricalDataLoadListener.Status#ALREADY_LOADED}.
+			 */
+			public boolean wasSuccess()
+			{
+				return status() == Status.LOADED || status() == Status.ALREADY_LOADED;
+			}
+
+			@Override public String toString()
+			{
+				return Utils_String.toString
+						(
+								this.getClass(),
+								"macAddress", macAddress(),
+								"uuid", m_endpoint.getManager().getLogger().uuidName(uuid()),
+								"status", status()
+						);
+			}
+		}
+
+		/**
+		 * Called when the historical data for a given characteristic {@link UUID} is done loading from disk.
+		 */
+		void onEvent(final HistoricalDataLoadEvent e);
+	}
+
+	/**
+	 * A callback that is used by {@link BleDevice#select()} to listen for when a database query is done processing.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	public static interface HistoricalDataQueryListener
+	{
+		/**
+		 * Enumerates the status codes for operations kicked off from {@link BleDevice#select()}.
+		 */
+		public static enum Status implements UsesCustomNull
+		{
+			/**
+			 * Fulfills soft contract of {@link UsesCustomNull}.
+			 */
+			NULL,
+
+			/**
+			 * Tried to query historical data on {@link BleDevice#NULL} or {@link BleServer#NULL}.
+			 */
+			NULL_ENDPOINT,
+
+			/**
+			 * Query completed successfully - {@link HistoricalDataQueryEvent#cursor()} may be empty but there were no exceptions or anything.
+			 */
+			SUCCESS,
+
+			/**
+			 * There is no backing table for the given {@link UUID}.
+			 */
+			NO_TABLE,
+
+			/**
+			 * General failure - this feature is still in {@link com.idevicesinc.sweetblue.annotations.Alpha} so expect more detailed error statuses in the future.
+			 */
+			ERROR;
+
+			/**
+			 * Returns true if <code>this==</code> {@link #NULL}.
+			 */
+			@Override public boolean isNull()
+			{
+				return this == NULL;
+			}
+		}
+
+		/**
+		 * Event struct passed to {@link HistoricalDataQueryListener#onEvent(HistoricalDataQueryEvent)} that provides
+		 * further information about the status of a historical data load to memory using {@link BleDevice#loadHistoricalData()}
+		 * (or overloads).
+		 */
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class HistoricalDataQueryEvent
+		{
+			/**
+			 * The mac address that the data is being queried for.
+			 */
+			public String macAddress() {  return m_macAddress; }
+			private final String m_macAddress;
+
+			/**
+			 * The {@link UUID} that the data is being queried for.
+			 */
+			public UUID uuid() {  return m_uuid;  }
+			private final UUID m_uuid;
+
+			/**
+			 * The general status of the query operation.
+			 */
+			public Status status() {  return m_status; }
+			private final Status m_status;
+
+			/**
+			 * The resulting {@link Cursor} from the database query. This will never be null, just an empty cursor if anything goes wrong.
+			 */
+			public @Nullable(Nullable.Prevalence.NEVER) Cursor cursor() {  return m_cursor; }
+			private final Cursor m_cursor;
+
+			/**
+			 * The resulting {@link Cursor} from the database query. This will never be null, just an empty cursor if anything goes wrong.
+			 */
+			public @Nullable(Nullable.Prevalence.NEVER) String rawQuery() {  return m_rawQuery; }
+			private final String m_rawQuery;
+
+			private final BleEndpoint m_endpoint;
+
+			public HistoricalDataQueryEvent(final BleEndpoint endpoint, final String macAddress, final UUID uuid, final Cursor cursor, final Status status, final String rawQuery)
+			{
+				m_endpoint = endpoint;
+				m_macAddress = macAddress;
+				m_uuid = uuid;
+				m_cursor = cursor;
+				m_status = status;
+				m_rawQuery = rawQuery;
+			}
+
+			/**
+			 * Returns <code>true</code> if {@link #status()} is {@link HistoricalDataQueryListener.Status#SUCCESS}.
+			 */
+			public boolean wasSuccess()
+			{
+				return status() == Status.SUCCESS;
+			}
+
+			@Override public String toString()
+			{
+				return Utils_String.toString
+				(
+					this.getClass(),
+					"macAddress",		macAddress(),
+					"uuid",				m_endpoint.getManager().getLogger().uuidName(uuid()),
+					"status",			status()
+				);
+			}
+		}
+
+		/**
+		 * Called when the historical data for a given characteristic {@link UUID} is done querying.
+		 */
+		void onEvent(final HistoricalDataQueryEvent e);
+	}
+
+	//--- DRK > Some reusable empty-array-type instances so we don't have to create them from scratch over and over on demand.
+	protected static final UUID[] EMPTY_UUID_ARRAY			= new UUID[0];
+	protected static final ArrayList<UUID> EMPTY_LIST		= new ArrayList<UUID>();
+
+	/*package*/ static final byte[] EMPTY_BYTE_ARRAY		= new byte[0];
+	/*package*/ static final FutureData EMPTY_FUTURE_DATA	= new PresentData(EMPTY_BYTE_ARRAY);
+
+	/**
+	 * Field for app to associate any data it wants with instances of this class
+	 * instead of having to subclass or manage associative hash maps or something.
+	 * The library does not touch or interact with this data in any way.
+	 *
+	 * @see BleManager#appData
+	 * @see BleServer#appData
+	 */
+	public Object appData;
+
+	private final BleManager m_manager;
+
+	/*package*/ BleEndpoint(final BleManager manager)
+	{
+		m_manager = manager;
+	}
+
+	/**
 	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
 	 * matching the given {@link UUID}.
 	 */
@@ -298,4 +586,72 @@ public abstract class BleEndpoint
 	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
 	 */
 	public abstract @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service);
+
+	/**
+	 * Returns a new {@link com.idevicesinc.sweetblue.utils.HistoricalData} instance using
+	 * {@link com.idevicesinc.sweetblue.BleDeviceConfig#historicalDataFactory} if available.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime)
+	{
+		final BleDeviceConfig.HistoricalDataFactory factory_device = conf_endpoint().historicalDataFactory;
+		final BleDeviceConfig.HistoricalDataFactory factory_mngr = conf_mngr().historicalDataFactory;
+		final BleDeviceConfig.HistoricalDataFactory factory = factory_device != null ? factory_device : factory_mngr;
+
+		if( factory != null )
+		{
+			return factory.newHistoricalData(data, epochTime);
+		}
+		else
+		{
+			return new HistoricalData(data, epochTime);
+		}
+	}
+
+	/**
+	 * Returns this endpoint's manager.
+	 */
+	public BleManager getManager()
+	{
+		if (isNull())
+		{
+			return BleManager.s_instance;
+		}
+		else
+		{
+			return m_manager;
+		}
+	}
+
+	/**
+	 * Convenience method that casts {@link #appData} for you.
+	 */
+	public <T> T appData()
+	{
+		return (T) appData;
+	}
+
+	BleManagerConfig conf_mngr()
+	{
+		if (getManager() != null)
+		{
+			return getManager().m_config;
+		}
+		else
+		{
+			return BleManagerConfig.NULL;
+		}
+	}
+
+	abstract BleEndpointConfig conf_endpoint();
+
+	P_TaskQueue queue()
+	{
+		return getManager().getTaskQueue();
+	}
+
+	P_Logger logger()
+	{
+		return getManager().getLogger();
+	}
 }

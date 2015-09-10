@@ -2,8 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
 
-import android.os.Handler;
-
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -16,7 +14,7 @@ abstract class PA_Task
 
 	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
-	private static final BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleServerConfig.TimeoutRequestFilter.TimeoutRequestEvent();
+	private static final BleEndpointConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleEndpointConfig.TimeoutRequestFilter.TimeoutRequestEvent();
 
 	
 	private 	  BleDevice m_device;
@@ -92,13 +90,13 @@ abstract class PA_Task
 			
 			s_timeoutRequestEvent.init(getManager(), device, server, taskType, getCharUuid(), getDescUuid());
 			
-			return BleServerConfig.getTimeout(s_timeoutRequestEvent);
+			return BleEndpointConfig.getTimeout(s_timeoutRequestEvent);
 		}
 		else
 		{
 			getManager().ASSERT(false, "BleTask type shouldn't be null.");
 			
-			return BleServerConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
+			return BleEndpointConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
 		}
 	}
 	
