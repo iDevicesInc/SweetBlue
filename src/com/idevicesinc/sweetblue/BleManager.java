@@ -50,6 +50,7 @@ import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 
 /**
  * The entry point to the library. Get a singleton instance using {@link #get(android.content.Context, BleManagerConfig)} or its overloads. Make sure
@@ -219,13 +220,13 @@ public class BleManager
 			
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
-					"device",				device().getName_debug(),
-					"lifeCycle",			lifeCycle(),
-					"rssi",					rssi(),
-					"rssi_percent",			rssi_percent()
+					"device", device().getName_debug(),
+					"lifeCycle", lifeCycle(),
+					"rssi", rssi(),
+					"rssi_percent", rssi_percent()
 				);
 			}
 		}
@@ -267,12 +268,12 @@ public class BleManager
 			
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
-					"entered",			Utils.toString(enterMask(),		BleManagerState.VALUES()),
-					"exited",			Utils.toString(exitMask(),		BleManagerState.VALUES()),
-					"current",			Utils.toString(newStateBits(),	BleManagerState.VALUES())
+					"entered",			Utils_String.toString(enterMask(),		BleManagerState.VALUES()),
+					"exited",			Utils_String.toString(exitMask(),		BleManagerState.VALUES()),
+					"current",			Utils_String.toString(newStateBits(),	BleManagerState.VALUES())
 				);
 			}
 		}
@@ -520,7 +521,7 @@ public class BleManager
 			
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 					"uhOh",			uhOh(),
@@ -582,7 +583,7 @@ public class BleManager
 			
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 					"progress",		progress()
@@ -638,7 +639,7 @@ public class BleManager
 			
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 					"message",			message(),
@@ -2120,7 +2121,7 @@ public class BleManager
 			return BleDevice.NULL;
 		}
 
-		final String name_normalized = Utils.normalizeDeviceName(name);
+		final String name_normalized = Utils_String.normalizeDeviceName(name);
 
 		final BleDevice newDevice = newDevice_private(device_native, name_normalized, name != null ? name : "", BleDeviceOrigin.EXPLICIT, config);
 
@@ -2328,7 +2329,7 @@ public class BleManager
 
 		List<UUID> services_nullable = null;
 
-		final String normalizedDeviceName = Utils.normalizeDeviceName(rawDeviceName);
+		final String normalizedDeviceName = Utils_String.normalizeDeviceName(rawDeviceName);
 		
 		final Please please;
 

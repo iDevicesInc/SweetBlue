@@ -106,7 +106,7 @@ public class HistoricalData implements UsesCustomNull
 	 */
 	public String getBlob_string()
 	{
-		return Utils.getStringValue(getBlob(), "UTF-8");
+		return Utils_String.getStringValue(getBlob(), "UTF-8");
 	}
 
 	/**

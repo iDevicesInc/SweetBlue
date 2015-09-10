@@ -7,6 +7,8 @@ import com.idevicesinc.sweetblue.BleDeviceState;
  */
 public class Utils_State extends Utils
 {
+	private Utils_State(){super();}
+
 	public static boolean query(final int stateMask, Object... query)
 	{
 		if (query == null || query.length == 0)  return false;

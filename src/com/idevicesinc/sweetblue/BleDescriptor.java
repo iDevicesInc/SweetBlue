@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothGattDescriptor;
 
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
 
 import java.util.UUID;
 
@@ -23,7 +24,7 @@ public class BleDescriptor
 
 	public BleDescriptor(final UUID uuid, final BleDescriptorPermission ... permissions)
 	{
-		this(uuid, Utils.toBits(permissions));
+		this(uuid, Utils_Byte.toBits(permissions));
 	}
 
 	private BleDescriptor(final UUID uuid, final int permissions)

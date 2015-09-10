@@ -77,7 +77,7 @@ public class Distance extends Unit<Distance>
 		}
 		else
 		{
-			return Utils.toFixed(meters())+"meters/"+Utils.toFixed(feet())+"feet";
+			return Utils_String.toFixed(meters())+"meters/"+Utils_String.toFixed(feet())+"feet";
 		}
 	}
 

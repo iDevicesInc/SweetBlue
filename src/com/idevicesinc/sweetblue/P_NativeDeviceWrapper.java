@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 
 
 class P_NativeDeviceWrapper
@@ -68,7 +69,7 @@ class P_NativeDeviceWrapper
 	void updateNativeName(final String name_native)
 	{
 		final String name_native_override = name_native != null ? name_native : "";
-		final String name_normalized = Utils.normalizeDeviceName(name_native_override);
+		final String name_normalized = Utils_String.normalizeDeviceName(name_native_override);
 
 		updateName(name_native_override, name_normalized);
 	}

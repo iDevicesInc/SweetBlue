@@ -21,6 +21,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -106,7 +107,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
 			 * <br><br>
-			 * TIP: If {@link ScanEvent#lastDisconnectIntent} isn't {@link utils.State.ChangeIntent#NULL} then most likely you can early-out
+			 * TIP: If {@link ScanEvent#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
 			 * and return <code>true</code> from {@link ScanFilter#onEvent(ScanEvent)} without having to check
 			 * uuids or names matching, because obviously you've seen and connected to this device before.
 			 */
@@ -130,12 +131,12 @@ public class BleManagerConfig extends BleDeviceConfig
 			
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
-					"macAddress",	macAddress(),
-					"name",			name_normalized(),
-					"services",		advertisedServices()
+					"macAddress", macAddress(),
+					"name", name_normalized(),
+					"services", advertisedServices()
 				);
 			}
 		}
@@ -282,7 +283,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		
 		/**
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
-		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#BleManagerConfig.DefaultScanFilter(Collection)}.
+		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#DefaultScanFilter(Collection)}.
 		 */
 		@Override public Please onEvent(ScanEvent e)
 		{

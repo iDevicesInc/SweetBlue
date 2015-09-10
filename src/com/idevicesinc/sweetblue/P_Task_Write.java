@@ -13,6 +13,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
 
 class P_Task_Write extends PA_Task_ReadOrWrite
 {
@@ -94,7 +95,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	private byte[] getMaxChunkBuffer()
 	{
 		m_maxChunkBuffer = m_maxChunkBuffer != null ? m_maxChunkBuffer : new byte[m_maxChunkSize];
-		Utils.memset(m_maxChunkBuffer, (byte) 0x0, m_maxChunkBuffer.length);
+		Utils_Byte.memset(m_maxChunkBuffer, (byte) 0x0, m_maxChunkBuffer.length);
 		
 		return m_maxChunkBuffer;
 	}
@@ -106,7 +107,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 		int copySize = m_allDataToSend.length - m_offset;
 		copySize = copySize > m_maxChunkSize ? m_maxChunkSize : copySize;
 		m_lastChunkBufferSent = copySize == m_maxChunkSize ? getMaxChunkBuffer() : new byte[copySize];
-		Utils.memcpy(m_lastChunkBufferSent, m_allDataToSend, copySize, 0, m_offset);
+		Utils_Byte.memcpy(m_lastChunkBufferSent, m_allDataToSend, copySize, 0, m_offset);
 		
 		m_offset += copySize;
 		

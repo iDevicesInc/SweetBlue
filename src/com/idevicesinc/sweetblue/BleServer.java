@@ -30,6 +30,7 @@ import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import static com.idevicesinc.sweetblue.BleServerState.*;
@@ -264,19 +265,19 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 			{
 				if( type().isRead() )
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
-						"type",				type(),
-						"target",			target(),
-						"macAddress",		macAddress(),
-						"charUuid",			server().getManager().getLogger().uuidName(charUuid()),
-						"requestId",		requestId()
+						"type", type(),
+						"target", target(),
+						"macAddress", macAddress(),
+						"charUuid", server().getManager().getLogger().uuidName(charUuid()),
+						"requestId", requestId()
 					);
 				}
 				else
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"type",				type(),
@@ -525,7 +526,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 			{
 				if( type().isRead() )
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"status",			status(),
@@ -538,7 +539,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 				}
 				else
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"status",			status(),
@@ -703,13 +704,13 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 //					"server",			server().getName_debug(),
-					"entered",			Utils.toString(enterMask(),						BleServerState.VALUES()),
-					"exited", 			Utils.toString(exitMask(),						BleServerState.VALUES()),
-					"current",			Utils.toString(newStateBits(),					BleServerState.VALUES()),
+					"entered",			Utils_String.toString(enterMask(),						BleServerState.VALUES()),
+					"exited", 			Utils_String.toString(exitMask(),						BleServerState.VALUES()),
+					"current",			Utils_String.toString(newStateBits(),					BleServerState.VALUES()),
 					"gattStatus",		server().getManager().getLogger().gattStatus(gattStatus())
 				);
 			}
@@ -943,7 +944,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 				}
 				else
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"server",				server(),
@@ -1175,7 +1176,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 
 			public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 					"status",			status(),

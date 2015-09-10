@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 
 abstract class PA_StateTracker
 {
@@ -236,6 +237,6 @@ abstract class PA_StateTracker
 	
 	protected String toString(State[] enums)
 	{
-		return Utils.toString(m_stateMask, enums);
+		return Utils_String.toString(m_stateMask, enums);
 	}
 }

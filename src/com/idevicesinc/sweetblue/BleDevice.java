@@ -606,7 +606,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			 */
 			public @Nullable(Prevalence.NEVER) String data_string(final String charset)
 			{
-				return Utils.getStringValue(data(), charset);
+				return Utils_String.getStringValue(data(), charset);
 			}
 
 			/**
@@ -627,7 +627,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 				{
 					if (target() == Target.RSSI)
 					{
-						return Utils.toString
+						return Utils_String.toString
 						(
 							this.getClass(),
 							"status",			status(),
@@ -639,7 +639,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 					}
 					else
 					{
-						return Utils.toString
+						return Utils_String.toString
 						(
 							this.getClass(),
 							"status",			status(),
@@ -704,26 +704,26 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 			{
 				if( device().is(RECONNECTING_SHORT_TERM) )
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"device",			device().getName_debug(),
-						"entered",			Utils.toString(enterMask(),						BleDeviceState.VALUES()),
-						"exited", 			Utils.toString(exitMask(),						BleDeviceState.VALUES()),
-						"current",			Utils.toString(newStateBits(),					BleDeviceState.VALUES()),
-						"current_native",	Utils.toString(device().getNativeStateMask(),	BleDeviceState.VALUES()),
+						"entered",			Utils_String.toString(enterMask(),						BleDeviceState.VALUES()),
+						"exited", 			Utils_String.toString(exitMask(),						BleDeviceState.VALUES()),
+						"current",			Utils_String.toString(newStateBits(),					BleDeviceState.VALUES()),
+						"current_native",	Utils_String.toString(device().getNativeStateMask(),	BleDeviceState.VALUES()),
 						"gattStatus",		device().m_logger.gattStatus(gattStatus())
 					);
 				}
 				else
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"device",			device().getName_debug(),
-						"entered",			Utils.toString(enterMask(),						BleDeviceState.VALUES()),
-						"exited", 			Utils.toString(exitMask(),						BleDeviceState.VALUES()),
-						"current",			Utils.toString(newStateBits(),					BleDeviceState.VALUES()),
+						"entered",			Utils_String.toString(enterMask(),						BleDeviceState.VALUES()),
+						"exited", 			Utils_String.toString(exitMask(),						BleDeviceState.VALUES()),
+						"current",			Utils_String.toString(newStateBits(),					BleDeviceState.VALUES()),
 						"gattStatus",		device().m_logger.gattStatus(gattStatus())
 					);
 				}
@@ -1049,7 +1049,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 				{
 					if( status() == Status.BONDING_FAILED )
 					{
-						return Utils.toString
+						return Utils_String.toString
 						(
 							this.getClass(),
 							"device",				device().getName_debug(),
@@ -1061,7 +1061,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 					}
 					else
 					{
-						return Utils.toString
+						return Utils_String.toString
 						(
 							this.getClass(),
 							"device",				device().getName_debug(),
@@ -1381,7 +1381,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 				}
 				else
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"device",			device().getName_debug(),
@@ -1512,7 +1512,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 					"device", device().getName_debug(),
@@ -1626,7 +1626,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 					"device",			device().getName_debug(),

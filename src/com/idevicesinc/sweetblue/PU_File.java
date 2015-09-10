@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,7 +29,7 @@ class PU_File
 
 		{
 			in.read(tempBuffer, 0, 2);
-			toReturn = Utils.bytesToShort(tempBuffer);
+			toReturn = Utils_Byte.bytesToShort(tempBuffer);
 		}
 
 		return toReturn;
@@ -40,7 +41,7 @@ class PU_File
 
 		{
 			in.read(tempBuffer, 0, 4);
-			toReturn = Utils.bytesToInt(tempBuffer);
+			toReturn = Utils_Byte.bytesToInt(tempBuffer);
 		}
 
 		return toReturn;
@@ -52,7 +53,7 @@ class PU_File
 
 		{
 			in.read(tempBuffer, 0, 8);
-			toReturn = Utils.bytesToLong(tempBuffer);
+			toReturn = Utils_Byte.bytesToLong(tempBuffer);
 		}
 
 		return toReturn;

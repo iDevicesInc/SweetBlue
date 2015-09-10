@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import com.idevicesinc.sweetblue.utils.State;
-import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
 
 /**
  * An enumeration of the various states that a {@link BleManager} can be in.
@@ -62,7 +62,7 @@ public enum BleManagerState implements State
 	/**
 	 * Full bitwise mask made by ORing all {@link BleManagerState} instances together.
 	 */
-	public static final int FULL_MASK = Utils.calcFullMask(VALUES());
+	public static final int FULL_MASK = Utils_Byte.toBits(VALUES());
 	
 	private BleManagerState()
 	{

@@ -166,7 +166,7 @@ public class Interval extends Unit<Interval>
 	
 	@Override public String toString()
 	{
-		return Utils.toFixed(secs())+"secs/"+millis()+"millis"; 
+		return Utils_String.toFixed(secs())+"secs/"+millis()+"millis";
 	}
 
 	@Override protected double getRawValue()

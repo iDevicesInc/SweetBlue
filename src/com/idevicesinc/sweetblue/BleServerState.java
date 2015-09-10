@@ -1,16 +1,8 @@
 package com.idevicesinc.sweetblue;
 
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothProfile;
-
-import com.idevicesinc.sweetblue.BleDevice.BondListener;
-import com.idevicesinc.sweetblue.BleDevice.StateListener;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
-import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import com.idevicesinc.sweetblue.utils.State;
-import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
 
 /**
  * An enumeration of the various states that a {@link BleServer} can be in on a per-client (mac address) basis.
@@ -45,7 +37,7 @@ public enum BleServerState implements State
 
 	public static int toBits(BleServerState ... states)
 	{
-		return Utils.toBits(states);
+		return Utils_Byte.toBits(states);
 	}
 	
 	@Override public boolean overlaps(int mask)
@@ -89,7 +81,7 @@ public enum BleServerState implements State
 	/**
 	 * Full bitwise mask made by ORing all {@link BleServerState} instances together.
 	 */
-	public static final int FULL_MASK = Utils.calcFullMask(VALUES());
+	public static final int FULL_MASK = Utils_Byte.toBits(VALUES());
 
 	@Override public boolean isNull()
 	{

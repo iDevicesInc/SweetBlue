@@ -13,6 +13,8 @@ import android.util.Log;
  */
 public class Utils_ScanRecord extends Utils
 {
+	private Utils_ScanRecord(){super();}
+
 	private static final String TAG = Utils_ScanRecord.class.getName();
 	
 	/**

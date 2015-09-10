@@ -28,6 +28,8 @@ package com.idevicesinc.sweetblue.utils;
  */
 public class Utils_Rssi extends Utils
 {
+	private Utils_Rssi(){super();}
+
 	public static double percent(final int rssi, final int rssi_min, final int rssi_max)
 	{
 		return (((double)(rssi-rssi_min)) / ((double)(rssi_max-rssi_min))) * 100.0;

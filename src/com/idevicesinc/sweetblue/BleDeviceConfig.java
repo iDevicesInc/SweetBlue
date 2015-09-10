@@ -438,13 +438,13 @@ public class BleDeviceConfig extends BleServerConfig implements Cloneable
 
 			@Override public String toString()
 			{
-				return Utils.toString
-						(
-								this.getClass(),
-								"device",		device().getName_debug(),
-								"charUuid",		device().getManager().getLogger().charName(charUuid()),
-								"type",			type()
-						);
+				return Utils_String.toString
+				(
+					this.getClass(),
+					"device",		device().getName_debug(),
+					"charUuid",		device().getManager().getLogger().charName(charUuid()),
+					"type",			type()
+				);
 			}
 		}
 
@@ -641,15 +641,15 @@ public class BleDeviceConfig extends BleServerConfig implements Cloneable
 
 		@Override public String toString()
 		{
-			return Utils.toString
-					(
-							this.getClass(),
-							"device",					device().getName_debug(),
-							"failureCount",				failureCount(),
-							"totalTimeReconnecting",	totalTimeReconnecting(),
-							"previousDelay",			previousDelay(),
-							"state",					state()
-					);
+			return Utils_String.toString
+			(
+				this.getClass(),
+				"device",					device().getName_debug(),
+				"failureCount",				failureCount(),
+				"totalTimeReconnecting",	totalTimeReconnecting(),
+				"previousDelay",			previousDelay(),
+				"state",					state()
+			);
 		}
 	}
 
