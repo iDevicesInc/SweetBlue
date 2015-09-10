@@ -19,9 +19,9 @@ import android.content.Context;
 import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.BleEndpoint.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.BleEndpoint.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
@@ -50,7 +50,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * {@link BleManager#startScan()}) and sent to you through
  * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
  */
-public class BleDevice implements UsesCustomNull
+public class BleDevice extends BleEndpoint implements UsesCustomNull
 {
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
@@ -743,7 +743,7 @@ public class BleDevice implements UsesCustomNull
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ConnectionFailListener
+	public static interface ConnectionFailListener extends BleEndpoint.ConnectionFailListener
 	{
 		/**
 		 * The reason for the connection failure.
@@ -906,128 +906,6 @@ public class BleDevice implements UsesCustomNull
 			 * The operation took longer than the time dictated by {@link BleDeviceConfig#timeoutRequestFilter}.
 			 */
 			TIMED_OUT;
-		}
-
-		/**
-		 * Describes usage of the <code>autoConnect</code> parameter for
-		 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
-		 */
-		@com.idevicesinc.sweetblue.annotations.Advanced
-		public static enum AutoConnectUsage
-		{
-			/**
-			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen, for example after
-			 * SweetBlue considers a connect timed out based on {@link BleDeviceConfig#timeoutRequestFilter} but then it somehow
-			 * does come in (shouldn't happen but who knows).
-			 */
-			UNKNOWN,
-
-			/**
-			 * Usage is not applicable to the{@link ConnectionFailEvent#status()} given.
-			 */
-			NOT_APPLICABLE,
-
-			/**
-			 * <code>autoConnect</code> was used.
-			 */
-			USED,
-
-			/**
-			 * <code>autoConnect</code> was not used.
-			 */
-			NOT_USED;
-		}
-
-		/**
-		 * Return value for {@link ConnectionFailListener#onEvent(ConnectionFailEvent)}.
-		 * Generally you will only return {@link #retry()} or {@link #doNotRetry()}, but there are more advanced options as well.
-		 */
-		@Immutable
-		public static class Please
-		{
-			static enum PE_Please
-			{
-				RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
-
-				boolean isRetry()
-				{
-					return this != DO_NOT_RETRY;
-				}
-			}
-
-			private final PE_Please m_please;
-
-			private Please(PE_Please please)
-			{
-				m_please = please;
-			}
-
-			PE_Please please()
-			{
-				return m_please;
-			}
-
-			/**
-			 * Return this to retry the connection, continuing the connection fail retry loop. <code>autoConnect</code> passed to
-			 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
-			 * will be false or true based on what has worked in the past, or on {@link BleDeviceConfig#alwaysUseAutoConnect}.
-			 */
-			public static Please retry()
-			{
-				return new Please(PE_Please.RETRY);
-			}
-
-			/**
-			 * Returns {@link #retry()} if the given condition holds <code>true</code>, {@link #doNotRetry()} otherwise.
-			 */
-			public static Please retryIf(boolean condition)
-			{
-				return condition ? retry() : doNotRetry();
-			}
-
-			/**
-			 * Return this to stop the connection fail retry loop.
-			 */
-			public static Please doNotRetry()
-			{
-				return new Please(PE_Please.DO_NOT_RETRY);
-			}
-
-			/**
-			 * Returns {@link #doNotRetry()} if the given condition holds <code>true</code>, {@link #retry()} otherwise.
-			 */
-			public static Please doNotRetryIf(boolean condition)
-			{
-				return condition ? doNotRetry() : retry();
-			}
-
-			/**
-			 * Same as {@link #retry()}, but <code>autoConnect=true</code> will be passed to
-			 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
-			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public static Please retryWithAutoConnectTrue()
-			{
-				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_TRUE);
-			}
-
-			/**
-			 * Opposite of{@link #retryWithAutoConnectTrue()}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public static Please retryWithAutoConnectFalse()
-			{
-				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_FALSE);
-			}
-
-			/**
-			 * Returns <code>true</code> for everything except {@link #doNotRetry()}.
-			 */
-			public boolean isRetry()
-			{
-				return m_please != null && m_please.isRetry();
-			}
 		}
 
 		/**
@@ -1218,6 +1096,7 @@ public class BleDevice implements UsesCustomNull
 							this.getClass(),
 							"device",				device().getName_debug(),
 							"status", 				status(),
+							"timing",				timing(),
 							"bondFailReason",		device().getManager().getLogger().gattUnbondReason(bondFailReason()),
 							"failureCountSoFar",	failureCountSoFar()
 						);
@@ -1229,6 +1108,7 @@ public class BleDevice implements UsesCustomNull
 							this.getClass(),
 							"device",				device().getName_debug(),
 							"status", 				status(),
+							"timing",				timing(),
 							"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus()),
 							"failureCountSoFar",	failureCountSoFar()
 						);
@@ -2409,7 +2289,7 @@ public class BleDevice implements UsesCustomNull
 	 */
 	public boolean is(Object... query)
 	{
-		return is_query(getStateMask(), query);
+		return Utils_State.query(getStateMask(), query);
 	}
 
 	boolean isAny_internal(BleDeviceState... states)
@@ -2417,7 +2297,9 @@ public class BleDevice implements UsesCustomNull
 		for (int i = 0; i < states.length; i++)
 		{
 			if (is_internal(states[i]))
+			{
 				return true;
+			}
 		}
 
 		return false;
@@ -2426,40 +2308,6 @@ public class BleDevice implements UsesCustomNull
 	boolean is_internal(BleDeviceState state)
 	{
 		return state.overlaps(stateTracker().getState());
-	}
-
-//	boolean is_internal(Object... query)
-//	{
-//		return is_query(/* internal= */true, query);
-//	}
-
-	static boolean is_query(final int stateMask, Object... query)
-	{
-		if (query == null || query.length == 0)  return false;
-
-		final boolean internal = false;
-
-		for (int i = 0; i < query.length; i += 2)
-		{
-			final Object first = query[i];
-			final Object second = i + 1 < query.length ? query[i + 1] : null;
-
-			if (first == null || second == null)  return false;
-
-			if (!(first instanceof BleDeviceState) || !(second instanceof Boolean))
-			{
-				return false;
-			}
-
-			final BleDeviceState state = (BleDeviceState) first;
-			final Boolean value = (Boolean) second;
-			final boolean overlap = state.overlaps(stateMask);
-
-			if (value && !overlap)					return false;
-			else if (!value && overlap)				return false;
-		}
-
-		return true;
 	}
 
 	/**
@@ -3387,7 +3235,6 @@ public class BleDevice implements UsesCustomNull
 	{
 		return write(serviceUuid, characteristicUuid, new PresentData(data), listener);
 	}
-
 
 	/**
 	 * Writes to the device without a callback.
@@ -5060,7 +4907,7 @@ public class BleDevice implements UsesCustomNull
 		}
 	}
 
-	void onNativeConnectFail(PE_TaskState state, int gattStatus, AutoConnectUsage autoConnectUsage)
+	void onNativeConnectFail(PE_TaskState state, int gattStatus, ConnectionFailListener.AutoConnectUsage autoConnectUsage)
 	{
 		m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */true);
 
@@ -5098,13 +4945,13 @@ public class BleDevice implements UsesCustomNull
 				timing = ConnectionFailListener.Timing.TIMED_OUT;
 			}
 
-			final Please.PE_Please retry = m_connectionFailMngr.onConnectionFailed(connectionFailStatus, timing, attemptingReconnect, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_EVENT());
+			final int retry__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailStatus, timing, attemptingReconnect, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, autoConnectUsage, NULL_READWRITE_EVENT());
 
-			if (!attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_TRUE)
+			if (!attemptingReconnect && retry__PE_Please == ConnectionFailListener.Please.PE_Please_RETRY_WITH_AUTOCONNECT_TRUE)
 			{
 				m_useAutoConnect = true;
 			}
-			else if (!attemptingReconnect && retry == Please.PE_Please.RETRY_WITH_AUTOCONNECT_FALSE)
+			else if (!attemptingReconnect && retry__PE_Please == ConnectionFailListener.Please.PE_Please_RETRY_WITH_AUTOCONNECT_FALSE)
 			{
 				m_useAutoConnect = false;
 			}
@@ -5280,7 +5127,7 @@ public class BleDevice implements UsesCustomNull
 		{
 			if (getManager().ASSERT(connectionFailReasonIfConnecting != null))
 			{
-				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect_longTerm, gattStatus, bondFailReason, highestState, AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
+				m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect_longTerm, gattStatus, bondFailReason, highestState, ConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
 			}
 		}
 	}
@@ -5441,21 +5288,22 @@ public class BleDevice implements UsesCustomNull
 			softlyCancelTasks(overrideOrdinal);
 		}
 
-		final Please.PE_Please retrying;
+		final int retrying__PE_Please;
+
 		if (!isConnectingOverall_1 && !m_reconnectMngr_shortTerm.isRunning())
 		{
 			if (connectionFailReason_nullable != null)
 			{
-				retrying = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
+				retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
 			}
 			else
 			{
-				retrying = Please.PE_Please.DO_NOT_RETRY;
+				retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
 			}
 		}
 		else
 		{
-			retrying = Please.PE_Please.DO_NOT_RETRY;
+			retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
 		}
 
 		//--- DRK > Again, technically user could have called connect() in callbacks above....bad form but we need to account for it.
@@ -5485,7 +5333,7 @@ public class BleDevice implements UsesCustomNull
 		//--- DRK > Not actually entirely sure how, it may be legitimate, but a connect task can still be
 		//--- hanging out in the queue at this point, so we just make sure to clear the queue as a failsafe.
 		//--- TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
-		if (!isConnectingOverall_2 && retrying == Please.PE_Please.DO_NOT_RETRY)
+		if (!isConnectingOverall_2 && retrying__PE_Please == ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
 		{
 			m_queue.clearQueueOf(P_Task_Connect.class, this, -1);
 		}

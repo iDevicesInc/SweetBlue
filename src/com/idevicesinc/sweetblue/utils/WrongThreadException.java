@@ -11,6 +11,6 @@ public class WrongThreadException extends RuntimeException
 {
 	public WrongThreadException()
 	{
-		super("This method must be called from the main thread.");
+		super("This method must be called on the main thread.");
 	}
 }

@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 public class Interval extends Unit<Interval>
 {
 	private static final double DISABLED_VALUE = -1.0;
-	
+
 	/**
 	 * Use this special value to disable options in {@link BleDeviceConfig} and {@link BleManagerConfig}.
 	 */
@@ -43,7 +43,8 @@ public class Interval extends Unit<Interval>
 	 * Convenience value representing ten seconds.
 	 */
 	public static final Interval TEN_SECS		= Interval.secs(10.0);
-	
+
+
 	
 	private final double m_secs;
 	private final long m_millis;

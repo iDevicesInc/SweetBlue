@@ -40,7 +40,7 @@ import static com.idevicesinc.sweetblue.BleServerState.*;
  * is only useful by piggybacking on an existing {@link BleDevice} that is currently {@link BleDeviceState#CONNECTED}.
  * For OS levels 5.0 and up a {@link BleServer} is capable of acting as an independent peripheral.
  */
-public class BleServer implements UsesCustomNull
+public class BleServer extends BleEndpoint implements UsesCustomNull
 {
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
@@ -727,7 +727,7 @@ public class BleServer implements UsesCustomNull
 	 * @see BleServer#setListener_ConnectionFail(ConnectionFailListener)
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ConnectionFailListener
+	public static interface ConnectionFailListener extends BleEndpoint.ConnectionFailListener
 	{
 		/**
 		 * The reason for the connection failure.
@@ -834,36 +834,6 @@ public class BleServer implements UsesCustomNull
 						this == NATIVE_CONNECTION_FAILED_EVENTUALLY		||
 						this == TIMED_OUT;
 			}
-		}
-
-		/**
-		 * Describes usage of the <code>autoConnect</code> parameter for
-		 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}.
-		 */
-		@com.idevicesinc.sweetblue.annotations.Advanced
-		public static enum AutoConnectUsage
-		{
-			/**
-			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen, for example after
-			 * SweetBlue considers a connect timed out based on {@link BleManagerConfig#timeoutRequestFilter} but then it somehow
-			 * does come in (shouldn't happen but who knows).
-			 */
-			UNKNOWN,
-
-			/**
-			 * Usage is not applicable to the{@link ConnectionFailEvent#status()} given.
-			 */
-			NOT_APPLICABLE,
-
-			/**
-			 * <code>autoConnect</code> was used.
-			 */
-			USED,
-
-			/**
-			 * <code>autoConnect</code> was not used.
-			 */
-			NOT_USED;
 		}
 
 		/**
@@ -1025,98 +995,6 @@ public class BleServer implements UsesCustomNull
 						"failureCountSoFar",	failureCountSoFar()
 					);
 				}
-			}
-		}
-
-		/**
-		 * Return value for {@link ConnectionFailListener#onEvent(ConnectionFailEvent)}.
-		 * Generally you will only return {@link #retry()} or {@link #doNotRetry()}, but there are more advanced options as well.
-		 */
-		@Immutable
-		public static class Please
-		{
-			static enum PE_Please
-			{
-				RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
-
-				boolean isRetry()
-				{
-					return this != DO_NOT_RETRY;
-				}
-			}
-
-			private final PE_Please m_please;
-
-			private Please(PE_Please please)
-			{
-				m_please = please;
-			}
-
-			/*package*/ PE_Please please()
-			{
-				return m_please;
-			}
-
-			/**
-			 * Return this to retry the connection, continuing the connection fail retry loop. <code>autoConnect</code> passed to
-			 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
-			 * will be false or true based on what has worked in the past, or on {@link BleServerConfig#alwaysUseAutoConnect}.
-			 */
-			public static Please retry()
-			{
-				return new Please(PE_Please.RETRY);
-			}
-
-			/**
-			 * Returns {@link #retry()} if the given condition holds <code>true</code>, {@link #doNotRetry()} otherwise.
-			 */
-			public static Please retryIf(boolean condition)
-			{
-				return condition ? retry() : doNotRetry();
-			}
-
-			/**
-			 * Return this to stop the connection fail retry loop.
-			 */
-			public static Please doNotRetry()
-			{
-				return new Please(PE_Please.DO_NOT_RETRY);
-			}
-
-			/**
-			 * Returns {@link #doNotRetry()} if the given condition holds <code>true</code>, {@link #retry()} otherwise.
-			 */
-			public static Please doNotRetryIf(boolean condition)
-			{
-				return condition ? doNotRetry() : retry();
-			}
-
-			/**
-			 * Same as {@link #retry()}, but <code>autoConnect=true</code> will be passed to
-			 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}.
-			 * See more discussion at {@link BleServerConfig#alwaysUseAutoConnect}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public static Please retryWithAutoConnectTrue()
-			{
-				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_TRUE);
-			}
-
-			/**
-			 * Opposite of {@link #retryWithAutoConnectTrue()}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public static Please retryWithAutoConnectFalse()
-			{
-				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_FALSE);
-			}
-
-			/**
-			 * Returns <code>true</code> for everything except {@link #doNotRetry()}.
-			 */
-			public boolean isRetry()
-			{
-				return m_please != null && m_please.isRetry();
 			}
 		}
 
