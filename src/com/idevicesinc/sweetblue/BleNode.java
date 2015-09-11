@@ -12,14 +12,18 @@ import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.utils.EmptyCursor;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.EpochTimeRange;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
+import com.idevicesinc.sweetblue.utils.HistoricalDataColumn;
+import com.idevicesinc.sweetblue.utils.HistoricalDataQuery;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -400,12 +404,6 @@ public abstract class BleNode implements UsesCustomNull
 		public static class HistoricalDataQueryEvent
 		{
 			/**
-			 * The mac address that the data is being queried for.
-			 */
-			public String macAddress() {  return m_macAddress; }
-			private final String m_macAddress;
-
-			/**
 			 * The {@link UUID} that the data is being queried for.
 			 */
 			public UUID uuid() {  return m_uuid;  }
@@ -431,10 +429,9 @@ public abstract class BleNode implements UsesCustomNull
 
 			private final BleNode m_endpoint;
 
-			public HistoricalDataQueryEvent(final BleNode endpoint, final String macAddress, final UUID uuid, final Cursor cursor, final Status status, final String rawQuery)
+			public HistoricalDataQueryEvent(final BleNode endpoint, final UUID uuid, final Cursor cursor, final Status status, final String rawQuery)
 			{
 				m_endpoint = endpoint;
-				m_macAddress = macAddress;
 				m_uuid = uuid;
 				m_cursor = cursor;
 				m_status = status;
@@ -454,7 +451,6 @@ public abstract class BleNode implements UsesCustomNull
 				return Utils_String.toString
 				(
 					this.getClass(),
-					"macAddress",		macAddress(),
 					"uuid",				m_endpoint.getManager().getLogger().uuidName(uuid()),
 					"status",			status()
 				);
@@ -486,7 +482,8 @@ public abstract class BleNode implements UsesCustomNull
 
 	private final BleManager m_manager;
 
-	/*package*/ BleNode(final BleManager manager)
+	/*package*/
+	protected BleNode(final BleManager manager)
 	{
 		m_manager = manager;
 	}
@@ -643,5 +640,62 @@ public abstract class BleNode implements UsesCustomNull
 	P_Logger logger()
 	{
 		return getManager().getLogger();
+	}
+
+	/**
+	 * Provides a means to perform a raw SQL query on the database storing the historical data for this node. Use {@link BleDevice#getHistoricalDataTableName(UUID)}
+	 * to generate table names and {@link HistoricalDataColumn} to get column names.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataQueryListener.HistoricalDataQueryEvent queryHistoricalData(final String query)
+	{
+		if( this.isNull() )
+		{
+			return new HistoricalDataQueryListener.HistoricalDataQueryEvent(this, Uuids.INVALID, new EmptyCursor(), HistoricalDataQueryListener.Status.NULL_ENDPOINT, query);
+		}
+		else
+		{
+			final Cursor cursor = this.getManager().m_historicalDatabase.query(query);
+
+			return new BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent(this, Uuids.INVALID, cursor, BleDevice.HistoricalDataQueryListener.Status.SUCCESS, query);
+		}
+	}
+
+	/**
+	 * Same as {@link #queryHistoricalData(String)} but performs the query on a background thread and returns the result back on the main thread
+	 * through the provided {@link BleNode.HistoricalDataQueryListener}.
+	 */
+	public void queryHistoricalData(final String query, final HistoricalDataQueryListener listener)
+	{
+		if( this.isNull() )
+		{
+			listener.onEvent(new HistoricalDataQueryListener.HistoricalDataQueryEvent(this, Uuids.INVALID, new EmptyCursor(), HistoricalDataQueryListener.Status.NULL_ENDPOINT, query));
+		}
+		else
+		{
+			P_HistoricalDataManager.post(new Runnable()
+			{
+				@Override public void run()
+				{
+					final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = queryHistoricalData(query);
+
+					getManager().getUpdateLoop().postIfNeeded(new Runnable()
+					{
+						@Override public void run()
+						{
+							listener.onEvent(e);
+						}
+					});
+				}
+			});
+		}
+	}
+
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@com.idevicesinc.sweetblue.annotations.Alpha
+	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataQuery.Part_Select select()
+	{
+		final HistoricalDataQuery.Part_Select select = HistoricalDataQuery.select(this, getManager().m_historicalDatabase);
+
+		return select;
 	}
 }

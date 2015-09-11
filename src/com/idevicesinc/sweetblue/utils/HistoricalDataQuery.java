@@ -1,8 +1,10 @@
 package com.idevicesinc.sweetblue.utils;
 
-import android.database.Cursor;
-
 import com.idevicesinc.sweetblue.BleDevice;
+import com.idevicesinc.sweetblue.BleManager;
+import com.idevicesinc.sweetblue.BleNode;
+import com.idevicesinc.sweetblue.BleServer;
+import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 
 import java.util.UUID;
@@ -111,7 +113,13 @@ public class HistoricalDataQuery
 
 		public HistoricalDataQuery from(final UUID uuid)
 		{
+			return from("", uuid);
+		}
+
+		public HistoricalDataQuery from(final String macAddress, final UUID uuid)
+		{
 			m_query.m_uuid = uuid;
+			m_query.m_macAddress = macAddress;
 
 			return m_query;
 		}
@@ -184,17 +192,19 @@ public class HistoricalDataQuery
 		}
 	}
 
-	private final BleDevice m_device;
+	private final BleNode m_node;
 
 	private UUID m_uuid = null;
 	private String m_select = "";
 	private String m_where = "";
 
+	private String m_macAddress = "";
+
 	final Backend_HistoricalDatabase m_database;
 
-	private HistoricalDataQuery(final BleDevice device, final Backend_HistoricalDatabase database)
+	private HistoricalDataQuery(final BleNode node, final Backend_HistoricalDatabase database)
 	{
-		m_device = device;
+		m_node = node;
 		m_database = database;
 	}
 
@@ -208,7 +218,7 @@ public class HistoricalDataQuery
 //		m_selectParenCount = 0;
 //	}
 
-	public static Part_Select select(final BleDevice device, final Backend_HistoricalDatabase database)
+	public static Part_Select select(final BleNode device, final Backend_HistoricalDatabase database)
 	{
 		final HistoricalDataQuery query = new HistoricalDataQuery(device, database);
 
@@ -230,7 +240,7 @@ public class HistoricalDataQuery
 	private String getTableName()
 	{
 		final UUID uuid = getUuidOrInvalid();
-		final String tableName = m_database.getTableName(m_device.getMacAddress(), uuid);
+		final String tableName = m_database.getTableName(m_macAddress, uuid);
 
 		return tableName;
 	}
@@ -250,12 +260,11 @@ public class HistoricalDataQuery
 
 	private BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent go_earlyOut()
 	{
-		final String macAddress = m_device.getMacAddress();
 		final UUID uuid = getUuidOrInvalid();
 
-		if( !m_database.doesDataExist(macAddress, uuid) )
+		if( false == m_database.doesDataExist(m_macAddress, uuid) )
 		{
-			return new BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent(m_device, uuid, EmptyCursor.SINGLETON, BleDevice.HistoricalDataQueryListener.Status.NO_TABLE, "");
+			return new BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent(m_node, uuid, EmptyCursor.SINGLETON, BleDevice.HistoricalDataQueryListener.Status.NO_TABLE, "");
 		}
 
 		return null;
@@ -270,7 +279,7 @@ public class HistoricalDataQuery
 			return e_earlyOut;
 		}
 
-		return m_device.queryHistoricalData(makeQuery());
+		return m_node.queryHistoricalData(makeQuery());
 	}
 
 	public void go(final BleDevice.HistoricalDataQueryListener listener)
@@ -284,6 +293,18 @@ public class HistoricalDataQuery
 			return;
 		}
 
-		m_device.queryHistoricalData(makeQuery(), listener);
+		m_node.queryHistoricalData(makeQuery(), listener);
+	}
+
+	private String getMacAddress()
+	{
+		if( m_node instanceof BleDevice )
+		{
+			return m_macAddress == null || m_macAddress.isEmpty() ? ((BleDevice)m_node).getMacAddress() : m_macAddress;
+		}
+		else
+		{
+			return m_macAddress;
+		}
 	}
 }

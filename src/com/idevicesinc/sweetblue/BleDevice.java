@@ -1621,8 +1621,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		return m_config != null ? m_config : conf_mngr();
 	}
 
-	@Override
-	BleNodeConfig conf_endpoint()
+	@Override BleNodeConfig conf_endpoint()
 	{
 		return conf_device();
 	}
@@ -1894,65 +1893,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	public @Nullable(Nullable.Prevalence.NEVER) String getHistoricalDataTableName(final UUID uuid)
 	{
 		return getManager().m_historicalDatabase.getTableName(getMacAddress(), uuid);
-	}
-
-	/**
-	 * Provides a means to perform a raw SQL query on the database storing the historical data for this device. Use {@link #getHistoricalDataTableName(UUID)}
-	 * to generate table names and {@link HistoricalDataColumn} to get column names.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	@com.idevicesinc.sweetblue.annotations.Alpha
-	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataQueryListener.HistoricalDataQueryEvent queryHistoricalData(final String query)
-	{
-		if( isNull() )
-		{
-			return new HistoricalDataQueryListener.HistoricalDataQueryEvent(this, getMacAddress(), Uuids.INVALID, new EmptyCursor(), HistoricalDataQueryListener.Status.NULL_ENDPOINT, query);
-		}
-		else
-		{
-			final Cursor cursor = getManager().m_historicalDatabase.query(query);
-
-			return new BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent(this, getMacAddress(), Uuids.INVALID, cursor, BleDevice.HistoricalDataQueryListener.Status.SUCCESS, query);
-		}
-	}
-
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	@com.idevicesinc.sweetblue.annotations.Alpha
-	public void queryHistoricalData(final String query, final HistoricalDataQueryListener listener)
-	{
-		if( isNull() )
-		{
-			listener.onEvent(new HistoricalDataQueryListener.HistoricalDataQueryEvent(this, getMacAddress(), Uuids.INVALID, new EmptyCursor(), HistoricalDataQueryListener.Status.NULL_ENDPOINT, query));
-		}
-		else
-		{
-			m_historicalDataMngr.post(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = queryHistoricalData(query);
-
-					BleDevice.this.getManager().getUpdateLoop().postIfNeeded(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							listener.onEvent(e);
-						}
-					});
-				}
-			});
-		}
-	}
-
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	@com.idevicesinc.sweetblue.annotations.Alpha
-	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataQuery.Part_Select select()
-	{
-		final HistoricalDataQuery.Part_Select select = HistoricalDataQuery.select(this, getManager().m_historicalDatabase);
-
-		return select;
 	}
 
 	/**

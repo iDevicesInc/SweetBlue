@@ -26,7 +26,7 @@ class P_HistoricalDataManager
 	private final HashMap<UUID, Backend_HistoricalDataList> m_lists = new HashMap<UUID, Backend_HistoricalDataList>();
 	private final BleNode m_endPoint;
 	private final String m_macAddress;
-	private final UpdateLoop m_updateLoop = UpdateLoop.newAnonThreadLoop();
+	private static final UpdateLoop s_updateLoop = UpdateLoop.newAnonThreadLoop();
 
 	private BleDevice.HistoricalDataLoadListener m_defaultListener = null;
 
@@ -75,7 +75,7 @@ class P_HistoricalDataManager
 				if( tableExists )
 				{
 					final String uuidName = m_endPoint.getManager().getLogger().charName(uuid);
-					final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_updateLoop, m_macAddress, uuid, uuidName, tableExists);
+					final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), s_updateLoop, m_macAddress, uuid, uuidName, tableExists);
 					m_lists.put(uuid, newList);
 
 					return newList;
@@ -98,7 +98,7 @@ class P_HistoricalDataManager
 				final boolean tableExists = getDatabase().doesDataExist(m_macAddress, uuid);
 				final String uuidName = m_endPoint.getManager().getLogger().charName(uuid);
 
-				final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_updateLoop, m_macAddress, uuid, uuidName, tableExists);
+				final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), s_updateLoop, m_macAddress, uuid, uuidName, tableExists);
 				m_lists.put(uuid, newList);
 
 				return newList;
@@ -548,8 +548,8 @@ class P_HistoricalDataManager
 		return getDatabase().getTableName(m_macAddress, uuid);
 	}
 
-	public void post(final Runnable runnable)
+	public static void post(final Runnable runnable)
 	{
-		m_updateLoop.forcePost(runnable);
+		s_updateLoop.forcePost(runnable);
 	}
 }

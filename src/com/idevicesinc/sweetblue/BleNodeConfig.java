@@ -602,7 +602,7 @@ public class BleNodeConfig
 		}
 		else if( server_nullable != null )
 		{
-			filter_specific = server_nullable.conf_server().timeoutRequestFilter;
+			filter_specific = server_nullable.conf_endpoint().timeoutRequestFilter;
 		}
 		else
 		{

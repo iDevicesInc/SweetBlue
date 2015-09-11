@@ -1252,15 +1252,9 @@ public class BleServer extends BleNode implements UsesCustomNull
 		m_config = config;
 	}
 
-	/*package*/ BleNodeConfig conf_server()
+	@Override /*package*/ BleNodeConfig conf_endpoint()
 	{
 		return m_config != null ? m_config : conf_mngr();
-	}
-
-	@Override
-	BleNodeConfig conf_endpoint()
-	{
-		return conf_server();
 	}
 	
 	/**

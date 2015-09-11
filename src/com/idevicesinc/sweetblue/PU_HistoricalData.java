@@ -86,16 +86,16 @@ class PU_HistoricalData
 		return filter_config_device != null ? filter_config_device : filter_config_mngr;
 	}
 
-	static BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent newEvent(final String macAddress, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
+	static BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent newEvent(final BleNode node, final String macAddress, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
 	{
-		final BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent event = new BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent(macAddress, uuid, data, epochTime, source);
+		final BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent event = new BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent(node, macAddress, uuid, data, epochTime, source);
 
 		return event;
 	}
 
-	static BleDeviceConfig.HistoricalDataLogFilter.Please getPlease(final BleNode endpoint, final String macAddress, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
+	static BleDeviceConfig.HistoricalDataLogFilter.Please getPlease(final BleNode node, final String macAddress, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
 	{
-		final BleDeviceConfig.HistoricalDataLogFilter filter = getFilter(endpoint);
+		final BleDeviceConfig.HistoricalDataLogFilter filter = getFilter(node);
 
 		if( filter == null )
 		{
@@ -103,7 +103,7 @@ class PU_HistoricalData
 		}
 		else
 		{
-			final BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent event = newEvent(macAddress, uuid, data, epochTime, source);
+			final BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent event = newEvent(node, macAddress, uuid, data, epochTime, source);
 			final BleDeviceConfig.HistoricalDataLogFilter.Please please = filter.onEvent(event);
 
 			return please != null ? please : DO_NOT_LOG;
