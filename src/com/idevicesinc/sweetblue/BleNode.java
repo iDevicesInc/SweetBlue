@@ -12,24 +12,14 @@ import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.utils.EmptyCursor;
-import com.idevicesinc.sweetblue.utils.EmptyIterator;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.EpochTimeRange;
-import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
-import com.idevicesinc.sweetblue.utils.ForEach_Returning;
-import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
-import com.idevicesinc.sweetblue.utils.HistoricalDataColumn;
-import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
-import com.idevicesinc.sweetblue.utils.HistoricalDataQuery;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
-import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -40,7 +30,7 @@ import java.util.UUID;
  * Abstract base class for {@link BleDevice} and {@link BleServer}, mostly just to statically tie their APIs together
  * wherever possible. That is, not much actual shared implementation exists in this class as of this writing.
  */
-public abstract class BleEndpoint implements UsesCustomNull
+public abstract class BleNode implements UsesCustomNull
 {
 	/**
 	 * Base interface for {@link BleDevice.ConnectionFailListener} and {@link BleServer.ConnectionFailListener}.
@@ -317,9 +307,9 @@ public abstract class BleEndpoint implements UsesCustomNull
 			public Status status() {  return m_status; }
 			private final Status m_status;
 
-			private final BleEndpoint m_endpoint;
+			private final BleNode m_endpoint;
 
-			HistoricalDataLoadEvent(final BleEndpoint endpoint, final String macAddress, final UUID uuid, final EpochTimeRange range, final Status status)
+			HistoricalDataLoadEvent(final BleNode endpoint, final String macAddress, final UUID uuid, final EpochTimeRange range, final Status status)
 			{
 				m_endpoint = endpoint;
 				m_macAddress = macAddress;
@@ -340,12 +330,12 @@ public abstract class BleEndpoint implements UsesCustomNull
 			@Override public String toString()
 			{
 				return Utils_String.toString
-						(
-								this.getClass(),
-								"macAddress", macAddress(),
-								"uuid", m_endpoint.getManager().getLogger().uuidName(uuid()),
-								"status", status()
-						);
+				(
+					this.getClass(),
+					"macAddress", macAddress(),
+					"uuid", m_endpoint.getManager().getLogger().uuidName(uuid()),
+					"status", status()
+				);
 			}
 		}
 
@@ -439,9 +429,9 @@ public abstract class BleEndpoint implements UsesCustomNull
 			public @Nullable(Nullable.Prevalence.NEVER) String rawQuery() {  return m_rawQuery; }
 			private final String m_rawQuery;
 
-			private final BleEndpoint m_endpoint;
+			private final BleNode m_endpoint;
 
-			public HistoricalDataQueryEvent(final BleEndpoint endpoint, final String macAddress, final UUID uuid, final Cursor cursor, final Status status, final String rawQuery)
+			public HistoricalDataQueryEvent(final BleNode endpoint, final String macAddress, final UUID uuid, final Cursor cursor, final Status status, final String rawQuery)
 			{
 				m_endpoint = endpoint;
 				m_macAddress = macAddress;
@@ -496,7 +486,7 @@ public abstract class BleEndpoint implements UsesCustomNull
 
 	private final BleManager m_manager;
 
-	/*package*/ BleEndpoint(final BleManager manager)
+	/*package*/ BleNode(final BleManager manager)
 	{
 		m_manager = manager;
 	}
@@ -643,7 +633,7 @@ public abstract class BleEndpoint implements UsesCustomNull
 		}
 	}
 
-	abstract BleEndpointConfig conf_endpoint();
+	abstract BleNodeConfig conf_endpoint();
 
 	P_TaskQueue queue()
 	{

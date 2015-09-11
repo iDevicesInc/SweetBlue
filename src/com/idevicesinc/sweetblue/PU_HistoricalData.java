@@ -78,7 +78,7 @@ class PU_HistoricalData
 		return newDatabase;
 	}
 
-	static BleDeviceConfig.HistoricalDataLogFilter getFilter(final BleEndpoint endpoint)
+	static BleDeviceConfig.HistoricalDataLogFilter getFilter(final BleNode endpoint)
 	{
 		final BleDeviceConfig.HistoricalDataLogFilter filter_config_device = endpoint.conf_endpoint().historicalDataLogFilter;
 		final BleDeviceConfig.HistoricalDataLogFilter filter_config_mngr = endpoint.conf_mngr().historicalDataLogFilter;
@@ -93,7 +93,7 @@ class PU_HistoricalData
 		return event;
 	}
 
-	static BleDeviceConfig.HistoricalDataLogFilter.Please getPlease(final BleEndpoint endpoint, final String macAddress, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
+	static BleDeviceConfig.HistoricalDataLogFilter.Please getPlease(final BleNode endpoint, final String macAddress, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
 	{
 		final BleDeviceConfig.HistoricalDataLogFilter filter = getFilter(endpoint);
 

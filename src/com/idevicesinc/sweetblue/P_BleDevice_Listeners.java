@@ -8,10 +8,9 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
-import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
-import com.idevicesinc.sweetblue.BleEndpoint.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;

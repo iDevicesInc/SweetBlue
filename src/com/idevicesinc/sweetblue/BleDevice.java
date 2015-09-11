@@ -15,13 +15,11 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
-import com.idevicesinc.sweetblue.BleEndpoint.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
-import com.idevicesinc.sweetblue.BleEndpoint.ConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
@@ -50,7 +48,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * {@link BleManager#startScan()}) and sent to you through
  * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
  */
-public class BleDevice extends BleEndpoint implements UsesCustomNull
+public class BleDevice extends BleNode implements UsesCustomNull
 {
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
@@ -743,7 +741,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 	 * @see BleDevice#setListener_ConnectionFail(ConnectionFailListener)
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ConnectionFailListener extends BleEndpoint.ConnectionFailListener
+	public static interface ConnectionFailListener extends BleNode.ConnectionFailListener
 	{
 		/**
 		 * The reason for the connection failure.
@@ -912,7 +910,7 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		 * Structure passed to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
 		 */
 		@Immutable
-		public static class ConnectionFailEvent extends BleEndpoint.ConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
+		public static class ConnectionFailEvent extends BleNode.ConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
 		{
 			/**
 			 * The {@link BleDevice} this {@link ConnectionFailEvent} is for.
@@ -1623,7 +1621,8 @@ public class BleDevice extends BleEndpoint implements UsesCustomNull
 		return m_config != null ? m_config : conf_mngr();
 	}
 
-	@Override BleEndpointConfig conf_endpoint()
+	@Override
+	BleNodeConfig conf_endpoint()
 	{
 		return conf_device();
 	}

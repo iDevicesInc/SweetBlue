@@ -1,10 +1,7 @@
 package com.idevicesinc.sweetblue;
 
-import android.database.Cursor;
+import static com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter.*;
 
-import static com.idevicesinc.sweetblue.BleEndpointConfig.HistoricalDataLogFilter.*;
-
-import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDataList;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
@@ -27,7 +24,7 @@ class P_HistoricalDataManager
 	private final Object LIST_CREATE_MUTEX = new Object();
 
 	private final HashMap<UUID, Backend_HistoricalDataList> m_lists = new HashMap<UUID, Backend_HistoricalDataList>();
-	private final BleEndpoint m_endPoint;
+	private final BleNode m_endPoint;
 	private final String m_macAddress;
 	private final UpdateLoop m_updateLoop = UpdateLoop.newAnonThreadLoop();
 
@@ -35,7 +32,7 @@ class P_HistoricalDataManager
 
 	private final P_HistoricalDataManager_PreviousUuids m_previousUuidsWithDataAdded;
 
-	P_HistoricalDataManager(final BleEndpoint endpoint, final String macAddress)
+	P_HistoricalDataManager(final BleNode endpoint, final String macAddress)
 	{
 		m_endPoint = endpoint;
 		m_macAddress = macAddress;
@@ -114,11 +111,11 @@ class P_HistoricalDataManager
 	}
 
 	//GOOD
-	public void add_single(final UUID uuid, final byte[] data, final EpochTime epochTime, final BleEndpointConfig.HistoricalDataLogFilter.Source source)
+	public void add_single(final UUID uuid, final byte[] data, final EpochTime epochTime, final BleNodeConfig.HistoricalDataLogFilter.Source source)
 	{
 		final Backend_HistoricalDataList list = getList_createIfNotExists(uuid);
 
-		final BleEndpointConfig.HistoricalDataLogFilter.Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, data, epochTime, source);
+		final BleNodeConfig.HistoricalDataLogFilter.Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, data, epochTime, source);
 
 		if( PU_HistoricalData.add_earlyOut(list, please) )  return;
 

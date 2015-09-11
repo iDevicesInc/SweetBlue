@@ -38,7 +38,7 @@ import static com.idevicesinc.sweetblue.BleServerState.*;
  * is only useful by piggybacking on an existing {@link BleDevice} that is currently {@link BleDeviceState#CONNECTED}.
  * For OS levels 5.0 and up a {@link BleServer} is capable of acting as an independent peripheral.
  */
-public class BleServer extends BleEndpoint implements UsesCustomNull
+public class BleServer extends BleNode implements UsesCustomNull
 {
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
@@ -628,7 +628,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 			CANCELLED_FROM_BLE_TURNING_OFF,
 
 			/**
-			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleEndpointConfig#timeoutRequestFilter}
+			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleNodeConfig#timeoutRequestFilter}
 			 * so we had to cut her loose.
 			 */
 			TIMED_OUT,
@@ -725,7 +725,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * @see BleServer#setListener_ConnectionFail(ConnectionFailListener)
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ConnectionFailListener extends BleEndpoint.ConnectionFailListener
+	public static interface ConnectionFailListener extends BleNode.ConnectionFailListener
 	{
 		/**
 		 * The reason for the connection failure.
@@ -770,7 +770,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 
 			/**
 			 * Couldn't connect through {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
-			 * because the operation took longer than the time dictated by {@link BleEndpointConfig#timeoutRequestFilter}.
+			 * because the operation took longer than the time dictated by {@link BleNodeConfig#timeoutRequestFilter}.
 			 */
 			TIMED_OUT,
 
@@ -838,7 +838,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 		 * Structure passed to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
 		 */
 		@Immutable
-		public static class ConnectionFailEvent extends BleEndpoint.ConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
+		public static class ConnectionFailEvent extends BleNode.ConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
 		{
 			/**
 			 * The {@link BleServer} this {@link ConnectionFailEvent} is for.
@@ -1076,7 +1076,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 			FAILED_EVENTUALLY,
 
 			/**
-			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleEndpointConfig#timeoutRequestFilter}.
+			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleNodeConfig#timeoutRequestFilter}.
 			 */
 			TIMED_OUT,
 
@@ -1202,7 +1202,7 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	private IncomingListener m_incomingListener;
 	private OutgoingListener m_outgoingListener_default;
 	private final boolean m_isNull;
-	private BleEndpointConfig m_config = null;
+	private BleNodeConfig m_config = null;
 	private final P_ServerConnectionFailManager m_connectionFailMngr;
 	private final P_ClientManager m_clientMngr;
 	final P_ServerServiceManager m_serviceMngr;
@@ -1247,17 +1247,18 @@ public class BleServer extends BleEndpoint implements UsesCustomNull
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual server.
 	 */
-	public void setConfig(final BleEndpointConfig config)
+	public void setConfig(final BleNodeConfig config)
 	{
 		m_config = config;
 	}
 
-	/*package*/ BleEndpointConfig conf_server()
+	/*package*/ BleNodeConfig conf_server()
 	{
 		return m_config != null ? m_config : conf_mngr();
 	}
 
-	@Override BleEndpointConfig conf_endpoint()
+	@Override
+	BleNodeConfig conf_endpoint()
 	{
 		return conf_server();
 	}

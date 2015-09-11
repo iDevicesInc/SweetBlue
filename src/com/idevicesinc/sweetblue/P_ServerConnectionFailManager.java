@@ -2,9 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 
-import com.idevicesinc.sweetblue.utils.Interval;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 
 class P_ServerConnectionFailManager
@@ -73,7 +70,7 @@ class P_ServerConnectionFailManager
 		{
 			final BleServer.ConnectionFailListener.Please please = m_connectionFailListener.onEvent(e);
 
-			ePlease__PE_Please = please != null ? please.please() : BleEndpoint.ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+			ePlease__PE_Please = please != null ? please.please() : BleNode.ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
 		}
 		else
 		{

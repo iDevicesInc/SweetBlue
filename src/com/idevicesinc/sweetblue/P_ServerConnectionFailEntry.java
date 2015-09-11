@@ -65,7 +65,7 @@ class P_ServerConnectionFailEntry
 
 		final int ePlease__PE_Please = m_mngr.invokeCallback(e);
 
-		if( BleEndpoint.ConnectionFailListener.Please.isRetry(ePlease__PE_Please) )
+		if( BleNode.ConnectionFailListener.Please.isRetry(ePlease__PE_Please) )
 		{
 			m_mngr.m_server.connect_internal(nativeDevice);
 		}

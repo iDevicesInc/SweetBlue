@@ -31,7 +31,7 @@ import com.idevicesinc.sweetblue.utils.*;
  * <br><br>
  * TIP: You can use {@link #newNulled()} (or {@link #nullOut()}) then only set the few options you want for {@link BleDevice#setConfig(BleDeviceConfig)}.
  */
-public class BleDeviceConfig extends BleEndpointConfig implements Cloneable
+public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 {
 	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
 	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;

@@ -11,25 +11,26 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.UUID;
 
 /**
- * Provides a number of options to (optionally) pass to {@link BleServer#setConfig(BleEndpointConfig)}.
+ * Provides a number of options to (optionally) pass to {@link BleServer#setConfig(BleNodeConfig)}.
  * This class is also a super class of {@link BleManagerConfig}, which you can pass
  * to {@link BleManager#get(Context, BleManagerConfig)} or {@link BleManager#setConfig(BleManagerConfig)} to set default base options for all servers at once.
- * For all options in this class, you may set the value to <code>null</code> when passed to {@link BleServer#setConfig(BleEndpointConfig)}
+ * For all options in this class, you may set the value to <code>null</code> when passed to {@link BleServer#setConfig(BleNodeConfig)}
  * and the value will then be inherited from the {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)}.
  * Otherwise, if the value is not <code>null</code> it will override any option in the {@link BleManagerConfig}.
- * If an option is ultimately <code>null</code> (<code>null</code> when passed to {@link BleServer#setConfig(BleEndpointConfig)}
+ * If an option is ultimately <code>null</code> (<code>null</code> when passed to {@link BleServer#setConfig(BleNodeConfig)}
  * *and* {@link BleManager#get(Context, BleManagerConfig)}) then it is interpreted as <code>false</code> or {@link Interval#DISABLED}.
  * <br><br>
  * TIP: You can use {@link Interval#DISABLED} instead of <code>null</code> to disable any time-based options, for code readability's sake.
  * <br><br>
- * TIP: You can use {@link #newNulled()} (or {@link #nullOut()}) then only set the few options you want for {@link BleServer#setConfig(BleEndpointConfig)}.
+ * TIP: You can use {@link #newNulled()} (or {@link #nullOut()}) then only set the few options you want for {@link BleServer#setConfig(BleNodeConfig)}.
  */
-public class BleEndpointConfig
+public class BleNodeConfig
 {
 	/**
 	 * @deprecated Use {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
@@ -82,7 +83,7 @@ public class BleEndpointConfig
 	public TimeoutRequestFilter timeoutRequestFilter						= new DefaultTimeoutRequestFilter();
 
 	/**
-	 * Default is an instance of {@link com.idevicesinc.sweetblue.BleEndpointConfig.DefaultHistoricalDataLogFilter} -
+	 * Default is an instance of {@link BleNodeConfig.DefaultHistoricalDataLogFilter} -
 	 * set an implementation here to control how/if data is logged.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -219,8 +220,11 @@ public class BleEndpointConfig
 			public UUID charUuid()  {  return m_charUuid;  }
 			private final UUID m_charUuid;
 
-			HistoricalDataLogEvent(final String macAddress, final UUID charUuid, final byte[] data, final EpochTime epochTime, final Source source)
+			private final BleNode m_endpoint;
+
+			HistoricalDataLogEvent(final BleNode endpoint, final String macAddress, final UUID charUuid, final byte[] data, final EpochTime epochTime, final Source source)
 			{
+				m_endpoint = endpoint;
 				m_macAddress = macAddress;
 				m_charUuid = charUuid;
 				m_data = data;
@@ -242,6 +246,18 @@ public class BleEndpointConfig
 			public boolean isFor(final UUID[] uuids)
 			{
 				return Utils.contains(uuids, charUuid());
+			}
+
+			@Override public String toString()
+			{
+				return Utils_String.toString
+						(
+								this.getClass(),
+								"macAddress", macAddress(),
+								"charUuid", m_endpoint.getManager().getLogger().charName(charUuid()),
+								"source", source(),
+								"data", data()
+						);
 			}
 		}
 
@@ -538,15 +554,15 @@ public class BleEndpointConfig
 	}
 
 	/**
-	 * Creates a {@link BleEndpointConfig} with all default options set. See each member of this class
+	 * Creates a {@link BleNodeConfig} with all default options set. See each member of this class
 	 * for what the default options are set to. Consider using {@link #newNulled()} also.
 	 */
-	public BleEndpointConfig()
+	public BleNodeConfig()
 	{
 	}
 
 	/**
-	 * Sets all {@link Nullable} options in {@link BleEndpointConfig}, {@link BleDeviceConfig}, {@link BleManagerConfig} to <code>null</code>
+	 * Sets all {@link Nullable} options in {@link BleNodeConfig}, {@link BleDeviceConfig}, {@link BleManagerConfig} to <code>null</code>
 	 * so for example it's easier to cherry-pick just a few options to override from {@link BleManagerConfig} when using {@link BleDevice#setConfig(BleDeviceConfig)}.
 	 * <br><br>
 	 * NOTE: This doesn't affect any non-nullable subclass members of {@link BleManagerConfig} like {@link BleManagerConfig#stopScanOnPause}.
@@ -555,18 +571,18 @@ public class BleEndpointConfig
 	{
 		Utils_Reflection.nullOut(this, BleDeviceConfig.class);
 		Utils_Reflection.nullOut(this, BleManagerConfig.class);
-		Utils_Reflection.nullOut(this, BleEndpointConfig.class);
+		Utils_Reflection.nullOut(this, BleNodeConfig.class);
 	}
 
 	/**
-	 * Convenience method that returns a nulled out {@link BleEndpointConfig}, which is useful
-	 * when using {@link BleServer#setConfig(BleEndpointConfig)} to only override a few options
+	 * Convenience method that returns a nulled out {@link BleNodeConfig}, which is useful
+	 * when using {@link BleServer#setConfig(BleNodeConfig)} to only override a few options
 	 * from {@link BleManagerConfig} passed to {@link BleManager#get(Context, BleManagerConfig)}
 	 * or {@link BleManager#setConfig(BleManagerConfig)}.
 	 */
-	public static BleEndpointConfig newNulled()
+	public static BleNodeConfig newNulled()
 	{
-		BleEndpointConfig config = new BleEndpointConfig();
+		BleNodeConfig config = new BleNodeConfig();
 		config.nullOut();
 
 		return config;
@@ -650,11 +666,11 @@ public class BleEndpointConfig
 		return filter_device != null ? filter_device : filter_mngr;
 	}
 
-	@Override protected BleEndpointConfig clone()
+	@Override protected BleNodeConfig clone()
 	{
 		try
 		{
-			return (BleEndpointConfig) super.clone();
+			return (BleNodeConfig) super.clone();
 		}
 		catch (CloneNotSupportedException e)
 		{
