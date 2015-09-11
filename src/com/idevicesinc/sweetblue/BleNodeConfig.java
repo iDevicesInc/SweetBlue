@@ -71,7 +71,7 @@ public class BleNodeConfig
 	public Boolean disconnectIsCancellable						= true;
 
 	/**
-	 * Default is an instance of {@link DefaultTimeoutRequestFilter} - set an implementation here to
+	 * Default is an instance of {@link DefaultTaskTimeoutRequestFilter} - set an implementation here to
 	 * have fine control over how long individual {@link BleTask} instances can take before they
 	 * are considered "timed out" and failed.
 	 * <br><br>
@@ -80,7 +80,7 @@ public class BleNodeConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Nullable.Prevalence.RARE)
-	public TimeoutRequestFilter timeoutRequestFilter						= new DefaultTimeoutRequestFilter();
+	public TaskTimeoutRequestFilter taskTimeoutRequestFilter = new DefaultTaskTimeoutRequestFilter();
 
 	/**
 	 * Default is an instance of {@link BleNodeConfig.DefaultHistoricalDataLogFilter} -
@@ -103,6 +103,20 @@ public class BleNodeConfig
 			return new HistoricalData(data, epochTime);
 		}
 	};
+
+	/**
+	 * Default is an instance of {@link DefaultReconnectFilter} using the timings that are <code>public static final</code> members thereof - set your own implementation here to
+	 * have fine-grain control over reconnect behavior while {@link BleDevice} is {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+	 * This is basically how often and how long the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
+	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
+	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/phone to stay awake while attempting a reconnect.
+	 *
+	 * @see BleManagerConfig#manageCpuWakeLock
+	 * @see ReconnectFilter
+	 * @see DefaultReconnectFilter
+	 */
+	@Nullable(Nullable.Prevalence.NORMAL)
+	public ReconnectFilter reconnectFilter		= new DefaultReconnectFilter();
 
 	/**
 	 * Provide an instance of this class to {@link com.idevicesinc.sweetblue.BleDeviceConfig#historicalDataLogFilter} to control
@@ -251,13 +265,13 @@ public class BleNodeConfig
 			@Override public String toString()
 			{
 				return Utils_String.toString
-						(
-								this.getClass(),
-								"macAddress", macAddress(),
-								"charUuid", m_endpoint.getManager().getLogger().charName(charUuid()),
-								"source", source(),
-								"data", data()
-						);
+				(
+					this.getClass(),
+					"macAddress", macAddress(),
+					"charUuid", m_endpoint.getManager().getLogger().charName(charUuid()),
+					"source", source(),
+					"data", data()
+				);
 			}
 		}
 
@@ -428,14 +442,14 @@ public class BleNodeConfig
 	}
 
 	/**
-	 * Provides a way to control timeout behavior for various {@link BleTask} instances. Assign an instance to {@link BleDeviceConfig#timeoutRequestFilter}.
+	 * Provides a way to control timeout behavior for various {@link BleTask} instances. Assign an instance to {@link BleDeviceConfig#taskTimeoutRequestFilter}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public static interface TimeoutRequestFilter
+	public static interface TaskTimeoutRequestFilter
 	{
 		/**
-		 * Event passed to {@link TimeoutRequestFilter#onEvent(TimeoutRequestEvent)} that provides
+		 * Event passed to {@link TaskTimeoutRequestFilter#onEvent(TimeoutRequestEvent)} that provides
 		 * information about the {@link BleTask} that will soon be executed.
 		 */
 		@Immutable
@@ -493,7 +507,7 @@ public class BleNodeConfig
 		}
 
 		/**
-		 * Use static constructor methods to create instances to return from {@link TimeoutRequestFilter#onEvent(TimeoutRequestEvent)}.
+		 * Use static constructor methods to create instances to return from {@link TaskTimeoutRequestFilter#onEvent(TimeoutRequestEvent)}.
 		 */
 		@Immutable
 		public static class Please
@@ -531,10 +545,10 @@ public class BleNodeConfig
 	}
 
 	/**
-	 * Default implementation of {@link TimeoutRequestFilter} that simply sets the timeout
+	 * Default implementation of {@link TaskTimeoutRequestFilter} that simply sets the timeout
 	 * for all {@link BleTask} instances to {@link #DEFAULT_TASK_TIMEOUT} seconds.
 	 */
-	public static class DefaultTimeoutRequestFilter implements TimeoutRequestFilter
+	public static class DefaultTaskTimeoutRequestFilter implements TaskTimeoutRequestFilter
 	{
 		public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
 
@@ -549,6 +563,348 @@ public class BleNodeConfig
 			else
 			{
 				return DEFAULT_RETURN_VALUE;
+			}
+		}
+	}
+
+	/**
+	 * An optional interface you can implement on {@link BleNodeConfig#reconnectFilter} to control reconnection behavior.
+	 *
+	 * @see #reconnectFilter
+	 * @see DefaultReconnectFilter
+	 */
+	@com.idevicesinc.sweetblue.annotations.Lambda
+	public static interface ReconnectFilter
+	{
+		/**
+		 * An enum provided through {@link ReconnectEvent#type()} that describes what reconnect stage we're at.
+		 */
+		public static enum Type
+		{
+			/**
+			 * A small period of time has passed since we last asked about {@link #SHORT_TERM__SHOULD_TRY_AGAIN}, so just making sure you want to keep going.
+			 */
+			SHORT_TERM__SHOULD_CONTINUE,
+
+			/**
+			 * An attempt to reconnect in the short term failed, should we try again?.
+			 */
+			SHORT_TERM__SHOULD_TRY_AGAIN,
+
+			/**
+			 * A small period of time has passed since we last asked about {@link #LONG_TERM__SHOULD_TRY_AGAIN}, so just making sure you want to keep going.
+			 */
+			LONG_TERM__SHOULD_CONTINUE,
+
+			/**
+			 * An attempt to reconnect in the long term failed, should we try again?.
+			 */
+			LONG_TERM__SHOULD_TRY_AGAIN;
+
+			/*package*/ boolean isShouldTryAgain()
+			{
+				return this == SHORT_TERM__SHOULD_TRY_AGAIN || this == LONG_TERM__SHOULD_TRY_AGAIN;
+			}
+
+			/*package*/ boolean isShouldContinue()
+			{
+				return this == SHORT_TERM__SHOULD_CONTINUE || this == LONG_TERM__SHOULD_CONTINUE;
+			}
+
+			/*package*/ boolean isShortTerm()
+			{
+				return this == SHORT_TERM__SHOULD_TRY_AGAIN || this == SHORT_TERM__SHOULD_CONTINUE;
+			}
+
+			/*package*/ boolean isLongTerm()
+			{
+				return this == LONG_TERM__SHOULD_TRY_AGAIN || this == LONG_TERM__SHOULD_CONTINUE;
+			}
+		}
+
+		/**
+		 * Struct passed to {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to aid in making a decision.
+		 */
+		@Immutable
+		public static class ReconnectEvent
+		{
+			/**
+			 * The node that is currently trying to reconnect.
+			 */
+			public BleNode node(){  return m_node;  }
+			private BleNode m_node;
+
+			/**
+			 * Tried to cast {@link #node()} to a {@link BleDevice}, otherwise returns {@link BleDevice#NULL}.
+			 */
+			public BleDevice device(){  return node().cast(BleDevice.class);  }
+
+			/**
+			 * Tried to cast {@link #node()} to a {@link BleServer}, otherwise returns {@link BleServer#NULL}.
+			 */
+			public BleServer server(){  return node().cast(BleServer.class);  }
+
+			/**
+			 * The number of times a reconnect attempt has failed so far.
+			 */
+			public int failureCount(){  return m_failureCount;  }
+			private int m_failureCount;
+
+			/**
+			 * The total amount of time since the device disconnected and we started the reconnect process.
+			 */
+			public Interval totalTimeReconnecting(){  return m_totalTimeReconnecting;  }
+			private Interval m_totalTimeReconnecting;
+
+			/**
+			 * The previous {@link Interval} returned through {@link com.idevicesinc.sweetblue.BleNodeConfig.ReconnectFilter.Please#retryIn(Interval)},
+			 * or {@link Interval#ZERO} for the first invocation.
+			 */
+			public Interval previousDelay(){  return m_previousDelay;  }
+			private Interval m_previousDelay;
+
+			/**
+			 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)}
+			 * before the call is made to {@link BleNodeConfig.ReconnectFilter#onEvent(ReconnectEvent)}. For the first call to {@link ReconnectFilter#onEvent(ReconnectEvent)},
+			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link BleNode.ConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
+			 */
+			public BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent(){  return m_connectionFailEvent;  }
+			private BleNode.ConnectionFailListener.ConnectionFailEvent m_connectionFailEvent;
+
+			/**
+			 * See {@link BleNodeConfig.ReconnectFilter.Type} for more info.
+			 */
+			public Type type(){  return m_type;  }
+			private Type m_type;
+
+			/*package*/ ReconnectEvent(BleNode node, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
+			{
+				this.init(node, failureCount, totalTimeReconnecting, previousDelay, connectionFailEvent, type);
+			}
+
+			/*package*/ ReconnectEvent()
+			{
+			}
+
+			/*package*/ void init(BleNode node, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
+			{
+				this.m_node						= node;
+				this.m_failureCount				= failureCount;
+				this.m_totalTimeReconnecting	= totalTimeReconnecting;
+				this.m_previousDelay			= previousDelay;
+				this.m_connectionFailEvent		= connectionFailEvent;
+				this.m_type						= type;
+			}
+
+			@Override public String toString()
+			{
+				return Utils_String.toString
+				(
+					this.getClass(),
+					"node",						node(),
+					"type",						type(),
+					"failureCount",				failureCount(),
+					"totalTimeReconnecting",	totalTimeReconnecting(),
+					"previousDelay",			previousDelay()
+				);
+			}
+		}
+
+		/**
+		 * Return value for {@link ReconnectFilter#onEvent(ReconnectEvent)}. Use static constructor methods to create instances.
+		 */
+		@Immutable
+		public static class Please
+		{
+			private static final Interval SHOULD_TRY_AGAIN__INSTANTLY	= Interval.ZERO;
+
+			private static final Please SHOULD_CONTINUE__PERSIST		= new Please(true);
+			private static final Please SHOULD_CONTINUE__STOP			= new Please(false);
+
+			private final Interval m_interval__SHOULD_TRY_AGAIN;
+			private final boolean m_persist;
+
+			private Please(final Interval interval__SHOULD_TRY_AGAIN)
+			{
+				m_interval__SHOULD_TRY_AGAIN = interval__SHOULD_TRY_AGAIN;
+				m_persist = true;
+			}
+
+			private Please(boolean persist)
+			{
+				m_persist = persist;
+				m_interval__SHOULD_TRY_AGAIN = null;
+			}
+
+			/*package*/ Interval interval()
+			{
+				return m_interval__SHOULD_TRY_AGAIN;
+			}
+
+			/*package*/ boolean shouldPersist()
+			{
+				return m_persist;
+			}
+
+			/**
+			 * When {@link ReconnectEvent#type()} is either {@link Type#SHORT_TERM__SHOULD_TRY_AGAIN} or {@link Type#LONG_TERM__SHOULD_TRY_AGAIN},
+			 * return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to instantly reconnect.
+			 */
+			public static Please retryInstantly()
+			{
+				return new Please(SHOULD_TRY_AGAIN__INSTANTLY);
+			}
+
+			/**
+			 * Return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to stop a reconnect attempt loop.
+			 * Note that {@link BleDevice#disconnect()} {@link BleServer#disconnect(String)} will also stop any ongoing reconnect loops.
+			 */
+			public static Please stopRetrying()
+			{
+				return SHOULD_CONTINUE__STOP;
+			}
+
+			/**
+			 * Return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to retry after the given amount of time.
+			 */
+			public static Please retryIn(Interval interval)
+			{
+				return new Please(interval != null ? interval : SHOULD_TRY_AGAIN__INSTANTLY);
+			}
+
+			/**
+			 * Indicates that the {@link BleDevice} should keep {@link BleDeviceState#RECONNECTING_LONG_TERM} or
+			 * {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
+			 */
+			public static Please persist()
+			{
+				return SHOULD_CONTINUE__PERSIST;
+			}
+
+			/**
+			 * Returns {@link #persist()} if the condition holds, {@link #stopRetrying()} otherwise.
+			 */
+			public static Please persistIf(final boolean condition)
+			{
+				return condition ? persist() : stopRetrying();
+			}
+
+			/**
+			 * Returns {@link #stopRetrying()} if the condition holds, {@link #persist()} otherwise.
+			 */
+			public static Please stopRetryingIf(final boolean condition)
+			{
+				return condition ? stopRetrying() : persist();
+			}
+		}
+
+		/**
+		 * Called for every connection failure while device is {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+		 * Use the static methods of {@link Please} as return values to stop reconnection ({@link Please#stopRetrying()}), try again
+		 * instantly ({@link Please#retryInstantly()}), or after some amount of time {@link Please#retryIn(Interval)}.
+		 */
+		Please onEvent(final ReconnectEvent e);
+	}
+
+	/**
+	 * Default implementation of {@link ReconnectFilter} that uses {@link ReconnectFilter.Please#retryInstantly()} for the
+	 * first reconnect attempt, and from then on uses the {@link Interval} rate passed to the constructor
+	 *
+	 */
+	public static class DefaultReconnectFilter implements ReconnectFilter
+	{
+		public static final Please DEFAULT_INITIAL_RECONNECT_DELAY	= Please.retryInstantly();
+
+		public static final Interval LONG_TERM_ATTEMPT_RATE			= Interval.secs(3.0);
+		public static final Interval SHORT_TERM_ATTEMPT_RATE		= Interval.secs(1.0);
+
+		public static final Interval SHORT_TERM_TIMEOUT				= Interval.FIVE_SECS;
+		public static final Interval LONG_TERM_TIMEOUT				= Interval.mins(5);
+
+		private final Please m_please__SHORT_TERM__SHOULD_TRY_AGAIN;
+		private final Please m_please__LONG_TERM__SHOULD_TRY_AGAIN;
+
+		private final Interval m_timeout__SHORT_TERM__SHOULD_CONTINUE;
+		private final Interval m_timeout__LONG_TERM__SHOULD_CONTINUE;
+
+		public DefaultReconnectFilter()
+		{
+			this
+			(
+				DefaultReconnectFilter.SHORT_TERM_ATTEMPT_RATE,
+				DefaultReconnectFilter.LONG_TERM_ATTEMPT_RATE,
+				DefaultReconnectFilter.SHORT_TERM_TIMEOUT,
+				DefaultReconnectFilter.LONG_TERM_TIMEOUT
+			);
+		}
+
+		public DefaultReconnectFilter(final Interval reconnectRate__SHORT_TERM, final Interval reconnectRate__LONG_TERM, final Interval timeout__SHORT_TERM, final Interval timeout__LONG_TERM)
+		{
+			m_please__SHORT_TERM__SHOULD_TRY_AGAIN = Please.retryIn(reconnectRate__SHORT_TERM);
+			m_please__LONG_TERM__SHOULD_TRY_AGAIN = Please.retryIn(reconnectRate__LONG_TERM);
+
+			m_timeout__SHORT_TERM__SHOULD_CONTINUE = timeout__SHORT_TERM;
+			m_timeout__LONG_TERM__SHOULD_CONTINUE = timeout__LONG_TERM;
+		}
+
+		@Override public Please onEvent(final ReconnectEvent e)
+		{
+			if( e.type().isShouldTryAgain() )
+			{
+				if( e.failureCount() == 0 )
+				{
+					return DEFAULT_INITIAL_RECONNECT_DELAY;
+				}
+				else
+				{
+					if( e.type().isShortTerm() )
+					{
+						return m_please__SHORT_TERM__SHOULD_TRY_AGAIN;
+					}
+					else
+					{
+						return m_please__LONG_TERM__SHOULD_TRY_AGAIN;
+					}
+				}
+			}
+			else if( e.type().isShouldContinue() )
+			{
+				if( e.node() instanceof BleDevice )
+				{
+					final boolean definitelyPersist = BleDeviceState.CONNECTING_OVERALL.overlaps(e.device().getNativeStateMask()) &&
+							BleDeviceState.CONNECTED.overlaps(e.device().getNativeStateMask());
+
+					//--- DRK > We don't interrupt if we're in the middle of connecting
+					//---		but this will be the last attempt if it fails.
+					if( definitelyPersist )
+					{
+						return Please.persist();
+					}
+					else
+					{
+						return shouldContinue(e);
+					}
+				}
+				else
+				{
+					return shouldContinue(e);
+				}
+			}
+			else
+			{
+				return Please.stopRetrying();
+			}
+		}
+
+		private Please shouldContinue(final ReconnectEvent e)
+		{
+			if( e.type().isShortTerm() )
+			{
+				return Please.persistIf(e.totalTimeReconnecting().lt(m_timeout__SHORT_TERM__SHOULD_CONTINUE));
+			}
+			else
+			{
+				return Please.persistIf(e.totalTimeReconnecting().lt(m_timeout__LONG_TERM__SHOULD_CONTINUE));
 			}
 		}
 	}
@@ -588,34 +944,34 @@ public class BleNodeConfig
 		return config;
 	}
 
-	static double getTimeout(final TimeoutRequestFilter.TimeoutRequestEvent event)
+	static double getTimeout(final TaskTimeoutRequestFilter.TimeoutRequestEvent event)
 	{
 		final BleManager manager = event.manager();
 		final BleDevice device_nullable = !event.device().isNull() ? event.device() : null;
 		final BleServer server_nullable = !event.server().isNull() ? event.server() : null;
 
-		final TimeoutRequestFilter filter_specific;
+		final TaskTimeoutRequestFilter filter_specific;
 
 		if( device_nullable != null )
 		{
-			filter_specific = device_nullable.conf_device().timeoutRequestFilter;
+			filter_specific = device_nullable.conf_device().taskTimeoutRequestFilter;
 		}
 		else if( server_nullable != null )
 		{
-			filter_specific = server_nullable.conf_endpoint().timeoutRequestFilter;
+			filter_specific = server_nullable.conf_endpoint().taskTimeoutRequestFilter;
 		}
 		else
 		{
 			filter_specific = null;
 		}
 
-		final TimeoutRequestFilter filter_mngr = manager.m_config.timeoutRequestFilter;
-		final TimeoutRequestFilter filter = filter_specific != null ? filter_specific : filter_mngr;
-		final TimeoutRequestFilter.Please please = filter != null ? filter.onEvent(event) : null;
+		final TaskTimeoutRequestFilter filter_mngr = manager.m_config.taskTimeoutRequestFilter;
+		final TaskTimeoutRequestFilter filter = filter_specific != null ? filter_specific : filter_mngr;
+		final TaskTimeoutRequestFilter.Please please = filter != null ? filter.onEvent(event) : null;
 		final Interval timeout = please != null ? please.m_interval : Interval.DISABLED;
 		final double toReturn = timeout != null ? timeout.secs() : Interval.DISABLED.secs();
 
-		event.device().getManager().getLogger().checkPlease(please, TimeoutRequestFilter.Please.class);
+		event.device().getManager().getLogger().checkPlease(please, TaskTimeoutRequestFilter.Please.class);
 
 		return toReturn;
 	}

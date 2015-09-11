@@ -65,9 +65,13 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 
 	@Override void execute()
 	{
-		if( !getServer().getNative().sendResponse(m_requestEvent.nativeDevice(), m_requestEvent.requestId(), m_please.m_gattStatus, m_requestEvent.offset(), data_sent()) )
+		if( false == getServer().getNative().sendResponse(m_requestEvent.nativeDevice(), m_requestEvent.requestId(), m_please.m_gattStatus, m_requestEvent.offset(), data_sent()) )
 		{
 			fail(BleServer.OutgoingListener.Status.FAILED_TO_SEND_OUT);
+		}
+		else
+		{
+			// SUCCESS, and we'll wait a half second or so (for now hardcoded) until success, cause there's no callback for this one.
 		}
 	}
 
@@ -78,7 +82,7 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 
 	@Override protected void update(double timeStep)
 	{
-		final double timeToSuccess = .5d; //TODO
+		final double timeToSuccess = .25d; //TODO
 
 		if( getState() == PE_TaskState.EXECUTING && getTotalTimeExecuting() >= timeToSuccess )
 		{

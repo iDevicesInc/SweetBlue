@@ -628,7 +628,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 			CANCELLED_FROM_BLE_TURNING_OFF,
 
 			/**
-			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleNodeConfig#timeoutRequestFilter}
+			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleNodeConfig#taskTimeoutRequestFilter}
 			 * so we had to cut her loose.
 			 */
 			TIMED_OUT,
@@ -770,7 +770,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 			/**
 			 * Couldn't connect through {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
-			 * because the operation took longer than the time dictated by {@link BleNodeConfig#timeoutRequestFilter}.
+			 * because the operation took longer than the time dictated by {@link BleNodeConfig#taskTimeoutRequestFilter}.
 			 */
 			TIMED_OUT,
 
@@ -917,7 +917,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 			/**
 			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
-			 * {@link BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent#connectionFailInfo()} in certain situations.
+			 * {@link BleDeviceConfig.ReconnectFilter.ReconnectRequestEvent#connectionFailInfo()} in certain situations.
 			 */
 			@Override public boolean isNull()
 			{
@@ -1076,7 +1076,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 			FAILED_EVENTUALLY,
 
 			/**
-			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleNodeConfig#timeoutRequestFilter}.
+			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleNodeConfig#taskTimeoutRequestFilter}.
 			 */
 			TIMED_OUT,
 

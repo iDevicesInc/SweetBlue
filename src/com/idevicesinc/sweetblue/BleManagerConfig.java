@@ -5,16 +5,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
-import com.idevicesinc.sweetblue.BleManager.UhOhListener;
-import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
-import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -374,8 +370,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * {@link BleDeviceState#CONNECTED} but one or more devices are {@link BleDeviceState#RECONNECTING_LONG_TERM}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from
-	 * {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}.
+	 * {@link ReconnectFilter.Please#stopRetrying()} from
+	 * {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectRequestEvent)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  

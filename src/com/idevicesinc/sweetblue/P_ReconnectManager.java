@@ -3,14 +3,9 @@ package com.idevicesinc.sweetblue;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
-import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectPersistFilter;
-import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectPersistFilter.ReconnectPersistEvent;
-import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter;
-import com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.BleNodeConfig.*;
 
 class P_ReconnectManager
 {
@@ -24,11 +19,11 @@ class P_ReconnectManager
 	
 	private int m_gattStatusOfOriginalDisconnect = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	
-	private ConnectionFailListener.ConnectionFailEvent m_connectionFailInfo;
+	private ConnectionFailListener.ConnectionFailEvent m_connectionFailEvent;
 	
 	private final boolean m_isShortTerm;
 	
-	private static final ReconnectPersistEvent PERSIST_EVENT = new ReconnectPersistEvent();
+	private static final BleNodeConfig.ReconnectFilter.ReconnectEvent EVENT = new BleNodeConfig.ReconnectFilter.ReconnectEvent();
 	
 	P_ReconnectManager(final BleDevice device, final boolean isShortTerm)
 	{
@@ -36,14 +31,14 @@ class P_ReconnectManager
 		
 		m_isShortTerm = isShortTerm;
 		
-		m_connectionFailInfo = m_device.NULL_CONNECTIONFAIL_INFO();
+		m_connectionFailEvent = m_device.NULL_CONNECTIONFAIL_INFO();
 	}
 	
 	void attemptStart(final int gattStatusOfDisconnect)
 	{
 		m_totalTime = 0.0;
 		m_attemptCount = 0;
-		m_connectionFailInfo = m_device.NULL_CONNECTIONFAIL_INFO();
+		m_connectionFailEvent = m_device.NULL_CONNECTIONFAIL_INFO();
 		
 		m_delay = getNextTime(m_device.NULL_CONNECTIONFAIL_INFO());
 		
@@ -88,53 +83,40 @@ class P_ReconnectManager
 		}
 	}
 	
-	private ReconnectRequestFilter getRequestFilter()
+	private ReconnectFilter getFilter()
 	{
-		if( m_isShortTerm )
-		{
-			final BleDeviceConfig.ReconnectRequestFilter filter = m_device.conf_device().reconnectRequestFilter_shortTerm;
-			return filter != null ? filter : m_device.conf_mngr().reconnectRequestFilter_shortTerm;
-		}
-		else
-		{
-			final BleDeviceConfig.ReconnectRequestFilter filter = m_device.conf_device().reconnectRequestFilter_longTerm;
-			return filter != null ? filter : m_device.conf_mngr().reconnectRequestFilter_longTerm;
-		}
-	}
-	
-	private ReconnectPersistFilter getPersistFilter()
-	{
-		if( m_isShortTerm )
-		{
-			final BleDeviceConfig.ReconnectPersistFilter filter = m_device.conf_device().reconnectPersistFilter_shortTerm;
-			return filter != null ? filter : m_device.conf_mngr().reconnectPersistFilter_shortTerm;
-		}
-		else
-		{
-			final BleDeviceConfig.ReconnectPersistFilter filter = m_device.conf_device().reconnectPersistFilter_longTerm;
-			return filter != null ? filter : m_device.conf_mngr().reconnectPersistFilter_longTerm;
-		}
+		final ReconnectFilter filter = m_device.conf_device().reconnectFilter;
+
+		return filter != null ? filter : m_device.conf_mngr().reconnectFilter;
 	}
 	
 	private double getNextTime(ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 	{
-		final BleDeviceConfig.ReconnectRequestFilter filter = getRequestFilter();
+		final ReconnectFilter filter = getFilter();
 		
 		if( filter == null )
 		{
-			return BleManagerConfig.ReconnectRequestFilter.Please.STOP.secs();
+			return Interval.DISABLED.secs();
 		}
 		else
 		{
-			ReconnectRequestFilter.ReconnectRequestEvent info = new ReconnectRequestFilter.ReconnectRequestEvent(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo);
-			final Please please = filter.onEvent(info);
+			final ReconnectFilter.Type type = m_isShortTerm ? ReconnectFilter.Type.SHORT_TERM__SHOULD_TRY_AGAIN : ReconnectFilter.Type.LONG_TERM__SHOULD_TRY_AGAIN;
+
+			EVENT.init(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo, type);
+			final ReconnectFilter.Please please = filter.onEvent(EVENT);
 			
-			m_device.getManager().getLogger().checkPlease(please, Please.class);
-			
-			Interval delay = please != null ? please.getInterval() : null;
-			delay = delay != null ? delay : BleManagerConfig.ReconnectRequestFilter.Please.STOP;
-			
-			return delay.secs();
+			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.Please.class);
+
+			if( false == please.shouldPersist() )
+			{
+				return Interval.DISABLED.secs();
+			}
+			else
+			{
+				final Interval delay = please != null ? please.interval() : null;
+
+				return delay != null ? delay.secs() : Interval.DISABLED.secs();
+			}
 		}
 	}
 	
@@ -146,24 +128,19 @@ class P_ReconnectManager
 		}
 		
 		m_attemptCount++;
-
 		m_timeTracker = 0.0;
 		
-		double delay = getNextTime(connectionFailInfo);
+		final double delay = getNextTime(connectionFailInfo);
 		
 		if( delay < 0.0 )
 		{
 			stop();
-			
-			return;
 		}
 		else
 		{
-			m_connectionFailInfo = connectionFailInfo;
+			m_connectionFailEvent = connectionFailInfo;
 			m_delay = delay;
 			m_timeTracker = 0.0;
-			
-			return;
 		}
 	}
 	
@@ -193,15 +170,17 @@ class P_ReconnectManager
 	
 	private void doPersistCheck()
 	{
-		ReconnectPersistFilter persistFilter = getPersistFilter();
+		ReconnectFilter persistFilter = getFilter();
 		
 		if( persistFilter == null )  return;
+
+		final ReconnectFilter.Type type = m_isShortTerm ? ReconnectFilter.Type.SHORT_TERM__SHOULD_CONTINUE : ReconnectFilter.Type.LONG_TERM__SHOULD_CONTINUE;
 		
-		PERSIST_EVENT.init(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), m_connectionFailInfo);
+		EVENT.init(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), m_connectionFailEvent, type);
 		
-		final ReconnectPersistFilter.Please please = persistFilter.onEvent(PERSIST_EVENT);
+		final ReconnectFilter.Please please = persistFilter.onEvent(EVENT);
 		
-		m_device.getManager().getLogger().checkPlease(please, ReconnectPersistFilter.Please.class);
+		m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.Please.class);
 		
 		if( please == null || !please.shouldPersist() )
 		{
@@ -230,7 +209,7 @@ class P_ReconnectManager
 		m_timeTracker = NOT_RUNNING;
 		m_attemptCount = 0;
 		m_totalTime = 0.0;
-		m_connectionFailInfo = m_device.NULL_CONNECTIONFAIL_INFO();
+		m_connectionFailEvent = m_device.NULL_CONNECTIONFAIL_INFO();
 		m_gattStatusOfOriginalDisconnect = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	}
 }

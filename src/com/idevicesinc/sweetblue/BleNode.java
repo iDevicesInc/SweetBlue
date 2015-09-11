@@ -51,7 +51,7 @@ public abstract class BleNode implements UsesCustomNull
 		{
 			/**
 			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen, for example after
-			 * SweetBlue considers a connect timed out based on {@link BleDeviceConfig#timeoutRequestFilter} but then it somehow
+			 * SweetBlue considers a connect timed out based on {@link BleDeviceConfig#taskTimeoutRequestFilter} but then it somehow
 			 * does come in (shouldn't happen but who knows).
 			 */
 			UNKNOWN,
@@ -697,5 +697,26 @@ public abstract class BleNode implements UsesCustomNull
 		final HistoricalDataQuery.Part_Select select = HistoricalDataQuery.select(this, getManager().m_historicalDatabase);
 
 		return select;
+	}
+
+	public <T extends BleNode> T cast()
+	{
+		return (T) this;
+	}
+
+	public <T extends BleNode> T cast(Class<T> type)
+	{
+		if( this instanceof BleDevice && type == BleServer.class )
+		{
+			return (T) BleServer.NULL;
+		}
+		else if( this instanceof BleServer && type == BleDevice.class )
+		{
+			return (T) BleDevice.NULL;
+		}
+		else
+		{
+			return cast();
+		}
 	}
 }

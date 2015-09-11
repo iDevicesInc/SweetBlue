@@ -343,7 +343,7 @@ public class BleManager
 			
 			/**
 			 * A {@link BleDevice#read(java.util.UUID, BleDevice.ReadWriteListener)}
-			 * took longer than timeout set by {@link BleDeviceConfig#timeoutRequestFilter}.
+			 * took longer than timeout set by {@link BleDeviceConfig#taskTimeoutRequestFilter}.
 			 * You will also get a {@link BleDevice.ReadWriteListener.ReadWriteEvent} with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}
 			 * but a timeout is a sort of fringe case that should not regularly happen.
 			 */

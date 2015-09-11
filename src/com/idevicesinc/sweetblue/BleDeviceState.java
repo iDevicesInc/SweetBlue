@@ -35,7 +35,7 @@ public enum BleDeviceState implements State
 	/**
 	 * If {@link BleDeviceConfig#reconnectRequestFilter_longTerm} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
-	 * {@link BleDeviceConfig.ReconnectRequestFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectRequestFilter#onEvent(com.idevicesinc.sweetblue.BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent)}
+	 * {@link BleDeviceConfig.ReconnectFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectFilter#onEvent(BleDeviceConfig.ReconnectFilter.ReconnectRequestEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
 	 * @see #RECONNECTING_SHORT_TERM

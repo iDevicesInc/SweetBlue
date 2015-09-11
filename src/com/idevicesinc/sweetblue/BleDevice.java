@@ -15,7 +15,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
-import android.database.Cursor;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
@@ -176,7 +175,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			REMOTE_GATT_FAILURE,
 
 			/**
-			 * Operation took longer than time specified in {@link BleDeviceConfig#timeoutRequestFilter} so we cut it loose.
+			 * Operation took longer than time specified in {@link BleDeviceConfig#taskTimeoutRequestFilter} so we cut it loose.
 			 */
 			TIMED_OUT;
 
@@ -901,7 +900,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			EVENTUALLY,
 
 			/**
-			 * The operation took longer than the time dictated by {@link BleDeviceConfig#timeoutRequestFilter}.
+			 * The operation took longer than the time dictated by {@link BleDeviceConfig#taskTimeoutRequestFilter}.
 			 */
 			TIMED_OUT;
 		}
@@ -1021,7 +1020,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 			/**
 			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
-			 * {@link BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent#connectionFailInfo()} in certain situations.
+			 * {@link BleDeviceConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
 			 */
 			@Override public boolean isNull()
 			{
@@ -1076,7 +1075,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		/**
 		 * Return value is ignored if device is either {@link BleDeviceState#RECONNECTING_LONG_TERM} or reason
 		 * {@link Status#allowsRetry()} is <code>false</code>. If the device is {@link BleDeviceState#RECONNECTING_LONG_TERM}
-		 * then authority is deferred to {@link BleDeviceConfig.ReconnectRequestFilter}.
+		 * then authority is deferred to {@link BleDeviceConfig.ReconnectFilter}.
 		 * <br><br>
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also lets
 		 * the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
@@ -1258,7 +1257,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			FAILED_EVENTUALLY,
 
 			/**
-			 * The bond operation took longer than the time set in {@link BleDeviceConfig#timeoutRequestFilter} so we cut it loose.
+			 * The bond operation took longer than the time set in {@link BleDeviceConfig#taskTimeoutRequestFilter} so we cut it loose.
 			 */
 			TIMED_OUT,
 

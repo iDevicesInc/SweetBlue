@@ -14,7 +14,7 @@ abstract class PA_Task
 
 	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
-	private static final BleNodeConfig.TimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleNodeConfig.TimeoutRequestFilter.TimeoutRequestEvent();
+	private static final BleNodeConfig.TaskTimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleNodeConfig.TaskTimeoutRequestFilter.TimeoutRequestEvent();
 
 	
 	private 	  BleDevice m_device;
@@ -96,7 +96,7 @@ abstract class PA_Task
 		{
 			getManager().ASSERT(false, "BleTask type shouldn't be null.");
 			
-			return BleNodeConfig.DefaultTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
+			return BleNodeConfig.DefaultTaskTimeoutRequestFilter.DEFAULT_TASK_TIMEOUT; // just a back-up, should never be invoked.
 		}
 	}
 	
