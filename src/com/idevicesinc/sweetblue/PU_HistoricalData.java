@@ -80,7 +80,7 @@ class PU_HistoricalData
 
 	static BleDeviceConfig.HistoricalDataLogFilter getFilter(final BleNode endpoint)
 	{
-		final BleDeviceConfig.HistoricalDataLogFilter filter_config_device = endpoint.conf_endpoint().historicalDataLogFilter;
+		final BleDeviceConfig.HistoricalDataLogFilter filter_config_device = endpoint.conf_node().historicalDataLogFilter;
 		final BleDeviceConfig.HistoricalDataLogFilter filter_config_mngr = endpoint.conf_mngr().historicalDataLogFilter;
 
 		return filter_config_device != null ? filter_config_device : filter_config_mngr;

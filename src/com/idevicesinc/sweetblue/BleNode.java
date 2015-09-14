@@ -22,6 +22,7 @@ import com.idevicesinc.sweetblue.utils.HistoricalDataQuery;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
+import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -581,7 +582,7 @@ public abstract class BleNode implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime)
 	{
-		final BleDeviceConfig.HistoricalDataFactory factory_device = conf_endpoint().historicalDataFactory;
+		final BleDeviceConfig.HistoricalDataFactory factory_device = conf_node().historicalDataFactory;
 		final BleDeviceConfig.HistoricalDataFactory factory_mngr = conf_mngr().historicalDataFactory;
 		final BleDeviceConfig.HistoricalDataFactory factory = factory_device != null ? factory_device : factory_mngr;
 
@@ -630,7 +631,7 @@ public abstract class BleNode implements UsesCustomNull
 		}
 	}
 
-	abstract BleNodeConfig conf_endpoint();
+	abstract BleNodeConfig conf_node();
 
 	P_TaskQueue queue()
 	{
@@ -717,6 +718,16 @@ public abstract class BleNode implements UsesCustomNull
 		else
 		{
 			return cast();
+		}
+	}
+
+	protected void enforceMainThread()
+	{
+		final boolean allowAllThreads = BleDeviceConfig.bool(conf_node().allowCallsFromAllThreads, conf_mngr().allowCallsFromAllThreads);
+
+		if( false == allowAllThreads )
+		{
+			Utils.enforceMainThread();
 		}
 	}
 }

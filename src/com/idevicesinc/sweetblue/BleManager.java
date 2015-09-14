@@ -72,20 +72,23 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * Then here is a simple example usage:<pre><code>
  * public class MyActivity extends Activity
  * {
- *      private BleManager m_bleManager;
- *
  *      {@literal @}Override protected void onCreate(Bundle savedInstanceState)
  *      {
  *          super.onCreate(savedInstanceState);
  *
- *          m_bleManager = BleManager.get(this);
+ *          BleManager.get(this).startScan(new ScanFilter()
+ *          {
+ *              @Override public Please onEvent(ScanEvent e)
+ *              {
+ *                  return Please.acknowledgeIf(e.name_normalized().contains("my_device"))
+ *                               .thenStopScan();
+ *              }
+ *          },
  *
- *          m_bleManager.startScan(new BleManager.DiscoveryListener()
+ *          new BleManager.DiscoveryListener()
  *          {
  *              {@literal @}Override public void onEvent(DiscoveryEvent event)
  *              {
- *                  m_bleManager.stopScan();
- *
  *                  if( event.was(LifeCycle.DISCOVERED) )
  *                  {
  *                      event.device().connect(new BleDevice.StateListener()
@@ -108,14 +111,14 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  *      {
  *          super.onResume();
  *
- *          m_bleManager.onResume();
+ *          BleManager.get(this).onResume();
  *      }
  *
  *      {@literal @}Override protected void onPause()
  *      {
  *          super.onPause();
  *
- *          m_bleManager.onPause();
+ *          BleManager.get(this).onPause();
  *      }
  * }
  * </code>
@@ -673,11 +676,15 @@ public class BleManager
 	{
 		if( s_instance == null )
 		{
+			Utils.enforceMainThread();
+
 			return get(context, new BleManagerConfig());
 		}
 		else
 		{
 			verifySingleton(context);
+
+			s_instance.enforceMainThread();
 
 			return s_instance;
 		}
@@ -692,6 +699,13 @@ public class BleManager
 	{
 		if( s_instance == null )
 		{
+			final boolean allowAllThreads = BleDeviceConfig.boolOrDefault(config != null ? config.allowCallsFromAllThreads : null);
+
+			if( false == allowAllThreads )
+			{
+				Utils.enforceMainThread();
+			}
+
 			s_instance = new BleManager(context, config);
 
 			return s_instance;
@@ -701,6 +715,8 @@ public class BleManager
 			verifySingleton(context);
 
 			s_instance.setConfig(config);
+
+			s_instance.enforceMainThread();
 
 			return s_instance;
 		}
@@ -733,8 +749,6 @@ public class BleManager
 	private final P_TaskQueue m_taskQueue;
 	private 	P_UhOhThrottler m_uhOhThrottler;
 				P_WakeLockManager m_wakeLockMngr;
-	
-		final Object m_threadLock = new Object();
 
 			BleDevice.HistoricalDataLoadListener m_historicalDataLoadListener;
 			DiscoveryListener m_discoveryListener;
@@ -819,6 +833,13 @@ public class BleManager
 	 */
 	public void setConfig(@Nullable(Prevalence.RARE) BleManagerConfig config_nullable)
 	{
+		final boolean allowAllThreads = BleDeviceConfig.boolOrDefault(config_nullable != null ? config_nullable.allowCallsFromAllThreads : null);
+
+		if( false == allowAllThreads )
+		{
+			Utils.enforceMainThread();
+		}
+
 		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
 		this.initLogger();
 		this.initConfigDependentMembers();
@@ -942,6 +963,8 @@ public class BleManager
 	 */
 	public Interval getTimeInState(BleManagerState state)
 	{
+		enforceMainThread();
+
 		return Interval.millis(m_stateTracker.getTimeInState(state.ordinal()));
 	}
 
@@ -952,6 +975,8 @@ public class BleManager
 	 */
 	public Interval getTimeInNativeState(BleManagerState state)
 	{
+		enforceMainThread();
+
 		return Interval.millis(m_nativeStateTracker.getTimeInState(state.ordinal()));
 	}
 
@@ -960,6 +985,8 @@ public class BleManager
 	 */
 	public boolean isBleSupported()
 	{
+		enforceMainThread();
+
 		PackageManager pm = m_context.getPackageManager();
 		boolean hasBLE = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
 
@@ -972,6 +999,8 @@ public class BleManager
 	 */
 	public void turnOff()
 	{
+		enforceMainThread();
+
 		turnOff_private(false);
 	}
 
@@ -981,6 +1010,8 @@ public class BleManager
 	@Advanced
 	public BluetoothManager getNative()
 	{
+		enforceMainThread();
+
 		return m_btMngr;
 	}
 
@@ -990,6 +1021,8 @@ public class BleManager
 	@Advanced
 	public BluetoothAdapter getNativeAdapter()
 	{
+		enforceMainThread();
+
 		return getNative().getAdapter();
 	}
 
@@ -999,6 +1032,8 @@ public class BleManager
 	 */
 	public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleNode.HistoricalDataLoadListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_historicalDataLoadListener = listener_nullable;
 	}
 
@@ -1007,6 +1042,8 @@ public class BleManager
 	 */
 	public void setListener_UhOh(@Nullable(Prevalence.NORMAL) UhOhListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_uhOhThrottler.setListener(listener_nullable);
 	}
 
@@ -1016,6 +1053,8 @@ public class BleManager
 	 */
 	public void setListener_Assert(@Nullable(Prevalence.NORMAL) AssertListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_assertionListener = listener_nullable;
 	}
 
@@ -1024,6 +1063,8 @@ public class BleManager
 	 */
 	public void setListener_Discovery(@Nullable(Prevalence.NORMAL) DiscoveryListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_discoveryListener = listener_nullable;
 	}
 
@@ -1033,6 +1074,8 @@ public class BleManager
 	 */
 	public DiscoveryListener getListener_Discovery()
 	{
+		enforceMainThread();
+
 		return m_discoveryListener;
 	}
 
@@ -1041,6 +1084,8 @@ public class BleManager
 	 */
 	public void setListener_State(@Nullable(Prevalence.NORMAL) StateListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_stateTracker.setListener(listener_nullable);
 	}
 
@@ -1053,6 +1098,8 @@ public class BleManager
 	 */
 	public void setListener_DeviceState(@Nullable(Prevalence.NORMAL) BleDevice.StateListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_defaultDeviceStateListener = listener_nullable;
 	}
 
@@ -1067,6 +1114,8 @@ public class BleManager
 	 */
 	public void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) BleServer.ConnectionFailListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_defaultConnectionFailListener_server = listener_nullable;
 	}
 
@@ -1081,6 +1130,8 @@ public class BleManager
 	 */
 	public void setListener_Incoming(@Nullable(Prevalence.NORMAL) IncomingListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_defaultServerIncomingListener = listener_nullable;
 	}
 
@@ -1093,6 +1144,8 @@ public class BleManager
 	 */
 	public void setListener_ServiceAdd(@Nullable(Prevalence.NORMAL)BleServer.ServiceAddListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_serviceAddListener = listener_nullable;
 	}
 
@@ -1105,6 +1158,8 @@ public class BleManager
 	 */
 	public void setListener_ServerState(@Nullable(Prevalence.NORMAL) BleServer.StateListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_defaultServerStateListener = listener_nullable;
 	}
 
@@ -1117,6 +1172,8 @@ public class BleManager
 	 */
 	public void setListener_Outgoing(@Nullable(Prevalence.NORMAL) BleServer.OutgoingListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_defaultServerOutgoingListener = listener_nullable;
 	}
 
@@ -1131,6 +1188,8 @@ public class BleManager
 	 */
 	public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) BleDevice.ConnectionFailListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_defaultConnectionFailListener = listener_nullable;
 	}
 	
@@ -1139,6 +1198,8 @@ public class BleManager
 	 */
 	public void setListener_Bond(@Nullable(Prevalence.NORMAL) BleDevice.BondListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_defaultBondListener = listener_nullable;
 	}
 	
@@ -1149,6 +1210,8 @@ public class BleManager
 	 */
 	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) ReadWriteListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_defaultReadWriteListener = listener_nullable;
 	}
 
@@ -1157,6 +1220,8 @@ public class BleManager
 	 */
 	public void setListener_NativeState(NativeStateListener listener)
 	{
+		enforceMainThread();
+
 		m_nativeStateTracker.setListener(listener);
 	}
 
@@ -1195,6 +1260,8 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter, DiscoveryListener discoveryListener)
 	{
+		enforceMainThread();
+
 		if( discoveryListener != null )
 		{
 			setListener_Discovery(discoveryListener);
@@ -1220,6 +1287,8 @@ public class BleManager
 	 */
 	public void stopPeriodicScan(final ScanFilter filter)
 	{
+		enforceMainThread();
+
 		m_filterMngr.remove(filter);
 
 		stopPeriodicScan();
@@ -1231,6 +1300,8 @@ public class BleManager
 	 */
 	public void stopPeriodicScan()
 	{
+		enforceMainThread();
+
 		m_config.autoScanTime = Interval.DISABLED;
 
 		if( !m_doingInfiniteScan )
@@ -1305,6 +1376,8 @@ public class BleManager
 
 	public void startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
 	{
+		enforceMainThread();
+
 		m_timeNotScanning = 0.0;
 		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
 
@@ -1344,6 +1417,8 @@ public class BleManager
 	@Advanced
 	public void pushWakeLock()
 	{
+		enforceMainThread();
+
 		m_wakeLockMngr.push();
 	}
 
@@ -1353,6 +1428,8 @@ public class BleManager
 	@Advanced
 	public void popWakeLock()
 	{
+		enforceMainThread();
+
 		m_wakeLockMngr.pop();
 	}
 
@@ -1372,6 +1449,8 @@ public class BleManager
 	@Advanced
 	public boolean ASSERT(boolean condition, String message)
 	{
+		enforceMainThread();
+
 		if( !condition )
 		{
 			Exception dummyException = null;
@@ -1407,6 +1486,8 @@ public class BleManager
 	 */
 	public int getStateMask()
 	{
+		enforceMainThread();
+
 		return m_stateTracker.getState();
 	}
 
@@ -1419,6 +1500,8 @@ public class BleManager
 	@Advanced
 	public int getNativeStateMask()
 	{
+		enforceMainThread();
+
 		return m_nativeStateTracker.getState();
 	}
 
@@ -1428,6 +1511,8 @@ public class BleManager
 	 */
 	public void turnOn()
 	{
+		enforceMainThread();
+
 		if( isAny(TURNING_ON, ON) )  return;
 
 		if( is(OFF) )
@@ -1464,6 +1549,8 @@ public class BleManager
 	 */
 	public void reset(ResetListener listener)
 	{
+		enforceMainThread();
+
 		if( listener != null )
 		{
 			if( m_resetListeners != null )
@@ -1519,6 +1606,8 @@ public class BleManager
 	 */
 	public void unbondAll()
 	{
+		enforceMainThread();
+
 		m_deviceMngr.unbondAll(null, Status.CANCELLED_FROM_UNBOND);
 	}
 
@@ -1529,6 +1618,8 @@ public class BleManager
 	 */
 	public void disconnectAll()
 	{
+		enforceMainThread();
+
 		m_deviceMngr.disconnectAll();
 	}
 
@@ -1537,6 +1628,8 @@ public class BleManager
 	 */
 	public void disconnectAll_remote()
 	{
+		enforceMainThread();
+
 		m_deviceMngr.disconnectAll_remote();
 	}
 
@@ -1547,6 +1640,8 @@ public class BleManager
 	 */
 	public void undiscoverAll()
 	{
+		enforceMainThread();
+
 		m_deviceMngr.undiscoverAll();
 	}
 
@@ -1559,6 +1654,8 @@ public class BleManager
 	 */
 	public void turnOnWithIntent(Activity callingActivity, int requestCode)
 	{
+		enforceMainThread();
+
 		if( isAny(ON, TURNING_ON) )  return;
 
 		Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -1571,6 +1668,8 @@ public class BleManager
 	 */
 	public void onResume()
 	{
+		enforceMainThread();
+
 		m_triedToStartScanAfterResume = false;
 		m_isForegrounded = true;
 		m_timeForegrounded = 0.0;
@@ -1596,6 +1695,8 @@ public class BleManager
 	 */
 	public void onPause()
 	{
+		enforceMainThread();
+
 		m_triedToStartScanAfterResume = false;
 		m_isForegrounded = false;
 		m_timeForegrounded = 0.0;
@@ -1613,6 +1714,8 @@ public class BleManager
 	 */
 	void onDestroy()
 	{
+		enforceMainThread();
+
 		m_wakeLockMngr.clear();
 		m_listeners.onDestroy();
 	}
@@ -1633,6 +1736,8 @@ public class BleManager
 	 */
 	public void stopScan()
 	{
+		enforceMainThread();
+
 		m_doingInfiniteScan = false;
 
 		stopScan_private(E_Intent.INTENTIONAL);
@@ -1645,6 +1750,8 @@ public class BleManager
 	 */
 	public void stopScan(ScanFilter filter)
 	{
+		enforceMainThread();
+
 		m_filterMngr.remove(filter);
 
 		stopScan();
@@ -1667,7 +1774,9 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(String macAddress)
 	{
-		BleDevice device = m_deviceMngr.get(macAddress);
+		enforceMainThread();
+
+		final BleDevice device = m_deviceMngr.get(macAddress);
 		
 		if( device != null )  return device;
 		
@@ -1696,6 +1805,8 @@ public class BleManager
 	 */
 	private boolean hasDevice_private(BleDevice device)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.has(device);
 	}
 
@@ -1704,6 +1815,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(BleDeviceState state)
 	{
+		enforceMainThread();
+
 		for( int i = 0; i < m_deviceMngr.getCount(); i++ )
 		{
 			BleDevice device = m_deviceMngr.get(i);
@@ -1722,6 +1835,8 @@ public class BleManager
 	 */
 	public boolean hasDevice(BleDeviceState state)
 	{
+		enforceMainThread();
+
 		return !getDevice(state).isNull();
 	}
 
@@ -1730,6 +1845,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice()
 	{
+		enforceMainThread();
+
 		return hasDevices() ? getDeviceAt(0) : BleDevice.NULL;
 	}
 
@@ -1739,6 +1856,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(Object ... query)
 	{
+		enforceMainThread();
+
 		for( int i = 0; i < m_deviceMngr.getCount(); i++ )
 		{
 			BleDevice device = m_deviceMngr.get(i);
@@ -1766,6 +1885,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(final int mask_BleDeviceState)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevice(mask_BleDeviceState);
 	}
 	
@@ -1783,6 +1904,8 @@ public class BleManager
 	 */
 	public void getDevices(final ForEach_Void<BleDevice> forEach)
 	{
+		enforceMainThread();
+
 		m_deviceMngr.forEach(forEach);
 	}
 
@@ -1792,6 +1915,8 @@ public class BleManager
 	 */
 	public void getDevices(final ForEach_Void<BleDevice> forEach, final BleDeviceState state)
 	{
+		enforceMainThread();
+
 		m_deviceMngr.forEach(forEach, state, true);
 	}
 
@@ -1801,6 +1926,8 @@ public class BleManager
 	 */
 	public void getDevices(final ForEach_Breakable<BleDevice> forEach)
 	{
+		enforceMainThread();
+
 		m_deviceMngr.forEach(forEach);
 	}
 
@@ -1810,6 +1937,8 @@ public class BleManager
 	 */
 	public void getDevices(final ForEach_Breakable<BleDevice> forEach, final BleDeviceState state)
 	{
+		enforceMainThread();
+
 		m_deviceMngr.forEach(forEach, state, true);
 	}
 
@@ -1819,6 +1948,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) Iterator<String> getDevices_previouslyConnected()
 	{
+		enforceMainThread();
+
 		return m_diskOptionsMngr.getPreviouslyConnectedDevices();
 	}
 
@@ -1836,6 +1967,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List()
 	{
+		enforceMainThread();
+
 		return (List<BleDevice>) m_deviceMngr.getList().clone();
 	}
 
@@ -1845,6 +1978,8 @@ public class BleManager
 	 */
 	public int getDeviceCount()
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getCount();
 	}
 
@@ -1853,6 +1988,8 @@ public class BleManager
 	 */
 	public int getDeviceCount(BleDeviceState state)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getCount(state);
 	}
 
@@ -1862,6 +1999,8 @@ public class BleManager
 	 */
 	public int getDeviceCount(Object ... query)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getCount(query);
 	}
 
@@ -1872,6 +2011,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDeviceAt(final int index)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.get(index);
 	}
 
@@ -1895,6 +2036,8 @@ public class BleManager
 
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevice_offset(device, -1);
 	}
 
@@ -1904,6 +2047,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevice_offset(device, 1);
 	}
 
@@ -1914,6 +2059,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device, final BleDeviceState state)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevice_offset(device, -1, state, true);
 	}
 
@@ -1923,6 +2070,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device, final BleDeviceState state)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevice_offset(device, 1, state, true);
 	}
 
@@ -1932,6 +2081,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device, final Object ... query)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevice_offset(device, -1, query);
 	}
 
@@ -1941,6 +2092,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device, final Object ... query)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevice_offset(device, 1, query);
 	}
 
@@ -1950,6 +2103,8 @@ public class BleManager
 	 */
 	public boolean hasDevices()
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getCount() > 0;
 	}
 
@@ -1966,6 +2121,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final BleDeviceState state)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevices_List(state);
 	}
 
@@ -1983,6 +2140,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final Object ... query)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevices_List(query);
 	}
 	
@@ -1999,6 +2158,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final int mask_BleDeviceState)
 	{
+		enforceMainThread();
+
 		return m_deviceMngr.getDevices_List(mask_BleDeviceState);
 	}
 
@@ -2008,6 +2169,8 @@ public class BleManager
 	 */
 	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime)
 	{
+		enforceMainThread();
+
 		final BleDeviceConfig.HistoricalDataFactory factory = m_config.historicalDataFactory;
 
 		if( m_config.historicalDataFactory != null )
@@ -2052,6 +2215,8 @@ public class BleManager
 	 */
 	public BleServer getServer(final IncomingListener incomingListener)
 	{
+		enforceMainThread();
+
 		m_server = m_server != null ? m_server : new BleServer(this, /*isNull=*/false);
 
 //		bleServer.setConfig(config);
@@ -2097,6 +2262,8 @@ public class BleManager
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name, final BleDeviceConfig config)
 	{
+		enforceMainThread();
+
 		final BleDevice existingDevice = this.getDevice(macAddress);
 
 		if( !existingDevice.isNull() )
@@ -2150,6 +2317,8 @@ public class BleManager
 	 */
 	public boolean undiscover(final BleDevice device)
 	{
+		enforceMainThread();
+
 		if( device == null )							return false;
 		if( device.isNull() )							return false;
 		if( !hasDevice(device) )						return false;
@@ -2185,6 +2354,8 @@ public class BleManager
 	 */
 	public void clearSharedPreferences(final String macAddress)
 	{
+		enforceMainThread();
+
 		m_diskOptionsMngr.clear(macAddress);
 	}
 
@@ -2198,6 +2369,8 @@ public class BleManager
 	 */
 	public void clearSharedPreferences()
 	{
+		enforceMainThread();
+
 		m_diskOptionsMngr.clear();
 	}
 
@@ -2212,6 +2385,8 @@ public class BleManager
 
 	private void turnOff_private(final boolean removeAllBonds)
 	{
+		enforceMainThread();
+
 		if( isAny(TURNING_OFF, OFF) )  return;
 
 		if( is(ON) )
@@ -2501,6 +2676,8 @@ public class BleManager
 	@Advanced
 	public void update(final double timeStep_seconds)
 	{
+		enforceMainThread();
+
 		m_uhOhThrottler.update(timeStep_seconds);
 		m_taskQueue.update(timeStep_seconds);
 
@@ -2571,6 +2748,8 @@ public class BleManager
 	 */
 	public boolean isForegrounded()
 	{
+		enforceMainThread();
+
 		return m_isForegrounded;
 	}
 
@@ -2592,5 +2771,15 @@ public class BleManager
 	@Override public String toString()
 	{
 		return m_stateTracker.toString();
+	}
+
+	private void enforceMainThread()
+	{
+		final boolean allowAllThreads = BleDeviceConfig.boolOrDefault(m_config != null ? m_config.allowCallsFromAllThreads : null);
+
+		if( false == allowAllThreads )
+		{
+			Utils.enforceMainThread();
+		}
 	}
 }

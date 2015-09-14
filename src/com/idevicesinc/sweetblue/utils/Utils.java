@@ -1,33 +1,14 @@
 package com.idevicesinc.sweetblue.utils;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
-
-import com.idevicesinc.sweetblue.BleDeviceConfig;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Looper;
-import android.text.SpannableString;
-import android.text.TextPaint;
-import android.text.style.CharacterStyle;
-import android.util.Log;
 
 /**
  * Some static utility methods that are probably not very useful outside the library.
@@ -78,7 +59,7 @@ public class Utils
 	{
 		if( !isOnMainThread() )
 		{
-			throw new WrongThreadException();
+			throw new WrongThreadError();
 		}
 	}
 

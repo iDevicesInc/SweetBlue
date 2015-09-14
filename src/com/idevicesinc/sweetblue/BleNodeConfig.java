@@ -13,6 +13,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
+import com.idevicesinc.sweetblue.utils.WrongThreadError;
 
 import java.util.UUID;
 
@@ -60,6 +61,15 @@ public class BleNodeConfig
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Nullable.Prevalence.NORMAL)
 	public Boolean alwaysUseAutoConnect							= false;
+
+	/**
+	 * Default is <code>false</code> - SweetBlue, for the sake of performance, stability, and simplicity, requires all back and forth to take place on the main thread,
+	 * with {@link WrongThreadError} thrown if not.
+	 * Versions less than v2 did not enforce this, but feedback indicated that the threading model was unclear and some people would kick
+	 * off SweetBlue operations on alternate threads, which could definitely lead to problems. This remains as an option to help older code bases transitioning to >= v2
+	 */
+	@Nullable(Nullable.Prevalence.RARE)
+	public Boolean allowCallsFromAllThreads						= false;
 
 	/**
 	 * Default is <code>true</code> - controls whether the library is allowed to optimize fast disconnect/reconnect cycles
@@ -265,13 +275,23 @@ public class BleNodeConfig
 			@Override public String toString()
 			{
 				return Utils_String.toString
-				(
-					this.getClass(),
-					"macAddress",		macAddress(),
-					"charUuid",			m_endpoint.getManager().getLogger().charName(charUuid()),
-					"source",			source(),
-					"data",				data()
-				);
+						(
+								this.getClass(),
+								"macAddress", macAddress(),
+								"charUuid", m_endpoint.getManager().getLogger().charName(charUuid()),
+								"source", source(),
+								"data", data()
+						);
+			}
+
+			public static boolean includesMemory(final int enum_PersistenceLevel)
+			{
+				return enum_PersistenceLevel == PersistenceLevel_MEMORY || enum_PersistenceLevel == PersistenceLevel_BOTH;
+			}
+
+			public static boolean includesDisk(final int enum_PersistenceLevel)
+			{
+				return enum_PersistenceLevel == PersistenceLevel_DISK || enum_PersistenceLevel == PersistenceLevel_BOTH;
 			}
 		}
 
@@ -286,16 +306,6 @@ public class BleNodeConfig
 		 */
 		public static class Please
 		{
-			/*package*/ static boolean includesMemory(final int enum_PersistenceLevel)
-			{
-				return enum_PersistenceLevel == PersistenceLevel_MEMORY || enum_PersistenceLevel == PersistenceLevel_BOTH;
-			}
-
-			/*package*/ static boolean includesDisk(final int enum_PersistenceLevel)
-			{
-				return enum_PersistenceLevel == PersistenceLevel_DISK || enum_PersistenceLevel == PersistenceLevel_BOTH;
-			}
-
 			final int m_persistenceLevel;
 
 			private byte[] m_amendedData = null;
@@ -994,7 +1004,7 @@ public class BleNodeConfig
 		}
 		else if( server_nullable != null )
 		{
-			filter_specific = server_nullable.conf_endpoint().taskTimeoutRequestFilter;
+			filter_specific = server_nullable.conf_node().taskTimeoutRequestFilter;
 		}
 		else
 		{

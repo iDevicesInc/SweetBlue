@@ -7,9 +7,9 @@ import com.idevicesinc.sweetblue.*;
  * must be called from the main thread, similar to how Android will complain if you try to edit a {@link android.view.View}
  * from another thread.
  */
-public class WrongThreadException extends RuntimeException
+public class WrongThreadError extends Error
 {
-	public WrongThreadException()
+	public WrongThreadError()
 	{
 		super("This method must be called on the main thread.");
 	}

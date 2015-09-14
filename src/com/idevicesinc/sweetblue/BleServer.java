@@ -27,6 +27,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
+import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -1247,12 +1248,19 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual server.
 	 */
-	public void setConfig(final BleNodeConfig config)
+	public void setConfig(final BleNodeConfig config_nullable)
 	{
-		m_config = config;
+		final boolean allowAllThreads = BleDeviceConfig.bool(config_nullable != null ? config_nullable.allowCallsFromAllThreads : null, conf_mngr().allowCallsFromAllThreads);
+
+		if( false == allowAllThreads )
+		{
+			Utils.enforceMainThread();
+		}
+
+		m_config = config_nullable;
 	}
 
-	@Override /*package*/ BleNodeConfig conf_endpoint()
+	@Override /*package*/ BleNodeConfig conf_node()
 	{
 		return m_config != null ? m_config : conf_mngr();
 	}
@@ -1262,6 +1270,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.StateListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_stateTracker.setListener(listener_nullable);
 	}
 
@@ -1270,6 +1280,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void setListener_Incoming(@Nullable(Nullable.Prevalence.NORMAL) final IncomingListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_incomingListener = listener_nullable;
 	}
 
@@ -1279,6 +1291,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void setListener_ServiceAdd(@Nullable(Nullable.Prevalence.NORMAL) final ServiceAddListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_serviceMngr.setListener(listener_nullable);
 	}
 
@@ -1287,6 +1301,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.RARE) IncomingListener getListener_Incoming()
 	{
+		enforceMainThread();
+
 		return m_incomingListener;
 	}
 
@@ -1298,6 +1314,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void setListener_Outgoing(final OutgoingListener listener)
 	{
+		enforceMainThread();
+
 		m_outgoingListener_default = listener;
 	}
 
@@ -1306,6 +1324,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void setListener_ConnectionFail(final ConnectionFailListener listener)
 	{
+		enforceMainThread();
+
 		m_connectionFailMngr.setListener(listener);
 	}
 
@@ -1442,6 +1462,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 	private OutgoingListener.OutgoingEvent sendNotification_private(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData, final OutgoingListener listener, final boolean isIndication)
 	{
+		enforceMainThread();
+
 		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
 
 		if( isNull() )
@@ -1487,6 +1509,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	@Advanced
 	public @Nullable(Nullable.Prevalence.RARE) BluetoothGattServer getNative()
 	{
+		enforceMainThread();
+
 		return m_nativeWrapper.getNative();
 	}
 
@@ -1498,6 +1522,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	@Advanced
 	public int getStateMask(final String macAddress)
 	{
+		enforceMainThread();
+
 		return m_stateTracker.getStateMask(macAddress);
 	}
 
@@ -1593,6 +1619,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
+		enforceMainThread();
+
 		m_nativeWrapper.clearImplicitDisconnectIgnoring(nativeDevice.getAddress());
 
 		if( stateListener != null )
@@ -1649,6 +1677,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 	private boolean disconnect_private(final String macAddress, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
 	{
+		enforceMainThread();
+
 		final boolean addTask = true;
 
 		m_connectionFailMngr.onExplicitDisconnect(macAddress);
@@ -1679,6 +1709,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 	/*package*/ void disconnect_internal(final ServiceAddListener.Status status_serviceAdd, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
 	{
+		enforceMainThread();
+
 		getClients(new ForEach_Void<String>()
 		{
 			@Override public void next(final String next)
@@ -1764,6 +1796,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final BleServer server_nullable)
 	{
+		enforceMainThread();
+
 		if (server_nullable == null)												return false;
 		if (server_nullable == this)												return true;
 		if (server_nullable.getNative() == null || this.getNative() == null)		return false;
@@ -1779,6 +1813,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final Object object_nullable)
 	{
+		enforceMainThread();
+
 		if( object_nullable == null )  return false;
 
 		if (object_nullable instanceof BleServer)
@@ -1822,6 +1858,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.addService(service, listener);
 	}
 
@@ -1832,6 +1870,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService removeService(final UUID serviceUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.remove(serviceUuid);
 	}
 
@@ -1840,6 +1880,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void removeAllServices()
 	{
+		enforceMainThread();
+
 		m_serviceMngr.removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
 	}
 
@@ -1851,6 +1893,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
 	}
 
@@ -1859,6 +1903,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 	}
 
@@ -1870,6 +1916,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getServiceDirectlyFromNativeServer(uuid);
 	}
 
@@ -1881,6 +1929,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getServices();
 	}
 
@@ -1891,6 +1941,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getServices_List();
 	}
 
@@ -1902,6 +1954,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristics(null);
 	}
 
@@ -1912,6 +1966,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristics_List(null);
 	}
 
@@ -1922,6 +1978,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(final UUID serviceUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristics(serviceUuid);
 	}
 
@@ -1932,6 +1990,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(final UUID serviceUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristics_List(serviceUuid);
 	}
 
@@ -1941,6 +2001,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, 0x0);
 	}
 
@@ -1950,6 +2012,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, state.bit());
 	}
 
@@ -1959,6 +2023,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
 
@@ -1968,6 +2034,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, 0x0);
 	}
 
@@ -1977,6 +2045,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, state.bit());
 	}
 
@@ -1986,6 +2056,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
 
@@ -1994,6 +2066,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients()
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients(0x0);
 	}
 
@@ -2002,6 +2076,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients(state.bit());
 	}
 
@@ -2010,6 +2086,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients(BleServerState.toBits(states));
 	}
 
@@ -2018,6 +2096,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List()
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients_List(0x0);
 	}
 
@@ -2026,6 +2106,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState state)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients_List(state.bit());
 	}
 
@@ -2034,6 +2116,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients_List(BleServerState.toBits(states));
 	}
 
@@ -2042,6 +2126,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public int getClientCount()
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClientCount();
 	}
 
@@ -2050,6 +2136,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public int getClientCount(final BleServerState state)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClientCount(state.bit());
 	}
 
@@ -2058,6 +2146,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public int getClientCount(final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClientCount(BleServerState.toBits(states));
 	}
 
