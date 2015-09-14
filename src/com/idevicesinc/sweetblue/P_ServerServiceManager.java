@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
-import android.util.MutableBoolean;
+import com.idevicesinc.sweetblue.utils.Pointer;
 
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
@@ -373,7 +373,7 @@ class P_ServerServiceManager
 		}
 		else
 		{
-			final MutableBoolean mutableBool = new MutableBoolean(false);
+			final Pointer<Boolean> mutableBool = new Pointer<Boolean>(false);
 
 			getTasks(new ForEach_Breakable<P_Task_AddService>()
 			{
