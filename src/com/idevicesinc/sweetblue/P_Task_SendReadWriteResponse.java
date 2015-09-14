@@ -71,7 +71,7 @@ class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection impl
 		}
 		else
 		{
-			// SUCCESS, and we'll wait a half second or so (for now hardcoded) until success, cause there's no callback for this one.
+			// SUCCESS, and we'll wait a half second or so (for now hardcoded) until actually succeeding, cause there's no native callback for this one.
 		}
 	}
 

@@ -601,22 +601,34 @@ public class BleNodeConfig
 			 */
 			LONG_TERM__SHOULD_TRY_AGAIN;
 
-			/*package*/ boolean isShouldTryAgain()
+			/**
+			 * Is this either {@link #SHORT_TERM__SHOULD_CONTINUE} or {@link #LONG_TERM__SHOULD_TRY_AGAIN}.
+			 */
+			public boolean isShouldTryAgain()
 			{
 				return this == SHORT_TERM__SHOULD_TRY_AGAIN || this == LONG_TERM__SHOULD_TRY_AGAIN;
 			}
 
-			/*package*/ boolean isShouldContinue()
+			/**
+			 * Is this either {@link #SHORT_TERM__SHOULD_CONTINUE} or {@link #LONG_TERM__SHOULD_CONTINUE}.
+			 */
+			public boolean isShouldContinue()
 			{
 				return this == SHORT_TERM__SHOULD_CONTINUE || this == LONG_TERM__SHOULD_CONTINUE;
 			}
 
-			/*package*/ boolean isShortTerm()
+			/**
+			 * Is this either {@link #SHORT_TERM__SHOULD_TRY_AGAIN} or {@link #SHORT_TERM__SHOULD_CONTINUE}.
+			 */
+			public boolean isShortTerm()
 			{
 				return this == SHORT_TERM__SHOULD_TRY_AGAIN || this == SHORT_TERM__SHOULD_CONTINUE;
 			}
 
-			/*package*/ boolean isLongTerm()
+			/**
+			 * Is this either {@link #LONG_TERM__SHOULD_TRY_AGAIN} or {@link #LONG_TERM__SHOULD_CONTINUE}.
+			 */
+			public boolean isLongTerm()
 			{
 				return this == LONG_TERM__SHOULD_TRY_AGAIN || this == LONG_TERM__SHOULD_CONTINUE;
 			}
