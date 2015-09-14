@@ -4232,6 +4232,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		if( m_reconnectMngr_shortTerm != null )  m_reconnectMngr_shortTerm.stop();
 		if( m_rssiPollMngr != null )  m_rssiPollMngr.stop();
 		if( m_rssiPollMngr_auto != null )  m_rssiPollMngr_auto.stop();
+		if( m_pollMngr != null )  m_pollMngr.clear();
 
 		stateTracker_main().set(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCOVERED, false, ADVERTISING, false, m_bondMngr.getNativeBondingStateOverrides(), DISCONNECTED, true);
 	}

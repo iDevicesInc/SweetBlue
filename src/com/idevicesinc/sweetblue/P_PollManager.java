@@ -237,6 +237,11 @@ class P_PollManager
 	{
 		m_device = device;
 	}
+
+	void clear()
+	{
+		m_entries.clear();
+	}
 	
 	void startPoll(final UUID serviceUuid, final UUID charUuid, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
 	{
