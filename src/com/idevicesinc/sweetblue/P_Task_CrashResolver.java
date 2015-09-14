@@ -4,6 +4,22 @@ package com.idevicesinc.sweetblue;
 class P_Task_CrashResolver extends PA_Task_RequiresBleOn 
 {
 	private final P_BluetoothCrashResolver m_resolver;
+
+	private volatile boolean m_startedRecovery = false;
+
+	private final Runnable m_updateRunnable = new Runnable()
+	{
+		@Override public void run()
+		{
+			if( getState() == PE_TaskState.EXECUTING && true == m_startedRecovery )
+			{
+				if( false == m_resolver.isRecoveryInProgress() )
+				{
+					succeed();
+				}
+			}
+		}
+	};
 	
 	public P_Task_CrashResolver(BleManager manager, P_BluetoothCrashResolver resolver)
 	{
@@ -14,14 +30,22 @@ class P_Task_CrashResolver extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		if( m_resolver.isRecoveryInProgress() )
+		if( true == m_resolver.isRecoveryInProgress() )
 		{
-			redundant();
-			
-			return;
+			getManager().ASSERT(false, "CrashResolver recovery already in progress!");
 		}
-		
-		m_resolver.forceFlush();
+		else
+		{
+			getQueue().getExecuteHandler().post(new Runnable()
+			{
+				@Override public void run()
+				{
+					m_resolver.forceFlush();
+
+					m_startedRecovery = true;
+				}
+			});
+		}
 	}
 	
 	@Override public PE_TaskPriority getPriority()
@@ -31,10 +55,7 @@ class P_Task_CrashResolver extends PA_Task_RequiresBleOn
 	
 	@Override protected void update(double timeStep)
 	{
-		if( !m_resolver.isRecoveryInProgress() )
-		{
-			succeed();
-		}
+		getQueue().getExecuteHandler().post(m_updateRunnable);
 	}
 	
 	@Override protected BleTask getTaskType()

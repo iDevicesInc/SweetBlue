@@ -647,12 +647,12 @@ public class BleNodeConfig
 			private BleNode m_node;
 
 			/**
-			 * Tried to cast {@link #node()} to a {@link BleDevice}, otherwise returns {@link BleDevice#NULL}.
+			 * Tries to cast {@link #node()} to a {@link BleDevice}, otherwise returns {@link BleDevice#NULL}.
 			 */
 			public BleDevice device(){  return node().cast(BleDevice.class);  }
 
 			/**
-			 * Tried to cast {@link #node()} to a {@link BleServer}, otherwise returns {@link BleServer#NULL}.
+			 * Tries to cast {@link #node()} to a {@link BleServer}, otherwise returns {@link BleServer#NULL}.
 			 */
 			public BleServer server(){  return node().cast(BleServer.class);  }
 
