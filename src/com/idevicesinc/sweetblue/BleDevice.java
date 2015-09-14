@@ -3030,6 +3030,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		final boolean alreadyDisconnected = is(DISCONNECTED);
 		final boolean reconnecting_longTerm = is(RECONNECTING_LONG_TERM);
 
+		if( status == Status.EXPLICIT_DISCONNECT )
+		{
+			m_pollMngr.clear();
+		}
+
 		disconnectWithReason(/*priority=*/null, status, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
 
 		return !alreadyDisconnected || reconnecting_longTerm;
