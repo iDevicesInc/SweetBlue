@@ -808,7 +808,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Whether this reason honors a {@link BleServer.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
+			 * Whether this reason honors a {@link BleNode.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
 			 * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
 			 */
 			public boolean allowsRetry()
@@ -917,7 +917,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 			/**
 			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
-			 * {@link BleDeviceConfig.ReconnectFilter.ReconnectRequestEvent#connectionFailInfo()} in certain situations.
+			 * {@link BleNodeConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
 			 */
 			@Override public boolean isNull()
 			{
@@ -978,7 +978,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link ConnectionFailListener.Please#retryWithAutoConnectTrue()}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link BleNode.ConnectionFailListener.Please#retryWithAutoConnectTrue()}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 

@@ -994,10 +994,10 @@ public class BleManager
 	}
 
 	/**
-	 * Sets a default backup {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener} that will be invoked
+	 * Sets a default backup {@link BleNode.HistoricalDataLoadListener} that will be invoked
 	 * for all historical data loads to memory for all uuids for all devices.
 	 */
-	public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleDevice.HistoricalDataLoadListener listener_nullable)
+	public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleNode.HistoricalDataLoadListener listener_nullable)
 	{
 		m_historicalDataLoadListener = listener_nullable;
 	}
@@ -1028,7 +1028,7 @@ public class BleManager
 	}
 
 	/**
-	 * Returns the discovery listener set with {@link #setListener_Discovery(com.idevicesinc.sweetblue.BleManager.DiscoveryListener)} or
+	 * Returns the discovery listener set with {@link #setListener_Discovery(BleManager.DiscoveryListener)} or
 	 * {@link BleManagerConfig#defaultDiscoveryListener}, or <code>null</code> if not set.
 	 */
 	public DiscoveryListener getListener_Discovery()

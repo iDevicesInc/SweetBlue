@@ -225,8 +225,8 @@ public abstract class BleNode implements UsesCustomNull
 
 	/**
 	 * A callback that is used by various overloads of {@link BleDevice#loadHistoricalData()} that accept instances hereof.
-	 * You can also set default listeners on {@link BleDevice#setListener_HistoricalDataLoad(HistoricalDataLoadListener)}
-	 * and {@link BleManager#setListener_HistoricalDataLoad(BleDevice.HistoricalDataLoadListener)}.
+	 * You can also set default listeners on {@link BleDevice#setListener_HistoricalDataLoad(BleNode.HistoricalDataLoadListener)}
+	 * and {@link BleManager#setListener_HistoricalDataLoad(BleNode.HistoricalDataLoadListener)}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface HistoricalDataLoadListener

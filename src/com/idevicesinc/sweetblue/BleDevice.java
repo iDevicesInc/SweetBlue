@@ -175,7 +175,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			REMOTE_GATT_FAILURE,
 
 			/**
-			 * Operation took longer than time specified in {@link BleDeviceConfig#taskTimeoutRequestFilter} so we cut it loose.
+			 * Operation took longer than time specified in {@link BleNodeConfig#taskTimeoutRequestFilter} so we cut it loose.
 			 */
 			TIMED_OUT;
 
@@ -301,21 +301,21 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Returns the {@link BleDeviceConfig.HistoricalDataLogFilter.Source} equivalent
-			 * for this {@link BleDevice.ReadWriteListener.Type}, or {@link BleDeviceConfig.HistoricalDataLogFilter.Source#NULL}.
+			 * Returns the {@link BleNodeConfig.HistoricalDataLogFilter.Source} equivalent
+			 * for this {@link BleDevice.ReadWriteListener.Type}, or {@link BleNodeConfig.HistoricalDataLogFilter.Source#NULL}.
 			 */
-			public BleDeviceConfig.HistoricalDataLogFilter.Source toHistoricalDataSource()
+			public BleNodeConfig.HistoricalDataLogFilter.Source toHistoricalDataSource()
 			{
 				switch(this)
 				{
-					case READ:					return BleDeviceConfig.HistoricalDataLogFilter.Source.READ;
-					case POLL:					return BleDeviceConfig.HistoricalDataLogFilter.Source.POLL;
-					case NOTIFICATION:			return BleDeviceConfig.HistoricalDataLogFilter.Source.NOTIFICATION;
-					case INDICATION:			return BleDeviceConfig.HistoricalDataLogFilter.Source.INDICATION;
-					case PSUEDO_NOTIFICATION:	return BleDeviceConfig.HistoricalDataLogFilter.Source.PSUEDO_NOTIFICATION;
+					case READ:					return BleNodeConfig.HistoricalDataLogFilter.Source.READ;
+					case POLL:					return BleNodeConfig.HistoricalDataLogFilter.Source.POLL;
+					case NOTIFICATION:			return BleNodeConfig.HistoricalDataLogFilter.Source.NOTIFICATION;
+					case INDICATION:			return BleNodeConfig.HistoricalDataLogFilter.Source.INDICATION;
+					case PSUEDO_NOTIFICATION:	return BleNodeConfig.HistoricalDataLogFilter.Source.PSUEDO_NOTIFICATION;
 				}
 
-				return BleDeviceConfig.HistoricalDataLogFilter.Source.NULL;
+				return BleNodeConfig.HistoricalDataLogFilter.Source.NULL;
 			}
 
 			@Override public boolean isNull()
@@ -845,7 +845,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Whether this reason honors a {@link Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
+			 * Whether this status honors a {@link BleNode.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
 			 * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
 			 */
 			public boolean allowsRetry()
@@ -1020,7 +1020,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 			/**
 			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
-			 * {@link BleDeviceConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
+			 * {@link BleNodeConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
 			 */
 			@Override public boolean isNull()
 			{
@@ -1028,8 +1028,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Forwards {@link com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status#shouldBeReportedToUser()}
-			 * using {@link #status()}.
+			 * Forwards {@link BleDevice.ConnectionFailListener.Status#shouldBeReportedToUser()} using {@link #status()}.
 			 */
 			public boolean shouldBeReportedToUser()
 			{
@@ -1075,7 +1074,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		/**
 		 * Return value is ignored if device is either {@link BleDeviceState#RECONNECTING_LONG_TERM} or reason
 		 * {@link Status#allowsRetry()} is <code>false</code>. If the device is {@link BleDeviceState#RECONNECTING_LONG_TERM}
-		 * then authority is deferred to {@link BleDeviceConfig.ReconnectFilter}.
+		 * then authority is deferred to {@link BleNodeConfig.ReconnectFilter}.
 		 * <br><br>
 		 * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also lets
 		 * the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
@@ -1109,7 +1108,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link Please#retryWithAutoConnectTrue()}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link BleNode.ConnectionFailListener.Please#retryWithAutoConnectTrue()}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 
@@ -1723,10 +1722,10 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Sets a default backup {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener} that will be invoked
+	 * Sets a default backup {@link BleNode.HistoricalDataLoadListener} that will be invoked
 	 * for all historical data loads to memory for all uuids.
 	 */
-	public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final HistoricalDataLoadListener listener_nullable)
+	public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleNode.HistoricalDataLoadListener listener_nullable)
 	{
 		if( isNull() )  return;
 
@@ -1979,7 +1978,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns <code>true</code> if the historical data for all historical data for
 	 * this device is loaded into memory.
-	 * Use {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener}
+	 * Use {@link BleNode.HistoricalDataLoadListener}
 	 * to listen for when the load actually completes. If {@link #hasHistoricalData(UUID)}
 	 * returns <code>false</code> then this will also always return <code>false</code>.
 	 */
@@ -1991,7 +1990,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 	/**
 	 * Returns <code>true</code> if the historical data for a given uuid is loaded into memory.
-	 * Use {@link com.idevicesinc.sweetblue.BleDevice.HistoricalDataLoadListener}
+	 * Use {@link BleNode.HistoricalDataLoadListener}
 	 * to listen for when the load actually completes. If {@link #hasHistoricalData(UUID)}
 	 * returns <code>false</code> then this will also always return <code>false</code>.
 	 */
@@ -2007,8 +2006,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * and {@link ReadWriteListener.ReadWriteEvent#wasSuccess()} both return <code>true</code> then {@link ReadWriteListener.ReadWriteEvent#data()},
 	 * will be cached and is retrievable by this method.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see BleNodeConfig.HistoricalDataLogFilter
+	 * @see BleNodeConfig.DefaultHistoricalDataLogFilter
 	 *
 	 * @return The cached value from a previous read or notify, or {@link HistoricalData#NULL} otherwise.
 	 */
@@ -2021,8 +2020,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns an iterator that will iterate through all {@link HistoricalData} entries.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid)
@@ -2033,8 +2032,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns an iterator that will iterate through all {@link HistoricalData} entries within the range provided.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid, final EpochTimeRange range)
@@ -2047,8 +2046,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Provides all historical data through the "for each" provided.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 *
 	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
 	 */
@@ -2061,8 +2060,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Provides all historical data through the "for each" provided within the range provided.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see BleNodeConfig.HistoricalDataLogFilter
+	 * @see BleNodeConfig.DefaultHistoricalDataLogFilter
 	 *
 	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
 	 */
@@ -2077,8 +2076,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Provides all historical data through the "for each" provided.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 *
 	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
 	 */
@@ -2091,8 +2090,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Provides all historical data through the "for each" provided within the range provided.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 *
 	 * @return <code>true</code> if there are any entries, <code>false</code> otherwise.
 	 */
@@ -2109,8 +2108,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * will return the earliest {@link HistoricalData}. Use in combination with {@link #getHistoricalDataCount(java.util.UUID)} to iterate
 	 * "manually" through this device's historical data for the given characteristic.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final int offsetFromStart)
@@ -2121,8 +2120,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Same as {@link #getHistoricalData_atOffset(java.util.UUID, int)} but offset is relative to the time range provided.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final EpochTimeRange range, final int offsetFromStart)
@@ -2135,8 +2134,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns the number of historical data entries that have been logged for the device's given characteristic.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public int getHistoricalDataCount(final UUID uuid)
@@ -2148,8 +2147,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Returns the number of historical data entries that have been logged
 	 * for the device's given characteristic within the range provided.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public int getHistoricalDataCount(final UUID uuid, final EpochTimeRange range)
@@ -2162,8 +2161,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns <code>true</code> if there is any historical data at all for this device.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean hasHistoricalData()
@@ -2174,8 +2173,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns <code>true</code> if there is any historical data at all for this device within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean hasHistoricalData(final EpochTimeRange range)
@@ -2188,8 +2187,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns <code>true</code> if there is any historical data for the given uuid.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean hasHistoricalData(final UUID uuid)
@@ -2200,8 +2199,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns <code>true</code> if there is any historical data for any of the given uuids.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean hasHistoricalData(final UUID[] uuids)
@@ -2220,8 +2219,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Returns <code>true</code> if there is any historical data for the given uuid within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean hasHistoricalData(final UUID uuid, final EpochTimeRange range)
@@ -2237,15 +2236,15 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * After you connect with this device and download the log you can add it manually here.
 	 * Really you can use this for any arbitrary historical data though, even if it's not associated with a characteristic.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void addHistoricalData(final UUID uuid, final byte[] data, final EpochTime epochTime)
 	{
 		if( isNull() ) return;
 
-		m_historicalDataMngr.add_single(uuid, data, epochTime, BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
+		m_historicalDataMngr.add_single(uuid, data, epochTime, BleNodeConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
 	}
 
 	/**
@@ -2260,36 +2259,36 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but uses {@link System#currentTimeMillis()} for the timestamp.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void addHistoricalData(final UUID uuid, final byte[] data)
 	{
 		if( isNull() ) return;
 
-		m_historicalDataMngr.add_single(uuid, data, new EpochTime(), BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
+		m_historicalDataMngr.add_single(uuid, data, new EpochTime(), BleNodeConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
 	}
 
 	/**
 	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)}.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void addHistoricalData(final UUID uuid, final HistoricalData historicalData)
 	{
 		if( isNull() ) return;
 
-		m_historicalDataMngr.add_single(uuid, historicalData, BleDeviceConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
+		m_historicalDataMngr.add_single(uuid, historicalData, BleNodeConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
 	}
 
 	/**
 	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void addHistoricalData(final UUID uuid, final Iterator<HistoricalData> historicalData)
@@ -2302,8 +2301,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void addHistoricalData(final UUID uuid, final List<HistoricalData> historicalData)
@@ -2314,8 +2313,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Same as {@link #addHistoricalData(UUID, byte[], EpochTime)} but for large datasets this is more efficient when writing to disk.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void addHistoricalData(final UUID uuid, final ForEach_Returning<HistoricalData> historicalData)
@@ -3474,8 +3473,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData()
@@ -3488,8 +3487,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData(final long count)
@@ -3500,8 +3499,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData(final EpochTimeRange range)
@@ -3512,8 +3511,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData(final EpochTimeRange range, final long count)
@@ -3527,8 +3526,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID}.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData(final UUID uuid)
@@ -3553,8 +3552,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID}.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData(final UUID uuid, final long count)
@@ -3566,8 +3565,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID} within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData(final UUID uuid, final EpochTimeRange range)
@@ -3579,8 +3578,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID} within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData(final UUID uuid, final EpochTimeRange range, final long count)
@@ -3593,8 +3592,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData_memoryOnly()
@@ -3605,8 +3604,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData_memoryOnly(final long count)
@@ -3617,8 +3616,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData_memoryOnly(final EpochTimeRange range)
@@ -3629,8 +3628,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData_memoryOnly(final EpochTimeRange range, final long count)
@@ -3644,8 +3643,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID}.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData_memoryOnly(final UUID uuid)
@@ -3657,8 +3656,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID}.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData_memoryOnly(final UUID uuid, final long count)
@@ -3670,8 +3669,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Clears all {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID} within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData_memoryOnly(final UUID characteristicUuid, final EpochTimeRange range)
@@ -3683,8 +3682,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Clears the first <code>count</code> number of {@link com.idevicesinc.sweetblue.utils.HistoricalData} tracked by this device for a particular
 	 * characteristic {@link java.util.UUID} within the given range.
 	 *
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter
-	 * @see com.idevicesinc.sweetblue.BleDeviceConfig.DefaultHistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter
+	 * @see com.idevicesinc.sweetblue.BleNodeConfig.DefaultHistoricalDataLogFilter
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public void clearHistoricalData_memoryOnly(final UUID characteristicUuid, final EpochTimeRange range, final long count)
@@ -5036,7 +5035,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		if( event.wasSuccess() && event.isRead() && event.target() == ReadWriteListener.Target.CHARACTERISTIC )
 		{
 			final EpochTime timestamp = new EpochTime();
-			final BleDeviceConfig.HistoricalDataLogFilter.Source source = event.type().toHistoricalDataSource();
+			final BleNodeConfig.HistoricalDataLogFilter.Source source = event.type().toHistoricalDataSource();
 
 			m_historicalDataMngr.add_single(event.charUuid(), event.data(), timestamp, source);
 		}

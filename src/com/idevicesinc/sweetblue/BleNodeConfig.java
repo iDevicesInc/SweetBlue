@@ -49,7 +49,7 @@ public class BleNodeConfig
 	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
-	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link BleDevice.ConnectionFailListener.Please}
+	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link BleNode.ConnectionFailListener.Please}
 	 * returned from {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} (or the equivalent
 	 * structures that are inner structures of {@link BleServer}).
 	 * <br><br>
@@ -80,7 +80,7 @@ public class BleNodeConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Nullable.Prevalence.RARE)
-	public TaskTimeoutRequestFilter taskTimeoutRequestFilter = new DefaultTaskTimeoutRequestFilter();
+	public TaskTimeoutRequestFilter taskTimeoutRequestFilter				= new DefaultTaskTimeoutRequestFilter();
 
 	/**
 	 * Default is an instance of {@link BleNodeConfig.DefaultHistoricalDataLogFilter} -
@@ -199,7 +199,7 @@ public class BleNodeConfig
 		}
 
 		/**
-		 * Event passed to {@link BleDeviceConfig.HistoricalDataLogFilter#onEvent(HistoricalDataLogEvent)} that provides
+		 * Event passed to {@link BleNodeConfig.HistoricalDataLogFilter#onEvent(HistoricalDataLogEvent)} that provides
 		 * information you can use to determine whether or not {@link HistoricalDataLogEvent#data()} should be logged.
 		 */
 		public static class HistoricalDataLogEvent
@@ -267,10 +267,10 @@ public class BleNodeConfig
 				return Utils_String.toString
 				(
 					this.getClass(),
-					"macAddress", macAddress(),
-					"charUuid", m_endpoint.getManager().getLogger().charName(charUuid()),
-					"source", source(),
-					"data", data()
+					"macAddress",		macAddress(),
+					"charUuid",			m_endpoint.getManager().getLogger().charName(charUuid()),
+					"source",			source(),
+					"data",				data()
 				);
 			}
 		}
@@ -281,7 +281,7 @@ public class BleNodeConfig
 		/*package*/ static int PersistenceLevel_BOTH	= 3;
 
 		/**
-		 * Special value returned from {@link BleDeviceConfig.HistoricalDataLogFilter#onEvent(HistoricalDataLogEvent)}
+		 * Special value returned from {@link BleNodeConfig.HistoricalDataLogFilter#onEvent(HistoricalDataLogEvent)}
 		 * that determines if/how {@link HistoricalDataLogFilter.HistoricalDataLogEvent#data()} will get logged.
 		 */
 		public static class Please
@@ -449,11 +449,11 @@ public class BleNodeConfig
 	public static interface TaskTimeoutRequestFilter
 	{
 		/**
-		 * Event passed to {@link TaskTimeoutRequestFilter#onEvent(TimeoutRequestEvent)} that provides
+		 * Event passed to {@link TaskTimeoutRequestFilter#onEvent(TaskTimeoutRequestEvent)} that provides
 		 * information about the {@link BleTask} that will soon be executed.
 		 */
 		@Immutable
-		public static class TimeoutRequestEvent
+		public static class TaskTimeoutRequestEvent
 		{
 			/**
 			 * The {@link BleDevice} associated with the {@link #task()}, or {@link BleDevice#NULL} if
@@ -504,10 +504,34 @@ public class BleNodeConfig
 				m_charUuid = charUuid;
 				m_descUuid = descUuid;
 			}
+
+			@Override public String toString()
+			{
+				if( device() != BleDevice.NULL )
+				{
+					return Utils_String.toString
+					(
+						this.getClass(),
+						"device",		device(),
+						"task",			task(),
+						"charUuid",		charUuid()
+					);
+				}
+				else
+				{
+					return Utils_String.toString
+					(
+						this.getClass(),
+						"server",		server(),
+						"task",			task(),
+						"charUuid",		charUuid()
+					);
+				}
+			}
 		}
 
 		/**
-		 * Use static constructor methods to create instances to return from {@link TaskTimeoutRequestFilter#onEvent(TimeoutRequestEvent)}.
+		 * Use static constructor methods to create instances to return from {@link TaskTimeoutRequestFilter#onEvent(TaskTimeoutRequestEvent)}.
 		 */
 		@Immutable
 		public static class Please
@@ -541,7 +565,7 @@ public class BleNodeConfig
 		/**
 		 * Implement this to have fine-grained control over {@link BleTask} timeout behavior.
 		 */
-		Please onEvent(TimeoutRequestEvent e);
+		Please onEvent(TaskTimeoutRequestEvent e);
 	}
 
 	/**
@@ -554,7 +578,7 @@ public class BleNodeConfig
 
 		private static final Please DEFAULT_RETURN_VALUE = Please.setTimeoutFor(Interval.secs(DEFAULT_TASK_TIMEOUT));
 
-		@Override public Please onEvent(TimeoutRequestEvent e)
+		@Override public Please onEvent(TaskTimeoutRequestEvent e)
 		{
 			if( e.task() == BleTask.BOND )
 			{
@@ -635,7 +659,7 @@ public class BleNodeConfig
 		}
 
 		/**
-		 * Struct passed to {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to aid in making a decision.
+		 * Struct passed to {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)} to aid in making a decision.
 		 */
 		@Immutable
 		public static class ReconnectEvent
@@ -669,7 +693,7 @@ public class BleNodeConfig
 			private Interval m_totalTimeReconnecting;
 
 			/**
-			 * The previous {@link Interval} returned through {@link com.idevicesinc.sweetblue.BleNodeConfig.ReconnectFilter.Please#retryIn(Interval)},
+			 * The previous {@link Interval} returned through {@link BleNodeConfig.ReconnectFilter.Please#retryIn(Interval)},
 			 * or {@link Interval#ZERO} for the first invocation.
 			 */
 			public Interval previousDelay(){  return m_previousDelay;  }
@@ -759,8 +783,8 @@ public class BleNodeConfig
 			}
 
 			/**
-			 * When {@link ReconnectEvent#type()} is either {@link Type#SHORT_TERM__SHOULD_TRY_AGAIN} or {@link Type#LONG_TERM__SHOULD_TRY_AGAIN},
-			 * return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to instantly reconnect.
+			 * When {@link BleNodeConfig.ReconnectFilter.ReconnectEvent#type()} is either {@link Type#SHORT_TERM__SHOULD_TRY_AGAIN} or {@link Type#LONG_TERM__SHOULD_TRY_AGAIN},
+			 * return this from {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)} to instantly reconnect.
 			 */
 			public static Please retryInstantly()
 			{
@@ -768,7 +792,7 @@ public class BleNodeConfig
 			}
 
 			/**
-			 * Return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to stop a reconnect attempt loop.
+			 * Return this from {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)} to stop a reconnect attempt loop.
 			 * Note that {@link BleDevice#disconnect()} {@link BleServer#disconnect(String)} will also stop any ongoing reconnect loops.
 			 */
 			public static Please stopRetrying()
@@ -777,7 +801,7 @@ public class BleNodeConfig
 			}
 
 			/**
-			 * Return this from {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectEvent)} to retry after the given amount of time.
+			 * Return this from {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)} to retry after the given amount of time.
 			 */
 			public static Please retryIn(Interval interval)
 			{
@@ -956,7 +980,7 @@ public class BleNodeConfig
 		return config;
 	}
 
-	static double getTimeout(final TaskTimeoutRequestFilter.TimeoutRequestEvent event)
+	static double getTimeout(final TaskTimeoutRequestFilter.TaskTimeoutRequestEvent event)
 	{
 		final BleManager manager = event.manager();
 		final BleDevice device_nullable = !event.device().isNull() ? event.device() : null;

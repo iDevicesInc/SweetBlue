@@ -16,6 +16,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
@@ -103,7 +104,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * See explanation at {@link BleDevice#getLastDisconnectIntent()}.
 			 * <br><br>
-			 * TIP: If {@link ScanEvent#lastDisconnectIntent} isn't {@link State.ChangeIntent#NULL} then most likely you can early-out
+			 * TIP: If {@link ScanEvent#lastDisconnectIntent} isn't {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#NULL} then most likely you can early-out
 			 * and return <code>true</code> from {@link ScanFilter#onEvent(ScanEvent)} without having to check
 			 * uuids or names matching, because obviously you've seen and connected to this device before.
 			 */
@@ -279,7 +280,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		
 		/**
 		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
-		 * and the {@link Collection} passed into {@link BleManagerConfig.DefaultScanFilter#DefaultScanFilter(Collection)}.
+		 * and the {@link Collection} passed into the constructor of {@link BleManagerConfig.DefaultScanFilter}.
 		 */
 		@Override public Please onEvent(ScanEvent e)
 		{
@@ -370,8 +371,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * {@link BleDeviceState#CONNECTED} but one or more devices are {@link BleDeviceState#RECONNECTING_LONG_TERM}.
 	 * The wake lock will be released when devices are reconnected (e.g. from coming back
 	 * into range) or when reconnection is stopped either through {@link BleDevice#disconnect()} or returning
-	 * {@link ReconnectFilter.Please#stopRetrying()} from
-	 * {@link ReconnectFilter#onEvent(ReconnectFilter.ReconnectRequestEvent)}.
+	 * {@link BleNodeConfig.ReconnectFilter.Please#stopRetrying()} from
+	 * {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)}.
 	 * Wake locks will also be released if Bluetooth is turned off either from the App or OS settings.
 	 * Note that Android itself uses some kind of implicit wake lock when you are connected to
 	 * one or more devices and requires no explicit wake lock nor any extra permissions to do so.  

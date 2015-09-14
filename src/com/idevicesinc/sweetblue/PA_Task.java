@@ -14,7 +14,7 @@ abstract class PA_Task
 
 	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
-	private static final BleNodeConfig.TaskTimeoutRequestFilter.TimeoutRequestEvent s_timeoutRequestEvent = new BleNodeConfig.TaskTimeoutRequestFilter.TimeoutRequestEvent();
+	private static final BleNodeConfig.TaskTimeoutRequestFilter.TaskTimeoutRequestEvent s_timeoutRequestEvent = new BleNodeConfig.TaskTimeoutRequestFilter.TaskTimeoutRequestEvent();
 
 	
 	private 	  BleDevice m_device;
