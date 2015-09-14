@@ -123,7 +123,7 @@ class P_HistoricalDataManager
 
 		m_previousUuidsWithDataAdded.addUuid(uuid);
 
-		list.add_single(historicalData, please.m_logChoice, please.getLimit());
+		list.add_single(historicalData, please.m_persistenceLevel, please.getLimit());
 	}
 
 	//GOOD
@@ -148,7 +148,7 @@ class P_HistoricalDataManager
 
 		m_previousUuidsWithDataAdded.addUuid(uuid);
 
-		list.add_single(historicalData_override, please.m_logChoice, please.getLimit());
+		list.add_single(historicalData_override, please.m_persistenceLevel, please.getLimit());
 	}
 
 	//GOOD
@@ -162,7 +162,7 @@ class P_HistoricalDataManager
 
 		m_previousUuidsWithDataAdded.addUuid(uuid);
 
-		list.add_multiple(historicalData, please.m_logChoice, please.getLimit());
+		list.add_multiple(historicalData, please.m_persistenceLevel, please.getLimit());
 	}
 
 	//GOOD
@@ -176,7 +176,7 @@ class P_HistoricalDataManager
 
 		m_previousUuidsWithDataAdded.addUuid(uuid);
 
-		list.add_multiple(historicalData, please.m_logChoice, please.getLimit());
+		list.add_multiple(historicalData, please.m_persistenceLevel, please.getLimit());
 	}
 
 	//GOOD

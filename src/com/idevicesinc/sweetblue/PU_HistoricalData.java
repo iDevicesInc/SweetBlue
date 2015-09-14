@@ -122,7 +122,7 @@ class PU_HistoricalData
 
 	static boolean add_earlyOut(final Backend_HistoricalDataList list, final BleDeviceConfig.HistoricalDataLogFilter.Please please)
 	{
-		if( please.m_logChoice == BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel.NONE )
+		if( please.m_persistenceLevel == BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel_NONE )
 		{
 			final long numberToDelete = please.getLimit() != Long.MAX_VALUE ? list.getCount(EpochTimeRange.FROM_MIN_TO_MAX)-please.getLimit() : 0;
 

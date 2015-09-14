@@ -275,20 +275,10 @@ public class BleNodeConfig
 			}
 		}
 
-		static enum PersistenceLevel
-		{
-			NONE, MEMORY, DISK, BOTH;
-
-			public boolean includesMemory()
-			{
-				return this == MEMORY || this == BOTH;
-			}
-
-			public boolean includesDisk()
-			{
-				return this == DISK || this == BOTH;
-			}
-		}
+		/*package*/ static int PersistenceLevel_NONE	= 0;
+		/*package*/ static int PersistenceLevel_MEMORY	= 1;
+		/*package*/ static int PersistenceLevel_DISK	= 2;
+		/*package*/ static int PersistenceLevel_BOTH	= 3;
 
 		/**
 		 * Special value returned from {@link BleDeviceConfig.HistoricalDataLogFilter#onEvent(HistoricalDataLogEvent)}
@@ -296,15 +286,25 @@ public class BleNodeConfig
 		 */
 		public static class Please
 		{
-			final PersistenceLevel m_logChoice;
+			/*package*/ static boolean includesMemory(final int enum_PersistenceLevel)
+			{
+				return enum_PersistenceLevel == PersistenceLevel_MEMORY || enum_PersistenceLevel == PersistenceLevel_BOTH;
+			}
+
+			/*package*/ static boolean includesDisk(final int enum_PersistenceLevel)
+			{
+				return enum_PersistenceLevel == PersistenceLevel_DISK || enum_PersistenceLevel == PersistenceLevel_BOTH;
+			}
+
+			final int m_persistenceLevel;
 
 			private byte[] m_amendedData = null;
 			private EpochTime m_amendedEpochTime = null;
 			private Long m_logLimit = null;
 
-			private Please(final PersistenceLevel logChoice)
+			private Please(final int persistenceLevel)
 			{
-				m_logChoice = logChoice;
+				m_persistenceLevel = persistenceLevel;
 			}
 
 			/**
@@ -375,7 +375,7 @@ public class BleNodeConfig
 			 */
 			public static Please logToDisk()
 			{
-				return new Please(PersistenceLevel.DISK);
+				return new Please(PersistenceLevel_DISK);
 			}
 
 			/**
@@ -383,7 +383,7 @@ public class BleNodeConfig
 			 */
 			public static Please logToMemory()
 			{
-				return new Please(PersistenceLevel.MEMORY);
+				return new Please(PersistenceLevel_MEMORY);
 			}
 
 			/**
@@ -391,7 +391,7 @@ public class BleNodeConfig
 			 */
 			public static Please logToMemoryAndDisk()
 			{
-				return new Please(PersistenceLevel.BOTH);
+				return new Please(PersistenceLevel_BOTH);
 			}
 
 			/**
@@ -399,7 +399,7 @@ public class BleNodeConfig
 			 */
 			public static Please doNotLog()
 			{
-				return new Please(PersistenceLevel.NONE);
+				return new Please(PersistenceLevel_NONE);
 			}
 		}
 

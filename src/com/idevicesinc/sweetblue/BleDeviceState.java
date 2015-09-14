@@ -33,9 +33,9 @@ public enum BleDeviceState implements State
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleDeviceConfig#reconnectRequestFilter_longTerm} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleDeviceConfig#reconnectFilter} is set and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
-	 * {@link BleDeviceConfig.ReconnectFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectFilter#onEvent(BleDeviceConfig.ReconnectFilter.ReconnectRequestEvent)}
+	 * {@link BleDeviceConfig.ReconnectFilter.Please#stopRetrying()} from {@link BleDeviceConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
 	 * @see #RECONNECTING_SHORT_TERM
@@ -43,10 +43,10 @@ public enum BleDeviceState implements State
 	RECONNECTING_LONG_TERM,
 	
 	/**
-	 * If {@link BleDeviceConfig#reconnectRequestFilter_shortTerm} is set and the device implicitly disconnects this state will be entered.
+	 * If {@link BleDeviceConfig#reconnectFilter} is set and the device implicitly disconnects this state will be entered.
 	 * Unlike with {@link #RECONNECTING_LONG_TERM}, entering this state does not mean that the {@link BleDevice} becomes {@link #DISCONNECTED}.
 	 * By all outward appearances the library treats the {@link BleDevice} as still being {@link #CONNECTED} while transparently trying
-	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectRequestFilter_shortTerm}. You can even perform
+	 * to reconnect under the hood using {@link BleDeviceConfig#reconnectFilter}. You can even perform
 	 * {@link BleDevice#read(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}, {@link BleDevice#write(java.util.UUID, byte[])}, etc.
 	 * and they will be queued up until the device *actually* reconnects under the hood.
 	 * 

@@ -73,9 +73,9 @@ public class Backend_HistoricalDataList_Default implements Backend_HistoricalDat
 		);
 	}
 
-	@Override public void add_single(HistoricalData historicalData, BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel logChoice, long limit)
+	@Override public void add_single(HistoricalData historicalData, final int persistenceLevel, long limit)
 	{
-		if( logChoice == BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel.NONE )  return;
+		if( persistenceLevel == BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel_NONE )  return;
 
 		if( limit <= 0 )
 		{
@@ -86,21 +86,21 @@ public class Backend_HistoricalDataList_Default implements Backend_HistoricalDat
 
 		m_data = historicalData;
 
-		if( alreadyHadData || logChoice == BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel.DISK )
+		if( alreadyHadData || persistenceLevel == BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel_DISK )
 		{
 			printWarning_write();
 		}
 	}
 
-	@Override public void add_multiple(Iterator<HistoricalData> historicalData, BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel logChoice, final long limit)
+	@Override public void add_multiple(Iterator<HistoricalData> historicalData, final int persistenceLevel, final long limit)
 	{
 		while(historicalData.hasNext() )
 		{
-			add_single(historicalData.next(), logChoice, Long.MAX_VALUE);
+			add_single(historicalData.next(), persistenceLevel, Long.MAX_VALUE);
 		}
 	}
 
-	@Override public void add_multiple(ForEach_Returning<HistoricalData> historicalData, BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel logChoice, final long limit)
+	@Override public void add_multiple(ForEach_Returning<HistoricalData> historicalData, final int persistenceLevel, final long limit)
 	{
 		int i = 0;
 
@@ -110,7 +110,7 @@ public class Backend_HistoricalDataList_Default implements Backend_HistoricalDat
 
 			if( next == null )  break;
 
-			add_single(next, logChoice, limit);
+			add_single(next, persistenceLevel, limit);
 
 			i++;
 		}
