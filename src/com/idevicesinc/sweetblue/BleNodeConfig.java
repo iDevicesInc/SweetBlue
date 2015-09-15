@@ -60,7 +60,7 @@ public class BleNodeConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Nullable.Prevalence.NORMAL)
-	public Boolean alwaysUseAutoConnect							= false;
+	public Boolean alwaysUseAutoConnect										= false;
 
 	/**
 	 * Default is <code>false</code> - SweetBlue, for the sake of performance, stability, and simplicity, requires all back and forth to take place on the main thread,
@@ -69,7 +69,7 @@ public class BleNodeConfig
 	 * off SweetBlue operations on alternate threads, which could definitely lead to problems. This remains as an option to help older code bases transitioning to >= v2
 	 */
 	@Nullable(Nullable.Prevalence.RARE)
-	public Boolean allowCallsFromAllThreads						= false;
+	public Boolean allowCallsFromAllThreads									= false;
 
 	/**
 	 * Default is <code>true</code> - controls whether the library is allowed to optimize fast disconnect/reconnect cycles
@@ -78,7 +78,7 @@ public class BleNodeConfig
 	 * again won't result in a native disconnect/reconnect - your actual physical ble device firmware won't know that a disconnect was requested.
 	 */
 	@Nullable(Nullable.Prevalence.NORMAL)
-	public Boolean disconnectIsCancellable						= true;
+	public Boolean disconnectIsCancellable									= true;
 
 	/**
 	 * Default is an instance of {@link DefaultTaskTimeoutRequestFilter} - set an implementation here to
@@ -126,7 +126,7 @@ public class BleNodeConfig
 	 * @see DefaultReconnectFilter
 	 */
 	@Nullable(Nullable.Prevalence.NORMAL)
-	public ReconnectFilter reconnectFilter		= new DefaultReconnectFilter();
+	public ReconnectFilter reconnectFilter									= new DefaultReconnectFilter();
 
 	/**
 	 * Provide an instance of this class to {@link com.idevicesinc.sweetblue.BleDeviceConfig#historicalDataLogFilter} to control
@@ -139,7 +139,7 @@ public class BleNodeConfig
 		/**
 		 * Special value you can use in place of Java's built-in <code>null</code>, just for code readability.
 		 */
-		public static HistoricalDataLogFilter DISABLED = null;
+		public static final HistoricalDataLogFilter DISABLED = null;
 
 		/**
 		 * Signifies where the data came from, usually from a BLE read or notification.

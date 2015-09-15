@@ -2842,8 +2842,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Prevalence.NEVER) String getMacAddress()
 	{
-		enforceMainThread();
-
 		return m_nativeWrapper.getAddress();
 	}
 

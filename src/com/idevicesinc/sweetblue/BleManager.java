@@ -1227,12 +1227,12 @@ public class BleManager
 
 	/**
 	 * Manually starts a periodic scan. This is the post-constructor runtime equivalent to setting
-	 * {@link BleManagerConfig#autoScanTime} and {@link BleManagerConfig#autoScanInterval}, so see
+	 * {@link BleManagerConfig#autoScanActiveTime} and {@link BleManagerConfig#autoScanPauseInterval}, so see
 	 * their comments for more detail. Calling this forever-after overrides the options you set
 	 * in {@link BleManagerConfig}.
 	 *
-	 * @see BleManagerConfig#autoScanTime
-	 * @see BleManagerConfig#autoScanInterval
+	 * @see BleManagerConfig#autoScanActiveTime
+	 * @see BleManagerConfig#autoScanPauseInterval
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime)
 	{
@@ -1269,14 +1269,14 @@ public class BleManager
 
 		m_filterMngr.add(filter);
 
-		m_config.autoScanTime = scanActiveTime;
-		m_config.autoScanInterval = scanPauseTime;
+		m_config.autoScanActiveTime = scanActiveTime;
+		m_config.autoScanPauseInterval = scanPauseTime;
 
-		if( Interval.isEnabled(m_config.autoScanTime) )
+		if( Interval.isEnabled(m_config.autoScanActiveTime) )
 		{
 			if( doAutoScan() )
 			{
-				startScan(m_config.autoScanTime);
+				startScan(m_config.autoScanActiveTime);
 			}
 		}
 	}
@@ -1296,13 +1296,13 @@ public class BleManager
 
 	/**
 	 * Stops a periodic scan previously started either explicitly with {@link #startPeriodicScan(Interval, Interval)} or through
-	 * the {@link BleManagerConfig#autoScanTime} and {@link BleManagerConfig#autoScanInterval} config options.
+	 * the {@link BleManagerConfig#autoScanActiveTime} and {@link BleManagerConfig#autoScanPauseInterval} config options.
 	 */
 	public void stopPeriodicScan()
 	{
 		enforceMainThread();
 
-		m_config.autoScanTime = Interval.DISABLED;
+		m_config.autoScanActiveTime = Interval.DISABLED;
 
 		if( !m_doingInfiniteScan )
 		{
@@ -1731,7 +1731,7 @@ public class BleManager
 	/**
 	 * Stops a scan previously started by {@link #startScan()} or its various overloads.
 	 * This will also stop the actual scan operation itself that may be ongoing due to
-	 * {@link #startPeriodicScan(Interval, Interval)} or defined by {@link BleManagerConfig#autoScanTime},
+	 * {@link #startPeriodicScan(Interval, Interval)} or defined by {@link BleManagerConfig#autoScanActiveTime},
 	 * but scanning in general will still continue periodically until you call {@link #stopPeriodicScan()}.
 	 */
 	public void stopScan()
@@ -2699,7 +2699,7 @@ public class BleManager
 
 		boolean startScan = false;
 
-		if( Interval.isEnabled(m_config.autoScanTime) )
+		if( Interval.isEnabled(m_config.autoScanActiveTime) )
 		{
 			if( m_isForegrounded && Interval.isEnabled(m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_timeForegrounded >= Interval.secs(m_config.autoScanDelayAfterResume) )
 			{
@@ -2712,7 +2712,7 @@ public class BleManager
 			}
 			else if( !is(SCANNING) )
 			{
-				double scanInterval = Interval.secs(m_isForegrounded ? m_config.autoScanInterval : m_config.autoScanIntervalWhileAppIsPaused);
+				double scanInterval = Interval.secs(m_isForegrounded ? m_config.autoScanPauseInterval : m_config.autoScanPauseTimeWhileAppIsBackgrounded);
 
 				if( Interval.isEnabled(scanInterval) && m_timeNotScanning >= scanInterval )
 				{
@@ -2725,7 +2725,7 @@ public class BleManager
 		{
 			if( doAutoScan() )
 			{
-				startScan_private(m_config.autoScanTime, null, null, /*isPoll=*/true);
+				startScan_private(m_config.autoScanActiveTime, null, null, /*isPoll=*/true);
 			}
 		}
 
