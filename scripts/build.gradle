@@ -1,7 +1,21 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {        
+        classpath 'commons-codec:commons-codec:1.8'   
+    }
+}
 apply plugin: 'java'
 apply plugin: 'checkstyle'
 
 version = '1.0'
+
+sourceSets {
+    main.java.srcDir '../src/'        
+    test.java.srcDir '../test/'            
+}
 
 // Set base variables
 ext.JAR_BASE_NAME = "sweetblue_${SEMVER}"
@@ -17,25 +31,10 @@ ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
-
-sourceSets {
-    main.java.srcDir '../src/'
-    test.java.srcDir '../test/'
-}
-
 repositories {
     mavenCentral()
 }
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath "commons-codec:commons-codec:1.8"
-    }
-}
 dependencies {    
     compile files("${ANDROID_JAR}")
     testCompile 'junit:junit:4.10'
@@ -47,7 +46,7 @@ import org.apache.commons.codec.digest.DigestUtils
 // Task definitions
 task checker(type: Checkstyle) {
     configFile file("./config/checkstyle/checkstyle.xml")
-    source 'src'
+    source '../src'
     include '**/*.java'
     exclude '**/gen/**'
     classpath = files()
@@ -55,8 +54,8 @@ task checker(type: Checkstyle) {
 
 // Creates Sweetblue jar
 jar {
-    archiveName = JAR_NAME
-    destinationDir = new File(JAR_DIR)
+    archiveName = JAR_NAME    
+    destinationDir = new File(JAR_DIR)    
 }
 
 // Create the source Jar
