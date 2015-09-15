@@ -2180,6 +2180,6 @@ public class BleServer extends BleNode implements UsesCustomNull
 	 */
 	public String toString()
 	{
-		return this.getClass().getSimpleName() + " with " + getClientCount(CONNECTING, CONNECTED) + " connected/ing clients.";
+		return this.getClass().getSimpleName() + " with " + m_clientMngr.getClientCount(BleServerState.toBits(CONNECTING, CONNECTED)) + " connected/ing clients.";
 	}
 }

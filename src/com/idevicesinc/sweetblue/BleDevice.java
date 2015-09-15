@@ -4313,7 +4313,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		}
 		else
 		{
-			return getName_debug() + " " + stateTracker_main().toString();
+			return m_nativeWrapper.getDebugName() + " " + stateTracker_main().toString();
 		}
 	}
 
