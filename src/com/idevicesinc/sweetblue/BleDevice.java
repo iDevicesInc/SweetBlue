@@ -1576,7 +1576,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 		if( false == allowAllThreads )
 		{
-			Utils.enforceMainThread();
+			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
 		}
 
 		if (isNull())  return;
@@ -2468,14 +2468,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	public boolean is(final BleDeviceState state)
 	{
 		return state.overlaps(getStateMask());
-	}
-
-	/**
-	 * @deprecated Use {@link #isAny(int)} instead.
-	 */
-	public boolean is(final int mask_BleDeviceState)
-	{
-		return isAny(mask_BleDeviceState);
 	}
 
 	/**

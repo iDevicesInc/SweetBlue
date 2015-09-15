@@ -34,12 +34,6 @@ import java.util.UUID;
 public class BleNodeConfig
 {
 	/**
-	 * @deprecated Use {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
-	 */
-	@Deprecated
-	public static final int GATT_STATUS_NOT_APPLICABLE 					= BleStatuses.GATT_STATUS_NOT_APPLICABLE;
-
-	/**
 	 * Default is <code>false</code> - see the <code>boolean autoConnect</code> parameters of
 	 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
 	 * and {@link android.bluetooth.BluetoothGattServer#connect(BluetoothDevice, boolean)}.
@@ -584,13 +578,25 @@ public class BleNodeConfig
 	 */
 	public static class DefaultTaskTimeoutRequestFilter implements TaskTimeoutRequestFilter
 	{
-		public static final double DEFAULT_TASK_TIMEOUT						= 12.5;
+		/**
+		 * Default value for all tasks.
+		 */
+		public static final double DEFAULT_TASK_TIMEOUT					= 12.5;
+
+		/**
+		 * Value used for crash resolver process because this can take a bit longer.
+		 */
+		public static final double DEFAULT_CRASH_RESOLVER_TIMEOUT		= 20.0;
 
 		private static final Please DEFAULT_RETURN_VALUE = Please.setTimeoutFor(Interval.secs(DEFAULT_TASK_TIMEOUT));
 
 		@Override public Please onEvent(TaskTimeoutRequestEvent e)
 		{
-			if( e.task() == BleTask.BOND )
+			if( e.task() == BleTask.RESOLVE_CRASHES )
+			{
+				return Please.setTimeoutFor(Interval.secs(DEFAULT_CRASH_RESOLVER_TIMEOUT));
+			}
+			else if( e.task() == BleTask.BOND )
 			{
 				return DEFAULT_RETURN_VALUE;
 			}
@@ -954,6 +960,12 @@ public class BleNodeConfig
 			}
 		}
 	}
+
+	static final String WRONG_THREAD_MESSAGE =
+
+			"As of v2.0.0 this API must be called on the main thread. " +
+			"To temporarily disable this enforcement for migrations from v1.*.* set BleNodeConfig.allowCallsFromAllThreads=true. " +
+			"HOWEVER, this should be treated as a temporary solution for your";
 
 	/**
 	 * Creates a {@link BleNodeConfig} with all default options set. See each member of this class

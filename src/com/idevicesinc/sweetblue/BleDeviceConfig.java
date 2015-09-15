@@ -57,12 +57,6 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static final int DEFAULT_TX_POWER							= -50;
 	
 	/**
-	 * @deprecated Use {@link BleStatuses#BOND_FAIL_REASON_NOT_APPLICABLE}.
-	 */
-	@Deprecated
-	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE;
-	
-	/**
 	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},
 	 * so this option controls whether the library will internally change any bonding flow dictated by {@link #bondFilter} when a bond fails and try
 	 * to bond again the next time the device is {@link BleDeviceState#DISCONNECTED}.

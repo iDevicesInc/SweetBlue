@@ -9,8 +9,8 @@ import com.idevicesinc.sweetblue.*;
  */
 public class WrongThreadError extends Error
 {
-	public WrongThreadError()
+	public WrongThreadError(final String message)
 	{
-		super("This method must be called on the main thread.");
+		super(message);
 	}
 }

@@ -1254,7 +1254,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 		if( false == allowAllThreads )
 		{
-			Utils.enforceMainThread();
+			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
 		}
 
 		m_config = config_nullable;

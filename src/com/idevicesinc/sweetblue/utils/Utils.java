@@ -55,11 +55,11 @@ public class Utils
 		return Looper.getMainLooper().getThread() == Thread.currentThread();
 	}
 
-	public static void enforceMainThread()
+	public static void enforceMainThread(final String message)
 	{
 		if( !isOnMainThread() )
 		{
-			throw new WrongThreadError();
+			throw new WrongThreadError(message);
 		}
 	}
 

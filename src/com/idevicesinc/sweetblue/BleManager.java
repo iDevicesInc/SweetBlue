@@ -676,7 +676,7 @@ public class BleManager
 	{
 		if( s_instance == null )
 		{
-			Utils.enforceMainThread();
+			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
 
 			return get(context, new BleManagerConfig());
 		}
@@ -703,7 +703,7 @@ public class BleManager
 
 			if( false == allowAllThreads )
 			{
-				Utils.enforceMainThread();
+				Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
 			}
 
 			s_instance = new BleManager(context, config);
@@ -837,7 +837,7 @@ public class BleManager
 
 		if( false == allowAllThreads )
 		{
-			Utils.enforceMainThread();
+			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
 		}
 
 		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
@@ -926,14 +926,6 @@ public class BleManager
 	public boolean is(final BleManagerState state)
 	{
 		return state.overlaps(getStateMask());
-	}
-	
-	/**
-	 * @deprecated Use {@link #isAny(int)}.
-	 */
-	public boolean is(final int mask_BleManagerState)
-	{
-		return (getStateMask() & mask_BleManagerState) != 0x0;
 	}
 	
 	/**
@@ -1572,15 +1564,14 @@ public class BleManager
 
 		if( m_config.enableCrashResolverForReset )
 		{
-			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver));
+			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver, /*partOfReset=*/true));
 		}
 
 		turnOff_private(/*removeAllBonds=*/true);
 
 		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
 		{
-			@Override
-			public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			@Override public void onStateChange(PA_Task taskClass, PE_TaskState state)
 			{
 				if( state.isEndingState() )
 				{
@@ -2729,7 +2720,7 @@ public class BleManager
 			}
 		}
 
-		P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
+		final P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
 
 		if( scanTask != null )
 		{
@@ -2779,7 +2770,7 @@ public class BleManager
 
 		if( false == allowAllThreads )
 		{
-			Utils.enforceMainThread();
+			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
 		}
 	}
 }

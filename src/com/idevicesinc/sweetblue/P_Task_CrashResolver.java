@@ -6,6 +6,7 @@ class P_Task_CrashResolver extends PA_Task_RequiresBleOn
 	private final P_BluetoothCrashResolver m_resolver;
 
 	private volatile boolean m_startedRecovery = false;
+	private final boolean m_partOfReset;
 
 	private final Runnable m_updateRunnable = new Runnable()
 	{
@@ -21,11 +22,12 @@ class P_Task_CrashResolver extends PA_Task_RequiresBleOn
 		}
 	};
 	
-	public P_Task_CrashResolver(BleManager manager, P_BluetoothCrashResolver resolver)
+	public P_Task_CrashResolver(BleManager manager, P_BluetoothCrashResolver resolver, final boolean partOfReset)
 	{
 		super(manager, null);
 		
 		m_resolver = resolver;
+		m_partOfReset = partOfReset;
 	}
 	
 	@Override public void execute()
@@ -45,6 +47,27 @@ class P_Task_CrashResolver extends PA_Task_RequiresBleOn
 					m_startedRecovery = true;
 				}
 			});
+		}
+	}
+
+	@Override public boolean isCancellableBy(PA_Task task)
+	{
+		if( task instanceof P_Task_TurnBleOff )
+		{
+			final P_Task_TurnBleOff task_cast = (P_Task_TurnBleOff) task;
+
+			if( task_cast.isImplicit() || false == this.m_partOfReset )
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return super.isCancellableBy(task);
 		}
 	}
 	
