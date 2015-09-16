@@ -2601,7 +2601,7 @@ public class BleManager
 
 	void stopNativeScan(final P_Task_Scan scanTask)
 	{
-		if( scanTask.getMode() == P_Task_Scan.E_Mode.BLE )
+		if( scanTask.getMode() == P_Task_Scan.Mode_BLE )
 		{
 			try
 			{
@@ -2625,7 +2625,7 @@ public class BleManager
 				uhOh(UhOh.RANDOM_EXCEPTION);
 			}
 		}
-		else if( scanTask.getMode() == P_Task_Scan.E_Mode.CLASSIC )
+		else if( scanTask.getMode() == P_Task_Scan.Mode_CLASSIC )
 		{
 			//--- DRK > This assert tripped, but not sure what I can do about it. Technically discovery can be cancelled
 			//---		by another app or something, so its usefulness as a logic checker is debatable.

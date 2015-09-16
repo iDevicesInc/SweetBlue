@@ -15,13 +15,11 @@ import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class P_Task_Scan extends PA_Task_RequiresBleOn
-{	
-	static enum E_Mode
-	{
-		BLE, CLASSIC;
-	}
+{
+	static final int Mode_BLE			= 0;
+	static final int Mode_CLASSIC		= 1;
 	
-	private E_Mode m_mode = null;
+	private Integer m_mode = null;
 	
 	//TODO
 	private final boolean m_explicit = true;
@@ -91,7 +89,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				tryClassicDiscovery(getIntent());
 
-				m_mode = E_Mode.CLASSIC;
+				m_mode = Mode_CLASSIC;
 			}
 		}
 	};
@@ -133,7 +131,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			if( Utils.isLollipop() )
 			{
-				m_mode = E_Mode.BLE;
+				m_mode = Mode_BLE;
 				getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 				startNativeScan_postLollipop();
@@ -176,7 +174,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
 	}
 
-	private P_Task_Scan.E_Mode startNativeScan_preLollipop(final E_Intent intent)
+	private int/*_Mode*/ startNativeScan_preLollipop(final E_Intent intent)
 	{
 		//--- DRK > Not sure how useful this retry loop is. I've definitely seen startLeScan
 		//---		fail but then work again at a later time (seconds-minutes later), so
@@ -243,7 +241,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			tryClassicDiscovery(intent);
 
-			return E_Mode.CLASSIC;
+			return Mode_CLASSIC;
 		}
 		else
 		{
@@ -259,7 +257,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			return E_Mode.BLE;
+			return Mode_BLE;
 		}
 	}
 
@@ -309,7 +307,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				selfInterrupt();
 			}
-			else if( m_mode == E_Mode.CLASSIC && getTotalTimeExecuting() >= BleManagerConfig.MAX_CLASSIC_SCAN_TIME )
+			else if( m_mode == Mode_CLASSIC && getTotalTimeExecuting() >= BleManagerConfig.MAX_CLASSIC_SCAN_TIME )
 			{
 				selfInterrupt();
 			}
@@ -321,7 +319,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		return PE_TaskPriority.TRIVIAL;
 	}
 	
-	public E_Mode getMode()
+	public Integer/*_Mode*/ getMode()
 	{
 		return m_mode;
 	}

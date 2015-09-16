@@ -19,10 +19,9 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 
 class P_PollManager
 {
-	static enum E_NotifyState
-	{
-		NOT_ENABLED, ENABLING, ENABLED;
-	}
+	static final int E_NotifyState__NOT_ENABLED		= 0;
+	static final int E_NotifyState__ENABLING 		= 1;
+	static final int E_NotifyState__ENABLED			= 2;
 	
 	private static class PollingReadListener extends P_WrappingReadWriteListener
 	{
@@ -100,7 +99,7 @@ class P_PollManager
 		private final UUID m_charUuid;
 		private final UUID m_serviceUuid;
 		private final boolean m_usingNotify;
-		private E_NotifyState m_notifyState;
+		private int/*_E_NotifyState*/ m_notifyState;
 		
 		private double m_timeTracker;
 		private boolean m_waitingForResponse;
@@ -112,7 +111,7 @@ class P_PollManager
 			m_interval = interval;
 			m_device = device;
 			m_usingNotify = usingNotify;
-			m_notifyState = E_NotifyState.NOT_ENABLED;
+			m_notifyState = E_NotifyState__NOT_ENABLED;
 
 			m_timeTracker = interval; // to get it to do a first read pretty much instantly.
 			
@@ -276,7 +275,7 @@ class P_PollManager
 		
 		if( usingNotify )
 		{
-			final E_NotifyState state = getNotifyState(serviceUuid, charUuid);
+			final int/*_E_NotifyState*/ state = getNotifyState(serviceUuid, charUuid);
 			newEntry.m_notifyState = state;
 		}
 
@@ -321,9 +320,9 @@ class P_PollManager
 		}
 	}
 	
-	E_NotifyState getNotifyState(final UUID serviceUuid, final UUID charUuid)
+	int/*__E_NotifyState*/ getNotifyState(final UUID serviceUuid, final UUID charUuid)
 	{
-		E_NotifyState highestState = E_NotifyState.NOT_ENABLED;
+		int/*__E_NotifyState*/ highestState = E_NotifyState__NOT_ENABLED;
 		
 		for( int i = 0; i < m_entries.size(); i++ )
 		{
@@ -331,7 +330,7 @@ class P_PollManager
 			
 			if( ithEntry.isFor(serviceUuid, charUuid) )
 			{
-				if( ithEntry.m_notifyState.ordinal() > highestState.ordinal() )
+				if( ithEntry.m_notifyState > highestState )
 				{
 					highestState = ithEntry.m_notifyState;
 				}
@@ -341,7 +340,7 @@ class P_PollManager
 		return highestState;
 	}
 	
-	void onNotifyStateChange(final UUID serviceUuid, final UUID charUuid, E_NotifyState state)
+	void onNotifyStateChange(final UUID serviceUuid, final UUID charUuid, int/*__E_NotifyState*/ state)
 	{
 		for( int i = 0; i < m_entries.size(); i++ )
 		{
@@ -360,7 +359,7 @@ class P_PollManager
 		{
 			CallbackEntry ithEntry = m_entries.get(i);
 			
-			ithEntry.m_notifyState = E_NotifyState.NOT_ENABLED;
+			ithEntry.m_notifyState = E_NotifyState__NOT_ENABLED;
 		}
 	}
 	
@@ -372,7 +371,7 @@ class P_PollManager
 			
 			if( ithEntry.usingNotify() )
 			{
-				E_NotifyState notifyState = getNotifyState(ithEntry.m_serviceUuid, ithEntry.m_charUuid);
+				int/*__E_NotifyState*/ notifyState = getNotifyState(ithEntry.m_serviceUuid, ithEntry.m_charUuid);
 				
 				P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(ithEntry.m_serviceUuid, ithEntry.m_charUuid);
 				
@@ -384,7 +383,7 @@ class P_PollManager
 					continue;
 				}
 				
-				if( notifyState == E_NotifyState.NOT_ENABLED )
+				if( notifyState == E_NotifyState__NOT_ENABLED )
 				{
 					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.getServiceManager().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, BleDevice.EMPTY_FUTURE_DATA, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
 					
@@ -398,11 +397,11 @@ class P_PollManager
 
 						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, characteristic, /*enable=*/true, ithEntry.m_pollingReadListener, m_device.getOverrideReadWritePriority()));
 						
-						notifyState = E_NotifyState.ENABLING;
+						notifyState = E_NotifyState__ENABLING;
 					}
 				}
 				
-				if( notifyState == E_NotifyState.ENABLED && ithEntry.m_notifyState != E_NotifyState.ENABLED )
+				if( notifyState == E_NotifyState__ENABLED && ithEntry.m_notifyState != E_NotifyState__ENABLED )
 				{
 					ReadWriteEvent result = newAlreadyEnabledEvent(characteristic, ithEntry.m_serviceUuid, ithEntry.m_charUuid);
 					ithEntry.m_pollingReadListener.onEvent(result);

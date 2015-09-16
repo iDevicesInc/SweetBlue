@@ -9,7 +9,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
-import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
@@ -112,7 +111,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 
 		if( m_enable )
 		{
-			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), charUuid, E_NotifyState.NOT_ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), charUuid, P_PollManager.E_NotifyState__NOT_ENABLED);
 		}
 	}
 	
@@ -122,11 +121,11 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( m_enable )
 		{
-			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), E_NotifyState.ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), P_PollManager.E_NotifyState__ENABLED);
 		}
 		else
 		{
-			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), E_NotifyState.NOT_ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), P_PollManager.E_NotifyState__NOT_ENABLED);
 		}
 
 		super.succeed();

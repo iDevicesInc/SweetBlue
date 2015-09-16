@@ -25,7 +25,6 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
-import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -679,7 +678,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			private final BleDevice m_device;
 
 			/**
-			 * The change in gattStatus that may have precipitated the state change, or {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
+			 * The change in gattStatus that may have precipitated the state change, or {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 * For example if {@link #didEnter(State)} with {@link BleDeviceState#DISCONNECTED} is <code>true</code> and
 			 * {@link #didExit(State)} with {@link BleDeviceState#CONNECTING} is also <code>true</code> then {@link #gattStatus()} may be greater
 			 * than zero and give some further hint as to why the connection failed.
@@ -1325,7 +1324,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			/**
 			 * If {@link #status()} is {@link BondListener.Status#FAILED_EVENTUALLY}, this integer will
 			 * be one of the values enumerated in {@link BluetoothDevice} that start with <code>UNBOND_REASON</code> such as
-			 * {@link BleStatuses#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to {@link BleDeviceConfig#BOND_FAIL_REASON_NOT_APPLICABLE}.
+			 * {@link BleStatuses#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to {@link BleStatuses#BOND_FAIL_REASON_NOT_APPLICABLE}.
 			 * See also a publically accessible list in {@link BleStatuses}.
 			 */
 			public int failReason() {  return m_failReason;  }
@@ -3907,9 +3906,9 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 		final UUID serviceUuid = null;
 
-		final E_NotifyState notifyState = m_pollMngr.getNotifyState(serviceUuid, uuid);
+		final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, uuid);
 
-		return notifyState == E_NotifyState.ENABLED;
+		return notifyState == P_PollManager.E_NotifyState__ENABLED;
 	}
 
 	/**
@@ -3925,9 +3924,9 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 		final UUID serviceUuid = null;
 
-		final E_NotifyState notifyState = m_pollMngr.getNotifyState(serviceUuid, uuid);
+		final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, uuid);
 
-		return notifyState == E_NotifyState.ENABLING;
+		return notifyState == P_PollManager.E_NotifyState__ENABLING;
 	}
 
 	/**
@@ -4059,8 +4058,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		}
 
 		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
-		final E_NotifyState notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
-		final boolean shouldSendOutNotifyEnable = notifyState == E_NotifyState.NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
+		final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
+		final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
 		final ReadWriteEvent result;
 		final boolean isConnected = is(CONNECTED);
@@ -4071,11 +4070,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 			queue().add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, listener, getOverrideReadWritePriority()));
 
-			m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, E_NotifyState.ENABLING);
+			m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, P_PollManager.E_NotifyState__ENABLING);
 
 			result = NULL_READWRITE_EVENT();
 		}
-		else if (notifyState == E_NotifyState.ENABLED)
+		else if (notifyState == P_PollManager.E_NotifyState__ENABLED)
 		{
 			if (listener != null && isConnected )
 			{

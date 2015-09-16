@@ -483,7 +483,6 @@ public abstract class BleNode implements UsesCustomNull
 
 	private final BleManager m_manager;
 
-	/*package*/
 	protected BleNode(final BleManager manager)
 	{
 		m_manager = manager;
@@ -691,6 +690,9 @@ public abstract class BleNode implements UsesCustomNull
 		}
 	}
 
+	/**
+	 * Provides a way to perform a statically checked SQL query by chaining method calls.
+	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@com.idevicesinc.sweetblue.annotations.Alpha
 	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataQuery.Part_Select select()
@@ -700,12 +702,19 @@ public abstract class BleNode implements UsesCustomNull
 		return select;
 	}
 
+	/**
+	 * Just some sugar for casting to subclasses.
+	 */
 	public <T extends BleNode> T cast()
 	{
 		return (T) this;
 	}
 
-	public <T extends BleNode> T cast(Class<T> type)
+	/**
+	 * Safer version of {@link #cast()} that will return {@link BleDevice#NULL} or {@link BleServer#NULL}
+	 * if the cast cannot be made.
+	 */
+	public <T extends BleNode> T cast(final Class<T> type)
 	{
 		if( this instanceof BleDevice && type == BleServer.class )
 		{
@@ -721,7 +730,7 @@ public abstract class BleNode implements UsesCustomNull
 		}
 	}
 
-	protected void enforceMainThread()
+	void enforceMainThread()
 	{
 		final boolean allowAllThreads = BleDeviceConfig.bool(conf_node().allowCallsFromAllThreads, conf_mngr().allowCallsFromAllThreads);
 
