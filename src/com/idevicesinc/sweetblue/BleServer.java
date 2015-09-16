@@ -1208,16 +1208,6 @@ public class BleServer extends BleNode implements UsesCustomNull
 	private final P_ClientManager m_clientMngr;
 	final P_ServerServiceManager m_serviceMngr;
 
-	/**
-	 * Field for app to associate any data it wants with instances of this class
-	 * instead of having to subclass or manage associative hash maps or something.
-	 * The library does not touch or interact with this data in any way.
-	 *
-	 * @see BleManager#appData
-	 * @see BleDevice#appData
-	 */
-	public Object appData;
-
 	/*package*/ BleServer(final BleManager mngr, final boolean isNull)
 	{
 		super(mngr);
@@ -1525,14 +1515,6 @@ public class BleServer extends BleNode implements UsesCustomNull
 		enforceMainThread();
 
 		return m_stateTracker.getStateMask(macAddress);
-	}
-
-	/**
-	 * @deprecated Use {@link #isAny(String, int)} instead.
-	 */
-	public boolean is(final String macAddress, final int mask_BleServerState)
-	{
-		return isAny(macAddress, mask_BleServerState);
 	}
 
 	/**

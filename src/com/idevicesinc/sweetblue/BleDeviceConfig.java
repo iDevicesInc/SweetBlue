@@ -282,7 +282,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * @see BondFilter
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public BondFilter bondFilter											= new DefaultBondFilter();
+	public BondFilter bondFilter								= new DefaultBondFilter();
 
 	/**
 	 * As of now there are two main default uses for this class...
@@ -527,7 +527,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	public static BleDeviceConfig newNulled()
 	{
-		BleDeviceConfig config = new BleDeviceConfig();
+		final BleDeviceConfig config = new BleDeviceConfig();
 		config.nullOut();
 		
 		return config;

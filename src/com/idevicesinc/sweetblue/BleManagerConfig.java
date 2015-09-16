@@ -310,10 +310,10 @@ public class BleManagerConfig extends BleDeviceConfig
 			private final State.ChangeIntent m_lastDisconnectIntent;
 
 			ScanEvent
-					(
-							BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName,
-							String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent
-					)
+			(
+				BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName,
+				String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent
+			)
 			{
 				this.m_nativeInstance = nativeInstance;
 				this.m_advertisedServices = advertisedServices;
@@ -327,12 +327,12 @@ public class BleManagerConfig extends BleDeviceConfig
 			@Override public String toString()
 			{
 				return Utils_String.toString
-						(
-								this.getClass(),
-								"macAddress", macAddress(),
-								"name", name_normalized(),
-								"services", advertisedServices()
-						);
+				(
+					this.getClass(),
+					"macAddress", macAddress(),
+					"name", name_normalized(),
+					"services", advertisedServices()
+				);
 			}
 		}
 
