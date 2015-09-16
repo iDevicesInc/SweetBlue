@@ -34,7 +34,7 @@ public enum BleDeviceState implements State
 	UNDISCOVERED,
 	
 	/**
-	 * If {@link BleNodeConfig#reconnectFilter} is set and the device implicitly disconnects, either through going out of range,
+	 * If {@link BleNodeConfig#reconnectFilter} is set appropriately and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
 	 * {@link BleNodeConfig.ReconnectFilter.Please#stopRetrying()} from {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
@@ -44,7 +44,7 @@ public enum BleDeviceState implements State
 	RECONNECTING_LONG_TERM,
 	
 	/**
-	 * If {@link BleNodeConfig#reconnectFilter} is set and the device implicitly disconnects this state will be entered.
+	 * If {@link BleNodeConfig#reconnectFilter} is set appropriately and the device implicitly disconnects this state will be entered.
 	 * Unlike with {@link #RECONNECTING_LONG_TERM}, entering this state does not mean that the {@link BleDevice} becomes {@link #DISCONNECTED}.
 	 * By all outward appearances the library treats the {@link BleDevice} as still being {@link #CONNECTED} while transparently trying
 	 * to reconnect under the hood using {@link BleNodeConfig#reconnectFilter}. You can even perform

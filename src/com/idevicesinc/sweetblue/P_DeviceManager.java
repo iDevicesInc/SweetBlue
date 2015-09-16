@@ -394,7 +394,7 @@ class P_DeviceManager
 			final BleDevice device = get(i);
 
 			//--- DRK > Just an early-out performance check here.
-			if( device.is(BleDeviceState.CONNECTED) )
+			if( device.is(BleDeviceState.CONNECTING_OVERALL, BleDeviceState.CONNECTED) )
 			{
 				device.disconnectWithReason(priority, Status.BLE_TURNING_OFF, ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
 			}
@@ -445,18 +445,18 @@ class P_DeviceManager
 
 			final boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);
 
-			if( !retainDeviceWhenBleTurnsOff )
+			if( false == retainDeviceWhenBleTurnsOff )
 			{
 				undiscoverAndRemove(device_ith, m_mngr.m_discoveryListener, cache, intent);
-
-				continue;
 			}
-
-			final boolean undiscoverDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().undiscoverDeviceWhenBleTurnsOff, device_ith.conf_mngr().undiscoverDeviceWhenBleTurnsOff);
-
-			if( undiscoverDeviceWhenBleTurnsOff)
+			else
 			{
-				undiscoverDevice(device_ith, m_mngr.m_discoveryListener, intent);
+				final boolean undiscoverDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().undiscoverDeviceWhenBleTurnsOff, device_ith.conf_mngr().undiscoverDeviceWhenBleTurnsOff);
+
+				if( true == undiscoverDeviceWhenBleTurnsOff )
+				{
+					undiscoverDevice(device_ith, m_mngr.m_discoveryListener, intent);
+				}
 			}
 		}
 	}

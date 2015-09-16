@@ -4064,7 +4064,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		final ReadWriteEvent result;
 		final boolean isConnected = is(CONNECTED);
 
-		if (shouldSendOutNotifyEnable && characteristic != null && isConnected)
+		if( shouldSendOutNotifyEnable && characteristic != null && isConnected )
 		{
 			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
 
@@ -4407,6 +4407,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		if( m_pollMngr != null )  m_pollMngr.clear();
 
 		stateTracker_main().set(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCOVERED, false, ADVERTISING, false, m_bondMngr.getNativeBondingStateOverrides(), DISCONNECTED, true);
+
+		if( m_txnMngr != null )
+		{
+			m_txnMngr.cancelAllTransactions();
+		}
 	}
 
 	double getTimeSinceLastDiscovery()

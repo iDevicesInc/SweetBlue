@@ -810,6 +810,7 @@ public class BleManager
 		{
 			nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
 		}
+		
 		m_stateTracker = new P_BleStateTracker(this);
 		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);

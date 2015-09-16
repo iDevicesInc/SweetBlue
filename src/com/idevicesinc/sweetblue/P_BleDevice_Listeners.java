@@ -175,7 +175,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				}
 				else
 				{
-					m_device.onNativeDisconnect(/*explicit=*/false, gattStatus, /*doShortTermReconnect=*/true, /*saveLastDisconnect=*/true);
+					final boolean doShortTermReconnect = m_device.getManager().is(BleManagerState.ON);
+					m_device.onNativeDisconnect(/*explicit=*/false, gattStatus, doShortTermReconnect, /*saveLastDisconnect=*/true);
 				}
 			}
 		}

@@ -16,10 +16,11 @@ import java.util.List;
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class P_Task_Scan extends PA_Task_RequiresBleOn
 {
-	static final int Mode_BLE			= 0;
-	static final int Mode_CLASSIC		= 1;
+	static final int Mode_NULL			= -1;
+	static final int Mode_BLE			=  0;
+	static final int Mode_CLASSIC		=  1;
 	
-	private Integer m_mode = null;
+	private int m_mode = Mode_NULL;
 	
 	//TODO
 	private final boolean m_explicit = true;
@@ -140,7 +141,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				m_mode = startNativeScan_preLollipop(getIntent());
 
-				if( m_mode == null )
+				if( m_mode == Mode_NULL )
 				{
 					fail();
 				}
@@ -319,7 +320,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		return PE_TaskPriority.TRIVIAL;
 	}
 	
-	public Integer/*_Mode*/ getMode()
+	public int/*_Mode*/ getMode()
 	{
 		return m_mode;
 	}

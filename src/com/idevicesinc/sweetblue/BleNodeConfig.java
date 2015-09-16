@@ -586,7 +586,7 @@ public class BleNodeConfig
 		/**
 		 * Value used for crash resolver process because this can take a bit longer.
 		 */
-		public static final double DEFAULT_CRASH_RESOLVER_TIMEOUT		= 20.0;
+		public static final double DEFAULT_CRASH_RESOLVER_TIMEOUT		= 50.0;
 
 		private static final Please DEFAULT_RETURN_VALUE = Please.setTimeoutFor(Interval.secs(DEFAULT_TASK_TIMEOUT));
 

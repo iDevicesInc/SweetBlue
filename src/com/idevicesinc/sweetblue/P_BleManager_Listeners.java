@@ -286,7 +286,9 @@ class P_BleManager_Listeners
 		{
 			if( !m_taskQueue.isCurrent(P_Task_TurnBleOff.class, m_mngr) )
 			{
-				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, E_Intent.UNINTENTIONAL);
+				m_mngr.m_deviceMngr.disconnectAllForTurnOff(PE_TaskPriority.CRITICAL);
+				
+//				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, E_Intent.UNINTENTIONAL);
 				m_taskQueue.add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
 
 				if( m_mngr.m_server != null )

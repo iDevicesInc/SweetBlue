@@ -714,7 +714,7 @@ public abstract class BleNode implements UsesCustomNull
 	 * Safer version of {@link #cast()} that will return {@link BleDevice#NULL} or {@link BleServer#NULL}
 	 * if the cast cannot be made.
 	 */
-	public <T extends BleNode> T cast(final Class<T> type)
+	public @Nullable(Nullable.Prevalence.NEVER) <T extends BleNode> T cast(final Class<T> type)
 	{
 		if( this instanceof BleDevice && type == BleServer.class )
 		{
