@@ -20,6 +20,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	static final int Mode_NULL			= -1;
 	static final int Mode_BLE			=  0;
 	static final int Mode_CLASSIC		=  1;
+
+	private static final int CallbackType_UNKNOWN = -1;
 	
 	private int m_mode = Mode_NULL;
 	
@@ -59,9 +61,20 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			getManager().onDiscovered(result.getDevice(), result.getRssi(), scanRecord.getBytes());
 		}
 
-		public void onBatchScanResults(List<ScanResult> results)
+		public void onBatchScanResults(final List<ScanResult> results)
 		{
-			Log.e("", "");
+			if( results != null )
+			{
+				for( int i = 0; i < results.size(); i++ )
+				{
+					final ScanResult result_ith = results.get(i);
+
+					if( result_ith != null )
+					{
+						onScanResult(CallbackType_UNKNOWN, result_ith);
+					}
+				}
+			}
 		}
 
 		public void onScanFailed(final int errorCode)
