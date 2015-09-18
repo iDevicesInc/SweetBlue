@@ -26,7 +26,7 @@ import com.idevicesinc.sweetblue.utils.*;
  * If an option is ultimately <code>null</code> (<code>null</code> when passed to {@link BleDevice#setConfig(BleDeviceConfig)}
  * *and* {@link BleManager#get(Context, BleManagerConfig)}) then it is interpreted as <code>false</code> or {@link Interval#DISABLED}.
  * <br><br>
- * TIP: You can use {@link Interval#DISABLED} instead of <code>null</code> to disable any time-based options, for code readability's sake.
+ * TIP: You can use {@link Interval#DISABLED} instead of <code>null</code> to disable any keepalive-based options, for code readability's sake.
  * <br><br>
  * TIP: You can use {@link #newNulled()} (or {@link #nullOut()}) then only set the few options you want for {@link BleDevice#setConfig(BleDeviceConfig)}.
  */
@@ -211,7 +211,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Interval	minScanTimeNeededForUndiscovery				= Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 	
 	/**
-	 * Default is {@link #DEFAULT_SCAN_KEEP_ALIVE} seconds - If a device exceeds this amount of time since its
+	 * Default is disabled - If a device exceeds this amount of time since its
 	 * last discovery then it is a candidate for being undiscovered.
 	 * The default for this option attempts to accommodate the worst Android phones (BLE-wise), which may make it seem
 	 * like it takes a long time to undiscover a device. You may want to configure this number based on the phone or
@@ -223,7 +223,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * @see #minScanTimeNeededForUndiscovery
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Interval	undiscoveryKeepAlive						= Interval.secs(DEFAULT_SCAN_KEEP_ALIVE);
+	public Interval	undiscoveryKeepAlive						= Interval.DISABLED;
 	
 	/**
 	 * Default is {@link #DEFAULT_RSSI_AUTO_POLL_RATE} - The rate at which a {@link BleDevice} will automatically poll for its {@link BleDevice#getRssi()} value

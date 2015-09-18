@@ -155,10 +155,10 @@ public class BleManager
 			
 			/**
 			 * Used when a device is "undiscovered" after being discovered at least once. There is no native equivalent
-			 * for this callback. Undiscovery is approximated with a timeout based on the last time we discovered a device.
-			 * Consequently you should expect that the callback will take some amount of time to receive after an
-			 * advertising device is turned off or goes out of range or what have you. It's generally not as fast as other
-			 * state changes like {@link BleDeviceState#DISCONNECTED} or getting {@link BleDeviceState#DISCOVERED} in the first place.
+			 * for this callback. Undiscovery is approximated with a timeout based on the last time we discovered a device, configured
+			 * by {@link BleDeviceConfig#undiscoveryKeepAlive}. This option is disabled by default. If set, you should expect that the undiscovery
+			 * callback will take some amount of time to receive after an advertising device is turned off or goes out of range or what have you.
+			 * It's generally not as fast as other state changes like {@link BleDeviceState#DISCONNECTED} or getting {@link BleDeviceState#DISCOVERED} in the first place.
 			 *
 			 * @see BleDeviceConfig#minScanTimeNeededForUndiscovery
 			 * @see BleDeviceConfig#undiscoveryKeepAlive
