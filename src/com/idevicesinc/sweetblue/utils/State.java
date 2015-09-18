@@ -88,6 +88,14 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		{
 			return state.didExit(oldStateBits(), newStateBits());
 		}
+
+		/**
+		 * Returns <code>true</code> if {@link #didEnter(State)} or {@link #didExit(State)} return true.
+		 */
+		public boolean isFor(T_State state)
+		{
+			return didEnter(state) || didExit(state);
+		}
 		
 		/**
 		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns <code>true</code> on any of the {@link State} instances given.
