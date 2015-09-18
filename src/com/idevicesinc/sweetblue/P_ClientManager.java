@@ -147,7 +147,7 @@ class P_ClientManager
 			{
 				final String client = m_all.next();
 
-				if( m_stateMask != 0x0 && m_server.is(client, m_stateMask) )
+				if( m_stateMask != 0x0 && m_server.isAny(client, m_stateMask) )
 				{
 					m_next = client;
 

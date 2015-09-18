@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
+import android.util.Log;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -60,6 +61,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 		public void onBatchScanResults(List<ScanResult> results)
 		{
+			Log.e("", "");
 		}
 
 		public void onScanFailed(final int errorCode)
@@ -170,9 +172,20 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
 		}
 
-		final ScanSettings scanSettings = !Utils.isLollipop() ? null : new ScanSettings.Builder().setScanMode(scanMode).build();
+		if( false == Utils.isLollipop() )
+		{
+			getManager().ASSERT(false, "Tried to create ScanSettings for pre-lollipop!");
+		}
+		else
+		{
+			final ScanSettings.Builder builder = new ScanSettings.Builder();
+			builder.setScanMode(scanMode);
+			builder.setReportDelay(0);
 
-		getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
+			final ScanSettings scanSettings= builder.build();
+
+			getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
+		}
 	}
 
 	private int/*_Mode*/ startNativeScan_preLollipop(final E_Intent intent)
