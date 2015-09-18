@@ -30,11 +30,11 @@ public interface Backend_HistoricalDataList
 
 	void init(final Backend_HistoricalDatabase database, final UpdateLoop updateLoop, final String macAddress, final UUID uuid, final String uuidName, final boolean hasExistingTable);
 
-	void add_single(final HistoricalData historicalData, final BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel logChoice, final long limit);
+	void add_single(final HistoricalData historicalData, final int persistenceLevel, final long limit);
 
-	void add_multiple(final Iterator<HistoricalData> historicalData, final BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel logChoice, final long limit);
+	void add_multiple(final Iterator<HistoricalData> historicalData, final int persistenceLevel, final long limit);
 
-	void add_multiple(final ForEach_Returning<HistoricalData> historicalData, final BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel logChoice, final long limit);
+	void add_multiple(final ForEach_Returning<HistoricalData> historicalData, final int persistenceLevel, final long limit);
 
 	int getCount(final EpochTimeRange range);
 

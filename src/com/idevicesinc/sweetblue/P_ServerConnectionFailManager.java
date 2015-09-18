@@ -2,9 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 
-import com.idevicesinc.sweetblue.utils.Interval;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 
 class P_ServerConnectionFailManager
@@ -65,23 +62,23 @@ class P_ServerConnectionFailManager
 		getOrCreateEntry(nativeDevice.getAddress()).onNativeConnectFail(nativeDevice, status, gattStatus);
 	}
 
-	BleServer.ConnectionFailListener.Please.PE_Please invokeCallback(final BleServer.ConnectionFailListener.ConnectionFailEvent e)
+	int/*__PE_Please*/ invokeCallback(final BleServer.ConnectionFailListener.ConnectionFailEvent e)
 	{
-		final BleServer.ConnectionFailListener.Please.PE_Please ePlease;
+		final int ePlease__PE_Please;
 
 		if( m_connectionFailListener != null )
 		{
 			final BleServer.ConnectionFailListener.Please please = m_connectionFailListener.onEvent(e);
 
-			ePlease = please != null ? please.please() : BleServer.ConnectionFailListener.Please.PE_Please.DO_NOT_RETRY;
+			ePlease__PE_Please = please != null ? please.please() : BleNode.ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
 		}
 		else
 		{
 			final BleServer.ConnectionFailListener.Please please = m_server.getManager().m_defaultConnectionFailListener_server.onEvent(e);
 
-			ePlease = please != null ? please.please() : BleServer.ConnectionFailListener.Please.PE_Please.DO_NOT_RETRY;
+			ePlease__PE_Please = please != null ? please.please() : BleServer.ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
 		}
 
-		return ePlease;
+		return ePlease__PE_Please;
 	}
 }

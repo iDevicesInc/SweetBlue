@@ -8,10 +8,9 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
-import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
@@ -176,7 +175,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				}
 				else
 				{
-					m_device.onNativeDisconnect(/*explicit=*/false, gattStatus, /*doShortTermReconnect=*/true, /*saveLastDisconnect=*/true);
+					final boolean doShortTermReconnect = m_device.getManager().is(BleManagerState.ON);
+					m_device.onNativeDisconnect(/*explicit=*/false, gattStatus, doShortTermReconnect, /*saveLastDisconnect=*/true);
 				}
 			}
 		}

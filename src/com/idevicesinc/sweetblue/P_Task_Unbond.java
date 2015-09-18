@@ -6,8 +6,9 @@ import android.annotation.SuppressLint;
 
 class P_Task_Unbond extends PA_Task_RequiresBleOn
 {
-	private static final String METHOD_NAME_REMOVE_BOND				= "removeBond";
-	private static final String METHOD_NAME_CANCEL_BOND_PROCESS		= "cancelBondProcess";
+	private static final String METHOD_NAME__REMOVE_BOND			= "removeBond";
+	private static final String METHOD_NAME__CANCEL_BOND_PROCESS	= "cancelBondProcess";
+
 	
 	private final PE_TaskPriority m_priority;
 	
@@ -32,40 +33,48 @@ class P_Task_Unbond extends PA_Task_RequiresBleOn
 //			m_logger.w("Already not bonded!");
 			
 			redundant();
-			
-			return;
-		}
-
-		if( getDevice().m_nativeWrapper.isNativelyBonding() )
-		{
-			if( !cancelBondProcess() )
-			{
-				failImmediately();
-			}
-		}
-		else if( getDevice().m_nativeWrapper.isNativelyBonded() )
-		{
-			if( !removeBond() )
-			{
-				failImmediately();
-			}
 		}
 		else
 		{
-			getManager().ASSERT(false, "Expected to be bonding or bonded only.");
-			
-			failImmediately();
+			if( getDevice().m_nativeWrapper.isNativelyBonding() )
+			{
+				if( false == cancelBondProcess() )
+				{
+					failImmediately();
+				}
+				else
+				{
+					// SUCCESS, so far...
+				}
+			}
+			else if( getDevice().m_nativeWrapper.isNativelyBonded() )
+			{
+				if( false == removeBond() )
+				{
+					failImmediately();
+				}
+				else
+				{
+					// SUCCESS, so far...
+				}
+			}
+			else
+			{
+				getManager().ASSERT(false, "Expected to be bonding or bonded only.");
+
+				failImmediately();
+			}
 		}
 	}
 	
 	private boolean removeBond()
 	{
-		return callMethod(METHOD_NAME_REMOVE_BOND);
+		return callMethod(METHOD_NAME__REMOVE_BOND);
 	}
 	
 	private boolean cancelBondProcess()
 	{
-		return callMethod(METHOD_NAME_CANCEL_BOND_PROCESS);
+		return callMethod(METHOD_NAME__CANCEL_BOND_PROCESS);
 	}
 	
 	private boolean callMethod(final String name)

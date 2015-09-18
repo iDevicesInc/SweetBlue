@@ -9,28 +9,19 @@ import android.bluetooth.BluetoothGattDescriptor;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
-import com.idevicesinc.sweetblue.P_PollManager.E_NotifyState;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {
-	private static enum Type
-	{
-		NOTIFY,
-		INDICATE
-	}
+	private static int Type_NOTIFY = 0;
+	private static int Type_INDICATE = 1;
 	
 	private final boolean m_enable;
 	private final UUID m_descUuid;
 	
 	private byte[] m_writeValue = null;
-	
-//	public P_Task_ToggleNotify(BleDevice device, P_Characteristic characteristic, boolean enable, P_WrappingReadWriteListener writeListener)
-//	{
-//		this(device, characteristic, enable, writeListener, null);
-//	}
 
 	public P_Task_ToggleNotify(BleDevice device, P_Characteristic characteristic, boolean enable, final BleDevice.ReadWriteListener writeListener, PE_TaskPriority priority)
 	{
@@ -47,22 +38,22 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	static byte[] getWriteValue(BluetoothGattCharacteristic char_native, boolean enable)
 	{
-		final Type type;
+		final int type;
 		
 		if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0x0 )
 		{
-			type = Type.NOTIFY;
+			type = Type_NOTIFY;
 		}
 		else if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0x0 )
 		{
-			type = Type.INDICATE;
+			type = Type_INDICATE;
 		}
 		else
 		{
-			type = Type.NOTIFY;
+			type = Type_NOTIFY;
 		}
 		
-		final byte[] enableValue = type == Type.NOTIFY ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.ENABLE_INDICATION_VALUE;
+		final byte[] enableValue = type == Type_NOTIFY ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.ENABLE_INDICATION_VALUE;
 		final byte[] disableValue = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
 
 		return enable ? enableValue : disableValue;
@@ -77,43 +68,40 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		if( char_native == null )
 		{
 			this.fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-			
-			return;
 		}
-		
-		if( !getDevice().getNativeGatt().setCharacteristicNotification(char_native, m_enable) )
+		else if( false == getDevice().getNativeGatt().setCharacteristicNotification(char_native, m_enable) )
 		{
 			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
-			
-			return;
 		}
-		
-		final BluetoothGattDescriptor descriptor = char_native.getDescriptor(m_descUuid);
-		
-		if( descriptor == null )
+		else
 		{
-			//--- DRK > Previously we were failing the task if the descriptor came up null. It was assumed that writing the descriptor
-			//---		was a requirement. It turns out that, at least sometimes, simply calling setCharacteristicNotification(true) is enough.
-			succeed();
-//			this.fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_uuid, m_descUuid);
-			
-			return;
-		}
-		
-		m_writeValue = getWriteValue(char_native, m_enable);
+			final BluetoothGattDescriptor descriptor = char_native.getDescriptor(m_descUuid);
 
-		if( !descriptor.setValue(getWriteValue()) )
-		{
-			this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
+			if( descriptor == null )
+			{
+				//--- DRK > Previously we were failing the task if the descriptor came up null. It was assumed that writing the descriptor
+				//---		was a requirement. It turns out that, at least sometimes, simply calling setCharacteristicNotification(true) is enough.
+				succeed();
 
-			return;
-		}
+				// this.fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_uuid, m_descUuid);
+			}
+			else
+			{
+				m_writeValue = getWriteValue(char_native, m_enable);
 
-		if( !getDevice().getNativeGatt().writeDescriptor(descriptor) )
-		{
-			this.fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
-
-			return;
+				if( false == descriptor.setValue(getWriteValue()) )
+				{
+					this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
+				}
+				else if( false == getDevice().getNativeGatt().writeDescriptor(descriptor) )
+				{
+					this.fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
+				}
+				else
+				{
+					// SUCCESS, so far...
+				}
+			}
 		}
 	}
 	
@@ -123,7 +111,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 
 		if( m_enable )
 		{
-			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), charUuid, E_NotifyState.NOT_ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), charUuid, P_PollManager.E_NotifyState__NOT_ENABLED);
 		}
 	}
 	
@@ -133,11 +121,11 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		
 		if( m_enable )
 		{
-			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), E_NotifyState.ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), P_PollManager.E_NotifyState__ENABLED);
 		}
 		else
 		{
-			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), E_NotifyState.NOT_ENABLED);
+			getDevice().getPollManager().onNotifyStateChange(getServiceUuid(), getCharUuid(), P_PollManager.E_NotifyState__NOT_ENABLED);
 		}
 
 		super.succeed();
@@ -185,15 +173,17 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			getLogger().w(getLogger().charName(getCharUuid()) + " descriptor write timed out!");
 
 			final ReadWriteEvent event = newReadWriteEvent(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getServiceUuid(), getCharUuid(), m_descUuid);
+
 			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			Target target = this.getState() == PE_TaskState.EXECUTING ? Target.DESCRIPTOR : Target.CHARACTERISTIC;
-			UUID descUuid = target == Target.DESCRIPTOR ? m_descUuid : ReadWriteEvent.NON_APPLICABLE_UUID;
+			final Target target = this.getState() == PE_TaskState.EXECUTING ? Target.DESCRIPTOR : Target.CHARACTERISTIC;
+			final UUID descUuid = target == Target.DESCRIPTOR ? m_descUuid : ReadWriteEvent.NON_APPLICABLE_UUID;
 			final ReadWriteEvent event = newReadWriteEvent(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, target, getServiceUuid(), getCharUuid(), descUuid);
+
 			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 		}
 	}

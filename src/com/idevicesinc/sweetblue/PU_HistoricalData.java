@@ -78,24 +78,24 @@ class PU_HistoricalData
 		return newDatabase;
 	}
 
-	static BleDeviceConfig.HistoricalDataLogFilter getFilter(final BleDevice device)
+	static BleDeviceConfig.HistoricalDataLogFilter getFilter(final BleNode endpoint)
 	{
-		final BleDeviceConfig.HistoricalDataLogFilter filter_config_device = device.conf_device().historicalDataLogFilter;
-		final BleDeviceConfig.HistoricalDataLogFilter filter_config_mngr = device.conf_mngr().historicalDataLogFilter;
+		final BleDeviceConfig.HistoricalDataLogFilter filter_config_device = endpoint.conf_node().historicalDataLogFilter;
+		final BleDeviceConfig.HistoricalDataLogFilter filter_config_mngr = endpoint.conf_mngr().historicalDataLogFilter;
 
 		return filter_config_device != null ? filter_config_device : filter_config_mngr;
 	}
 
-	static BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent newEvent(final BleDevice device, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
+	static BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent newEvent(final BleNode node, final String macAddress, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
 	{
-		final BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent event = new BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent(device, uuid, data, epochTime, source);
+		final BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent event = new BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent(node, macAddress, uuid, data, epochTime, source);
 
 		return event;
 	}
 
-	static BleDeviceConfig.HistoricalDataLogFilter.Please getPlease(final BleDevice device, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
+	static BleDeviceConfig.HistoricalDataLogFilter.Please getPlease(final BleNode node, final String macAddress, final UUID uuid, final byte[] data, final EpochTime epochTime, final BleDeviceConfig.HistoricalDataLogFilter.Source source)
 	{
-		final BleDeviceConfig.HistoricalDataLogFilter filter = getFilter(device);
+		final BleDeviceConfig.HistoricalDataLogFilter filter = getFilter(node);
 
 		if( filter == null )
 		{
@@ -103,7 +103,7 @@ class PU_HistoricalData
 		}
 		else
 		{
-			final BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent event = newEvent(device, uuid, data, epochTime, source);
+			final BleDeviceConfig.HistoricalDataLogFilter.HistoricalDataLogEvent event = newEvent(node, macAddress, uuid, data, epochTime, source);
 			final BleDeviceConfig.HistoricalDataLogFilter.Please please = filter.onEvent(event);
 
 			return please != null ? please : DO_NOT_LOG;
@@ -122,7 +122,7 @@ class PU_HistoricalData
 
 	static boolean add_earlyOut(final Backend_HistoricalDataList list, final BleDeviceConfig.HistoricalDataLogFilter.Please please)
 	{
-		if( please.m_logChoice == BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel.NONE )
+		if( please.m_persistenceLevel == BleDeviceConfig.HistoricalDataLogFilter.PersistenceLevel_NONE )
 		{
 			final long numberToDelete = please.getLimit() != Long.MAX_VALUE ? list.getCount(EpochTimeRange.FROM_MIN_TO_MAX)-please.getLimit() : 0;
 

@@ -64,7 +64,7 @@ public class HistoricalData implements UsesCustomNull
 			return HistoricalData.NULL;
 		}
 
-		final HistoricalData data = new HistoricalData(cursor.getLong(Backend_HistoricalDatabase.COLUMN_INDEX__EPOCH_TIME), cursor.getBlob(Backend_HistoricalDatabase.COLUMN_INDEX__DATA));
+		final HistoricalData data = new HistoricalData(cursor.getLong(HistoricalDataColumn.EPOCH_TIME.getColumnIndex()), cursor.getBlob(HistoricalDataColumn.DATA.getColumnIndex()));
 
 		return data;
 	}
@@ -106,7 +106,7 @@ public class HistoricalData implements UsesCustomNull
 	 */
 	public String getBlob_string()
 	{
-		return Utils.getStringValue(getBlob(), "UTF-8");
+		return Utils_String.getStringValue(getBlob(), "UTF-8");
 	}
 
 	/**

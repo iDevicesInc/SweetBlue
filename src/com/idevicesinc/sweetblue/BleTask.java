@@ -1,7 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import android.bluetooth.BluetoothDevice;
-
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.FutureData;
 
@@ -10,7 +8,7 @@ import java.util.UUID;
 /**
  * Under the hood, SweetBlue uses a priority task queue to serialize all interaction with the native BLE stack.
  * This enumeration represents all the tasks that are used and lets you control various timing options in
- * {@link BleDeviceConfig} and {@link BleManagerConfig}, for example {@link BleDeviceConfig#timeoutRequestFilter}.
+ * {@link BleDeviceConfig} and {@link BleManagerConfig}, for example {@link BleDeviceConfig#taskTimeoutRequestFilter}.
  */
 @Advanced
 public enum BleTask

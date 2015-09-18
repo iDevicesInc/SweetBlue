@@ -11,6 +11,8 @@ import java.util.TimeZone;
  */
 public class Utils_Time extends Utils
 {
+	private Utils_Time(){super();}
+
 	/**
 	 * {@link FutureData} wrapper of {@link #getCurrentTime()}.
 	 */
@@ -35,8 +37,8 @@ public class Utils_Time extends Utils
 		GregorianCalendar timestamp = new GregorianCalendar();
 
 		short year = (short) timestamp.get( Calendar.YEAR );
-		final byte[] year_bytes = Utils.shortToBytes(year);
-		Utils.reverseBytes(year_bytes);
+		final byte[] year_bytes = Utils_Byte.shortToBytes(year);
+		Utils_Byte.reverseBytes(year_bytes);
 
 		System.arraycopy(year_bytes, 0, time, 0, 2);
 

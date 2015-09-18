@@ -37,25 +37,26 @@ class P_Task_TurnBleOn extends PA_Task
 	{
 		if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_ON )
 		{
-			this.redundant();
-			
-			return;
+			redundant();
 		}
-		
-		if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_TURNING_ON )
+		else if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_TURNING_ON )
 		{
-			return;
+			// DRK > Nothing to do, already turning on.
 		}
-		
-		if( m_implicit )
+		else
 		{
-			this.fail();
-		}
-		else if( !getManager().getNative().getAdapter().enable() )
-		{
-			this.fail();
-			
-			return;
+			if( m_implicit )
+			{
+				fail();
+			}
+			else if( false == getManager().getNative().getAdapter().enable() )
+			{
+				fail();
+			}
+			else
+			{
+				// SUCCESS, so far...
+			}
 		}
 	}
 	

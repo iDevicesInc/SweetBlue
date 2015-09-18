@@ -173,8 +173,7 @@ class P_TaskQueue
 		{
 			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
 			{
-				@Override
-				public void run()
+				@Override public void run()
 				{
 					add_mainThread(newTask);
 				}
@@ -190,7 +189,10 @@ class P_TaskQueue
 	{
 		if( tryCancellingCurrentTask(newTask) )
 		{
-			dequeue();
+			if( getCurrent() == null )
+			{
+				dequeue();
+			}
 		}
 		else if( tryInterruptingCurrentTask(newTask) ) {}
 		else if( tryInsertingIntoQueue(newTask) ) {}

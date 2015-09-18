@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.utils.Utils_State;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -98,7 +100,7 @@ public class BleDeviceIterator implements Iterator<BleDevice>
 			{
 				final int mask = m_all_states != null ? m_all_states.get(i) : BleDeviceState.FULL_MASK;
 				
-				if( BleDevice.is_query(mask, m_query) )
+				if( Utils_State.query(mask, m_query) )
 				{
 					m_next = i;
 					

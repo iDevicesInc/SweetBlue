@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
+import android.util.Log;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -15,13 +16,14 @@ import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class P_Task_Scan extends PA_Task_RequiresBleOn
-{	
-	static enum E_Mode
-	{
-		BLE, CLASSIC;
-	}
+{
+	static final int Mode_NULL			= -1;
+	static final int Mode_BLE			=  0;
+	static final int Mode_CLASSIC		=  1;
+
+	private static final int CallbackType_UNKNOWN = -1;
 	
-	private E_Mode m_mode = null;
+	private int m_mode = Mode_NULL;
 	
 	//TODO
 	private final boolean m_explicit = true;
@@ -59,8 +61,20 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			getManager().onDiscovered(result.getDevice(), result.getRssi(), scanRecord.getBytes());
 		}
 
-		public void onBatchScanResults(List<ScanResult> results)
+		public void onBatchScanResults(final List<ScanResult> results)
 		{
+			if( results != null )
+			{
+				for( int i = 0; i < results.size(); i++ )
+				{
+					final ScanResult result_ith = results.get(i);
+
+					if( result_ith != null )
+					{
+						onScanResult(CallbackType_UNKNOWN, result_ith);
+					}
+				}
+			}
 		}
 
 		public void onScanFailed(final int errorCode)
@@ -91,7 +105,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				tryClassicDiscovery(getIntent());
 
-				m_mode = E_Mode.CLASSIC;
+				m_mode = Mode_CLASSIC;
 			}
 		}
 	};
@@ -133,7 +147,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			if( Utils.isLollipop() )
 			{
-				m_mode = E_Mode.BLE;
+				m_mode = Mode_BLE;
 				getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 				startNativeScan_postLollipop();
@@ -142,7 +156,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				m_mode = startNativeScan_preLollipop(getIntent());
 
-				if( m_mode == null )
+				if( m_mode == Mode_NULL )
 				{
 					fail();
 				}
@@ -171,12 +185,23 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
 		}
 
-		final ScanSettings scanSettings = !Utils.isLollipop() ? null : new ScanSettings.Builder().setScanMode(scanMode).build();
+		if( false == Utils.isLollipop() )
+		{
+			getManager().ASSERT(false, "Tried to create ScanSettings for pre-lollipop!");
+		}
+		else
+		{
+			final ScanSettings.Builder builder = new ScanSettings.Builder();
+			builder.setScanMode(scanMode);
+			builder.setReportDelay(0);
 
-		getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
+			final ScanSettings scanSettings= builder.build();
+
+			getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
+		}
 	}
 
-	private P_Task_Scan.E_Mode startNativeScan_preLollipop(final E_Intent intent)
+	private int/*_Mode*/ startNativeScan_preLollipop(final E_Intent intent)
 	{
 		//--- DRK > Not sure how useful this retry loop is. I've definitely seen startLeScan
 		//---		fail but then work again at a later time (seconds-minutes later), so
@@ -243,7 +268,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			tryClassicDiscovery(intent);
 
-			return E_Mode.CLASSIC;
+			return Mode_CLASSIC;
 		}
 		else
 		{
@@ -259,7 +284,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			return E_Mode.BLE;
+			return Mode_BLE;
 		}
 	}
 
@@ -309,7 +334,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				selfInterrupt();
 			}
-			else if( m_mode == E_Mode.CLASSIC && getTotalTimeExecuting() >= BleManagerConfig.MAX_CLASSIC_SCAN_TIME )
+			else if( m_mode == Mode_CLASSIC && getTotalTimeExecuting() >= BleManagerConfig.MAX_CLASSIC_SCAN_TIME )
 			{
 				selfInterrupt();
 			}
@@ -321,7 +346,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		return PE_TaskPriority.TRIVIAL;
 	}
 	
-	public E_Mode getMode()
+	public int/*_Mode*/ getMode()
 	{
 		return m_mode;
 	}

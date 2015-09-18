@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 
 
 class P_NativeDeviceWrapper
@@ -12,8 +13,6 @@ class P_NativeDeviceWrapper
 	private BluetoothDevice m_device_native;
 	private	BluetoothGatt m_gatt;
 	private final String m_address;
-	private final P_Logger m_logger;
-	private final BleManager m_mngr;
 
 	private String m_name_native;
 	private String m_name_normalized;
@@ -30,14 +29,12 @@ class P_NativeDeviceWrapper
 		m_device = device;
 		m_device_native = device_native;
 		m_address = m_device_native == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
-		m_logger = m_device.getManager().getLogger();
-		m_mngr = m_device.getManager();
 
 		updateName(name_native, name_normalized);
 
 		//--- DRK > Manager can be null for BleDevice.NULL.
 		final boolean hitDiskForOverrideName = true;
-		final String name_disk = m_mngr != null ? m_mngr.m_diskOptionsMngr.loadName(m_address, hitDiskForOverrideName) : null;
+		final String name_disk = getManager() != null ? getManager().m_diskOptionsMngr.loadName(m_address, hitDiskForOverrideName) : null;
 
 		if( name_disk != null )
 		{
@@ -47,8 +44,18 @@ class P_NativeDeviceWrapper
 		{
 			setName_override(m_name_native);
 			final boolean saveToDisk = BleDeviceConfig.bool(m_device.conf_device().saveNameChangesToDisk, m_device.conf_mngr().saveNameChangesToDisk);
-			m_mngr.m_diskOptionsMngr.saveName(m_address, m_name_native, saveToDisk);
+			getManager().m_diskOptionsMngr.saveName(m_address, m_name_native, saveToDisk);
 		}
+	}
+
+	private BleManager getManager()
+	{
+		return m_device.getManager();
+	}
+
+	private P_Logger getLogger()
+	{
+		return m_device.getManager().getLogger();
 	}
 
 	void updateNativeDevice(final BluetoothDevice device_native)
@@ -68,7 +75,7 @@ class P_NativeDeviceWrapper
 	void updateNativeName(final String name_native)
 	{
 		final String name_native_override = name_native != null ? name_native : "";
-		final String name_normalized = Utils.normalizeDeviceName(name_native_override);
+		final String name_normalized = Utils_String.normalizeDeviceName(name_native_override);
 
 		updateName(name_native_override, name_normalized);
 	}
@@ -142,7 +149,7 @@ class P_NativeDeviceWrapper
 	{
 		if (gatt == null)
 		{
-			m_logger.w("Gatt object from callback is null.");
+			getLogger().w("Gatt object from callback is null.");
 		}
 		else
 		{
@@ -162,21 +169,18 @@ class P_NativeDeviceWrapper
 	
 	void updateNativeConnectionState(BluetoothGatt gatt, Integer state)
 	{
-		synchronized (this)
+		if( state == null )
 		{
-			if( state == null )
-			{
-				m_nativeConnectionState = getNativeConnectionState();
-			}
-			else
-			{
-				m_nativeConnectionState = state;
-			}
-			
-			updateGattFromCallback(gatt);
-			
-			m_logger.i(m_logger.gattConn(m_nativeConnectionState));
+			m_nativeConnectionState = getNativeConnectionState();
 		}
+		else
+		{
+			m_nativeConnectionState = state;
+		}
+
+		updateGattFromCallback(gatt);
+
+		getLogger().i(getLogger().gattConn(m_nativeConnectionState));
 	}
 	
 	public int getNativeBondState()
@@ -235,7 +239,7 @@ class P_NativeDeviceWrapper
 			{
 				if( m_nativeConnectionState != reportedNativeConnectionState )
 				{
-					m_logger.e("Tracked native state "+m_logger.gattConn(m_nativeConnectionState)+" doesn't match reported state "+m_logger.gattConn(reportedNativeConnectionState)+".");
+					getLogger().e("Tracked native state " + getLogger().gattConn(m_nativeConnectionState) + " doesn't match reported state " + getLogger().gattConn(reportedNativeConnectionState) + ".");
 				}
 				
 				connectedStateThatWeWillGoWith = m_nativeConnectionState;
@@ -250,15 +254,15 @@ class P_NativeDeviceWrapper
 					//---		but we haven't called connect yet. Really rare...only seen once after 4 months.
 					if( m_nativeConnectionState == null )
 					{
-						m_logger.e("Gatt is null with " + m_logger.gattConn(connectedStateThatWeWillGoWith));
+						getLogger().e("Gatt is null with " + getLogger().gattConn(connectedStateThatWeWillGoWith));
 						
 						connectedStateThatWeWillGoWith = BluetoothGatt.STATE_DISCONNECTED;
-						
-						m_mngr.uhOh(UhOh.CONNECTED_WITHOUT_EVER_CONNECTING);
+
+						getManager().uhOh(UhOh.CONNECTED_WITHOUT_EVER_CONNECTING);
 					}
 					else
 					{
-						m_mngr.ASSERT(false, "Gatt is null with tracked native state: " + m_logger.gattConn(connectedStateThatWeWillGoWith));
+						getManager().ASSERT(false, "Gatt is null with tracked native state: " + getLogger().gattConn(connectedStateThatWeWillGoWith));
 					}
 				}
 			}
@@ -278,36 +282,31 @@ class P_NativeDeviceWrapper
 	
 	void closeGattIfNeeded(boolean disconnectAlso)
 	{
-		synchronized (this)
-		{
-			if( m_gatt == null )  return;
-			
-			closeGatt(disconnectAlso);
-		}
+		if( m_gatt == null )  return;
+
+		closeGatt(disconnectAlso);
 	}
 	
 	private void closeGatt(boolean disconnectAlso)
 	{
-		synchronized (this)
-		{
-			if( m_gatt == null )  return;
-			
-			//--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
-			//---		Don't want to keep it here because I'm afraid it has a better chance to do bad than good.
+		if( m_gatt == null )  return;
+
+		//--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
+		//---		Don't want to keep it here because I'm afraid it has a better chance to do bad than good.
 //			if( disconnectAlso )
 //			{
 //				m_gatt.disconnect();
 //			}
 
-			//--- DRK > This can randomly throw an NPE down stream...NOT from m_gatt being null, but a few methods downstream.
-			//---		See below for more info.
-			try
-			{
-				m_gatt.close();
-			}
-			catch(NullPointerException e)
-			{
-				//--- DRK > From Flurry crash reports...happened several times on S4 running 4.4.4 but was not able to reproduce.
+		//--- DRK > This can randomly throw an NPE down stream...NOT from m_gatt being null, but a few methods downstream.
+		//---		See below for more info.
+		try
+		{
+			m_gatt.close();
+		}
+		catch(NullPointerException e)
+		{
+			//--- DRK > From Flurry crash reports...happened several times on S4 running 4.4.4 but was not able to reproduce.
 //				This error occurred: java.lang.NullPointerException
 //				android.os.Parcel.readException(Parcel.java:1546)
 //				android.os.Parcel.readException(Parcel.java:1493)
@@ -325,45 +324,40 @@ class P_NativeDeviceWrapper
 //				com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask(P_TaskQueue.java:267)
 //				com.idevicesinc.sweetblue.P_TaskQueue.fail(P_TaskQueue.java:260)
 //				com.idevicesinc.sweetblue.P_BleDevice_Listeners.onConnectionStateChange_synchronized(P_BleDevice_Listeners.java:168)
-				m_device.getManager().uhOh(UhOh.RANDOM_EXCEPTION);
-			}
-			m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;
-			m_gatt = null;
+			m_device.getManager().uhOh(UhOh.RANDOM_EXCEPTION);
 		}
+		m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;
+		m_gatt = null;
 	}
 	
 	private void setGatt(BluetoothGatt gatt)
 	{
-		synchronized (this)
+		if( m_gatt != null )
 		{
-			if( m_gatt != null )
+			//--- DRK > This tripped with an S5 and iGrillv2 with low battery (not sure that matters).
+			//---		AV was able to replicate twice but was not attached to debugger and now can't replicate.
+			//---		As a result of a brief audit, moved gatt object setting from the ending state
+			//---		handler of the connect task in P_BleDevice_Listeners to the execute method of the connect task itself.
+			//---		Doesn't solve any particular issue found, but seems more logical.
+			getManager().ASSERT(m_gatt == gatt, "Different gatt object set.");
+
+			if( m_gatt != gatt )
 			{
-				//--- DRK > This tripped with an S5 and iGrillv2 with low battery (not sure that matters).
-				//---		AV was able to replicate twice but was not attached to debugger and now can't replicate.
-				//---		As a result of a brief audit, moved gatt object setting from the ending state
-				//---		handler of the connect task in P_BleDevice_Listeners to the execute method of the connect task itself.
-				//---		Doesn't solve any particular issue found, but seems more logical.
-				m_mngr.ASSERT(m_gatt == gatt, "Different gatt object set.");
-				
-				if( m_gatt != gatt )
-				{
-					closeGatt(/*disconnectAlso=*/false);
-				}
-				else
-				{
-					return;
-				}
-			}
-			
-			if( gatt == null )
-			{
-				m_gatt = null;
+				closeGatt(/*disconnectAlso=*/false);
 			}
 			else
 			{
-				m_gatt = gatt;
+				return;
 			}
 		}
+
+		if( gatt == null )
+		{
+			m_gatt = null;
+		}
+		else
+		{
+			m_gatt = gatt;
+		}
 	}
-	
 }

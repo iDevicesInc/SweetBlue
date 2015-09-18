@@ -32,25 +32,26 @@ class P_Task_TurnBleOff extends PA_Task
 	{
 		if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_OFF )
 		{
-			this.redundant();
-			
-			return;
+			redundant();
 		}
-		
-		if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_TURNING_OFF )
+		else if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_TURNING_OFF )
 		{
-			return;
+			// DRK > Nothing to do, already turning off.
 		}
-		
-		if( m_implicit )
+		else
 		{
-			this.fail();
-		}
-		else if( !getManager().getNative().getAdapter().disable() )
-		{
-			this.fail();
-			
-			return;
+			if( m_implicit )
+			{
+				this.fail();
+			}
+			else if( false == getManager().getNative().getAdapter().disable() )
+			{
+				this.fail();
+			}
+			else
+			{
+				// SUCCESS, for now...
+			}
 		}
 	}
 	

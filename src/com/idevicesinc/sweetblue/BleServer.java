@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
@@ -30,6 +28,7 @@ import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import static com.idevicesinc.sweetblue.BleServerState.*;
@@ -40,7 +39,7 @@ import static com.idevicesinc.sweetblue.BleServerState.*;
  * is only useful by piggybacking on an existing {@link BleDevice} that is currently {@link BleDeviceState#CONNECTED}.
  * For OS levels 5.0 and up a {@link BleServer} is capable of acting as an independent peripheral.
  */
-public class BleServer implements UsesCustomNull
+public class BleServer extends BleNode implements UsesCustomNull
 {
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
@@ -264,19 +263,19 @@ public class BleServer implements UsesCustomNull
 			{
 				if( type().isRead() )
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
-						"type",				type(),
-						"target",			target(),
-						"macAddress",		macAddress(),
-						"charUuid",			server().getManager().getLogger().uuidName(charUuid()),
-						"requestId",		requestId()
+						"type", type(),
+						"target", target(),
+						"macAddress", macAddress(),
+						"charUuid", server().getManager().getLogger().uuidName(charUuid()),
+						"requestId", requestId()
 					);
 				}
 				else
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"type",				type(),
@@ -525,7 +524,7 @@ public class BleServer implements UsesCustomNull
 			{
 				if( type().isRead() )
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"status",			status(),
@@ -538,7 +537,7 @@ public class BleServer implements UsesCustomNull
 				}
 				else
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"status",			status(),
@@ -630,7 +629,7 @@ public class BleServer implements UsesCustomNull
 			CANCELLED_FROM_BLE_TURNING_OFF,
 
 			/**
-			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}
+			 * Couldn't send out the data because the operation took longer than the time dictated by {@link BleNodeConfig#taskTimeoutRequestFilter}
 			 * so we had to cut her loose.
 			 */
 			TIMED_OUT,
@@ -684,7 +683,7 @@ public class BleServer implements UsesCustomNull
 			private final String m_macAddress;
 
 			/**
-			 * The change in gattStatus that may have precipitated the state change, or {@link BleDeviceConfig#GATT_STATUS_NOT_APPLICABLE}.
+			 * The change in gattStatus that may have precipitated the state change, or {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 * For example if {@link #didEnter(State)} with {@link BleServerState#DISCONNECTED} is <code>true</code> and
 			 * {@link #didExit(State)} with {@link BleServerState#CONNECTING} is also <code>true</code> then {@link #gattStatus()} may be greater
 			 * than zero and give some further hint as to why the connection failed.
@@ -703,13 +702,13 @@ public class BleServer implements UsesCustomNull
 
 			@Override public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 //					"server",			server().getName_debug(),
-					"entered",			Utils.toString(enterMask(),						BleServerState.VALUES()),
-					"exited", 			Utils.toString(exitMask(),						BleServerState.VALUES()),
-					"current",			Utils.toString(newStateBits(),					BleServerState.VALUES()),
+					"entered",			Utils_String.toString(enterMask(),						BleServerState.VALUES()),
+					"exited", 			Utils_String.toString(exitMask(),						BleServerState.VALUES()),
+					"current",			Utils_String.toString(newStateBits(),					BleServerState.VALUES()),
 					"gattStatus",		server().getManager().getLogger().gattStatus(gattStatus())
 				);
 			}
@@ -727,7 +726,7 @@ public class BleServer implements UsesCustomNull
 	 * @see BleServer#setListener_ConnectionFail(ConnectionFailListener)
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ConnectionFailListener
+	public static interface ConnectionFailListener extends BleNode.ConnectionFailListener
 	{
 		/**
 		 * The reason for the connection failure.
@@ -772,7 +771,7 @@ public class BleServer implements UsesCustomNull
 
 			/**
 			 * Couldn't connect through {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
-			 * because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}.
+			 * because the operation took longer than the time dictated by {@link BleNodeConfig#taskTimeoutRequestFilter}.
 			 */
 			TIMED_OUT,
 
@@ -810,7 +809,7 @@ public class BleServer implements UsesCustomNull
 			}
 
 			/**
-			 * Whether this reason honors a {@link BleServer.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
+			 * Whether this reason honors a {@link BleNode.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
 			 * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
 			 */
 			public boolean allowsRetry()
@@ -837,40 +836,10 @@ public class BleServer implements UsesCustomNull
 		}
 
 		/**
-		 * Describes usage of the <code>autoConnect</code> parameter for
-		 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}.
-		 */
-		@com.idevicesinc.sweetblue.annotations.Advanced
-		public static enum AutoConnectUsage
-		{
-			/**
-			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen, for example after
-			 * SweetBlue considers a connect timed out based on {@link BleManagerConfig#timeoutRequestFilter} but then it somehow
-			 * does come in (shouldn't happen but who knows).
-			 */
-			UNKNOWN,
-
-			/**
-			 * Usage is not applicable to the{@link ConnectionFailEvent#status()} given.
-			 */
-			NOT_APPLICABLE,
-
-			/**
-			 * <code>autoConnect</code> was used.
-			 */
-			USED,
-
-			/**
-			 * <code>autoConnect</code> was not used.
-			 */
-			NOT_USED;
-		}
-
-		/**
 		 * Structure passed to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
 		 */
 		@Immutable
-		public static class ConnectionFailEvent implements UsesCustomNull
+		public static class ConnectionFailEvent extends BleNode.ConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
 		{
 			/**
 			 * The {@link BleServer} this {@link ConnectionFailEvent} is for.
@@ -896,45 +865,6 @@ public class BleServer implements UsesCustomNull
 			private final Status m_status;
 
 			/**
-			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
-			 */
-			public int failureCountSoFar() {  return m_failureCountSoFar;  }
-			private final int m_failureCountSoFar;
-
-			/**
-			 * How long the last connection attempt took before failing.
-			 */
-			public Interval attemptTime_latest() {  return m_latestAttemptTime;  }
-			private final Interval m_latestAttemptTime;
-
-			/**
-			 * How long it's been since {@link BleDevice#connect()} (or overloads) were initially called.
-			 */
-			public Interval attemptTime_total() {  return m_totalAttemptTime;  }
-			private final Interval m_totalAttemptTime;
-
-			/**
-			 * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
-			 * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
-			 * If not applicable, for example if {@link ConnectionFailEvent#status()} is {@link Status#CANCELLED_FROM_DISCONNECT}, then this is set to
-			 * {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
-			 * <br><br>
-			 * See {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
-			 *
-			 * @see BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()
-			 */
-			public int gattStatus() {  return m_gattStatus;  }
-			private final int m_gattStatus;
-
-			/**
-			 * Whether <code>autoConnect=true</code> was passed to {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}.
-			 * See more discussion at {@link BleDeviceConfig#alwaysUseAutoConnect}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public AutoConnectUsage autoConnectUsage() {  return m_autoConnectUsage;  }
-			private final AutoConnectUsage m_autoConnectUsage;
-
-			/**
 			 * Returns a chronologically-ordered list of all {@link ConnectionFailEvent} instances returned through
 			 * {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} since the first call to {@link BleDevice#connect()},
 			 * including the current instance. Thus this list will always have at least a length of one (except if {@link #isNull()} is <code>true</code>).
@@ -946,14 +876,11 @@ public class BleServer implements UsesCustomNull
 
 			ConnectionFailEvent(BleServer server, final BluetoothDevice nativeDevice, Status status, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, AutoConnectUsage autoConnectUsage, ArrayList<ConnectionFailEvent> history)
 			{
+				super(failureCountSoFar, latestAttemptTime, totalAttemptTime, gattStatus, autoConnectUsage);
+
 				this.m_server = server;
 				this.m_nativeDevice = nativeDevice;
 				this.m_status = status;
-				this.m_failureCountSoFar = failureCountSoFar;
-				this.m_latestAttemptTime = latestAttemptTime;
-				this.m_totalAttemptTime = totalAttemptTime;
-				this.m_gattStatus = gattStatus;
-				this.m_autoConnectUsage = autoConnectUsage;
 
 				if( history == null )
 				{
@@ -991,7 +918,7 @@ public class BleServer implements UsesCustomNull
 
 			/**
 			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
-			 * {@link BleDeviceConfig.ReconnectRequestFilter.ReconnectRequestEvent#connectionFailInfo()} in certain situations.
+			 * {@link BleNodeConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
 			 */
 			@Override public boolean isNull()
 			{
@@ -1015,7 +942,7 @@ public class BleServer implements UsesCustomNull
 				}
 				else
 				{
-					return Utils.toString
+					return Utils_String.toString
 					(
 						this.getClass(),
 						"server",				server(),
@@ -1025,98 +952,6 @@ public class BleServer implements UsesCustomNull
 						"failureCountSoFar",	failureCountSoFar()
 					);
 				}
-			}
-		}
-
-		/**
-		 * Return value for {@link ConnectionFailListener#onEvent(ConnectionFailEvent)}.
-		 * Generally you will only return {@link #retry()} or {@link #doNotRetry()}, but there are more advanced options as well.
-		 */
-		@Immutable
-		public static class Please
-		{
-			static enum PE_Please
-			{
-				RETRY, RETRY_WITH_AUTOCONNECT_TRUE, RETRY_WITH_AUTOCONNECT_FALSE, DO_NOT_RETRY;
-
-				boolean isRetry()
-				{
-					return this != DO_NOT_RETRY;
-				}
-			}
-
-			private final PE_Please m_please;
-
-			private Please(PE_Please please)
-			{
-				m_please = please;
-			}
-
-			/*package*/ PE_Please please()
-			{
-				return m_please;
-			}
-
-			/**
-			 * Return this to retry the connection, continuing the connection fail retry loop. <code>autoConnect</code> passed to
-			 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}
-			 * will be false or true based on what has worked in the past, or on {@link BleServerConfig#alwaysUseAutoConnect}.
-			 */
-			public static Please retry()
-			{
-				return new Please(PE_Please.RETRY);
-			}
-
-			/**
-			 * Returns {@link #retry()} if the given condition holds <code>true</code>, {@link #doNotRetry()} otherwise.
-			 */
-			public static Please retryIf(boolean condition)
-			{
-				return condition ? retry() : doNotRetry();
-			}
-
-			/**
-			 * Return this to stop the connection fail retry loop.
-			 */
-			public static Please doNotRetry()
-			{
-				return new Please(PE_Please.DO_NOT_RETRY);
-			}
-
-			/**
-			 * Returns {@link #doNotRetry()} if the given condition holds <code>true</code>, {@link #retry()} otherwise.
-			 */
-			public static Please doNotRetryIf(boolean condition)
-			{
-				return condition ? doNotRetry() : retry();
-			}
-
-			/**
-			 * Same as {@link #retry()}, but <code>autoConnect=true</code> will be passed to
-			 * {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}.
-			 * See more discussion at {@link BleServerConfig#alwaysUseAutoConnect}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public static Please retryWithAutoConnectTrue()
-			{
-				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_TRUE);
-			}
-
-			/**
-			 * Opposite of {@link #retryWithAutoConnectTrue()}.
-			 */
-			@com.idevicesinc.sweetblue.annotations.Advanced
-			public static Please retryWithAutoConnectFalse()
-			{
-				return new Please(PE_Please.RETRY_WITH_AUTOCONNECT_FALSE);
-			}
-
-			/**
-			 * Returns <code>true</code> for everything except {@link #doNotRetry()}.
-			 */
-			public boolean isRetry()
-			{
-				return m_please != null && m_please.isRetry();
 			}
 		}
 
@@ -1144,7 +979,7 @@ public class BleServer implements UsesCustomNull
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link ConnectionFailListener.Please#retryWithAutoConnectTrue()}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link BleNode.ConnectionFailListener.Please#retryWithAutoConnectTrue()}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 
@@ -1242,7 +1077,7 @@ public class BleServer implements UsesCustomNull
 			FAILED_EVENTUALLY,
 
 			/**
-			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleServerConfig#timeoutRequestFilter}.
+			 * Couldn't add the service because the operation took longer than the time dictated by {@link BleNodeConfig#taskTimeoutRequestFilter}.
 			 */
 			TIMED_OUT,
 
@@ -1339,7 +1174,7 @@ public class BleServer implements UsesCustomNull
 
 			public String toString()
 			{
-				return Utils.toString
+				return Utils_String.toString
 				(
 					this.getClass(),
 					"status",			status(),
@@ -1362,40 +1197,25 @@ public class BleServer implements UsesCustomNull
 		}
 	};
 
-	static final byte[]				EMPTY_BYTE_ARRAY	= new byte[0];
-	static final FutureData			EMPTY_FUTURE_DATA 	= new PresentData(EMPTY_BYTE_ARRAY);
-
 	private final P_ServerStateTracker m_stateTracker;
-	private final BleManager m_mngr;
-	private final P_TaskQueue m_queue;
 	final P_BleServer_Listeners m_listeners;
 	final P_NativeServerWrapper m_nativeWrapper;
 	private IncomingListener m_incomingListener;
 	private OutgoingListener m_outgoingListener_default;
 	private final boolean m_isNull;
-	private BleServerConfig m_config = null;
+	private BleNodeConfig m_config = null;
 	private final P_ServerConnectionFailManager m_connectionFailMngr;
 	private final P_ClientManager m_clientMngr;
 	final P_ServerServiceManager m_serviceMngr;
 
-	/**
-	 * Field for app to associate any data it wants with instances of this class
-	 * instead of having to subclass or manage associative hash maps or something.
-	 * The library does not touch or interact with this data in any way.
-	 *
-	 * @see BleManager#appData
-	 * @see BleDevice#appData
-	 */
-	public Object appData;
-
 	/*package*/ BleServer(final BleManager mngr, final boolean isNull)
 	{
-		m_mngr = mngr;
+		super(mngr);
+
 		m_isNull = isNull;
 
 		if( isNull )
 		{
-			m_queue = null;
 			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = null;
 			m_nativeWrapper = new P_NativeServerWrapper(this);
@@ -1405,7 +1225,6 @@ public class BleServer implements UsesCustomNull
 		}
 		else
 		{
-			m_queue = m_mngr.getTaskQueue();
 			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = new P_BleServer_Listeners(this);
 			m_nativeWrapper = new P_NativeServerWrapper(this);
@@ -1419,26 +1238,21 @@ public class BleServer implements UsesCustomNull
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual server.
 	 */
-	public void setConfig(final BleServerConfig config)
+	public void setConfig(final BleNodeConfig config_nullable)
 	{
-		m_config = config;
+		final boolean allowAllThreads = BleDeviceConfig.bool(config_nullable != null ? config_nullable.allowCallsFromAllThreads : null, conf_mngr().allowCallsFromAllThreads);
+
+		if( false == allowAllThreads )
+		{
+			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
+		}
+
+		m_config = config_nullable;
 	}
 
-	/*package*/ BleServerConfig conf_server()
+	@Override /*package*/ BleNodeConfig conf_node()
 	{
 		return m_config != null ? m_config : conf_mngr();
-	}
-
-	/*package*/ BleManagerConfig conf_mngr()
-	{
-		if (getManager() != null)
-		{
-			return getManager().m_config;
-		}
-		else
-		{
-			return BleManagerConfig.NULL;
-		}
 	}
 	
 	/**
@@ -1446,6 +1260,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.StateListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_stateTracker.setListener(listener_nullable);
 	}
 
@@ -1454,6 +1270,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void setListener_Incoming(@Nullable(Nullable.Prevalence.NORMAL) final IncomingListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_incomingListener = listener_nullable;
 	}
 
@@ -1463,6 +1281,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void setListener_ServiceAdd(@Nullable(Nullable.Prevalence.NORMAL) final ServiceAddListener listener_nullable)
 	{
+		enforceMainThread();
+
 		m_serviceMngr.setListener(listener_nullable);
 	}
 
@@ -1471,6 +1291,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.RARE) IncomingListener getListener_Incoming()
 	{
+		enforceMainThread();
+
 		return m_incomingListener;
 	}
 
@@ -1482,6 +1304,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void setListener_Outgoing(final OutgoingListener listener)
 	{
+		enforceMainThread();
+
 		m_outgoingListener_default = listener;
 	}
 
@@ -1490,6 +1314,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void setListener_ConnectionFail(final ConnectionFailListener listener)
 	{
+		enforceMainThread();
+
 		m_connectionFailMngr.setListener(listener);
 	}
 
@@ -1626,6 +1452,8 @@ public class BleServer implements UsesCustomNull
 
 	private OutgoingListener.OutgoingEvent sendNotification_private(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData, final OutgoingListener listener, final boolean isIndication)
 	{
+		enforceMainThread();
+
 		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
 
 		if( isNull() )
@@ -1659,7 +1487,7 @@ public class BleServer implements UsesCustomNull
 
 		final boolean confirm = isIndication;
 		final P_Task_SendNotification task = new P_Task_SendNotification(this, nativeDevice, serviceUuid, charUuid, futureData, confirm, listener);
-		m_queue.add(task);
+		queue().add(task);
 
 		return OutgoingListener.OutgoingEvent.NULL__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid);
 	}
@@ -1671,6 +1499,8 @@ public class BleServer implements UsesCustomNull
 	@Advanced
 	public @Nullable(Nullable.Prevalence.RARE) BluetoothGattServer getNative()
 	{
+		enforceMainThread();
+
 		return m_nativeWrapper.getNative();
 	}
 
@@ -1682,15 +1512,9 @@ public class BleServer implements UsesCustomNull
 	@Advanced
 	public int getStateMask(final String macAddress)
 	{
-		return m_stateTracker.getStateMask(macAddress);
-	}
+		enforceMainThread();
 
-	/**
-	 * @deprecated Use {@link #isAny(String, int)} instead.
-	 */
-	public boolean is(final String macAddress, final int mask_BleServerState)
-	{
-		return isAny(macAddress, mask_BleServerState);
+		return m_stateTracker.getStateMask(macAddress);
 	}
 
 	/**
@@ -1738,14 +1562,6 @@ public class BleServer implements UsesCustomNull
 	}
 
 	/**
-	 * Returns this server's manager.
-	 */
-	public BleManager getManager()
-	{
-		return m_mngr;
-	}
-
-	/**
 	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with no listeners.
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
@@ -1785,6 +1601,8 @@ public class BleServer implements UsesCustomNull
 
 	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
+		enforceMainThread();
+
 		m_nativeWrapper.clearImplicitDisconnectIgnoring(nativeDevice.getAddress());
 
 		if( stateListener != null )
@@ -1820,7 +1638,7 @@ public class BleServer implements UsesCustomNull
 		m_clientMngr.onConnecting(nativeDevice.getAddress());
 
 		final P_Task_ConnectServer task = new P_Task_ConnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-		m_queue.add(task);
+		queue().add(task);
 
 		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
@@ -1841,6 +1659,8 @@ public class BleServer implements UsesCustomNull
 
 	private boolean disconnect_private(final String macAddress, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
 	{
+		enforceMainThread();
+
 		final boolean addTask = true;
 
 		m_connectionFailMngr.onExplicitDisconnect(macAddress);
@@ -1856,7 +1676,7 @@ public class BleServer implements UsesCustomNull
 			//--- DRK > Purposely doing explicit=true here without regarding the intent.
 			final boolean explicit = true;
 			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-			m_queue.add(task);
+			queue().add(task);
 		}
 
 		m_stateTracker.doStateTransition(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -1871,10 +1691,11 @@ public class BleServer implements UsesCustomNull
 
 	/*package*/ void disconnect_internal(final ServiceAddListener.Status status_serviceAdd, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
 	{
+		enforceMainThread();
+
 		getClients(new ForEach_Void<String>()
 		{
-			@Override
-			public void next(final String next)
+			@Override public void next(final String next)
 			{
 				disconnect_private(next, status_connectionFail, intent);
 
@@ -1930,7 +1751,7 @@ public class BleServer implements UsesCustomNull
 		if( status == ConnectionFailListener.Status.TIMED_OUT )
 		{
 			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-			m_queue.add(task);
+			queue().add(task);
 		}
 
 		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.CONNECTING /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -1957,6 +1778,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final BleServer server_nullable)
 	{
+		enforceMainThread();
+
 		if (server_nullable == null)												return false;
 		if (server_nullable == this)												return true;
 		if (server_nullable.getNative() == null || this.getNative() == null)		return false;
@@ -1972,6 +1795,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	@Override public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final Object object_nullable)
 	{
+		enforceMainThread();
+
 		if( object_nullable == null )  return false;
 
 		if (object_nullable instanceof BleServer)
@@ -2015,6 +1840,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.addService(service, listener);
 	}
 
@@ -2025,6 +1852,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService removeService(final UUID serviceUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.remove(serviceUuid);
 	}
 
@@ -2033,61 +1862,31 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void removeAllServices()
 	{
+		enforceMainThread();
+
 		m_serviceMngr.removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
 	}
 
-	/**
-	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
-	 * matching the given {@link UUID}.
-	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID descUuid)
-	{
-		return m_serviceMngr.getDescriptor(null, null, descUuid);
-	}
-
-	/**
-	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
-	 * inside the given characteristic matching the given {@link UUID}.
-	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inChar(final UUID charUuid, final UUID descUuid)
-	{
-		return m_serviceMngr.getDescriptor(null, charUuid, descUuid);
-	}
-
-	/**
-	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
-	 * inside the given service matching the given {@link UUID}.
-	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inService(final UUID serviceUuid, final UUID descUuid)
-	{
-		return m_serviceMngr.getDescriptor(serviceUuid, null, descUuid);
-	}
 
 	/**
 	 * Returns the native descriptor for the given UUID in case you need lower-level access.
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
+	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
 	{
-		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
-	}
+		enforceMainThread();
 
-	/**
-	 * Returns the native characteristic for the given UUID in case you need lower-level access.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID characteristicUuid)
-	{
-		return m_serviceMngr.getCharacteristic(null, characteristicUuid);
+		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
 	}
 
 	/**
 	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
 	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
+	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 	}
 
@@ -2097,8 +1896,10 @@ public class BleServer implements UsesCustomNull
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
 
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
+	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getServiceDirectlyFromNativeServer(uuid);
 	}
 
@@ -2108,8 +1909,10 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
+	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getServices();
 	}
 
@@ -2118,8 +1921,10 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
+	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getServices_List();
 	}
 
@@ -2129,8 +1934,10 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
+	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristics(null);
 	}
 
@@ -2139,8 +1946,10 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
+	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristics_List(null);
 	}
 
@@ -2149,8 +1958,10 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(final UUID serviceUuid)
+	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(final UUID serviceUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristics(serviceUuid);
 	}
 
@@ -2159,8 +1970,10 @@ public class BleServer implements UsesCustomNull
 	 * <br><br>
 	 * WARNING: Please see the WARNING for {@link #getNative()}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(final UUID serviceUuid)
+	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(final UUID serviceUuid)
 	{
+		enforceMainThread();
+
 		return m_serviceMngr.getCharacteristics_List(serviceUuid);
 	}
 
@@ -2170,6 +1983,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, 0x0);
 	}
 
@@ -2179,6 +1994,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, state.bit());
 	}
 
@@ -2188,6 +2005,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
 
@@ -2197,6 +2016,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, 0x0);
 	}
 
@@ -2206,6 +2027,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, state.bit());
 	}
 
@@ -2215,6 +2038,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
 
@@ -2223,6 +2048,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients()
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients(0x0);
 	}
 
@@ -2231,6 +2058,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients(state.bit());
 	}
 
@@ -2239,6 +2068,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients(BleServerState.toBits(states));
 	}
 
@@ -2247,6 +2078,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List()
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients_List(0x0);
 	}
 
@@ -2255,6 +2088,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState state)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients_List(state.bit());
 	}
 
@@ -2263,6 +2098,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClients_List(BleServerState.toBits(states));
 	}
 
@@ -2271,6 +2108,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public int getClientCount()
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClientCount();
 	}
 
@@ -2279,6 +2118,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public int getClientCount(final BleServerState state)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClientCount(state.bit());
 	}
 
@@ -2287,6 +2128,8 @@ public class BleServer implements UsesCustomNull
 	 */
 	public int getClientCount(final BleServerState ... states)
 	{
+		enforceMainThread();
+
 		return m_clientMngr.getClientCount(BleServerState.toBits(states));
 	}
 
@@ -2319,6 +2162,6 @@ public class BleServer implements UsesCustomNull
 	 */
 	public String toString()
 	{
-		return this.getClass().getSimpleName() + " with " + getClientCount(CONNECTING, CONNECTED) + " connected/ing clients.";
+		return this.getClass().getSimpleName() + " with " + m_clientMngr.getClientCount(BleServerState.toBits(CONNECTING, CONNECTED)) + " connected/ing clients.";
 	}
 }

@@ -52,26 +52,24 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 			getLogger().w("Already bonded!");
 			
 			succeed();
-			
-			return;
 		}
-		
-		if( getDevice().m_nativeWrapper./*already*/isNativelyBonding() )
+		else
 		{
-			// nothing to do
-			
-			return;
-		}
+			if( getDevice().m_nativeWrapper./*already*/isNativelyBonding() )
+			{
+				// nothing to do
+			}
+			else if( false == m_explicit )
+			{
+				// DRK > Fail cause we're not natively bonding and this task was implicit, meaning we should be.
+				fail();
+			}
+			else if( false == getDevice().getNative().createBond() )
+			{
+				failImmediately();
 
-		if( !m_explicit )
-		{
-			fail();
-		}
-		else if( !getDevice().getNative().createBond() )
-		{
-			failImmediately();
-
-			getLogger().w("Bond failed immediately.");
+				getLogger().w("Bond failed immediately.");
+			}
 		}
 	}
 	

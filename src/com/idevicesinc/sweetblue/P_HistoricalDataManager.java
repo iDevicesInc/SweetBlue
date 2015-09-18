@@ -1,10 +1,7 @@
 package com.idevicesinc.sweetblue;
 
-import android.database.Cursor;
+import static com.idevicesinc.sweetblue.BleNodeConfig.HistoricalDataLogFilter.*;
 
-import static com.idevicesinc.sweetblue.BleDeviceConfig.HistoricalDataLogFilter.*;
-
-import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDataList;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
@@ -27,18 +24,20 @@ class P_HistoricalDataManager
 	private final Object LIST_CREATE_MUTEX = new Object();
 
 	private final HashMap<UUID, Backend_HistoricalDataList> m_lists = new HashMap<UUID, Backend_HistoricalDataList>();
-	private final BleDevice m_device;
-	private final UpdateLoop m_updateLoop = UpdateLoop.newAnonThreadLoop();
+	private final BleNode m_endPoint;
+	private final String m_macAddress;
+	private static final UpdateLoop s_updateLoop = UpdateLoop.newAnonThreadLoop();
 
 	private BleDevice.HistoricalDataLoadListener m_defaultListener = null;
 
 	private final P_HistoricalDataManager_PreviousUuids m_previousUuidsWithDataAdded;
 
-	P_HistoricalDataManager(final BleDevice device)
+	P_HistoricalDataManager(final BleNode endpoint, final String macAddress)
 	{
-		m_device = device;
+		m_endPoint = endpoint;
+		m_macAddress = macAddress;
 
-		m_previousUuidsWithDataAdded = new P_HistoricalDataManager_PreviousUuids(m_device.getManager().getApplicationContext(), m_device.getMacAddress());
+		m_previousUuidsWithDataAdded = new P_HistoricalDataManager_PreviousUuids(m_endPoint.getManager().getApplicationContext(), macAddress);
 	}
 
 	void setListener(final BleDevice.HistoricalDataLoadListener listener)
@@ -48,7 +47,7 @@ class P_HistoricalDataManager
 
 	Backend_HistoricalDatabase getDatabase()
 	{
-		return m_device.getManager().m_historicalDatabase;
+		return m_endPoint.getManager().m_historicalDatabase;
 	}
 
 	//GOOD
@@ -71,12 +70,12 @@ class P_HistoricalDataManager
 
 			if( existingList == null )
 			{
-				final boolean tableExists = getDatabase().doesDataExist(m_device.getMacAddress(), uuid);
+				final boolean tableExists = getDatabase().doesDataExist(m_macAddress, uuid);
 
 				if( tableExists )
 				{
-					final String uuidName = m_device.getManager().getLogger().charName(uuid);
-					final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_updateLoop, m_device.getMacAddress(), uuid, uuidName, tableExists);
+					final String uuidName = m_endPoint.getManager().getLogger().charName(uuid);
+					final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), s_updateLoop, m_macAddress, uuid, uuidName, tableExists);
 					m_lists.put(uuid, newList);
 
 					return newList;
@@ -96,10 +95,10 @@ class P_HistoricalDataManager
 
 			if( existingList == null )
 			{
-				final boolean tableExists = getDatabase().doesDataExist(m_device.getMacAddress(), uuid);
-				final String uuidName = m_device.getManager().getLogger().charName(uuid);
+				final boolean tableExists = getDatabase().doesDataExist(m_macAddress, uuid);
+				final String uuidName = m_endPoint.getManager().getLogger().charName(uuid);
 
-				final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), m_updateLoop, m_device.getMacAddress(), uuid, uuidName, tableExists);
+				final Backend_HistoricalDataList newList = PU_HistoricalData.newList(getDatabase(), s_updateLoop, m_macAddress, uuid, uuidName, tableExists);
 				m_lists.put(uuid, newList);
 
 				return newList;
@@ -112,19 +111,19 @@ class P_HistoricalDataManager
 	}
 
 	//GOOD
-	public void add_single(final UUID uuid, final byte[] data, final EpochTime epochTime, final Source source)
+	public void add_single(final UUID uuid, final byte[] data, final EpochTime epochTime, final BleNodeConfig.HistoricalDataLogFilter.Source source)
 	{
 		final Backend_HistoricalDataList list = getList_createIfNotExists(uuid);
 
-		final Please please = PU_HistoricalData.getPlease(m_device, uuid, data, epochTime, source);
+		final BleNodeConfig.HistoricalDataLogFilter.Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, data, epochTime, source);
 
 		if( PU_HistoricalData.add_earlyOut(list, please) )  return;
 
-		final HistoricalData historicalData = m_device.newHistoricalData(PU_HistoricalData.getAmendedData(data, please), PU_HistoricalData.getAmendedTimestamp(epochTime, please));
+		final HistoricalData historicalData = m_endPoint.newHistoricalData(PU_HistoricalData.getAmendedData(data, please), PU_HistoricalData.getAmendedTimestamp(epochTime, please));
 
 		m_previousUuidsWithDataAdded.addUuid(uuid);
 
-		list.add_single(historicalData, please.m_logChoice, please.getLimit());
+		list.add_single(historicalData, please.m_persistenceLevel, please.getLimit());
 	}
 
 	//GOOD
@@ -132,13 +131,13 @@ class P_HistoricalDataManager
 	{
 		final Backend_HistoricalDataList list = getList_createIfNotExists(uuid);
 
-		final Please please = PU_HistoricalData.getPlease(m_device, uuid, historicalData.getBlob(), historicalData.getEpochTime(), source);
+		final Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, historicalData.getBlob(), historicalData.getEpochTime(), source);
 
 		final HistoricalData historicalData_override;
 
 		if( please.getAmendedData() != null || !please.getAmendedEpochTime().isNull() )
 		{
-			historicalData_override = m_device.newHistoricalData(PU_HistoricalData.getAmendedData(historicalData.getBlob(), please), PU_HistoricalData.getAmendedTimestamp(historicalData.getEpochTime(), please));
+			historicalData_override = m_endPoint.newHistoricalData(PU_HistoricalData.getAmendedData(historicalData.getBlob(), please), PU_HistoricalData.getAmendedTimestamp(historicalData.getEpochTime(), please));
 		}
 		else
 		{
@@ -149,7 +148,7 @@ class P_HistoricalDataManager
 
 		m_previousUuidsWithDataAdded.addUuid(uuid);
 
-		list.add_single(historicalData_override, please.m_logChoice, please.getLimit());
+		list.add_single(historicalData_override, please.m_persistenceLevel, please.getLimit());
 	}
 
 	//GOOD
@@ -157,13 +156,13 @@ class P_HistoricalDataManager
 	{
 		final Backend_HistoricalDataList list = getList_createIfNotExists(uuid);
 
-		final Please please = PU_HistoricalData.getPlease(m_device, uuid, EMPTY_BYTE_ARRAY, EpochTime.NULL, Source.MULTIPLE_MANUAL_ADDITIONS);
+		final Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, EMPTY_BYTE_ARRAY, EpochTime.NULL, Source.MULTIPLE_MANUAL_ADDITIONS);
 
 		if( PU_HistoricalData.add_earlyOut(list, please) )  return;
 
 		m_previousUuidsWithDataAdded.addUuid(uuid);
 
-		list.add_multiple(historicalData, please.m_logChoice, please.getLimit());
+		list.add_multiple(historicalData, please.m_persistenceLevel, please.getLimit());
 	}
 
 	//GOOD
@@ -171,13 +170,13 @@ class P_HistoricalDataManager
 	{
 		final Backend_HistoricalDataList list = getList_createIfNotExists(uuid);
 
-		final Please please = PU_HistoricalData.getPlease(m_device, uuid, EMPTY_BYTE_ARRAY, EpochTime.NULL, Source.MULTIPLE_MANUAL_ADDITIONS);
+		final Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, EMPTY_BYTE_ARRAY, EpochTime.NULL, Source.MULTIPLE_MANUAL_ADDITIONS);
 
 		if( PU_HistoricalData.add_earlyOut(list, please) )  return;
 
 		m_previousUuidsWithDataAdded.addUuid(uuid);
 
-		list.add_multiple(historicalData, please.m_logChoice, please.getLimit());
+		list.add_multiple(historicalData, please.m_persistenceLevel, please.getLimit());
 	}
 
 	//GOOD
@@ -215,7 +214,7 @@ class P_HistoricalDataManager
 			}
 			else
 			{
-				getDatabase().delete_singleUuid_inRange(m_device.getMacAddress(), uuid, range, limit);
+				getDatabase().delete_singleUuid_inRange(m_macAddress, uuid, range, limit);
 			}
 		}
 	}
@@ -245,7 +244,7 @@ class P_HistoricalDataManager
 			if( uuids != null )
 			{
 				uuids[i] = ith;
-				macs[i] = m_device.getMacAddress();
+				macs[i] = m_macAddress;
 			}
 
 			i++;
@@ -319,7 +318,7 @@ class P_HistoricalDataManager
 		}
 		else
 		{
-			return getDatabase().getCursor(m_device.getMacAddress(), uuid, range);
+			return getDatabase().getCursor(m_macAddress, uuid, range);
 		}
 	}
 
@@ -356,7 +355,7 @@ class P_HistoricalDataManager
 				}
 				else
 				{
-					if( getDatabase().getCount(m_device.getMacAddress(), ithUuid, range) > 0 )
+					if( getDatabase().getCount(m_macAddress, ithUuid, range) > 0 )
 					{
 						return true;
 					}
@@ -382,7 +381,7 @@ class P_HistoricalDataManager
 				}
 				else
 				{
-					m_device.getManager().ASSERT(false, "list should not have been null.");
+					m_endPoint.getManager().ASSERT(false, "list should not have been null.");
 				}
 			}
 			else
@@ -411,7 +410,7 @@ class P_HistoricalDataManager
 					{
 						@Override public void onDone()
 						{
-							m_device.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+							m_endPoint.getManager().getUpdateLoop().postIfNeeded(new Runnable()
 							{
 								@Override public void run()
 								{
@@ -426,7 +425,7 @@ class P_HistoricalDataManager
 									}
 									else
 									{
-										m_device.getManager().ASSERT(false, "Didn't expect to still be loading historical data.");
+										m_endPoint.getManager().ASSERT(false, "Didn't expect to still be loading historical data.");
 									}
 								}
 							});
@@ -527,7 +526,7 @@ class P_HistoricalDataManager
 
 		event = invokeListener(uuid, range, listener_nullable, status, event);
 		event = invokeListener(uuid, range, m_defaultListener, status, event);
-		event = invokeListener(uuid, range, m_device.getManager().m_historicalDataLoadListener, status, event);
+		event = invokeListener(uuid, range, m_endPoint.getManager().m_historicalDataLoadListener, status, event);
 	}
 
 	//GOOD
@@ -535,7 +534,7 @@ class P_HistoricalDataManager
 	{
 		if( listener_nullable != null )
 		{
-			event_nullable = event_nullable != null ? event_nullable : new BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent(m_device, uuid, range, status);
+			event_nullable = event_nullable != null ? event_nullable : new BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent(m_endPoint, m_macAddress, uuid, range, status);
 
 			listener_nullable.onEvent(event_nullable);
 		}
@@ -546,11 +545,11 @@ class P_HistoricalDataManager
 	//GOOD
 	public String getTableName(final UUID uuid)
 	{
-		return getDatabase().getTableName(m_device.getMacAddress(), uuid);
+		return getDatabase().getTableName(m_macAddress, uuid);
 	}
 
-	public void post(final Runnable runnable)
+	public static void post(final Runnable runnable)
 	{
-		m_updateLoop.forcePost(runnable);
+		s_updateLoop.forcePost(runnable);
 	}
 }

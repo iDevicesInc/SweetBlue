@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
 
 import java.util.UUID;
 
@@ -23,12 +24,12 @@ public class BleCharacteristic
 
 	public BleCharacteristic(final UUID uuid, final BleDescriptor descriptor, final BleCharacteristicPermission permission, final BleCharacteristicProperty ... properties)
 	{
-		this(uuid, Utils.toBits(properties), permission.bit(), new BleDescriptor[]{descriptor});
+		this(uuid, Utils_Byte.toBits(properties), permission.bit(), new BleDescriptor[]{descriptor});
 	}
 
 	public BleCharacteristic(final UUID uuid, final BleDescriptor descriptor, final BleCharacteristicProperty property, final BleCharacteristicPermission ... permissions)
 	{
-		this(uuid, property.bit(), Utils.toBits(permissions), new BleDescriptor[]{descriptor});
+		this(uuid, property.bit(), Utils_Byte.toBits(permissions), new BleDescriptor[]{descriptor});
 	}
 
 	public BleCharacteristic(final UUID uuid, final BleCharacteristicPermission permission, final BleCharacteristicProperty property, final BleDescriptor ... descriptors)
@@ -38,7 +39,7 @@ public class BleCharacteristic
 
 	public BleCharacteristic(final UUID uuid, final BleCharacteristicProperty[] properties, final BleCharacteristicPermission[] permissions, final BleDescriptor ... descriptors)
 	{
-		this(uuid, Utils.toBits(properties), Utils.toBits(permissions), descriptors);
+		this(uuid, Utils_Byte.toBits(properties), Utils_Byte.toBits(permissions), descriptors);
 	}
 
 	private BleCharacteristic(final UUID uuid, final int properties, final int permissions, final BleDescriptor[] descriptors)

@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue.tests;
 
 
-import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
 import java.util.ArrayList;
@@ -18,14 +18,14 @@ public class TestUtils {
     public void getStringValueTest() {
         String s = "This is just a test";
         byte[] sb = s.getBytes();
-        assertEquals(s, Utils.getStringValue(sb));
-        assertEquals(s, Utils.getStringValue(sb, "UTF-8"));
+        assertEquals(s, Utils_String.getStringValue(sb));
+        assertEquals(s, Utils_String.getStringValue(sb, "UTF-8"));
     }
 
     @Test
     public void normalizeNameTest() {
         String name = "This Is A Test-To make sure it works";
-        assertEquals("this_is_a_test", Utils.normalizeDeviceName(name));
+        assertEquals("this_is_a_test", Utils_String.normalizeDeviceName(name));
     }
 
     @Test

@@ -33,7 +33,22 @@ abstract class PA_Task_RequiresBleOn extends PA_Task
 		{
 			return true;
 		}
-		
-		return super.isCancellableBy(task);
+		else if( task instanceof P_Task_CrashResolver )
+		{
+			final P_Task_CrashResolver task_cast = (P_Task_CrashResolver) task;
+
+			if( task_cast.isForReset() )
+			{
+				return true;
+			}
+			else
+			{
+				return super.isCancellableBy(task);
+			}
+		}
+		else
+		{
+			return super.isCancellableBy(task);
+		}
 	}
 }

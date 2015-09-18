@@ -63,9 +63,9 @@ class P_ServerConnectionFailEntry
 
 		m_history.add(e);
 
-		final BleServer.ConnectionFailListener.Please.PE_Please ePlease = m_mngr.invokeCallback(e);
+		final int ePlease__PE_Please = m_mngr.invokeCallback(e);
 
-		if( ePlease.isRetry() )
+		if( BleNode.ConnectionFailListener.Please.isRetry(ePlease__PE_Please) )
 		{
 			m_mngr.m_server.connect_internal(nativeDevice);
 		}

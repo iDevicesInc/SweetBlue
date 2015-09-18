@@ -15,6 +15,8 @@ import android.util.Log;
  */
 public class Utils_Reflection extends Utils
 {
+	private Utils_Reflection(){super();}
+
 	private static final String TAG = Utils_Reflection.class.getName();
 	
 	public static String fieldStringValue(Field field)
