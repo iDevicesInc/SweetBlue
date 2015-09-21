@@ -1,9 +1,9 @@
 #!/bin/sh
 
-SWEETBLUE_DIR=../
-SWEETBLUE_DOCS_DIR=$SWEETBLUE_DIR/docs/api/
-
 source config.sh
+
+SWEETBLUE_DIR=../script_output/$JAR_NAME
+SWEETBLUE_DOCS_DIR=$SWEETBLUE_DIR/docs/api/
 
 sh build_docs.sh
 
