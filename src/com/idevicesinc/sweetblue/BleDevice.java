@@ -2552,7 +2552,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setName(final String name, final UUID characteristicUuid)
 	{
-		return setName(name, characteristicUuid);
+		return setName(name, characteristicUuid, null);
 	}
 
 	/**
