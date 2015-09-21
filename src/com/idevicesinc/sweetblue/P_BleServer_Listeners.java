@@ -415,7 +415,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		return e;
 	}
 
-	private void onWriteRequest_mainThread(final BluetoothDevice device, final int requestId, final int offset, final boolean preparedWrite, final boolean responseNeeded, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
+	private void onWriteRequest_mainThread(final BluetoothDevice device, final byte[] data, final int requestId, final int offset, final boolean preparedWrite, final boolean responseNeeded, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
 	{
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 		final Type type = preparedWrite ? Type.PREPARED_WRITE : Type.WRITE;
@@ -430,7 +430,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		{
 			final IncomingEvent requestEvent = new IncomingEvent
 			(
-				m_server, device, serviceUuid, charUuid, descUuid_nullable, type, target, BleServer.EMPTY_BYTE_ARRAY, requestId, offset, responseNeeded
+				m_server, device, serviceUuid, charUuid, descUuid_nullable, type, target, data, requestId, offset, responseNeeded
 			);
 
 			final IncomingListener.Please please = listener.onEvent(requestEvent);
@@ -465,13 +465,13 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 			{
 				@Override public void run()
 				{
-					onWriteRequest_mainThread(device, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
+					onWriteRequest_mainThread(device, value, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
 				}
 			});
 		}
 		else
 		{
-			onWriteRequest_mainThread(device, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
+			onWriteRequest_mainThread(device, value, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
 		}
     }
 
@@ -483,13 +483,13 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 			{
 				@Override public void run()
 				{
-					onWriteRequest_mainThread(device, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
+					onWriteRequest_mainThread(device, value, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
 				}
 			});
 		}
 		else
 		{
-			onWriteRequest_mainThread(device, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
+			onWriteRequest_mainThread(device, value, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
 		}
     }
 
