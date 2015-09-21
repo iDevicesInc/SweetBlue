@@ -3,7 +3,7 @@
 source config.sh
 
 CUR_VER=$(sh echo_version.sh)
-SWEETBLUE_DIR="../script_output/sweetblue_${CUR_VER}"
+SWEETBLUE_DIR="script_output/sweetblue_${CUR_VER}"
 SWEETBLUE_DOCS_DIR=$SWEETBLUE_DIR/docs/api/
 
 echo $SWEETBLUE_DOCS_DIR
