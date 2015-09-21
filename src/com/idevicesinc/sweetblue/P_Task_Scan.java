@@ -172,8 +172,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			if( m_isPoll || m_scanTime == Double.POSITIVE_INFINITY )
 			{
-//				scanMode = ScanSettings.SCAN_MODE_BALANCED;
-				scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+				scanMode = ScanSettings.SCAN_MODE_BALANCED;
+//				scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
 			}
 			else
 			{

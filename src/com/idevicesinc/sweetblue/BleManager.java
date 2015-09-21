@@ -62,8 +62,8 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * {@code <uses-permission android:name="android.permission.BLUETOOTH" /> }<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> }<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" /> }<br>
- * {@code <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" /> }<br>
  * {@code <uses-permission android:name="android.permission.WAKE_LOCK" /> } <br>
+ * {@code <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" /> }<br>
  * <br><br>
  * {@link android.Manifest.permission#WAKE_LOCK} is recommended but optional, needed if {@link BleManagerConfig#manageCpuWakeLock} is enabled to aid with reconnect loops.
  * As of now it's enabled by default.
@@ -72,13 +72,13 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * Then here is a simple example usage:<pre><code>
  * public class MyActivity extends Activity
  * {
- *      {@literal @}Override protected void onCreate(Bundle savedInstanceState)
+ *     {@literal @}Override protected void onCreate(Bundle savedInstanceState)
  *      {
  *          super.onCreate(savedInstanceState);
  *
  *          BleManager.get(this).startScan(new ScanFilter()
  *          {
- *              {@literal @}Override public Please onEvent(ScanEvent e)
+ *             {@literal @}Override public Please onEvent(ScanEvent e)
  *              {
  *                  return Please.acknowledgeIf(e.name_normalized().contains("my_device"))
  *                               .thenStopScan();
@@ -87,13 +87,13 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  *
  *          new BleManager.DiscoveryListener()
  *          {
- *              {@literal @}Override public void onEvent(DiscoveryEvent event)
+ *             {@literal @}Override public void onEvent(DiscoveryEvent event)
  *              {
  *                  if( event.was(LifeCycle.DISCOVERED) )
  *                  {
  *                      event.device().connect(new BleDevice.StateListener()
  *                      {
- *                          {@literal @}Override public void onEvent(StateEvent event)
+ *                         {@literal @}Override public void onEvent(StateEvent event)
  *                          {
  *                              if( event.didEnter(BleDeviceState.INITIALIZED) )
  *                              {
@@ -107,14 +107,14 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  *          });
  *       }
  *
- *      {@literal @}Override protected void onResume()
+ *     {@literal @}Override protected void onResume()
  *      {
  *          super.onResume();
  *
  *          BleManager.get(this).onResume();
  *      }
  *
- *      {@literal @}Override protected void onPause()
+ *     {@literal @}Override protected void onPause()
  *      {
  *          super.onPause();
  *

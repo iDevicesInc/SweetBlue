@@ -110,7 +110,7 @@ public class BleNodeConfig
 
 	/**
 	 * Default is an instance of {@link DefaultReconnectFilter} using the timings that are <code>public static final</code> members thereof - set your own implementation here to
-	 * have fine-grain control over reconnect behavior while {@link BleDevice} is {@link BleDeviceState#RECONNECTING_LONG_TERM}.
+	 * have fine-grain control over reconnect behavior while a device is {@link BleDeviceState#RECONNECTING_LONG_TERM} or {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
 	 * This is basically how often and how long the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
 	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
 	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/phone to stay awake while attempting a reconnect.

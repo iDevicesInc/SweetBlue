@@ -92,7 +92,8 @@ public enum BleDeviceState implements State
 	
 	/**
 	 * A convenience flag for checking if the device is connecting in an overall sense. This state is active if any one of {@link #CONNECTING},
-	 * {@link #DISCOVERING_SERVICES}, {@link #AUTHENTICATING}, or {@link #INITIALIZING} is also active.
+	 * {@link #DISCOVERING_SERVICES}, {@link #AUTHENTICATING}, or {@link #INITIALIZING} is also active. It is suggested to have {@link #BONDING}
+	 * be a part of this also using {@link BleDeviceConfig#bondFilter} but technically {@link #BONDING} can be done outside of this state.
 	 */
 	CONNECTING_OVERALL,
 	
