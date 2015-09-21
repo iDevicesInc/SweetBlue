@@ -2,9 +2,11 @@
 
 source config.sh
 
-SWEETBLUE_DIR=../script_output/$JAR_NAME
+CUR_VER=$(sh echo_version.sh)
+SWEETBLUE_DIR="../script_output/sweetblue_${CUR_VER}"
 SWEETBLUE_DOCS_DIR=$SWEETBLUE_DIR/docs/api/
 
+echo $SWEETBLUE_DOCS_DIR
 sh build_docs.sh
 
 read -n 1 -p "Are you SURE you want to upload? " sure
