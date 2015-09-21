@@ -74,7 +74,19 @@ class P_NativeDeviceWrapper
 
 	void updateNativeName(final String name_native)
 	{
-		final String name_native_override = name_native != null ? name_native : "";
+		final String name_native_override;
+
+		if( name_native != null )
+		{
+			name_native_override = name_native;
+		}
+		else
+		{
+			//--- DRK > After a ble reset using cached devices, calling updateNativeDevice with the old native BluetoothDevice
+			//---		instance gives you a null name...not sure how long this has been the case, but I think only > 5.0
+			name_native_override = m_name_native;
+		}
+
 		final String name_normalized = Utils_String.normalizeDeviceName(name_native_override);
 
 		updateName(name_native_override, name_normalized);
