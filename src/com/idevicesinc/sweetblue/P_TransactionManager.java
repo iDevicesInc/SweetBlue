@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
 class P_TransactionManager
 {
-	final BleTransaction.PI_EndListener m_txnEndListener = new BleTransaction.PI_EndListener()
+	final PI_EndListener m_txnEndListener = new PI_EndListener()
 	{
 		@Override public void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.ReadWriteEvent txnFailReason)
 		{

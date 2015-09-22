@@ -58,11 +58,6 @@ public abstract class BleTransaction
 		FAILED;
 	}
 	
-	static interface PI_EndListener
-	{
-		void onTransactionEnd(BleTransaction txn, EndReason reason, ReadWriteListener.ReadWriteEvent failReason);
-	}
-	
 	private final double m_timeout;
 	private double m_timeTracker;
 	private boolean m_isRunning;
