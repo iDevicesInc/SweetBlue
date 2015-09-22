@@ -26,6 +26,11 @@ class P_Task_CrashResolver extends PA_Task_RequiresBleOn implements PA_Task.I_St
 		if( true == m_resolver.isRecoveryInProgress() )
 		{
 			getManager().ASSERT(false, "CrashResolver recovery already in progress!");
+
+			//--- DRK > Previously was just letting this task continuously spin if it's already running,
+			//---		but 99% of the time it means it won't ever stop so the task takes a while to timeout
+			//---		and doesn't do anything anyway.
+			fail();
 		}
 		else
 		{
