@@ -267,7 +267,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					onServicesDiscovered_mainThread(gatt, gattStatus);
 				}
@@ -306,7 +307,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					onCharacteristicRead_mainThread(gatt, characteristic, gattStatus, value);
 				}
@@ -342,7 +344,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					onCharacteristicWrite_mainThread(gatt, characteristic, gattStatus);
 				}
@@ -378,7 +381,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					onReliableWriteCompleted_mainThread(gatt, gattStatus);
 				}
@@ -412,7 +416,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					onReadRemoteRssi_mainThread(gatt, rssi, gattStatus);
 				}
@@ -449,7 +454,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					onDescriptorWrite_mainThread(gatt, descriptor, gattStatus);
 				}
@@ -487,7 +493,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					onCharacteristicChanged_mainThread(gatt, characteristic, value);
 				}
@@ -559,6 +566,43 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			{
 				m_device.m_bondMngr.onNativeBond(E_Intent.UNINTENTIONAL);
 			}
+		}
+	}
+
+	@Override public void onMtuChanged(final BluetoothGatt gatt, final int mtu, final int gattStatus)
+	{
+		if( postNeeded() )
+		{
+			post(new Runnable()
+			{
+				@Override public void run()
+				{
+					onMtuChanged_mainThread(gatt, mtu, gattStatus);
+				}
+			});
+		}
+		else
+		{
+			onMtuChanged_mainThread(gatt, mtu, gattStatus);
+		}
+	}
+
+	private void onMtuChanged_mainThread(BluetoothGatt gatt, int mtu, int gattStatus)
+	{
+		if( Utils.isSuccess(gattStatus) )
+		{
+			m_device.updateMtu(mtu);
+		}
+
+		final P_Task_RequestMtu task = m_queue.getCurrent(P_Task_RequestMtu.class, m_device);
+
+		if( task != null )
+		{
+			task.onMtuChanged(gatt, mtu, gattStatus);
+		}
+		else
+		{
+			// fire unsolicited
 		}
 	}
 }

@@ -7,27 +7,22 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.Utils;
 
-/**
- * 
- * 
- */
-class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_StateListener
-{	
+class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_StateListener
+{
 	protected final BleDevice.ReadWriteListener m_readWriteListener;
-	private final Type m_type;
-	
-	public P_Task_ReadRssi(BleDevice device, BleDevice.ReadWriteListener readWriteListener, BleTransaction txn_nullable, PE_TaskPriority priority, Type type)
+	private final int m_mtu;
+
+	public P_Task_RequestMtu(BleDevice device, BleDevice.ReadWriteListener readWriteListener, BleTransaction txn_nullable, PE_TaskPriority priority, final int mtu)
 	{
 		super(device, txn_nullable, false, priority);
 		
 		m_readWriteListener = readWriteListener;
-
-		m_type = type;
+		m_mtu = mtu;
 	}
 	
-	private ReadWriteEvent newEvent(Status status, int gattStatus, int rssi)
+	private ReadWriteEvent newEvent(Status status, int gattStatus, int mtu)
 	{
-		return new ReadWriteEvent(getDevice(), m_type, /*rssi=*/rssi, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
+		return new ReadWriteEvent(getDevice(), /*mtu=*/mtu, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
 	}
 
 	@Override protected void onNotExecutable()
@@ -46,7 +41,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 
 	@Override public void execute()
 	{
-		if( false == getDevice().getNativeGatt().readRemoteRssi() )
+		if( false == getDevice().getNativeGatt().requestMtu(m_mtu) )
 		{
 			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
@@ -56,26 +51,26 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 		}
 	}
 	
-	private void succeed(int gattStatus, int rssi)
+	private void succeed(int gattStatus, int mtu)
 	{
 		super.succeed();
 
-		final ReadWriteEvent event = newEvent(Status.SUCCESS, gattStatus, rssi);
+		final ReadWriteEvent event = newEvent(Status.SUCCESS, gattStatus, mtu);
 		
 		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 	}
 	
-	public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
+	public void onMtuChanged(BluetoothGatt gatt, int mtu, int gattStatus)
 	{
 		getManager().ASSERT(gatt == getDevice().getNativeGatt());
 		
-		if( Utils.isSuccess(status) )
+		if( Utils.isSuccess(gattStatus) )
 		{
-			succeed(status, rssi);
+			succeed(gattStatus, mtu);
 		}
 		else
 		{
-			fail(Status.REMOTE_GATT_FAILURE, status);
+			fail(Status.REMOTE_GATT_FAILURE, gattStatus);
 		}
 	}
 	
@@ -93,6 +88,6 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	@Override protected BleTask getTaskType()
 	{
-		return BleTask.READ_RSSI;
+		return BleTask.SET_MTU;
 	}
 }

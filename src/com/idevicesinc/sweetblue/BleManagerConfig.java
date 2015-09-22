@@ -166,7 +166,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * @see BleManager#stopPeriodicScan()
 	 */
 	@Nullable(Prevalence.NORMAL)
-	public Interval autoScanActiveTime						= Interval.DISABLED; //Interval.seconds(DEFAULT_MINIMUM_SCAN_TIME);
+	public Interval autoScanActiveTime						= Interval.DISABLED;
 
 	/**
 	 * Default is {@value #DEFAULT_AUTO_SCAN_PAUSE_TIME} seconds - Length of time in seconds between automatic scan pulses defined by {@link #autoScanActiveTime}.

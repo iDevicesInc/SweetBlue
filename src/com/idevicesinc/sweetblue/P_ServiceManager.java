@@ -125,7 +125,7 @@ class P_ServiceManager
 			return result;
 		}
 		
-		if( !m_device.is(BleDeviceState.CONNECTED) )
+		if( false == m_device.is(BleDeviceState.CONNECTED) )
 		{
 			if( type != BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION && type != BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION)
 			{				
@@ -139,7 +139,7 @@ class P_ServiceManager
 			}
 		}
 		
-		if( target == Target.RSSI )  return null;
+		if( target == Target.RSSI || target == Target.MTU )  return null;
 		
 		final P_Characteristic characteristic = getCharacteristic(serviceUuid, characteristicUuid);
 		

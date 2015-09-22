@@ -15,6 +15,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
+import android.os.Build;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
@@ -110,6 +111,13 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			OPERATION_NOT_SUPPORTED,
 
 			/**
+			 * The android api level doesn't support the lower level API call. For example if you try to use
+			 * {@link BleDevice#setMtu(int, ReadWriteListener)}, which requires API level 21, and you are at
+			 * level 18.
+			 */
+			ANDROID_VERSION_NOT_SUPPORTED,
+
+			/**
 			 * {@link BluetoothGatt#setCharacteristicNotification(BluetoothGattCharacteristic, boolean)}
 			 * returned <code>false</code> for an unknown reason. This {@link Status} is only relevant for calls to
 			 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and {@link BleDevice#disableNotify(UUID, ReadWriteListener)}
@@ -163,6 +171,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			EMPTY_DATA,
 
 			/**
+			 * For now only used when giving a negative or zero value to {@link BleDevice#setMtu(int, ReadWriteListener)}.
+			 */
+			INVALID_DATA,
+
+			/**
 			 * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means for
 			 * example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
 			 * returned a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted,
@@ -208,7 +221,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			READ,
 
 			/**
-			 * Associated with {@link BleDevice#write(UUID, byte[])} or {@link BleDevice#write(UUID, byte[], ReadWriteListener)}.
+			 * Associated with {@link BleDevice#write(UUID, byte[])} or {@link BleDevice#write(UUID, byte[], ReadWriteListener)}
+			 * or {@link BleDevice#setMtu(int)}.
 			 *
 			 * @see #isWrite()
 			 */
@@ -324,7 +338,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		}
 
 		/**
-		 * The type of GATT object, provided by {@link ReadWriteEvent#target}.
+		 * The type of GATT "object", provided by {@link ReadWriteEvent#target()}.
 		 */
 		public static enum Target implements UsesCustomNull
 		{
@@ -347,7 +361,12 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			 * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#readRssi(ReadWriteListener)} or
 			 * {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
 			 */
-			RSSI;
+			RSSI,
+
+			/**
+			 * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#setMtu(int, ReadWriteListener)} or overloads.
+			 */
+			MTU;
 
 			@Override public boolean isNull()
 			{
@@ -430,6 +449,15 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			private final int m_rssi;
 
 			/**
+			 * This value gets set as a result of a {@link BleDevice#setMtu(int, ReadWriteListener)} call. It will
+			 * always be equivalent to {@link BleDevice#getMtu()} but is included here for convenience.
+			 *
+			 * @see BleDevice#getMtu()
+			 */
+			public int mtu() {  return m_mtu;  }
+			private final int m_mtu;
+
+			/**
 			 * Indicates either success or the type of failure. Some values of {@link Status} are not used for certain values of {@link Type}.
 			 * For example a {@link Type#NOTIFICATION} cannot fail with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}.
 			 */
@@ -491,6 +519,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 				this.m_transitTime = Interval.secs(transitTime);
 				this.m_data = data != null ? data : EMPTY_BYTE_ARRAY;
 				this.m_rssi = device.getRssi();
+				this.m_mtu = device.getMtu();
 			}
 
 			ReadWriteEvent(BleDevice device, Type type, int rssi, Status status, int gattStatus, double totalTime, double transitTime)
@@ -507,6 +536,24 @@ public class BleDevice extends BleNode implements UsesCustomNull
 				this.m_transitTime = Interval.secs(transitTime);
 				this.m_data = EMPTY_BYTE_ARRAY;
 				this.m_rssi = status == Status.SUCCESS ? rssi : device.getRssi();
+				this.m_mtu = device.getMtu();
+			}
+
+			ReadWriteEvent(BleDevice device, int mtu, Status status, int gattStatus, double totalTime, double transitTime)
+			{
+				this.m_device = device;
+				this.m_charUuid = NON_APPLICABLE_UUID;
+				this.m_descUuid = NON_APPLICABLE_UUID;
+				this.m_serviceUuid = NON_APPLICABLE_UUID;
+				this.m_type = Type.WRITE;
+				this.m_target = Target.MTU;
+				this.m_status = status;
+				this.m_gattStatus = gattStatus;
+				this.m_totalTime = Interval.secs(totalTime);
+				this.m_transitTime = Interval.secs(transitTime);
+				this.m_data = EMPTY_BYTE_ARRAY;
+				this.m_rssi = device.getRssi();
+				this.m_mtu = status == Status.SUCCESS ? mtu : device.getMtu();
 			}
 
 			static ReadWriteEvent NULL(BleDevice device)
@@ -515,7 +562,16 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Forwards {@link BleDevice#getNativeCharacteristic(UUID, UUID)}, which will be non=null
+			 * Forwards {@link BleDevice#getNativeService(UUID)}, which will be nonnull
+			 * if {@link #target()} is {@link Target#CHARACTERISTIC} or {@link Target#DESCRIPTOR}.
+			 */
+			public @Nullable(Prevalence.NORMAL) BluetoothGattService service()
+			{
+				return device().getNativeService(serviceUuid());
+			}
+
+			/**
+			 * Forwards {@link BleDevice#getNativeCharacteristic(UUID, UUID)}, which will be nonnull
 			 * if {@link #target()} is {@link Target#CHARACTERISTIC} or {@link Target#DESCRIPTOR}.
 			 */
 			public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
@@ -524,7 +580,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Forwards {@link BleDevice#getNativeDescriptor_inChar(UUID, UUID)}, which will be non=null
+			 * Forwards {@link BleDevice#getNativeDescriptor_inChar(UUID, UUID)}, which will be nonnull
 			 * if {@link #target()} is {@link Target#DESCRIPTOR}.
 			 */
 			public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor descriptor()
@@ -1433,6 +1489,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	private final BleDeviceOrigin m_origin;
 	private BleDeviceOrigin m_origin_latest;
 
+	private int m_mtu = 0;
 	private int m_rssi = 0;
 	private Integer m_knownTxPower = null;
 	private List<UUID> m_advertisedServices = EMPTY_LIST;
@@ -3155,12 +3212,18 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 		if( status == Status.EXPLICIT_DISCONNECT )
 		{
-			m_pollMngr.clear();
+			clearForExplicitDisconnect();
 		}
 
 		disconnectWithReason(/*priority=*/null, status, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
 
 		return !alreadyDisconnected || reconnecting_longTerm;
+	}
+
+	private void clearForExplicitDisconnect()
+	{
+		m_pollMngr.clear();
+		clearMtu();
 	}
 
 	/**
@@ -3552,6 +3615,120 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	}
 
 	/**
+	 * Returns the "maximum transmission unit" value set by {@link #setMtu(int ReadWriteListener)}, or {@link BleDeviceConfig#DEFAULT_MTU_SIZE} if
+	 * it was never set explicitly.
+	 */
+	@Advanced
+	public int getMtu()
+	{
+		return m_mtu == 0 ? BleDeviceConfig.DEFAULT_MTU_SIZE : m_mtu;
+	}
+
+	/**
+	 * Same as {@link #setMtuToDefault( ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
+	 *
+	 * @return (same as {@link #setMtu(int, ReadWriteListener)}).
+	 */
+	@Advanced
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault()
+	{
+		return setMtuToDefault(null);
+	}
+
+	/**
+	 * Overload of {@link #setMtu(int, ReadWriteListener)} that returns the "maximum transmission unit" to the default.
+	 * This can be called when the device is disconnected in the event that you don't want the
+	 * MTU to be auto-set upon next reconnection.
+	 *
+	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+	 */
+	@Advanced
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault(final ReadWriteListener listener)
+	{
+		if( is(CONNECTED) )
+		{
+			return setMtu(BleNodeConfig.DEFAULT_MTU_SIZE, listener);
+		}
+		else
+		{
+			clearMtu();
+
+			final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.SUCCESS, BleStatuses.GATT_SUCCESS, 0.0, 0.0);
+
+			invokeReadWriteCallback(listener, e);
+
+			return e;
+		}
+	}
+
+	/**
+	 * Same as {@link #setMtu(int, ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
+	 *
+	 * @return (same as {@link #setMtu(int, ReadWriteListener)}).
+	 */
+	@Advanced
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu)
+	{
+		return setMtu(mtu, null);
+	}
+
+	/**
+	 * Wrapper for {@link BluetoothGatt#requestMtu(int)} which attempts to change the "maximum transmission unit" for a given connection.
+	 * This will eventually update the value returned by {@link #getMtu()} but it is not
+	 * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
+	 * this call to succeed.
+	 *
+	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+	 */
+	@Advanced
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
+	{
+		enforceMainThread();
+
+		return setMtu_private(mtu, listener, getOverrideReadWritePriority());
+	}
+
+	private ReadWriteListener.ReadWriteEvent setMtu_private(final int mtu, final ReadWriteListener listener, PE_TaskPriority priority)
+	{
+		if( false == Utils.isLollipop() )
+		{
+			final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.ANDROID_VERSION_NOT_SUPPORTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0);
+
+			invokeReadWriteCallback(listener, e);
+
+			return e;
+		}
+		else
+		{
+			if( mtu <= 0 )
+			{
+				final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.INVALID_DATA, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0);
+
+				invokeReadWriteCallback(listener, e);
+
+				return e;
+			}
+			else
+			{
+				final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
+
+				if( earlyOutResult != null )
+				{
+					invokeReadWriteCallback(listener, earlyOutResult);
+
+					return earlyOutResult;
+				}
+				else
+				{
+					getTaskQueue().add(new P_Task_RequestMtu(this, listener, m_txnMngr.getCurrent(), priority, mtu));
+
+					return NULL_READWRITE_EVENT();
+				}
+			}
+		}
+	}
+
+	/**
 	 * Same as {@link #startPoll(UUID, Interval, ReadWriteListener)} but for when you don't care when/if the RSSI is actually updated.
 	 * <br><br>
 	 * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}.
@@ -3572,7 +3749,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		enforceMainThread();
 
-		if (isNull())  return;
+		if( isNull() ) return;
 
 		m_rssiPollMngr.start(interval.secs(), listener);
 
@@ -4433,6 +4610,16 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		m_rssi = rssi;
 	}
 
+	void updateMtu(final int mtu)
+	{
+		m_mtu = mtu;
+	}
+
+	private void clearMtu()
+	{
+		updateMtu(0);
+	}
+
 	void update(double timeStep)
 	{
 		m_timeSinceLastDiscovery += timeStep;
@@ -4729,6 +4916,14 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		m_serviceMngr.clear();
 		m_serviceMngr.loadDiscoveredServices();
+
+		if( m_mtu > 0 )
+		{
+			if( isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM) )
+			{
+				setMtu_private(m_mtu, null, PE_TaskPriority.FOR_PRIORITY_READS_WRITES);
+			}
+		}
 
 		m_txnMngr.runAuthOrInitTxnIfNeeded(BluetoothGatt.GATT_SUCCESS, DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true);
 	}

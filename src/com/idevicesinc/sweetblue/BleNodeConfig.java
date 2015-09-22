@@ -34,6 +34,18 @@ import java.util.UUID;
 public class BleNodeConfig
 {
 	/**
+	 * The default MTU size in bytes for gatt reads/writes/notifies/etc.
+	 */
+	public static final int DEFAULT_MTU_SIZE							= 23;
+
+	/**
+	 * The overhead in bytes that is subtracted from the total mtu size (e.g. {@link #DEFAULT_MTU_SIZE}) to
+	 * give you the effective payload size that your application can send or receive. For Android this
+	 * payload size is almost always 23-3=20 bytes.
+	 */
+	public static final int GATT_MTU_OVERHEAD							= 3;
+
+	/**
 	 * Default is <code>false</code> - see the <code>boolean autoConnect</code> parameters of
 	 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
 	 * and {@link android.bluetooth.BluetoothGattServer#connect(BluetoothDevice, boolean)}.

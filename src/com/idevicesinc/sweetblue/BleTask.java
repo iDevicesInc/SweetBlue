@@ -99,7 +99,12 @@ public enum BleTask
 	/**
 	 * Associated with {@link BleServer#addService(BleService, BleServer.ServiceAddListener)} or overloads.
 	 */
-	ADD_SERVICE;
+	ADD_SERVICE,
+
+	/**
+	 * Associated with {@link BleDevice#setMtu(int)} or overloads.
+	 */
+	SET_MTU;
 	
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
