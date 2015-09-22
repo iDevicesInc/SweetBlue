@@ -1121,7 +1121,7 @@ public class BleManager
 	 *
 	 * @see BleServer#setListener_Incoming(IncomingListener)
 	 */
-	public void setListener_Incoming(@Nullable(Prevalence.NORMAL) IncomingListener listener_nullable)
+	public void setListener_Incoming(@Nullable(Prevalence.NORMAL) BleServer.IncomingListener listener_nullable)
 	{
 		enforceMainThread();
 
