@@ -111,9 +111,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			OPERATION_NOT_SUPPORTED,
 
 			/**
-			 * The android api level doesn't support the lower level API call. For example if you try to use
-			 * {@link BleDevice#setMtu(int, ReadWriteListener)}, which requires API level 21, and you are at
-			 * level 18.
+			 * The android api level doesn't support the lower level API call in the native stack. For example if you try to use
+			 * {@link BleDevice#setMtu(int, ReadWriteListener)}, which requires API level 21, and you are at level 18.
 			 */
 			ANDROID_VERSION_NOT_SUPPORTED,
 

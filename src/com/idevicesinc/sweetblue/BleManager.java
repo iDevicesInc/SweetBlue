@@ -1305,76 +1305,97 @@ public class BleManager
 
 	/**
 	 * Starts a scan that will continue indefinitely until {@link #stopScan()} is called.
+	 *
+	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
-	public void startScan()
+	public boolean startScan()
 	{
-		startScan(Interval.INFINITE);
+		return startScan(Interval.INFINITE);
 	}
 
 	/**
 	 * Calls {@link #startScan(Interval, BleManagerConfig.ScanFilter)} with {@link Interval#INFINITE}.
+	 *
+	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
-	public void startScan(ScanFilter filter)
+	public boolean startScan(ScanFilter filter)
 	{
-		startScan(Interval.INFINITE, filter, (DiscoveryListener) null);
+		return startScan(Interval.INFINITE, filter, (DiscoveryListener) null);
 	}
 
 	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(com.idevicesinc.sweetblue.BleManager.DiscoveryListener)} for you.
+	 *
+	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
-	public void startScan(DiscoveryListener discoveryListener)
+	public boolean startScan(DiscoveryListener discoveryListener)
 	{
-		startScan(Interval.INFINITE, (ScanFilter) null, discoveryListener);
+		return startScan(Interval.INFINITE, (ScanFilter) null, discoveryListener);
 	}
 
 	/**
 	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, com.idevicesinc.sweetblue.BleManager.DiscoveryListener)}
+	 *
+	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
-	public void startScan(Interval scanTime, ScanFilter filter)
+	public boolean startScan(Interval scanTime, ScanFilter filter)
 	{
-		startScan(scanTime, filter, (DiscoveryListener) null);
+		return startScan(scanTime, filter, (DiscoveryListener) null);
 	}
 
 	/**
 	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, com.idevicesinc.sweetblue.BleManager.DiscoveryListener)}
+	 *
+	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
-	public void startScan(Interval scanTime, DiscoveryListener discoveryListener)
+	public boolean startScan(Interval scanTime, DiscoveryListener discoveryListener)
 	{
-		startScan(scanTime, (ScanFilter) null, discoveryListener);
+		return startScan(scanTime, (ScanFilter) null, discoveryListener);
 	}
 
 	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(com.idevicesinc.sweetblue.BleManager.DiscoveryListener)} for you.
+	 *
+	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
-	public void startScan(ScanFilter filter, DiscoveryListener discoveryListener)
+	public boolean startScan(ScanFilter filter, DiscoveryListener discoveryListener)
 	{
-		startScan(Interval.INFINITE, filter, discoveryListener);
+		return startScan(Interval.INFINITE, filter, discoveryListener);
 	}
 
 	/**
 	 * Starts a scan that will generally last for the given time (roughly).
+	 *
+	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
-	public void startScan(Interval scanTime)
+	public boolean startScan(Interval scanTime)
 	{
-		startScan(scanTime, (ScanFilter) null, (DiscoveryListener) null);
+		return startScan(scanTime, (ScanFilter) null, (DiscoveryListener) null);
 	}
 
 	/**
 	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(com.idevicesinc.sweetblue.BleManager.DiscoveryListener)} for you.
+	 *
+	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
-	public void startScan(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener)
+	public boolean startScan(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener)
 	{
-		startScan_private(scanTime, filter, discoveryListener, /*isPoll=*/false);
+		return startScan_private(scanTime, filter, discoveryListener, /*isPoll=*/false);
 	}
 
-	public void startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
+	public boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
 	{
 		enforceMainThread();
 
 		m_timeNotScanning = 0.0;
 		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
 
-		if( !is(ON) )  return;
+		if( false == is(ON) )
+		{
+			m_logger.e(BleManager.class.getSimpleName() + " is not " + ON + "! Please use the turnOn() method first.");
+
+			return false;
+		}
 
 		m_doingInfiniteScan = scanTime.equals(Interval.INFINITE);
 
@@ -1399,6 +1420,8 @@ public class BleManager
 
 			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs(), isPoll));
 		}
+
+		return true;
 	}
 
 	/**
