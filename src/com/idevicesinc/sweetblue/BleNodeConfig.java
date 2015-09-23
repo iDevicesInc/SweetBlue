@@ -222,7 +222,23 @@ public class BleNodeConfig
 		public static class HistoricalDataLogEvent extends Event
 		{
 			/**
-			 * The device in question.
+			 * The node that is currently trying to reconnect.
+			 */
+			public BleNode node(){  return m_node;  }
+			private final BleNode m_node;
+
+			/**
+			 * Tries to cast {@link #node()} to a {@link BleDevice}, otherwise returns {@link BleDevice#NULL}.
+			 */
+			public BleDevice device(){  return node().cast(BleDevice.class);  }
+
+			/**
+			 * Tries to cast {@link #node()} to a {@link BleServer}, otherwise returns {@link BleServer#NULL}.
+			 */
+			public BleServer server(){  return node().cast(BleServer.class);  }
+
+			/**
+			 * The device or server client in question.
 			 */
 			public String macAddress()  {  return m_macAddress;  }
 			private final String m_macAddress;
@@ -251,11 +267,9 @@ public class BleNodeConfig
 			public UUID charUuid()  {  return m_charUuid;  }
 			private final UUID m_charUuid;
 
-			private final BleNode m_endpoint;
-
-			HistoricalDataLogEvent(final BleNode endpoint, final String macAddress, final UUID charUuid, final byte[] data, final EpochTime epochTime, final Source source)
+			HistoricalDataLogEvent(final BleNode node, final String macAddress, final UUID charUuid, final byte[] data, final EpochTime epochTime, final Source source)
 			{
-				m_endpoint = endpoint;
+				m_node = node;
 				m_macAddress = macAddress;
 				m_charUuid = charUuid;
 				m_data = data;
@@ -285,7 +299,7 @@ public class BleNodeConfig
 				(
 					this.getClass(),
 					"macAddress", macAddress(),
-					"charUuid", m_endpoint.getManager().getLogger().charName(charUuid()),
+					"charUuid", m_node.getManager().getLogger().charName(charUuid()),
 					"source", source(),
 					"data", data()
 				);
@@ -478,6 +492,11 @@ public class BleNodeConfig
 			 */
 			public BleDevice device(){  return m_device;  }
 			private BleDevice m_device;
+
+			/**
+			 * Convience to return the mac address of {@link #device()}.
+			 */
+			public String macAddress()  {  return m_device.getMacAddress();  }
 
 			/**
 			 * The {@link BleServer} associated with the {@link #task()}, or {@link BleServer#NULL} if
@@ -710,6 +729,12 @@ public class BleNodeConfig
 			public BleServer server(){  return node().cast(BleServer.class);  }
 
 			/**
+			 * Convience to return the mac address of {@link #device()} or the client being reconnected to the {@link #server()}.
+			 */
+			public String macAddress()  {  return m_macAddress;  }
+			private String m_macAddress;
+
+			/**
 			 * The number of times a reconnect attempt has failed so far.
 			 */
 			public int failureCount(){  return m_failureCount;  }
@@ -742,18 +767,19 @@ public class BleNodeConfig
 			public Type type(){  return m_type;  }
 			private Type m_type;
 
-			/*package*/ ReconnectEvent(BleNode node, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
+			/*package*/ ReconnectEvent(BleNode node, final String macAddress, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
 			{
-				this.init(node, failureCount, totalTimeReconnecting, previousDelay, connectionFailEvent, type);
+				this.init(node, macAddress, failureCount, totalTimeReconnecting, previousDelay, connectionFailEvent, type);
 			}
 
 			/*package*/ ReconnectEvent()
 			{
 			}
 
-			/*package*/ void init(BleNode node, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
+			/*package*/ void init(BleNode node, final String macAddress, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
 			{
 				this.m_node						= node;
+				this.m_macAddress				= macAddress;
 				this.m_failureCount				= failureCount;
 				this.m_totalTimeReconnecting	= totalTimeReconnecting;
 				this.m_previousDelay			= previousDelay;

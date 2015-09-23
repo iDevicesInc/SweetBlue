@@ -184,6 +184,11 @@ public class BleManager
 			 */
 			public BleDevice device(){  return m_device;  }
 			private final BleDevice m_device;
+
+			/**
+			 * Convience to return the mac address of {@link #device()}.
+			 */
+			public String macAddress()  {  return m_device.getMacAddress();  }
 			
 			/**
 			 * The discovery {@link com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle} that the device has undergone.

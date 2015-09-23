@@ -102,7 +102,7 @@ class P_ReconnectManager
 		{
 			final ReconnectFilter.Type type = m_isShortTerm ? ReconnectFilter.Type.SHORT_TERM__SHOULD_TRY_AGAIN : ReconnectFilter.Type.LONG_TERM__SHOULD_TRY_AGAIN;
 
-			EVENT.init(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo, type);
+			EVENT.init(m_device, m_device.getMacAddress(), m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo, type);
 			final ReconnectFilter.Please please = filter.onEvent(EVENT);
 			
 			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.Please.class);
@@ -176,7 +176,7 @@ class P_ReconnectManager
 
 		final ReconnectFilter.Type type = m_isShortTerm ? ReconnectFilter.Type.SHORT_TERM__SHOULD_CONTINUE : ReconnectFilter.Type.LONG_TERM__SHOULD_CONTINUE;
 		
-		EVENT.init(m_device, m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), m_connectionFailEvent, type);
+		EVENT.init(m_device, m_device.getMacAddress(), m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), m_connectionFailEvent, type);
 		
 		final ReconnectFilter.Please please = persistFilter.onEvent(EVENT);
 		

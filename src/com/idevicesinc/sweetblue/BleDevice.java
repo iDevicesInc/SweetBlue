@@ -393,6 +393,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			private final BleDevice m_device;
 
 			/**
+			 * Convience to return the mac address of {@link #device()}.
+			 */
+			public String macAddress()  {  return m_device.getMacAddress();  }
+
+			/**
 			 * The type of operation, read, write, etc.
 			 */
 			public Type type() {  return m_type; }
@@ -745,6 +750,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			private final BleDevice m_device;
 
 			/**
+			 * Convience to return the mac address of {@link #device()}.
+			 */
+			public String macAddress()  {  return m_device.getMacAddress();  }
+
+			/**
 			 * The change in gattStatus that may have precipitated the state change, or {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 * For example if {@link #didEnter(State)} with {@link BleDeviceState#DISCONNECTED} is <code>true</code> and
 			 * {@link #didExit(State)} with {@link BleDeviceState#CONNECTING} is also <code>true</code> then {@link #gattStatus()} may be greater
@@ -982,6 +992,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			 */
 			public BleDevice device() {  return m_device;  }
 			private final BleDevice m_device;
+
+			/**
+			 * Convience to return the mac address of {@link #device()}.
+			 */
+			public String macAddress()  {  return m_device.getMacAddress();  }
 
 			/**
 			 * General reason why the connection failed.
@@ -1381,6 +1396,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			 */
 			public BleDevice device() {  return m_device;  }
 			private final BleDevice m_device;
+
+			/**
+			 * Convience to return the mac address of {@link #device()}.
+			 */
+			public String macAddress()  {  return m_device.getMacAddress();  }
 
 			/**
 			 * The {@link Status} associated with this event.

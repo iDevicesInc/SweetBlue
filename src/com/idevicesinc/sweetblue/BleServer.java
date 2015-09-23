@@ -1139,6 +1139,11 @@ public class BleServer extends BleNode implements UsesCustomNull
 			private final BluetoothGattService m_service;
 
 			/**
+			 * Convenience to return the {@link UUID} of {@link #service()}.
+			 */
+			public UUID serviceUuid() {  return service().getUuid();  }
+
+			/**
 			 * Should only be relevant if {@link #status()} is {@link BleServer.ServiceAddListener.Status#FAILED_EVENTUALLY}.
 			 */
 			public int gattStatus()  {  return m_gattStatus;  }

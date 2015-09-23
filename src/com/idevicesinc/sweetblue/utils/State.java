@@ -4,7 +4,8 @@ import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleDeviceConfig;
 import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleDevice.StateListener;
+import com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent;
+import com.idevicesinc.sweetblue.BleManager.StateListener.*;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleManagerState;
 
@@ -95,6 +96,22 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		public boolean isFor(T_State state)
 		{
 			return didEnter(state) || didExit(state);
+		}
+
+		/**
+		 * Returns <code>true</code> if {@link #didEnterAny(State...)} or {@link #didExitAny(State...)} return true.
+		 */
+		public boolean isForAny(T_State ... states)
+		{
+			return didEnterAny(states) || didExitAny(states);
+		}
+
+		/**
+		 * Returns <code>true</code> if {@link #didEnterAll(State...)} or {@link #didExitAll(State...)} return true.
+		 */
+		public boolean isForAll(T_State ... states)
+		{
+			return didEnterAll(states) || didExitAll(states);
 		}
 		
 		/**

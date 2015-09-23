@@ -352,6 +352,11 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 			private final BleDevice m_device;
 
 			/**
+			 * Convience to return the mac address of {@link #device()}.
+			 */
+			public String macAddress()  {  return m_device.getMacAddress();  }
+
+			/**
 			 * Returns the {@link UUID} of the characteristic in question.
 			 */
 			public UUID charUuid(){  return m_uuid;  }
