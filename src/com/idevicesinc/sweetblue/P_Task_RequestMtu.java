@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothGatt;
+import android.os.Build;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
@@ -39,15 +41,24 @@ class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_Sta
 		getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(status, gattStatus, 0));
 	}
 
+	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 	@Override public void execute()
 	{
-		if( false == getDevice().getNativeGatt().requestMtu(m_mtu) )
+		if( Utils.isLollipop() )
 		{
-			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			if( false == getDevice().getNativeGatt().requestMtu(m_mtu) )
+			{
+				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			}
+			else
+			{
+				// SUCCESS, so far...
+			}
 		}
 		else
 		{
-			// SUCCESS, so far...
+			//--- DRK > Should be checked for before the task is even created but just being anal.
+			fail(Status.ANDROID_VERSION_NOT_SUPPORTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 	}
 	

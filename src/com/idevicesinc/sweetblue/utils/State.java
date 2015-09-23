@@ -18,7 +18,7 @@ public interface State extends UsesCustomNull, BitwiseEnum
 	/**
 	 * Abstract base class for {@link com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent} and {@link com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent}.
 	 */
-	public static abstract class ChangeEvent<T_State extends State>
+	public static abstract class ChangeEvent<T_State extends State> extends Event
 	{
 		/**
 		 * The bitwise representation of the {@link BleDevice} or {@link BleManager}

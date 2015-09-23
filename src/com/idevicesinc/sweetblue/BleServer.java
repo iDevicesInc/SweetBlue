@@ -20,6 +20,7 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
@@ -130,7 +131,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 		 * {@link IncomingListener.IncomingEvent} and {@link OutgoingListener.OutgoingEvent} with a common API.
 		 */
 		@Immutable
-		public abstract static class ExchangeEvent
+		public abstract static class ExchangeEvent extends Event
 		{
 			/**
 			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid()}
@@ -238,6 +239,9 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 				m_data_received = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
 			}
+
+			public boolean isFor(final String macAddress)  {  return macAddress().equals(macAddress);  }
+			public boolean isFor(final UUID uuid)  {  return uuid.equals(serviceUuid()) || uuid.equals(charUuid()) || uuid.equals(descUuid());  }
 		}
 	}
 
@@ -1120,7 +1124,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 		 * of a service addition or the reason(s) for its failure.
 		 */
 		@Immutable
-		public static class ServiceAddEvent
+		public static class ServiceAddEvent extends Event
 		{
 			/**
 			 * The server to which the service is being added.

@@ -41,6 +41,7 @@ import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 import com.idevicesinc.sweetblue.utils.EpochTime;
+import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
@@ -170,7 +171,7 @@ public class BleManager
 		 * Struct passed to {@link com.idevicesinc.sweetblue.BleManager.DiscoveryListener#onEvent(com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent)}.
 		 */
 		@Immutable
-		public static class DiscoveryEvent
+		public static class DiscoveryEvent extends Event
 		{
 			/**
 			 * The {@link com.idevicesinc.sweetblue.BleManager} which is currently {@link BleManagerState#SCANNING}.
@@ -336,7 +337,7 @@ public class BleManager
 		 * @see com.idevicesinc.sweetblue.BleManager.UhOhListener
 		 * @see com.idevicesinc.sweetblue.BleManager#setListener_UhOh(com.idevicesinc.sweetblue.BleManager.UhOhListener)
 		 */
-		public enum UhOh
+		public static enum UhOh
 		{
 			/**
 			 * A {@link BleTask#BOND} operation timed out. This can happen a lot with the Galaxy Tab 4, and doing {@link com.idevicesinc.sweetblue.BleManager#reset()} seems to fix it.
@@ -497,7 +498,7 @@ public class BleManager
 		 * Struct passed to {@link com.idevicesinc.sweetblue.BleManager.UhOhListener#onEvent(com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOhEvent)}.
 		 */
 		@Immutable
-		public static class UhOhEvent
+		public static class UhOhEvent extends Event
 		{
 			/**
 			 * The manager associated with the {@link com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOhEvent}
@@ -564,7 +565,7 @@ public class BleManager
 		 * Struct passed to {@link com.idevicesinc.sweetblue.BleManager.ResetListener#onEvent(com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent)}.
 		 */
 		@Immutable
-		public static class ResetEvent
+		public static class ResetEvent extends Event
 		{
 			/**
 			 * The {@link com.idevicesinc.sweetblue.BleManager} the reset was applied to.
@@ -613,7 +614,7 @@ public class BleManager
 		 * Struct passed to {@link com.idevicesinc.sweetblue.BleManager.AssertListener#onEvent(com.idevicesinc.sweetblue.BleManager.AssertListener.AssertEvent)}.
 		 */
 		@Immutable
-		public static class AssertEvent
+		public static class AssertEvent extends Event
 		{
 			/**
 			 * The {@link com.idevicesinc.sweetblue.BleManager} instance for your application.
@@ -1406,7 +1407,7 @@ public class BleManager
 
 		m_filterMngr.add(filter);
 
-		P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
+		final P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
 
 		if( scanTask != null )
 		{

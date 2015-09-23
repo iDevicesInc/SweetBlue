@@ -15,6 +15,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.EmptyCursor;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.EpochTimeRange;
+import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataColumn;
@@ -78,7 +79,7 @@ public abstract class BleNode implements UsesCustomNull
 		 * and {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} to provide more info about how/why a connection failed.
 		 */
 		@Immutable
-		public abstract static class ConnectionFailEvent implements UsesCustomNull
+		public abstract static class ConnectionFailEvent extends Event implements UsesCustomNull
 		{
 			/**
 			 * The failure count so far. This will start at 1 and keep incrementing for more failures.
@@ -286,7 +287,7 @@ public abstract class BleNode implements UsesCustomNull
 		 * (or overloads).
 		 */
 		@com.idevicesinc.sweetblue.annotations.Immutable
-		public static class HistoricalDataLoadEvent
+		public static class HistoricalDataLoadEvent extends Event
 		{
 			/**
 			 * The mac address that the data is being queried for.
@@ -402,7 +403,7 @@ public abstract class BleNode implements UsesCustomNull
 		 * (or overloads).
 		 */
 		@com.idevicesinc.sweetblue.annotations.Immutable
-		public static class HistoricalDataQueryEvent
+		public static class HistoricalDataQueryEvent extends Event
 		{
 			/**
 			 * The {@link UUID} that the data is being queried for.

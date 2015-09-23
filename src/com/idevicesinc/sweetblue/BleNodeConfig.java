@@ -6,6 +6,7 @@ import android.content.Context;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.EpochTime;
+import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
@@ -218,7 +219,7 @@ public class BleNodeConfig
 		 * Event passed to {@link BleNodeConfig.HistoricalDataLogFilter#onEvent(HistoricalDataLogEvent)} that provides
 		 * information you can use to determine whether or not {@link HistoricalDataLogEvent#data()} should be logged.
 		 */
-		public static class HistoricalDataLogEvent
+		public static class HistoricalDataLogEvent extends Event
 		{
 			/**
 			 * The device in question.
@@ -281,13 +282,13 @@ public class BleNodeConfig
 			@Override public String toString()
 			{
 				return Utils_String.toString
-						(
-								this.getClass(),
-								"macAddress", macAddress(),
-								"charUuid", m_endpoint.getManager().getLogger().charName(charUuid()),
-								"source", source(),
-								"data", data()
-						);
+				(
+					this.getClass(),
+					"macAddress", macAddress(),
+					"charUuid", m_endpoint.getManager().getLogger().charName(charUuid()),
+					"source", source(),
+					"data", data()
+				);
 			}
 
 			public static boolean includesMemory(final int enum_PersistenceLevel)
@@ -469,7 +470,7 @@ public class BleNodeConfig
 		 * information about the {@link BleTask} that will soon be executed.
 		 */
 		@Immutable
-		public static class TaskTimeoutRequestEvent
+		public static class TaskTimeoutRequestEvent extends Event
 		{
 			/**
 			 * The {@link BleDevice} associated with the {@link #task()}, or {@link BleDevice#NULL} if
@@ -690,7 +691,7 @@ public class BleNodeConfig
 		 * Struct passed to {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)} to aid in making a decision.
 		 */
 		@Immutable
-		public static class ReconnectEvent
+		public static class ReconnectEvent extends Event
 		{
 			/**
 			 * The node that is currently trying to reconnect.
@@ -977,7 +978,7 @@ public class BleNodeConfig
 
 			"As of v2.0.0 this API must be called on the main thread. " +
 			"To temporarily disable this enforcement for migrations from v1.*.* set BleNodeConfig.allowCallsFromAllThreads=true. " +
-			"HOWEVER, this should be treated as a temporary solution for your";
+			"HOWEVER, this should only be treated as a temporary solution for your app.";
 
 	/**
 	 * Creates a {@link BleNodeConfig} with all default options set. See each member of this class

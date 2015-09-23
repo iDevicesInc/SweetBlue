@@ -13,6 +13,7 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
@@ -254,7 +255,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		 * Instances of this class are passed to {@link ScanFilter#onEvent(ScanEvent)} to aid in making a decision.
 		 */
 		@Immutable
-		public static class ScanEvent
+		public static class ScanEvent extends Event
 		{
 			/**
 			 * Other parameters are probably enough to make a decision but this native instance is provided just in case.

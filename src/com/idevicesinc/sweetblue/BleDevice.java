@@ -377,7 +377,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		 * Provides a bunch of information about a completed read, write, or notification.
 		 */
 		@Immutable
-		public static class ReadWriteEvent implements UsesCustomNull
+		public static class ReadWriteEvent extends Event implements UsesCustomNull
 		{
 			/**
 			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid} isn't used for the {@link ReadWriteEvent}
@@ -1374,7 +1374,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		 * Struct passed to {@link BondListener#onEvent(BondEvent)} to provide more information about a {@link BleDevice#bond()} attempt.
 		 */
 		@Immutable
-		public static class BondEvent implements UsesCustomNull
+		public static class BondEvent extends Event implements UsesCustomNull
 		{
 			/**
 			 * The {@link BleDevice} that attempted to {@link BleDevice#bond()}.

@@ -343,7 +343,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 		 */
 		@com.idevicesinc.sweetblue.annotations.Advanced
 		@Immutable
-		public static class CharacteristicEvent
+		public static class CharacteristicEvent extends Event
 		{
 			/**
 			 * Returns the {@link BleDevice} in question.
