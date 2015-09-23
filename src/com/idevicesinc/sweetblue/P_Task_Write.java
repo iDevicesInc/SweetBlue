@@ -158,12 +158,16 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 				 
 				 if( m_offset >= m_allDataToSend.length )
 				 {
-					 if( !gatt.executeReliableWrite() )
+					 if( false == gatt.executeReliableWrite() )
 					 {
 						 //TODO: Use new more accurate error status?
 						 fail(Status.REMOTE_GATT_FAILURE, gattStatus, Target.CHARACTERISTIC, uuid, ReadWriteEvent.NON_APPLICABLE_UUID);
 						 
 						 return;
+					 }
+					 else
+					 {
+						 // SUCCESS, for now, until
 					 }
 				 }
 				 else

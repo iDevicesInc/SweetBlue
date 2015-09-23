@@ -689,6 +689,18 @@ public class BleDevice extends BleNode implements UsesCustomNull
 							"gattStatus",		device().getManager().getLogger().gattStatus(gattStatus())
 						);
 					}
+					else if (target() == Target.MTU )
+					{
+						return Utils_String.toString
+						(
+							this.getClass(),
+							"status",			status(),
+							"type",				type(),
+							"target",			target(),
+							"mtu",				mtu(),
+							"gattStatus",		device().getManager().getLogger().gattStatus(gattStatus())
+						);
+					}
 					else
 					{
 						return Utils_String.toString
