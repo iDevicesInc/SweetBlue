@@ -4626,7 +4626,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 */
 	public void disableNotify(final Iterable<UUID> charUuids)
 	{
-		this.enableNotify(charUuids, Interval.INFINITE, null);
+		this.disableNotify(charUuids, Interval.INFINITE, null);
 	}
 
 	/**
@@ -4634,7 +4634,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 */
 	public void disableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
 	{
-		this.enableNotify(charUuids, Interval.INFINITE, listener);
+		this.disableNotify(charUuids, Interval.INFINITE, listener);
 	}
 
 	/**
@@ -4642,7 +4642,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 */
 	public void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
 	{
-		this.enableNotify(charUuids, forceReadTimeout, null);
+		this.disableNotify(charUuids, forceReadTimeout, null);
 	}
 
 	/**
