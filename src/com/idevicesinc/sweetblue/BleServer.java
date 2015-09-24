@@ -930,7 +930,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Forwards {@link com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status#shouldBeReportedToUser()}
+			 * Forwards {@link BleDevice.ConnectionFailListener.Status#shouldBeReportedToUser()}
 			 * using {@link #status()}.
 			 */
 			public boolean shouldBeReportedToUser()
@@ -1998,7 +1998,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Void)} but will only return clients
+	 * Same as {@link #getClients(ForEach_Void)} but will only return clients
 	 * in the given state provided.
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
@@ -2009,7 +2009,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Void)} but will only return clients
+	 * Same as {@link #getClients(ForEach_Void)} but will only return clients
 	 * in any of the given states provided.
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
@@ -2020,7 +2020,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Overload of {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Void)}
+	 * Overload of {@link #getClients(ForEach_Void)}
 	 * if you need to break out of the iteration at any point.
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach)
@@ -2031,7 +2031,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Overload of {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Void, BleServerState)}
+	 * Overload of {@link #getClients(ForEach_Void, BleServerState)}
 	 * if you need to break out of the iteration at any point.
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
@@ -2042,7 +2042,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #getClients(com.idevicesinc.sweetblue.utils.ForEach_Breakable)} but will only return clients
+	 * Same as {@link #getClients(ForEach_Breakable)} but will only return clients
 	 * in any of the given states provided.
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)

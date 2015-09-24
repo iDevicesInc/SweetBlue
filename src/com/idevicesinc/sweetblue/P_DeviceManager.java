@@ -413,7 +413,7 @@ class P_DeviceManager
 
 				if( m_mngr.m_discoveryListener != null )
 				{
-					DiscoveryEvent event = new DiscoveryEvent(m_mngr, device, LifeCycle.DISCOVERED);
+					DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
 					m_mngr.m_discoveryListener.onEvent(event);
 				}
 			}
@@ -469,7 +469,7 @@ class P_DeviceManager
 		
 		if( listener != null )
 		{
-			DiscoveryEvent event = new DiscoveryEvent(device.getManager(), device, LifeCycle.UNDISCOVERED);
+			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.UNDISCOVERED);
 			listener.onEvent(event);
 		}
 	}

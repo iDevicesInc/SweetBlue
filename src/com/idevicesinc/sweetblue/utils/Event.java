@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Tagging base class for all events in SweetBlue, e.g. {@link State.ChangeEvent}.
+ * Abstract base class for all events in SweetBlue, e.g. {@link State.ChangeEvent}.
  */
 public abstract class Event
 {
