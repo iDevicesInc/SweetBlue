@@ -495,7 +495,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			 * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is, for example,
 			 * {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point where a gatt status is
 			 * provided, in which case this member is set to {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE} (value of
-			 * {@value BleStatuses#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater than
+			 * {@value com.idevicesinc.sweetblue.BleStatuses#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater than
 			 * <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status} is
 			 * {@link ReadWriteListener.Status#SUCCESS} or {@link ReadWriteListener.Status#REMOTE_GATT_FAILURE}. There are
 			 * also some cases where this will be 0 for success but {@link #status} is for example
@@ -1753,15 +1753,15 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * {@link BleManagerState#OFF}->{@link BleManagerState#ON} cycles or undiscovery->rediscovery, which
 	 * basically means how it was last {@link BleDeviceState#DISCONNECTED}.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#NULL}, then the last disconnect is unknown because
+	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#NULL}, then the last disconnect is unknown because
 	 * (a) device has never been seen before,
 	 * (b) reason for disconnect was app being killed and {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>,
 	 * (c) app user cleared app data between app sessions, (d) etc., etc.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
+	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
 	 * the disconnect to happen, and thus *probably* would want to be automatically connected again as soon as the device is discovered.
 	 * <br><br>
-	 * If {@link State.ChangeIntent#INTENTIONAL}, then the last reason the device was {@link BleDeviceState#DISCONNECTED} was because
+	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#INTENTIONAL}, then the last reason the device was {@link BleDeviceState#DISCONNECTED} was because
 	 * {@link BleDevice#disconnect()} was called, which most-likely means the user doesn't want to automatically connect to this device again.
 	 * <br><br>
 	 * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
@@ -3223,8 +3223,8 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 	/**
 	 * Same as {@link #disconnect()} but this call roughly simulates the disconnect as if it's because of the remote device going down, going out of range, etc.
-	 * For example {@link #getLastDisconnectIntent()} will be {@link State.ChangeIntent#UNINTENTIONAL} instead of
-	 * {@link State.ChangeIntent#INTENTIONAL}.
+	 * For example {@link #getLastDisconnectIntent()} will be {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL} instead of
+	 * {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#INTENTIONAL}.
 	 * <br><br>
 	 * If the device is currently {@link BleDeviceState#CONNECTING_OVERALL} then your
 	 * {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)}
@@ -3385,11 +3385,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Convenience to call {@link #startPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
 	 * characteristic uuids all at once.
 	 */
-	public void startPoll(final UUID[] uuids, final Interval interval, final ReadWriteListener listener)
+	public void startPoll(final UUID[] charUuids, final Interval interval, final ReadWriteListener listener)
 	{
-		for( int i = 0; i < uuids.length; i++ )
+		for( int i = 0; i < charUuids.length; i++ )
 		{
-			startPoll(uuids[i], interval, listener);
+			startPoll(charUuids[i], interval, listener);
 		}
 	}
 
@@ -3398,9 +3398,83 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * <br><br>
 	 * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
 	 */
-	public void startPoll(final UUID[] uuids, final Interval interval)
+	public void startPoll(final UUID[] charUuids, final Interval interval)
 	{
-		startPoll(uuids, interval, null);
+		startPoll(charUuids, interval, null);
+	}
+
+	/**
+	 * Convenience to call {@link #startPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
+	 * characteristic uuids all at once.
+	 */
+	public void startPoll(final Iterable<UUID> charUuids, final Interval interval, final ReadWriteListener listener)
+	{
+		final Iterator<UUID> iterator = charUuids.iterator();
+
+		while( iterator.hasNext() )
+		{
+			final UUID ith = iterator.next();
+
+			startPoll(ith, interval, listener);
+		}
+	}
+
+	/**
+	 * Same as {@link #startPoll(java.util.UUID[], Interval, BleDevice.ReadWriteListener)} but without a listener.
+	 * <br><br>
+	 * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
+	 */
+	public void startPoll(final Iterable<UUID> charUuids, final Interval interval)
+	{
+		startPoll(charUuids, interval, null);
+	}
+
+	/**
+	 * Convenience to call {@link #startChangeTrackingPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
+	 * characteristic uuids all at once.
+	 */
+	public void startChangeTrackingPoll(final UUID[] charUuids, final Interval interval, final ReadWriteListener listener)
+	{
+		for( int i = 0; i < charUuids.length; i++ )
+		{
+			startChangeTrackingPoll(charUuids[i], interval, listener);
+		}
+	}
+
+	/**
+	 * Same as {@link #startChangeTrackingPoll(java.util.UUID[], Interval, BleDevice.ReadWriteListener)} but without a listener.
+	 * <br><br>
+	 * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
+	 */
+	public void startChangeTrackingPoll(final UUID[] charUuids, final Interval interval)
+	{
+		startChangeTrackingPoll(charUuids, interval, null);
+	}
+
+	/**
+	 * Convenience to call {@link #startChangeTrackingPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
+	 * characteristic uuids all at once.
+	 */
+	public void startChangeTrackingPoll(final Iterable<UUID> charUuids, final Interval interval, final ReadWriteListener listener)
+	{
+		final Iterator<UUID> iterator = charUuids.iterator();
+
+		while( iterator.hasNext() )
+		{
+			final UUID ith = iterator.next();
+
+			startChangeTrackingPoll(ith, interval, listener);
+		}
+	}
+
+	/**
+	 * Same as {@link #startChangeTrackingPoll(java.util.UUID[], Interval, BleDevice.ReadWriteListener)} but without a listener.
+	 * <br><br>
+	 * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
+	 */
+	public void startChangeTrackingPoll(final Iterable<UUID> charUuids, final Interval interval)
+	{
+		startChangeTrackingPoll(charUuids, interval, null);
 	}
 
 	/**
@@ -3527,6 +3601,37 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 * Calls {@link #stopPoll(java.util.UUID)} multiple times for you.
 	 */
 	public void stopPoll(final UUID[] uuids)
+	{
+		stopPoll(uuids, null, null);
+	}
+
+	/**
+	 * Calls {@link #stopPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} multiple times for you.
+	 */
+	public void stopPoll(final Iterable<UUID> uuids, final Interval interval, final ReadWriteListener listener)
+	{
+		final Iterator<UUID> iterator = uuids.iterator();
+
+		while( iterator.hasNext() )
+		{
+			final UUID ith = iterator.next();
+
+			stopPoll(ith, interval, listener);
+		}
+	}
+
+	/**
+	 * Calls {@link #stopPoll(java.util.UUID, Interval)} multiple times for you.
+	 */
+	public void stopPoll(final Iterable<UUID> uuids, final Interval interval)
+	{
+		stopPoll(uuids, interval, null);
+	}
+
+	/**
+	 * Calls {@link #stopPoll(java.util.UUID)} multiple times for you.
+	 */
+	public void stopPoll(final Iterable<UUID> uuids)
 	{
 		stopPoll(uuids, null, null);
 	}
@@ -3674,7 +3779,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 	/**
 	 * Overload of {@link #setMtu(int, ReadWriteListener)} that returns the "maximum transmission unit" to the default.
-	 * This can be called when the device is disconnected in the event that you don't want the
+	 * Unlike {@link #setMtu(int)}, this can be called when the device is {@link BleDeviceState#DISCONNECTED} in the event that you don't want the
 	 * MTU to be auto-set upon next reconnection.
 	 *
 	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
@@ -3816,8 +3921,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		queue().add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
 	}
-
-
 
 	/**
 	 * One method to remove absolutely all "metadata" related to this device that is stored on disk and/or cached in memory in any way.
@@ -4066,6 +4169,48 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	}
 
 	/**
+	 * Overload of {@link #read(UUID)}.
+	 */
+	public void read(final UUID[] charUuids)
+	{
+		read(charUuids, null);
+	}
+
+	/**
+	 * Overload of {@link #read(UUID, ReadWriteListener)}.
+	 */
+	public void read(final UUID[] charUuids, final ReadWriteListener listener)
+	{
+		for( int i = 0; i < charUuids.length; i++ )
+		{
+			read(charUuids[i], listener);
+		}
+	}
+
+	/**
+	 * Overload of {@link #read(UUID)}.
+	 */
+	public void read(final Iterable<UUID> charUuids)
+	{
+		read(charUuids, null);
+	}
+
+	/**
+	 * Overload of {@link #read(UUID, ReadWriteListener)}.
+	 */
+	public void read(final Iterable<UUID> charUuids, final ReadWriteListener listener)
+	{
+		final Iterator<UUID> iterator = charUuids.iterator();
+
+		while( iterator.hasNext() )
+		{
+			final UUID charUuid = iterator.next();
+
+			read(charUuid, listener);
+		}
+	}
+
+	/**
 	 * Same as {@link #read(java.util.UUID, BleDevice.ReadWriteListener)} but you can use this
 	 * if you don't immediately care about the result. The callback will still be posted to {@link BleDevice.ReadWriteListener}
 	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
@@ -4146,35 +4291,74 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Overload for {@link #enableNotify(UUID)}.
 	 */
-	public void enableNotify(final UUID[] uuids)
+	public void enableNotify(final UUID[] charUuids)
 	{
-		this.enableNotify(uuids, Interval.INFINITE, null);
+		this.enableNotify(charUuids, Interval.INFINITE, null);
 	}
 
 	/**
 	 * Overload for {@link #enableNotify(UUID, ReadWriteListener)}.
 	 */
-	public void enableNotify(final UUID[] uuids, ReadWriteListener listener)
+	public void enableNotify(final UUID[] charUuids, ReadWriteListener listener)
 	{
-		this.enableNotify(uuids, Interval.INFINITE, listener);
+		this.enableNotify(charUuids, Interval.INFINITE, listener);
 	}
 
 	/**
 	 * Overload for {@link #enableNotify(UUID, Interval)}.
 	 */
-	public void enableNotify(final UUID[] uuids, final Interval forceReadTimeout)
+	public void enableNotify(final UUID[] charUuids, final Interval forceReadTimeout)
 	{
-		this.enableNotify(uuids, forceReadTimeout, null);
+		this.enableNotify(charUuids, forceReadTimeout, null);
 	}
 
 	/**
 	 * Overload for {@link #enableNotify(UUID, Interval, ReadWriteListener)}.
 	 */
-	public void enableNotify(final UUID[] uuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+	public void enableNotify(final UUID[] charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
 	{
-		for( int i = 0; i < uuids.length; i++ )
+		for( int i = 0; i < charUuids.length; i++ )
 		{
-			final UUID ith = uuids[i];
+			final UUID ith = charUuids[i];
+
+			enableNotify(ith, forceReadTimeout, listener);
+		}
+	}
+
+	/**
+	 * Overload for {@link #enableNotify(UUID)}.
+	 */
+	public void enableNotify(final Iterable<UUID> charUuids)
+	{
+		this.enableNotify(charUuids, Interval.INFINITE, null);
+	}
+
+	/**
+	 * Overload for {@link #enableNotify(UUID, ReadWriteListener)}.
+	 */
+	public void enableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
+	{
+		this.enableNotify(charUuids, Interval.INFINITE, listener);
+	}
+
+	/**
+	 * Overload for {@link #enableNotify(UUID, Interval)}.
+	 */
+	public void enableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
+	{
+		this.enableNotify(charUuids, forceReadTimeout, null);
+	}
+
+	/**
+	 * Overload for {@link #enableNotify(UUID, Interval, ReadWriteListener)}.
+	 */
+	public void enableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+	{
+		final Iterator<UUID> iterator = charUuids.iterator();
+
+		while( iterator.hasNext() )
+		{
+			final UUID ith = iterator.next();
 
 			enableNotify(ith, forceReadTimeout, listener);
 		}
@@ -4432,6 +4616,45 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		for( int i = 0; i < uuids.length; i++ )
 		{
 			final UUID ith = uuids[i];
+
+			disableNotify(ith, forceReadTimeout, listener);
+		}
+	}
+
+	/**
+	 * Overload for {@link #disableNotify(UUID)}.
+	 */
+	public void disableNotify(final Iterable<UUID> charUuids)
+	{
+		this.enableNotify(charUuids, Interval.INFINITE, null);
+	}
+
+	/**
+	 * Overload for {@link #disableNotify(UUID, ReadWriteListener)}.
+	 */
+	public void disableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
+	{
+		this.enableNotify(charUuids, Interval.INFINITE, listener);
+	}
+
+	/**
+	 * Overload for {@link #disableNotify(UUID, Interval)}.
+	 */
+	public void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
+	{
+		this.enableNotify(charUuids, forceReadTimeout, null);
+	}
+
+	/**
+	 * Overload for {@link #disableNotify(UUID, Interval, ReadWriteListener)}.
+	 */
+	public void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+	{
+		final Iterator<UUID> iterator = charUuids.iterator();
+
+		while( iterator.hasNext() )
+		{
+			final UUID ith = iterator.next();
 
 			disableNotify(ith, forceReadTimeout, listener);
 		}
