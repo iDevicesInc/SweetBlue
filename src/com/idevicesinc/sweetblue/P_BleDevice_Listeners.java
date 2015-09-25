@@ -13,6 +13,7 @@ import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -134,7 +135,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override public void run()
+				@Override
+				public void run()
 				{
 					onConnectionStateChange_mainThread(gatt, gattStatus, newState);
 				}
@@ -328,18 +330,20 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		final P_Task_Read readTask = m_queue.getCurrent(P_Task_Read.class, m_device);
 
-		if( readTask != null )
+		if( readTask != null && readTask.isFor(characteristic) )
 		{
 			readTask.onCharacteristicRead(gatt, characteristic.getUuid(), value, gattStatus);
 		}
 		else
 		{
-			/// fire unsolicited
+			fireUnsolicitedEvent(characteristic, null, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, value, gattStatus);
 		}
 	}
 
 	@Override public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
 	{
+		final byte[] data = characteristic.getValue();
+
 		if( postNeeded() )
 		{
 			post(new Runnable()
@@ -347,17 +351,17 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 				@Override
 				public void run()
 				{
-					onCharacteristicWrite_mainThread(gatt, characteristic, gattStatus);
+					onCharacteristicWrite_mainThread(gatt, characteristic, data, gattStatus);
 				}
 			});
 		}
 		else
 		{
-			onCharacteristicWrite_mainThread(gatt, characteristic, gattStatus);
+			onCharacteristicWrite_mainThread(gatt, characteristic, data, gattStatus);
 		}
 	}
 
-	private void onCharacteristicWrite_mainThread(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
+	private void onCharacteristicWrite_mainThread(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final byte[] data, final int gattStatus)
 	{
 		final UUID uuid = characteristic.getUuid();
 		m_logger.i(m_logger.charName(uuid));
@@ -365,14 +369,58 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
 
-		if (task != null )
+		if (task != null && task.isFor(characteristic) )
 		{
 			task.onCharacteristicWrite(gatt, characteristic.getUuid(), gattStatus);
 		}
 		else
 		{
-			// fire unsoliicted event
+			fireUnsolicitedEvent(characteristic, null, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, data, gattStatus);
 		}
+	}
+
+	private void fireUnsolicitedEvent(final BluetoothGattCharacteristic characteristic_nullable, final BluetoothGattDescriptor descriptor_nullable, BleDevice.ReadWriteListener.Type type, final BleDevice.ReadWriteListener.Target target, final byte[] data, final int gattStatus)
+	{
+		final BleDevice.ReadWriteListener.Type type_modified = characteristic_nullable != null ? P_DeviceServiceManager.modifyResultType(characteristic_nullable, type) : type;
+		final BleDevice.ReadWriteListener.Status status = Utils.isSuccess(gattStatus) ? BleDevice.ReadWriteListener.Status.SUCCESS : BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE;
+
+		final UUID serviceUuid			= characteristic_nullable != null	? characteristic_nullable.getService().getUuid()	: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
+		final UUID characteristicUuid	= characteristic_nullable != null	? characteristic_nullable.getUuid()					: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;;
+		final UUID descriptorUuid		= descriptor_nullable != null		? descriptor_nullable.getUuid()						: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
+
+		final double time = Interval.DISABLED.secs();
+		final boolean solicited = false;
+
+		final BleDevice.ReadWriteListener.ReadWriteEvent e;
+
+		if( target == BleDevice.ReadWriteListener.Target.CHARACTERISTIC || target == BleDevice.ReadWriteListener.Target.DESCRIPTOR )
+		{
+			e = new BleDevice.ReadWriteListener.ReadWriteEvent
+			(
+				m_device, serviceUuid, characteristicUuid, descriptorUuid, type_modified,
+				target, data, status, gattStatus, time, time, solicited
+			);
+		}
+		else if( target == BleDevice.ReadWriteListener.Target.RSSI )
+		{
+			e = new BleDevice.ReadWriteListener.ReadWriteEvent
+			(
+				m_device, type, m_device.getRssi(), status, gattStatus, time, time, solicited
+			);
+		}
+		else if( target == BleDevice.ReadWriteListener.Target.MTU )
+		{
+			e = new BleDevice.ReadWriteListener.ReadWriteEvent
+			(
+				m_device, m_device.getMtu(), status, gattStatus, time, time, solicited
+			);
+		}
+		else
+		{
+			return;
+		}
+
+		m_device.invokeReadWriteCallback(null, e);
 	}
 	
 	@Override public void onReliableWriteCompleted(final BluetoothGatt gatt, final int gattStatus)
@@ -381,8 +429,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override
-				public void run()
+				@Override public void run()
 				{
 					onReliableWriteCompleted_mainThread(gatt, gattStatus);
 				}
@@ -398,16 +445,16 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		m_logger.log_status(gattStatus);
 
-		final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
-
-		if( task != null )
-		{
-			task.onReliableWriteCompleted(gatt, gattStatus);
-		}
-		else
-		{
-			// fire unsolicited event
-		}
+//		final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
+//
+//		if( task != null )
+//		{
+//			task.onReliableWriteCompleted(gatt, gattStatus);
+//		}
+//		else
+//		{
+//			// fire unsolicited event
+//		}
 	}
 	
 	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
@@ -416,8 +463,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override
-				public void run()
+				@Override public void run()
 				{
 					onReadRemoteRssi_mainThread(gatt, rssi, gattStatus);
 				}
@@ -444,44 +490,88 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			// fire unsolicited
+			fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.RSSI, BleDevice.EMPTY_BYTE_ARRAY, gattStatus);
 		}
 	}
 	
 	@Override public void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
 	{
+		final byte[] data = descriptor.getValue();
+
 		if( postNeeded() )
 		{
 			post(new Runnable()
 			{
-				@Override
-				public void run()
+				@Override public void run()
 				{
-					onDescriptorWrite_mainThread(gatt, descriptor, gattStatus);
+					onDescriptorWrite_mainThread(gatt, descriptor, data, gattStatus);
 				}
 			});
 		}
 		else
 		{
-			onDescriptorWrite_mainThread(gatt, descriptor, gattStatus);
+			onDescriptorWrite_mainThread(gatt, descriptor, data, gattStatus);
 		}
 	}
 
-	private void onDescriptorWrite_mainThread(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
+	private void onDescriptorWrite_mainThread(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final byte[] data, final int gattStatus)
 	{
 		final UUID uuid = descriptor.getUuid();
 		m_logger.i(m_logger.descriptorName(uuid));
 		m_logger.log_status(gattStatus);
 
-		final P_Task_ToggleNotify task = m_queue.getCurrent(P_Task_ToggleNotify.class, m_device);
+		final P_Task_WriteDescriptor task_write = m_queue.getCurrent(P_Task_WriteDescriptor.class, m_device);
 
-		if( task != null )
+		if( task_write != null && task_write.isFor(descriptor) )
 		{
-			task.onDescriptorWrite(gatt, uuid, gattStatus);
+			task_write.onDescriptorWrite(gatt, descriptor.getUuid(), gattStatus);
 		}
 		else
 		{
-			// fire unsolicited gatt event
+			final P_Task_ToggleNotify task_toggleNotify = m_queue.getCurrent(P_Task_ToggleNotify.class, m_device);
+
+			if( task_toggleNotify != null && task_toggleNotify.isFor(descriptor) )
+			{
+				task_toggleNotify.onDescriptorWrite(gatt, uuid, gattStatus);
+			}
+			else
+			{
+				fireUnsolicitedEvent(descriptor.getCharacteristic(), descriptor, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
+			}
+		}
+	}
+
+	@Override public void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
+	{
+		final byte[] data = descriptor.getValue();
+
+		if( postNeeded() )
+		{
+			post(new Runnable()
+			{
+				@Override public void run()
+				{
+					onDescriptorRead_mainThread(gatt, descriptor, data, gattStatus);
+				}
+			});
+		}
+		else
+		{
+			onDescriptorRead_mainThread(gatt, descriptor, data, gattStatus);
+		}
+	}
+
+	private void onDescriptorRead_mainThread(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final byte[] data, final int gattStatus)
+	{
+		final P_Task_ReadDescriptor task_read = m_queue.getCurrent(P_Task_ReadDescriptor.class, m_device);
+
+		if( task_read != null && task_read.isFor(descriptor) )
+		{
+			task_read.onDescriptorRead(gatt, descriptor.getUuid(), data, gattStatus);
+		}
+		else
+		{
+			fireUnsolicitedEvent(descriptor.getCharacteristic(), descriptor, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
 		}
 	}
 	
@@ -493,8 +583,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			post(new Runnable()
 			{
-				@Override
-				public void run()
+				@Override public void run()
 				{
 					onCharacteristicChanged_mainThread(gatt, characteristic, value);
 				}
@@ -602,7 +691,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			// fire unsolicited
+			fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.MTU, BleDevice.EMPTY_BYTE_ARRAY, gattStatus);
 		}
 	}
 }

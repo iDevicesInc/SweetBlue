@@ -15,7 +15,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
-import android.os.Build;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
@@ -30,15 +29,11 @@ import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.*;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
-import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 
 import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
-import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
-import com.idevicesinc.sweetblue.utils.State.ChangeIntent.*;
-import static com.idevicesinc.sweetblue.utils.State.ChangeIntent.*;
 
 /**
  * This is the one other class you will use the most besides {@link BleManager}.
@@ -510,12 +505,17 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
-			ReadWriteEvent(BleDevice device, P_Characteristic characteristic, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime)
-			{
-				this(device, characteristic.getServiceUuid(), characteristic.getUuid(), descUuid, type, target, data, status, gattStatus, totalTime, transitTime);
-			}
+			/**
+			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
+			 * {@link BleDevice#read(UUID)}, {@link BleDevice#write(UUID, byte[])}, etc. It will return <code>false</code> otherwise,
+			 * which can happen if for example you use {@link BleDevice#getNativeGatt()} to bypass SweetBlue for whatever reason.
+			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link Status#TIMED_OUT},
+			 * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
+			 */
+			public boolean solicited() {  return m_solicited;  }
+			private final boolean m_solicited;
 
-			ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime)
+			ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
 			{
 				this.m_device = device;
 				this.m_serviceUuid = serviceUuid != null ? serviceUuid : NON_APPLICABLE_UUID;
@@ -530,9 +530,10 @@ public class BleDevice extends BleNode implements UsesCustomNull
 				this.m_data = data != null ? data : EMPTY_BYTE_ARRAY;
 				this.m_rssi = device.getRssi();
 				this.m_mtu = device.getMtu();
+				this.m_solicited = solicited;
 			}
 
-			ReadWriteEvent(BleDevice device, Type type, int rssi, Status status, int gattStatus, double totalTime, double transitTime)
+			ReadWriteEvent(BleDevice device, Type type, int rssi, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
 			{
 				this.m_device = device;
 				this.m_charUuid = NON_APPLICABLE_UUID;
@@ -547,9 +548,10 @@ public class BleDevice extends BleNode implements UsesCustomNull
 				this.m_data = EMPTY_BYTE_ARRAY;
 				this.m_rssi = status == Status.SUCCESS ? rssi : device.getRssi();
 				this.m_mtu = device.getMtu();
+				this.m_solicited = solicited;
 			}
 
-			ReadWriteEvent(BleDevice device, int mtu, Status status, int gattStatus, double totalTime, double transitTime)
+			ReadWriteEvent(BleDevice device, int mtu, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
 			{
 				this.m_device = device;
 				this.m_charUuid = NON_APPLICABLE_UUID;
@@ -564,11 +566,12 @@ public class BleDevice extends BleNode implements UsesCustomNull
 				this.m_data = EMPTY_BYTE_ARRAY;
 				this.m_rssi = device.getRssi();
 				this.m_mtu = status == Status.SUCCESS ? mtu : device.getMtu();
+				this.m_solicited = solicited;
 			}
 
 			static ReadWriteEvent NULL(BleDevice device)
 			{
-				return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs());
+				return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
 			}
 
 			/**
@@ -1501,7 +1504,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	private EpochTime m_lastDiscoveryTime = EpochTime.NULL;
 
 	final P_BleDevice_Listeners m_listeners;
-	private final P_ServiceManager m_serviceMngr;
 	private final P_DeviceStateTracker m_stateTracker;
 	private final P_DeviceStateTracker m_stateTracker_shortTermReconnect;
 	private final P_PollManager m_pollMngr;
@@ -1561,7 +1563,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			// setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
 			m_listeners = null;
-			m_serviceMngr = new P_ServiceManager(this);
+			m_serviceMngr = new P_DeviceServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = null;
 			m_bondMngr = new P_BondManager(this);
@@ -1582,7 +1584,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
 			m_listeners = new P_BleDevice_Listeners(this);
-			m_serviceMngr = new P_ServiceManager(this);
+			m_serviceMngr = new P_DeviceServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
 			m_bondMngr = new P_BondManager(this);
@@ -2781,133 +2783,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the native descriptor for the given UUID in case you need lower-level access. You should only call this after
-	 * {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Advanced
-	public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUUID)
-	{
-		final BluetoothGattCharacteristic char_native = getNativeCharacteristic(serviceUuid, charUuid);
-
-		if( char_native == null )  return null;
-
-		final BluetoothGattDescriptor desc_native = char_native.getDescriptor(descUUID);
-
-		return desc_native;
-	}
-
-	/**
-	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
-	 */
-	@Advanced
-	@Override public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
-	{
-		enforceMainThread();
-
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
-
-		if (characteristic == null)  return null;
-
-		return characteristic.getGuaranteedNative();
-	}
-
-	/**
-	 * Returns the native service for the given UUID in case you need lower-level access. You should only call this after
-	 * {@link BleDeviceState#DISCOVERING_SERVICES} has completed.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Advanced
-	@Override public @Nullable(Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
-	{
-		enforceMainThread();
-
-		final P_Service service = m_serviceMngr.get(uuid);
-
-		if (service == null)  return null;
-
-		return service.getNative();
-	}
-
-	/**
-	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
-	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Advanced
-	public @Nullable(Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getNativeServices();
-	}
-
-	/**
-	 * Convenience overload of {@link #getNativeServices()} that returns a {@link List}.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Advanced
-	public @Nullable(Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getNativeServices_List();
-	}
-
-	/**
-	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
-	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	public @Nullable(Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getNativeCharacteristics();
-	}
-
-	/**
-	 * Convenience overload of {@link #getNativeCharacteristics()} that returns a {@link List}.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	public @Nullable(Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getNativeCharacteristics_List();
-	}
-
-	/**
-	 * Same as {@link #getNativeCharacteristics()} but you can filter on the service {@link UUID}.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	public @Nullable(Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service)
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getNativeCharacteristics(service);
-	}
-
-	/**
-	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	public @Nullable(Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service)
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getNativeCharacteristics_List(service);
-	}
-
-	/**
 	 * See pertinent warning for {@link #getNative()}. Generally speaking, this
 	 * will return <code>null</code> if the BleDevice is {@link BleDeviceState#DISCONNECTED}.
 	 * <br><br>
@@ -3643,7 +3518,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 *
 	 * @see #write(UUID, byte[], ReadWriteListener)
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data)
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data)
 	{
 		return this.write(characteristicUuid, new PresentData(data), (ReadWriteListener) null);
 	}
@@ -3655,7 +3530,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 *
 	 * @see #write(UUID, byte[])
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
 	{
 		final UUID serviceUuid = null;
 
@@ -3665,7 +3540,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Overload of {@link #write(UUID, byte[])} for when you have characteristics with identical uuids under different services.
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data)
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data)
 	{
 		return this.write(serviceUuid, characteristicUuid, new PresentData(data), (ReadWriteListener) null);
 	}
@@ -3673,7 +3548,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Overload of {@link #write(UUID, byte[], ReadWriteListener)} for when you have characteristics with identical uuids under different services.
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
 	{
 		return write(serviceUuid, characteristicUuid, new PresentData(data), listener);
 	}
@@ -3685,7 +3560,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 *
 	 * @see #write(UUID, FutureData, ReadWriteListener)
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData)
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData)
 	{
 		return this.write(characteristicUuid, futureData, (ReadWriteListener) null);
 	}
@@ -3697,7 +3572,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 *
 	 * @see #write(UUID, FutureData)
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
 	{
 		final UUID serviceUuid = null;
 
@@ -3707,7 +3582,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Overload of {@link #write(UUID, FutureData)} for when you have characteristics with identical uuids under different services.
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData)
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData)
 	{
 		return this.write(serviceUuid, characteristicUuid, futureData, (ReadWriteListener) null);
 	}
@@ -3715,9 +3590,168 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Overload of {@link #write(UUID, FutureData, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
 	 */
-	public ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
 	{
-		return write_internal(serviceUuid, characteristicUuid, futureData, listener);
+		return write_internal(serviceUuid, characteristicUuid, Uuids.INVALID, futureData, listener);
+	}
+
+	/**
+	 * Writes to the device descriptor without a callback.
+	 *
+	 * @return (same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}).
+	 *
+	 * @see #writeDescriptor(UUID, byte[], ReadWriteListener)
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data)
+	{
+		return writeDescriptor(descriptorUuid, data, (ReadWriteListener) null);
+	}
+
+	/**
+	 * Writes to the device descriptor with a callback.
+	 *
+	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+	 *
+	 * @see #writeDescriptor(UUID, byte[])
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
+	{
+		final UUID characteristicUuid = null;
+
+		return writeDescriptor(characteristicUuid, descriptorUuid, data, listener);
+	}
+
+	/**
+	 * Overload of {@link #writeDescriptor(UUID, byte[])} for when you have descriptors with identical uuids under different services.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data)
+	{
+		return writeDescriptor(characteristicUuid, descriptorUuid, data, (ReadWriteListener) null);
+	}
+
+	/**
+	 * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
+	{
+		return writeDescriptor(characteristicUuid, descriptorUuid, data, listener);
+	}
+
+	/**
+	 * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
+	{
+		return writeDescriptor(serviceUuid, characteristicUuid, descriptorUuid, new PresentData(data), listener);
+	}
+
+	/**
+	 * Writes to the device descriptor without a callback.
+	 *
+	 * @return (same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}).
+	 *
+	 * @see #writeDescriptor(UUID, byte[], ReadWriteListener)
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData)
+	{
+		return writeDescriptor(descriptorUuid, futureData, (ReadWriteListener) null);
+	}
+
+	/**
+	 * Writes to the device with a callback.
+	 *
+	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+	 *
+	 * @see #writeDescriptor(UUID, byte[])
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
+	{
+		final UUID characteristicUuid = null;
+
+		return writeDescriptor(characteristicUuid, descriptorUuid, futureData, listener);
+	}
+
+	/**
+	 * Overload of {@link #writeDescriptor(UUID, byte[])} for when you have descriptors with identical uuids under different services.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData)
+	{
+		return writeDescriptor(characteristicUuid, descriptorUuid, futureData, (ReadWriteListener) null);
+	}
+
+	/**
+	 * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
+	{
+		return writeDescriptor(characteristicUuid, descriptorUuid, futureData, listener);
+	}
+
+	/**
+	 * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
+	{
+		return write_internal(serviceUuid, characteristicUuid, descriptorUuid, futureData, listener);
+	}
+
+	/**
+	 * Reads from the device without a callback - the callback will still be sent through any listeners provided
+	 * to either {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} or {@link BleManager#setListener_ReadWrite(ReadWriteListener)}.
+	 *
+	 * @return (same as {@link #readDescriptor(UUID, byte[], ReadWriteListener)}).
+	 *
+	 * @see #readDescriptor(UUID, ReadWriteListener)
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid)
+	{
+		return readDescriptor(descriptorUuid, (ReadWriteListener) null);
+	}
+
+	/**
+	 * Reads from the device with a callback.
+	 *
+	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+	 *
+	 * @see #readDescriptor(UUID)
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid, final ReadWriteListener listener)
+	{
+		final UUID characteristicUuid = null;
+
+		return readDescriptor(characteristicUuid, descriptorUuid, listener);
+	}
+
+	/**
+	 * Overload of {@link #readDescriptor(UUID)} for when you have descriptors with identical uuids under different services.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid)
+	{
+		return readDescriptor(characteristicUuid, descriptorUuid, (ReadWriteListener) null);
+	}
+
+	/**
+	 * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
+	{
+		return readDescriptor(characteristicUuid, descriptorUuid, listener);
+	}
+
+	/**
+	 * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid)
+	{
+		return readDescriptor(serviceUuid, characteristicUuid, descriptorUuid, null);
+	}
+
+	/**
+	 * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
+	{
+		return read_internal(serviceUuid, characteristicUuid, descriptorUuid, Type.READ, listener);
 	}
 
 	/**
@@ -3742,7 +3776,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		enforceMainThread();
 
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
+		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
 
 		if (earlyOutResult != null)
 		{
@@ -3795,7 +3829,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		{
 			clearMtu();
 
-			final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.SUCCESS, BleStatuses.GATT_SUCCESS, 0.0, 0.0);
+			final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.SUCCESS, BleStatuses.GATT_SUCCESS, 0.0, 0.0, /*solicited=*/true);
 
 			invokeReadWriteCallback(listener, e);
 
@@ -3834,7 +3868,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		if( false == Utils.isLollipop() )
 		{
-			final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.ANDROID_VERSION_NOT_SUPPORTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0);
+			final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.ANDROID_VERSION_NOT_SUPPORTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, /*solicited=*/true);
 
 			invokeReadWriteCallback(listener, e);
 
@@ -3844,7 +3878,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		{
 			if( mtu <= 0 )
 			{
-				final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.INVALID_DATA, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0);
+				final ReadWriteEvent e = new ReadWriteEvent(this, getMtu(), ReadWriteListener.Status.INVALID_DATA, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, /*solicited=*/true);
 
 				invokeReadWriteCallback(listener, e);
 
@@ -3852,7 +3886,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			}
 			else
 			{
-				final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
+				final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
 
 				if( earlyOutResult != null )
 				{
@@ -4220,7 +4254,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		final UUID serviceUuid = null;
 
-		return read_internal(serviceUuid, characteristicUuid, Type.READ, null);
+		return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null);
 	}
 
 	/**
@@ -4232,7 +4266,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		final UUID serviceUuid = null;
 
-		return read_internal(serviceUuid, characteristicUuid, Type.READ, listener);
+		return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, listener);
 	}
 
 	/**
@@ -4240,7 +4274,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid)
 	{
-		return read_internal(serviceUuid, characteristicUuid, Type.READ, null);
+		return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null);
 	}
 
 	/**
@@ -4248,7 +4282,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	 */
 	public ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
 	{
-		return read_internal(serviceUuid, characteristicUuid, Type.READ, listener);
+		return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, listener);
 	}
 
 	/**
@@ -4441,7 +4475,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		enforceMainThread();
 
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -4455,7 +4489,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			}
 		}
 
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+		final BluetoothGattCharacteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 		final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
 		final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
@@ -4464,7 +4498,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 		if( shouldSendOutNotifyEnable && characteristic != null && isConnected )
 		{
-			m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
+			m_bondMngr.bondIfNeeded(characteristicUuid, CharacteristicEventType.ENABLE_NOTIFY);
 
 			queue().add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, listener, getOverrideReadWritePriority()));
 
@@ -4804,11 +4838,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		return m_pollMngr;
 	}
 
-	P_ServiceManager getServiceManager()
-	{
-		return m_serviceMngr;
-	}
-
 	void onNewlyDiscovered(final BluetoothDevice device_native, List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		m_origin_latest = origin;
@@ -4918,6 +4947,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		{
 			m_bondMngr.invokeCallback(status, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, State.ChangeIntent.INTENTIONAL);
 		}
+	}
+
+	P_DeviceServiceManager serviceMngr_device()
+	{
+		return (P_DeviceServiceManager) m_serviceMngr;
 	}
 
 	private ConnectionFailListener.ConnectionFailEvent connect_earlyOut()
@@ -5105,7 +5139,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			return;
 		}
 
-		m_serviceMngr.clear();
 		queue().add(new P_Task_DiscoverServices(this, m_taskStateListener));
 
 		//--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
@@ -5174,9 +5207,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 	void onServicesDiscovered()
 	{
-		m_serviceMngr.clear();
-		m_serviceMngr.loadDiscoveredServices();
-
 		if( m_mtu > 0 )
 		{
 			if( isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM) )
@@ -5210,7 +5240,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		//--- it from being immediately undiscovered after disconnection.
 		m_timeSinceLastDiscovery = 0.0;
 
-		m_serviceMngr.clear();
 		m_txnMngr.clearQueueLock();
 
 		final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
@@ -5571,11 +5600,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 		m_pollMngr.stopPoll(serviceUuid, characteristicUuid, interval, listener, /* usingNotify= */false);
 	}
 
-	ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final Type type, final ReadWriteListener listener)
+	ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, final ReadWriteListener listener)
 	{
 		enforceMainThread();
 
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5584,20 +5613,30 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+		if( descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID) )
+		{
+			final BluetoothGattCharacteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 
-		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.READ);
+			final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
 
-		queue().add(new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+			queue().add(new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		}
+		else
+		{
+			final boolean requiresBonding = false;
+			final BluetoothGattDescriptor descriptor = getNativeDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
+
+			queue().add(new P_Task_ReadDescriptor(this, descriptor, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		}
 
 		return NULL_READWRITE_EVENT();
 	}
 
-	ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final FutureData data, final ReadWriteListener listener)
+	ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final ReadWriteListener listener)
 	{
 		enforceMainThread();
 
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, descriptorUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5606,11 +5645,21 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+		if( descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID) )
+		{
+			final BluetoothGattCharacteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 
-		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic, BondFilter.CharacteristicEventType.WRITE);
+			final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
-		queue().add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+			queue().add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		}
+		else
+		{
+			final boolean requiresBonding = false;
+			final BluetoothGattDescriptor descriptor = getNativeDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
+
+			queue().add(new P_Task_WriteDescriptor(this, descriptor, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		}
 
 		return NULL_READWRITE_EVENT();
 	}
@@ -5619,7 +5668,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	{
 		enforceMainThread();
 
-		final ReadWriteEvent earlyOutResult = m_serviceMngr.getEarlyOutEvent(serviceUuid, characteristicUuid, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
 		{
@@ -5628,7 +5677,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		final P_Characteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+		final BluetoothGattCharacteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
 
 		if (characteristic != null && is(CONNECTED))
 		{

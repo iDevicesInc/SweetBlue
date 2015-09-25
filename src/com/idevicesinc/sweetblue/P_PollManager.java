@@ -167,17 +167,16 @@ class P_PollManager
 			//---		regardless.
 			if( m_device.is(BleDeviceState.DISCONNECTED) )  return;
 			
-			P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(m_serviceUuid, m_charUuid);
+			BluetoothGattCharacteristic characteristic = m_device.getNativeCharacteristic(m_serviceUuid, m_charUuid);
 			
 			if( characteristic == null )  return;
-			
-			BluetoothGattCharacteristic char_native = characteristic.getGuaranteedNative();
-			Type type = P_ServiceManager.modifyResultType(char_native, Type.NOTIFICATION);
+
+			Type type = P_DeviceServiceManager.modifyResultType(characteristic, Type.NOTIFICATION);
 			int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 			
 			if( value == null )
 			{
-				ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0);
+				ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0, /*solicited=*/true);
 
 				m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 			}
@@ -185,12 +184,12 @@ class P_PollManager
 			{
 				if( value.length == 0 )
 				{
-					ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0);
+					ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0, /*solicited=*/true);
 					m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 				}
 				else
 				{
-					ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0);
+					ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0, /*solicited=*/true);
 					m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 				}
 			}
@@ -221,7 +220,7 @@ class P_PollManager
 					{
 						m_waitingForResponse = true;
 						Type type = trackingChanges() ? Type.PSUEDO_NOTIFICATION : Type.POLL;
-						m_device.read_internal(m_serviceUuid, m_charUuid, type, m_pollingReadListener);
+						m_device.read_internal(m_serviceUuid, m_charUuid, Uuids.INVALID, type, m_pollingReadListener);
 					}
 				}
 			}
@@ -373,7 +372,7 @@ class P_PollManager
 			{
 				int/*__E_NotifyState*/ notifyState = getNotifyState(ithEntry.m_serviceUuid, ithEntry.m_charUuid);
 				
-				P_Characteristic characteristic = m_device.getServiceManager().getCharacteristic(ithEntry.m_serviceUuid, ithEntry.m_charUuid);
+				BluetoothGattCharacteristic characteristic = m_device.getNativeCharacteristic(ithEntry.m_serviceUuid, ithEntry.m_charUuid);
 				
 				//--- DRK > This was observed to happen while doing iterative testing on a dev board that was changing
 				//---		its gatt database again and again...I guess service discovery "succeeded" but the service
@@ -385,7 +384,7 @@ class P_PollManager
 				
 				if( notifyState == E_NotifyState__NOT_ENABLED )
 				{
-					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.getServiceManager().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, BleDevice.EMPTY_FUTURE_DATA, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
+					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.serviceMngr_device().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, Uuids.INVALID, BleDevice.EMPTY_FUTURE_DATA, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
 					
 					if( earlyOutResult != null )
 					{
@@ -393,7 +392,7 @@ class P_PollManager
 					}
 					else
 					{
-						m_device.m_bondMngr.bondIfNeeded(characteristic, CharacteristicEventType.ENABLE_NOTIFY);
+						m_device.m_bondMngr.bondIfNeeded(characteristic.getUuid(), CharacteristicEventType.ENABLE_NOTIFY);
 
 						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, characteristic, /*enable=*/true, ithEntry.m_pollingReadListener, m_device.getOverrideReadWritePriority()));
 						
@@ -412,12 +411,12 @@ class P_PollManager
 		}
 	}
 	
-	ReadWriteEvent newAlreadyEnabledEvent(P_Characteristic characteristic, final UUID serviceUuid, final UUID characteristicUuid)
+	ReadWriteEvent newAlreadyEnabledEvent(BluetoothGattCharacteristic characteristic, final UUID serviceUuid, final UUID characteristicUuid)
 	{
 		//--- DRK > Just being anal with the null check here.
-		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic.getNative(), /*enable=*/true) : BleDevice.EMPTY_BYTE_ARRAY;
+		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic, /*enable=*/true) : BleDevice.EMPTY_BYTE_ARRAY;
 		int gattStatus = BluetoothGatt.GATT_SUCCESS;
-		ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0);
+		ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0, /*solicited=*/true);
 		
 		return result;
 	}

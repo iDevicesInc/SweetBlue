@@ -24,7 +24,7 @@ class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_Sta
 	
 	private ReadWriteEvent newEvent(Status status, int gattStatus, int mtu)
 	{
-		return new ReadWriteEvent(getDevice(), /*mtu=*/mtu, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
+		return new ReadWriteEvent(getDevice(), /*mtu=*/mtu, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
 	@Override protected void onNotExecutable()

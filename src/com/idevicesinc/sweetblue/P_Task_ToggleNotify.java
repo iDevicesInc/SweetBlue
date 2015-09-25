@@ -23,9 +23,9 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	private byte[] m_writeValue = null;
 
-	public P_Task_ToggleNotify(BleDevice device, P_Characteristic characteristic, boolean enable, final BleDevice.ReadWriteListener writeListener, PE_TaskPriority priority)
+	public P_Task_ToggleNotify(BleDevice device, BluetoothGattCharacteristic nativeChar, boolean enable, final BleDevice.ReadWriteListener writeListener, PE_TaskPriority priority)
 	{
-		super(device, characteristic, writeListener, false, null, priority);
+		super(device, nativeChar, writeListener, false, null, priority);
 		
 		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
 		m_enable = enable;
@@ -205,7 +205,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 
 	@Override protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
 	{
-		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, getReadWriteType(), target, getWriteValue(), status, gattStatus, getTotalTime(), getTotalTimeExecuting());
+		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, getReadWriteType(), target, getWriteValue(), status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 	
 	@Override protected BleTask getTaskType()
