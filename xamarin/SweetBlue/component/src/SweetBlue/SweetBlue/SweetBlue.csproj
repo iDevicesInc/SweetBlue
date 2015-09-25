@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{10368E6C-D01B-4462-8E8B-01FC667A7035};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{070E7011-8E84-4555-89B0-2265D0CE1E5A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>SweetBlue</RootNamespace>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
+    <AssemblyName>SweetBlue</AssemblyName>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <SynchReleaseVersion>false</SynchReleaseVersion>
+    <ReleaseVersion>2.6.10</ReleaseVersion>
+    <Java7DocPaths>Javadoc/</Java7DocPaths>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Additions\FutureDataWrapper.cs" />
+    <Compile Include="Additions\ForEach_VoidWrapper.cs" />
+    <Compile Include="Additions\ForEach_BreakableWrapper.cs" />
+    <Compile Include="Additions\ForEach_ReturningWrapper.cs" />
+    <Compile Include="Additions\EpochTime.cs" />
+    <Compile Include="Additions\ServiceAddListener.cs" />
+    <Compile Include="Additions\ServerOutgoingListener.cs" />
+    <Compile Include="Additions\ServerIncomingListener.cs" />
+    <Compile Include="Additions\ScanFilter.cs" />
+    <Compile Include="Additions\ReadWriteListener.cs" />
+    <Compile Include="Additions\DiscoveryListener.cs" />
+    <Compile Include="Additions\DeviceStateListener.cs" />
+    <Compile Include="Additions\BleServer.cs" />
+    <Compile Include="Additions\BleDevice.cs" />
+    <Compile Include="Additions\BleManager.cs" />
+    <Compile Include="Additions\BleNode.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Additions\AboutAdditions.txt" />
+    <None Include="Jars\AboutJars.txt" />
+    <None Include="Javadoc\allclasses-frame.html" />
+    <None Include="Javadoc\allclasses-noframe.html" />
+    <None Include="Javadoc\constant-values.html" />
+    <None Include="Javadoc\deprecated-list.html" />
+    <None Include="Javadoc\doc_style.css" />
+    <None Include="Javadoc\help-doc.html" />
+    <None Include="Javadoc\index-all.html" />
+    <None Include="Javadoc\overview-frame.html" />
+    <None Include="Javadoc\overview-summary.html" />
+    <None Include="Javadoc\overview-tree.html" />
+    <None Include="Javadoc\package-list" />
+    <None Include="Javadoc\script.js" />
+    <None Include="Javadoc\serialized-form.html" />
+    <None Include="Javadoc\META-INF\MANIFEST.MF" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleCharacteristic.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleCharacteristicPermission.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleCharacteristicProperty.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDescriptor.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDescriptorPermission.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.BondListener.BondEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.BondListener.Status.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.BondListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ConnectionFailListener.ConnectionFailEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ConnectionFailListener.Status.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ConnectionFailListener.Timing.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ConnectionFailListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.DefaultConnectionFailListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ReadWriteListener.ReadWriteEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ReadWriteListener.Status.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ReadWriteListener.Target.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ReadWriteListener.Type.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.ReadWriteListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.StateListener.StateEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.StateListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDevice.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceConfig.BondFilter.CharacteristicEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceConfig.BondFilter.CharacteristicEventType.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceConfig.BondFilter.Please.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceConfig.BondFilter.StateChangeEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceConfig.BondFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceConfig.DefaultBondFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceConfig.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceIterator.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceOrigin.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleDeviceState.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.AssertListener.AssertEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.AssertListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.DiscoveryListener.DiscoveryEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.DiscoveryListener.LifeCycle.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.DiscoveryListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.ManagerStateListener.StateEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.ManagerStateListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.NativeStateListener.NativeStateEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.NativeStateListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.ResetListener.Progress.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.ResetListener.ResetEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.ResetListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.UhOhListener.Remedy.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.UhOhListener.UhOh.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.UhOhListener.UhOhEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.UhOhListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManager.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManagerConfig.DefaultScanFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManagerConfig.ScanFilter.Please.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManagerConfig.ScanFilter.ScanEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManagerConfig.ScanFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManagerConfig.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleManagerState.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.ConnectionFailListener.AutoConnectUsage.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.ConnectionFailListener.ConnectionFailEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.ConnectionFailListener.Please.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.ConnectionFailListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.HistoricalDataLoadListener.HistoricalDataLoadEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.HistoricalDataLoadListener.Status.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.HistoricalDataLoadListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.HistoricalDataQueryListener.HistoricalDataQueryEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.HistoricalDataQueryListener.Status.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.HistoricalDataQueryListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNode.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.DefaultHistoricalDataLogFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.DefaultReconnectFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.DefaultTaskTimeoutRequestFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.HistoricalDataFactory.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.HistoricalDataLogFilter.HistoricalDataLogEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.HistoricalDataLogFilter.Please.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.HistoricalDataLogFilter.Source.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.HistoricalDataLogFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.ReconnectFilter.Please.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.ReconnectFilter.ReconnectEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.ReconnectFilter.Type.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.ReconnectFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.TaskTimeoutRequestFilter.Please.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.TaskTimeoutRequestFilter.TaskTimeoutRequestEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.TaskTimeoutRequestFilter.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleNodeConfig.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ConnectionFailListener.ConnectionFailEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ConnectionFailListener.Status.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ConnectionFailListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.DefaultConnectionFailListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ExchangeListener.ExchangeEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ExchangeListener.Target.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ExchangeListener.Type.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ExchangeListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.IncomingListener.IncomingEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.IncomingListener.Please.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.IncomingListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.OutgoingListener.OutgoingEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.OutgoingListener.Status.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.OutgoingListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ServerStateListener.StateEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ServerStateListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ServiceAddListener.ServiceAddEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ServiceAddListener.Status.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.ServiceAddListener.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServer.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServerState.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleService.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleServices.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleStatuses.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleTask.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleTransaction.Auth.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleTransaction.EndReason.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleTransaction.Init.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleTransaction.Ota.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\BleTransaction.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\package-frame.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\package-summary.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\package-tree.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\Advanced.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\Alpha.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\Immutable.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\Lambda.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\Nullable.Prevalence.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\Nullable.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\package-frame.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\package-summary.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\annotations\package-tree.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\Backend_Modules.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\package-frame.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\package-summary.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\package-tree.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\historical\Backend_HistoricalDataList.AsyncLoadCallback.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\historical\Backend_HistoricalDataList.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\historical\Backend_HistoricalDataList_Default.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\historical\Backend_HistoricalDatabase.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\historical\Backend_HistoricalDatabase_Default.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\historical\package-frame.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\historical\package-summary.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\backend\historical\package-tree.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\BasicUuidNameMap.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\BitwiseEnum.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Distance.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\EmptyCursor.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\EmptyIterator.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\EpochTime.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\EpochTimeRange.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Event.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\ForEach_Breakable.Please.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\ForEach_Breakable.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\ForEach_Returning.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\ForEach_Void.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\FutureData.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalData.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataColumn.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataCursor.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part_AllowsFrom.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part_AllowsSelectColumn.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part_ClauseColumn.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part_From.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part_Function.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part_Select.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part_SelectColumn.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.Part_Where.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\HistoricalDataQuery.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Interval.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Percent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Pointer.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\PresentData.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\ReflectionUuidNameMap.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\SingleElementIterator.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\State.ChangeEvent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\State.ChangeIntent.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\State.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\TimeEstimator.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Unit.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\UpdateLoop.Callback.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\UpdateLoop.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\UsesCustomNull.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Utils.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Utils_Byte.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Utils_Reflection.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Utils_Rssi.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Utils_ScanRecord.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Utils_State.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Utils_String.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Utils_Time.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\UuidNameMap.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\UuidNameMap_ListWrapper.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\Uuids.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\WrongThreadError.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\package-frame.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\package-summary.html" />
+    <None Include="Javadoc\com\idevicesinc\sweetblue\utils\package-tree.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <TransformFile Include="Transforms\EnumFields.xml" />
+    <TransformFile Include="Transforms\EnumMethods.xml" />
+    <TransformFile Include="Transforms\Metadata.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Novell\Xamarin.Android.Bindings.targets" />
+  <ItemGroup>
+    <EmbeddedJar Include="Jars\sweetblue_2_11_11.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <JavaDocIndex Include="Javadoc\index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Javadoc\" />
+  </ItemGroup>
+</Project>

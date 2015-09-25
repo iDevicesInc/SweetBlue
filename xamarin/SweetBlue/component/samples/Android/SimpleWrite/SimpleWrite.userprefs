@@ -1,0 +1,12 @@
+﻿<Properties StartupItem="SimpleWrite/SimpleWrite.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="Android.LGD855b4106068" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="SimpleWrite/MainActivity.cs">
+    <Files>
+      <File FileName="SimpleWrite/MainActivity.cs" Line="35" Column="7" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

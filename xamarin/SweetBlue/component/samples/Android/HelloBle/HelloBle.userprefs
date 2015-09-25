@@ -1,0 +1,12 @@
+﻿<Properties StartupItem="HelloBle/HelloBle.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Android.LGD855b4106068" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="HelloBle/MainActivity.cs">
+    <Files>
+      <File FileName="HelloBle/MainActivity.cs" Line="41" Column="7" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

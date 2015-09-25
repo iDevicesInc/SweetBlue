@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleOta", "SimpleOta\SimpleOta.csproj", "{29610085-13E6-46B7-AFF4-C67918178808}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleOta.UITests", "SimpleOta.UITests\SimpleOta.UITests.csproj", "{74B9F62C-0C99-4F20-B2CF-69F1B3A6D234}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SweetBlue", "..\..\..\src\SweetBlue\SweetBlue\SweetBlue.csproj", "{070E7011-8E84-4555-89B0-2265D0CE1E5A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{070E7011-8E84-4555-89B0-2265D0CE1E5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{070E7011-8E84-4555-89B0-2265D0CE1E5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{070E7011-8E84-4555-89B0-2265D0CE1E5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{070E7011-8E84-4555-89B0-2265D0CE1E5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29610085-13E6-46B7-AFF4-C67918178808}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29610085-13E6-46B7-AFF4-C67918178808}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29610085-13E6-46B7-AFF4-C67918178808}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29610085-13E6-46B7-AFF4-C67918178808}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74B9F62C-0C99-4F20-B2CF-69F1B3A6D234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74B9F62C-0C99-4F20-B2CF-69F1B3A6D234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74B9F62C-0C99-4F20-B2CF-69F1B3A6D234}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74B9F62C-0C99-4F20-B2CF-69F1B3A6D234}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

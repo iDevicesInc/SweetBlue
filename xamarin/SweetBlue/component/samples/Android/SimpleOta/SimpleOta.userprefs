@@ -1,0 +1,12 @@
+﻿<Properties StartupItem="SimpleOta/SimpleOta.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Android.LGD855b4106068" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="SimpleOta/MainActivity.cs">
+    <Files>
+      <File FileName="SimpleOta/MainActivity.cs" Line="100" Column="5" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

@@ -1,0 +1,12 @@
+﻿<Properties StartupItem="CurrentTimeServer/CurrentTimeServer.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="Android.LGD855b4106068" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="CurrentTimeServer/MainActivity.cs">
+    <Files>
+      <File FileName="CurrentTimeServer/MainActivity.cs" Line="104" Column="3" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

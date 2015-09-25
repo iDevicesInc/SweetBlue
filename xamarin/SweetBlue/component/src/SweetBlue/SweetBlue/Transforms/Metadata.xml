@@ -1,0 +1,64 @@
+﻿<metadata>
+	<!--
+  This sample removes the class: android.support.v4.content.AsyncTaskLoader.LoadTask:
+  <remove-node path="/api/package[@name='android.support.v4.content']/class[@name='AsyncTaskLoader.LoadTask']" />
+  
+  This sample removes the method: android.support.v4.content.CursorLoader.loadInBackground:
+  <remove-node path="/api/package[@name='android.support.v4.content']/class[@name='CursorLoader']/method[@name='loadInBackground']" />
+  -->
+
+<!--  Rename the namespace to be more in line with C# standards  -->
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']" name="managedName">Idevices.Sweetblue</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue.utils']" name="managedName">Idevices.Sweetblue.Util</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue.annotations']" name="managedName">Idevices.Sweetblue.Annotations</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue.backend']" name="managedName">Idevices.Sweetblue.Backend</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue.backend.historical']" name="managedName">Idevices.Sweetblue.Backend.Historical</attr>
+
+<!--  Fix Java generic return issue-->
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleDeviceIterator']/method[@name='next']" name="return">Java.Lang.Object</attr>
+
+<!--  Rename event names to better represent the events -->
+  
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_UhOh']" name="eventName">UhOh</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_HistoricalDataLoad']" name="eventName">HistoricalDataLoad</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_Assert']" name="eventName">Assert</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_Discovery']" name="eventName">Discovery</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_State']" name="eventName">State</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_DeviceState']" name="eventName">DeviceState</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_ConnectionFail_Server']" name="eventName">ServerConnectionFail</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_Incoming']" name="eventName">Incoming</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_ServiceAdd']" name="eventName">ServiceAdd</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_ServerState']" name="eventName">ServerState</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_ConnectionFail']" name="eventName">ConnectionFail</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_Bond']" name="eventName">Bond</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_ReadWrite']" name="eventName">ReadWrite</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManager']/method[@name='setListener_NativeState']" name="eventName">NativeState</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleServer']/method[@name='setListener_ServiceAdd']" name="eventName">ServiceAdd</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleServer']/method[@name='setListener_State']" name="eventName">State</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleDevice']/method[@name='setListener_Bond']" name="eventName">Bonded</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleDevice']/method[@name='setListener_State']" name="eventName">State</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleDevice']/method[@name='setListener_ConnectionFail']" name="eventName">ConnectionFail</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleDevice']/method[@name='setListener_ReadWrite']" name="eventName">ReadWrite</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleDevice']/method[@name='setListener_HistoricalDataLoad']" name="eventName">HistoricalDataLoad</attr>
+
+<!--  Rename method parameters for listeners -->
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleDevice.BondListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">bondEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleDevice.ReadWriteListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">readWriteEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleDevice.StateListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">stateEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleDevice.ConnectionFailListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">connectionFailEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleNode.HistoricalDataLoadListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">historicalDataLoadEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleNode.HistoricalDataQueryListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">historicalDataQueryEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleManager.DiscoveryListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">discoveryEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleManager.ManagerStateListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">stateEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleServer.ServerStateListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">stateEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleManager.NativeStateListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">nativeStateEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleManager.UhOhListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">uhOhEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleManager.ResetListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">resetEvent</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/interface[@name='BleManager.AssertListener']/method[@name='onEvent' and count(parameter)=1]/parameter[@name='p0']" name="managedName">assertEvent</attr>
+
+<!--  Fix duplicate name -->
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleNodeConfig']/field[@name='historicalDataLogFilter']" name="managedName">historicalDataLogFilter2</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleManagerConfig']/field[@name='defaultScanFilter']" name="managedName">defScanFilter</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleDeviceConfig']/field[@name='defaultTxPower']" name="managedName">defTxPower</attr>
+  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleNode']/method[@name='appData']" name="managedName">getAppData</attr>
+</metadata>

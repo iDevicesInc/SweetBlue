@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleWrite", "SimpleWrite\SimpleWrite.csproj", "{35DA39C7-7CFC-4AB1-9ABF-D69919D9A958}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleWrite.UITests", "SimpleWrite.UITests\SimpleWrite.UITests.csproj", "{FDB2AA1D-719B-42CA-89D8-7CB52A53D3BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SweetBlue", "..\..\..\src\SweetBlue\SweetBlue\SweetBlue.csproj", "{070E7011-8E84-4555-89B0-2265D0CE1E5A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{070E7011-8E84-4555-89B0-2265D0CE1E5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{070E7011-8E84-4555-89B0-2265D0CE1E5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{070E7011-8E84-4555-89B0-2265D0CE1E5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{070E7011-8E84-4555-89B0-2265D0CE1E5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35DA39C7-7CFC-4AB1-9ABF-D69919D9A958}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35DA39C7-7CFC-4AB1-9ABF-D69919D9A958}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35DA39C7-7CFC-4AB1-9ABF-D69919D9A958}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35DA39C7-7CFC-4AB1-9ABF-D69919D9A958}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDB2AA1D-719B-42CA-89D8-7CB52A53D3BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDB2AA1D-719B-42CA-89D8-7CB52A53D3BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDB2AA1D-719B-42CA-89D8-7CB52A53D3BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDB2AA1D-719B-42CA-89D8-7CB52A53D3BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
