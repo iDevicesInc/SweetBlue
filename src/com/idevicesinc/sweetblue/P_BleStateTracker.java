@@ -1,12 +1,12 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent;
+import com.idevicesinc.sweetblue.BleManager.ManagerStateListener.StateEvent;
 
 import android.transition.ChangeBounds;
 
 class P_BleStateTracker extends PA_StateTracker
 {
-	private BleManager.StateListener m_stateListener;
+	private BleManager.ManagerStateListener m_stateListener;
 	private final BleManager m_mngr;
 	
 	P_BleStateTracker(BleManager mngr)
@@ -16,7 +16,7 @@ class P_BleStateTracker extends PA_StateTracker
 		m_mngr = mngr;
 	}
 	
-	public void setListener(BleManager.StateListener listener)
+	public void setListener(BleManager.ManagerStateListener listener)
 	{
 		m_stateListener = listener;
 	}

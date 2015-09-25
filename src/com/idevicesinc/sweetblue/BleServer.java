@@ -659,14 +659,14 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Provide an implementation to {@link BleServer#setListener_State(StateListener)} and/or
-	 * {@link BleManager#setListener_ServerState(BleServer.StateListener)} to receive state change events.
+	 * Provide an implementation to {@link BleServer#setListener_State(ServerStateListener)} and/or
+	 * {@link BleManager#setListener_ServerState(BleServer.ServerStateListener)} to receive state change events.
 	 *
 	 * @see BleServerState
-	 * @see BleServer#setListener_State(StateListener)
+	 * @see BleServer#setListener_State(ServerStateListener)
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface StateListener
+	public static interface ServerStateListener
 	{
 		/**
 		 * Subclass that adds the {@link #server()}, {@link #macAddress()}, and {@link #gattStatus()} fields.
@@ -1267,7 +1267,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	/**
 	 * Set a listener here to be notified whenever this server's state changes in relation to a specific client.
 	 */
-	public void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.StateListener listener_nullable)
+	public void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.ServerStateListener listener_nullable)
 	{
 		enforceMainThread();
 
@@ -1571,7 +1571,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with no listeners.
+	 * Overload of {@link #connect(String, ServerStateListener, ConnectionFailListener)} with no listeners.
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
 	{
@@ -1579,15 +1579,15 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with only one listener.
+	 * Overload of {@link #connect(String, ServerStateListener, ConnectionFailListener)} with only one listener.
 	 */
-	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener)
+	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ServerStateListener stateListener)
 	{
 		return connect(macAddress, stateListener, null);
 	}
 
 	/**
-	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with only one listener.
+	 * Overload of {@link #connect(String, ServerStateListener, ConnectionFailListener)} with only one listener.
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ConnectionFailListener connectionFailListener)
 	{
@@ -1595,10 +1595,10 @@ public class BleServer extends BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Connect to the given client mac address and provided listeners that are shorthand for calling {@link #setListener_State(StateListener)}
+	 * Connect to the given client mac address and provided listeners that are shorthand for calling {@link #setListener_State(ServerStateListener)}
 	 * {@link #setListener_ConnectionFail(ConnectionFailListener)}.
 	 */
-	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
+	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ServerStateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
 		return connect_internal(newNativeDevice(macAddress), stateListener, connectionFailListener);
 	}
@@ -1608,7 +1608,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 		return connect_internal(nativeDevice, null, null);
 	}
 
-	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
+	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final ServerStateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
 		enforceMainThread();
 

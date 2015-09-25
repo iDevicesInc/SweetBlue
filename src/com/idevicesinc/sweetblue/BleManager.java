@@ -248,11 +248,11 @@ public class BleManager
 	}
 
 	/**
-	 * Provide an implementation to {@link BleManager#setListener_State(BleManager.StateListener)} to receive callbacks
+	 * Provide an implementation to {@link BleManager#setListener_State(BleManager.ManagerStateListener)} to receive callbacks
 	 * when the {@link BleManager} undergoes a {@link BleManagerState} change.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface StateListener
+	public static interface ManagerStateListener
 	{
 		/**
 		 * Subclass that adds the manager field.
@@ -293,9 +293,9 @@ public class BleManager
 
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_NativeState(BleManager.NativeStateListener)} to receive callbacks
-	 * when the {@link BleManager} undergoes a *native* {@link BleManagerState} change. This is similar to {@link BleManager.StateListener}
+	 * when the {@link BleManager} undergoes a *native* {@link BleManagerState} change. This is similar to {@link BleManager.ManagerStateListener}
 	 * but reflects what is going on in the actual underlying stack, which may lag slightly behind the
-	 * abstracted state reflected by {@link BleManager.StateListener}. Most apps will not find this callback useful.
+	 * abstracted state reflected by {@link BleManager.ManagerStateListener}. Most apps will not find this callback useful.
 	 */
 	@Advanced
 	@com.idevicesinc.sweetblue.annotations.Lambda
@@ -306,7 +306,7 @@ public class BleManager
 		 */
 		@Advanced
 		@Immutable
-		public static class NativeStateEvent extends StateListener.StateEvent
+		public static class NativeStateEvent extends ManagerStateListener.StateEvent
 		{
 			NativeStateEvent(final BleManager manager, final int oldStateBits, final int newStateBits, final int intentMask)
 			{
@@ -772,7 +772,7 @@ public class BleManager
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
 
-    BleServer.StateListener m_defaultServerStateListener;
+    BleServer.ServerStateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
 	IncomingListener m_defaultServerIncomingListener;
 	BleServer.ServiceAddListener m_serviceAddListener;
@@ -1079,7 +1079,7 @@ public class BleManager
 	/**
 	 * Set a listener here to be notified whenever this manager's {@link BleManagerState} changes.
 	 */
-	public void setListener_State(@Nullable(Prevalence.NORMAL) StateListener listener_nullable)
+	public void setListener_State(@Nullable(Prevalence.NORMAL) ManagerStateListener listener_nullable)
 	{
 		enforceMainThread();
 
@@ -1104,7 +1104,7 @@ public class BleManager
 	 * Convenience method to handle server connection fail events at the manager level. The listener provided
 	 * will only get called if the server whose connection failed doesn't have a listener provided to
 	 * {@link BleServer#setListener_ConnectionFail(BleServer.ConnectionFailListener)}. This is unlike the behavior
-	 * behind (for example) {@link #setListener_ServerState(BleServer.StateListener)} because
+	 * behind (for example) {@link #setListener_ServerState(BleServer.ServerStateListener)} because
 	 * {@link BleServer.ConnectionFailListener#onEvent(BleServer.ConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
 	 * @see BleServer#setListener_ConnectionFail(BleServer.ConnectionFailListener)
@@ -1149,11 +1149,11 @@ public class BleManager
 	/**
 	 * Convenience method to listen for all changes in {@link BleServerState} for all servers.
 	 * The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleServer#setListener_State(BleServer.StateListener)}.
+	 * to {@link BleServer#setListener_State(BleServer.ServerStateListener)}.
 	 * 
-	 * @see BleServer#setListener_State(BleServer.StateListener)
+	 * @see BleServer#setListener_State(BleServer.ServerStateListener)
 	 */
-	public void setListener_ServerState(@Nullable(Prevalence.NORMAL) BleServer.StateListener listener_nullable)
+	public void setListener_ServerState(@Nullable(Prevalence.NORMAL) BleServer.ServerStateListener listener_nullable)
 	{
 		enforceMainThread();
 

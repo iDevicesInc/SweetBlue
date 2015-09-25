@@ -10,7 +10,7 @@ import static com.idevicesinc.sweetblue.BleServerState.CONNECTING;
 
 class P_ServerStateTracker
 {
-	private BleServer.StateListener m_stateListener;
+	private BleServer.ServerStateListener m_stateListener;
 	private final BleServer m_server;
 	
 	P_ServerStateTracker(BleServer server)
@@ -18,7 +18,7 @@ class P_ServerStateTracker
 		m_server = server;
 	}
 	
-	public void setListener(BleServer.StateListener listener)
+	public void setListener(BleServer.ServerStateListener listener)
 	{
 		m_stateListener = listener;
 	}
@@ -54,12 +54,12 @@ class P_ServerStateTracker
 		final int newBits = (currentBits | newState_bit) & ~oldState_bit;
 		final int intentMask = (oldBits | newBits) & intentBits;
 
-		final BleServer.StateListener.StateEvent e = new BleServer.StateListener.StateEvent(m_server, macAddress, oldBits, newBits, intentMask, gattStatus);
+		final BleServer.ServerStateListener.StateEvent e = new BleServer.ServerStateListener.StateEvent(m_server, macAddress, oldBits, newBits, intentMask, gattStatus);
 
 		fireEvent(e);
 	}
 
-	private void fireEvent(final BleServer.StateListener.StateEvent e)
+	private void fireEvent(final BleServer.ServerStateListener.StateEvent e)
 	{
 		if( m_stateListener != null )
 		{
