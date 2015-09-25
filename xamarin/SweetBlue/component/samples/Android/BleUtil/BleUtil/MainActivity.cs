@@ -26,6 +26,9 @@ namespace BleUtil
 		{
 			base.OnCreate (bundle);
 
+			// Mostly using default options for this demo, but provide overrides here if desired.
+			// Disabling undiscovery so the list doesn't jump around...ultimately a UI problem so 
+			// should be fixed there eventually.
 			m_bleManagerConfig.UndiscoveryKeepAlive = Interval.Disabled;
 			m_bleManagerConfig.LoggingEnabled = true;
 

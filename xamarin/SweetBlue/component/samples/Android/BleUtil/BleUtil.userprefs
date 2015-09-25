@@ -1,14 +1,13 @@
 ﻿<Properties StartupItem="BleUtil/BleUtil.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Android.LGD855b4106068" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="BleUtil/DeviceListEntry.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="BleUtil/MainActivity.cs">
     <Files>
-      <File FileName="BleUtil/MainActivity.cs" Line="1" Column="1" />
+      <File FileName="BleUtil/MainActivity.cs" Line="31" Column="7" />
       <File FileName="BleUtil/ViewController.cs" Line="1" Column="1" />
       <File FileName="BleUtil/AlertManager.cs" Line="19" Column="17" />
-      <File FileName="BleUtil/DeviceListEntry.cs" Line="33" Column="19" />
+      <File FileName="BleUtil/DeviceListEntry.cs" Line="30" Column="4" />
       <File FileName="BleUtil/BleBar.cs" Line="1" Column="1" />
       <File FileName="BleUtil/BleStatusBar.cs" Line="27" Column="24" />
-      <File FileName="BleUtil/DeviceList.cs" Line="23" Column="23" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
