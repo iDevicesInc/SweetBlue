@@ -480,7 +480,7 @@ public abstract class BleNode implements UsesCustomNull
 	 * @see BleManager#appData
 	 * @see BleServer#appData
 	 */
-	public Object appData;
+	public Object appData;d
 
 	private final BleManager m_manager;
 
