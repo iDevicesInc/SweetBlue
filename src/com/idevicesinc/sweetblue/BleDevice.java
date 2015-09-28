@@ -1563,7 +1563,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			// setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
 			m_listeners = null;
-			m_serviceMngr = new P_DeviceServiceManager(this);
+			//m_serviceMngr = new P_DeviceServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = null;
 			m_bondMngr = new P_BondManager(this);
@@ -1584,7 +1584,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
 			m_listeners = new P_BleDevice_Listeners(this);
-			m_serviceMngr = new P_DeviceServiceManager(this);
+			//m_serviceMngr = new P_DeviceServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
 			m_bondMngr = new P_BondManager(this);
@@ -1598,6 +1598,11 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING, /*cancellable=*/true);
 			m_historicalDataMngr = new P_HistoricalDataManager(this, getMacAddress());
 		}
+	}
+	
+	@Override
+	PA_ServiceManager initServiceManager() {		
+		return new P_DeviceServiceManager(this);
 	}
 
 	void notifyOfPossibleImplicitBondingAttempt()
@@ -4489,7 +4494,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			}
 		}
 
-		final BluetoothGattCharacteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+		final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 		final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
 		final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
@@ -4951,7 +4956,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 	P_DeviceServiceManager serviceMngr_device()
 	{
-		return (P_DeviceServiceManager) m_serviceMngr;
+		return getServiceManager();
 	}
 
 	private ConnectionFailListener.ConnectionFailEvent connect_earlyOut()
@@ -5615,7 +5620,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 		if( descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID) )
 		{
-			final BluetoothGattCharacteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+			final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 
 			final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
 
@@ -5647,7 +5652,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 		if( descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID) )
 		{
-			final BluetoothGattCharacteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+			final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 
 			final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
@@ -5677,7 +5682,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			return earlyOutResult;
 		}
 
-		final BluetoothGattCharacteristic characteristic = m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
+		final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 
 		if (characteristic != null && is(CONNECTED))
 		{
