@@ -485,11 +485,18 @@ public abstract class BleNode implements UsesCustomNull
 	private final BleManager m_manager;
 
 	//--- DRK > Can't be final cause can't reference subclass 'this' while calling super() constructor.
-	protected PA_ServiceManager m_serviceMngr;
+	private PA_ServiceManager m_serviceMngr;
+	
+	abstract PA_ServiceManager initServiceManager();
 
 	protected BleNode(final BleManager manager)
 	{
 		m_manager = manager;
+		m_serviceMngr = initServiceManager();
+	}
+	
+	public <T extends PA_ServiceManager> T getServiceManager() {
+		return (T) m_serviceMngr;
 	}
 
 	/**

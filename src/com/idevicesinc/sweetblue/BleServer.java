@@ -1229,7 +1229,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 			m_clientMngr = new P_ClientManager(this);
-			m_serviceMngr = new P_ServerServiceManager(this);
+			//m_serviceMngr = new P_ServerServiceManager(this);
 		}
 		else
 		{
@@ -1238,8 +1238,13 @@ public class BleServer extends BleNode implements UsesCustomNull
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 			m_clientMngr = new P_ClientManager(this);
-			m_serviceMngr = new P_ServerServiceManager(this);
+			//m_serviceMngr = new P_ServerServiceManager(this);
 		}
+	}
+	
+	@Override
+	PA_ServiceManager initServiceManager() {		
+		return new P_ServerServiceManager(this);
 	}
 
 	/**
@@ -2057,7 +2062,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 	P_ServerServiceManager serviceMngr_server()
 	{
-		return (P_ServerServiceManager) m_serviceMngr;
+		return getServiceManager();
 	}
 
 	/**
