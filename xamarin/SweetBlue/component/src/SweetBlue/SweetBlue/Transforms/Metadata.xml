@@ -14,8 +14,6 @@
   <attr path="/api/package[@name='com.idevicesinc.sweetblue.backend']" name="managedName">Idevices.Sweetblue.Backend</attr>
   <attr path="/api/package[@name='com.idevicesinc.sweetblue.backend.historical']" name="managedName">Idevices.Sweetblue.Backend.Historical</attr>
 
-  <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='PA_ServiceManager']" name="visibility">public</attr>
-
 <!--  Fix Java generic return issue-->
   <attr path="/api/package[@name='com.idevicesinc.sweetblue']/class[@name='BleDeviceIterator']/method[@name='next']" name="return">Java.Lang.Object</attr>
 

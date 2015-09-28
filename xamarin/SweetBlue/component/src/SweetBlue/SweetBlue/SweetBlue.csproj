@@ -278,9 +278,9 @@
     <Folder Include="Javadoc\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedJar Include="Jars\sweetblue_2_13_14.jar" />
+    <JavaDocIndex Include="Javadoc\index.html" />
   </ItemGroup>
   <ItemGroup>
-    <JavaDocIndex Include="Javadoc\index.html" />
+    <EmbeddedJar Include="Jars\sweetblue_2_13_14.jar" />
   </ItemGroup>
 </Project>
