@@ -15,8 +15,6 @@
     <SynchReleaseVersion>false</SynchReleaseVersion>
     <ReleaseVersion>2.6.10</ReleaseVersion>
     <Java7DocPaths>Javadoc/</Java7DocPaths>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -79,7 +77,6 @@
     <None Include="Javadoc\package-list" />
     <None Include="Javadoc\script.js" />
     <None Include="Javadoc\serialized-form.html" />
-    <None Include="Javadoc\META-INF\MANIFEST.MF" />
     <None Include="Javadoc\com\idevicesinc\sweetblue\BleCharacteristic.html" />
     <None Include="Javadoc\com\idevicesinc\sweetblue\BleCharacteristicPermission.html" />
     <None Include="Javadoc\com\idevicesinc\sweetblue\BleCharacteristicProperty.html" />
@@ -278,12 +275,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Xamarin.Android.Bindings.targets" />
   <ItemGroup>
-    <EmbeddedJar Include="Jars\sweetblue_2_11_11.jar" />
+    <Folder Include="Javadoc\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedJar Include="Jars\sweetblue_2_13_14.jar" />
   </ItemGroup>
   <ItemGroup>
     <JavaDocIndex Include="Javadoc\index.html" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Javadoc\" />
   </ItemGroup>
 </Project>

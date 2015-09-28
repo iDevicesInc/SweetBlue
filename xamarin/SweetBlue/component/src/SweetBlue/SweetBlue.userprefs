@@ -1,11 +1,10 @@
 ﻿<Properties StartupItem="SweetBlue/SweetBlue.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="Android.Nexus_5_API_21_x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="SweetBlue/Transforms/Metadata.xml">
+  <MonoDevelop.Ide.Workbench ActiveDocument="SweetBlue/Additions/BleManager.cs">
     <Files>
       <File FileName="SweetBlue/Transforms/Metadata.xml" Line="12" Column="112" />
       <File FileName="SweetBlue/Additions/BleManager.cs" Line="43" Column="37" />
-      <File FileName="SweetBlue/Additions/BleDevice.cs" Line="170" Column="56" />
-      <File FileName="SweetBlue/Additions/ForEachVoid.cs" Line="9" Column="3" />
+      <File FileName="SweetBlue/Additions/BleDevice.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
