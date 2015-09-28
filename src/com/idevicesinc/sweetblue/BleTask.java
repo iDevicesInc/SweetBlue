@@ -104,7 +104,17 @@ public enum BleTask
 	/**
 	 * Associated with {@link BleDevice#setMtu(int)} or overloads.
 	 */
-	SET_MTU;
+	SET_MTU,
+
+	/**
+	 * Associated with {@link BleDevice#readDescriptor(UUID, UUID, BleDevice.ReadWriteListener)} or overloads.
+	 */
+	READ_DESCRIPTOR,
+
+	/**
+	 * Associated with {@link BleDevice#writeDescriptor(UUID, UUID, byte[], BleDevice.ReadWriteListener)} or overloads.
+	 */
+	WRITE_DESCRIPTOR;
 	
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
@@ -118,6 +128,7 @@ public enum BleTask
 			case DISCONNECT_SERVER:
 			case SEND_NOTIFICATION:
 			case SEND_READ_WRITE_RESPONSE:
+			case ADD_SERVICE:
 
 			//--- DRK > Manager-specific.
 			case TURN_BLE_OFF:
@@ -137,9 +148,9 @@ public enum BleTask
 		{
 			case TURN_BLE_OFF:
 			case TURN_BLE_ON:
-			case RESOLVE_CRASHES:
+			case RESOLVE_CRASHES:	return true;
 
-			default:				return true;
+			default:				return false;
 		}
 	}
 
@@ -152,10 +163,10 @@ public enum BleTask
 	}
 	
 	/**
-	 * Returns <code>true</code> if the task can have a characteristic UUID associated with it - for now {@link #READ}, {@link #WRITE} and {@link #TOGGLE_NOTIFY}.
+	 * Returns <code>true</code> if the task can have a characteristic UUID associated with it - for now {@link #READ}, {@link #WRITE}, {@link #TOGGLE_NOTIFY}, {@link #READ_DESCRIPTOR} and {@link #WRITE_DESCRIPTOR}.
 	 */
 	public boolean usesCharUuid()
 	{
-		return this == READ || this == WRITE || this == TOGGLE_NOTIFY;
+		return this == READ || this == WRITE || this == TOGGLE_NOTIFY || this == READ_DESCRIPTOR || this == WRITE_DESCRIPTOR;
 	}
 }

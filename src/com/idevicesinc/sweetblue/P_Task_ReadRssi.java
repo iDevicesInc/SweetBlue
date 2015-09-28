@@ -27,7 +27,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	private ReadWriteEvent newEvent(Status status, int gattStatus, int rssi)
 	{
-		return new ReadWriteEvent(getDevice(), m_type, /*rssi=*/rssi, status, gattStatus, getTotalTime(), getTotalTimeExecuting());
+		return new ReadWriteEvent(getDevice(), m_type, /*rssi=*/rssi, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
 	@Override protected void onNotExecutable()

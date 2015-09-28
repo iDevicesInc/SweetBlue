@@ -13,6 +13,8 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.State;
 
+import java.util.UUID;
+
 class P_BondManager
 {
 	static final Object[] OVERRIDE_UNBONDED_STATES = {UNBONDED, true, BONDING, false, BONDED, false};
@@ -192,13 +194,13 @@ class P_BondManager
 		m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDED, false, BONDING, false, UNBONDED, true);
 	}
 	
-	boolean bondIfNeeded(final P_Characteristic characteristic, final BondFilter.CharacteristicEventType type)
+	boolean bondIfNeeded(final UUID charUuid, final BondFilter.CharacteristicEventType type)
 	{
 		final BleDeviceConfig.BondFilter bondFilter = m_device.conf_device().bondFilter != null ? m_device.conf_device().bondFilter : m_device.conf_mngr().bondFilter;
 		
 		if( bondFilter == null )  return false;
 		
-		final BondFilter.CharacteristicEvent event = new BleDeviceConfig.BondFilter.CharacteristicEvent(m_device, characteristic.getUuid(), type);
+		final BondFilter.CharacteristicEvent event = new BleDeviceConfig.BondFilter.CharacteristicEvent(m_device, charUuid, type);
 		
 		final BondFilter.Please please = bondFilter.onEvent(event);
 		

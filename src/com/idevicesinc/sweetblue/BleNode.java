@@ -484,6 +484,9 @@ public abstract class BleNode implements UsesCustomNull
 
 	private final BleManager m_manager;
 
+	//--- DRK > Can't be final cause can't reference subclass 'this' while calling super() constructor.
+	protected PA_ServiceManager m_serviceMngr;
+
 	protected BleNode(final BleManager manager)
 	{
 		m_manager = manager;
@@ -520,60 +523,105 @@ public abstract class BleNode implements UsesCustomNull
 	 * Returns the native descriptor for the given UUID in case you need lower-level access.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public abstract @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUUID);
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
+	}
 
 	/**
 	 * Returns the native characteristic for the given UUID in case you need lower-level access.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID uuid)
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID charUuid)
 	{
-		return getNativeCharacteristic(null, uuid);
+		return getNativeCharacteristic(null, charUuid);
 	}
 
 	/**
 	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public abstract @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid);
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID charUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getCharacteristic(serviceUuid, charUuid);
+	}
 
 	/**
 	 * Returns the native service for the given UUID in case you need lower-level access.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public abstract @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid);
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID serviceUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getServiceDirectlyFromNativeNode(serviceUuid);
+	}
 
 	/**
 	 * Returns all {@link BluetoothGattService} instances.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public abstract @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices();
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getServices();
+	}
 
 	/**
 	 * Convenience overload of {@link #getNativeServices()} that returns a {@link List}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public abstract @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List();
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getServices_List();
+	}
 
 	/**
 	 * Returns all {@link BluetoothGattCharacteristic} instances.
 	 */
-	public abstract @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics();
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getCharacteristics(null);
+	}
 
 	/**
 	 * Convenience overload of {@link #getNativeCharacteristics()} that returns a {@link List}.
 	 */
-	public abstract @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List();
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getCharacteristics_List(null);
+	}
 
 	/**
 	 * Same as {@link #getNativeCharacteristics()} but you can filter on the service {@link UUID}.
 	 */
-	public abstract @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID service);
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID serviceUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getCharacteristics(serviceUuid);
+	}
 
 	/**
 	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
 	 */
-	public abstract @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID service);
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID serviceUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getCharacteristics_List(serviceUuid);
+	}
 
 	/**
 	 * Returns a new {@link com.idevicesinc.sweetblue.utils.HistoricalData} instance using

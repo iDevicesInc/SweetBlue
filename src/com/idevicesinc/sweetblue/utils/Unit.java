@@ -9,6 +9,7 @@ import com.idevicesinc.sweetblue.annotations.Immutable;
  * @param <T> Used to enforce just-in-case subclass type checking for methods like {@link #lt(Unit)} so you can't compare one subclass with another subclass.
  */
 @Immutable
+
 public abstract class Unit<T>
 {
 	/**

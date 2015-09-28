@@ -1215,7 +1215,6 @@ public class BleServer extends BleNode implements UsesCustomNull
 	private BleNodeConfig m_config = null;
 	private final P_ServerConnectionFailManager m_connectionFailMngr;
 	private final P_ClientManager m_clientMngr;
-	final P_ServerServiceManager m_serviceMngr;
 
 	/*package*/ BleServer(final BleManager mngr, final boolean isNull)
 	{
@@ -1292,7 +1291,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	{
 		enforceMainThread();
 
-		m_serviceMngr.setListener(listener_nullable);
+		serviceMngr_server().setListener(listener_nullable);
 	}
 
 	/**
@@ -1715,7 +1714,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 		m_nativeWrapper.closeServer();
 
-		m_serviceMngr.removeAll(status_serviceAdd);
+		serviceMngr_server().removeAll(status_serviceAdd);
 	}
 
 	/**
@@ -1851,7 +1850,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	{
 		enforceMainThread();
 
-		return m_serviceMngr.addService(service, listener);
+		return serviceMngr_server().addService(service, listener);
 	}
 
 	/**
@@ -1863,7 +1862,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	{
 		enforceMainThread();
 
-		return m_serviceMngr.remove(serviceUuid);
+		return serviceMngr_server().remove(serviceUuid);
 	}
 
 	/**
@@ -1873,117 +1872,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 	{
 		enforceMainThread();
 
-		m_serviceMngr.removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
-	}
-
-
-	/**
-	 * Returns the native descriptor for the given UUID in case you need lower-level access.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
-	}
-
-	/**
-	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
-	 */
-	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID characteristicUuid)
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getCharacteristic(serviceUuid, characteristicUuid);
-	}
-
-	/**
-	 * Returns the native service for the given UUID.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-
-	@Override public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID uuid)
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getServiceDirectlyFromNativeServer(uuid);
-	}
-
-	/**
-	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
-	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getServices();
-	}
-
-	/**
-	 * Convenience overload of {@link #getNativeServices()} that returns a {@link List}.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getServices_List();
-	}
-
-	/**
-	 * Returns all {@link BluetoothGattService} instances once {@link BleDevice#is(BleDeviceState)} with
-	 * {@link BleDeviceState#SERVICES_DISCOVERED} returns <code>true</code>.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getCharacteristics(null);
-	}
-
-	/**
-	 * Convenience overload of {@link #getNativeCharacteristics()} that returns a {@link List}.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getCharacteristics_List(null);
-	}
-
-	/**
-	 * Same as {@link #getNativeCharacteristics()} but you can filter on the service {@link UUID}.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Override public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(final UUID serviceUuid)
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getCharacteristics(serviceUuid);
-	}
-
-	/**
-	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
-	 * <br><br>
-	 * WARNING: Please see the WARNING for {@link #getNative()}.
-	 */
-	@Override public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(final UUID serviceUuid)
-	{
-		enforceMainThread();
-
-		return m_serviceMngr.getCharacteristics_List(serviceUuid);
+		serviceMngr_server().removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
 	}
 
 	/**
@@ -2164,6 +2053,11 @@ public class BleServer extends BleNode implements UsesCustomNull
 	public boolean hasClient(final BleServerState ... states)
 	{
 		return getClientCount(states) > 0;
+	}
+
+	P_ServerServiceManager serviceMngr_server()
+	{
+		return (P_ServerServiceManager) m_serviceMngr;
 	}
 
 	/**
