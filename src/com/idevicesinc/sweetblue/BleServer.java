@@ -40,7 +40,7 @@ import static com.idevicesinc.sweetblue.BleServerState.*;
  * is only useful by piggybacking on an existing {@link BleDevice} that is currently {@link BleDeviceState#CONNECTED}.
  * For OS levels 5.0 and up a {@link BleServer} is capable of acting as an independent peripheral.
  */
-public class BleServer extends BleNode implements UsesCustomNull
+public class BleServer extends BleNode
 {
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
@@ -473,7 +473,17 @@ public class BleServer extends BleNode implements UsesCustomNull
 			public int gattStatus_received()  {  return m_gattStatus_received;  }
 			private final int m_gattStatus_received;
 
-			OutgoingEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_received, byte[] data_sent, int requestId, int offset, final boolean responseNeeded, final Status status, final int gattStatus_sent, final int gattStatus_received)
+			/**
+			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
+			 * {@link BleServer#sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}. It will return <code>false</code> otherwise,
+			 * which can happen if for example you use {@link BleServer#getNative()} to bypass SweetBlue for whatever reason.
+			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.OutgoingListener.Status#TIMED_OUT},
+			 * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
+			 */
+			public boolean solicited()  {  return m_solicited;  }
+			private final boolean m_solicited;
+
+			OutgoingEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_received, byte[] data_sent, int requestId, int offset, final boolean responseNeeded, final Status status, final int gattStatus_sent, final int gattStatus_received, final boolean solicited)
 			{
 				super(server, nativeDevice, serviceUuid_in, charUuid_in, descUuid_in, type_in, target_in, data_received, requestId, offset, responseNeeded);
 
@@ -481,6 +491,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 				m_data_sent = data_sent;
 				m_gattStatus_received = gattStatus_received;
 				m_gattStatus_sent = gattStatus_sent;
+				m_solicited = solicited;
 			}
 
 			OutgoingEvent(final IncomingListener.IncomingEvent e, final byte[] data_sent, final Status status, final int gattStatus_sent, final int gattStatus_received)
@@ -491,6 +502,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 				m_data_sent = data_sent;
 				m_gattStatus_received = gattStatus_received;
 				m_gattStatus_sent = gattStatus_sent;
+				m_solicited = true;
 			}
 
 			static OutgoingEvent EARLY_OUT__NOTIFICATION(final BleServer server, final BluetoothDevice nativeDevice, final UUID serviceUuid, final UUID charUuid, final FutureData data, final Status status)
@@ -498,7 +510,8 @@ public class BleServer extends BleNode implements UsesCustomNull
 				return new OutgoingEvent
 				(
 					server, nativeDevice, serviceUuid, charUuid, NON_APPLICABLE_UUID, Type.NOTIFICATION, Target.CHARACTERISTIC,
-					EMPTY_BYTE_ARRAY, data.getData(), NON_APPLICABLE_REQUEST_ID, 0, false, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE
+					EMPTY_BYTE_ARRAY, data.getData(), NON_APPLICABLE_REQUEST_ID, 0, false, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE,
+					BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true
 				);
 			}
 
@@ -1155,12 +1168,23 @@ public class BleServer extends BleNode implements UsesCustomNull
 			public Status status()  {  return m_status;  }
 			private final Status m_status;
 
-			/*package*/ ServiceAddEvent(final BleServer server, final BluetoothGattService service, final Status status, final int gattStatus)
+			/**
+			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
+			 * {@link BleServer#addService(BleService, ServiceAddListener)}. It will return <code>false</code> otherwise,
+			 * which can happen if for example you use {@link BleServer#getNative()} to bypass SweetBlue for whatever reason.
+			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener.Status#TIMED_OUT},
+			 * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
+			 */
+			public boolean solicited()  {  return m_solicited;  }
+			private final boolean m_solicited;
+
+			/*package*/ ServiceAddEvent(final BleServer server, final BluetoothGattService service, final Status status, final int gattStatus, final boolean solicited)
 			{
 				m_server = server;
 				m_service = service;
 				m_status = status;
 				m_gattStatus = gattStatus;
+				m_solicited = solicited;
 			}
 
 			/**
@@ -1178,7 +1202,7 @@ public class BleServer extends BleNode implements UsesCustomNull
 
 			/*package*/ static ServiceAddEvent EARLY_OUT(BleServer server, BluetoothGattService service, Status status)
 			{
-				return new ServiceAddEvent(server, service, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+				return new ServiceAddEvent(server, service, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 			}
 
 			public String toString()
@@ -1229,7 +1253,6 @@ public class BleServer extends BleNode implements UsesCustomNull
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 			m_clientMngr = new P_ClientManager(this);
-			//m_serviceMngr = new P_ServerServiceManager(this);
 		}
 		else
 		{
@@ -1238,12 +1261,11 @@ public class BleServer extends BleNode implements UsesCustomNull
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 			m_clientMngr = new P_ClientManager(this);
-			//m_serviceMngr = new P_ServerServiceManager(this);
 		}
 	}
-	
-	@Override
-	PA_ServiceManager initServiceManager() {		
+
+	@Override protected PA_ServiceManager newServiceManager()
+	{
 		return new P_ServerServiceManager(this);
 	}
 

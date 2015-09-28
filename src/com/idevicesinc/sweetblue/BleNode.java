@@ -424,7 +424,7 @@ public abstract class BleNode implements UsesCustomNull
 			private final Cursor m_cursor;
 
 			/**
-			 * The resulting {@link Cursor} from the database query. This will never be null, just an empty cursor if anything goes wrong.
+			 * The raw query given to the database.
 			 */
 			public @Nullable(Nullable.Prevalence.NEVER) String rawQuery() {  return m_rawQuery; }
 			private final String m_rawQuery;
@@ -485,17 +485,18 @@ public abstract class BleNode implements UsesCustomNull
 	private final BleManager m_manager;
 
 	//--- DRK > Can't be final cause can't reference subclass 'this' while calling super() constructor.
-	private PA_ServiceManager m_serviceMngr;
-	
-	abstract PA_ServiceManager initServiceManager();
+	private final PA_ServiceManager m_serviceMngr;
 
 	protected BleNode(final BleManager manager)
 	{
 		m_manager = manager;
-		m_serviceMngr = initServiceManager();
+		m_serviceMngr = newServiceManager();
 	}
+
+	protected abstract PA_ServiceManager newServiceManager();
 	
-	protected <T extends PA_ServiceManager> T getServiceManager() {
+	protected <T extends PA_ServiceManager> T getServiceManager()
+	{
 		return (T) m_serviceMngr;
 	}
 
