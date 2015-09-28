@@ -509,7 +509,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
 			 * {@link BleDevice#read(UUID)}, {@link BleDevice#write(UUID, byte[])}, etc. It will return <code>false</code> otherwise,
 			 * which can happen if for example you use {@link BleDevice#getNativeGatt()} to bypass SweetBlue for whatever reason.
-			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link Status#TIMED_OUT},
+			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status#TIMED_OUT},
 			 * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
 			 */
 			public boolean solicited() {  return m_solicited;  }
@@ -3697,9 +3697,9 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 	/**
 	 * Reads from the device without a callback - the callback will still be sent through any listeners provided
-	 * to either {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} or {@link BleManager#setListener_ReadWrite(ReadWriteListener)}.
+	 * to either {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} or {@link BleManager#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
 	 *
-	 * @return (same as {@link #readDescriptor(UUID, byte[], ReadWriteListener)}).
+	 * @return (same as {@link #readDescriptor(UUID, BleDevice.ReadWriteListener)}).
 	 *
 	 * @see #readDescriptor(UUID, ReadWriteListener)
 	 */
