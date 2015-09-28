@@ -495,7 +495,7 @@ public abstract class BleNode implements UsesCustomNull
 		m_serviceMngr = initServiceManager();
 	}
 	
-	public <T extends PA_ServiceManager> T getServiceManager() {
+	protected <T extends PA_ServiceManager> T getServiceManager() {
 		return (T) m_serviceMngr;
 	}
 
