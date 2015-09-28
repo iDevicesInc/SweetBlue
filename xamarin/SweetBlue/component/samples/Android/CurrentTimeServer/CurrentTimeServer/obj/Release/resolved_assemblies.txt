@@ -1,0 +1,6 @@
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/CurrentTimeServer/CurrentTimeServer/obj/Release/android/assets/CurrentTimeServer.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/CurrentTimeServer/CurrentTimeServer/obj/Release/android/assets/System.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/CurrentTimeServer/CurrentTimeServer/obj/Release/android/assets/Mono.Android.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/CurrentTimeServer/CurrentTimeServer/obj/Release/android/assets/System.Core.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/CurrentTimeServer/CurrentTimeServer/obj/Release/android/assets/SweetBlue.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/CurrentTimeServer/CurrentTimeServer/obj/Release/android/assets/mscorlib.dll

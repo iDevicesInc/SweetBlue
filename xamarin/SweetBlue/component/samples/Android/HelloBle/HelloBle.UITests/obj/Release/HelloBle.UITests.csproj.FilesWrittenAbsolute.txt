@@ -5,3 +5,10 @@
 /Users/ryanbis/Documents/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/obj/Release/HelloBle.UITests.dll.mdb
 /Users/ryanbis/Documents/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/bin/Release/nunit.framework.dll
 /Users/ryanbis/Documents/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/bin/Release/Xamarin.UITest.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/obj/Release/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/bin/Release/HelloBle.UITests.dll.mdb
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/bin/Release/HelloBle.UITests.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/obj/Release/HelloBle.UITests.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/obj/Release/HelloBle.UITests.dll.mdb
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/bin/Release/nunit.framework.dll
+/Users/ryanbis/Documents/SweetBlue/xamarin/SweetBlue/component/samples/Android/HelloBle/HelloBle.UITests/bin/Release/Xamarin.UITest.dll

@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="com.idevicesinc.sweetblue.current_time_server">
+  <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="21" />
+  <application android:label="Current Time Server" android:name="mono.android.app.Application" android:debuggable="true">
+    <activity android:icon="@drawable/icon" android:label="CurrentTimeServer" android:name="md5bec44010db4e2d20fca04e7fd3375f6d.MainActivity" />
+    <provider android:name="mono.MonoRuntimeProvider" android:exported="false" android:initOrder="2147483647" android:authorities="com.idevicesinc.sweetblue.current_time_server.mono.MonoRuntimeProvider.__mono_init__" />
+    <receiver android:name="mono.android.Seppuku">
+      <intent-filter>
+        <action android:name="mono.android.intent.action.SEPPUKU" />
+        <category android:name="mono.android.intent.category.SEPPUKU.com.idevicesinc.sweetblue.current_time_server" />
+      </intent-filter>
+    </receiver>
+    <activity android:icon="@drawable/icon" android:label="CurrentTimeServer" android:name="com.idevicesinc.sweetblue.current_time_server.TrialSplashScreen" android:theme="@style/Mono.Android.Theme.Splash" android:noHistory="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+  </application>
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+</manifest>

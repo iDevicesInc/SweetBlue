@@ -7,15 +7,26 @@ license: License.md
 icons: 
   - SweetBlue_128x128.png
   - SweetBlue_512x512.png
-publisher-url: www.idevicesinc.com
+publisher-url: http://www.idevicesinc.com/
+build: 
+  - src/SweetBlue/SweetBlue.sln
 libraries: 
-  ios: ../lib/ios/Awesome.dll
+  android: ./lib/Android/SweetBlue.dll
 summary: Bluetooth Low Energy library for Android
 details: Details.md
 screenshots: 
-  - screenshots/screenshot1.png
+  #- screenshots/screenshot1.png
 getting-started: GettingStarted.md
-version: 2.6.10
-samples: 
-  iOS Sample: ../samples/AwesomeSample/AwesomeSample.sln
+version: 2.11.11
+samples:   
+  - name: "Hello Ble Sample"  
+    path: ./samples/Android/HelloBle/HelloBle.sln
+  - name: "Simple Ota Sample"
+    path: ./samples/Android/SimpleOta/SimpleOta.sln
+  - name: "Simple Write Sample"  
+    path: ./samples/Android/SimpleWrite/SimpleWrite.sln
+  - name: "Ble Util Sample"
+    path: ./samples/Android/BleUtil/BleUtil.sln  
+  - name: "Ble Time Server Sample"
+    path: ./samples/Android/CurrentTimeServer/CurrentTimeServer.sln
 ...
