@@ -219,6 +219,7 @@ public class BleManager
 			
 			/**
 			 * Convenience method for checking equality of given {@link BleManager.DiscoveryListener.LifeCycle} and {@link #lifeCycle()}.
+			 * @param lifeCycle
 			 */
 			public boolean was(LifeCycle lifeCycle)
 			{
@@ -675,6 +676,9 @@ public class BleManager
 	 * {@link android.app.Activity}), the {@link BleManagerConfig} originally passed in will be used.
 	 * Otherwise, if a new instance is to be created, this calls {@link #get(android.content.Context, BleManagerConfig)} with a {@link BleManagerConfig}
 	 * instance created using the default constructor {@link BleManagerConfig#BleManagerConfig()}.
+	 * 
+	 * @param context
+	 * 
 	 */
 	public static BleManager get(Context context)
 	{
@@ -698,6 +702,9 @@ public class BleManager
 	 * Create the singleton instance or retrieve the already-created singleton instance with custom configuration options set.
 	 * If you call this more than once (for example from a different {@link android.app.Activity}
 	 * with different {@link BleManagerConfig} options set then the newer options overwrite the older options.
+	 * 
+	 * @param context
+	 * @param config
 	 */
 	public static BleManager get(Context context, BleManagerConfig config)
 	{
@@ -835,6 +842,7 @@ public class BleManager
 	/**
 	 * Updates the config options for this instance after calling {@link #get(android.content.Context)} or {@link #get(android.content.Context, BleManagerConfig)}.
 	 * Providing a <code>null</code> value will set everything back to default values.
+	 * @param config_nullable
 	 */
 	public void setConfig(@Nullable(Prevalence.RARE) BleManagerConfig config_nullable)
 	{
@@ -897,6 +905,8 @@ public class BleManager
 
 	/**
 	 * Returns whether the manager is in any of the provided states.
+	 * @param states
+	 * 
 	 */
 	public boolean isAny(BleManagerState ... states)
 	{
@@ -911,6 +921,7 @@ public class BleManager
 	/**
 	 * Returns whether the manager is in all of the provided states.
 	 * 
+	 * @param states
 	 * @see #isAny(BleManagerState...)
 	 */
 	public boolean isAll(BleManagerState... states)
@@ -926,6 +937,7 @@ public class BleManager
 	/**
 	 * Returns whether the manager is in the provided state.
 	 *
+	 * @param state
 	 * @see #isAny(BleManagerState...)
 	 */
 	public boolean is(final BleManagerState state)
@@ -936,6 +948,7 @@ public class BleManager
 	/**
 	 * Returns <code>true</code> if there is partial bitwise overlap between the provided value and {@link #getStateMask()}.
 	 * 
+	 * @param mask_BleManagerState
 	 * @see #isAll(int)
 	 */
 	public boolean isAny(final int mask_BleManagerState)
@@ -946,6 +959,7 @@ public class BleManager
 	/**
 	 * Returns <code>true</code> if there is complete bitwise overlap between the provided value and {@link #getStateMask()}.
 	 * 
+	 * @param mask_BleManagerState
 	 * @see #isAny(int)
 	 */
 	public boolean isAll(final int mask_BleManagerState)
@@ -956,6 +970,7 @@ public class BleManager
 	/**
 	 * See similar comment for {@link BleDevice#getTimeInState(BleDeviceState)}.
 	 *
+	 * @param state
 	 * @see BleDevice#getTimeInState(BleDeviceState)
 	 */
 	public Interval getTimeInState(BleManagerState state)
@@ -968,6 +983,7 @@ public class BleManager
 	/**
 	 * See similar comment for {@link BleDevice#getTimeInState(BleDeviceState)}.
 	 *
+	 * @param state
 	 * @see BleDevice#getTimeInState(BleDeviceState)
 	 */
 	public Interval getTimeInNativeState(BleManagerState state)
@@ -1026,6 +1042,7 @@ public class BleManager
 	/**
 	 * Sets a default backup {@link BleNode.HistoricalDataLoadListener} that will be invoked
 	 * for all historical data loads to memory for all uuids for all devices.
+	 * @param listener_nullable
 	 */
 	public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleNode.HistoricalDataLoadListener listener_nullable)
 	{
@@ -1036,6 +1053,8 @@ public class BleManager
 
 	/**
 	 * Set a listener here to be notified whenever we encounter an {@link UhOh}.
+	 * @param listener_nullable
+	 * 
 	 */
 	public void setListener_UhOh(@Nullable(Prevalence.NORMAL) UhOhListener listener_nullable)
 	{
@@ -1047,6 +1066,7 @@ public class BleManager
 	/**
 	 * Set a listener here to be notified whenever {@link #ASSERT(boolean)} fails.
 	 * Mostly for use by internal library developers.
+	 * @param listener_nullable
 	 */
 	public void setListener_Assert(@Nullable(Prevalence.NORMAL) AssertListener listener_nullable)
 	{
@@ -1057,6 +1077,7 @@ public class BleManager
 
 	/**
 	 * Set a listener here to be notified whenever a {@link BleDevice} is discovered, rediscovered, or undiscovered.
+	 * @param listener_nullable
 	 */
 	public void setListener_Discovery(@Nullable(Prevalence.NORMAL) DiscoveryListener listener_nullable)
 	{
@@ -1078,6 +1099,8 @@ public class BleManager
 
 	/**
 	 * Set a listener here to be notified whenever this manager's {@link BleManagerState} changes.
+	 * 
+	 * @param listener_nullable
 	 */
 	public void setListener_State(@Nullable(Prevalence.NORMAL) StateListener listener_nullable)
 	{
@@ -1091,6 +1114,7 @@ public class BleManager
 	 * The listener provided will get called in addition to and after the listener, if any, provided
 	 * to {@link BleDevice#setListener_State(BleDevice.StateListener)}.
 	 *
+	 * @param listener_nullable
 	 * @see BleDevice#setListener_State(BleDevice.StateListener)
 	 */
 	public void setListener_DeviceState(@Nullable(Prevalence.NORMAL) BleDevice.StateListener listener_nullable)
@@ -1107,6 +1131,7 @@ public class BleManager
 	 * behind (for example) {@link #setListener_ServerState(BleServer.StateListener)} because
 	 * {@link BleServer.ConnectionFailListener#onEvent(BleServer.ConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
+	 * @param listener_nullable
 	 * @see BleServer#setListener_ConnectionFail(BleServer.ConnectionFailListener)
 	 */
 	public void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) BleServer.ConnectionFailListener listener_nullable)
@@ -1123,6 +1148,7 @@ public class BleManager
 	 * behind {@link #setListener_Outgoing(BleServer.OutgoingListener)} because
 	 * {@link BleServer.IncomingListener#onEvent(BleServer.IncomingListener.IncomingEvent)} requires a return value.
 	 *
+	 * @param listener_nullable
 	 * @see BleServer#setListener_Incoming(IncomingListener)
 	 */
 	public void setListener_Incoming(@Nullable(Prevalence.NORMAL) BleServer.IncomingListener listener_nullable)
@@ -1137,6 +1163,7 @@ public class BleManager
 	 * The listener provided will get called in addition to and after the listener, if any, provided
 	 * to {@link BleServer#setListener_ServiceAdd(BleServer.ServiceAddListener)}.
 	 *
+	 * @param listener_nullable
 	 * @see BleServer#setListener_ServiceAdd(BleServer.ServiceAddListener)
 	 */
 	public void setListener_ServiceAdd(@Nullable(Prevalence.NORMAL)BleServer.ServiceAddListener listener_nullable)
@@ -1151,6 +1178,7 @@ public class BleManager
 	 * The listener provided will get called in addition to and after the listener, if any, provided
 	 * to {@link BleServer#setListener_State(BleServer.StateListener)}.
 	 * 
+	 * @param listener_nullable
 	 * @see BleServer#setListener_State(BleServer.StateListener)
 	 */
 	public void setListener_ServerState(@Nullable(Prevalence.NORMAL) BleServer.StateListener listener_nullable)
@@ -1165,6 +1193,7 @@ public class BleManager
 	 * {@link BleServer} instances. The listener provided will get called in addition to and after the listener, if any, provided
 	 * to {@link BleServer#setListener_Outgoing(BleServer.OutgoingListener)}.
 	 *
+	 * @param listener_nullable
 	 * @see BleServer#setListener_Outgoing(BleServer.OutgoingListener)
 	 */
 	public void setListener_Outgoing(@Nullable(Prevalence.NORMAL) BleServer.OutgoingListener listener_nullable)
@@ -1181,6 +1210,7 @@ public class BleManager
 	 * behind {@link #setListener_DeviceState(BleDevice.StateListener)} because
 	 * {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
+	 * @param listener_nullable
 	 * @see BleDevice#setListener_ConnectionFail(BleDevice.ConnectionFailListener)
 	 */
 	public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) BleDevice.ConnectionFailListener listener_nullable)
@@ -1192,6 +1222,7 @@ public class BleManager
 	
 	/**
 	 * Convenience method to set a default back up listener for all {@link BondEvent}s across all {@link BleDevice} instances.
+	 * @param listener_nullable
 	 */
 	public void setListener_Bond(@Nullable(Prevalence.NORMAL) BleDevice.BondListener listener_nullable)
 	{
@@ -1204,6 +1235,7 @@ public class BleManager
 	 * Sets a default backup {@link ReadWriteListener} that will be called for all {@link BleDevice} instances.
 	 * <br><br>
 	 * TIP: Place some analytics code in the listener here. 
+	 * @param listener_nullable
 	 */
 	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) ReadWriteListener listener_nullable)
 	{
@@ -1214,6 +1246,8 @@ public class BleManager
 
 	/**
 	 * Set a listener here to be notified whenever this manager's native {@link BleManagerState} changes.
+	 * @param listener
+	 * 
 	 */
 	public void setListener_NativeState(NativeStateListener listener)
 	{
@@ -1227,6 +1261,9 @@ public class BleManager
 	 * {@link BleManagerConfig#autoScanActiveTime} and {@link BleManagerConfig#autoScanPauseInterval}, so see
 	 * their comments for more detail. Calling this forever-after overrides the options you set
 	 * in {@link BleManagerConfig}.
+	 * 
+	 * @param scanActiveTime
+	 * @param scanPauseTime
 	 *
 	 * @see BleManagerConfig#autoScanActiveTime
 	 * @see BleManagerConfig#autoScanPauseInterval
@@ -1238,6 +1275,9 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you too.
+	 * @param scanActiveTime
+	 * @param scanPauseTime
+	 * @param discoveryListener
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, DiscoveryListener discoveryListener)
 	{
@@ -1246,6 +1286,9 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but adds a filter too.
+	 * @param scanActiveTime
+	 * @param scanPauseTime
+	 * @param filter
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter)
 	{
@@ -1254,6 +1297,10 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you too and adds a filter.
+	 * @param scanActiveTime
+	 * @param scanPauseTime
+	 * @param filter
+	 * @param discoveryListener
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter, DiscoveryListener discoveryListener)
 	{
@@ -1281,6 +1328,8 @@ public class BleManager
 	/**
 	 * Same as {@link #stopPeriodicScan()} but will also unregister any {@link BleManagerConfig.ScanFilter} provided
 	 * through {@link #startPeriodicScan(Interval, Interval, BleManagerConfig.ScanFilter)} or other overloads.
+	 * 
+	 * @param filter
 	 */
 	public void stopPeriodicScan(final ScanFilter filter)
 	{
@@ -1320,6 +1369,8 @@ public class BleManager
 	/**
 	 * Calls {@link #startScan(Interval, BleManagerConfig.ScanFilter)} with {@link Interval#INFINITE}.
 	 *
+	 * @param filter
+	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan(ScanFilter filter)
@@ -1329,6 +1380,8 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
+	 *
+	 * @param discoveryListener
 	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
@@ -1340,6 +1393,9 @@ public class BleManager
 	/**
 	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, BleManager.DiscoveryListener)}
 	 *
+	 * @param scanTime
+	 * @param filter
+	 * 
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan(Interval scanTime, ScanFilter filter)
@@ -1349,6 +1405,9 @@ public class BleManager
 
 	/**
 	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, BleManager.DiscoveryListener)}
+	 *
+	 * @param scanTime
+	 * @param discoveryListener
 	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
@@ -1360,6 +1419,9 @@ public class BleManager
 	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
 	 *
+	 * @param filter
+	 * @param discoveryListener
+	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan(ScanFilter filter, DiscoveryListener discoveryListener)
@@ -1370,6 +1432,8 @@ public class BleManager
 	/**
 	 * Starts a scan that will generally last for the given time (roughly).
 	 *
+	 * @param scanTime
+	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan(Interval scanTime)
@@ -1379,6 +1443,10 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
+	 *
+	 * @param scanTime
+	 * @param filter
+	 * @param discoveryListener
 	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
@@ -1456,6 +1524,8 @@ public class BleManager
 	/**
 	 * Fires a callback to {@link BleManager.AssertListener} if condition is false. Will post a {@link android.util.Log#ERROR}-level
 	 * message with a stack trace to the console as well if {@link BleManagerConfig#loggingEnabled} is true.
+	 * 
+	 * @param condition
 	 */
 	@Advanced
 	public boolean ASSERT(boolean condition)
@@ -1465,6 +1535,9 @@ public class BleManager
 
 	/**
 	 * Same as {@link #ASSERT(boolean)} but with an added message.
+	 * 
+	 * @param condition
+	 * @param message
 	 */
 	@Advanced
 	public boolean ASSERT(boolean condition, String message)
@@ -1564,6 +1637,8 @@ public class BleManager
 	/**
 	 * Same as {@link #reset()} but with a convenience callback for when the reset is
 	 * completed and the native BLE stack is (should be) back to normal.
+	 *
+	 * @param listener
 	 *
 	 * @see BleManagerState#RESETTING
 	 */
@@ -1670,6 +1745,9 @@ public class BleManager
 	 * Result will be posted as normal to {@link android.app.Activity#onActivityResult(int, int, Intent)}.
 	 * If current state is {@link BleManagerState#ON} or {@link BleManagerState#TURNING_ON}
 	 * this method early outs and does nothing.
+	 * 
+	 * @param callingActivity
+	 * @param requestCode
 	 */
 	public void turnOnWithIntent(Activity callingActivity, int requestCode)
 	{
@@ -1766,6 +1844,8 @@ public class BleManager
 	 * Same as {@link #stopScan()} but also unregisters any filter supplied to various overloads of
 	 * {@link #startScan()} or {@link #startPeriodicScan(Interval, Interval)} that take an {@link BleManagerConfig.ScanFilter}.
 	 * Calling {@link #stopScan()} alone will keep any previously registered filters active.
+	 * 
+	 * @param filter
 	 */
 	public void stopScan(ScanFilter filter)
 	{
@@ -1790,6 +1870,8 @@ public class BleManager
 
 	/**
 	 * Gets a known {@link BleDeviceState#DISCOVERED} device by MAC address, or {@link BleDevice#NULL} if there is no such device.
+	 * 
+	 * @param macAddress
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(String macAddress)
 	{
@@ -1804,6 +1886,8 @@ public class BleManager
 
 	/**
 	 * Shortcut for checking if {@link #getDevice(String)} returns {@link BleDevice#NULL}.
+	 * 
+	 * @param macAddress
 	 */
 	public boolean hasDevice(final String macAddress)
 	{
@@ -1812,6 +1896,8 @@ public class BleManager
 
 	/**
 	 * Calls {@link #hasDevice(String)}.
+	 * 
+	 * @param device
 	 */
 	public boolean hasDevice(final BleDevice device)
 	{
@@ -1831,6 +1917,8 @@ public class BleManager
 
 	/**
 	 * Returns the first device that is in the given state, or {@link BleDevice#NULL} if no match is found.
+	 * 
+	 * @param state
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(BleDeviceState state)
 	{
@@ -1851,6 +1939,8 @@ public class BleManager
 
 	/**
 	 * Returns true if we have a device in the given state.
+	 * 
+	 * @param state
 	 */
 	public boolean hasDevice(BleDeviceState state)
 	{
@@ -1872,6 +1962,8 @@ public class BleManager
 	/**
 	 * Returns the first device that matches the query, or {@link BleDevice#NULL} if no match is found.
 	 * See {@link BleDevice#is(Object...)} for the query format.
+	 * 
+	 * @param query
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(Object ... query)
 	{
@@ -1893,6 +1985,8 @@ public class BleManager
 	/**
 	 * Returns true if we have a device that matches the given query.
 	 * See {@link BleDevice#is(Object...)} for the query format.
+	 * 
+	 * @param query
 	 */
 	public boolean hasDevice(Object ... query)
 	{
@@ -1901,6 +1995,8 @@ public class BleManager
 	
 	/**
 	 * Returns the first device which returns <code>true</code> for {@link BleDevice#isAny(int)}, or {@link BleDevice#NULL} if no such device is found.
+	 * 
+	 * @param mask_BleDeviceState
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice(final int mask_BleDeviceState)
 	{
@@ -1911,6 +2007,7 @@ public class BleManager
 	
 	/**
 	 * Returns <code>true</code> if there is any {@link BleDevice} for which {@link BleDevice#isAny(int)} with the given mask returns <code>true</code>.
+	 * @param mask_BleDeviceState
 	 */
 	public boolean hasDevice(final int mask_BleDeviceState)
 	{
@@ -1920,6 +2017,8 @@ public class BleManager
 	/**
 	 * Offers a more "functional" means of iterating through the internal list of devices instead of
 	 * using {@link #getDevices()} or {@link #getDevices_List()}.
+	 * 
+	 * @param forEach
 	 */
 	public void getDevices(final ForEach_Void<BleDevice> forEach)
 	{
@@ -1931,6 +2030,9 @@ public class BleManager
 	/**
 	 * Same as {@link #getDevices(ForEach_Void)} but will only return devices
 	 * in the given state provided.
+	 * 
+	 * @param forEach
+	 * @param state
 	 */
 	public void getDevices(final ForEach_Void<BleDevice> forEach, final BleDeviceState state)
 	{
@@ -1942,6 +2044,8 @@ public class BleManager
 	/**
 	 * Overload of {@link #getDevices(ForEach_Void)}
 	 * if you need to break out of the iteration at any point.
+	 * 
+	 * @param forEach
 	 */
 	public void getDevices(final ForEach_Breakable<BleDevice> forEach)
 	{
@@ -1953,6 +2057,9 @@ public class BleManager
 	/**
 	 * Overload of {@link #getDevices(ForEach_Void, BleDeviceState)}
 	 * if you need to break out of the iteration at any point.
+	 * 
+	 * @param forEach
+	 * @param state
 	 */
 	public void getDevices(final ForEach_Breakable<BleDevice> forEach, final BleDeviceState state)
 	{
@@ -2004,6 +2111,8 @@ public class BleManager
 
 	/**
 	 * Returns the number of devices that are in the current state.
+	 * 
+	 * @param state
 	 */
 	public int getDeviceCount(BleDeviceState state)
 	{
@@ -2015,6 +2124,8 @@ public class BleManager
 	/**
 	 * Returns the number of devices that match the given query.
 	 * See {@link BleDevice#is(Object...)} for the query format.
+	 * 
+	 * @param query
 	 */
 	public int getDeviceCount(Object ... query)
 	{
@@ -2027,6 +2138,8 @@ public class BleManager
 	 * Accessor into the underlying array used to store {@link BleDevice} instances.
 	 * Combine with {@link #getDeviceCount()} to iterate, or you may want to use the
 	 * {@link java.util.Iterator} returned from {@link #getDevices()} and its various overloads instead.
+	 * 
+	 * @param index
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDeviceAt(final int index)
 	{
@@ -2037,6 +2150,8 @@ public class BleManager
 
 	/**
 	 * Returns the index of this device in the internal list, or -1 if it's not found.
+	 * 
+	 * @param device
 	 */
 	public int getDeviceIndex(final BleDevice device)
 	{
@@ -2063,6 +2178,8 @@ public class BleManager
 	/**
 	 * Same as {@link #getDevice_next(BleDevice, BleDeviceState)} but just returns the next device in the internal list
 	 * with no state checking.
+	 * 
+	 * @param device
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device)
 	{
@@ -2075,6 +2192,9 @@ public class BleManager
 	 * Returns the first device previous to the provided one in the internal list that is in the given state. For various fringe cases like
 	 * this manager not having any devices, this method returns {@link BleDevice#NULL}. This method wraps
 	 * around so that if the provided device is at index 0, the returned device will be the last device this manager holds.
+	 * 
+	 * @param device
+	 * @param state
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device, final BleDeviceState state)
 	{
@@ -2086,6 +2206,9 @@ public class BleManager
 	/**
 	 * Same as {@link #getDevice_previous(BleDevice, BleDeviceState)} but returns the next device in the internal list
 	 * with no state checking.
+	 * 
+	 * @param device
+	 * @param state
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device, final BleDeviceState state)
 	{
@@ -2097,6 +2220,9 @@ public class BleManager
 	/**
 	 * Same as {@link #getDevice_previous(BleDevice, BleDeviceState)} but allows you to pass a query.
 	 * See {@link BleDevice#is(Object...)} for the query format.
+	 * 
+	 * @param device
+	 * @param query
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device, final Object ... query)
 	{
@@ -2108,6 +2234,9 @@ public class BleManager
 	/**
 	 * Same as {@link #getDevice_next(BleDevice, BleDeviceState)} but allows you to pass a query.
 	 * See {@link BleDevice#is(Object...)} for the query format.
+	 * 
+	 * @param device
+	 * @param query
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device, final Object ... query)
 	{
@@ -2129,6 +2258,8 @@ public class BleManager
 
 	/**
 	 * Same as {@link #getDevice(BleDeviceState)} except returns all matching devices.
+	 * 
+	 * @param state
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final BleDeviceState state)
 	{
@@ -2137,6 +2268,8 @@ public class BleManager
 	
 	/**
 	 * Overload of {@link #getDevices(BleDeviceState)} that returns a {@link java.util.List} for you.
+	 * 
+	 * @param state
 	 */
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final BleDeviceState state)
 	{
@@ -2148,6 +2281,8 @@ public class BleManager
 	/**
 	 * Same as {@link #getDevice(Object...)} except returns all matching devices.
 	 * See {@link BleDevice#is(Object...)} for the query format.
+	 * 
+	 * @param query
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final Object ... query)
 	{
@@ -2156,6 +2291,8 @@ public class BleManager
 	
 	/**
 	 * Overload of {@link #getDevices(Object...)} that returns a {@link java.util.List} for you.
+	 * 
+	 * @param query
 	 */
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final Object ... query)
 	{
@@ -2166,6 +2303,8 @@ public class BleManager
 	
 	/**
 	 * Same as {@link #getDevices()} except filters using {@link BleDevice#isAny(int)}.
+	 * 
+	 * @param mask_BleDeviceState
 	 */
 	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices(final int mask_BleDeviceState)
 	{
@@ -2174,6 +2313,8 @@ public class BleManager
 	
 	/**
 	 * Overload of {@link #getDevices(int)} that returns a {@link java.util.List} for you.
+	 * 
+	 * @param mask_BleDeviceState
 	 */
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List(final int mask_BleDeviceState)
 	{
@@ -2185,6 +2326,9 @@ public class BleManager
 	/**
 	 * Returns a new {@link HistoricalData} instance using
 	 * {@link BleDeviceConfig#historicalDataFactory} if available.
+	 * 
+	 * @param data
+	 * @param epochTime
 	 */
 	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime)
 	{
@@ -2206,6 +2350,10 @@ public class BleManager
 	 * Same as {@link #newHistoricalData(byte[], EpochTime)} but tries to use
 	 * {@link BleDevice#newHistoricalData(byte[], EpochTime)} if we have a device
 	 * matching the given mac address.
+	 * 
+	 * @param data
+	 * @param epochTime
+	 * @param macAddress
 	 */
 	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime, final String macAddress)
 	{
@@ -2231,6 +2379,8 @@ public class BleManager
 
 	/**
 	 * Returns a {@link BleServer} instance. which for now at least is a singleton.
+	 * 
+	 * @param incomingListener
 	 */
 	public BleServer getServer(final IncomingListener incomingListener)
 	{
@@ -2247,6 +2397,8 @@ public class BleManager
 	/**
 	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
 	 * and passes a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
+	 * 
+	 * @param macAddress
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice newDevice(String macAddress)
 	{
@@ -2255,6 +2407,9 @@ public class BleManager
 	
 	/**
 	 * Same as {@link #newDevice(String)} but allows a custom name also.
+	 * 
+	 * @param macAddress
+	 * @param name
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name)
 	{
@@ -2263,8 +2418,11 @@ public class BleManager
 	
 	/**
 	 * Same as {@link #newDevice(String)} but passes a {@link BleDeviceConfig} to be used as well.
-	 */
-	
+	 * 
+	 * @param macAddress
+	 * @param config
+	 * 
+	 */	
 	public @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final BleDeviceConfig config)
 	{
 		return newDevice(macAddress, null, config);
@@ -2278,6 +2436,10 @@ public class BleManager
 	 * NOTE: You should always do a {@link BleDevice#isNull()} check on this method's return value just in case. Android
 	 * documentation says that underlying stack will always return a valid {@link android.bluetooth.BluetoothDevice}
 	 * instance (which is required to create a valid {@link BleDevice} instance), but you really never know.
+	 * 
+	 * @param macAddress
+	 * @param name
+	 * @param config
 	 */
 	public @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name, final BleDeviceConfig config)
 	{
@@ -2330,6 +2492,8 @@ public class BleManager
 	 * Forcefully undiscovers a device, disconnecting it first if needed and removing it from this manager's internal list.
 	 * {@link BleManager.DiscoveryListener#onEvent(DiscoveryEvent)} with {@link LifeCycle#UNDISCOVERED} will be called.
 	 * No clear use case has been thought of but the method is here just in case anyway.
+	 * 
+	 * @param device
 	 *
 	 * @return	<code>true</code> if the device was undiscovered, <code>false</code> if device is already {@link BleDeviceState#UNDISCOVERED} or manager
 	 * 			doesn't contain an instance, checked referentially, not through {@link BleDevice#equals(BleDevice)} (i.e. by mac address).
@@ -2356,6 +2520,7 @@ public class BleManager
 	/**
 	 * Convenience forwarding of {@link #clearSharedPreferences(String)}.
 	 *
+	 * @param device
 	 * @see #clearSharedPreferences(String)
 	 */
 	public void clearSharedPreferences(final BleDevice device)
@@ -2365,6 +2530,8 @@ public class BleManager
 
 	/**
 	 * Clears all data currently being held in {@link android.content.SharedPreferences} for a particular device.
+	 *
+	 * @param macAddress
 	 *
 	 * @see BleDeviceConfig#manageLastDisconnectOnDisk
 	 * @see BleDeviceConfig#tryBondingWhileDisconnected_manageOnDisk
@@ -2691,6 +2858,8 @@ public class BleManager
 	 * This method is made public in case you want to tie the library in to an update loop
 	 * from another codebase. Generally you should leave {@link BleManagerConfig#autoUpdateRate}
 	 * alone and let the library handle the calling of this method.
+	 * 
+	 * @param timeStep_seconds
 	 */
 	@Advanced
 	public void update(final double timeStep_seconds)

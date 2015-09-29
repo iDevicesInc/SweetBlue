@@ -19,6 +19,9 @@ public class BasicUuidNameMap implements UuidNameMap
 	
 	/**
 	 * Add a {@link UUID}-to-debug name entry.
+	 * 
+	 * @param uuid
+	 * @param name
 	 */
 	public void add(String uuid, String name)
 	{

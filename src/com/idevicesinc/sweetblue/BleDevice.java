@@ -668,6 +668,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 			/**
 			 * Convenience method that attempts to parse {@link #data()} as a {@link String} with the given charset, for example <code>"UTF-8"</code>.
+			 * @param charset
 			 */
 			public @Nullable(Prevalence.NEVER) String data_string(final String charset)
 			{
@@ -1669,6 +1670,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual device.
+	 * @param config_nullable
 	 */
 	public void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
 	{
@@ -1788,6 +1790,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 	/**
 	 * Set a listener here to be notified whenever this device's state changes.
+	 * @param listener_nullable
 	 */
 	public void setListener_State(@Nullable(Prevalence.NORMAL) StateListener listener_nullable)
 	{
@@ -1801,6 +1804,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Set a listener here to be notified whenever a connection fails and to
 	 * have control over retry behavior.
+	 * @param listener_nullable
 	 */
 	public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) ConnectionFailListener listener_nullable)
 	{

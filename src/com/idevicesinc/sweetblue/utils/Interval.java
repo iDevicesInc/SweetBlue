@@ -73,6 +73,8 @@ public class Interval extends Unit<Interval>
 
 	/**
 	 * Returns a new {@link Interval} representing the given number of seconds.
+	 * 
+	 * @param value
 	 */
 	public static Interval secs(double value)
 	{
@@ -81,6 +83,8 @@ public class Interval extends Unit<Interval>
 
 	/**
 	 * Returns a new {@link Interval} representing the given number of minutes.
+	 * 
+	 * @param value
 	 */
 	public static Interval mins(final int value)
 	{
@@ -89,6 +93,8 @@ public class Interval extends Unit<Interval>
 	
 	/**
 	 * Returns a new {@link Interval} representing the given number of milliseconds.
+	 * 
+	 * @param milliseconds
 	 */
 	public static Interval millis(long milliseconds)
 	{
@@ -98,6 +104,8 @@ public class Interval extends Unit<Interval>
 	/**
 	 * Returns a new {@link Interval} representing the time since the given past epoch time,
 	 * using {@link System#currentTimeMillis()}.
+	 * 
+	 * @param epochTime_milliseconds
 	 */
 	public static Interval since(long epochTime_milliseconds)
 	{
@@ -106,6 +114,9 @@ public class Interval extends Unit<Interval>
 	
 	/**
 	 * Returns a new {@link Interval} representing the delta between the two epoch times.
+	 * 
+	 * @param earlierTime_millis
+	 * @param laterTime_millis
 	 */
 	public static Interval delta(long earlierTime_millis, long laterTime_millis)
 	{
@@ -114,6 +125,8 @@ public class Interval extends Unit<Interval>
 	
 	/**
 	 * Returns the double values as seconds from a given nullable {@link Interval}.
+	 * 
+	 * @param interval_nullable
 	 */
 	public static double secs(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
@@ -128,6 +141,8 @@ public class Interval extends Unit<Interval>
 	/**
 	 * Returns true if the given {@link Interval} is not <code>null</code>
 	 * and its value is greater than zero.
+	 * 
+	 * @param interval_nullable
 	 */
 	public static boolean isEnabled(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
@@ -136,6 +151,8 @@ public class Interval extends Unit<Interval>
 	
 	/**
 	 * Same as {@link #isEnabled(Interval)}.
+	 * 
+	 * @param interval
 	 */
 	public static boolean isEnabled(double interval)
 	{
@@ -145,6 +162,8 @@ public class Interval extends Unit<Interval>
 	/**
 	 * Returns true if the given {@link Interval} is either <code>null</code>
 	 * or its value is less than or equal to zero.
+	 * 
+	 * @param interval_nullable
 	 */
 	public static boolean isDisabled(@Nullable(Prevalence.NORMAL) Interval interval_nullable)
 	{
@@ -158,6 +177,8 @@ public class Interval extends Unit<Interval>
 	
 	/**
 	 * Same as {@link #isDisabled(Interval)}.
+	 * 
+	 * @param interval_nullable
 	 */
 	public static boolean isDisabled(Double interval_nullable)
 	{

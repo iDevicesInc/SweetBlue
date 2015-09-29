@@ -47,6 +47,8 @@ public class Distance extends Unit<Distance>
 	
 	/**
 	 * Creates a new value in meters.
+	 * 
+	 * @param meters
 	 */
 	public static Distance meters(double meters)
 	{
@@ -55,6 +57,8 @@ public class Distance extends Unit<Distance>
 	
 	/**
 	 * Creates a new value in feet.
+	 * 
+	 * @param feet
 	 */
 	public static Distance feet(double feet)
 	{
