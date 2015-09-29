@@ -83,7 +83,7 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 	{
 		final BleServer.ServiceAddListener.ServiceAddEvent e = new BleServer.ServiceAddListener.ServiceAddEvent
 		(
-			getServer(), m_service, status, gattStatus
+			getServer(), m_service, status, gattStatus, /*solicited=*/true
 		);
 
 		getServer().serviceMngr_server().invokeListeners(e, m_addListener);
@@ -95,7 +95,7 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 
 		final BleServer.ServiceAddListener.ServiceAddEvent e = new BleServer.ServiceAddListener.ServiceAddEvent
 		(
-			getServer(), m_service, BleServer.ServiceAddListener.Status.SUCCESS, BleStatuses.GATT_SUCCESS
+			getServer(), m_service, BleServer.ServiceAddListener.Status.SUCCESS, BleStatuses.GATT_SUCCESS, /*solicited=*/true
 		);
 
 		getServer().serviceMngr_server().invokeListeners(e, m_addListener);

@@ -48,7 +48,7 @@ import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
  * {@link BleManager#startScan()}) and sent to you through
  * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
  */
-public class BleDevice extends BleNode implements UsesCustomNull
+public class BleDevice extends BleNode
 {
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.
@@ -668,6 +668,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 			/**
 			 * Convenience method that attempts to parse {@link #data()} as a {@link String} with the given charset, for example <code>"UTF-8"</code>.
+			 * @param charset
 			 */
 			public @Nullable(Prevalence.NEVER) String data_string(final String charset)
 			{
@@ -1563,7 +1564,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			// setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
 			m_listeners = null;
-			//m_serviceMngr = new P_DeviceServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = null;
 			m_bondMngr = new P_BondManager(this);
@@ -1584,7 +1584,6 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			setConfig(config_nullable);
 			m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
 			m_listeners = new P_BleDevice_Listeners(this);
-			//m_serviceMngr = new P_DeviceServiceManager(this);
 			m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
 			m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
 			m_bondMngr = new P_BondManager(this);
@@ -1599,9 +1598,9 @@ public class BleDevice extends BleNode implements UsesCustomNull
 			m_historicalDataMngr = new P_HistoricalDataManager(this, getMacAddress());
 		}
 	}
-	
-	@Override
-	PA_ServiceManager initServiceManager() {		
+
+	@Override protected PA_ServiceManager newServiceManager()
+	{
 		return new P_DeviceServiceManager(this);
 	}
 
@@ -1669,6 +1668,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual device.
+	 * @param config_nullable
 	 */
 	public void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
 	{
@@ -1788,6 +1788,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 
 	/**
 	 * Set a listener here to be notified whenever this device's state changes.
+	 * @param listener_nullable
 	 */
 	public void setListener_State(@Nullable(Prevalence.NORMAL) StateListener listener_nullable)
 	{
@@ -1801,6 +1802,7 @@ public class BleDevice extends BleNode implements UsesCustomNull
 	/**
 	 * Set a listener here to be notified whenever a connection fails and to
 	 * have control over retry behavior.
+	 * @param listener_nullable
 	 */
 	public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) ConnectionFailListener listener_nullable)
 	{

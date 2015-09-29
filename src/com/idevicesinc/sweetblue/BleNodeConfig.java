@@ -279,6 +279,8 @@ public class BleNodeConfig
 
 			/**
 			 * Returns true if this event is associated with the given uuid.
+			 * 
+			 * @param uuid
 			 */
 			public boolean isFor(final UUID uuid)
 			{
@@ -287,6 +289,8 @@ public class BleNodeConfig
 
 			/**
 			 * Returns true if this event is associated with any of the given uuids.
+			 * 
+			 * @param uuids
 			 */
 			public boolean isFor(final UUID[] uuids)
 			{
@@ -365,6 +369,8 @@ public class BleNodeConfig
 			/**
 			 * Last chance to amend or replace {@link HistoricalDataLogEvent#data()} before it's written to the log.
 			 *
+			 * @param data
+			 *
 			 * @return <code>this</code> so you can chain calls together.
 			 */
 			public Please andAmendData(final byte[] data)
@@ -376,6 +382,9 @@ public class BleNodeConfig
 
 			/**
 			 * Last chance to amend or replace {@link HistoricalDataLogEvent#epochTime()} before it's written to the log.
+			 * 
+			 * @param epochTime
+			 * 
 			 * @return <code>this</code> so you can chain calls together.
 			 */
 			public Please andAmendEpochTime(final EpochTime epochTime)
@@ -389,6 +398,8 @@ public class BleNodeConfig
 			 * Calling this will crop the log to the given limit <i>before></i> {@link HistoricalDataLogEvent#data()} is written.
 			 * So if you call this with <code>0</code> {@link BleDevice#getHistoricalDataCount(java.util.UUID)} will return <code>1</code>
 			 * after this.
+			 * 
+			 * @param logLimit
 			 *
 			 * @return <code>this</code> so you can chain calls together.
 			 */
@@ -468,6 +479,9 @@ public class BleNodeConfig
 		/**
 		 * Return a new subclass of {@link HistoricalData} that for example implements a custom interface
 		 * for another library that handles graphing or analytics.
+		 * 
+		 * @param data
+		 * @param epochTime
 		 */
 		HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime);
 	}
@@ -581,6 +595,8 @@ public class BleNodeConfig
 
 			/**
 			 * Tells SweetBlue to wait for the given interval before timing out the task.
+			 * 
+			 * @param interval
 			 */
 			public static Please setTimeoutFor(final Interval interval)
 			{
@@ -857,6 +873,9 @@ public class BleNodeConfig
 
 			/**
 			 * Return this from {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)} to retry after the given amount of time.
+			 * 
+			 * @param interval
+			 * 
 			 */
 			public static Please retryIn(Interval interval)
 			{
@@ -874,6 +893,8 @@ public class BleNodeConfig
 
 			/**
 			 * Returns {@link #persist()} if the condition holds, {@link #stopRetrying()} otherwise.
+			 * 
+			 * @param condition
 			 */
 			public static Please persistIf(final boolean condition)
 			{
@@ -882,6 +903,8 @@ public class BleNodeConfig
 
 			/**
 			 * Returns {@link #stopRetrying()} if the condition holds, {@link #persist()} otherwise.
+			 * 
+			 * @param condition
 			 */
 			public static Please stopRetryingIf(final boolean condition)
 			{

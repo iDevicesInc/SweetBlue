@@ -7,11 +7,13 @@ public interface BitwiseEnum
 {
 	/**
 	 * Does a bitwise OR for this state and the given state.
+	 * @param state
 	 */
 	int or(BitwiseEnum state);
 
 	/**
 	 * Does a bitwise OR for this state and the given bits.
+	 * @param bits
 	 */
 	int or(int bits);
 
@@ -22,6 +24,7 @@ public interface BitwiseEnum
 
 	/**
 	 * Convenience method for checking if <code>({@link #bit()} & mask) != 0x0</code>.
+	 * @param mask
 	 */
 	boolean overlaps(int mask);
 

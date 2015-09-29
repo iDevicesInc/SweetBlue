@@ -424,6 +424,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 			/**
 			 * Returns {@link #bond()} if the given condition holds <code>true</code>, {@link #doNothing()} otherwise.
+			 * 
+			 * @param condition
 			 */
 			public static Please bondIf(boolean condition)
 			{
@@ -432,6 +434,9 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 			/**
 			 * Same as {@link #bondIf(boolean)} but lets you pass a {@link BondListener} as well.
+			 * 
+			 * @param condition
+			 * @param listener
 			 */
 			public static Please bondIf(boolean condition, BondListener listener)
 			{
@@ -440,6 +445,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 			/**
 			 * Same as {@link #bond()} but lets you pass a {@link BondListener} as well.
+			 * 
+			 * @param listener
 			 */
 			public static Please bond(BondListener listener)
 			{
@@ -456,6 +463,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 			/**
 			 * Returns {@link #bond()} if the given condition holds <code>true</code>, {@link #doNothing()} otherwise.
+			 * 
+			 * @param condition
 			 */
 			public static Please unbondIf(boolean condition)
 			{

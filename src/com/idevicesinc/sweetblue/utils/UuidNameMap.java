@@ -13,6 +13,8 @@ public interface UuidNameMap
 {
 	/**
 	 * Returns the name of the {@link UUID} to be used for logging/debugging purposes, for example "BATTERY_LEVEL".
+	 * 
+	 * @param uuid
 	 */
 	String getUuidName(String uuid);
 }

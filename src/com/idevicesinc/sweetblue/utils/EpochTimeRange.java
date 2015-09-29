@@ -28,6 +28,8 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * Returns a new instance representing the time range from the given value to {@link Long#MAX_VALUE}.
+	 * 
+	 * @param from
 	 */
 	public static EpochTimeRange fromGiven_toMax(final EpochTime from)
 	{
@@ -36,6 +38,8 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * Returns a new instance representing the time range from the given value to now.
+	 * 
+	 * @param from
 	 */
 	public static EpochTimeRange fromGiven_toNow(final EpochTime from)
 	{
@@ -44,14 +48,20 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * Basically just a more readable overload for the normal constructor {@link #EpochTimeRange(EpochTime, EpochTime)}.
+	 * 
+	 * @param from
+	 * @param to
 	 */
 	public static EpochTimeRange fromGiven_toGiven(final EpochTime from, final EpochTime to)
 	{
 		return new EpochTimeRange(from, EpochTime.now());
 	}
 
-	/**
-	 * Returns a new instance representing the time range from 1970 to the given value.
+	/**	 
+	 * 
+	 * @param to
+	 * 
+	 * @return a new instance representing the time range from 1970 to the given value.
 	 */
 	public static EpochTimeRange from1970_toGiven(final EpochTime to)
 	{
@@ -59,7 +69,9 @@ public class EpochTimeRange implements UsesCustomNull
 	}
 
 	/**
-	 * Returns a new instance representing the time range from {@link Long#MIN_VALUE} to the given value.
+	 * @param to
+	 * 
+	 * @return a new instance representing the time range from {@link Long#MIN_VALUE} to the given value.
 	 */
 	public static EpochTimeRange fromMin_toGiven(final EpochTime to)
 	{
@@ -75,7 +87,9 @@ public class EpochTimeRange implements UsesCustomNull
 	}
 
 	/**
-	 * Returns a new instance representing an instant zero length time range.
+	 * @param time
+	 * 
+	 * @return a new instance representing an instant zero length time range.
 	 */
 	public static EpochTimeRange instant(final EpochTime time)
 	{
@@ -92,6 +106,9 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * Returns a new instance representing the time range between the given epoch times.
+	 * 
+	 * @param from
+	 * @param to
 	 */
 	public EpochTimeRange(final EpochTime from, final EpochTime to)
 	{
@@ -101,6 +118,9 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * Returns a new instance representing the time range between the given epoch times as primitive longs.
+	 * 
+	 * @param from
+	 * @param to
 	 */
 	public EpochTimeRange(final long from, final long to)
 	{
@@ -177,6 +197,8 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * "less than" comparison.
+	 * 
+	 * @param otherRange
 	 */
 	public boolean lt(final EpochTimeRange otherRange)
 	{
@@ -185,6 +207,8 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * "less than or equal" comparison.
+	 * 
+	 * @param otherRange
 	 */
 	public boolean lte(final EpochTimeRange otherRange)
 	{
@@ -193,6 +217,8 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * "greater than" comparison.
+	 * 
+	 * @param otherRange
 	 */
 	public boolean gt(final EpochTimeRange otherRange)
 	{
@@ -201,6 +227,8 @@ public class EpochTimeRange implements UsesCustomNull
 
 	/**
 	 * "greater than or equal" comparison.
+	 * 
+	 * @param otherRange
 	 */
 	public boolean gte(final EpochTimeRange otherRange)
 	{

@@ -172,7 +172,9 @@ public abstract class BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Returns {@link #retry()} if the given condition holds <code>true</code>, {@link #doNotRetry()} otherwise.
+			 * @param condition
+			 * 
+			 * @return {@link #retry()} if the given condition holds <code>true</code>, {@link #doNotRetry()} otherwise.
 			 */
 			public static Please retryIf(boolean condition)
 			{
@@ -188,7 +190,9 @@ public abstract class BleNode implements UsesCustomNull
 			}
 
 			/**
-			 * Returns {@link #doNotRetry()} if the given condition holds <code>true</code>, {@link #retry()} otherwise.
+			 * @param condition
+			 * 
+			 * @return {@link #doNotRetry()} if the given condition holds <code>true</code>, {@link #retry()} otherwise.
 			 */
 			public static Please doNotRetryIf(boolean condition)
 			{
@@ -424,7 +428,7 @@ public abstract class BleNode implements UsesCustomNull
 			private final Cursor m_cursor;
 
 			/**
-			 * The resulting {@link Cursor} from the database query. This will never be null, just an empty cursor if anything goes wrong.
+			 * The raw query given to the database.
 			 */
 			public @Nullable(Nullable.Prevalence.NEVER) String rawQuery() {  return m_rawQuery; }
 			private final String m_rawQuery;
@@ -485,23 +489,26 @@ public abstract class BleNode implements UsesCustomNull
 	private final BleManager m_manager;
 
 	//--- DRK > Can't be final cause can't reference subclass 'this' while calling super() constructor.
-	private PA_ServiceManager m_serviceMngr;
-	
-	abstract PA_ServiceManager initServiceManager();
+	private final PA_ServiceManager m_serviceMngr;
 
 	protected BleNode(final BleManager manager)
 	{
 		m_manager = manager;
-		m_serviceMngr = initServiceManager();
+		m_serviceMngr = newServiceManager();
 	}
+
+	protected abstract PA_ServiceManager newServiceManager();
 	
-	protected <T extends PA_ServiceManager> T getServiceManager() {
+	protected <T extends PA_ServiceManager> T getServiceManager()
+	{
 		return (T) m_serviceMngr;
 	}
 
 	/**
 	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
 	 * matching the given {@link UUID}.
+	 * 
+	 * @param descUuid
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID descUuid)
 	{
@@ -511,6 +518,9 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
 	 * inside the given characteristic matching the given {@link UUID}.
+	 * 
+	 * @param charUuid
+	 * @param descUuid
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inChar(final UUID charUuid, final UUID descUuid)
 	{
@@ -520,6 +530,9 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
 	 * inside the given service matching the given {@link UUID}.
+	 * 
+	 * @param serviceUuid
+	 * @param descUuid
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor_inService(final UUID serviceUuid, final UUID descUuid)
 	{
@@ -528,6 +541,10 @@ public abstract class BleNode implements UsesCustomNull
 
 	/**
 	 * Returns the native descriptor for the given UUID in case you need lower-level access.
+	 * 
+	 * @param serviceUuid
+	 * @param charUuid
+	 * @param descUuid
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
@@ -539,6 +556,8 @@ public abstract class BleNode implements UsesCustomNull
 
 	/**
 	 * Returns the native characteristic for the given UUID in case you need lower-level access.
+	 * 
+	 * @param charUuid
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID charUuid)
@@ -548,6 +567,9 @@ public abstract class BleNode implements UsesCustomNull
 
 	/**
 	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
+	 * 
+	 * @param serviceUuid
+	 * @param charUuid
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID charUuid)
@@ -559,6 +581,8 @@ public abstract class BleNode implements UsesCustomNull
 
 	/**
 	 * Returns the native service for the given UUID in case you need lower-level access.
+	 * 
+	 * @param serviceUuid
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID serviceUuid)
@@ -612,6 +636,8 @@ public abstract class BleNode implements UsesCustomNull
 
 	/**
 	 * Same as {@link #getNativeCharacteristics()} but you can filter on the service {@link UUID}.
+	 * 
+	 * @param serviceUuid
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID serviceUuid)
 	{
@@ -622,6 +648,8 @@ public abstract class BleNode implements UsesCustomNull
 
 	/**
 	 * Convenience overload of {@link #getNativeCharacteristics(UUID)} that returns a {@link List}.
+	 * 
+	 * @param serviceUuid
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID serviceUuid)
 	{
@@ -633,6 +661,9 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Returns a new {@link com.idevicesinc.sweetblue.utils.HistoricalData} instance using
 	 * {@link com.idevicesinc.sweetblue.BleDeviceConfig#historicalDataFactory} if available.
+	 * 
+	 * @param data
+	 * @param epochTime
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public HistoricalData newHistoricalData(final byte[] data, final EpochTime epochTime)
@@ -701,6 +732,8 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Provides a means to perform a raw SQL query on the database storing the historical data for this node. Use {@link BleDevice#getHistoricalDataTableName(UUID)}
 	 * to generate table names and {@link HistoricalDataColumn} to get column names.
+	 * 
+	 * @param query
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataQueryListener.HistoricalDataQueryEvent queryHistoricalData(final String query)
 	{
@@ -719,6 +752,9 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Same as {@link #queryHistoricalData(String)} but performs the query on a background thread and returns the result back on the main thread
 	 * through the provided {@link BleNode.HistoricalDataQueryListener}.
+	 * 
+	 * @param query
+	 * @param listener
 	 */
 	public void queryHistoricalData(final String query, final HistoricalDataQueryListener listener)
 	{
@@ -769,6 +805,8 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Safer version of {@link #cast()} that will return {@link BleDevice#NULL} or {@link BleServer#NULL}
 	 * if the cast cannot be made.
+	 * 
+	 * @param type
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) <T extends BleNode> T cast(final Class<T> type)
 	{
