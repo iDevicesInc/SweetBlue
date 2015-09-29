@@ -14,6 +14,7 @@ import static com.idevicesinc.sweetblue.BleServer.IncomingListener.*;
 import static com.idevicesinc.sweetblue.BleServer.OutgoingListener.*;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 class P_BleServer_Listeners extends BluetoothGattServerCallback
 {
@@ -308,7 +309,13 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		}
 		else
 		{
-			// TODO: Perhaps call callback anyway
+			final BleServer.ServiceAddListener.Status status = Utils.isSuccess(gattStatus) ? BleServer.ServiceAddListener.Status.SUCCESS : BleServer.ServiceAddListener.Status.FAILED_EVENTUALLY;
+			final BleServer.ServiceAddListener.ServiceAddEvent e = new BleServer.ServiceAddListener.ServiceAddEvent
+			(
+				m_server, service, status, gattStatus, /*solicited=*/false
+			);
+
+			m_server.serviceMngr_server().invokeListeners(e, null);
 		}
     }
 
@@ -319,7 +326,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		final OutgoingEvent e = new OutgoingEvent
 		(
 			m_server, device, serviceUuid, charUuid, descUuid_nullable, Type.READ, target, BleServer.EMPTY_BYTE_ARRAY, BleServer.EMPTY_BYTE_ARRAY,
-			requestId, offset, /*responseNeeded=*/true, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE
+			requestId, offset, /*responseNeeded=*/true, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true
 		);
 
 		return e;
@@ -409,7 +416,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		final OutgoingEvent e = new OutgoingEvent
 		(
 			m_server, device, serviceUuid, charUuid, descUuid_nullable, type, target, BleServer.EMPTY_BYTE_ARRAY, BleServer.EMPTY_BYTE_ARRAY,
-			requestId, offset, /*responseNeeded=*/true, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE
+			requestId, offset, /*responseNeeded=*/true, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true
 		);
 
 		return e;
@@ -525,10 +532,14 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		}
 		else
 		{
-			// DRK > For now not doing anything...the most-likely scenario I can see is if sending out a notification takes
-			// longer than the timeout so we kill the task but then this comes in and there's no task there. Since we already
-			// sent the callback to appland for the timeout it's tricky whether we should send another callback.
-			// UPDATE: Gonna call the callback anyway
+			final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
+			(
+				m_server, device, Uuids.INVALID, Uuids.INVALID, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, Type.NOTIFICATION,
+				BleServer.ExchangeListener.Target.CHARACTERISTIC, BleServer.EMPTY_BYTE_ARRAY, BleServer.EMPTY_BYTE_ARRAY, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
+				/*offset=*/0, /*responseNeeded=*/false, BleServer.OutgoingListener.Status.SUCCESS, BleStatuses.GATT_STATUS_NOT_APPLICABLE, gattStatus, /*solicited=*/false
+			);
+
+			m_server.invokeOutgoingListeners(e, null);
 		}
     }
 }
