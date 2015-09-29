@@ -445,16 +445,16 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		m_logger.log_status(gattStatus);
 
-//		final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
-//
-//		if( task != null )
-//		{
-//			task.onReliableWriteCompleted(gatt, gattStatus);
-//		}
-//		else
-//		{
-//			// fire unsolicited event
-//		}
+		final P_Task_ExecuteReliableWrite task = m_queue.getCurrent(P_Task_ExecuteReliableWrite.class, m_device);
+
+		if( task != null )
+		{
+			task.onReliableWriteCompleted(gatt, gattStatus);
+		}
+		else
+		{
+			m_device.m_reliableWriteMngr.onReliableWriteCompleted_unsolicited(gatt, gattStatus);
+		}
 	}
 	
 	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)

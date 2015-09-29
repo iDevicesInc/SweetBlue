@@ -182,7 +182,7 @@ class P_ReconnectManager
 		
 		m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.Please.class);
 		
-		if( please == null || !please.shouldPersist() )
+		if( please == null || false == please.shouldPersist() )
 		{
 			final int gattStatusOfOriginalDisconnect = gattStatusOfOriginalDisconnect();
 			
