@@ -1638,6 +1638,8 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_begin(final ReadWriteListener listener)
 	{
+		enforceMainThread();
+
 		return m_reliableWriteMngr.begin(listener);
 	}
 
@@ -1647,6 +1649,8 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_abort()
 	{
+		enforceMainThread();
+
 		return m_reliableWriteMngr.abort();
 	}
 
@@ -1656,6 +1660,8 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_execute()
 	{
+		enforceMainThread();
+
 		return m_reliableWriteMngr.execute();
 	}
 
@@ -4254,6 +4260,8 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault(final ReadWriteListener listener)
 	{
+		enforceMainThread();
+
 		if( is(CONNECTED) )
 		{
 			return setMtu(BleNodeConfig.DEFAULT_MTU_SIZE, listener);
