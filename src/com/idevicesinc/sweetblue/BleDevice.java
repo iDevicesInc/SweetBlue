@@ -106,6 +106,29 @@ public class BleDevice extends BleNode
 			NO_MATCHING_TARGET,
 
 			/**
+			 * Specific to {@link Target#RELIABLE_WRITE}, this means the underlying call to {@link BluetoothGatt#beginReliableWrite()}
+			 * returned <code>false</code>.
+			 */
+			RELIABLE_WRITE_FAILED_TO_BEGIN,
+
+			/**
+			 * Specific to {@link Target#RELIABLE_WRITE}, this means {@link BleDevice#reliableWrite_begin(ReadWriteListener)} was
+			 * called twice without an intervening call to either {@link BleDevice#reliableWrite_abort()} or {@link BleDevice#reliableWrite_execute()}.
+			 */
+			RELIABLE_WRITE_ALREADY_BEGAN,
+
+			/**
+			 * Specific to {@link Target#RELIABLE_WRITE}, this means {@link BleDevice#reliableWrite_abort()} or {@link BleDevice#reliableWrite_execute()}
+			 * was called without a previous call to {@link BleDevice#reliableWrite_begin(ReadWriteListener)}.
+			 */
+			RELIABLE_WRITE_NEVER_BEGAN,
+
+			/**
+			 * Specific to {@link Target#RELIABLE_WRITE}, this means {@link BleDevice#reliableWrite_abort()} was called.
+			 */
+			RELIABLE_WRITE_ABORTED,
+
+			/**
 			 * You tried to do a read on a characteristic that is write-only, or
 			 * vice-versa, or tried to read a notify-only characteristic, or etc., etc.
 			 */
@@ -366,7 +389,12 @@ public class BleDevice extends BleNode
 			/**
 			 * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#setMtu(int, ReadWriteListener)} or overloads.
 			 */
-			MTU;
+			MTU,
+
+			/**
+			 *
+			 */
+			RELIABLE_WRITE;
 
 			@Override public boolean isNull()
 			{
@@ -1549,6 +1577,8 @@ public class BleDevice extends BleNode
 
 	private final boolean m_isNull;
 
+	final P_ReliableWriteManager m_reliableWriteMngr;
+
 	BleDevice(BleManager mngr, BluetoothDevice device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
 	{
 		super(mngr);
@@ -1576,6 +1606,7 @@ public class BleDevice extends BleNode
 			m_connectionFailMngr = new P_ConnectionFailManager(this);
 			m_dummyDisconnectTask = null;
 			m_historicalDataMngr = null;
+			m_reliableWriteMngr = null;
 		}
 		else
 		{
@@ -1596,7 +1627,36 @@ public class BleDevice extends BleNode
 			m_connectionFailMngr = new P_ConnectionFailManager(this);
 			m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING, /*cancellable=*/true);
 			m_historicalDataMngr = new P_HistoricalDataManager(this, getMacAddress());
+			m_reliableWriteMngr = new P_ReliableWriteManager(this);
 		}
+	}
+
+	/**
+	 * Wrapper for {@link BluetoothGatt#beginReliableWrite()} - will return an event such that {@link ReadWriteEvent#isNull()} will
+	 * return <code>false</code> if there are no problems. After calling this you should do a few {@link BleDevice#write(UUID, byte[])}
+	 * calls then call {@link #reliableWrite_execute()}.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_begin(final ReadWriteListener listener)
+	{
+		return m_reliableWriteMngr.begin(listener);
+	}
+
+	/**
+	 * Wrapper for {@link BluetoothGatt#abortReliableWrite()} - will return an event such that {@link ReadWriteEvent#isNull()} will
+	 * return <code>false</code> if there are no problems. This call requires a previous call to {@link #reliableWrite_begin(ReadWriteListener)}.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_abort()
+	{
+		return m_reliableWriteMngr.abort();
+	}
+
+	/**
+	 * Wrapper for {@link BluetoothGatt#abortReliableWrite()} - will return an event such that {@link ReadWriteEvent#isNull()} will
+	 * return <code>false</code> if there are no problems. This call requires a previous call to {@link #reliableWrite_begin(ReadWriteListener)}.
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_execute()
+	{
+		return m_reliableWriteMngr.execute();
 	}
 
 	@Override protected PA_ServiceManager newServiceManager()
@@ -5978,7 +6038,7 @@ public class BleDevice extends BleNode
 
 		m_pollMngr.resetNotifyStates();
 
-		if( attemptShortTermReconnect )
+//		if( attemptShortTermReconnect )
 		{
 			m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */false);
 		}
@@ -5987,7 +6047,7 @@ public class BleDevice extends BleNode
 
 		final boolean wasInitialized = is(INITIALIZED);
 
-		if (attemptShortTermReconnect)
+		if ( attemptShortTermReconnect )
 		{
 			if (!wasExplicit && wasInitialized && !m_reconnectMngr_shortTerm.isRunning())
 			{
