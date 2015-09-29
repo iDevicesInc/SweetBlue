@@ -21,6 +21,6 @@ Global
 		$1.ResourceNamePolicy = FileFormatDefault
 		$0.VersionControlPolicy = $2
 		$2.inheritsSet = Mono
-		version = 0.2
+		version = 2.15.14
 	EndGlobalSection
 EndGlobal

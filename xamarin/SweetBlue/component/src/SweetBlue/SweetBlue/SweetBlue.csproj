@@ -12,8 +12,9 @@
     <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
     <AssemblyName>SweetBlue</AssemblyName>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
-    <SynchReleaseVersion>false</SynchReleaseVersion>
-    <ReleaseVersion>2.6.10</ReleaseVersion>
+    <ReleaseVersion>2.15.14</ReleaseVersion>
+  </PropertyGroup>
+  <PropertyGroup>
     <Java7DocPaths>Javadoc/</Java7DocPaths>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -281,6 +282,6 @@
     <JavaDocIndex Include="Javadoc\index.html" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedJar Include="Jars\sweetblue_2_13_14.jar" />
+    <EmbeddedJar Include="Jars\sweetblue_2_15_14.jar" />
   </ItemGroup>
 </Project>
