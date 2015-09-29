@@ -294,6 +294,8 @@ class P_NativeDeviceWrapper
 	
 	void closeGattIfNeeded(boolean disconnectAlso)
 	{
+		m_device.m_reliableWriteMngr.onDisconnect();
+
 		if( m_gatt == null )  return;
 
 		closeGatt(disconnectAlso);
@@ -338,6 +340,7 @@ class P_NativeDeviceWrapper
 //				com.idevicesinc.sweetblue.P_BleDevice_Listeners.onConnectionStateChange_synchronized(P_BleDevice_Listeners.java:168)
 			m_device.getManager().uhOh(UhOh.RANDOM_EXCEPTION);
 		}
+
 		m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 		m_gatt = null;
 	}

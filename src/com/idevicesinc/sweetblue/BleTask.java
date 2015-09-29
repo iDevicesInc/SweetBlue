@@ -114,7 +114,12 @@ public enum BleTask
 	/**
 	 * Associated with {@link BleDevice#writeDescriptor(UUID, UUID, byte[], BleDevice.ReadWriteListener)} or overloads.
 	 */
-	WRITE_DESCRIPTOR;
+	WRITE_DESCRIPTOR,
+
+	/**
+	 * Associated with {@link BleDevice#reliableWrite_execute()}.
+	 */
+	RELIABLE_WRITE;
 	
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
