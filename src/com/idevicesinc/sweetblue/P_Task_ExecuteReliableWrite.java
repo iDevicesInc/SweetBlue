@@ -45,9 +45,7 @@ class P_Task_ExecuteReliableWrite extends PA_Task_RequiresConnection implements 
 	{
 		if( false == getDevice().getNativeGatt().executeReliableWrite() )
 		{
-			fail();
-
-			invokeListeners(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 		else
 		{
@@ -65,10 +63,15 @@ class P_Task_ExecuteReliableWrite extends PA_Task_RequiresConnection implements 
 		}
 		else
 		{
-			fail();
-
-			invokeListeners(BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE, gattStatus);
+			fail(BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE, gattStatus);
 		}
+	}
+
+	private void fail(final BleDevice.ReadWriteListener.Status status, final int gattStatus)
+	{
+		super.fail();
+
+		invokeListeners(BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE, gattStatus);
 	}
 
 	@Override public PE_TaskPriority getPriority()
