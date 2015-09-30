@@ -833,4 +833,9 @@ public abstract class BleNode implements UsesCustomNull
 			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
 		}
 	}
+
+	/**
+	 * Returns the MAC address of the remote {@link BleDevice} or local {@link BleServer}.
+	 */
+	public abstract @Nullable(Nullable.Prevalence.NEVER) String getMacAddress();
 }

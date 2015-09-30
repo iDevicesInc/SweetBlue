@@ -24,7 +24,7 @@ class P_WakeLockManager
 		{
 			if( !Utils.hasPermission(mngr.getApplicationContext(), permission.WAKE_LOCK) )
 			{
-				Log.w(P_WakeLockManager.class.getSimpleName(), "PERMISSION REQUIRED: " + permission.WAKE_LOCK + ". Set BleManagerConfig#manageCpuWakeLock to false to disable wake lock management.");
+				Log.e(P_WakeLockManager.class.getSimpleName(), "PERMISSION REQUIRED: " + permission.WAKE_LOCK + ". Or set BleManagerConfig#manageCpuWakeLock to false to disable wake lock management.");
 				
 				m_wakeLock = null;
 				

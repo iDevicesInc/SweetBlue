@@ -2986,9 +2986,10 @@ public class BleDevice extends BleNode
 	}
 
 	/**
-	 * Returns the MAC address of this device, as retrieved from the native stack.
+	 * Returns the MAC address of this device, as retrieved from the native stack or provided through {@link BleManager#newDevice(String)} (or overloads thereof).
+	 * You may treat this as the unique ID of the device, suitable as a key in a {@link java.util.HashMap}, {@link android.content.SharedPreferences}, etc.
 	 */
-	public @Nullable(Prevalence.NEVER) String getMacAddress()
+	@Override public @Nullable(Prevalence.NEVER) String getMacAddress()
 	{
 		return m_nativeWrapper.getAddress();
 	}

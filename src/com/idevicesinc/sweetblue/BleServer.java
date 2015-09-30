@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
@@ -2272,5 +2273,13 @@ public class BleServer extends BleNode
 	public String toString()
 	{
 		return this.getClass().getSimpleName() + " with " + m_clientMngr.getClientCount(BleServerState.toBits(CONNECTING, CONNECTED)) + " connected/ing clients.";
+	}
+
+	/**
+	 * Returns the local mac address provided by {@link BluetoothAdapter#getAddress()}.
+	 */
+	@Override public @Nullable(Nullable.Prevalence.NEVER) String getMacAddress()
+	{
+		return getManager().getNativeAdapter().getAddress();
 	}
 }
