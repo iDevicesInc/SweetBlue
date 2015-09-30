@@ -16,6 +16,8 @@ import com.idevicesinc.sweetblue.utils.EmptyCursor;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.EpochTimeRange;
 import com.idevicesinc.sweetblue.utils.Event;
+import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
+import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataColumn;
@@ -592,6 +594,66 @@ public abstract class BleNode implements UsesCustomNull
 	}
 
 	/**
+	 * Overload of {@link #getNativeServices()} that uses a for each construct instead of returning an iterator.
+	 */
+	public void getNativeServices(final ForEach_Void<BluetoothGattService> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getServices(forEach);
+	}
+
+	/**
+	 * Overload of {@link #getNativeServices()} that uses a for each construct instead of returning an iterator.
+	 */
+	public void getNativeServices(final ForEach_Breakable<BluetoothGattService> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getServices(forEach);
+	}
+
+	/**
+	 * Overload of {@link #getNativeCharacteristics()} that uses a for each construct instead of returning an iterator.
+	 */
+	public void getNativeCharacteristics(final ForEach_Void<BluetoothGattCharacteristic> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getCharacteristics(null, forEach);
+	}
+
+	/**
+	 * Overload of {@link #getNativeCharacteristics()} that uses a for each construct instead of returning an iterator.
+	 */
+	public void getNativeCharacteristics(final ForEach_Breakable<BluetoothGattCharacteristic> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getCharacteristics(null, forEach);
+	}
+
+	/**
+	 * Overload of {@link #getNativeCharacteristics(UUID)} that uses a for each construct instead of returning an iterator.
+	 */
+	public void getNativeCharacteristics(final UUID serviceUuid, final ForEach_Void<BluetoothGattCharacteristic> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getCharacteristics(serviceUuid, forEach);
+	}
+
+	/**
+	 * Overload of {@link #getNativeCharacteristics(UUID)} that uses a for each construct instead of returning an iterator.
+	 */
+	public void getNativeCharacteristics(final UUID serviceUuid, final ForEach_Breakable<BluetoothGattCharacteristic> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getCharacteristics(serviceUuid, forEach);
+	}
+
+	/**
 	 * Returns all {@link BluetoothGattCharacteristic} instances.
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
@@ -629,6 +691,166 @@ public abstract class BleNode implements UsesCustomNull
 		enforceMainThread();
 
 		return m_serviceMngr.getCharacteristics_List(serviceUuid);
+	}
+
+	/**
+	 * Returns all descriptors on this node.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattDescriptor> getNativeDescriptors()
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptors(null, null);
+	}
+
+	/**
+	 * Returns all descriptors on this node as a list.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattDescriptor> getNativeDescriptors_List()
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptors_List(null, null);
+	}
+
+	/**
+	 * Returns all descriptors on this node in the given service.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattDescriptor> getNativeDescriptors_inService(final UUID serviceUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptors(serviceUuid, null);
+	}
+
+	/**
+	 * Returns all descriptors on this node in the given service as a list.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattDescriptor> getNativeDescriptors_inService_List(final UUID serviceUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptors_List(serviceUuid, null);
+	}
+
+	/**
+	 * Returns all descriptors on this node in the given characteristic.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattDescriptor> getNativeDescriptors_inChar(final UUID charUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptors(null, charUuid);
+	}
+
+	/**
+	 * Returns all descriptors on this node in the given characteristic as a list.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattDescriptor> getNativeDescriptors_inChar_List(final UUID charUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptors_List(null, charUuid);
+	}
+
+	/**
+	 * Returns all descriptors on this node in the given characteristic.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattDescriptor> getNativeDescriptors(final UUID serviceUuid, final UUID charUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptors(serviceUuid, charUuid);
+	}
+
+	/**
+	 * Returns all descriptors on this node in the given characteristic as a list.
+	 */
+	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattDescriptor> getNativeDescriptors_List(final UUID serviceUuid, final UUID charUuid)
+	{
+		enforceMainThread();
+
+		return m_serviceMngr.getDescriptors_List(serviceUuid, charUuid);
+	}
+
+	/**
+	 * Overload of {@link BleNode#getNativeDescriptors()} using a for each construct.
+	 */
+	public void getNativeDescriptors(final ForEach_Void<BluetoothGattDescriptor> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getDescriptors(null, null, forEach);
+	}
+
+	/**
+	 * Overload of {@link BleNode#getNativeDescriptors()} using a for each construct.
+	 */
+	public void getNativeDescriptors(final ForEach_Breakable<BluetoothGattDescriptor> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getDescriptors(null, null, forEach);
+	}
+
+	/**
+	 * Overload of {@link BleNode#getNativeDescriptors_inService(UUID)} using a for each construct.
+	 */
+	public void getNativeDescriptors_inService(final UUID serviceUuid, final ForEach_Void<BluetoothGattDescriptor> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getDescriptors(serviceUuid, null, forEach);
+	}
+
+	/**
+	 * Overload of {@link BleNode#getNativeDescriptors_inService(UUID)} using a for each construct.
+	 */
+	public void getNativeDescriptors_inService(final UUID serviceUuid, final ForEach_Breakable<BluetoothGattDescriptor> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getDescriptors(serviceUuid, null, forEach);
+	}
+
+	/**
+	 * Overload of {@link BleNode#getNativeDescriptors_inChar(UUID)} using a for each construct.
+	 */
+	public void getNativeDescriptors_inChar(final UUID charUuid, final ForEach_Void<BluetoothGattDescriptor> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getDescriptors(null, charUuid, forEach);
+	}
+
+	/**
+	 * Overload of {@link BleNode#getNativeDescriptors_inChar(UUID)} using a for each construct.
+	 */
+	public void getNativeDescriptors_inChar(final UUID charUuid, final ForEach_Breakable<BluetoothGattDescriptor> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getDescriptors(null, charUuid, forEach);
+	}
+
+	/**
+	 * Overload of {@link BleNode#getNativeDescriptors(UUID, UUID)} using a for each construct.
+	 */
+	public void getNativeDescriptors(final UUID serviceUuid, final UUID charUuid, final ForEach_Void<BluetoothGattDescriptor> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getDescriptors(serviceUuid, charUuid, forEach);
+	}
+
+	/**
+	 * Overload of {@link BleNode#getNativeDescriptors(UUID, UUID)} using a for each construct.
+	 */
+	public void getNativeDescriptors(final UUID serviceUuid, final UUID charUuid, final ForEach_Breakable<BluetoothGattDescriptor> forEach)
+	{
+		enforceMainThread();
+
+		m_serviceMngr.getDescriptors(serviceUuid, charUuid, forEach);
 	}
 
 	/**
