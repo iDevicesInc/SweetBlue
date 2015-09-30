@@ -119,7 +119,7 @@ public class Uuids
 	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
 	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
 	 *
-	 * @param assignedNumber	A {@link String} of length 4 as the hex representation of a 2-byte (short) value, for example "2a19".
+	 * @param assignedNumber	A {@link String} of length <= 4 as the hex representation of a 2-byte (short) value, for example "2a19".
 	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
 	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
 	 */
@@ -166,7 +166,7 @@ public class Uuids
 	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
 	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
 	 *
-	 * @param assignedNumber	A {@link String} of length 8 as the hex representation of a 4-byte (int) value, for example "12630102".
+	 * @param assignedNumber	A {@link String} of length <= 8 as the hex representation of a 4-byte (int) value, for example "12630102".
 	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
 	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
 	 */
