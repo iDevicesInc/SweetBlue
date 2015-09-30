@@ -125,11 +125,33 @@ public class Uuids
 	 */
 	public static UUID fromShort(String assignedNumber, String uuidTemplate)
 	{
-		if( assignedNumber == null || assignedNumber.length() != 4 )  return INVALID;
+		if( assignedNumber_earlyOut(assignedNumber, 4) )  return INVALID;
 
-		String uuid = uuidTemplate.substring(0, 4) + assignedNumber + uuidTemplate.substring(8, uuidTemplate.length());
+		String uuid = uuidTemplate.substring(0, 4) + padAssignedNumber(assignedNumber, 4) + uuidTemplate.substring(8, uuidTemplate.length());
 
 		return fromString(uuid);
+	}
+
+	private static boolean assignedNumber_earlyOut(final String assignedNumber, final int length)
+	{
+		if( assignedNumber == null || assignedNumber.isEmpty() || assignedNumber.length() > length )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	private static String padAssignedNumber(String assignedNumber, final int length)
+	{
+		while(assignedNumber.length() < length )
+		{
+			assignedNumber = "0" + assignedNumber;
+		}
+
+		return assignedNumber;
 	}
 
 	/**
@@ -150,9 +172,9 @@ public class Uuids
 	 */
 	public static UUID fromInt(String assignedNumber, String uuidTemplate)
 	{
-		if( assignedNumber == null || assignedNumber.length() != 8 )  return INVALID;
+		if( assignedNumber_earlyOut(assignedNumber, 8) )  return INVALID;
 
-		String uuid = assignedNumber + uuidTemplate.substring(8, uuidTemplate.length());
+		String uuid = padAssignedNumber(assignedNumber, 8) + uuidTemplate.substring(8, uuidTemplate.length());
 
 		return fromString(uuid);
 	}
