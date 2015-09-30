@@ -105,7 +105,7 @@ public abstract class Event
 				else if( returnType == String.class && false == ith.getName().equals("macAddress") )
 				{
 					// Special case of only allowing String return value for mac address.
-					// Other methods that return String are too generic and variable so we skip them.
+					// Other methods that return String like Object.toString() are too generic and variable so we skip them.
 				}
 				else if( Unit.class.isAssignableFrom(returnType) )
 				{
