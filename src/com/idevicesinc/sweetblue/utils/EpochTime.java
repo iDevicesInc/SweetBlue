@@ -44,8 +44,6 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 
 	/**
 	 * Converts from Java's built-in date.
-	 * 
-	 * @param date
 	 */
 	public EpochTime(final Date date)
 	{
@@ -54,8 +52,6 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 
 	/**
 	 * Constructs a new instance using milliseconds since 1970.
-	 * 
-	 * @param millisecondsSince1970
 	 */
 	public EpochTime(final long millisecondsSince1970)
 	{
@@ -96,9 +92,6 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 
 	/**
 	 * Does an inclusive check for <code>this</code> being in the given range.
-	 * 
-	 * @param from
-	 * @param to
 	 */
 	public boolean isBetween_inclusive(final EpochTime from, final EpochTime to)
 	{
@@ -107,8 +100,6 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 
 	/**
 	 * Overload of {@link #isBetween_inclusive(EpochTime, EpochTime)}.
-	 * 
-	 * @param range
 	 */
 	public boolean isBetween_inclusive(final EpochTimeRange range)
 	{
@@ -137,8 +128,6 @@ public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 
 	/**
 	 * Returns the delta resulting from <code>this-epochTime</code>.
-	 * 
-	 * @param epochTime
 	 */
 	public EpochTimeRange minus(final EpochTime epochTime)
 	{

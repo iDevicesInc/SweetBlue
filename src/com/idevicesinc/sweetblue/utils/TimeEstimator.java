@@ -20,10 +20,6 @@ public class TimeEstimator
 	
 	/**
 	 * Lets this class act as a "time remaining" estimator for long-running operations.
-	 * 
-	 * @param totalSteps
-	 * @param estimatedTimePerStep
-	 * @param runningAverageN
 	 */
 	public TimeEstimator(int totalSteps, double estimatedTimePerStep, int runningAverageN)
 	{
@@ -37,8 +33,6 @@ public class TimeEstimator
 	
 	/**
 	 * Lets this class act as a utility for calculating the running average completion time of arbitrary operations.
-	 * 
-	 * @param runningAverageN
 	 */
 	public TimeEstimator(int runningAverageN)
 	{
@@ -108,8 +102,6 @@ public class TimeEstimator
 	/**
 	 * Adds the time it took for a just-completed operation to finish
 	 * and updates the running average time.
-	 * 
-	 * @param timeStep
 	 */
 	public void addTime(double timeStep)
 	{

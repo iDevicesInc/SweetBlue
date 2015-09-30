@@ -409,8 +409,6 @@ public class BleManagerConfig extends BleDeviceConfig
 
 			/**
 			 * Returns {@link #acknowledge()} if the given condition holds <code>true</code>, {@link #ignore()} otherwise.
-			 * 
-			 * @param condition
 			 */
 			public static Please acknowledgeIf(boolean condition)
 			{
@@ -419,9 +417,6 @@ public class BleManagerConfig extends BleDeviceConfig
 
 			/**
 			 * Same as {@link #acknowledgeIf(boolean)} but lets you pass a {@link BleDeviceConfig} as well.
-			 * 
-			 * @param condition
-			 * @param config
 			 */
 			public static Please acknowledgeIf(boolean condition, BleDeviceConfig config)
 			{
@@ -431,8 +426,6 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * Same as {@link #acknowledge()} but allows you to pass a {@link BleDeviceConfig}
 			 * instance to the {@link BleDevice} that's about to be created.
-			 * 
-			 * @param config
 			 */
 			public static Please acknowledge(BleDeviceConfig config)
 			{
@@ -449,8 +442,6 @@ public class BleManagerConfig extends BleDeviceConfig
 
 			/**
 			 * Returns {@link #ignore()} if the given condition holds <code>true</code>, {@link #acknowledge()} otherwise.
-			 * 
-			 * @param condition
 			 */
 			public static Please ignoreIf(final boolean condition)
 			{

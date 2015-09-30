@@ -183,7 +183,6 @@ public class BleServer extends BleNode
 			/**
 			 * The {@link UUID} of the characteristic associated with this {@link ExchangeEvent}. This will always be
 			 * a valid {@link UUID}, even if {@link #target()} is {@link Target#DESCRIPTOR}.
-			 * 
 			 */
 			public @Nullable(Nullable.Prevalence.NEVER) UUID charUuid() {  return m_charUuid; }
 			private final UUID m_charUuid;
@@ -343,8 +342,6 @@ public class BleServer extends BleNode
 			 * Your {@link BleServer.OutgoingListener#onEvent(BleServer.OutgoingListener.OutgoingEvent)} will simply be called
 			 * with {@link BleServer.OutgoingListener.Status#NO_RESPONSE_ATTEMPTED}.
 			 *
-			 * @param listener
-			 *
 			 * @see BleServer#setListener_Outgoing(BleServer.OutgoingListener)
 			 */
 			public static Please doNotRespond(final OutgoingListener listener)
@@ -354,8 +351,6 @@ public class BleServer extends BleNode
 
 			/**
 			 * Overload of {@link #respondWithSuccess(byte[])} - see {@link FutureData} for why/when you would want to use this.
-			 * 
-			 * @param futureData
 			 */
 			public static Please respondWithSuccess(final FutureData futureData)
 			{
@@ -364,8 +359,6 @@ public class BleServer extends BleNode
 
 			/**
 			 * Overload of {@link #respondWithSuccess(byte[], BleServer.OutgoingListener)} - see {@link FutureData} for why/when you would want to use this.
-			 * @param futureData
-			 * @param listener
 			 */
 			public static Please respondWithSuccess(final FutureData futureData, final OutgoingListener listener)
 			{
@@ -376,8 +369,6 @@ public class BleServer extends BleNode
 			 * Use this as the return value of {@link IncomingListener#onEvent(IncomingEvent)} when
 			 * {@link IncomingEvent#type()} {@link Type#isRead()} is <code>true</code> and you can respect
 			 * the read request and respond with data.
-			 * 
-			 * @param data
 			 */
 			public static Please respondWithSuccess(final byte[] data)
 			{
@@ -386,9 +377,6 @@ public class BleServer extends BleNode
 
 			/**
 			 * Same as {@link #respondWithSuccess(byte[])} but allows you to provide a listener specific to this response.
-			 *
-			 * @param data
-			 * @param listener
 			 *
 			 * @see BleServer#setListener_Outgoing(OutgoingListener)
 			 */
@@ -410,8 +398,6 @@ public class BleServer extends BleNode
 			/**
 			 * Same as {@link #respondWithSuccess()} but allows you to provide a listener specific to this response.
 			 *
-			 * @param listener
-			 *
 			 * @see BleServer#setListener_Outgoing(OutgoingListener)
 			 */
 			public static Please respondWithSuccess(final OutgoingListener listener)
@@ -422,8 +408,6 @@ public class BleServer extends BleNode
 			/**
 			 * Send an error/status code back to the client. See <code>static final int</code>
 			 * members of {@link BleStatuses} starting with GATT_ for possible values.
-			 * 
-			 * @param gattStatus
 			 */
 			public static Please respondWithError(final int gattStatus)
 			{
@@ -432,9 +416,6 @@ public class BleServer extends BleNode
 
 			/**
 			 * Same as {@link #respondWithError(int)} but allows you to provide a listener specific to this response.
-			 *
-			 * @param gattStatus
-			 * @param listener
 			 *
 			 * @see BleServer#setListener_Outgoing(OutgoingListener)
 			 */
@@ -1292,8 +1273,6 @@ public class BleServer extends BleNode
 	/**
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual server.
-	 * 
-	 * @param config_nullable
 	 */
 	public void setConfig(final BleNodeConfig config_nullable)
 	{
@@ -1314,8 +1293,6 @@ public class BleServer extends BleNode
 	
 	/**
 	 * Set a listener here to be notified whenever this server's state changes in relation to a specific client.
-	 * 
-	 * @param listener_nullable
 	 */
 	public void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.StateListener listener_nullable)
 	{
@@ -1326,8 +1303,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Set a listener here to override any listener provided previously.
-	 * 
-	 * @param listener_nullable
 	 */
 	public void setListener_Incoming(@Nullable(Nullable.Prevalence.NORMAL) final IncomingListener listener_nullable)
 	{
@@ -1339,8 +1314,6 @@ public class BleServer extends BleNode
 	/**
 	 * Set a listener here to override any listener provided previously and provide a default backup that will be called
 	 * after any listener provided to {@link #addService(BleService, ServiceAddListener)}.
-	 * 
-	 * @param listener_nullable
 	 */
 	public void setListener_ServiceAdd(@Nullable(Nullable.Prevalence.NORMAL) final ServiceAddListener listener_nullable)
 	{
@@ -1363,8 +1336,6 @@ public class BleServer extends BleNode
 	 * This is a default catch-all convenience listener that will be called after any listener provided through
 	 * the static methods of {@link BleServer.IncomingListener.Please} such as {@link BleServer.IncomingListener.Please#respondWithSuccess(BleServer.OutgoingListener)}.
 	 *
-	 * @param listener
-	 *
 	 * @see BleManager#setListener_Outgoing(BleServer.OutgoingListener)
 	 */
 	public void setListener_Outgoing(final OutgoingListener listener)
@@ -1376,8 +1347,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Set a listener here to override any listener provided previously.
-	 * 
-	 * @param listener
 	 */
 	public void setListener_ConnectionFail(final ConnectionFailListener listener)
 	{
@@ -1388,10 +1357,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param charUuid
-	 * @param data
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID charUuid, byte[] data)
 	{
@@ -1400,11 +1365,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param charUuid
-	 * @param data
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
@@ -1413,11 +1373,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param serviceUuid
-	 * @param charUuid
-	 * @param data
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data)
 	{
@@ -1426,12 +1381,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param serviceUuid
-	 * @param charUuid
-	 * @param data
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
@@ -1440,10 +1389,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param charUuid
-	 * @param futureData
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID charUuid, final FutureData futureData)
 	{
@@ -1452,11 +1397,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param charUuid
-	 * @param futureData
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
@@ -1465,11 +1405,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param serviceUuid
-	 * @param charUuid
-	 * @param futureData
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData)
 	{
@@ -1478,12 +1413,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Same as {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)} but sends an indication instead.
-	 * 
-	 * @param macAddress
-	 * @param serviceUuid
-	 * @param charUuid
-	 * @param futureData
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
@@ -1492,10 +1421,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param charUuid
-	 * @param data
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID charUuid, byte[] data)
 	{
@@ -1504,11 +1429,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param charUuid
-	 * @param data
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
@@ -1517,11 +1437,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param serviceUuid
-	 * @param charUuid
-	 * @param data
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data)
 	{
@@ -1530,12 +1445,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param serviceUuid
-	 * @param charUuid
-	 * @param data
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
@@ -1544,10 +1453,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param charUuid
-	 * @param futureData
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID charUuid, final FutureData futureData)
 	{
@@ -1556,11 +1461,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param charUuid
-	 * @param futureData
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
@@ -1569,11 +1469,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
-	 * 
-	 * @param macAddress
-	 * @param serviceUuid
-	 * @param charUuid
-	 * @param futureData
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData)
 	{
@@ -1585,12 +1480,6 @@ public class BleServer extends BleNode
 	 * If there is any kind of "early-out" issue then this method will return a {@link OutgoingListener.OutgoingEvent} in addition
 	 * to passing it through the listener. Otherwise this method will return an instance with {@link OutgoingListener.OutgoingEvent#isNull()} being
 	 * <code>true</code>.
-	 * 
-	 * @param macAddress
-	 * @param serviceUuid
-	 * @param charUuid
-	 * @param futureData
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
@@ -1654,8 +1543,6 @@ public class BleServer extends BleNode
 	/**
 	 * Returns the bitwise state mask representation of {@link BleServerState} for the given client mac address.
 	 *
-	 * @param macAddress
-	 *
 	 * @see BleServerState
 	 */
 	@Advanced
@@ -1669,9 +1556,6 @@ public class BleServer extends BleNode
 	/**
 	 * Returns <code>true</code> if there is any bitwise overlap between the provided value and {@link #getStateMask(String)}.
 	 *
-	 * @param macAddress
-	 * @param mask_BleServerState
-	 *
 	 * @see #isAll(String, int)
 	 */
 	public boolean isAny(final String macAddress, final int mask_BleServerState)
@@ -1681,9 +1565,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns <code>true</code> if there is complete bitwise overlap between the provided value and {@link #getStateMask(String)}.
-	 *
-	 * @param macAddress
-	 * @param mask_BleServerState
 	 *
 	 * @see #isAny(String, int)
 	 *
@@ -1695,9 +1576,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns true if the given client is in the state provided.
-	 * 
-	 * @param macAddress
-	 * @param state
 	 */
 	public boolean is(final String macAddress, final BleServerState state)
 	{
@@ -1706,9 +1584,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns true if the given client is in any of the states provided.
-	 * 
-	 * @param macAddress
-	 * @param states
 	 */
 	public boolean isAny(final String macAddress, final BleServerState ... states )
 	{
@@ -1724,8 +1599,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with no listeners.
-	 * 
-	 * @param macAddress
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
 	{
@@ -1734,9 +1607,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with only one listener.
-	 * 
-	 * @param macAddress
-	 * @param stateListener
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener)
 	{
@@ -1745,9 +1615,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with only one listener.
-	 * 
-	 * @param macAddress
-	 * @param connectionFailListener
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ConnectionFailListener connectionFailListener)
 	{
@@ -1757,10 +1624,6 @@ public class BleServer extends BleNode
 	/**
 	 * Connect to the given client mac address and provided listeners that are shorthand for calling {@link #setListener_State(StateListener)}
 	 * {@link #setListener_ConnectionFail(ConnectionFailListener)}.
-	 * 
-	 * @param macAddress
-	 * @param stateListener
-	 * @param connectionFailListener
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
@@ -1948,8 +1811,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Does a referential equality check on the two servers.
-	 * 
-	 * @param server_nullable
 	 */
 	public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final BleServer server_nullable)
 	{
@@ -1965,9 +1826,7 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns {@link #equals(BleServer)} if object is an instance of {@link BleServer}. Otherwise calls super.
-	 * 
-	 * @param object_nullable
-	 * 
+	 *
 	 * @see BleServer#equals(BleServer)
 	 */
 	@Override public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final Object object_nullable)
@@ -2006,8 +1865,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #addService(BleService, ServiceAddListener)} without the listener.
-	 * 
-	 * @param service
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service)
 	{
@@ -2016,8 +1873,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Starts the process of adding a service to this server. The provided listener will be called when the service is added or there is a problem.
-	 * @param service
-	 * @param listener
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
 	{
@@ -2030,8 +1885,6 @@ public class BleServer extends BleNode
 	 * Remove any service previously provided to {@link #addService(BleService, ServiceAddListener)} or overloads. This can be safely called
 	 * even if the call to {@link #addService(BleService, ServiceAddListener)} hasn't resulted in a callback to the provided listener yet, in which
 	 * case it will be called with {@link BleServer.ServiceAddListener.Status#CANCELLED_FROM_REMOVAL}.
-	 * 
-	 * @param serviceUuid
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService removeService(final UUID serviceUuid)
 	{
@@ -2053,8 +1906,6 @@ public class BleServer extends BleNode
 	/**
 	 * Offers a more "functional" means of iterating through the internal list of clients instead of
 	 * using {@link #getClients()} or {@link #getClients_List()}.
-	 * 
-	 * @param forEach
 	 */
 	public void getClients(final ForEach_Void<String> forEach)
 	{
@@ -2066,9 +1917,6 @@ public class BleServer extends BleNode
 	/**
 	 * Same as {@link #getClients(ForEach_Void)} but will only return clients
 	 * in the given state provided.
-	 * 
-	 * @param forEach
-	 * @param state
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
 	{
@@ -2080,9 +1928,6 @@ public class BleServer extends BleNode
 	/**
 	 * Same as {@link #getClients(ForEach_Void)} but will only return clients
 	 * in any of the given states provided.
-	 * 
-	 * @param forEach
-	 * @param states
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
 	{
@@ -2094,8 +1939,6 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #getClients(ForEach_Void)}
 	 * if you need to break out of the iteration at any point.
-	 * 
-	 * @param forEach
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach)
 	{
@@ -2107,9 +1950,6 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #getClients(ForEach_Void, BleServerState)}
 	 * if you need to break out of the iteration at any point.
-	 * 
-	 * @param forEach
-	 * @param state
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
 	{
@@ -2121,9 +1961,6 @@ public class BleServer extends BleNode
 	/**
 	 * Same as {@link #getClients(ForEach_Breakable)} but will only return clients
 	 * in any of the given states provided.
-	 * 
-	 * @param forEach
-	 * @param states
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)
 	{
@@ -2144,8 +1981,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns all the clients connected or connecting (or previously so) to this server.
-	 * 
-	 * @param state
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
 	{
@@ -2156,8 +1991,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns all the clients connected or connecting (or previously so) to this server.
-	 * 
-	 * @param states
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState ... states)
 	{
@@ -2178,8 +2011,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #getClients(BleServerState)} that returns a {@link java.util.List} for you.
-	 * 
-	 * @param state
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState state)
 	{
@@ -2190,8 +2021,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Overload of {@link #getClients(BleServerState[])} that returns a {@link java.util.List} for you.
-	 * 
-	 * @param states
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState ... states)
 	{
@@ -2212,8 +2041,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns the number of clients that are in the current state.
-	 * 
-	 * @param state
 	 */
 	public int getClientCount(final BleServerState state)
 	{
@@ -2224,8 +2051,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns the number of clients that are in any of the given states.
-	 * 
-	 * @param states
 	 */
 	public int getClientCount(final BleServerState ... states)
 	{
@@ -2244,8 +2069,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns <code>true</code> if this server has any clients in the given state.
-	 * 
-	 * @param state
 	 */
 	public boolean hasClient(final BleServerState state)
 	{
@@ -2254,8 +2077,6 @@ public class BleServer extends BleNode
 
 	/**
 	 * Returns <code>true</code> if this server has any clients in any of the given states.
-	 * 
-	 * @param states
 	 */
 	public boolean hasClient(final BleServerState ... states)
 	{

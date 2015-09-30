@@ -69,8 +69,6 @@ public class Uuids
 	 * Convenience overload of {@link #fromShort(String, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
 	 * For example to create the battery level characteristic you would call
 	 * <code>{@link Uuids}.fromShort("180f")</code>.
-	 * 
-	 * @param assignedNumber
 	 */
 	public static UUID fromShort(String assignedNumber)
 	{
@@ -81,8 +79,6 @@ public class Uuids
 	 * Convenience overload of {@link #fromShort(short, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
 	 * For example to create the battery level characteristic you would call
 	 * <code>{@link Uuids}.fromShort((short)0x180f)</code>.
-	 * 
-	 * @param assignedNumber
 	 */
 	public static UUID fromShort(short assignedNumber)
 	{
@@ -91,8 +87,6 @@ public class Uuids
 	
 	/**
 	 * Overload of {@link #fromShort(short)} so you don't have to downcast hardcoded integers yourself.
-	 * 
-	 * @param assignedNumber
 	 */
 	public static UUID fromShort(int assignedNumber)
 	{
@@ -104,9 +98,6 @@ public class Uuids
 	 * short to a {@link String} hex representation.
 	 * For example to create the battery level characteristic you would call
 	 * <code>{@link Uuids}.fromShort((short)0x180f, {@link #STANDARD_UUID_TEMPLATE})</code>.
-	 * 
-	 * @param assignedNumber
-	 * @param uuidTemplate
 	 */
 	public static UUID fromShort(short assignedNumber, String uuidTemplate)
 	{
@@ -118,9 +109,6 @@ public class Uuids
 	/**
 	 * Convenience overload of {@link #fromShort(short, String)} so you don't
 	 * have to downcast hardcoded integers yourself.
-	 * 
-	 * @param assignedNumber
-	 * @param uuidTemplate
 	 */
 	public static UUID fromShort(int assignedNumber, String uuidTemplate)
 	{
@@ -146,9 +134,6 @@ public class Uuids
 
 	/**
 	 * Convenience overload of {@link #fromInt(String, String)}.
-	 * 
-	 * @param assignedNumber
-	 * @param uuidTemplate
 	 */
 	public static UUID fromInt(int assignedNumber, String uuidTemplate)
 	{
@@ -174,8 +159,6 @@ public class Uuids
 
 	/**
 	 * Convenience forwarding of {@link UUID#fromString(String)}.
-	 * 
-	 * @param value
 	 */
 	public static UUID fromString(final String value)
 	{

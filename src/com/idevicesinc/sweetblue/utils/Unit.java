@@ -14,8 +14,6 @@ public abstract class Unit<T>
 {
 	/**
 	 * "less than" comparison.
-	 * 
-	 * @param otherUnit
 	 */
 	public boolean lt(final Unit<T> otherUnit)
 	{
@@ -24,8 +22,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * "less than or equal" comparison.
-	 * 
-	 * @param otherUnit
 	 */
 	public boolean lte(final Unit<T> otherUnit)
 	{
@@ -34,8 +30,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * "greater than" comparison.
-	 * 
-	 * @param otherUnit
 	 */
 	public boolean gt(final Unit<T> otherUnit)
 	{
@@ -44,8 +38,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * "greater than or equal" comparison.
-	 * 
-	 * @param otherUnit
 	 */
 	public boolean gte(final Unit<T> otherUnit)
 	{
@@ -54,8 +46,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * "less than" comparison.
-	 * 
-	 * @param otherUnit
 	 */
 	public boolean lt(final double otherUnit)
 	{
@@ -64,8 +54,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * "less than or equal" comparison.
-	 * 
-	 * @param otherUnit
 	 */
 	public boolean lte(final double otherUnit)
 	{
@@ -74,8 +62,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * "greater than" comparison.
-	 * 
-	 * @param otherUnit
 	 */
 	public boolean gt(final double otherUnit)
 	{
@@ -84,8 +70,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * "greater than or equal" comparison.
-	 * 
-	 * @param otherUnit
 	 */
 	public boolean gte(final double otherUnit)
 	{
@@ -94,8 +78,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * Returns a new instance that is the result of doing <code>this - other</code>.
-	 * 
-	 * @param other
 	 */
 	public Unit<T> minus(Unit<T> other)
 	{
@@ -108,8 +90,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * Returns a new instance that is the result of doing <code>this + other</code>.
-	 * 
-	 * @param other
 	 */
 	public Unit<T> plus(Unit<T> other)
 	{
@@ -122,8 +102,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * Returns a new instance that is the result of doing <code>this * other</code>.
-	 * 
-	 * @param other
 	 */
 	public Unit<T> times(Unit<T> other)
 	{
@@ -136,8 +114,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * Returns a new instance that is the result of doing <code>this / other</code>.
-	 * 
-	 * @param other
 	 */
 	public Unit<T> dividedBy(Unit<T> other)
 	{
@@ -158,8 +134,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * Returns <code>==</code> using {@link #getRawValue()}.
-	 * 
-	 * @param object
 	 */
 	@Override public boolean equals(Object object)
 	{
@@ -178,8 +152,6 @@ public abstract class Unit<T>
 	
 	/**
 	 * Subclasses must override this so that arithmetic "operators" can create new instances.
-	 * 
-	 * @param rawValue
 	 */
 	protected abstract Unit<T> newInstance(final double rawValue);
 }

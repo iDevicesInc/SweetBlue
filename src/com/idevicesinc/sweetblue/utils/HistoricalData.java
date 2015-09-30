@@ -95,7 +95,6 @@ public class HistoricalData implements UsesCustomNull
 
 	/**
 	 * Convenience to return the timestamp as a formatted string, for example pass <code>new SimpleDateFormat("MM/dd/yyyy HH:mm:ss")</code>.
-	 * @param dateFormat
 	 */
 	public String getEpochTime_dateString(final DateFormat dateFormat)
 	{

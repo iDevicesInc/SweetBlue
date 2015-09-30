@@ -76,8 +76,6 @@ public class Percent extends Unit<Percent>
 	
 	/**
 	 * Returns a new instance using the given <code>double</code> value.
-	 * 
-	 * @param value
 	 */
 	public static Percent fromDouble(final double value)
 	{
@@ -86,8 +84,6 @@ public class Percent extends Unit<Percent>
 	
 	/**
 	 * Returns a new instance clamped between 0% and 100%, regardless of input value.
-	 * 
-	 * @param value
 	 */
 	public static Percent fromDouble_clamped(final double value)
 	{
@@ -101,8 +97,6 @@ public class Percent extends Unit<Percent>
 	
 	/**
 	 * Returns a new instance using the given <code>int</code> value.
-	 * 
-	 * @param value
 	 */
 	public static Percent fromInt(final int value)
 	{
@@ -111,8 +105,6 @@ public class Percent extends Unit<Percent>
 
 	/**
 	 * Returns a new instance clamped between 0% and 100%, regardless of input value.
-	 * 
-	 * @param value
 	 */
 	public static Percent fromInt_clamped(final int value)
 	{
