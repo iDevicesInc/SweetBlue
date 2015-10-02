@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.utils.BleAdvertiseInfo;
 import com.idevicesinc.sweetblue.utils.FutureData;
 
 import java.util.UUID;
@@ -119,7 +120,14 @@ public enum BleTask
 	/**
 	 * Associated with {@link BleDevice#reliableWrite_execute()}.
 	 */
-	RELIABLE_WRITE;
+	RELIABLE_WRITE,
+
+	/**
+	 * Associated with {@link BleManager#startAdvertising(BleAdvertiseInfo)}, {@link BleManager#startAdvertising(BleAdvertiseInfo, BleManager.AdvertiseListener)}
+	 */
+	START_ADVERTISING,
+
+	STOP_ADVERTISING;
 	
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.

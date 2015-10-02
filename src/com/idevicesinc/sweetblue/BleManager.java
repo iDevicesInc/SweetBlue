@@ -40,6 +40,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
+import com.idevicesinc.sweetblue.utils.BleAdvertiseInfo;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
@@ -278,9 +279,9 @@ public class BleManager
 				return Utils_String.toString
 				(
 					this.getClass(),
-					"entered",			Utils_String.toString(enterMask(),		BleManagerState.VALUES()),
-					"exited",			Utils_String.toString(exitMask(),		BleManagerState.VALUES()),
-					"current",			Utils_String.toString(newStateBits(),	BleManagerState.VALUES())
+					"entered",			Utils_String.toString(enterMask(), BleManagerState.VALUES()),
+					"exited",			Utils_String.toString(exitMask(), BleManagerState.VALUES()),
+					"current",			Utils_String.toString(newStateBits(), BleManagerState.VALUES())
 				);
 			}
 		}
@@ -991,6 +992,20 @@ public class BleManager
 	}
 
 	/**
+	 * Checks to see if the phone supports advertising BLE services.
+	 */
+	public boolean isAdvertisingSupported()
+	{
+		enforceMainThread();
+
+		if (Build.VERSION.SDK_INT < 21) {
+			return false;
+		} else {
+			return P_Task_Advertise.canAdvertise(this);
+		}
+	}
+
+	/**
 	 * Disables BLE if manager is {@link BleManagerState#ON}. This disconnects all current
 	 * connections, stops scanning, and forgets all discovered devices.
 	 */
@@ -1597,19 +1612,16 @@ public class BleManager
 
 		turnOff_private(/*removeAllBonds=*/true);
 
-		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
-		{
-			@Override public void onStateChange(PA_Task taskClass, PE_TaskState state)
-			{
-				if( state.isEndingState() )
-				{
+		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener() {
+			@Override
+			public void onStateChange(PA_Task taskClass, PE_TaskState state) {
+				if (state.isEndingState()) {
 					ResetListener nukeListeners = m_resetListeners;
 					m_resetListeners = null;
 					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-					if( nukeListeners != null )
-					{
+					if (nukeListeners != null) {
 						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
 						nukeListeners.onEvent(event);
 					}
