@@ -221,9 +221,17 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			final ScanSettings.Builder builder = new ScanSettings.Builder();
 			builder.setScanMode(scanMode);
-			final Interval scanReportDelay = getManager().m_config.scanReportDelay;
-			final long scanReportDelay_millis = false == Interval.isDisabled(scanReportDelay) ? scanReportDelay.millis() : 0;
-			builder.setReportDelay(scanReportDelay_millis);
+
+			if( getManager().getNativeAdapter().isOffloadedScanBatchingSupported() )
+			{
+				final Interval scanReportDelay = getManager().m_config.scanReportDelay;
+				final long scanReportDelay_millis = false == Interval.isDisabled(scanReportDelay) ? scanReportDelay.millis() : 0;
+				builder.setReportDelay(scanReportDelay_millis);
+			}
+			else
+			{
+				builder.setReportDelay(0);
+			}
 
 			final ScanSettings scanSettings = builder.build();
 

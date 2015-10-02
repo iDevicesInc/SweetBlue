@@ -1301,7 +1301,7 @@ public class BleManager
 
 		m_config.autoScanActiveTime = Interval.DISABLED;
 
-		if( !m_doingInfiniteScan )
+		if( false == m_doingInfiniteScan )
 		{
 			this.stopScan();
 		}
@@ -1745,6 +1745,15 @@ public class BleManager
 	public Context getApplicationContext()
 	{
 		return (Application) m_context;
+	}
+
+	/**
+	 * Convenience that will call both {@link #stopPeriodicScan()} and {@link #stopScan()} for you.
+	 */
+	public void stopAllScanning()
+	{
+		this.stopPeriodicScan();
+		this.stopScan();
 	}
 
 	/**
