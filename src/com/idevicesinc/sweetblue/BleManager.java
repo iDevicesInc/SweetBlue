@@ -997,7 +997,12 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		return P_Task_Advertise.canAdvertise(this);
+		if (Build.VERSION.SDK_INT >= 21)
+		{
+			return P_Task_Advertise.canAdvertise(this);
+		}
+
+		return false;
 	}
 
 	/**

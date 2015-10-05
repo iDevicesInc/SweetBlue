@@ -1899,6 +1899,8 @@ public class BleServer extends BleNode
 	{
 		enforceMainThread();
 
+		stopAdvertising();
+
 		getClients(new ForEach_Void<String>()
 		{
 			@Override public void next(final String next)

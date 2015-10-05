@@ -153,7 +153,7 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
                 public void onStartFailure(int errorCode)
                 {
                     BleServer.AdvertiseListener.AdvertiseResult result = BleServer.AdvertiseListener.AdvertiseResult.fromNativeBit(errorCode);
-                    getLogger().d("Failed to start advertising! Result: " + result);
+                    getLogger().e("Failed to start advertising! Result: " + result);
                     if (listener != null)
                     {
                         getServer().onAdvertiseResult(result, listener);
