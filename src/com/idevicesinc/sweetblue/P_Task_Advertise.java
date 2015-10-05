@@ -16,10 +16,12 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
     private final BleAdvertiseInfo m_info;
     private final BleServer.AdvertiseListener m_listener;
+    private final boolean start;
 
 
-    public P_Task_Advertise(BleServer server, BleAdvertiseInfo info, BleServer.AdvertiseListener listener) {
+    public P_Task_Advertise(BleServer server, BleAdvertiseInfo info, BleServer.AdvertiseListener listener, boolean start) {
         super(server, null);
+        this.start = start;
         m_info = info;
         m_listener = listener;
     }
@@ -33,9 +35,30 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
     @Override
     void execute() {
         if (Utils.isLollipop()) {
-            startAdvertising(m_info, m_listener);
+            if (start) {
+                startAdvertising(m_info, m_listener);
+            } else {
+                stopAdvertising(m_listener);
+            }
         } else {
             fail();
+        }
+    }
+
+    private void stopAdvertising(BleServer.AdvertiseListener m_listener) {
+        BluetoothLeAdvertiser ad = getManager().getNativeAdapter().getBluetoothLeAdvertiser();
+        if (ad != null) {
+            ad.stopAdvertising(new AdvertiseCallback() {
+                @Override
+                public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                    super.onStartSuccess(settingsInEffect);
+                }
+
+                @Override
+                public void onStartFailure(int errorCode) {
+                    super.onStartFailure(errorCode);
+                }
+            });
         }
     }
 

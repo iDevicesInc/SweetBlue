@@ -1663,8 +1663,14 @@ public class BleServer extends BleNode
 				adListen = m_advertiseListener;
 			}
 
-			getManager().getTaskQueue().add(new P_Task_Advertise(this, advertiseInfo, adListen));
+			getManager().getTaskQueue().add(new P_Task_Advertise(this, advertiseInfo, adListen, true));
 			return true;
+		}
+	}
+
+	public void stopAdvertising(AdvertiseListener listener) {
+		if (Build.VERSION.SDK_INT >= 21) {
+
 		}
 	}
 

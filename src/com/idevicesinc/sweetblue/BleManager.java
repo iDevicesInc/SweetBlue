@@ -998,11 +998,7 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		if (Build.VERSION.SDK_INT < 21) {
-			return false;
-		} else {
-			return P_Task_Advertise.canAdvertise(this);
-		}
+		return P_Task_Advertise.canAdvertise(this);
 	}
 
 	/**
