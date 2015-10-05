@@ -11,11 +11,13 @@ public enum BleAdvertiseMode {
 
     private final int m_native;
 
-    BleAdvertiseMode(int nativeBit) {
+    BleAdvertiseMode(int nativeBit)
+    {
         m_native = nativeBit;
     }
 
-    public int getNativeBit() {
+    public int getNativeBit()
+    {
         return m_native;
     }
 }

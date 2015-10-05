@@ -10,11 +10,13 @@ public enum BleAdvertisePower {
 
     private final int m_native;
 
-    BleAdvertisePower(int nativeBit) {
+    BleAdvertisePower(int nativeBit)
+    {
         m_native = nativeBit;
     }
 
-    public int getNativeBit() {
+    public int getNativeBit()
+    {
         return m_native;
     }
 

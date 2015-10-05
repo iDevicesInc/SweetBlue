@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
-import com.idevicesinc.sweetblue.utils.BleAdvertiseInfo;
+import com.idevicesinc.sweetblue.utils.BleAdvertiseConfig;
 import com.idevicesinc.sweetblue.utils.FutureData;
 
 import java.util.UUID;
@@ -123,10 +123,13 @@ public enum BleTask
 	RELIABLE_WRITE,
 
 	/**
-	 * Associated with {@link BleManager#startAdvertising(BleAdvertiseInfo)}, {@link BleManager#startAdvertising(BleAdvertiseInfo, BleManager.AdvertiseListener)}
+	 * Associated with {@link BleServer#startAdvertising(BleAdvertiseConfig)}, {@link BleServer#startAdvertising(BleAdvertiseConfig, BleServer.AdvertiseListener)}
 	 */
 	START_ADVERTISING,
 
+	/**
+	 * Associated with {@link BleServer#stopAdvertising(BleServer.AdvertiseListener)}, {@link BleServer#stopAdvertising()}
+	 */
 	STOP_ADVERTISING;
 	
 	/**

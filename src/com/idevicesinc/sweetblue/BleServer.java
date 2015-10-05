@@ -16,13 +16,12 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
-import android.os.Build;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.utils.BleAdvertiseInfo;
+import com.idevicesinc.sweetblue.utils.BleAdvertiseConfig;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
@@ -677,13 +676,13 @@ public class BleServer extends BleNode
 
 	/**
 	 * Provide an implementation to {@link BleServer#setListener_Advertise(AdvertiseListener)} to receive a callback
-	 * when using {@link #startAdvertising(BleAdvertiseInfo)} for the result.
+	 * when using {@link #startAdvertising(BleAdvertiseConfig)} for the result.
 	 */
 	public interface AdvertiseListener
 	{
 
 		/**
-		 * Enumeration describing the result of calling {@link #startAdvertising(BleAdvertiseInfo)}.
+		 * Enumeration describing the result of calling {@link #startAdvertising(BleAdvertiseConfig)}.
 		 */
 		enum AdvertiseResult
 		{
@@ -733,20 +732,20 @@ public class BleServer extends BleNode
 			public BleServer server() { return m_server; }
 
 			/**
-			 * Whether or not {@link #startAdvertising(BleAdvertiseInfo)} was successful or not. If false,
+			 * Whether or not {@link #startAdvertising(BleAdvertiseConfig)} was successful or not. If false,
 			 * then call {@link #result} to get the error code.
 			 */
 			public boolean wasSuccess() { return result == AdvertiseResult.SUCCESS; }
 
 			/**
 			 * Returns {@link com.idevicesinc.sweetblue.BleServer.AdvertiseListener.AdvertiseResult} describing
-			 * the result of calling {@link #startAdvertising(BleAdvertiseInfo)}
+			 * the result of calling {@link #startAdvertising(BleAdvertiseConfig)}
 			 */
 			public AdvertiseResult result() { return result; }
 		}
 
 		/**
-		 * Called upon the result of calling {@link #startAdvertising(BleAdvertiseInfo)}
+		 * Called upon the result of calling {@link #startAdvertising(BleAdvertiseConfig)}
 		 */
 		void onEvent(AdvertiseEvent e);
 
@@ -1624,19 +1623,19 @@ public class BleServer extends BleNode
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertiseInfo, AdvertiseListener)}
+	 * Overload of {@link #startAdvertising(BleAdvertiseConfig, AdvertiseListener)}
 	 */
-	public boolean startAdvertising(BleAdvertiseInfo advertiseInfo)
+	public boolean startAdvertising(BleAdvertiseConfig advertiseInfo)
 	{
 		return startAdvertising(advertiseInfo, m_advertiseListener);
 	}
 
 	/**
-	 * Starts advertising serviceUuids with the information supplied in {@link BleAdvertiseInfo}. Note that this will
+	 * Starts advertising serviceUuids with the information supplied in {@link BleAdvertiseConfig}. Note that this will
 	 * only work for devices on Lollipop, or above. Even then, not every device supports advertising. Use
 	 * {@link BleManager#isAdvertisingSupported()} to check to see if the phone supports it.
 	 */
-	public boolean startAdvertising(BleAdvertiseInfo advertiseInfo, AdvertiseListener listener)
+	public boolean startAdvertising(BleAdvertiseConfig advertiseInfo, AdvertiseListener listener)
 	{
 		enforceMainThread();
 
@@ -1985,8 +1984,10 @@ public class BleServer extends BleNode
 		onAdvertiseResult(result, m_advertiseListener);
 	}
 
-	void onAdvertiseResult(AdvertiseListener.AdvertiseResult result, AdvertiseListener listener) {
-		if (listener != null) {
+	void onAdvertiseResult(AdvertiseListener.AdvertiseResult result, AdvertiseListener listener)
+	{
+		if (listener != null)
+		{
 			AdvertiseListener.AdvertiseEvent event = new AdvertiseListener.AdvertiseEvent(this, result);
 			listener.onEvent(event);
 		}

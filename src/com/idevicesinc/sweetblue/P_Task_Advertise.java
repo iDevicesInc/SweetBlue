@@ -6,7 +6,7 @@ import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.Build;
 import android.os.ParcelUuid;
-import com.idevicesinc.sweetblue.utils.BleAdvertiseInfo;
+import com.idevicesinc.sweetblue.utils.BleAdvertiseConfig;
 import com.idevicesinc.sweetblue.utils.Utils;
 import java.util.Map;
 import java.util.UUID;
@@ -14,56 +14,80 @@ import java.util.UUID;
 
 public class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
-    private final BleAdvertiseInfo m_info;
+    private final BleAdvertiseConfig m_info;
     private final BleServer.AdvertiseListener m_listener;
     private final boolean start;
 
 
-    public P_Task_Advertise(BleServer server, BleAdvertiseInfo info, BleServer.AdvertiseListener listener, boolean start) {
+    public P_Task_Advertise(BleServer server, BleAdvertiseConfig info, BleServer.AdvertiseListener listener, boolean start)
+    {
         super(server, null);
         this.start = start;
         m_info = info;
         m_listener = listener;
     }
 
-    public boolean isStarting() {
+    public boolean isStarting()
+    {
         return start;
     }
 
     @Override
-    protected BleTask getTaskType() {
-        return BleTask.START_ADVERTISING;
+    protected BleTask getTaskType()
+    {
+        if (start)
+        {
+            return BleTask.START_ADVERTISING;
+        }
+        else
+        {
+            return BleTask.STOP_ADVERTISING;
+        }
     }
 
     @Override
-    void execute() {
-        if (Utils.isLollipop()) {
-            if (start) {
+    void execute()
+    {
+        if (Utils.isLollipop())
+        {
+            if (start)
+            {
                 startAdvertising(m_info, m_listener);
-            } else {
+            }
+            else
+            {
                 stopAdvertising(m_listener);
             }
-        } else {
+        }
+        else
+        {
             fail();
         }
     }
 
-    private void stopAdvertising(final BleServer.AdvertiseListener m_listener) {
+    private void stopAdvertising(final BleServer.AdvertiseListener m_listener)
+    {
         BluetoothLeAdvertiser ad = getManager().getNativeAdapter().getBluetoothLeAdvertiser();
-        if (ad != null) {
-            ad.stopAdvertising(new AdvertiseCallback() {
+        if (ad != null)
+        {
+            ad.stopAdvertising(new AdvertiseCallback()
+            {
                 @Override
-                public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                public void onStartSuccess(AdvertiseSettings settingsInEffect)
+                {
                     super.onStartSuccess(settingsInEffect);
-                    if (m_listener != null) {
+                    if (m_listener != null)
+                    {
                         m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), BleServer.AdvertiseListener.AdvertiseResult.SUCCESS));
                     }
                 }
 
                 @Override
-                public void onStartFailure(int errorCode) {
+                public void onStartFailure(int errorCode)
+                {
                     super.onStartFailure(errorCode);
-                    if (m_listener != null) {
+                    if (m_listener != null)
+                    {
                         m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), BleServer.AdvertiseListener.AdvertiseResult.fromNativeBit(errorCode)));
                     }
                 }
@@ -72,53 +96,70 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
     }
 
     @Override
-    public PE_TaskPriority getPriority() {
+    public PE_TaskPriority getPriority()
+    {
         return PE_TaskPriority.MEDIUM;
     }
 
-    private void startAdvertising(BleAdvertiseInfo info, final BleServer.AdvertiseListener listener) {
+    private void startAdvertising(BleAdvertiseConfig info, final BleServer.AdvertiseListener listener)
+    {
         AdvertiseSettings.Builder settings = new AdvertiseSettings.Builder();
         settings.setAdvertiseMode(info.getMode().getNativeBit());
         settings.setTxPowerLevel(info.getPower().getNativeBit());
         settings.setConnectable(info.isConnectable());
-        if (info.getTimeout() != null) {
+        if (info.getTimeout() != null)
+        {
             settings.setTimeout((int) info.getTimeout().millis());
         }
         AdvertiseData.Builder data = new AdvertiseData.Builder();
-        for (UUID id : info.getUuids()) {
+        for (UUID id : info.getUuids())
+        {
             data.addServiceUuid(new ParcelUuid(id));
         }
-        if (info.getManufacturerId() != Integer.MIN_VALUE && info.getManufacturerData() != null) {
+        if (info.getManufacturerId() != Integer.MIN_VALUE && info.getManufacturerData() != null)
+        {
             data.addManufacturerData(info.getManufacturerId(), info.getManufacturerData());
         }
-        if (info.getServiceData() != null && info.getServiceData().size() > 0) {
+        if (info.getServiceData() != null && info.getServiceData().size() > 0)
+        {
             Map<UUID, byte[]> sdata = info.getServiceData();
-            for (UUID dataUuid : sdata.keySet()) {
+            for (UUID dataUuid : sdata.keySet())
+            {
                 data.addServiceData(new ParcelUuid(dataUuid), sdata.get(dataUuid));
             }
         }
         data.setIncludeDeviceName(info.includeDeviceName());
         data.setIncludeTxPowerLevel(info.includeTxPowerLevel());
         BluetoothLeAdvertiser advert = getManager().getNativeAdapter().getBluetoothLeAdvertiser();
-        if (advert != null) {
-            advert.startAdvertising(settings.build(), data.build(), new AdvertiseCallback() {
+        if (advert != null)
+        {
+            advert.startAdvertising(settings.build(), data.build(), new AdvertiseCallback()
+            {
                 @Override
-                public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                public void onStartSuccess(AdvertiseSettings settingsInEffect)
+                {
                     getLogger().d("Advertising started successfully.");
-                    if (listener != null) {
+                    if (listener != null)
+                    {
                         getServer().onAdvertiseResult(BleServer.AdvertiseListener.AdvertiseResult.SUCCESS, listener);
-                    } else {
+                    }
+                    else
+                    {
                         getServer().onAdvertiseResult(BleServer.AdvertiseListener.AdvertiseResult.SUCCESS);
                     }
                 }
 
                 @Override
-                public void onStartFailure(int errorCode) {
+                public void onStartFailure(int errorCode)
+                {
                     BleServer.AdvertiseListener.AdvertiseResult result = BleServer.AdvertiseListener.AdvertiseResult.fromNativeBit(errorCode);
                     getLogger().d("Failed to start advertising! Result: " + result);
-                    if (listener != null) {
+                    if (listener != null)
+                    {
                         getServer().onAdvertiseResult(result, listener);
-                    } else {
+                    }
+                    else
+                    {
                         getServer().onAdvertiseResult(result);
                     }
                 }
@@ -126,10 +167,14 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
         }
     }
 
-    static boolean canAdvertise(BleManager man) {
-        if (Build.VERSION.SDK_INT >= 21) {
+    static boolean canAdvertise(BleManager man)
+    {
+        if (Build.VERSION.SDK_INT >= 21)
+        {
             return man.getNativeAdapter().isMultipleAdvertisementSupported();
-        } else {
+        }
+        else
+        {
             return false;
         }
     }
