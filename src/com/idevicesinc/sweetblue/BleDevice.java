@@ -4,8 +4,10 @@ import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothDevice;
@@ -15,6 +17,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
+import android.util.SparseArray;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
@@ -1558,9 +1561,13 @@ public class BleDevice extends BleNode
 
 	private int m_mtu = 0;
 	private int m_rssi = 0;
+	private int m_advertisingFlags = 0x0;
 	private Integer m_knownTxPower = null;
-	private List<UUID> m_advertisedServices = EMPTY_LIST;
 	private byte[] m_scanRecord = EMPTY_BYTE_ARRAY;
+
+	private final List<UUID> m_advertisedServices = new ArrayList<UUID>();
+	private SparseArray<byte[]> m_manufacturerData = null;
+	private final Map<UUID, byte[]> m_serviceData = new HashMap<UUID, byte[]>();
 
 	private boolean m_useAutoConnect = false;
 	private boolean m_alwaysUseAutoConnect = false;
@@ -2051,7 +2058,7 @@ public class BleDevice extends BleNode
 
 		if (isNull())
 		{
-			return 0;
+			return BleNodeConfig.INVALID_TX_POWER;
 		}
 		else
 		{
@@ -2062,7 +2069,7 @@ public class BleDevice extends BleNode
 			else
 			{
 				final Integer defaultTxPower = BleDeviceConfig.integer(conf_device().defaultTxPower, conf_mngr().defaultTxPower);
-				final int toReturn = defaultTxPower == null ? BleDeviceConfig.DEFAULT_TX_POWER : defaultTxPower;
+				final int toReturn = defaultTxPower == null || defaultTxPower == BleNodeConfig.INVALID_TX_POWER ? BleDeviceConfig.DEFAULT_TX_POWER : defaultTxPower;
 
 				return toReturn;
 			}
@@ -4910,7 +4917,7 @@ public class BleDevice extends BleNode
 		return m_pollMngr;
 	}
 
-	void onNewlyDiscovered(final BluetoothDevice device_native, List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+	void onNewlyDiscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		m_origin_latest = origin;
 
@@ -4918,18 +4925,18 @@ public class BleDevice extends BleNode
 
 		m_nativeWrapper.updateNativeDevice(device_native);
 
-		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
+		onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 
-		stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin==BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
+		stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
 	}
 
-	void onRediscovered(final BluetoothDevice device_native, List<UUID> advertisedServices_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+	void onRediscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
 	{
 		m_origin_latest = origin;
 
 		m_nativeWrapper.updateNativeDevice(device_native);
 
-		onDiscovered_private(advertisedServices_nullable, rssi, scanRecord_nullable);
+		onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 
 		stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), ADVERTISING, true);
 	}
@@ -4957,13 +4964,49 @@ public class BleDevice extends BleNode
 		return m_timeSinceLastDiscovery;
 	}
 
-	private void onDiscovered_private(List<UUID> advertisedServices_nullable, final int rssi, byte[] scanRecord_nullable)
+	private void onDiscovered_private(final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, final int rssi, byte[] scanRecord_nullable)
 	{
 		m_lastDiscoveryTime = EpochTime.now();
 		m_timeSinceLastDiscovery = 0.0;
 		updateRssi(rssi);
-		m_advertisedServices = advertisedServices_nullable == null || advertisedServices_nullable.size() == 0 ? m_advertisedServices : advertisedServices_nullable;
-		m_scanRecord = scanRecord_nullable != null ? scanRecord_nullable : m_scanRecord;
+
+		if( scanEvent_nullable != null )
+		{
+			m_scanRecord = scanEvent_nullable.scanRecord();
+
+			updateKnownTxPower(scanEvent_nullable.txPower());
+
+			m_advertisingFlags = scanEvent_nullable.advertisingFlags();
+
+			m_advertisedServices.clear();
+			m_advertisedServices.addAll(scanEvent_nullable.advertisedServices());
+
+			m_manufacturerData = scanEvent_nullable.manufacturerData();
+
+			m_serviceData.clear();
+			m_serviceData.putAll(scanEvent_nullable.serviceData());
+		}
+		else if( scanRecord_nullable != null )
+		{
+			m_scanRecord = scanRecord_nullable;
+
+			m_manufacturerData = m_manufacturerData != null ? m_manufacturerData : new SparseArray<byte[]>();
+			final Pointer<Integer> txPower = new Pointer<Integer>();
+			final Pointer<Integer> advFlags = new Pointer<Integer>();
+
+			Utils_ScanRecord.parseScanRecord(scanRecord_nullable, advFlags, txPower, m_advertisedServices, m_manufacturerData, m_serviceData);
+
+			m_advertisingFlags = advFlags.value;
+			updateKnownTxPower(txPower.value);
+		}
+	}
+
+	private void updateKnownTxPower(final int txPower)
+	{
+		if( txPower != BleNodeConfig.INVALID_TX_POWER )
+		{
+			m_knownTxPower = txPower;
+		}
 	}
 
 	void updateRssi(final int rssi)

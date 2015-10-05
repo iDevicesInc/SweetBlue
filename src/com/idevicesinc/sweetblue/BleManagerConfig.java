@@ -2,12 +2,15 @@ package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.util.SparseArray;
 
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -15,9 +18,11 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Uuids;
@@ -324,6 +329,12 @@ public class BleManagerConfig extends BleDeviceConfig
 			private final int m_rssi;
 
 			/**
+			 * Returns the transmission power of the device in decibels, or {@link BleNodeConfig#INVALID_TX_POWER} if device is not advertising its transmission power.
+			 */
+			public int txPower(){  return m_txPower;  }
+			private final int m_txPower;
+
+			/**
 			 * Returns the mac address of the discovered device.
 			 */
 			public String macAddress(){  return m_nativeInstance.getAddress();  }
@@ -338,19 +349,49 @@ public class BleManagerConfig extends BleDeviceConfig
 			public State.ChangeIntent lastDisconnectIntent(){  return m_lastDisconnectIntent;  }
 			private final State.ChangeIntent m_lastDisconnectIntent;
 
+
+			public int advertisingFlags()  {  return m_advertisingFlags;  }
+			private final int m_advertisingFlags;
+
+			public SparseArray<byte[]> manufacturerData(){  return m_manufacturerData;  }
+			private final SparseArray<byte[]> m_manufacturerData;
+
+			public Map<UUID, byte[]> serviceData()  {  return m_serviceData;  }
+			private final Map<UUID, byte[]> m_serviceData;
+
 			ScanEvent
 			(
 				BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName,
-				String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent
+				String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent,
+				final int txPower, final SparseArray<byte[]> manufacturerData, final Map<UUID, byte[]> serviceData, final int advFlags
 			)
 			{
 				this.m_nativeInstance = nativeInstance;
 				this.m_advertisedServices = advertisedServices;
 				this.m_rawDeviceName = rawDeviceName;
 				this.m_normalizedDeviceName = normalizedDeviceName;
-				this.m_scanRecord = scanRecord;
+				this.m_scanRecord = scanRecord != null ? scanRecord : BleDevice.EMPTY_BYTE_ARRAY;
 				this.m_rssi = rssi;
 				this.m_lastDisconnectIntent = lastDisconnectIntent;
+				this.m_txPower = txPower;
+				this.m_advertisingFlags = advFlags;
+				this.m_manufacturerData = manufacturerData;
+				this.m_serviceData = serviceData;
+			}
+
+			/*package*/ static ScanEvent fromScanRecord(final BluetoothDevice device_native, final String rawDeviceName, final String normalizedDeviceName, final int rssi, final State.ChangeIntent lastDisconnectIntent, final byte[] scanRecord)
+			{
+				final Pointer<Integer> advFlags = new Pointer<Integer>();
+				final Pointer<Integer> txPower = new Pointer<Integer>();
+				final List<UUID> serviceUuids = new ArrayList<UUID>();
+				final SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
+				final Map<UUID, byte[]> serviceData = new HashMap<UUID, byte[]>();
+
+				Utils_ScanRecord.parseScanRecord(scanRecord, advFlags, txPower, serviceUuids, manufacturerData, serviceData);
+
+				final ScanEvent e = new ScanEvent(device_native, serviceUuids, rawDeviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent, txPower.value, manufacturerData, serviceData, advFlags.value);
+
+				return e;
 			}
 
 			@Override public String toString()

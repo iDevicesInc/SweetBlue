@@ -49,7 +49,7 @@ class P_BleManager_Listeners
 	{
 		m_mngr.getCrashResolver().notifyScannedDevice(device_native, m_scanCallback_preLollipop);
 
-		m_mngr.onDiscovered(device_native, rssi, scanRecord);
+		m_mngr.onDiscoveredFromNativeStack(device_native, rssi, scanRecord);
 	}
 
 	private final PA_Task.I_StateListener m_scanTaskListener = new PA_Task.I_StateListener()
@@ -115,7 +115,7 @@ class P_BleManager_Listeners
 			}
 			else if( action.equals(BluetoothDevice.ACTION_FOUND) )
 			{
-				onDeviceFound(context, intent);
+				onDeviceFound_classic(context, intent);
 			}
 			else if( action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED) )
 			{
@@ -205,12 +205,12 @@ class P_BleManager_Listeners
 		return m_scanTaskListener;
 	}
 	
-	private void onDeviceFound(Context context, Intent intent)
+	private void onDeviceFound_classic(Context context, Intent intent)
 	{
 		final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 		final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
 
-		m_mngr.onDiscovered(device_native, rssi, null);
+		m_mngr.onDiscoveredFromNativeStack(device_native, rssi, null);
 	}
 
 	private void onClassicDiscoveryFinished()

@@ -47,6 +47,14 @@ public class BleNodeConfig
 	public static final int GATT_MTU_OVERHEAD							= 3;
 
 	/**
+	 * Constant for an invalid or unknown transmission power.
+	 *
+	 * @see BleDevice#getTxPower()
+	 * @see BleDeviceConfig#defaultTxPower
+	 */
+	public static final int INVALID_TX_POWER							= Integer.MIN_VALUE;
+
+	/**
 	 * Default is <code>false</code> - see the <code>boolean autoConnect</code> parameters of
 	 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
 	 * and {@link android.bluetooth.BluetoothGattServer#connect(BluetoothDevice, boolean)}.
