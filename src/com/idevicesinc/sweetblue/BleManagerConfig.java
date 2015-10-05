@@ -217,6 +217,9 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * code, API documentation, or internet search what effects this has, when you would want to use it, etc. The reason we use the default
 	 * value provided is largely subjective. It seemed to help discover a peripheral faster on the Nexus 7 that was only advertising on channels
 	 * 37 and 38 - i.e. not on channel 39 too. It is also the default option in the nRF Master Control panel diagnostic app.
+	 * <br><br>
+	 * NOTE: This option is only relevant if {@link BluetoothAdapter#isOffloadedScanBatchingSupported()} returns <code>true</code> - otherwise
+	 * it has no effect because the hardware does not support it.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.RARE)
