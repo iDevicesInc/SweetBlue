@@ -26,6 +26,9 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
         m_listener = listener;
     }
 
+    public boolean isStarting() {
+        return start;
+    }
 
     @Override
     protected BleTask getTaskType() {
@@ -45,18 +48,24 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
         }
     }
 
-    private void stopAdvertising(BleServer.AdvertiseListener m_listener) {
+    private void stopAdvertising(final BleServer.AdvertiseListener m_listener) {
         BluetoothLeAdvertiser ad = getManager().getNativeAdapter().getBluetoothLeAdvertiser();
         if (ad != null) {
             ad.stopAdvertising(new AdvertiseCallback() {
                 @Override
                 public void onStartSuccess(AdvertiseSettings settingsInEffect) {
                     super.onStartSuccess(settingsInEffect);
+                    if (m_listener != null) {
+                        m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), BleServer.AdvertiseListener.AdvertiseResult.SUCCESS));
+                    }
                 }
 
                 @Override
                 public void onStartFailure(int errorCode) {
                     super.onStartFailure(errorCode);
+                    if (m_listener != null) {
+                        m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), BleServer.AdvertiseListener.AdvertiseResult.fromNativeBit(errorCode)));
+                    }
                 }
             });
         }
@@ -117,7 +126,7 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
         }
     }
 
-    public static boolean canAdvertise(BleManager man) {
+    static boolean canAdvertise(BleManager man) {
         if (Build.VERSION.SDK_INT >= 21) {
             return man.getNativeAdapter().isMultipleAdvertisementSupported();
         } else {

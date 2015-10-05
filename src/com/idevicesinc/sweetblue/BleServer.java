@@ -1668,10 +1668,35 @@ public class BleServer extends BleNode
 		}
 	}
 
-	public void stopAdvertising(AdvertiseListener listener) {
-		if (Build.VERSION.SDK_INT >= 21) {
+	/**
+	 * Overload of {@link #stopAdvertising(AdvertiseListener)}
+	 */
+	public void stopAdvertising() {
+		stopAdvertising(null);
+	}
 
+	/**
+	 * Stops the server from advertising.
+	 */
+	public void stopAdvertising(AdvertiseListener listener)
+	{
+		enforceMainThread();
+
+		final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
+		if (adTask != null)
+		{
+			if (adTask.isStarting()) {
+				getManager().getTaskQueue().clearQueueOf(P_Task_Advertise.class, getManager());
+			}
 		}
+		getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
+
+		AdvertiseListener adListen = listener;
+		if (adListen == null) {
+			adListen = m_advertiseListener;
+		}
+
+		getManager().getTaskQueue().add(new P_Task_Advertise(this, null, adListen, false));
 	}
 
 	/**
