@@ -1612,16 +1612,19 @@ public class BleManager
 
 		turnOff_private(/*removeAllBonds=*/true);
 
-		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener() {
-			@Override
-			public void onStateChange(PA_Task taskClass, PE_TaskState state) {
-				if (state.isEndingState()) {
+		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		{
+			@Override public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			{
+				if (state.isEndingState())
+				{
 					ResetListener nukeListeners = m_resetListeners;
 					m_resetListeners = null;
 					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-					if (nukeListeners != null) {
+					if (nukeListeners != null)
+					{
 						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
 						nukeListeners.onEvent(event);
 					}
