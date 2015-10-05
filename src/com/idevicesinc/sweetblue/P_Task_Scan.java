@@ -63,6 +63,24 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 		public void onBatchScanResults(final List<ScanResult> results)
 		{
+			if( getManager().getUpdateLoop().postNeeded() )
+			{
+				getManager().getUpdateLoop().postIfNeeded(new Runnable()
+				{
+					@Override public void run()
+					{
+						onBatchScanResults_mainThread(results);
+					}
+				});
+			}
+			else
+			{
+				onBatchScanResults_mainThread(results);
+			}
+		}
+
+		private void onBatchScanResults_mainThread(final List<ScanResult> results)
+		{
 			if( results != null )
 			{
 				for( int i = 0; i < results.size(); i++ )
@@ -71,7 +89,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 					if( result_ith != null )
 					{
-						onScanResult(CallbackType_UNKNOWN, result_ith);
+						onScanResult_mainThread(CallbackType_UNKNOWN, result_ith);
 					}
 				}
 			}
@@ -139,20 +157,15 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		//---		but then by the time we get here it can be false. isExecutable() is currently not thread-safe
 		//---		either, thus we're doing the manual check in the native stack. Before 5.0 the scan would just fail
 		//---		so we'd fail as we do below, but Android 5.0 makes this an exception for at least some phones (OnePlus One (A0001)).
-		if( !getManager().getNative().getAdapter().isEnabled() )
+		if( false == getManager().getNative().getAdapter().isEnabled() )
 		{
 			fail();
 		}
 		else
 		{
-			if( Utils.isLollipop() )
-			{
-				m_mode = Mode_BLE;
-				getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			final boolean forcePreLollipopScan = getManager().m_config.forcePreLollipopScan;
 
-				startNativeScan_postLollipop();
-			}
-			else
+			if( true == forcePreLollipopScan || false == Utils.isLollipop() )
 			{
 				m_mode = startNativeScan_preLollipop(getIntent());
 
@@ -161,28 +174,43 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 					fail();
 				}
 			}
+			else
+			{
+				m_mode = Mode_BLE;
+				getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+				startNativeScan_postLollipop();
+			}
 		}
 	}
 
 	private void startNativeScan_postLollipop()
 	{
+		final BleScanMode scanMode_abstracted = getManager().m_config.scanMode;
+
 		final int scanMode;
 
-		if( getManager().isForegrounded() )
+		if( scanMode_abstracted == null || scanMode_abstracted == BleScanMode.AUTO )
 		{
-			if( m_isPoll || m_scanTime == Double.POSITIVE_INFINITY )
+			if( getManager().isForegrounded() )
 			{
-				scanMode = ScanSettings.SCAN_MODE_BALANCED;
-//				scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+				if( m_isPoll || m_scanTime == Double.POSITIVE_INFINITY )
+				{
+					scanMode = ScanSettings.SCAN_MODE_BALANCED;
+				}
+				else
+				{
+					scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+				}
 			}
 			else
 			{
-				scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+				scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
 			}
 		}
 		else
 		{
-			scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
+			scanMode = scanMode_abstracted.getNativeMode();
 		}
 
 		if( false == Utils.isLollipop() )
@@ -193,9 +221,19 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			final ScanSettings.Builder builder = new ScanSettings.Builder();
 			builder.setScanMode(scanMode);
-			builder.setReportDelay(0);
 
-			final ScanSettings scanSettings= builder.build();
+			if( getManager().getNativeAdapter().isOffloadedScanBatchingSupported() )
+			{
+				final Interval scanReportDelay = getManager().m_config.scanReportDelay;
+				final long scanReportDelay_millis = false == Interval.isDisabled(scanReportDelay) ? scanReportDelay.millis() : 0;
+				builder.setReportDelay(scanReportDelay_millis);
+			}
+			else
+			{
+				builder.setReportDelay(0);
+			}
+
+			final ScanSettings scanSettings = builder.build();
 
 			getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
 		}

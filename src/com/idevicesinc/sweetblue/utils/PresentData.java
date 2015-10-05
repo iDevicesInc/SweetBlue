@@ -9,8 +9,6 @@ public class PresentData implements FutureData
 
 	/**
 	 * The data sent to this constructor will simply be returned by {@link #getData()}.
-	 * 
-	 * @param data
 	 */
 	public PresentData(final byte[] data)
 	{

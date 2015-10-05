@@ -33,6 +33,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	public static final double DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME 	= 0.5;
 	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/30.0;
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
+	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 	
 	static final BleManagerConfig NULL = new BleManagerConfig();
 	
@@ -134,6 +135,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean manageCpuWakeLock						= true;
+
+	/**
+	 * Default is <code>false</code> - Only applicable for Lollipop and up (i.e. > 5.0), this will force the use of the deprecated "pre-lollipop"
+	 * scanning API, that is {@link BluetoothAdapter#startLeScan(BluetoothAdapter.LeScanCallback)}. There is no known reason you would
+	 * want this, but including it just in case.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean forcePreLollipopScan						= false;
 	
 	/**
 	 * Default is {@value #DEFAULT_UH_OH_CALLBACK_THROTTLE} seconds - {@link BleManager.UhOhListener.UhOh} callbacks from {@link BleManager.UhOhListener}
@@ -203,6 +212,20 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval autoUpdateRate							= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
 
 	/**
+	 * Default is {@value #DEFAULT_SCAN_REPORT_DELAY} seconds - Only applicable for Lollipop and up (i.e. > 5.0), this is the value given to
+	 * {@link android.bluetooth.le.ScanSettings.Builder#setReportDelay(long)} so that scan results are "batched" ¯\_(ツ)_/¯. It's not clear from source
+	 * code, API documentation, or internet search what effects this has, when you would want to use it, etc. The reason we use the default
+	 * value provided is largely subjective. It seemed to help discover a peripheral faster on the Nexus 7 that was only advertising on channels
+	 * 37 and 38 - i.e. not on channel 39 too. It is also the default option in the nRF Master Control panel diagnostic app.
+	 * <br><br>
+	 * NOTE: This option is only relevant if {@link BluetoothAdapter#isOffloadedScanBatchingSupported()} returns <code>true</code> - otherwise
+	 * it has no effect because the hardware does not support it.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.RARE)
+	public Interval scanReportDelay							= Interval.secs(DEFAULT_SCAN_REPORT_DELAY);
+
+	/**
 	 * Default is <code>null</code>, meaning no filtering - all discovered devices will
 	 * be piped through your {@link BleManager.DiscoveryListener} instance
 	 * and added to the internal list of {@link BleManager}.
@@ -220,6 +243,11 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public DiscoveryListener defaultDiscoveryListener		= null;
+
+	/**
+	 * Default is {@link BleScanMode#AUTO} - see {@link BleScanMode} for more details.
+	 */
+	public BleScanMode scanMode								= BleScanMode.AUTO;
 	
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
@@ -409,8 +437,6 @@ public class BleManagerConfig extends BleDeviceConfig
 
 			/**
 			 * Returns {@link #acknowledge()} if the given condition holds <code>true</code>, {@link #ignore()} otherwise.
-			 * 
-			 * @param condition
 			 */
 			public static Please acknowledgeIf(boolean condition)
 			{
@@ -419,9 +445,6 @@ public class BleManagerConfig extends BleDeviceConfig
 
 			/**
 			 * Same as {@link #acknowledgeIf(boolean)} but lets you pass a {@link BleDeviceConfig} as well.
-			 * 
-			 * @param condition
-			 * @param config
 			 */
 			public static Please acknowledgeIf(boolean condition, BleDeviceConfig config)
 			{
@@ -431,8 +454,6 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * Same as {@link #acknowledge()} but allows you to pass a {@link BleDeviceConfig}
 			 * instance to the {@link BleDevice} that's about to be created.
-			 * 
-			 * @param config
 			 */
 			public static Please acknowledge(BleDeviceConfig config)
 			{
@@ -449,8 +470,6 @@ public class BleManagerConfig extends BleDeviceConfig
 
 			/**
 			 * Returns {@link #ignore()} if the given condition holds <code>true</code>, {@link #acknowledge()} otherwise.
-			 * 
-			 * @param condition
 			 */
 			public static Please ignoreIf(final boolean condition)
 			{

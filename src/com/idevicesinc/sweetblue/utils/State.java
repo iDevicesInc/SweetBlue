@@ -76,8 +76,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		
 		/**
 		 * Convenience forwarding of {@link State#didEnter(int, int)}.
-		 * 
-		 * @param state
 		 */
 		public boolean didEnter(T_State state)
 		{
@@ -86,8 +84,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		
 		/**
 		 * Convenience forwarding of {@link State#didExit(int, int)}.
-		 * 
-		 * @param state
 		 */
 		public boolean didExit(T_State state)
 		{
@@ -96,8 +92,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 
 		/**
 		 * Returns <code>true</code> if {@link #didEnter(State)} or {@link #didExit(State)} return true.
-		 * 
-		 * @param state
 		 */
 		public boolean isFor(T_State state)
 		{
@@ -106,8 +100,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 
 		/**
 		 * Returns <code>true</code> if {@link #didEnterAny(State...)} or {@link #didExitAny(State...)} return true.
-		 * 
-		 * @param states
 		 */
 		public boolean isForAny(T_State ... states)
 		{
@@ -116,8 +108,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 
 		/**
 		 * Returns <code>true</code> if {@link #didEnterAll(State...)} or {@link #didExitAll(State...)} return true.
-		 * 
-		 * @param states
 		 */
 		public boolean isForAll(T_State ... states)
 		{
@@ -126,7 +116,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		
 		/**
 		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns <code>true</code> on any of the {@link State} instances given.
-		 * @param states
 		 */
 		public boolean didEnterAny(T_State ... states)
 		{
@@ -140,7 +129,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		
 		/**
 		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns <code>true</code> on any of the {@link State} instances given.
-		 * @param states
 		 */
 		public boolean didExitAny(T_State ... states)
 		{
@@ -154,7 +142,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		
 		/**
 		 * Convenience to return <code>true</code> if {@link #didEnter(State)} returns <code>true</code> for all the {@link State} instances given.
-		 * @param states
 		 */
 		public boolean didEnterAll(T_State ... states)
 		{
@@ -168,7 +155,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		
 		/**
 		 * Convenience to return <code>true</code> if {@link #didExit(State)} returns <code>true</code> for all the {@link State} instances given.
-		 * @param states
 		 */
 		public boolean didExitAll(T_State ... states)
 		{
@@ -183,8 +169,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		/**
 		 * Returns the intention behind the state change, or {@link ChangeIntent#NULL} if no state
 		 * change for the given state occurred.
-		 * 
-		 * @param state
 		 */
 		public ChangeIntent getIntent(T_State state)
 		{
@@ -249,8 +233,6 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		/**
 		 * Transforms {@link #toDiskValue()} back to the enum.
 		 * Returns {@link #NULL} if diskValue can't be resolved.
-		 * 
-		 * @param diskValue
 		 */
 		public static ChangeIntent fromDiskValue(int diskValue)
 		{
@@ -272,18 +254,12 @@ public interface State extends UsesCustomNull, BitwiseEnum
 	 *  or {@link com.idevicesinc.sweetblue.BleManager.ManagerStateListener#onEvent(com.idevicesinc.sweetblue.BleManager.ManagerStateListener.StateEvent)}, this method tells you whether the
 	 * the 'this' state was appended.
 	 * 
-	 * @param oldStateBits
-	 * @param newStateBits
-	 * 
 	 * @see #didExit(int, int)
 	 */
 	boolean didEnter(int oldStateBits, int newStateBits);
 	
 	/**
 	 * Reverse of {@link #didEnter(int, int)}.
-	 * 
-	 * @param oldStateBits
-	 * @param newStateBits
 	 * 
 	 * @see #didEnter(int, int)
 	 */

@@ -20,8 +20,6 @@ public abstract class Event
 	 * <code>e.isForAny("DE:CA::FF:CO::FF::EE", "DE:AD:BE:EF:BA:BE")</code> to quickly check if the event
 	 * is associated with either of the two devices. This method would then just do a comparison
 	 * with the input strings against {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#macAddress()}.
-	 * 
-	 * @param values
 	 */
 	public boolean isForAny(final Object ... values)
 	{
@@ -56,8 +54,6 @@ public abstract class Event
 	 * This method would then just do a comparison with the input values against {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#macAddress()},
 	 * {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#charUuid()} {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#descUuid()}, and
 	 * {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#serviceUuid()}.
-	 * 
-	 * @param values
 	 */
 	public boolean isForAll(final Object ... values)
 	{
@@ -109,7 +105,7 @@ public abstract class Event
 				else if( returnType == String.class && false == ith.getName().equals("macAddress") )
 				{
 					// Special case of only allowing String return value for mac address.
-					// Other methods that return String are too generic and variable so we skip them.
+					// Other methods that return String like Object.toString() are too generic and variable so we skip them.
 				}
 				else if( Unit.class.isAssignableFrom(returnType) )
 				{

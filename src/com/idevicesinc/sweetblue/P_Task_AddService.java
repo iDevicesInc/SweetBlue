@@ -20,11 +20,6 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 		m_addListener = addListener;
 	}
 
-//	@Override public boolean executeOnSeperateThread()
-//	{
-//		return true;
-//	}
-
 	@Override void execute()
 	{
 		final BluetoothGattServer server_native_nullable = getServer().getNative();

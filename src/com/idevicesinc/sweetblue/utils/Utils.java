@@ -111,4 +111,40 @@ public class Utils
 		
 	    return (res == PackageManager.PERMISSION_GRANTED);
 	}
+
+	public static <T extends Object> boolean doForEach_break(final Object forEach, final List<T> list)
+	{
+		final int size = list.size();
+
+		for( int i = 0; i < size; i++ )
+		{
+			final T ith = list.get(i);
+
+			if( doForEach_break(forEach, ith) )
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean doForEach_break(final Object forEach, final Object next)
+	{
+		if( forEach instanceof ForEach_Void )
+		{
+			((ForEach_Void)forEach).next(next);
+		}
+		else if( forEach instanceof ForEach_Breakable )
+		{
+			final ForEach_Breakable.Please please = ((ForEach_Breakable)forEach).next(next);
+
+			if( false == please.shouldContinue() )
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

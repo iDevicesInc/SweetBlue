@@ -63,14 +63,12 @@ public class Uuids
 	
 	public static final UUID CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID	= fromShort("2902");
 	
-	protected final static String BLUETOOTH_CONNECTED_HASH = "5c3d022337d68c3355d5cd7023c603b6fb4dfc3b";
+	protected final static String BLUETOOTH_CONNECTED_HASH = "be08f52494812745f919d7841e41537eddeb1c3e";
 	
 	/**
 	 * Convenience overload of {@link #fromShort(String, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
 	 * For example to create the battery level characteristic you would call
 	 * <code>{@link Uuids}.fromShort("180f")</code>.
-	 * 
-	 * @param assignedNumber
 	 */
 	public static UUID fromShort(String assignedNumber)
 	{
@@ -81,8 +79,6 @@ public class Uuids
 	 * Convenience overload of {@link #fromShort(short, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
 	 * For example to create the battery level characteristic you would call
 	 * <code>{@link Uuids}.fromShort((short)0x180f)</code>.
-	 * 
-	 * @param assignedNumber
 	 */
 	public static UUID fromShort(short assignedNumber)
 	{
@@ -91,8 +87,6 @@ public class Uuids
 	
 	/**
 	 * Overload of {@link #fromShort(short)} so you don't have to downcast hardcoded integers yourself.
-	 * 
-	 * @param assignedNumber
 	 */
 	public static UUID fromShort(int assignedNumber)
 	{
@@ -104,9 +98,6 @@ public class Uuids
 	 * short to a {@link String} hex representation.
 	 * For example to create the battery level characteristic you would call
 	 * <code>{@link Uuids}.fromShort((short)0x180f, {@link #STANDARD_UUID_TEMPLATE})</code>.
-	 * 
-	 * @param assignedNumber
-	 * @param uuidTemplate
 	 */
 	public static UUID fromShort(short assignedNumber, String uuidTemplate)
 	{
@@ -118,9 +109,6 @@ public class Uuids
 	/**
 	 * Convenience overload of {@link #fromShort(short, String)} so you don't
 	 * have to downcast hardcoded integers yourself.
-	 * 
-	 * @param assignedNumber
-	 * @param uuidTemplate
 	 */
 	public static UUID fromShort(int assignedNumber, String uuidTemplate)
 	{
@@ -131,24 +119,43 @@ public class Uuids
 	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
 	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
 	 *
-	 * @param assignedNumber	A {@link String} of length 4 as the hex representation of a 2-byte (short) value, for example "2a19".
+	 * @param assignedNumber	A {@link String} of length <= 4 as the hex representation of a 2-byte (short) value, for example "2a19".
 	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
 	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
 	 */
 	public static UUID fromShort(String assignedNumber, String uuidTemplate)
 	{
-		if( assignedNumber == null || assignedNumber.length() != 4 )  return INVALID;
+		if( assignedNumber_earlyOut(assignedNumber, 4) )  return INVALID;
 
-		String uuid = uuidTemplate.substring(0, 4) + assignedNumber + uuidTemplate.substring(8, uuidTemplate.length());
+		String uuid = uuidTemplate.substring(0, 4) + padAssignedNumber(assignedNumber, 4) + uuidTemplate.substring(8, uuidTemplate.length());
 
 		return fromString(uuid);
 	}
 
+	private static boolean assignedNumber_earlyOut(final String assignedNumber, final int length)
+	{
+		if( assignedNumber == null || assignedNumber.isEmpty() || assignedNumber.length() > length )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	private static String padAssignedNumber(String assignedNumber, final int length)
+	{
+		while(assignedNumber.length() < length )
+		{
+			assignedNumber = "0" + assignedNumber;
+		}
+
+		return assignedNumber;
+	}
+
 	/**
 	 * Convenience overload of {@link #fromInt(String, String)}.
-	 * 
-	 * @param assignedNumber
-	 * @param uuidTemplate
 	 */
 	public static UUID fromInt(int assignedNumber, String uuidTemplate)
 	{
@@ -159,23 +166,21 @@ public class Uuids
 	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
 	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
 	 *
-	 * @param assignedNumber	A {@link String} of length 8 as the hex representation of a 4-byte (int) value, for example "12630102".
+	 * @param assignedNumber	A {@link String} of length <= 8 as the hex representation of a 4-byte (int) value, for example "12630102".
 	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
 	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
 	 */
 	public static UUID fromInt(String assignedNumber, String uuidTemplate)
 	{
-		if( assignedNumber == null || assignedNumber.length() != 8 )  return INVALID;
+		if( assignedNumber_earlyOut(assignedNumber, 8) )  return INVALID;
 
-		String uuid = assignedNumber + uuidTemplate.substring(8, uuidTemplate.length());
+		String uuid = padAssignedNumber(assignedNumber, 8) + uuidTemplate.substring(8, uuidTemplate.length());
 
 		return fromString(uuid);
 	}
 
 	/**
 	 * Convenience forwarding of {@link UUID#fromString(String)}.
-	 * 
-	 * @param value
 	 */
 	public static UUID fromString(final String value)
 	{

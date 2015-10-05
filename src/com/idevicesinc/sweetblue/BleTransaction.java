@@ -100,8 +100,6 @@ public abstract class BleTransaction
 	/**
 	 * Implement this method to kick off your transaction. Usually you kick off some reads/writes inside
 	 * your override and call {@link #succeed()} or {@link #fail()} depending on how things went.
-	 * 
-	 * @param device
 	 */
 	protected abstract void start(BleDevice device);
 	
@@ -111,16 +109,11 @@ public abstract class BleTransaction
 	 * the transaction, for example if {@link #getDevice()} becomes {@link BleDeviceState#DISCONNECTED}.
 	 * 
 	 * Override this method to wrap up any loose ends or notify UI or what have you.
-	 * 
-	 * @param device
-	 * @param reason
 	 */
 	protected void onEnd(BleDevice device, EndReason reason){}
 	
 	/**
 	 * Optional convenience method to override if you want to do periodic updates or time-based calculations.
-	 * 
-	 * @param timeStep
 	 */
 	protected void update(double timeStep){}
 	
