@@ -695,17 +695,22 @@ public class BleServer extends BleNode
 
 			private final int m_nativeBit;
 
-			AdvertiseResult(int nativeBit) {
+			AdvertiseResult(int nativeBit)
+			{
 				m_nativeBit = nativeBit;
 			}
 
-			public int getNativeBit() {
+			public int getNativeBit()
+			{
 				return m_nativeBit;
 			}
 
-			public static AdvertiseResult fromNativeBit(int bit) {
-				for (AdvertiseResult res : values()) {
-					if (res.m_nativeBit == bit) {
+			public static AdvertiseResult fromNativeBit(int bit)
+			{
+				for (AdvertiseResult res : values())
+				{
+					if (res.m_nativeBit == bit)
+					{
 						return res;
 					}
 				}
@@ -721,7 +726,8 @@ public class BleServer extends BleNode
 			private final BleServer m_server;
 			private final AdvertiseResult result;
 
-			AdvertiseEvent(BleServer server, AdvertiseResult result) {
+			AdvertiseEvent(BleServer server, AdvertiseResult result)
+			{
 				m_server = server;
 				this.result = result;
 			}
@@ -729,19 +735,28 @@ public class BleServer extends BleNode
 			/**
 			 * The backing {@link BleManager} which is attempting to start advertising.
 			 */
-			public BleServer server() { return m_server; }
+			public BleServer server()
+			{
+				return m_server;
+			}
 
 			/**
 			 * Whether or not {@link #startAdvertising(BleAdvertiseConfig)} was successful or not. If false,
 			 * then call {@link #result} to get the error code.
 			 */
-			public boolean wasSuccess() { return result == AdvertiseResult.SUCCESS; }
+			public boolean wasSuccess()
+			{
+				return result == AdvertiseResult.SUCCESS;
+			}
 
 			/**
 			 * Returns {@link com.idevicesinc.sweetblue.BleServer.AdvertiseListener.AdvertiseResult} describing
 			 * the result of calling {@link #startAdvertising(BleAdvertiseConfig)}
 			 */
-			public AdvertiseResult result() { return result; }
+			public AdvertiseResult result()
+			{
+				return result;
+			}
 		}
 
 		/**

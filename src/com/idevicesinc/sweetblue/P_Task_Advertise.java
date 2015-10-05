@@ -79,6 +79,7 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
                     if (m_listener != null)
                     {
                         m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), BleServer.AdvertiseListener.AdvertiseResult.SUCCESS));
+                        succeed();
                     }
                 }
 
@@ -88,7 +89,9 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
                     super.onStartFailure(errorCode);
                     if (m_listener != null)
                     {
-                        m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), BleServer.AdvertiseListener.AdvertiseResult.fromNativeBit(errorCode)));
+                        BleServer.AdvertiseListener.AdvertiseResult res = BleServer.AdvertiseListener.AdvertiseResult.fromNativeBit(errorCode);
+                        m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), res));
+                        fail();
                     }
                 }
             });
@@ -147,6 +150,7 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
                     {
                         getServer().onAdvertiseResult(BleServer.AdvertiseListener.AdvertiseResult.SUCCESS);
                     }
+                    succeed();
                 }
 
                 @Override
@@ -162,6 +166,7 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
                     {
                         getServer().onAdvertiseResult(result);
                     }
+                    fail();
                 }
             });
         }
