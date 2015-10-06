@@ -6,7 +6,6 @@ import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
-import android.util.Log;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -32,7 +31,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private final int m_retryCountMax = 3;
 
-	private final ScanCallback m_scanCallback_postLollipop = !Utils.isLollipop() ? null : new ScanCallback()
+	private final ScanCallback m_scanCallback_postLollipop = false == Utils.isLollipop() ? null : new ScanCallback()
 	{
 		public void onScanResult(final int callbackType, final ScanResult result)
 		{
@@ -58,7 +57,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			final ScanRecord scanRecord = result.getScanRecord();
 
-			getManager().onDiscovered(result.getDevice(), result.getRssi(), scanRecord.getBytes());
+			getManager().onDiscoveredFromNativeStack(result.getDevice(), result.getRssi(), scanRecord.getBytes());
 		}
 
 		public void onBatchScanResults(final List<ScanResult> results)

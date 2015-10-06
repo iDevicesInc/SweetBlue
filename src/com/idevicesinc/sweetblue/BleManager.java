@@ -1614,7 +1614,8 @@ public class BleManager
 
 		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
 		{
-			@Override public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			@Override
+			public void onStateChange(PA_Task taskClass, PE_TaskState state)
 			{
 				if (state.isEndingState())
 				{
@@ -2340,7 +2341,7 @@ public class BleManager
 			newDevice.setName(name);
 		}
 		
-		onDiscovered_wrapItUp(newDevice, device_native, /*newlyDiscovered=*/true, null, null, 0, BleDeviceOrigin.EXPLICIT);
+		onDiscovered_wrapItUp(newDevice, device_native, /*newlyDiscovered=*/true, /*scanRecord=*/null, 0, BleDeviceOrigin.EXPLICIT, /*scanEvent=*/null);
 
 		return newDevice;
 	}
@@ -2484,20 +2485,20 @@ public class BleManager
 		}
 	}
 
-	void onDiscovered(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
+	void onDiscoveredFromNativeStack(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
 		//---		discover another device or two. We're checking the enum state as opposed to the native
 		//---		integer state because in this case the "turn off ble" task hasn't started yet and thus
 		//---		hasn't called down into native code and thus the native state hasn't changed.
-		if( !is(ON) )  return;
+		if( false == is(ON) )  return;
 
 		//--- DRK > Not sure if queued up messages to library's thread can sneak in a device discovery event
 		//---		after user called stopScan(), so just a check to prevent unexpected callbacks to the user.
-		if( !is(SCANNING) )  return;
+		if( false == is(SCANNING) )  return;
 
-		String rawDeviceName = "";
+		final String rawDeviceName;
 
 		try
 		{
@@ -2522,64 +2523,64 @@ public class BleManager
 			return;
 		}
 
-		String loggedDeviceName = rawDeviceName;
-		loggedDeviceName = loggedDeviceName != null ? loggedDeviceName : "<NO_NAME>";
+		final String loggedDeviceName = rawDeviceName != null ? rawDeviceName : "<NO_NAME>";
 
-		String macAddress = device_native.getAddress();
-		BleDevice device = m_deviceMngr.get(macAddress);
+		final String macAddress = device_native.getAddress();
+		BleDevice device_sweetblue = m_deviceMngr.get(macAddress);
 
-		if ( device == null )
+		if ( device_sweetblue == null )
     	{
 //    		m_logger.i("Discovered device " + loggedDeviceName + " " + macAddress + " not in list.");
     	}
     	else
     	{
-    		if( device.getNative().equals(device_native) )
+    		if( device_sweetblue.getNative().equals(device_native) )
     		{
 //    			m_logger.i("Discovered device " + loggedDeviceName + " " + macAddress + " already in list.");
     		}
     		else
     		{
-    			m_logger.e("Discovered device " + loggedDeviceName + " " + macAddress + " already in list but with new native device instance.");
-    			ASSERT(false);
+    			ASSERT(false, "Discovered device " + loggedDeviceName + " " + macAddress + " already in list but with new native device instance.");
     		}
     	}
 
-		List<UUID> services_nullable = null;
-
 		final String normalizedDeviceName = Utils_String.normalizeDeviceName(rawDeviceName);
+		final ScanFilter.ScanEvent scanEvent_nullable;
 		
 		final Please please;
 
-		if( device == null )
+		if( device_sweetblue == null )
 		{
-	    	services_nullable = Utils_ScanRecord.parseServiceUuids(scanRecord_nullable);
-	    	byte[] scanRecord = scanRecord_nullable != null ? scanRecord_nullable : BleDevice.EMPTY_BYTE_ARRAY;
-	    	String deviceName = rawDeviceName;
-	    	deviceName = deviceName != null ? deviceName : "";
-	    	boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
-	    	State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
-	    	please = m_filterMngr.allow(m_logger, device_native, services_nullable, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
+			final boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
+			final State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
+			scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(device_native, rawDeviceName, normalizedDeviceName, rssi, lastDisconnectIntent, scanRecord_nullable) : null;
+	    	final String deviceName = rawDeviceName != null ? rawDeviceName : "";
+	    	please = m_filterMngr.allow(m_logger, scanEvent_nullable);
 
-	    	if( please != null && !please.ack() )  return;
+	    	if( please != null && false == please.ack() )  return;
 		}
 		else
 		{
 			please = null;
+			scanEvent_nullable = null;
 		}
 
-    	boolean newlyDiscovered = false;
+    	final boolean newlyDiscovered;
 
-    	if ( device == null )
+    	if ( device_sweetblue == null )
     	{
 			final String name_native = device_native.getName();
 
     		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
-    		device = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
+    		device_sweetblue = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
     		newlyDiscovered = true;
     	}
+		else
+		{
+			newlyDiscovered = false;
+		}
 
-    	onDiscovered_wrapItUp(device, device_native, newlyDiscovered, services_nullable, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY);
+    	onDiscovered_wrapItUp(device_sweetblue, device_native, newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, scanEvent_nullable);
 	}
 
 	private BleDevice newDevice_private(final BluetoothDevice device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
@@ -2618,14 +2619,14 @@ public class BleManager
 			m_deviceMngr.add(device);
 		}
 		
-		onDiscovered_wrapItUp(device, device.getNative(), newlyDiscovered, services_nullable, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY);
+		onDiscovered_wrapItUp(device, device.getNative(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
 	}
 
-    private void onDiscovered_wrapItUp(final BleDevice device, final BluetoothDevice device_native, final boolean newlyDiscovered, final List<UUID> services_nullable, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin)
+    private void onDiscovered_wrapItUp(final BleDevice device, final BluetoothDevice device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
     {
     	if( newlyDiscovered )
     	{
-    		device.onNewlyDiscovered(device_native, services_nullable, rssi, scanRecord_nullable, origin);
+    		device.onNewlyDiscovered(device_native, scanEvent_nullable, rssi, scanRecord_nullable, origin);
 
     		if( m_discoveryListener != null )
     		{
@@ -2635,7 +2636,7 @@ public class BleManager
     	}
     	else
     	{
-    		device.onRediscovered(device_native, services_nullable, rssi, scanRecord_nullable, BleDeviceOrigin.FROM_DISCOVERY);
+    		device.onRediscovered(device_native, scanEvent_nullable, rssi, scanRecord_nullable, BleDeviceOrigin.FROM_DISCOVERY);
 
     		if( m_discoveryListener != null )
     		{
