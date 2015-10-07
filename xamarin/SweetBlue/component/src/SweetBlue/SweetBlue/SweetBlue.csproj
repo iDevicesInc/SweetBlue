@@ -12,7 +12,7 @@
     <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
     <AssemblyName>SweetBlue</AssemblyName>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
-    <ReleaseVersion>2.21.16</ReleaseVersion>
+    <ReleaseVersion>2.22.17</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup>
     <Java7DocPaths>Javadoc/</Java7DocPaths>
@@ -283,6 +283,6 @@
     <JavaDocIndex Include="Javadoc\index.html" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedJar Include="Jars\sweetblue_2_21_16.jar" />
+    <EmbeddedJar Include="Jars\sweetblue_2_22_17.jar" />
   </ItemGroup>
 </Project>
