@@ -1807,6 +1807,13 @@ public class BleServer extends BleNode
 			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.NULL_SERVER);
 		}
 
+		if (isAdvertisingSupportedByAndroidVersion())
+		{
+			getManager().getLogger().e("Advertising NOT supported on android OS's less than Lollipop!");
+
+			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.ANDROID_VERSION_NOT_SUPPORTED);d
+		}
+
 		if (!getManager().is(BleManagerState.ON))
 		{
 			getManager().getLogger().e(BleManager.class.getSimpleName() + " is not " + ON + "! Please use the turnOn() method first.");
