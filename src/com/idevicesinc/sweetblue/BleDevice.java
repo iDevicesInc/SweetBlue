@@ -47,7 +47,7 @@ import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
  * <br><br>
  * Although instances of this class can be created explicitly through
  * {@link BleManager#newDevice(String, String)}, usually they're created
- * implicitly by {@link BleManager} as a status of a scanning operation (e.g.
+ * implicitly by {@link BleManager} as a result of a scanning operation (e.g.
  * {@link BleManager#startScan()}) and sent to you through
  * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
  */
@@ -474,7 +474,7 @@ public class BleDevice extends BleNode
 			private final byte[] m_data;
 
 			/**
-			 * This value gets updated as a status of a {@link BleDevice#readRssi(ReadWriteListener)} call. It will
+			 * This value gets updated as a result of a {@link BleDevice#readRssi(ReadWriteListener)} call. It will
 			 * always be equivalent to {@link BleDevice#getRssi()} but is included here for convenience.
 			 *
 			 * @see BleDevice#getRssi()
@@ -485,7 +485,7 @@ public class BleDevice extends BleNode
 			private final int m_rssi;
 
 			/**
-			 * This value gets set as a status of a {@link BleDevice#setMtu(int, ReadWriteListener)} call. It will
+			 * This value gets set as a result of a {@link BleDevice#setMtu(int, ReadWriteListener)} call. It will
 			 * always be equivalent to {@link BleDevice#getMtu()} but is included here for convenience.
 			 *
 			 * @see BleDevice#getMtu()
@@ -537,7 +537,7 @@ public class BleDevice extends BleNode
 			private final int m_gattStatus;
 
 			/**
-			 * This returns <code>true</code> if this event was the status of an explicit call through SweetBlue, e.g. through
+			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
 			 * {@link BleDevice#read(UUID)}, {@link BleDevice#write(UUID, byte[])}, etc. It will return <code>false</code> otherwise,
 			 * which can happen if for example you use {@link BleDevice#getNativeGatt()} to bypass SweetBlue for whatever reason.
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status#TIMED_OUT},
@@ -4325,7 +4325,7 @@ public class BleDevice extends BleNode
 
 	/**
 	 * Same as {@link #read(java.util.UUID, BleDevice.ReadWriteListener)} but you can use this
-	 * if you don't immediately care about the status. The callback will still be posted to {@link BleDevice.ReadWriteListener}
+	 * if you don't immediately care about the result. The callback will still be posted to {@link BleDevice.ReadWriteListener}
 	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
 	 * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
 	 */
@@ -4641,7 +4641,7 @@ public class BleDevice extends BleNode
 	}
 
 	/**
-	 * Same as {@link #disableNotify(java.util.UUID, BleDevice.ReadWriteListener)} but you can use this if you don't care about the status.
+	 * Same as {@link #disableNotify(java.util.UUID, BleDevice.ReadWriteListener)} but you can use this if you don't care about the result.
 	 * The callback will still be posted to {@link BleDevice.ReadWriteListener}
 	 * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
 	 * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.

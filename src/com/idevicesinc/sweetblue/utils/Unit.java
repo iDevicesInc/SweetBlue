@@ -77,7 +77,7 @@ public abstract class Unit<T>
 	}
 	
 	/**
-	 * Returns a new instance that is the status of doing <code>this - other</code>.
+	 * Returns a new instance that is the result of doing <code>this - other</code>.
 	 */
 	public Unit<T> minus(Unit<T> other)
 	{
@@ -89,7 +89,7 @@ public abstract class Unit<T>
 	}
 	
 	/**
-	 * Returns a new instance that is the status of doing <code>this + other</code>.
+	 * Returns a new instance that is the result of doing <code>this + other</code>.
 	 */
 	public Unit<T> plus(Unit<T> other)
 	{
@@ -101,7 +101,7 @@ public abstract class Unit<T>
 	}
 	
 	/**
-	 * Returns a new instance that is the status of doing <code>this * other</code>.
+	 * Returns a new instance that is the result of doing <code>this * other</code>.
 	 */
 	public Unit<T> times(Unit<T> other)
 	{
@@ -113,7 +113,7 @@ public abstract class Unit<T>
 	}
 	
 	/**
-	 * Returns a new instance that is the status of doing <code>this / other</code>.
+	 * Returns a new instance that is the result of doing <code>this / other</code>.
 	 */
 	public Unit<T> dividedBy(Unit<T> other)
 	{

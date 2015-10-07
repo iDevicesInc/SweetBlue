@@ -1249,6 +1249,9 @@ public class BleManager
 		m_nativeStateTracker.setListener(listener);
 	}
 
+	/**
+	 * Set a listener here to be notified of the result of starting to advertise.
+	 */
 	public void setListener_Advertising(BleServer.AdvertisingListener listener)
 	{
 		enforceMainThread();

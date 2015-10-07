@@ -451,7 +451,7 @@ public class BleServer extends BleNode
 		public static class OutgoingEvent extends ExchangeEvent implements UsesCustomNull
 		{
 			/**
-			 * Returns the m_status of the response, or {@link BleServer.OutgoingListener.Status#NO_RESPONSE_ATTEMPTED} if
+			 * Returns the result of the response, or {@link BleServer.OutgoingListener.Status#NO_RESPONSE_ATTEMPTED} if
 			 * for example {@link BleServer.IncomingListener.Please#doNotRespond(BleServer.OutgoingListener)} was used.
 			 */
 			public Status status()  {  return m_status;  }
@@ -478,7 +478,7 @@ public class BleServer extends BleNode
 			private final int m_gattStatus_received;
 
 			/**
-			 * This returns <code>true</code> if this event was the m_status of an explicit call through SweetBlue, e.g. through
+			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
 			 * {@link BleServer#sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}. It will return <code>false</code> otherwise,
 			 * which can happen if for example you use {@link BleServer#getNative()} to bypass SweetBlue for whatever reason.
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.OutgoingListener.Status#TIMED_OUT},
@@ -676,7 +676,8 @@ public class BleServer extends BleNode
 	}
 
 	/**
-	 * Provide an implementation to {@link BleServer#setListener_Advertise(AdvertisingListener)} to receive a callback
+	 * Provide an implementation to {@link BleServer#setListener_Advertising(AdvertisingListener)}, and
+	 * {@link BleManager#setListener_Advertising(AdvertisingListener)} to receive a callback
 	 * when using {@link #startAdvertising(BleAdvertisingPacket)} for the m_status.
 	 */
 	public static interface AdvertisingListener
@@ -1286,7 +1287,7 @@ public class BleServer extends BleNode
 			private final Status m_status;
 
 			/**
-			 * This returns <code>true</code> if this event was the m_status of an explicit call through SweetBlue, e.g. through
+			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
 			 * {@link BleServer#addService(BleService, ServiceAddListener)}. It will return <code>false</code> otherwise,
 			 * which can happen if for example you use {@link BleServer#getNative()} to bypass SweetBlue for whatever reason.
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener.Status#TIMED_OUT},
@@ -1439,7 +1440,7 @@ public class BleServer extends BleNode
 		serviceMngr_server().setListener(listener_nullable);
 	}
 
-	public void setListener_Advertise(@Nullable(Nullable.Prevalence.NORMAL) final AdvertisingListener listener_nullable)
+	public void setListener_Advertising(@Nullable(Nullable.Prevalence.NORMAL) final AdvertisingListener listener_nullable)
 	{
 		enforceMainThread();
 
