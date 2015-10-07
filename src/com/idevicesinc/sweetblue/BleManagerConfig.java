@@ -349,13 +349,21 @@ public class BleManagerConfig extends BleDeviceConfig
 			public State.ChangeIntent lastDisconnectIntent(){  return m_lastDisconnectIntent;  }
 			private final State.ChangeIntent m_lastDisconnectIntent;
 
-
+			/**
+			 * Returns the advertising flags, if any, parsed from {@link #scanRecord()}.
+			 */
 			public int advertisingFlags()  {  return m_advertisingFlags;  }
 			private final int m_advertisingFlags;
 
+			/**
+			 * Returns the manufacturer-specific data, if any, parsed from {@link #scanRecord()}.
+			 */
 			public SparseArray<byte[]> manufacturerData(){  return m_manufacturerData;  }
 			private final SparseArray<byte[]> m_manufacturerData;
 
+			/**
+			 * Returns the service data, if any, parsed from {@link #scanRecord()}.
+			 */
 			public Map<UUID, byte[]> serviceData()  {  return m_serviceData;  }
 			private final Map<UUID, byte[]> m_serviceData;
 

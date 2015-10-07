@@ -2088,6 +2088,14 @@ public class BleDevice extends BleNode
 	}
 
 	/**
+	 * Returns the advertising flags, if any, parse from {@link #getScanRecord()}.
+	 */
+	public int getAdvertisingFlags()
+	{
+		return m_advertisingFlags;
+	}
+
+	/**
 	 * Returns the advertised services, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
 	 */
 	public @Nullable(Prevalence.NEVER) UUID[] getAdvertisedServices()
@@ -2096,6 +2104,32 @@ public class BleDevice extends BleNode
 
 		final UUID[] toReturn = m_advertisedServices.size() > 0 ? new UUID[m_advertisedServices.size()] : EMPTY_UUID_ARRAY;
 		return m_advertisedServices.toArray(toReturn);
+	}
+
+	/**
+	 * Returns the manufacturer data, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
+	 */
+	public @Nullable(Prevalence.NEVER) SparseArray<byte[]> getManufacturerData()
+	{
+		enforceMainThread();
+
+		final SparseArray<byte[]> toReturn = m_manufacturerData != null ? m_manufacturerData.clone() : new SparseArray<byte[]>();
+
+		return toReturn;
+	}
+
+	/**
+	 * Returns the manufacturer data, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
+	 */
+	public @Nullable(Prevalence.NEVER) Map<UUID, byte[]> getAdvertisedServiceData()
+	{
+		enforceMainThread();
+
+		final Map<UUID, byte[]> toReturn = new HashMap<UUID, byte[]>();
+
+		toReturn.putAll(m_serviceData);
+
+		return toReturn;
 	}
 
 	/**

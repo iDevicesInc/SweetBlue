@@ -55,6 +55,15 @@ class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_State
 		}
 	}
 
+	@Override protected void onNotExecutable()
+	{
+		getManager().ASSERT(false, "Should never have gotten into the queue, and if BLE goes OFF in the mean time should be removed from queue.");
+
+		super.onNotExecutable();
+
+		invokeFailCallback(BleServer.ServiceAddListener.Status.BLE_NOT_ON, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+	}
+
 	public BluetoothGattService getService()
 	{
 		return m_service;

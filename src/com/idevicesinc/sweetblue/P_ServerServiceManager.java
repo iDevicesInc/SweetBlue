@@ -147,6 +147,14 @@ class P_ServerServiceManager extends PA_ServiceManager
 
 			return e;
 		}
+		else if( false == m_server.getManager().is(BleManagerState.ON) )
+		{
+			final BleServer.ServiceAddListener.ServiceAddEvent e = BleServer.ServiceAddListener.ServiceAddEvent.EARLY_OUT(m_server, service, BleServer.ServiceAddListener.Status.BLE_NOT_ON);
+
+			invokeListeners(e, listener_specific_nullable);
+
+			return e;
+		}
 		else if( alreadyAddingOrAdded(service) )
 		{
 			final BleServer.ServiceAddListener.ServiceAddEvent e = BleServer.ServiceAddListener.ServiceAddEvent.EARLY_OUT(m_server, service, BleServer.ServiceAddListener.Status.DUPLICATE_SERVICE);
