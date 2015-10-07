@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
-import com.idevicesinc.sweetblue.utils.BleAdvertisingPacket;
 import com.idevicesinc.sweetblue.utils.FutureData;
 
 import java.util.UUID;

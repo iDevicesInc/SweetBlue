@@ -3,7 +3,6 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.le.AdvertiseSettings;
 
-import com.idevicesinc.sweetblue.utils.BleAdvertisingPacket;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
