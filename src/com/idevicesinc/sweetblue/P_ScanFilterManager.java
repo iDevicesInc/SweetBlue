@@ -44,18 +44,19 @@ class P_ScanFilterManager
 		
 		m_filters.add(filter);
 	}
+
+	public boolean makeEvent()
+	{
+		return m_default != null || m_filters.size() > 0;
+	}
 	
-	BleManagerConfig.ScanFilter.Please allow(P_Logger logger, BluetoothDevice nativeInstance, List<UUID> uuids, String deviceName, String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent)
+	BleManagerConfig.ScanFilter.Please allow(P_Logger logger, final ScanEvent e)
 	{
 		if( m_filters.size() == 0 && m_default == null )  return Please.acknowledge();
-		
-		ScanEvent result = null;
-		
+
 		if( m_default != null )
 		{
-			result = new ScanEvent(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
-			
-			final Please please = m_default.onEvent(result);
+			final Please please = m_default.onEvent(e);
 			
 			logger.checkPlease(please, Please.class);
 
@@ -69,11 +70,9 @@ class P_ScanFilterManager
 		
 		for( int i = 0; i < m_filters.size(); i++ )
 		{
-			result = result != null ? result : new ScanEvent(nativeInstance, uuids, deviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent);
-			
 			final ScanFilter ithFilter = m_filters.get(i);
 			
-			final Please please = ithFilter.onEvent(result);
+			final Please please = ithFilter.onEvent(e);
 			
 			logger.checkPlease(please, Please.class);
 
