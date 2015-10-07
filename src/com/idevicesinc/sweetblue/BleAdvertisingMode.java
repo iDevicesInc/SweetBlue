@@ -3,6 +3,16 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.le.AdvertiseSettings;
 
+import com.idevicesinc.sweetblue.utils.BleAdvertisingPacket;
+import com.idevicesinc.sweetblue.utils.Interval;
+
+/**
+ * Type-safe parallel of static final int members of {@link android.bluetooth.le.AdvertiseSettings}.
+ * Provide an instance to {@link BleServer#startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower)},
+ * {@link BleServer#startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval)}, or
+ * {@link BleServer#startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, BleServer.AdvertisingListener)}
+ * This is only applicable for Android >= 5.0 OS levels.
+ */
 public enum BleAdvertisingMode {
 
     /**

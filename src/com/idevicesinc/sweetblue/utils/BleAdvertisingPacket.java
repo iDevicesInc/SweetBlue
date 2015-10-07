@@ -281,7 +281,7 @@ public class BleAdvertisingPacket {
         return (m_options & Option.INCLUDE_TX_POWER.bit()) == Option.INCLUDE_TX_POWER.bit();
     }
 
-    public AdvertiseSettings getNativeSettings(BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout) {
+    /*package*/ AdvertiseSettings getNativeSettings(BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout) {
         AdvertiseSettings.Builder settings = new AdvertiseSettings.Builder();
         settings.setAdvertiseMode(mode.getNativeMode());
         settings.setTxPowerLevel(power.getNativeMode());
@@ -290,7 +290,7 @@ public class BleAdvertisingPacket {
         return settings.build();
     }
 
-    public AdvertiseData getNativeData() {
+    /*package*/ AdvertiseData getNativeData() {
         AdvertiseData.Builder data = new AdvertiseData.Builder();
         for (UUID id : serviceUuids)
         {

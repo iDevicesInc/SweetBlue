@@ -8,7 +8,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 
-public class P_Task_Advertise extends PA_Task_RequiresBleOn {
+class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
     private final BleAdvertisingPacket m_packet;
     private final BleServer.AdvertisingListener m_listener;
