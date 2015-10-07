@@ -15,13 +15,14 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.le.AdvertiseCallback;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.utils.BleAdvertiseConfig;
+import com.idevicesinc.sweetblue.utils.BleAdvertisingPacket;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
@@ -450,7 +451,7 @@ public class BleServer extends BleNode
 		public static class OutgoingEvent extends ExchangeEvent implements UsesCustomNull
 		{
 			/**
-			 * Returns the result of the response, or {@link BleServer.OutgoingListener.Status#NO_RESPONSE_ATTEMPTED} if
+			 * Returns the m_status of the response, or {@link BleServer.OutgoingListener.Status#NO_RESPONSE_ATTEMPTED} if
 			 * for example {@link BleServer.IncomingListener.Please#doNotRespond(BleServer.OutgoingListener)} was used.
 			 */
 			public Status status()  {  return m_status;  }
@@ -477,7 +478,7 @@ public class BleServer extends BleNode
 			private final int m_gattStatus_received;
 
 			/**
-			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
+			 * This returns <code>true</code> if this event was the m_status of an explicit call through SweetBlue, e.g. through
 			 * {@link BleServer#sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}. It will return <code>false</code> otherwise,
 			 * which can happen if for example you use {@link BleServer#getNative()} to bypass SweetBlue for whatever reason.
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.OutgoingListener.Status#TIMED_OUT},
@@ -675,61 +676,70 @@ public class BleServer extends BleNode
 	}
 
 	/**
-	 * Provide an implementation to {@link BleServer#setListener_Advertise(AdvertiseListener)} to receive a callback
-	 * when using {@link #startAdvertising(BleAdvertiseConfig)} for the result.
+	 * Provide an implementation to {@link BleServer#setListener_Advertise(AdvertisingListener)} to receive a callback
+	 * when using {@link #startAdvertising(BleAdvertisingPacket)} for the m_status.
 	 */
-	public interface AdvertiseListener
+	public static interface AdvertisingListener
 	{
 
 		/**
-		 * Enumeration describing the result of calling {@link #startAdvertising(BleAdvertiseConfig)}.
+		 * Enumeration describing the m_status of calling {@link #startAdvertising(BleAdvertisingPacket)}.
 		 */
-		enum AdvertiseResult
+		public static enum Status implements UsesCustomNull
 		{
-			SUCCESS(-1),
-			DATA_TOO_LARGE(1),
-			TOO_MANY_ADVERTISERS(2),
-			ALREADY_STARTED(3),
-			INTERNAL_ERROR(4),
-			FEATURE_UNSUPPORTED(5);
+			SUCCESS(BleStatuses.ADVERTISE_SUCCESS),
+			DATA_TOO_LARGE(AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE),
+			TOO_MANY_ADVERTISERS(AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS),
+			ALREADY_STARTED(AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED),
+			INTERNAL_ERROR(AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR),
+			ANDROID_VERSION_NOT_SUPPORTED(BleStatuses.ADVERTISE_ANDROID_VERSION_NOT_SUPPORTED),
+			CHIPSET_NOT_SUPPORTED(AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED),
+			BLE_NOT_ON(-1),
+			NULL_SERVER(-2),
+			NULL(-3);
 
-			private final int m_nativeBit;
+			private final int m_nativeStatus;
 
-			AdvertiseResult(int nativeBit)
+			Status(int nativeStatus)
 			{
-				m_nativeBit = nativeBit;
+				m_nativeStatus = nativeStatus;
 			}
 
-			public int getNativeBit()
+			public int getNativeStatus()
 			{
-				return m_nativeBit;
+				return m_nativeStatus;
 			}
 
-			public static AdvertiseResult fromNativeBit(int bit)
+			public static Status fromNativeStatus(int bit)
 			{
-				for (AdvertiseResult res : values())
+				for (Status res : values())
 				{
-					if (res.m_nativeBit == bit)
+					if (res.m_nativeStatus == bit)
 					{
 						return res;
 					}
 				}
 				return SUCCESS;
 			}
+
+			@Override
+			public boolean isNull() {
+				return this == NULL;
+			}
 		}
 
 		/**
 		 * Sub class representing the Advertising Event
 		 */
-		class AdvertiseEvent
+		public static class AdvertisingEvent extends Event implements UsesCustomNull
 		{
 			private final BleServer m_server;
-			private final AdvertiseResult result;
+			private final Status m_status;
 
-			AdvertiseEvent(BleServer server, AdvertiseResult result)
+			AdvertisingEvent(BleServer server, Status m_status)
 			{
 				m_server = server;
-				this.result = result;
+				this.m_status = m_status;
 			}
 
 			/**
@@ -741,28 +751,40 @@ public class BleServer extends BleNode
 			}
 
 			/**
-			 * Whether or not {@link #startAdvertising(BleAdvertiseConfig)} was successful or not. If false,
-			 * then call {@link #result} to get the error code.
+			 * Whether or not {@link #startAdvertising(BleAdvertisingPacket)} was successful or not. If false,
+			 * then call {@link #m_status} to get the error code.
 			 */
 			public boolean wasSuccess()
 			{
-				return result == AdvertiseResult.SUCCESS;
+				return m_status == Status.SUCCESS;
 			}
 
 			/**
-			 * Returns {@link com.idevicesinc.sweetblue.BleServer.AdvertiseListener.AdvertiseResult} describing
-			 * the result of calling {@link #startAdvertising(BleAdvertiseConfig)}
+			 * Returns {@link Status} describing
+			 * the m_status of calling {@link #startAdvertising(BleAdvertisingPacket)}
 			 */
-			public AdvertiseResult result()
+			public Status status()
 			{
-				return result;
+				return m_status;
+			}
+
+			@Override
+			public boolean isNull() {
+				return status() == Status.NULL;
+			}
+
+			@Override
+			public String toString() {
+				return Utils_String.toString(this.getClass(),
+						"server", server().getClass().getSimpleName(),
+						"status", status());
 			}
 		}
 
 		/**
-		 * Called upon the result of calling {@link #startAdvertising(BleAdvertiseConfig)}
+		 * Called upon the m_status of calling {@link #startAdvertising(BleAdvertisingPacket)}
 		 */
-		void onEvent(AdvertiseEvent e);
+		void onEvent(AdvertisingEvent e);
 
 	}
 
@@ -1264,7 +1286,7 @@ public class BleServer extends BleNode
 			private final Status m_status;
 
 			/**
-			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
+			 * This returns <code>true</code> if this event was the m_status of an explicit call through SweetBlue, e.g. through
 			 * {@link BleServer#addService(BleService, ServiceAddListener)}. It will return <code>false</code> otherwise,
 			 * which can happen if for example you use {@link BleServer#getNative()} to bypass SweetBlue for whatever reason.
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener.Status#TIMED_OUT},
@@ -1328,7 +1350,7 @@ public class BleServer extends BleNode
 	private final P_ServerStateTracker m_stateTracker;
 	final P_BleServer_Listeners m_listeners;
 	final P_NativeServerWrapper m_nativeWrapper;
-	private AdvertiseListener m_advertiseListener;
+	private AdvertisingListener m_advertisingListener;
 	private IncomingListener m_incomingListener;
 	private OutgoingListener m_outgoingListener_default;
 	private final boolean m_isNull;
@@ -1417,18 +1439,19 @@ public class BleServer extends BleNode
 		serviceMngr_server().setListener(listener_nullable);
 	}
 
-	public void setListener_Advertise(@Nullable(Nullable.Prevalence.NORMAL) final AdvertiseListener listener_nullable)
+	public void setListener_Advertise(@Nullable(Nullable.Prevalence.NORMAL) final AdvertisingListener listener_nullable)
 	{
 		enforceMainThread();
 
-		m_advertiseListener = listener_nullable;
+		m_advertisingListener = listener_nullable;
 	}
 
-	public @Nullable(Nullable.Prevalence.RARE) AdvertiseListener getListener_Advertise()
+	public @Nullable(Nullable.Prevalence.RARE)
+	AdvertisingListener getListener_Advertise()
 	{
 		enforceMainThread();
 
-		return m_advertiseListener;
+		return m_advertisingListener;
 	}
 
 	/**
@@ -1638,27 +1661,156 @@ public class BleServer extends BleNode
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertiseConfig, AdvertiseListener)}
+	 * Checks to see if the device is running an Android OS which supports
+	 * advertising. This is forwarded from {@link BleManager#isAdvertisingSupportedByAndroidVersion()}.
 	 */
-	public boolean startAdvertising(BleAdvertiseConfig advertiseInfo)
+	public boolean isAdvertisingSupportedByAndroidVersion()
 	{
-		return startAdvertising(advertiseInfo, m_advertiseListener);
+		return getManager().isAdvertisingSupportedByAndroidVersion();
 	}
 
 	/**
-	 * Starts advertising serviceUuids with the information supplied in {@link BleAdvertiseConfig}. Note that this will
+	 * Checks to see if the device supports advertising. This is forwarded from {@link BleManager#isAdvertisingSupportedByChipset()}.
+	 */
+	public boolean isAdvertisingSupportedByChipset()
+	{
+		return getManager().isAdvertisingSupportedByChipset();
+	}
+
+	/**
+	 * Checks to see if the device supports advertising BLE services. This is forwarded from {@link BleManager#isAdvertisingSupported()}.
+	 */
+	public boolean isAdvertisingSupported()
+	{
+		return getManager().isAdvertisingSupported();
+	}
+
+	/**
+	 * Checks to see if the device is currently advertising.
+	 */
+	public boolean isAdvertising()
+	{
+		enforceMainThread();
+
+		return getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager());
+	}
+
+	/**
+	 * Checks to see if the device is currently advertising the given {@link UUID}.
+	 */
+	public boolean isAdvertising(UUID serviceUuid)
+	{
+		enforceMainThread();
+
+		P_Task_Advertise adtask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
+		if (adtask != null)
+		{
+			return adtask.getPacket().hasUuid(serviceUuid);
+		}
+		return false;
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid));
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuids));
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid, serviceData));
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData, BleAdvertisingPacket.Option... options)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid, serviceData, options));
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingPacket.Option... options)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid, options));
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, BleAdvertisingPacket.Option... options)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuids, options));
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket)
+	{
+		return startAdvertising(advPacket, BleAdvertisingMode.MEDIUM_POWER, BleTransmissionPower.MEDIUM, Interval.ZERO, null);
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket, BleAdvertisingMode mode)
+	{
+		return startAdvertising(advPacket, mode, BleTransmissionPower.MEDIUM, Interval.ZERO, null);
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power)
+	{
+		return startAdvertising(advertisePacket, mode, power, Interval.ZERO, null);
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout)
+	{
+		return startAdvertising(advertisePacket, mode, power, timeout, null);
+	}
+
+	/**
+	 * Starts advertising serviceUuids with the information supplied in {@link BleAdvertisingPacket}. Note that this will
 	 * only work for devices on Lollipop, or above. Even then, not every device supports advertising. Use
 	 * {@link BleManager#isAdvertisingSupported()} to check to see if the phone supports it.
 	 */
-	public boolean startAdvertising(BleAdvertiseConfig advertiseInfo, AdvertiseListener listener)
+	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout, AdvertisingListener listener)
 	{
 		enforceMainThread();
+
+		if (isNull())
+		{
+			getManager().getLogger().e(BleServer.class.getSimpleName() + " is null!");
+
+			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.NULL_SERVER);
+		}
 
 		if (!getManager().is(BleManagerState.ON))
 		{
 			getManager().getLogger().e(BleManager.class.getSimpleName() + " is not " + ON + "! Please use the turnOn() method first.");
 
-			return false;
+			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.BLE_NOT_ON);
 		}
 
 		final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
@@ -1666,51 +1818,31 @@ public class BleServer extends BleNode
 		{
 			getManager().getLogger().w(BleServer.class.getSimpleName() + " is already advertising!");
 
-			return false;
+			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.ALREADY_STARTED);
 		}
 		else
 		{
 			getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
 
-			AdvertiseListener adListen = listener;
-			if (adListen == null) {
-				adListen = m_advertiseListener;
-			}
-
-			getManager().getTaskQueue().add(new P_Task_Advertise(this, advertiseInfo, adListen, true));
-			return true;
+			getManager().getTaskQueue().add(new P_Task_Advertise(this, advertisePacket, listener, mode, power, timeout));
+			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.NULL);
 		}
-	}
-
-	/**
-	 * Overload of {@link #stopAdvertising(AdvertiseListener)}
-	 */
-	public void stopAdvertising() {
-		stopAdvertising(null);
 	}
 
 	/**
 	 * Stops the server from advertising.
 	 */
-	public void stopAdvertising(AdvertiseListener listener)
+	public void stopAdvertising()
 	{
 		enforceMainThread();
 
 		final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
 		if (adTask != null)
 		{
-			if (adTask.isStarting()) {
-				getManager().getTaskQueue().clearQueueOf(P_Task_Advertise.class, getManager());
-			}
+			adTask.stopAdvertising();
+			adTask.clearFromQueue();
 		}
 		getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
-
-		AdvertiseListener adListen = listener;
-		if (adListen == null) {
-			adListen = m_advertiseListener;
-		}
-
-		getManager().getTaskQueue().add(new P_Task_Advertise(this, null, adListen, false));
 	}
 
 	/**
@@ -1996,17 +2128,20 @@ public class BleServer extends BleNode
 		}
 	}
 
-	void onAdvertiseResult(AdvertiseListener.AdvertiseResult result)
+	void invokeAdvertiseListeners(AdvertisingListener.Status result, AdvertisingListener listener)
 	{
-		onAdvertiseResult(result, m_advertiseListener);
-	}
-
-	void onAdvertiseResult(AdvertiseListener.AdvertiseResult result, AdvertiseListener listener)
-	{
+		final AdvertisingListener.AdvertisingEvent event = new AdvertisingListener.AdvertisingEvent(this, result);
 		if (listener != null)
 		{
-			AdvertiseListener.AdvertiseEvent event = new AdvertiseListener.AdvertiseEvent(this, result);
 			listener.onEvent(event);
+		}
+		if (m_advertisingListener != null)
+		{
+			m_advertisingListener.onEvent(event);
+		}
+		if (getManager().m_advertisingListener != null)
+		{
+			getManager().m_advertisingListener.onEvent(event);
 		}
 	}
 

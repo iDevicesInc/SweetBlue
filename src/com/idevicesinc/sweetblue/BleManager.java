@@ -50,7 +50,6 @@ import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 /**
@@ -776,6 +775,7 @@ public class BleManager
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
 	IncomingListener m_defaultServerIncomingListener;
 	BleServer.ServiceAddListener m_serviceAddListener;
+	BleServer.AdvertisingListener m_advertisingListener;
 //    final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
@@ -991,18 +991,30 @@ public class BleManager
 	}
 
 	/**
-	 * Checks to see if the phone supports advertising BLE services.
+	 * Checks to see if the device is running an Android OS which supports
+	 * advertising.
+	 */
+	public boolean isAdvertisingSupportedByAndroidVersion()
+	{
+		return Utils.isLollipop();
+	}
+
+	/**
+	 * Checks to see if the device supports advertising.
+	 */
+	public boolean isAdvertisingSupportedByChipset()
+	{
+		return getNativeAdapter().isMultipleAdvertisementSupported();
+	}
+
+	/**
+	 * Checks to see if the device supports advertising BLE services.
 	 */
 	public boolean isAdvertisingSupported()
 	{
 		enforceMainThread();
 
-		if (Build.VERSION.SDK_INT >= 21)
-		{
-			return P_Task_Advertise.canAdvertise(this);
-		}
-
-		return false;
+		return isAdvertisingSupportedByAndroidVersion() && isAdvertisingSupportedByChipset();
 	}
 
 	/**
@@ -1235,6 +1247,13 @@ public class BleManager
 		enforceMainThread();
 
 		m_nativeStateTracker.setListener(listener);
+	}
+
+	public void setListener_Advertising(BleServer.AdvertisingListener listener)
+	{
+		enforceMainThread();
+
+		m_advertisingListener = listener;
 	}
 
 	/**

@@ -90,7 +90,7 @@ public class BleNodeConfig
 	 * Default is <code>true</code> - controls whether the library is allowed to optimize fast disconnect/reconnect cycles
 	 * by actually not disconnecting in the native stack at all. For example, if this option is <code>true</code> and your
 	 * {@link BleDevice} is {@link BleDeviceState#CONNECTED}, calling {@link BleDevice#disconnect()} then {@link BleDevice#connect()}
-	 * again won't result in a native disconnect/reconnect - your actual physical ble device firmware won't know that a disconnect was requested.
+	 * again won't status in a native disconnect/reconnect - your actual physical ble device firmware won't know that a disconnect was requested.
 	 */
 	@Nullable(Nullable.Prevalence.NORMAL)
 	public Boolean disconnectIsCancellable									= true;

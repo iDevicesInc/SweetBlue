@@ -28,6 +28,19 @@ public class BleStatuses
 	 * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.
 	 */
 	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= GATT_STATUS_NOT_APPLICABLE;
+
+
+	/**
+	 * Status code used for {@link BleServer.AdvertisingListener.AdvertisingEvent#status()} when advertising has been
+	 * successfully started.
+	 */
+	public static final int ADVERTISE_SUCCESS = 0;
+
+	/**
+	 * Status code for (@link BleServer.AdvertiseListener.AdvertisingEvent#status} when trying to advertise on
+	 * a device which isn't running an android OS of Lollipop or higher.
+	 */
+	public static final int ADVERTISE_ANDROID_VERSION_NOT_SUPPORTED = 20;
 	
 	/**
      * A bond attempt succeeded.

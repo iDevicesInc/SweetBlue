@@ -940,7 +940,7 @@ public abstract class BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Same as {@link #queryHistoricalData(String)} but performs the query on a background thread and returns the result back on the main thread
+	 * Same as {@link #queryHistoricalData(String)} but performs the query on a background thread and returns the status back on the main thread
 	 * through the provided {@link BleNode.HistoricalDataQueryListener}.
 	 */
 	public void queryHistoricalData(final String query, final HistoricalDataQueryListener listener)

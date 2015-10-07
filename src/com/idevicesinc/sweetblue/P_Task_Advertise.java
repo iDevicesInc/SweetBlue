@@ -1,48 +1,61 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.le.AdvertiseCallback;
-import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
-import android.os.Build;
-import android.os.ParcelUuid;
-import com.idevicesinc.sweetblue.utils.BleAdvertiseConfig;
+import com.idevicesinc.sweetblue.utils.BleAdvertisingPacket;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
-import java.util.Map;
-import java.util.UUID;
 
 
 public class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
-    private final BleAdvertiseConfig m_info;
-    private final BleServer.AdvertiseListener m_listener;
-    private final boolean start;
+    private final BleAdvertisingPacket m_packet;
+    private final BleServer.AdvertisingListener m_listener;
+    private final BleAdvertisingMode m_mode;
+    private final BleTransmissionPower m_power;
+    private final Interval m_timeOut;
+
+    private final AdvertiseCallback adCallback = new AdvertiseCallback()
+    {
+        @Override
+        public void onStartSuccess(AdvertiseSettings settingsInEffect)
+        {
+            getLogger().d("Advertising started successfully.");
+            getServer().invokeAdvertiseListeners(BleServer.AdvertisingListener.Status.SUCCESS, m_listener);
+            succeed();
+        }
+
+        @Override
+        public void onStartFailure(int errorCode)
+        {
+            BleServer.AdvertisingListener.Status result = BleServer.AdvertisingListener.Status.fromNativeStatus(errorCode);
+            getLogger().e("Failed to start advertising! Result: " + result);
+            getServer().invokeAdvertiseListeners(result, m_listener);
+            fail();
+        }
+    };
 
 
-    public P_Task_Advertise(BleServer server, BleAdvertiseConfig info, BleServer.AdvertiseListener listener, boolean start)
+    public P_Task_Advertise(BleServer server, BleAdvertisingPacket info, BleServer.AdvertisingListener listener, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout)
     {
         super(server, null);
-        this.start = start;
-        m_info = info;
+        m_packet = info;
         m_listener = listener;
+        m_mode = mode;
+        m_power = power;
+        m_timeOut = timeout;
     }
 
-    public boolean isStarting()
+    /*package*/ BleAdvertisingPacket getPacket()
     {
-        return start;
+        return m_packet;
     }
 
     @Override
     protected BleTask getTaskType()
     {
-        if (start)
-        {
-            return BleTask.START_ADVERTISING;
-        }
-        else
-        {
-            return BleTask.STOP_ADVERTISING;
-        }
+        return BleTask.START_ADVERTISING;
     }
 
     @Override
@@ -50,14 +63,7 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
     {
         if (Utils.isLollipop())
         {
-            if (start)
-            {
-                startAdvertising(m_info, m_listener);
-            }
-            else
-            {
-                stopAdvertising(m_listener);
-            }
+            invokeStartAdvertising();
         }
         else
         {
@@ -65,122 +71,55 @@ public class P_Task_Advertise extends PA_Task_RequiresBleOn {
         }
     }
 
-    private void stopAdvertising(final BleServer.AdvertiseListener m_listener)
+    /*package*/ void stopAdvertising()
     {
         BluetoothLeAdvertiser ad = getManager().getNativeAdapter().getBluetoothLeAdvertiser();
         if (ad != null)
         {
-            ad.stopAdvertising(new AdvertiseCallback()
-            {
-                @Override
-                public void onStartSuccess(AdvertiseSettings settingsInEffect)
-                {
-                    super.onStartSuccess(settingsInEffect);
-                    if (m_listener != null)
-                    {
-                        m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), BleServer.AdvertiseListener.AdvertiseResult.SUCCESS));
-                        succeed();
-                    }
-                }
-
-                @Override
-                public void onStartFailure(int errorCode)
-                {
-                    super.onStartFailure(errorCode);
-                    if (m_listener != null)
-                    {
-                        BleServer.AdvertiseListener.AdvertiseResult res = BleServer.AdvertiseListener.AdvertiseResult.fromNativeBit(errorCode);
-                        m_listener.onEvent(new BleServer.AdvertiseListener.AdvertiseEvent(getServer(), res));
-                        fail();
-                    }
-                }
-            });
+            ad.stopAdvertising(adCallback);
         }
     }
 
     @Override
     public PE_TaskPriority getPriority()
     {
-        return PE_TaskPriority.MEDIUM;
+        return PE_TaskPriority.TRIVIAL;
     }
 
-    private void startAdvertising(BleAdvertiseConfig info, final BleServer.AdvertiseListener listener)
+    private void invokeStartAdvertising()
     {
-        AdvertiseSettings.Builder settings = new AdvertiseSettings.Builder();
-        settings.setAdvertiseMode(info.getMode().getNativeBit());
-        settings.setTxPowerLevel(info.getPower().getNativeBit());
-        settings.setConnectable(info.isConnectable());
-        if (info.getTimeout() != null)
-        {
-            settings.setTimeout((int) info.getTimeout().millis());
-        }
-        AdvertiseData.Builder data = new AdvertiseData.Builder();
-        for (UUID id : info.getUuids())
-        {
-            data.addServiceUuid(new ParcelUuid(id));
-        }
-        if (info.getManufacturerId() != Integer.MIN_VALUE && info.getManufacturerData() != null)
-        {
-            data.addManufacturerData(info.getManufacturerId(), info.getManufacturerData());
-        }
-        if (info.getServiceData() != null && info.getServiceData().size() > 0)
-        {
-            Map<UUID, byte[]> sdata = info.getServiceData();
-            for (UUID dataUuid : sdata.keySet())
-            {
-                data.addServiceData(new ParcelUuid(dataUuid), sdata.get(dataUuid));
-            }
-        }
-        data.setIncludeDeviceName(info.includeDeviceName());
-        data.setIncludeTxPowerLevel(info.includeTxPowerLevel());
         BluetoothLeAdvertiser advert = getManager().getNativeAdapter().getBluetoothLeAdvertiser();
         if (advert != null)
         {
-            advert.startAdvertising(settings.build(), data.build(), new AdvertiseCallback()
-            {
-                @Override
-                public void onStartSuccess(AdvertiseSettings settingsInEffect)
-                {
-                    getLogger().d("Advertising started successfully.");
-                    if (listener != null)
-                    {
-                        getServer().onAdvertiseResult(BleServer.AdvertiseListener.AdvertiseResult.SUCCESS, listener);
-                    }
-                    else
-                    {
-                        getServer().onAdvertiseResult(BleServer.AdvertiseListener.AdvertiseResult.SUCCESS);
-                    }
-                    succeed();
-                }
-
-                @Override
-                public void onStartFailure(int errorCode)
-                {
-                    BleServer.AdvertiseListener.AdvertiseResult result = BleServer.AdvertiseListener.AdvertiseResult.fromNativeBit(errorCode);
-                    getLogger().e("Failed to start advertising! Result: " + result);
-                    if (listener != null)
-                    {
-                        getServer().onAdvertiseResult(result, listener);
-                    }
-                    else
-                    {
-                        getServer().onAdvertiseResult(result);
-                    }
-                    fail();
-                }
-            });
+            BleAdvertisingMode mode = determineMode(m_mode, m_timeOut, getManager().isForegrounded());
+            advert.startAdvertising(m_packet.getNativeSettings(mode, m_power, m_timeOut), m_packet.getNativeData(), adCallback);
         }
     }
 
-    static boolean canAdvertise(BleManager man)
+    private static BleAdvertisingMode determineMode(BleAdvertisingMode curMode, Interval timeout, boolean foregrounded)
     {
-        if (Build.VERSION.SDK_INT >= 21)
+        if (curMode == BleAdvertisingMode.AUTO)
         {
-            return man.getNativeAdapter().isMultipleAdvertisementSupported();
+            if (foregrounded)
+            {
+                if (timeout == Interval.ZERO)
+                {
+                    return BleAdvertisingMode.MEDIUM_POWER;
+                }
+                else
+                {
+                    return BleAdvertisingMode.HIGH_POWER;
+                }
+            }
+            else
+            {
+                return BleAdvertisingMode.LOW_POWER;
+            }
         }
         else
         {
-            return false;
+            return curMode;
         }
     }
+
 }

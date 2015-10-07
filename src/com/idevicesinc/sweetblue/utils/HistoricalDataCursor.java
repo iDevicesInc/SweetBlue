@@ -33,13 +33,13 @@ public interface HistoricalDataCursor
 	/**
 	 * Move the cursor by a relative amount, forward or backward, from the
 	 * current position. Positive offsets move forwards, negative offsets move
-	 * backwards. If the final position is outside of the bounds of the result
+	 * backwards. If the final position is outside of the bounds of the status
 	 * set then the resultant position will be pinned to -1 or count() depending
 	 * on whether the value is off the front or end of the set, respectively.
 	 *
 	 * <p>This method will return true if the requested destination was
 	 * reachable, otherwise, it returns false. For example, if the cursor is at
-	 * currently on the second entry in the result set and move(-5) is called,
+	 * currently on the second entry in the status set and move(-5) is called,
 	 * the position will be pinned at -1, and false will be returned.
 	 *
 	 * @param offset the offset to be applied from the current position.
@@ -81,7 +81,7 @@ public interface HistoricalDataCursor
 	 * Move the cursor to the next row.
 	 *
 	 * <p>This method will return false if the cursor is already past the
-	 * last entry in the result set.
+	 * last entry in the status set.
 	 *
 	 * @return whether the move succeeded.
 	 */
@@ -91,7 +91,7 @@ public interface HistoricalDataCursor
 	 * Move the cursor to the previous row.
 	 *
 	 * <p>This method will return false if the cursor is already before the
-	 * first entry in the result set.
+	 * first entry in the status set.
 	 *
 	 * @return whether the move succeeded.
 	 */
@@ -115,7 +115,7 @@ public interface HistoricalDataCursor
 	 * Returns whether the cursor is pointing to the position before the first
 	 * row.
 	 *
-	 * @return whether the cursor is before the first result.
+	 * @return whether the cursor is before the first status.
 	 */
 	boolean isBeforeFirst();
 
@@ -123,7 +123,7 @@ public interface HistoricalDataCursor
 	 * Returns whether the cursor is pointing to the position after the last
 	 * row.
 	 *
-	 * @return whether the cursor is after the last result.
+	 * @return whether the cursor is after the last status.
 	 */
 	boolean isAfterLast();
 

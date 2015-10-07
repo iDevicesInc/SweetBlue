@@ -117,7 +117,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 	
 	@Override protected void succeed()
 	{
-//		getDevice().addWriteTime(result.totalTime);
+//		getDevice().addWriteTime(status.totalTime);
 		
 		if( m_enable )
 		{
