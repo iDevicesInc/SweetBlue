@@ -1763,7 +1763,7 @@ public class BleServer extends BleNode
 	 */
 	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket)
 	{
-		return startAdvertising(advPacket, BleAdvertisingMode.MEDIUM_POWER, BleTransmissionPower.MEDIUM, Interval.ZERO, null);
+		return startAdvertising(advPacket, BleAdvertisingMode.MEDIUM_FREQUENCY, BleTransmissionPower.MEDIUM, Interval.ZERO, null);
 	}
 
 	/**
@@ -1788,6 +1788,11 @@ public class BleServer extends BleNode
 	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout)
 	{
 		return startAdvertising(advertisePacket, mode, power, timeout, null);
+	}
+
+	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power, AdvertisingListener listener)
+	{
+		return startAdvertising(advertisePacket, mode, power, Interval.ZERO, listener);
 	}
 
 	/**

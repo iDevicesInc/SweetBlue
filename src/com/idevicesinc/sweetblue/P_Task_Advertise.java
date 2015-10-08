@@ -104,16 +104,16 @@ class P_Task_Advertise extends PA_Task_RequiresBleOn {
             {
                 if (timeout == Interval.ZERO)
                 {
-                    return BleAdvertisingMode.MEDIUM_POWER;
+                    return BleAdvertisingMode.MEDIUM_FREQUENCY;
                 }
                 else
                 {
-                    return BleAdvertisingMode.HIGH_POWER;
+                    return BleAdvertisingMode.HIGH_FREQUENCY;
                 }
             }
             else
             {
-                return BleAdvertisingMode.LOW_POWER;
+                return BleAdvertisingMode.LOW_FREQUENCY;
             }
         }
         else
