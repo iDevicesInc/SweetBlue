@@ -1719,11 +1719,27 @@ public class BleServer extends BleNode
 	}
 
 	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, AdvertisingListener)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, AdvertisingListener listener)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid), listener);
+	}
+
+	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
 	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuids));
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, AdvertisingListener)}.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, AdvertisingListener listener)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuids), listener);
 	}
 
 	/**
@@ -1759,15 +1775,65 @@ public class BleServer extends BleNode
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}.
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)} which sets
+	 * no timeout period.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket)
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingMode mode, BleTransmissionPower power)
 	{
-		return startAdvertising(advPacket, BleAdvertisingMode.MEDIUM_FREQUENCY, BleTransmissionPower.MEDIUM, Interval.ZERO, null);
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid), mode, power, Interval.ZERO, null);
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}.
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)} which sets
+	 * no timeout period.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingMode mode, BleTransmissionPower power, AdvertisingListener listener)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid), mode, power, Interval.ZERO, listener);
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)} which sets
+	 * no timeout period.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid), mode, power, timeout, null);
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)} which sets
+	 * no timeout period.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout, AdvertisingListener listener)
+	{
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid), mode, power, timeout, listener);
+	}
+
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}. This sets
+	 * the {@link BleAdvertisingMode} to {@link BleAdvertisingMode#AUTO}, and {@link BleTransmissionPower} to {@link BleTransmissionPower#MEDIUM}, and
+	 * no timeout for the advertisement.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket)
+	{
+		return startAdvertising(advPacket, BleAdvertisingMode.AUTO, BleTransmissionPower.MEDIUM, Interval.ZERO, null);
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}. This sets
+	 * the {@link BleAdvertisingMode} to {@link BleAdvertisingMode#AUTO}, and {@link BleTransmissionPower} to {@link BleTransmissionPower#MEDIUM}, and
+	 * no timeout for the advertisement.
+	 */
+	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket, AdvertisingListener listener)
+	{
+		return startAdvertising(advPacket, BleAdvertisingMode.AUTO, BleTransmissionPower.MEDIUM, Interval.ZERO, listener);
+	}
+
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}. This sets
+	 * the {@link BleTransmissionPower} to {@link BleTransmissionPower#MEDIUM}, with no timeout.
 	 */
 	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket, BleAdvertisingMode mode)
 	{
@@ -1775,7 +1841,8 @@ public class BleServer extends BleNode
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}.
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}. This also
+	 * sets no timeout period (it will continue to advertise until you call {@link #stopAdvertising()}).
 	 */
 	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power)
 	{
@@ -1790,6 +1857,10 @@ public class BleServer extends BleNode
 		return startAdvertising(advertisePacket, mode, power, timeout, null);
 	}
 
+	/**
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}, which sets no timeout
+	 * period.
+	 */
 	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power, AdvertisingListener listener)
 	{
 		return startAdvertising(advertisePacket, mode, power, Interval.ZERO, listener);
