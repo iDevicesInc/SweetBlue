@@ -206,7 +206,7 @@ public class BleDevice extends BleNode
 			 * example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
 			 * returned a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted,
 			 * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}. {@link ReadWriteEvent#gattStatus()}
-			 * will most likely be non-zero, and you can check the static fields in {@link BleStatuses} for more information.
+			 * will most likely be non-zero, and you can check against the static fields in {@link BleStatuses} for more information.
 			 *
 			 * @see ReadWriteEvent#gattStatus()
 			 */

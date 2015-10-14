@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
@@ -19,6 +20,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.DeadObjectException;
 import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
@@ -50,7 +52,6 @@ import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 /**
@@ -59,18 +60,22 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * <br><br>
  * Also put the following entries (or something similar) in the root of your AndroidManifest.xml:
  * <br><br>
- * {@code <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="21" />}<br>
+ * {@code <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="23" />}<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH" /> }<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> }<br>
  * {@code <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" /> }<br>
  * {@code <uses-permission android:name="android.permission.WAKE_LOCK" /> } <br>
+ * {@code <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> } <br>
  * {@code <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" /> }<br>
  * <br><br>
  * {@link android.Manifest.permission#WAKE_LOCK} is recommended but optional, needed if {@link BleManagerConfig#manageCpuWakeLock} is enabled to aid with reconnect loops.
  * As of now it's enabled by default.
- * <br><br><br>
- *
- * Then here is a simple example usage:<pre><code>
+ * <br><br>
+ * {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} (or {@link android.Manifest.permission#ACCESS_FINE_LOCATION})
+ * is also strongly recommended but optional. Without it, {@link BleManager#startScan()} and overloads will not properly return results in {@link android.os.Build.VERSION_CODES#M} and above.
+ * See {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)} for more information.
+ * <br><br>
+ * Now here is a simple example usage:<pre><code>
  * public class MyActivity extends Activity
  * {
  *     {@literal @}Override protected void onCreate(Bundle savedInstanceState)
@@ -1257,6 +1262,8 @@ public class BleManager
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter, DiscoveryListener discoveryListener)
 	{
+		showScanWarningIfNeeded();
+
 		enforceMainThread();
 
 		if( discoveryListener != null )
@@ -1273,7 +1280,7 @@ public class BleManager
 		{
 			if( doAutoScan() )
 			{
-				startScan(m_config.autoScanActiveTime);
+				startScan_private(m_config.autoScanActiveTime, null, null, /*isPoll=*/true);
 			}
 		}
 	}
@@ -1379,12 +1386,52 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
+	 * <br><br>
+	 * WARNING: For {@link android.os.Build.VERSION_CODES#M} and up, in order for this method to return scan events
+	 * through {@link ScanFilter} you must have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION}
+	 * in your AndroidManifest.xml, AND enabled at runtime (see {@link #isLocationEnabledForScanning_byRuntimePermissions()} and {@link #turnOnLocationWithIntent_forPermissions(Activity, int)}),
+	 * AND location services should be enabled (see {@link #isLocationEnabledForScanning_byOsServices()} and {@link #isLocationEnabledForScanning_byOsServices()}).
+	 * <br><br>
+	 * The assumed reason why location must be enabled is that an app might scan for bluetooth devices like iBeacons with known physical locations and unique advertisement packets.
+	 * Knowing the physical locations, the app could report back that you're definitely within ~50 ft. of a given longitude and latitude. With multiple beacons involved and/or fine-tuned RSSI-based
+	 * distance calculations the location could get pretty accurate. For example a department store app could sprinkle a few dozen beacons throughout its store and
+	 * if you had their app running they would know exactly where you are. Not an everyday concern, and it makes BLE even more annoying to implement on Android,
+	 * but Google is understandably erring on the side of privacy and security for its users.
 	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener)
 	{
+		showScanWarningIfNeeded();
+
 		return startScan_private(scanTime, filter, discoveryListener, /*isPoll=*/false);
+	}
+
+	private void showScanWarningIfNeeded()
+	{
+		if( false == isLocationEnabledForScanning() )
+		{
+			final String ENABLED = "enabled";
+			final String DISABLED = "disabled";
+
+			final boolean reasonA = isLocationEnabledForScanning_byManifestPermissions();
+			final boolean reasonB = isLocationEnabledForScanning_byRuntimePermissions();
+			final boolean reasonC = isLocationEnabledForScanning_byOsServices();
+			final String enabledA = reasonA ? ENABLED : DISABLED;
+			final String enabledB = reasonB ? ENABLED : DISABLED;
+			final String enabledC = reasonC ? ENABLED : DISABLED;
+
+			m_logger.w
+					(
+							"As of Android M, in order for low energy scan results to return you must have the following:\n" +
+									"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
+									"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
+									"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
+									"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
+									"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
+									"Good luck!"
+					);
+		}
 	}
 
 	public boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
@@ -1663,6 +1710,110 @@ public class BleManager
 		enforceMainThread();
 
 		m_deviceMngr.undiscoverAll();
+	}
+
+	/**
+	 * If {@link #isLocationEnabledForScanning_byOsServices()} returns <code>false</code>, you can use this method to allow the user to enable location services.
+	 *
+	 * @see #isLocationEnabledForScanning_byOsServices()
+	 */
+	public void turnOnLocationWithIntent_forOsServices(final Activity callingActivity, int requestCode)
+	{
+		final Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+
+		callingActivity.startActivityForResult(enableLocationIntent, requestCode);
+	}
+
+	/**
+	 * Overload of {@link #turnOnLocationWithIntent_forOsServices(Activity, int)} if you don't care about result.
+	 */
+	public void turnOnLocationWithIntent_forOsServices(final Activity callingActivity)
+	{
+		final Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+
+		callingActivity.startActivity(enableLocationIntent);
+
+		if( false == Utils.isMarshmallow() )
+		{
+			m_logger.w("You may use this method but since you're at SDK level " + Build.VERSION.SDK_INT + " it is not necessary for scanning.");
+		}
+	}
+
+	/**
+	 * If {@link #isLocationEnabledForScanning_byOsServices()} returns <code>false</code>, you can use this method to allow the user to enable location
+	 * through an OS intent. The result of the request (i.e. what the user chose) is passed back through {@link Activity#onRequestPermissionsResult(int, String[], int[])}
+	 * with the requestCode provided as the second parameter to this method.
+	 *
+	 * @see #isLocationEnabledForScanning_byRuntimePermissions()
+	 */
+	public void turnOnLocationWithIntent_forPermissions(final Activity callingActivity, int requestCode)
+	{
+		if( Utils.isMarshmallow() )
+		{
+			callingActivity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, requestCode);
+		}
+		else
+		{
+			m_logger.w("BleManager.turnOnLocationWithIntent_forPermissions() is only applicable for API levels 23 and above so this method does nothing.");
+		}
+	}
+
+	/**
+	 * Returns <code>true</code> if location is enabled to a degree that allows scanning on {@link android.os.Build.VERSION_CODES#M} and above.
+	 * If this returns <code>false</code> it means you're on Android M and you either (A) do not have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION}
+	 * (or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} in your AndroidManifest.xml, see {@link #isLocationEnabledForScanning_byManifestPermissions()}), or (B)
+	 * runtime permissions for aformentioned location permissions are off (see {@link #isLocationEnabledForScanning_byRuntimePermissions()} and
+	 * https://developer.android.com/training/permissions/index.html), or (C) location services on the phone are disabled (see {@link #isLocationEnabledForScanning_byOsServices()}).
+	 * <br><br>
+	 * If this returns <code>true</code> then you are good to go for calling {@link #startScan()}.
+	 *
+	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 *
+	 * @see #turnOnLocationWithIntent_forPermissions(Activity, int)
+	 * @see #turnOnLocationWithIntent_forOsServices(Activity)
+	 * @see #turnOnLocationWithIntent_forOsServices(Activity, int)
+	 */
+	public boolean isLocationEnabledForScanning()
+	{
+		return Utils.isLocationEnabledForScanning(getApplicationContext());
+	}
+
+	/**
+	 * Returns <code>true</code> if you're either pre-Android-M, or app has permission for either {@link android.Manifest.permission#ACCESS_COARSE_LOCATION}
+	 * or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} in your AndroidManifest.xml, <code>false</code> otherwise.
+	 *
+	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 */
+	public boolean isLocationEnabledForScanning_byManifestPermissions()
+	{
+		return Utils.isLocationEnabledForScanning_byManifestPermissions(getApplicationContext());
+	}
+
+	/**
+	 * Returns <code>true</code> if you're either pre-Android-M, or app has runtime permissions enabled by checking {@link android.support.v4.content.ContextCompat#checkSelfPermission(Context, String)}.
+	 * See more information at https://developer.android.com/training/permissions/index.html.
+	 *
+	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 *
+	 * @see #turnOnLocationWithIntent_forPermissions(Activity, int)
+	 */
+	public boolean isLocationEnabledForScanning_byRuntimePermissions()
+	{
+		return Utils.isLocationEnabledForScanning_byRuntimePermissions(getApplicationContext());
+	}
+
+	/**
+	 * Returns <code>true</code> if you're either pre-Android-M, or location services are enabled, the same is if you go to the Android Settings app
+	 * and manually toggle Location ON/OFF.
+	 *
+	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 *
+	 * @see #turnOnLocationWithIntent_forOsServices(Activity)
+	 * @see #turnOnLocationWithIntent_forOsServices(Activity, int)
+	 */
+	public boolean isLocationEnabledForScanning_byOsServices()
+	{
+		return Utils.isLocationEnabledForScanning_byOsServices(getApplicationContext());
 	}
 
 	/**

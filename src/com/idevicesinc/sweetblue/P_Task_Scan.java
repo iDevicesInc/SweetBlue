@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.List;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@TargetApi(Build.VERSION_CODES.M)
 class P_Task_Scan extends PA_Task_RequiresBleOn
 {
 	static final int Mode_NULL			= -1;
@@ -232,6 +232,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				builder.setReportDelay(0);
 			}
 
+			if( Utils.isMarshmallow() )
+			{
+				builder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
+				builder.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE);
+				builder.setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT);
+			}
+
 			final ScanSettings scanSettings = builder.build();
 
 			getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
@@ -329,7 +336,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		if( getManager().m_config.revertToClassicDiscoveryIfNeeded )
 		{
-			if( !getManager().getNativeAdapter().startDiscovery() )
+			if( false == getManager().getNativeAdapter().startDiscovery() )
 			{
 				getLogger().w("Classic discovery failed to start!");
 
