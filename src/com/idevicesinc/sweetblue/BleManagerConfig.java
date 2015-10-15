@@ -36,7 +36,7 @@ public class BleManagerConfig extends BleDeviceConfig
 {
 	public static final double DEFAULT_AUTO_SCAN_PAUSE_TIME				= 3.0;
 	public static final double DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME 	= 0.5;
-	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/30.0;
+	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/50.0;
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 	

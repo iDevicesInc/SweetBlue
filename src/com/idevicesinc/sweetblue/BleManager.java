@@ -2858,6 +2858,8 @@ public class BleManager
 	{
 		enforceMainThread();
 
+		m_listeners.update();
+
 		m_uhOhThrottler.update(timeStep_seconds);
 		m_taskQueue.update(timeStep_seconds);
 
