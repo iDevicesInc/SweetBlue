@@ -465,7 +465,7 @@ class P_BleManager_Listeners
 	{
 		//--- DRK > Note this is not an assert SweetBlue-logic-wise...just want to call out attention to state changes that I assumed were impossible.
 		//---		That said I will not be surprised if this trips.
-		m_mngr.ASSERT(false, "Weird BLE state change from polling: " + m_mngr.getLogger().gattBleState(oldState) + " -> " + m_mngr.getLogger().gattBleState(newState));
+		m_mngr.ASSERT(false, "Weird BLE state change detected from polling: " + m_mngr.getLogger().gattBleState(oldState) + " -> " + m_mngr.getLogger().gattBleState(newState));
 	}
 
 	private void onNativeBleStateChange_fromPolling(final int oldState, final int newState)
@@ -535,7 +535,7 @@ class P_BleManager_Listeners
 					else if( newState == BleStatuses.STATE_BLE_ON )
 					{
 						//--- DRK > Ignoring this because even though oddly enough it's an observed state transition, it doesn't make
-						//---		sense from the perspective of onNativeBleStateChange(). It happens pretty fast so sometimes we miss it.
+						//---		sense from the perspective of onNativeBleStateChange(). Note that it happens pretty fast so sometimes we miss it, but no big deal.
 					}
 					else
 					{
@@ -603,7 +603,7 @@ class P_BleManager_Listeners
 					}
 					else if( newState == BleStatuses.STATE_OFF )
 					{
-						//--- DRK > "Valid" case seen in the wild pre-M.
+						//--- DRK > "Valid" case seen in the wild pre-M. UhOhs/logging are in place to catch it.
 						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_ON, BleStatuses.STATE_OFF);
 					}
 					else
