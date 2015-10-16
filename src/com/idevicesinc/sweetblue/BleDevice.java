@@ -5150,10 +5150,11 @@ public class BleDevice extends BleNode
 
 		if( is(UNBONDED) )
 		{
+			final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
 			final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
 			final boolean doPreBond = getManager().m_diskOptionsMngr.loadNeedsBonding(getMacAddress(), tryBondingWhileDisconnected_manageOnDisk);
 
-			if( doPreBond )
+			if( doPreBond && tryBondingWhileDisconnected )
 			{
 				bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
 
