@@ -1714,6 +1714,9 @@ public class BleManager
 
 	/**
 	 * If {@link #isLocationEnabledForScanning_byOsServices()} returns <code>false</code>, you can use this method to allow the user to enable location services.
+	 * <br><br>
+	 * NOTE: If {@link #isLocationEnabledForScanning_byOsServices()} returns <code>false</code> but all other overloads of {@link #isLocationEnabledForScanning()} return <code>true</code> then
+	 * SweetBlue will fall back to classic discovery through {@link BluetoothAdapter#startDiscovery()} when you call {@link #startScan()} or overloads, so you may not have to use this.
 	 *
 	 * @see #isLocationEnabledForScanning_byOsServices()
 	 */
@@ -1805,6 +1808,9 @@ public class BleManager
 	/**
 	 * Returns <code>true</code> if you're either pre-Android-M, or location services are enabled, the same is if you go to the Android Settings app
 	 * and manually toggle Location ON/OFF.
+	 * <br><br>
+	 * NOTE: If this returns <code>false</code> but all other overloads of {@link #isLocationEnabledForScanning()} return <code>true</code> then
+	 * SweetBlue will fall back to classic discovery through {@link BluetoothAdapter#startDiscovery()} when you call {@link #startScan()} or overloads.
 	 *
 	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
 	 *

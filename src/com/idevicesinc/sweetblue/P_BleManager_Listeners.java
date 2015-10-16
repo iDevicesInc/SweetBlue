@@ -166,7 +166,7 @@ class P_BleManager_Listeners
 		m_mngr.getApplicationContext().registerReceiver(m_receiver, newIntentFilter());
 	}
 
-	private IntentFilter newIntentFilter()
+	private static IntentFilter newIntentFilter()
 	{
 		final IntentFilter intentFilter = new IntentFilter();
 
