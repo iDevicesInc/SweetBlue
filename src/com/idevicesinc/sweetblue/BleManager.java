@@ -1434,7 +1434,7 @@ public class BleManager
 		}
 	}
 
-	public boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
+	private boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
 	{
 		enforceMainThread();
 
@@ -2937,7 +2937,7 @@ public class BleManager
 
 	private boolean doAutoScan()
 	{
-		return m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA);
+		return is(ON) && (m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA));
 	}
 
 	void uhOh(UhOh reason)
