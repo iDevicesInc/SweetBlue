@@ -85,51 +85,46 @@ Getting Started
   3. If building with source, your gradle file should look something like this:
 
     ```gradle
-    android {
     
+    android {
         compileSdkVersion 23
         buildToolsVersion '23.0.0'
         
         defaultConfig {
             minSdkVersion 18
             targetSdkVersion 23
-            
             ...
         }
     
         sourceSets {
             main.java.srcDirs += 'src/main/lib/sweetblue/src'
-            
             ...
         }
-        
         ...
     }
+    
     ```
   4. Else if building with JAR, it should look something like this:
 
     ```gradle
     
     android {
-    
         compileSdkVersion 23
         buildToolsVersion '23.0.0'
         
         defaultConfig {
             minSdkVersion 18
             targetSdkVersion 23
-            
             ...
         }
     
         dependencies {
             compile fileTree(dir: 'libs', include: '*.jar')
-            
             ...
         }
-        
         ...
     }
+    
     ```
 3. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
