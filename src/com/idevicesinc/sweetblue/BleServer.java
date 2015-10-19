@@ -1117,7 +1117,12 @@ public class BleServer extends BleNode
 			 * <br><br>
 			 * Either way, the device was or will be disconnected.
 			 */
-			CANCELLED_FROM_BLE_TURNING_OFF;
+			CANCELLED_FROM_BLE_TURNING_OFF,
+
+			/**
+			 * {@link BleManager} is not {@link BleManagerState#ON} so we can't add a service.
+			 */
+			BLE_NOT_ON;
 
 			/**
 			 * Returns true if <code>this</code> equals {@link #SUCCESS}.

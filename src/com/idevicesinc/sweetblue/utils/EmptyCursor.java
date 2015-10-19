@@ -208,6 +208,12 @@ public class EmptyCursor implements Cursor
 		return false;
 	}
 
+	@Override
+	public void setExtras(Bundle extras)
+	{
+
+	}
+
 	@Override public Bundle getExtras()
 	{
 		return null;

@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.List;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@TargetApi(Build.VERSION_CODES.M)
 class P_Task_Scan extends PA_Task_RequiresBleOn
 {
 	static final int Mode_NULL			= -1;
@@ -120,7 +120,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 			else
 			{
-				tryClassicDiscovery(getIntent());
+				tryClassicDiscovery(getIntent(), /*suppressUhOh=*/false);
 
 				m_mode = Mode_CLASSIC;
 			}
@@ -162,24 +162,49 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 		else
 		{
-			final boolean forcePreLollipopScan = getManager().m_config.forcePreLollipopScan;
-
-			if( true == forcePreLollipopScan || false == Utils.isLollipop() )
+			if( false == getManager().isLocationEnabledForScanning() )
 			{
-				m_mode = startNativeScan_preLollipop(getIntent());
-
-				if( m_mode == Mode_NULL )
+				if( true == getManager().isLocationEnabledForScanning_byRuntimePermissions() && false == getManager().isLocationEnabledForScanning_byOsServices() )
 				{
-					fail();
+					//--- DRK > Classic discovery still seems to work as long as we have permissions.
+					//---		In other words if location services are off we can still do classic scanning.
+					tryClassicDiscovery(getIntent(), /*suppressUhOh=*/true);
+
+					m_mode = Mode_CLASSIC;
+				}
+				else
+				{
+					//--- DRK > Most likely won't return anything, but doesn't hurt to try...if (when) there's a bug in the OS we'll still get scan results
+					//--		even though we're not supposed to.
+					execute_locationEnabledFlow();
 				}
 			}
 			else
 			{
-				m_mode = Mode_BLE;
-				getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-				startNativeScan_postLollipop();
+				execute_locationEnabledFlow();
 			}
+		}
+	}
+
+	private void execute_locationEnabledFlow()
+	{
+		final boolean forcePreLollipopScan = getManager().m_config.forcePreLollipopScan;
+
+		if( true == forcePreLollipopScan || false == Utils.isLollipop() )
+		{
+			m_mode = startNativeScan_preLollipop(getIntent());
+
+			if( m_mode == Mode_NULL )
+			{
+				fail();
+			}
+		}
+		else
+		{
+			m_mode = Mode_BLE;
+			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+			startNativeScan_postLollipop();
 		}
 	}
 
@@ -230,6 +255,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			else
 			{
 				builder.setReportDelay(0);
+			}
+
+			if( Utils.isMarshmallow() )
+			{
+				builder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
+				builder.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE);
+				builder.setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT);
 			}
 
 			final ScanSettings scanSettings = builder.build();
@@ -303,7 +335,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		{
 			getLogger().w("Pre-Lollipop LeScan totally failed to start!");
 
-			tryClassicDiscovery(intent);
+			tryClassicDiscovery(intent, /*suppressUhOh=*/false);
 
 			return Mode_CLASSIC;
 		}
@@ -325,11 +357,11 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 	}
 
-	private boolean tryClassicDiscovery(final E_Intent intent)
+	private boolean tryClassicDiscovery(final E_Intent intent, final boolean suppressUhOh)
 	{
 		if( getManager().m_config.revertToClassicDiscoveryIfNeeded )
 		{
-			if( !getManager().getNativeAdapter().startDiscovery() )
+			if( false == getManager().getNativeAdapter().startDiscovery() )
 			{
 				getLogger().w("Classic discovery failed to start!");
 
@@ -343,7 +375,10 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-				getManager().uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
+				if( false == suppressUhOh )
+				{
+					getManager().uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
+				}
 
 				return true;
 			}

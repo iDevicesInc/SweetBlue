@@ -4,9 +4,10 @@
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>
 <a href="http://75.144.199.157:7117/job/SweetBlue%20Library/">
-  <img align="right" src="https://img.shields.io/badge/version-2.22.17-blue.svg" />
+  <img align="right" src="https://img.shields.io/badge/version-2.26.19-blue.svg" />
   <img align="right" src="https://github.com/iDevicesInc/SweetBlue/blob/master/scripts/assets/whitespace.bmp" />
   <img align="right" src="http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue%20Library"/>
+  
 </a>
 <p align="center">
   <br>
@@ -82,29 +83,54 @@ Getting Started
 2. Else if using **Android Studio** or **Gradle**...
   1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/src/main/lib/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
   2. Open the app module's `build.gradle` file.
-  3. If building with source, add the following to `sourceSets`:
+  3. If building with source, your gradle file should look something like this:
 
     ```gradle
+    
     android {
-        ...
-        sourceSets {
+        compileSdkVersion 23
+        buildToolsVersion '23.0.0'
+        
+        defaultConfig {
+            minSdkVersion 18
+            targetSdkVersion 23
             ...
-            main.java.srcDirs += 'src/main/lib/sweetblue/src'
         }
+    
+        sourceSets {
+            main.java.srcDirs += 'src/main/lib/sweetblue/src'
+            ...
+        }
+        ...
     }
+    
     ```
-  4. Else if building with JAR, add the following to `dependencies`:
+  4. Else if building with JAR, it should look something like this:
 
     ```gradle
-    dependencies {
+    
+    android {
+        compileSdkVersion 23
+        buildToolsVersion '23.0.0'
+        
+        defaultConfig {
+            minSdkVersion 18
+            targetSdkVersion 23
+            ...
+        }
+    
+        dependencies {
+            compile fileTree(dir: 'libs', include: '*.jar')
+            ...
+        }
         ...
-        compile fileTree(dir: 'libs', include: '*.jar')
     }
+    
     ```
 3. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```xml
-    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="21" />
+    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="23" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />

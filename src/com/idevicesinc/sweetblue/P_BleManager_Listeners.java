@@ -17,6 +17,9 @@ import android.util.Log;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
+import com.idevicesinc.sweetblue.utils.Utils;
+
+import java.lang.reflect.Method;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class P_BleManager_Listeners
@@ -32,7 +35,8 @@ class P_BleManager_Listeners
 			{
 				post(new Runnable()
 				{
-					@Override public void run()
+					@Override
+					public void run()
 					{
 						onLeScan_mainThread(device_native, rssi, scanRecord);
 					}
@@ -107,7 +111,7 @@ class P_BleManager_Listeners
 			
 			if ( action.equals(BluetoothAdapter.ACTION_STATE_CHANGED) )
 			{
-				onNativeBleStateChange(context, intent);
+				onNativeBleStateChangeFromBroadcastReceiver(context, intent);
 			}
 			else if( action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED) )
 			{
@@ -134,37 +138,35 @@ class P_BleManager_Listeners
 				}
 				else if( action.equals(BluetoothDevice.ACTION_UUID) )
 				{
-					m_logger.e("");
+					m_mngr.getLogger().e("");
 				}
 				
 				BleDevice device = m_mngr.getDevice(device_native.getAddress());
 				
 				if( device != null )
 				{
-//					m_logger.e("Known device " + device.getDebugName() + " " + action);
+//					m_mngr.getLogger().e("Known device " + device.getDebugName() + " " + action);
 				}
 				else
 				{
-//					m_logger.e("Mystery device " + device_native.getName() + " " + device_native.getAddress() + " " + action);
+//					m_mngr.getLogger().e("Mystery device " + device_native.getName() + " " + device_native.getAddress() + " " + action);
 				}
 			}
 		}
 	};
 	
 	private final BleManager m_mngr;
-	private final P_TaskQueue m_taskQueue;
-	private final P_Logger m_logger;
+
+	private int m_nativeState;
 	
 	P_BleManager_Listeners(BleManager bleMngr)
 	{
 		m_mngr = bleMngr;
-		m_taskQueue = m_mngr.getTaskQueue();
-		m_logger = m_mngr.getLogger();
 
 		m_mngr.getApplicationContext().registerReceiver(m_receiver, newIntentFilter());
 	}
 
-	private IntentFilter newIntentFilter()
+	private static IntentFilter newIntentFilter()
 	{
 		final IntentFilter intentFilter = new IntentFilter();
 
@@ -215,18 +217,37 @@ class P_BleManager_Listeners
 
 	private void onClassicDiscoveryFinished()
 	{
-		m_taskQueue.interrupt(P_Task_Scan.class, m_mngr);
+		m_mngr.getTaskQueue().interrupt(P_Task_Scan.class, m_mngr);
 	}
 	
-	private void onNativeBleStateChange(Context context, Intent intent)
+	private void onNativeBleStateChangeFromBroadcastReceiver(Context context, Intent intent)
 	{
 		final int previousNativeState = intent.getExtras().getInt(BluetoothAdapter.EXTRA_PREVIOUS_STATE);
 		final int newNativeState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
 		
 		int logLevel = newNativeState == BluetoothAdapter.ERROR || previousNativeState == BluetoothAdapter.ERROR ? Log.WARN : Log.INFO;
-		m_logger.log(logLevel, "previous=" + m_logger.gattBleState(previousNativeState) + " new=" + m_logger.gattBleState(newNativeState));
+		m_mngr.getLogger().log(logLevel, "previous=" + m_mngr.getLogger().gattBleState(previousNativeState) + " new=" + m_mngr.getLogger().gattBleState(newNativeState));
 
-		onNativeBleStateChange(previousNativeState, newNativeState);
+		if( Utils.isMarshmallow() )
+		{
+			if( previousNativeState == BleStatuses.STATE_ON && newNativeState == BleStatuses.STATE_TURNING_OFF )
+			{
+				if( m_nativeState == BleStatuses.STATE_ON )
+				{
+					m_nativeState = BleStatuses.STATE_TURNING_OFF;
+
+					//--- DRK > We allow this code path in this particular case in marshmallow because STATE_TURNING_OFF is only active
+					//---		for a very short time, so polling might miss it. If polling detects it before this, fine, because we
+					//---		early-out above and never call this method. If afterwards, it skips it because m_nativeState is identical
+					//---		to what's reported from the native stack.
+					onNativeBleStateChange(previousNativeState, newNativeState);
+				}
+			}
+		}
+		else
+		{
+			onNativeBleStateChange(previousNativeState, newNativeState);
+		}
 	}
 	
 	private void onNativeBleStateChange(int previousNativeState, int newNativeState)
@@ -254,11 +275,16 @@ class P_BleManager_Listeners
 		else if( newNativeState == BluetoothAdapter.STATE_OFF )
 		{
 			m_mngr.m_wakeLockMngr.clear();
+
+			if( m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOn.class, m_mngr) )
+			{
+				return;
+			}
 			
-			m_taskQueue.fail(P_Task_TurnBleOn.class, m_mngr);
-			P_Task_TurnBleOff turnOffTask = m_taskQueue.getCurrent(P_Task_TurnBleOff.class, m_mngr);
+			m_mngr.getTaskQueue().fail(P_Task_TurnBleOn.class, m_mngr);
+			P_Task_TurnBleOff turnOffTask = m_mngr.getTaskQueue().getCurrent(P_Task_TurnBleOff.class, m_mngr);
 			intent = turnOffTask == null || turnOffTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
-			m_taskQueue.succeed(P_Task_TurnBleOff.class, m_mngr);
+			m_mngr.getTaskQueue().succeed(P_Task_TurnBleOff.class, m_mngr);
 			
 			//--- DRK > Should have already been handled by the "turning off" event, but this is just to be 
 			//---		sure all devices are cleared in case something weird happens and we go straight
@@ -267,29 +293,29 @@ class P_BleManager_Listeners
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_TURNING_ON )
 		{
-			if( !m_taskQueue.isCurrent(P_Task_TurnBleOn.class, m_mngr) )
+			if( !m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOn.class, m_mngr) )
 			{
-				m_taskQueue.add(new P_Task_TurnBleOn(m_mngr, /*implicit=*/true));
+				m_mngr.getTaskQueue().add(new P_Task_TurnBleOn(m_mngr, /*implicit=*/true));
 				intent = E_Intent.UNINTENTIONAL;
 			}
 			
-			m_taskQueue.fail(P_Task_TurnBleOff.class, m_mngr);
+			m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_ON )
 		{
-			m_taskQueue.fail(P_Task_TurnBleOff.class, m_mngr);
-			P_Task_TurnBleOn turnOnTask = m_taskQueue.getCurrent(P_Task_TurnBleOn.class, m_mngr);
+			m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
+			P_Task_TurnBleOn turnOnTask = m_mngr.getTaskQueue().getCurrent(P_Task_TurnBleOn.class, m_mngr);
 			intent = turnOnTask == null || turnOnTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
-			m_taskQueue.succeed(P_Task_TurnBleOn.class, m_mngr);
+			m_mngr.getTaskQueue().succeed(P_Task_TurnBleOn.class, m_mngr);
 		}
 		else if( newNativeState == BluetoothAdapter.STATE_TURNING_OFF )
 		{
-			if( !m_taskQueue.isCurrent(P_Task_TurnBleOff.class, m_mngr) )
+			if( !m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOff.class, m_mngr) )
 			{
 				m_mngr.m_deviceMngr.disconnectAllForTurnOff(PE_TaskPriority.CRITICAL);
 				
 //				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, E_Intent.UNINTENTIONAL);
-				m_taskQueue.add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
+				m_mngr.getTaskQueue().add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
 
 				if( m_mngr.m_server != null )
 				{
@@ -299,7 +325,7 @@ class P_BleManager_Listeners
 				intent = E_Intent.UNINTENTIONAL;
 			}
 			
-			m_taskQueue.fail(P_Task_TurnBleOn.class, m_mngr);
+			m_mngr.getTaskQueue().fail(P_Task_TurnBleOn.class, m_mngr);
 		}
 		
 		//--- DRK > Can happen I suppose if newNativeState is an error and we revert to using the queried state and it's the same as previous state.
@@ -311,6 +337,8 @@ class P_BleManager_Listeners
 		
 		BleManagerState previousState = BleManagerState.get(previousNativeState);
 		BleManagerState newState = BleManagerState.get(newNativeState);
+
+		m_mngr.getLogger().e(previousNativeState + " " + newNativeState + " " + previousState + " " + newState);
 		
 		m_mngr.getNativeStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
 		m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
@@ -337,7 +365,7 @@ class P_BleManager_Listeners
 //		else if( inconsistentState )
 //		{
 //			m_mngr.uhOh(UhOh.INCONSISTENT_NATIVE_BLE_STATE);
-//			m_logger.w("adapterState=" + m_logger.gattBleState(adapterState) + " newState=" + m_logger.gattBleState(newNativeState));
+//			m_mngr.getLogger().w("adapterState=" + m_mngr.getLogger().gattBleState(adapterState) + " newState=" + m_mngr.getLogger().gattBleState(newNativeState));
 //		}
 	}
 	
@@ -346,7 +374,7 @@ class P_BleManager_Listeners
 		final int previousState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
 		final int newState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
 		int logLevel = newState == BluetoothDevice.ERROR || previousState == BluetoothDevice.ERROR ? Log.WARN : Log.INFO;
-		m_logger.log(logLevel, "previous=" + m_logger.gattBondState(previousState) + " new=" + m_logger.gattBondState(newState));
+		m_mngr.getLogger().log(logLevel, "previous=" + m_mngr.getLogger().gattBondState(previousState) + " new=" + m_mngr.getLogger().gattBondState(newState));
 		
 		final int failReason;
 		
@@ -357,7 +385,7 @@ class P_BleManager_Listeners
 
 			if( failReason != BleStatuses.BOND_SUCCESS )
 			{
-				m_logger.w(m_logger.gattUnbondReason(failReason));
+				m_mngr.getLogger().w(m_mngr.getLogger().gattUnbondReason(failReason));
 			}
 		}
 		else
@@ -376,7 +404,7 @@ class P_BleManager_Listeners
 
 		if( device == null )
 		{
-			final P_Task_Bond bondTask = m_taskQueue.getCurrent(P_Task_Bond.class, m_mngr);
+			final P_Task_Bond bondTask = m_mngr.getTaskQueue().getCurrent(P_Task_Bond.class, m_mngr);
 
 			if( bondTask != null )
 			{
@@ -389,7 +417,7 @@ class P_BleManager_Listeners
 
 		if( device /*still*/== null )
 		{
-			final P_Task_Unbond unbondTask = m_taskQueue.getCurrent(P_Task_Unbond.class, m_mngr);
+			final P_Task_Unbond unbondTask = m_mngr.getTaskQueue().getCurrent(P_Task_Unbond.class, m_mngr);
 
 			if( unbondTask != null )
 			{
@@ -422,5 +450,216 @@ class P_BleManager_Listeners
 //		{
 //			m_mngr.uhOh(UhOh.WENT_FROM_BONDING_TO_UNBONDED);
 //		}
+	}
+
+	private static boolean isBleStateFromPreM(final int state)
+	{
+		return
+				state == BleStatuses.STATE_ON			||
+				state == BleStatuses.STATE_TURNING_OFF  ||
+				state == BleStatuses.STATE_OFF			||
+				state == BleStatuses.STATE_TURNING_ON	;
+	}
+
+	private void assertOnWeirdStateChange(final int oldState, final int newState)
+	{
+		//--- DRK > Note this is not an assert SweetBlue-logic-wise...just want to call out attention to state changes that I assumed were impossible.
+		//---		That said I will not be surprised if this trips.
+		m_mngr.ASSERT(false, "Weird BLE state change detected from polling: " + m_mngr.getLogger().gattBleState(oldState) + " -> " + m_mngr.getLogger().gattBleState(newState));
+	}
+
+	private void onNativeBleStateChange_fromPolling(final int oldState, final int newState)
+	{
+		if( false == isBleStateFromPreM(oldState) || false == isBleStateFromPreM(newState) )
+		{
+			m_mngr.ASSERT(false, "Either " + m_mngr.getLogger().gattBleState(oldState) + " or " + m_mngr.getLogger().gattBleState(newState) + " are not valid pre-M BLE states!");
+		}
+		else
+		{
+			onNativeBleStateChange(oldState, newState);
+		}
+	}
+
+	/**
+	 * See the copy/pasted log statements in {@link BleStatuses} for an example of how the state changes
+	 * occur over the course of a few seconds in Android M.
+	 */
+	public void update()
+	{
+//		m_mngr.getLogger().e("*********************" + m_mngr.getLogger().gattBleState(getBleState()));
+
+		if( Utils.isMarshmallow() )
+		{
+			final int oldState = m_nativeState;
+			final int newState = getBleState();
+
+			if( oldState != newState )
+			{
+				m_nativeState = newState;
+
+				if( oldState == BleStatuses.STATE_ON )
+				{
+					     if( newState == BleStatuses.STATE_TURNING_OFF || newState == BleStatuses.STATE_BLE_TURNING_OFF )
+					{
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_ON, BleStatuses.STATE_TURNING_OFF);
+					}
+					else if( newState == BleStatuses.STATE_OFF )
+					{
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_ON, BleStatuses.STATE_OFF);
+					}
+					else
+					{
+						assertOnWeirdStateChange(oldState, newState);
+					}
+				}
+				else if( oldState == BleStatuses.STATE_TURNING_OFF )
+				{
+					     if( newState == BleStatuses.STATE_ON )
+					{
+						//--- DRK > This is a "valid" case observed in pre-Android-M BroadcastReceiver callbacks.
+						//---		Down the line this will result in an UhOh and log errors and whatnot but we
+						//---		let it pass just because we did previously.
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_OFF, BleStatuses.STATE_ON);
+					}
+					else if( newState == BleStatuses.STATE_OFF )
+					{
+						//--- DRK > Based on limited testing, we *should* get STATE_TURNING_OFF->STATE_BLE_TURNING_OFF->STATE_OFF
+						//---		but it's possible we missed STATE_BLE_TURNING_OFF so no problem, behaves just like pre-M.
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_OFF, BleStatuses.STATE_OFF);
+					}
+					else if( newState == BleStatuses.STATE_BLE_TURNING_OFF )
+					{
+						//--- DRK > We skip this case cause we consider STATE_TURNING_OFF to be the "start"
+						//---		of the turning off process, and STATE_TURNING_OFF->STATE_BLE_TURNING_OFF to just be the "continuation".
+					}
+					else if( newState == BleStatuses.STATE_BLE_ON )
+					{
+						//--- DRK > Ignoring this because even though oddly enough it's an observed state transition, it doesn't make
+						//---		sense from the perspective of onNativeBleStateChange(). Note that it happens pretty fast so sometimes we miss it, but no big deal.
+					}
+					else
+					{
+						assertOnWeirdStateChange(oldState, newState);
+					}
+				}
+				else if( oldState == BleStatuses.STATE_BLE_TURNING_OFF )
+				{
+					if( newState == BleStatuses.STATE_OFF )
+					{
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_OFF, BleStatuses.STATE_OFF);
+					}
+					else
+					{
+						assertOnWeirdStateChange(oldState, newState);
+					}
+				}
+				else if( oldState == BleStatuses.STATE_OFF )
+				{
+					     if( newState == BleStatuses.STATE_ON )
+					{
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_OFF, BleStatuses.STATE_ON);
+					}
+					else if( newState == BleStatuses.STATE_BLE_TURNING_ON || newState == BleStatuses.STATE_TURNING_ON )
+					{
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_OFF, BleStatuses.STATE_TURNING_ON);
+					}
+					else
+					{
+						assertOnWeirdStateChange(oldState, newState);
+					}
+				}
+				else if( oldState == BleStatuses.STATE_BLE_TURNING_ON )
+				{
+					if( newState == BleStatuses.STATE_ON )
+					{
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_ON, BleStatuses.STATE_ON);
+					}
+					else if( newState == BleStatuses.STATE_OFF )
+					{
+						//--- DRK > Have never seen this case directly but *have* seen STATE_TURNING_ON->STATE_OFF so have UhOh/logging-logic
+						//---		in place to handle it.
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_ON, BleStatuses.STATE_OFF);
+					}
+					else if( newState == BleStatuses.STATE_TURNING_ON )
+					{
+						//--- DRK > We skip this case cause we consider STATE_BLE_TURNING_ON to be the "start"
+						//---		of the turning on process, and STATE_BLE_TURNING_ON->STATE_TURNING_ON to just be the "continuation".
+					}
+					else if( newState == BleStatuses.STATE_BLE_ON )
+					{
+						//--- DRK > Also skipping this transition because we consider it the continuation of bluetooth turning on.
+						//---		Next state should be STATE_TURNING_ON.
+					}
+					else
+					{
+						assertOnWeirdStateChange(oldState, newState);
+					}
+				}
+				else if( oldState == BleStatuses.STATE_TURNING_ON )
+				{
+					     if( newState == BleStatuses.STATE_ON )
+					{
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_ON, BleStatuses.STATE_ON);
+					}
+					else if( newState == BleStatuses.STATE_OFF )
+					{
+						//--- DRK > "Valid" case seen in the wild pre-M. UhOhs/logging are in place to catch it.
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_ON, BleStatuses.STATE_OFF);
+					}
+					else
+					{
+						assertOnWeirdStateChange(oldState, newState);
+					}
+				}
+
+
+				//--- DRK > I've put line breaks before this else-if case to emphasize how it doesn't
+				//---		fit in nicely with the rest and should be looked down upon and even ridiculed.
+				else if( oldState == BleStatuses.STATE_BLE_ON )
+				{
+					if( newState == BleStatuses.STATE_OFF )
+					{
+						//--- DRK > This is to cover the case of STATE_ON->STATE_TURNING_OFF->STATE_BLE_ON->STATE_BLE_TURNING_OFF->STATE_OFF (see logcat in BleStatuses)
+						//---		but STATE_BLE_TURNING_OFF gets skipped for whatever reason because the timestep is large.
+						onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_OFF, BleStatuses.STATE_OFF);
+					}
+					else if( newState == BleStatuses.STATE_BLE_TURNING_OFF )
+					{
+						//--- DRK > Skipping because this is just the continuation of the turning off process that should have been caught earlier.
+					}
+					else if( newState == BleStatuses.STATE_TURNING_ON )
+					{
+						//--- DRK > Skipping because this is just the continuation of the bluetooth turning on process.
+					}
+					else
+					{
+						assertOnWeirdStateChange(oldState, newState);
+					}
+				}
+			}
+		}
+	}
+
+	private int getBleState()
+	{
+		if( Utils.isMarshmallow() )
+		{
+			try
+			{
+				final Method method = BluetoothAdapter.class.getDeclaredMethod("getLeState");
+				final Integer state = (Integer) method.invoke(m_mngr.getNativeAdapter());
+
+				return state;
+			}
+			catch (Exception e)
+			{
+
+				return m_mngr.getNativeAdapter().getState();
+			}
+		}
+		else
+		{
+			return m_mngr.getNativeAdapter().getState();
+		}
 	}
 }

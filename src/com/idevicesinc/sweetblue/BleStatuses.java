@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
 
 /**
@@ -73,6 +74,47 @@ public class BleStatuses
      * A bond attempt failed because we received an Authentication Cancel by remote end.
      */
     public static final int UNBOND_REASON_REMOTE_AUTH_CANCELED = 8;
+
+
+
+
+	/**
+	 * Indicates the local Bluetooth adapter is off.
+	 */
+	static final int STATE_OFF = BluetoothAdapter.STATE_OFF;
+
+	/**
+	 * Indicates the local Bluetooth adapter is turning on. However local
+	 * clients should wait for {@link #STATE_ON} before attempting to
+	 * use the adapter.
+	 */
+	static final int STATE_TURNING_ON = BluetoothAdapter.STATE_TURNING_ON;
+
+	/**
+	 * Indicates the local Bluetooth adapter is on, and ready for use.
+	 */
+	static final int STATE_ON = BluetoothAdapter.STATE_ON;
+
+	/**
+	 * Indicates the local Bluetooth adapter is turning off. Local clients
+	 * should immediately attempt graceful disconnection of any remote links.
+	 */
+	static final int STATE_TURNING_OFF = BluetoothAdapter.STATE_TURNING_OFF;
+
+	/**
+	 * Indicates the local Bluetooth adapter is turning Bluetooth LE mode on.
+	 */
+	/*package*/ static final int STATE_BLE_TURNING_ON = 14;
+
+	/**
+	 * Indicates the local Bluetooth adapter is in LE only mode.
+	 */
+	/*package*/ static final int STATE_BLE_ON = 15;
+
+	/**
+	 * Indicates the local Bluetooth adapter is turning off LE only mode.
+	 */
+	/*package*/ static final int STATE_BLE_TURNING_OFF = 16;
 	
 	//--- DRK > List from https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.3_r1.1/stack/include/gatt_api.h
 	//---		Copy/pasting here for easier reference or in case that resource disappears or something.
@@ -151,4 +193,159 @@ public class BleStatuses
 //	public static final int GATT_CONN_LMP_TIMEOUT               = HCI_ERR_LMP_RESPONSE_TIMEOUT;     /* 0x22 connection fail for LMP response tout */
 //	public static final int GATT_CONN_CANCEL                    = L2CAP_CONN_CANCEL;                /* 0x0100 L2CAP connection cancelled  */
 //	typedef UINT16 tGATT_DISCONN_REASON;
+
+
+
+
+	//--- DRK > Just for reference, copy/pasting the logcat logs of polling for ble state changes in recently released Android M.
+
+//	10-15 11:08:13.966 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:13.999 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.032 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.069 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.099 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.131 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.160 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.189 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.222 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.251 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:14.305 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_TURNING_OFF(13)
+//	10-15 11:08:14.332 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_ON(15)
+//	10-15 11:08:14.363 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.389 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.416 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.441 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.467 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.493 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.519 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.546 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.571 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.598 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.624 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.650 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.676 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.703 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.731 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_OFF(16)
+//	10-15 11:08:14.757 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.783 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.809 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.835 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.861 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.887 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.913 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.939 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.965 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:14.992 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.018 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.049 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.076 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.104 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.130 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.156 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.186 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.214 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.241 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.271 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.299 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.325 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.351 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.377 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.405 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.431 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.457 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.484 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.512 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.539 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.565 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.594 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.622 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.649 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.683 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.713 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.740 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.767 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.794 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.821 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.849 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.876 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.904 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.933 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.959 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:15.985 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.012 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.038 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.065 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.093 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.126 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.155 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.182 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.209 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.246 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.276 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.303 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.330 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.360 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.389 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.418 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.446 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.473 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.501 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.528 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.554 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.579 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.605 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_OFF(10)
+//	10-15 11:08:16.632 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.659 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.686 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.715 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.744 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.784 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.813 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.843 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.872 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.902 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.932 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.963 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:16.991 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.020 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.057 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.086 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.115 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.148 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.181 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.211 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.240 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.268 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.297 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.326 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.356 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.386 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.415 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.444 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.472 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.503 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.532 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.562 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.591 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.622 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.651 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.679 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.706 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.735 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.763 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+//	10-15 11:08:17.791 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_TURNING_ON(14)
+
+//	10-15 11:08:17.791 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_BLE_ON(15) // added manually from another test run, not detected in original run
+
+//	10-15 11:08:17.820 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_TURNING_ON(11)
+//	10-15 11:08:17.847 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_TURNING_ON(11)
+//	10-15 11:08:17.873 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_TURNING_ON(11)
+//	10-15 11:08:17.900 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_TURNING_ON(11)
+//	10-15 11:08:17.926 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:17.960 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:17.986 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:18.013 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:18.038 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:18.068 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
+//	10-15 11:08:18.094 6089-6089/com.idevicesllc.connected E/P_BleManager_Listeners: AMY(6089) update() - *********************STATE_ON(12)
 }
