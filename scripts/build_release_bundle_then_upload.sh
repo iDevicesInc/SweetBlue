@@ -6,6 +6,11 @@ SWEETBLUE_DIR=sweetblue_${ver}
 SWEETBLUE_DOCS_DIR=$SWEETBLUE_DIR/docs/api/
 JAR_NAME=sweetblue_$ver
 sh gradlew fullBuild
+if [ "$?" != 0 ];
+then
+	echo "Build failed! Fix errors, then run this script again."
+	exit 1
+fi
 cp $STAGE/sweetblue.zip $STAGE/$JAR_NAME.zip
 read -n 1 -p "Are you sure you want to upload? " sure
 if [ "$sure" = "y" -o "$sure" = "Y" ];
