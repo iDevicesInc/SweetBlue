@@ -1,14 +1,10 @@
 package com.idevicesinc.sweetblue.utils;
 
 import android.app.Activity;
-import android.content.pm.PackageManager;
+import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerState;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * BluetoothStartupHelper is used to handle the new logic that is introduced with {@link android.os.Build.VERSION_CODES#M}.  With {@link android.os.Build.VERSION_CODES#M} you need might need to request
@@ -43,6 +39,7 @@ public class BluetoothStartupHelper {
             CANCELLED_BY_INTENT,
             ALREADY_ENABLED,
             NOT_NEEDED,
+            NEED_ENABLING,
             NEED_RESPONSE,
             ENABLED;
         }
@@ -52,25 +49,68 @@ public class BluetoothStartupHelper {
             public EnablingStage stage(){ return m_stage;}
             private final EnablingStage m_stage;
 
+            public Status status(){ return m_status;}
+            private Status m_status;
+
+            public BluetoothStartupEvent nextEvent()
+            {
+                return new BluetoothStartupEvent(m_bleManager, stage().nextStage());
+            }
+
+            private BleManager m_bleManager;
+
 //            public EnablingStage nextStage(){return m_stage.nextStage();}
 
-            private final HashMap<BluetoothStartupEvent, Status> m_events;
 
             BluetoothStartupEvent(BleManager bleManager, EnablingStage stage)
             {
+                m_bleManager = bleManager;
                 m_stage = stage;
-                populateStatusForStages(bleManager);
+                populateStatusForStages(bleManager, stage);
             }
 
             BluetoothStartupEvent(BleManager bleManager)
             {
-                m_stage = EnablingStage.ENABLE_BLUETOOTH;
-                populateStatusForStages(bleManager);
+                this(bleManager, EnablingStage.ENABLE_BLUETOOTH);
             }
 
-            private void populateStatusForStages(BleManager manager)
+            private void populateStatusForStages(BleManager manager, EnablingStage stage)
             {
-
+                switch (stage){
+                    case ENABLE_BLUETOOTH:
+                        if(manager.isBleSupported() && !manager.is(BleManagerState.ON))
+                        {
+                            m_status = Status.NEED_ENABLING;
+                        }
+                        else
+                        {
+                            m_status = Status.ALREADY_ENABLED;
+                        }
+                        break;
+                    case REQUEST_LOCATION_PERMISSION:
+                        if(!manager.isLocationEnabledForScanning_byRuntimePermissions())
+                        {
+                            m_status = Status.NEED_ENABLING;
+                        }
+                        else
+                        {
+                            m_status = Status.ALREADY_ENABLED;
+                        }
+                        break;
+                    case ENABLE_LOCATION_SERVICES:
+                        if(!manager.isLocationEnabledForScanning_byOsServices())
+                        {
+                            m_status = Status.NEED_ENABLING;
+                        }
+                        else
+                        {
+                            m_status = Status.ALREADY_ENABLED;
+                        }
+                        break;
+                    default:
+                        m_status = Status.NEED_RESPONSE;
+                        break;
+                }
             }
 
             @Override public String toString()
@@ -86,27 +126,38 @@ public class BluetoothStartupHelper {
         public static class Please
         {
             private final static int NULL_REQUEST_CODE = 400; //Fix this to a better int
-            final Activity m_activity;
-            final int m_requestCode;
-            final BluetoothStartupHelperListener m_bluetoothStartupListener;
-            final EnablingStage m_stage;
+            final Context m_context;
+            private final int m_requestCode;
 
-            private Please(Activity activity, int requestCode, EnablingStage stage, BluetoothStartupHelperListener startupListener )
+            private Please(Context context, int requestCode)
             {
-                m_activity = activity;
+                m_context = context;
                 m_requestCode = requestCode;
-                m_stage = stage;
-                m_bluetoothStartupListener = startupListener;
             }
 
-            public static Please doNext()
+            int requestCode()
             {
-                return new Please(null, NULL_REQUEST_CODE, );
+                return m_requestCode;
             }
 
-            public static Please doNextWithRequestCode(Activity activity, int requestCode)
+            Context context()
             {
-                return new Please(activity,, requestCode, null);
+                return m_context;
+            }
+
+            public static Please doNext(Context context)
+            {
+                return new Please(context, NULL_REQUEST_CODE);
+            }
+
+            public static Please doNextWithRequestCode(Context context, int requestCode)
+            {
+                return new Please(context, requestCode);
+            }
+
+            public static Please doNothing()
+            {
+                return new Please(null, NULL_REQUEST_CODE);
             }
 
         }
@@ -119,220 +170,83 @@ public class BluetoothStartupHelper {
         private final int DEFUALT_SETTING_REQUEST_CODE = 91042469;
         @Override
         public Please onEvent(BluetoothStartupEvent e) {
-            return Please.doNextWithRequestCode();
+            return  null;
         }
     };
 
+    private BleManager m_bleManager;
+    private BluetoothStartupHelperListener.Please m_currentPlease;
+    private BluetoothStartupHelperListener.BluetoothStartupEvent m_currentEvent;
+    private final BluetoothStartupHelperListener m_startupListener;
+
     public BluetoothStartupHelper(BleManager bleManager, BluetoothStartupHelperListener startupListener)
     {
-        BluetoothStartupHelperListener.Please please = BluetoothStartupHelperListener.Please.doNext();
-    }
-
-
-    /**
-     * Provide an implementation to
-     */
-    @com.idevicesinc.sweetblue.annotations.Lambda
-    public static interface BluetoothEnabledListener
-    {
-        void bluetoothWasEnabled();
-        void bluetoothStillDisabled();
-    }
-
-    public static interface LocationPermissionListener
-    {
-        void locationPermissionGranted();
-        void locationPermissionDenied();
-    }
-
-    public static interface LocationServicesListener
-    {
-        void locationServicesEnabled();
-        void locationServicesStillDisabled();
-    }
-
-    private final BleManager m_bleManager;
-    private final Activity m_providedActivity;
-    private BluetoothEnabledListener m_bluetoothEnabledListener;
-    private LocationPermissionListener m_locationPermissionListener;
-    private LocationServicesListener m_locationServicesListener;
-    private List<BluetoothStartupHelperListener.EnablingStage> m_neededStages;
-
-    public BluetoothStartupHelper(BleManager bleManager)
-    {
-        m_neededStages = new ArrayList<>();
         m_bleManager = bleManager;
-        m_providedActivity = null;
+        m_currentEvent = new BluetoothStartupHelperListener.BluetoothStartupEvent(bleManager);
+        m_startupListener = startupListener;
+        m_currentPlease = m_startupListener.onEvent(m_currentEvent);
+        eventHandler(m_currentEvent, m_currentPlease);
     }
 
-    public BluetoothStartupHelper(Activity singletonActivity, BleManager bleManager)
+    private void eventHandler(BluetoothStartupHelperListener.BluetoothStartupEvent e, BluetoothStartupHelperListener.Please please)
     {
-        m_neededStages = new ArrayList<>();
-        m_providedActivity = singletonActivity;
-        m_bleManager = bleManager;
-    }
-
-    private boolean isBleOff()
-    {
-        return m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON);
-    }
-
-    private boolean isLocationPermissionEnabled()
-    {
-        return m_bleManager.isLocationEnabledForScanning_byRuntimePermissions();
-    }
-
-    private boolean isLocationServicesEnabled() {
-        return m_bleManager.isLocationEnabledForScanning_byOsServices();
-    }
-
-    private boolean needToEnable(BluetoothStartupHelperListener.EnablingStage stage)
-    {
-        return m_neededStages.contains(stage);
-    }
-
-    private void popStage()
-    {
-        m_neededStages.remove(0);
-    }
-
-    private  void setBleNeededStages()
-    {
-//        if(isBleOff())
+        switch(e.stage())
         {
-            m_neededStages.add(BluetoothStartupHelperListener.EnablingStage.ENABLE_BLUETOOTH);
-        }
-//        if(!isLocationPermissionEnabled())
-        {
-            m_neededStages.add(BluetoothStartupHelperListener.EnablingStage.REQUEST_LOCATION_PERMISSION);
-        }
-//        if(!isLocationServicesEnabled())
-        {
-            m_neededStages.add(BluetoothStartupHelperListener.EnablingStage.ENABLE_LOCATION_SERVICES);
-        }
-    }
-
-    public void enableEverything(BluetoothEnabledListener bluetoothListener, LocationPermissionListener locPermissionListener, LocationServicesListener locServicesListener)
-    {
-        enableEverything(m_providedActivity, bluetoothListener, locPermissionListener, locServicesListener);
-    }
-
-    public void enableEverything(Activity callingActivity, BluetoothEnabledListener bluetoothListener, LocationPermissionListener locPermissionListener, LocationServicesListener locServicesListener)
-    {
-        setBleNeededStages();
-        initListeners(bluetoothListener, locPermissionListener, locServicesListener);
-        enableNextRequirement();
-    }
-
-    public void enableNextRequirement()
-    {
-        enableNextRequirement(m_providedActivity);
-    }
-
-    public void enableNextRequirement(Activity callingActivity)
-    {
-        if(needToEnable(BluetoothStartupHelperListener.EnablingStage.ENABLE_BLUETOOTH))
-        {
-            popStage();
-            enableBluetooth(callingActivity);
-        }
-        else if(needToEnable(BluetoothStartupHelperListener.EnablingStage.REQUEST_LOCATION_PERMISSION))
-        {
-            popStage();
-            requestLocationPermission(callingActivity);
-        }
-        else if(needToEnable(BluetoothStartupHelperListener.EnablingStage.ENABLE_LOCATION_SERVICES))
-        {
-            popStage();
-            enableLocationServices(callingActivity);
+            case ENABLE_BLUETOOTH:
+                if(e.status() != BluetoothStartupHelperListener.Status.ALREADY_ENABLED)
+                {
+                    m_bleManager.turnOnWithIntent((Activity) please.context(), please.requestCode());
+                }
+                else
+                {
+                    updateEventAndPleaseAndCallNextEvent();
+                }
+                break;
+            case ENABLE_BLUETOOTH_RESPONSE:
+                updateEventAndPleaseAndCallNextEvent();
+                break;
+            case REQUEST_LOCATION_PERMISSION:
+                if(e.status() == BluetoothStartupHelperListener.Status.ALREADY_ENABLED)
+                {
+                    m_bleManager.turnOnLocationWithIntent_forPermissions((Activity)please.context(), please.requestCode());
+                }
+                else
+                {
+                    updateEventAndPleaseAndCallNextEvent();
+                }
+                break;
+            case REQUEST_LOCATION_PERMISSION_RESPONSE:
+                updateEventAndPleaseAndCallNextEvent();
+                break;
+            case ENABLE_LOCATION_SERVICES:
+                if(e.status() != BluetoothStartupHelperListener.Status.ALREADY_ENABLED)
+                {
+                    m_bleManager.turnOnLocationWithIntent_forOsServices((Activity) please.context(), please.requestCode());
+                }
+                else
+                {
+                    updateEventAndPleaseAndCallNextEvent();
+                }
+                break;
+            case DONE:
+                break;
         }
     }
 
-    private void initListeners(BluetoothEnabledListener bluetoothListener, LocationPermissionListener locationPermissionListener, LocationServicesListener locationServicesListener)
+    public void onActivityOrPermissionResult(int requestCode)
     {
-        m_bluetoothEnabledListener = bluetoothListener;
-        m_locationPermissionListener = locationPermissionListener;
-        m_locationServicesListener = locationServicesListener;
-    }
-
-    private void enableBluetooth(Activity callingActivity)
-    {
-        enableBluetooth(callingActivity, m_bluetoothEnabledListener);
-    }
-
-    public void enableBluetooth(Activity callingActivity, BluetoothEnabledListener listener)
-    {
-        m_bluetoothEnabledListener = listener;
-        m_bleManager.turnOnWithIntent(callingActivity, BluetoothStartupHelperListener.EnablingStage.ENABLE_BLUETOOTH.getCode());
-    }
-
-    public void enableBluetoothResult(int requestCode, int resultCode)
-    {
-        if(requestCode == BluetoothStartupHelperListener.EnablingStage.ENABLE_BLUETOOTH.getCode())
+        if(requestCode == m_currentPlease.requestCode())
         {
-            if(resultCode == Activity.RESULT_OK)
-            {
-                m_bluetoothEnabledListener.bluetoothWasEnabled();
-            }
-            else
-            {
-                m_bluetoothEnabledListener.bluetoothStillDisabled();
-            }
+            updateEventAndPleaseAndCallNextEvent();
         }
     }
 
-    public void requestLocationPermission(Activity callingActitity)
+    private void updateEventAndPleaseAndCallNextEvent()
     {
-        requestLocationPermission(callingActitity, m_locationPermissionListener);
+        m_currentEvent = m_currentEvent.nextEvent();
+        m_currentPlease = m_startupListener.onEvent(m_currentEvent);
+        eventHandler(m_currentEvent, m_currentPlease);
     }
-
-    public void requestLocationPermission(Activity callingActivity, LocationPermissionListener locationPermissionListener)
-    {
-        m_locationPermissionListener = locationPermissionListener;
-        m_bleManager.turnOnLocationWithIntent_forPermissions(callingActivity, BluetoothStartupHelperListener.EnablingStage.REQUEST_LOCATION_PERMISSION.getCode());
-    }
-
-    public void requestLocationPermissionResult(int requestCode, String[] permissions, int[] grantResult)
-    {
-        if(requestCode == BluetoothStartupHelperListener.EnablingStage.REQUEST_LOCATION_PERMISSION.getCode())
-        {
-            if(grantResult.length > 0 && grantResult[0] == PackageManager.PERMISSION_GRANTED)
-            {
-                m_locationPermissionListener.locationPermissionGranted();
-            }
-            else
-            {
-                m_locationPermissionListener.locationPermissionDenied();
-            }
-        }
-    }
-
-    public void enableLocationServices(Activity callingActivity)
-    {
-        enableLocationServices(callingActivity, m_locationServicesListener);
-    }
-
-    public void enableLocationServices(Activity callingActivity, LocationServicesListener locationServicesListener)
-    {
-        m_locationServicesListener = locationServicesListener;
-        m_bleManager.turnOnLocationWithIntent_forOsServices(callingActivity, BluetoothStartupHelperListener.EnablingStage.ENABLE_LOCATION_SERVICES.getCode());
-    }
-
-    public void enableLocationServicesResult(int requestCode, int resultCode)
-    {
-        if(requestCode == BluetoothStartupHelperListener.EnablingStage.ENABLE_LOCATION_SERVICES.getCode())
-        {
-            if(resultCode == Activity.RESULT_OK)
-            {
-                m_locationServicesListener.locationServicesEnabled();
-            }
-            else
-            {
-                m_locationServicesListener.locationServicesStillDisabled();
-            }
-        }
-    }
-
 
 
 
