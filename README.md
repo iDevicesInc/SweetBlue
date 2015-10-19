@@ -136,8 +136,8 @@ Getting Started
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- Note: Location is a new requirement for scanning in Android M. -->
-    <!--       You may use ACCESS_FINE_LOCATION also or instead. -->
+    <!-- NOTE: Location is a new requirement for scanning in Android M.  -->
+    <!--       You may use ACCESS_FINE_LOCATION also or instead.         -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     ```
         
