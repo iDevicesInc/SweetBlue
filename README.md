@@ -67,20 +67,7 @@ Features
 
 Getting Started
 ===============
-1. If using **Eclipse**...
-  1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/libs/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
-  2. Open the `Package Explorer` view.
-  3. Expand `MyApp/libs/sweetblue/`.
-  4. If building with source...
-    1. Right-click on the `src` folder.
-    2. Hover over `Build Path->`.
-    3. Click `Use as Source Folder`.
-  5. Else if building with JAR...
-    1. Expand the `jars` folder.
-    2. Right click on `sweetblue_{version}.jar`.
-    3. Hover over `Build Path->`.
-    4. Click `Add to Build Path`.
-2. Else if using **Android Studio** or **Gradle**...
+1. if using **Android Studio** or **Gradle**...
   1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/src/main/lib/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
   2. Open the app module's `build.gradle` file.
   3. If building with source, your gradle file should look something like this:
@@ -127,6 +114,19 @@ Getting Started
     }
     
     ```
+2. Else if using **Eclipse**...
+  1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/libs/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
+  2. Open the `Package Explorer` view.
+  3. Expand `MyApp/libs/sweetblue/`.
+  4. If building with source...
+    1. Right-click on the `src` folder.
+    2. Hover over `Build Path->`.
+    3. Click `Use as Source Folder`.
+  5. Else if building with JAR...
+    1. Expand the `jars` folder.
+    2. Right click on `sweetblue_{version}.jar`.
+    3. Hover over `Build Path->`.
+    4. Click `Add to Build Path`.
 3. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```xml
@@ -135,6 +135,9 @@ Getting Started
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Note: Location is a new requirement for scanning in Android M. -->
+    <!--       You may use ACCESS_FINE_LOCATION also or instead. -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     ```
         
