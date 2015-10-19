@@ -131,14 +131,15 @@ Getting Started
  
     ```xml
     <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="23" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
     <!-- NOTE: Location is a new requirement for scanning in Android M.  -->
     <!--       You may use ACCESS_FINE_LOCATION also or instead.         -->
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     ```
         
 4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
