@@ -82,6 +82,7 @@ task gendocs(type: Javadoc) {
     options.linksOffline('http://d.android.com/reference', System.getenv("ANDROID_HOME") + '/docs/reference')
     String v = "${SEMVER}"
     version = v.replace("_", '.')
+    options.setDocTitle("SweetBlue " + version + " API")
     destinationDir = new File("${BUNDLE_FOLDER}/docs/api")
     source = sourceSets.main.allJava
     classpath += configurations.compile

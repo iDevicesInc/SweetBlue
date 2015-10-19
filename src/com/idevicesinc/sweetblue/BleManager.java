@@ -1734,7 +1734,7 @@ public class BleManager
 
 		if( false == Utils.isMarshmallow() )
 		{
-			m_logger.w("You may use this method but since you're at SDK level " + Build.VERSION.SDK_INT + " it is not necessary for scanning.");
+			m_logger.w("You may use this method but since the phone is at " + Build.VERSION.SDK_INT + " and the requirement is "+Build.VERSION_CODES.M+", it is not necessary for scanning.");
 		}
 	}
 
