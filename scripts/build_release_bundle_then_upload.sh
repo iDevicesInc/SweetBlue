@@ -10,10 +10,17 @@ if [ "$sure" = "y" -o "$sure" = "Y" ];
 	then
 		echo "\n${GLITZ}UPLOADING ZIPS TO SERVER${GLITZ}"
 	    cd $STAGE
-	    SERVER_ADDRESS="162.209.102.219"
+	    SERVER_ADDRESS="162.209.102.219"	     
     	sshpass -p $SWEETBLUE_COM_FTP_PASSWORD scp -p $JAR_NAME.zip "${SWEETBLUE_COM_FTP_USERNAME}@${SERVER_ADDRESS}:/var/www/html/sweetblue/downloads"
 	    sshpass -p $SWEETBLUE_COM_FTP_PASSWORD scp -p sweetblue.zip "${SWEETBLUE_COM_FTP_USERNAME}@${SERVER_ADDRESS}:/var/www/html/sweetblue/downloads"
     	cd -
+    	if [ "$?" != 0 ];
+		then	
+			ssh -o StrictHostKeyChecking=no sweetblue@162.209.102.219 uptime
+			echo "Problem with scp. Attempted to setup host key, please run upload_release.sh to upload to server."
+			exit 1
+		fi
+		cd -
     else
     	echo "\nRelease bundle built, but the upload was aborted.\n"
 fi
