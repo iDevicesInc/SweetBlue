@@ -20,28 +20,26 @@ public class BluetoothStartupHelper {
     {
         public static enum EnablingStage
         {
-            ENABLE_BLUETOOTH,
-            ENABLE_BLUETOOTH_RESPONSE,
-            REQUEST_LOCATION_PERMISSION,
-            REQUEST_LOCATION_PERMISSION_RESPONSE,
-            ENABLE_LOCATION_SERVICES,
+            START,
+            ENABLING_BLUETOOTH,
+            REQUESTING_LOCATION_PERMISSION,
+            ENABLING_LOCATION_SERVICES,
             DONE;
 
-            EnablingStage nextStage()
+            EnablingStage next()
             {
-                return values()[ordinal() + 1];
+                return ordinal() + 1 < values().length ? values()[ordinal() + 1] : DONE;
             }
         }
 
         public static enum Status
         {
-            CANCELLED_BY_DIALOG,
-            CANCELLED_BY_INTENT,
-            ALREADY_ENABLED,
-            NOT_NEEDED,
-            NEED_ENABLING,
-            NEED_RESPONSE,
-            ENABLED;
+            ALREADY_ENABLED, //If whatever current stage is already enabled
+            ENABLED, //If the current stage was enabled by the user
+            CANCELLED_BY_DIALOG, //If the current stage was cancelled by the user selecting the dialog
+            CANCELLED_BY_INTENT, //If the current stage was cancelled by the user declining the actual request
+            NOT_NEEDED, //If the current stage isn't needed (occurs with requesting permission on pre-Marshmallow devices)
+            NEEDS_ENABLING; //If the current stage needs to be enabled by the user
         }
 
         public static class BluetoothStartupEvent extends Event
@@ -52,65 +50,25 @@ public class BluetoothStartupHelper {
             public Status status(){ return m_status;}
             private Status m_status;
 
-            public BluetoothStartupEvent nextEvent()
+            BluetoothStartupEvent()
             {
-                return new BluetoothStartupEvent(m_bleManager, stage().nextStage());
+                this(EnablingStage.START);
             }
 
-            private BleManager m_bleManager;
-
-//            public EnablingStage nextStage(){return m_stage.nextStage();}
-
-
-            BluetoothStartupEvent(BleManager bleManager, EnablingStage stage)
+            BluetoothStartupEvent(EnablingStage stage)
             {
-                m_bleManager = bleManager;
+                this(stage, Status.NEEDS_ENABLING);
+            }
+
+            BluetoothStartupEvent(EnablingStage stage, Status status)
+            {
                 m_stage = stage;
-                populateStatusForStages(bleManager, stage);
+                m_status = status;
             }
 
-            BluetoothStartupEvent(BleManager bleManager)
+            void setEventStatus(Status status)
             {
-                this(bleManager, EnablingStage.ENABLE_BLUETOOTH);
-            }
-
-            private void populateStatusForStages(BleManager manager, EnablingStage stage)
-            {
-                switch (stage){
-                    case ENABLE_BLUETOOTH:
-                        if(manager.isBleSupported() && !manager.is(BleManagerState.ON))
-                        {
-                            m_status = Status.NEED_ENABLING;
-                        }
-                        else
-                        {
-                            m_status = Status.ALREADY_ENABLED;
-                        }
-                        break;
-                    case REQUEST_LOCATION_PERMISSION:
-                        if(!manager.isLocationEnabledForScanning_byRuntimePermissions())
-                        {
-                            m_status = Status.NEED_ENABLING;
-                        }
-                        else
-                        {
-                            m_status = Status.ALREADY_ENABLED;
-                        }
-                        break;
-                    case ENABLE_LOCATION_SERVICES:
-                        if(!manager.isLocationEnabledForScanning_byOsServices())
-                        {
-                            m_status = Status.NEED_ENABLING;
-                        }
-                        else
-                        {
-                            m_status = Status.ALREADY_ENABLED;
-                        }
-                        break;
-                    default:
-                        m_status = Status.NEED_RESPONSE;
-                        break;
-                }
+                m_status = status;
             }
 
             @Override public String toString()
@@ -125,19 +83,32 @@ public class BluetoothStartupHelper {
 
         public static class Please
         {
+            final static int DO_NEXT = 0;
+            final static int SKIP_NEXT = 1;
+            final static int DO_NEXT_WITH_REQUEST_CODE = 2;
+            final static int SKIP_NEXT_WITH_REQUEST_CODE = 3;
+            final static int END = 4;
+
             private final static int NULL_REQUEST_CODE = 400; //Fix this to a better int
             final Context m_context;
             private final int m_requestCode;
+            private final int m_stateCode;
 
-            private Please(Context context, int requestCode)
+            private Please(Context context, int stateCode, int requestCode)
             {
                 m_context = context;
                 m_requestCode = requestCode;
+                m_stateCode = stateCode;
             }
 
             int requestCode()
             {
                 return m_requestCode;
+            }
+
+            int stateCode()
+            {
+                return m_stateCode;
             }
 
             Context context()
@@ -147,107 +118,191 @@ public class BluetoothStartupHelper {
 
             public static Please doNext(Context context)
             {
-                return new Please(context, NULL_REQUEST_CODE);
+                return new Please(context, DO_NEXT, NULL_REQUEST_CODE);
             }
 
             public static Please doNextWithRequestCode(Context context, int requestCode)
             {
-                return new Please(context, requestCode);
+                return new Please(context, DO_NEXT_WITH_REQUEST_CODE, requestCode);
             }
 
-            public static Please doNothing()
+            public static Please skipNext(Context context)
             {
-                return new Please(null, NULL_REQUEST_CODE);
+                return new Please(context, SKIP_NEXT, NULL_REQUEST_CODE);
             }
 
+            public static Please skipNextWithRequestCode(Context context, int requestCode)
+            {
+                return new Please(context, SKIP_NEXT_WITH_REQUEST_CODE, requestCode);
+            }
+
+            public static Please stop(Context context)
+            {
+                return new Please(context, END, NULL_REQUEST_CODE);
+            }
         }
 
         Please onEvent(final BluetoothStartupEvent e);
     }
 
     private static final BluetoothStartupHelperListener DEFAULT_STARTUP_LISTENER = new BluetoothStartupHelperListener() {
-        private final int DEFAULT_PERMISSION_REQUEST_CODE = 486016991;
-        private final int DEFUALT_SETTING_REQUEST_CODE = 91042469;
         @Override
         public Please onEvent(BluetoothStartupEvent e) {
-            return  null;
+            return  Please.doNext(null);
         }
     };
 
     private BleManager m_bleManager;
-    private BluetoothStartupHelperListener.Please m_currentPlease;
-    private BluetoothStartupHelperListener.BluetoothStartupEvent m_currentEvent;
     private final BluetoothStartupHelperListener m_startupListener;
+
+    private BluetoothStartupHelperListener.Please m_lastPlease;
+    private BluetoothStartupHelperListener.EnablingStage m_currentStage;
+    private BluetoothStartupHelperListener.BluetoothStartupEvent m_currentEvent;
 
     public BluetoothStartupHelper(BleManager bleManager, BluetoothStartupHelperListener startupListener)
     {
         m_bleManager = bleManager;
-        m_currentEvent = new BluetoothStartupHelperListener.BluetoothStartupEvent(bleManager);
+        m_currentStage = BluetoothStartupHelperListener.EnablingStage.START;
+        m_currentEvent = new BluetoothStartupHelperListener.BluetoothStartupEvent(m_currentStage);
         m_startupListener = startupListener;
-        m_currentPlease = m_startupListener.onEvent(m_currentEvent);
-        eventHandler(m_currentEvent, m_currentPlease);
+        nextStage();
     }
 
-    private void eventHandler(BluetoothStartupHelperListener.BluetoothStartupEvent e, BluetoothStartupHelperListener.Please please)
+    private void nextStage()
     {
-        switch(e.stage())
+        if(m_currentEvent.stage() == BluetoothStartupHelperListener.EnablingStage.START)
         {
-            case ENABLE_BLUETOOTH:
-                if(e.status() != BluetoothStartupHelperListener.Status.ALREADY_ENABLED)
+            m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
+            m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+            handlePleaseResponse();
+        }
+        else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.ENABLING_BLUETOOTH)
+        {
+            //check if bluetooth is on, if it is on pass an event to the library user saying it is already on
+            //get a please in return
+            //if please says stop then done
+            //please holds state, switch on please and do w/e it corresponds to
+            if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON))
+            {
+                m_bleManager.turnOnWithIntent((Activity) m_lastPlease.context(), m_lastPlease.requestCode());
+            }
+            else
+            {
+                m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
+                m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                handlePleaseResponse();
+            }
+        }
+        else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.REQUESTING_LOCATION_PERMISSION)
+        {
+            if(!Utils.isMarshmallow())
+            {
+                m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NOT_NEEDED);
+                m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                handlePleaseResponse();
+            }
+            else
+            {
+                if(!m_bleManager.isLocationEnabledForScanning_byRuntimePermissions())
                 {
-                    m_bleManager.turnOnWithIntent((Activity) please.context(), please.requestCode());
+                    m_bleManager.turnOnLocationWithIntent_forPermissions((Activity) m_lastPlease.context(), m_lastPlease.requestCode());
                 }
                 else
                 {
-                    updateEventAndPleaseAndCallNextEvent();
+                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
+                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                    handlePleaseResponse();
                 }
-                break;
-            case ENABLE_BLUETOOTH_RESPONSE:
-                updateEventAndPleaseAndCallNextEvent();
-                break;
-            case REQUEST_LOCATION_PERMISSION:
-                if(e.status() == BluetoothStartupHelperListener.Status.ALREADY_ENABLED)
-                {
-                    m_bleManager.turnOnLocationWithIntent_forPermissions((Activity)please.context(), please.requestCode());
-                }
-                else
-                {
-                    updateEventAndPleaseAndCallNextEvent();
-                }
-                break;
-            case REQUEST_LOCATION_PERMISSION_RESPONSE:
-                updateEventAndPleaseAndCallNextEvent();
-                break;
-            case ENABLE_LOCATION_SERVICES:
-                if(e.status() != BluetoothStartupHelperListener.Status.ALREADY_ENABLED)
-                {
-                    m_bleManager.turnOnLocationWithIntent_forOsServices((Activity) please.context(), please.requestCode());
-                }
-                else
-                {
-                    updateEventAndPleaseAndCallNextEvent();
-                }
-                break;
-            case DONE:
-                break;
+            }
+        }
+        else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.ENABLING_LOCATION_SERVICES)
+        {
+            if(!m_bleManager.isLocationEnabledForScanning_byOsServices())
+            {
+                m_bleManager.turnOnLocationWithIntent_forOsServices((Activity) m_lastPlease.context(), m_lastPlease.requestCode());
+            }
+            else{
+                m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
+                m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                handlePleaseResponse();
+            }
+        }
+    }
+
+    public void handlePleaseResponse()
+    {
+        if(m_lastPlease.stateCode() == BluetoothStartupHelperListener.Please.DO_NEXT || m_lastPlease.stateCode() == BluetoothStartupHelperListener.Please.DO_NEXT_WITH_REQUEST_CODE)
+        {
+            m_currentStage = m_currentStage.next();
+            m_currentEvent = new BluetoothStartupHelperListener.BluetoothStartupEvent(m_currentStage);
+            nextStage();
+        }
+        else if(m_lastPlease.stateCode() == BluetoothStartupHelperListener.Please.SKIP_NEXT || m_lastPlease.stateCode() == BluetoothStartupHelperListener.Please.SKIP_NEXT_WITH_REQUEST_CODE)
+        {
+            m_currentStage = m_currentStage.next().next();
+            m_currentEvent = new BluetoothStartupHelperListener.BluetoothStartupEvent(m_currentStage);
+            nextStage();
+        }
+        else if(m_lastPlease.stateCode() == BluetoothStartupHelperListener.Please.END)
+        {
+            m_currentStage = BluetoothStartupHelperListener.EnablingStage.DONE;
+            m_currentEvent = new BluetoothStartupHelperListener.BluetoothStartupEvent(m_currentStage);
+            nextStage();
         }
     }
 
     public void onActivityOrPermissionResult(int requestCode)
     {
-        if(requestCode == m_currentPlease.requestCode())
+        if(requestCode == m_lastPlease.requestCode());
         {
-            updateEventAndPleaseAndCallNextEvent();
+            if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.ENABLING_BLUETOOTH)
+            {
+               if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON))
+               {
+                   m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
+                   m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                   handlePleaseResponse();
+               }
+                else
+               {
+                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ENABLED);
+                   m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                   handlePleaseResponse();
+               }
+            }
+            else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.REQUESTING_LOCATION_PERMISSION)
+            {
+                if(!m_bleManager.isLocationEnabledForScanning_byRuntimePermissions())
+                {
+                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
+                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                    handlePleaseResponse();
+                }
+                else
+                {
+                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ENABLED);
+                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                    handlePleaseResponse();
+                }
+            }
+            else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.ENABLING_LOCATION_SERVICES)
+            {
+                if(!m_bleManager.isLocationEnabledForScanning_byOsServices())
+                {
+                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
+                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                    handlePleaseResponse();
+                }
+                else
+                {
+                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ENABLED);
+                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+                    handlePleaseResponse();
+                }
+
+            }
         }
     }
 
-    private void updateEventAndPleaseAndCallNextEvent()
-    {
-        m_currentEvent = m_currentEvent.nextEvent();
-        m_currentPlease = m_startupListener.onEvent(m_currentEvent);
-        eventHandler(m_currentEvent, m_currentPlease);
-    }
-
-
-
 }
+
