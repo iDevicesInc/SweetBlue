@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue.utils;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.BleManager;
@@ -152,7 +153,9 @@ public class BluetoothStartupHelper {
         }
     };
 
-    private BleManager m_bleManager;
+    private AlertDialog.Builder m_reasonDialogBuilder;
+
+    private final BleManager m_bleManager;
     private final BluetoothStartupHelperListener m_startupListener;
 
     private BluetoothStartupHelperListener.Please m_lastPlease;
@@ -172,9 +175,7 @@ public class BluetoothStartupHelper {
     {
         if(m_currentEvent.stage() == BluetoothStartupHelperListener.EnablingStage.START)
         {
-            m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
-            m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-            handlePleaseResponse();
+            updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
         }
         else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.ENABLING_BLUETOOTH)
         {
@@ -188,18 +189,14 @@ public class BluetoothStartupHelper {
             }
             else
             {
-                m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
-                m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                handlePleaseResponse();
+                updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
             }
         }
         else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.REQUESTING_LOCATION_PERMISSION)
         {
             if(!Utils.isMarshmallow())
             {
-                m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NOT_NEEDED);
-                m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                handlePleaseResponse();
+                updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.NOT_NEEDED);
             }
             else
             {
@@ -209,9 +206,7 @@ public class BluetoothStartupHelper {
                 }
                 else
                 {
-                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
-                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                    handlePleaseResponse();
+                    updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
                 }
             }
         }
@@ -222,9 +217,7 @@ public class BluetoothStartupHelper {
                 m_bleManager.turnOnLocationWithIntent_forOsServices((Activity) m_lastPlease.context(), m_lastPlease.requestCode());
             }
             else{
-                m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
-                m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                handlePleaseResponse();
+                updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.ALREADY_ENABLED);
             }
         }
     }
@@ -251,6 +244,13 @@ public class BluetoothStartupHelper {
         }
     }
 
+    private void updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status newStatus)
+    {
+        m_currentEvent.setEventStatus(newStatus);
+        m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+        handlePleaseResponse();
+    }
+
     public void onActivityOrPermissionResult(int requestCode)
     {
         if(requestCode == m_lastPlease.requestCode());
@@ -259,50 +259,36 @@ public class BluetoothStartupHelper {
             {
                if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON))
                {
-                   m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
-                   m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                   handlePleaseResponse();
+                   updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
                }
                 else
                {
-                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ENABLED);
-                   m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                   handlePleaseResponse();
+                   updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.ENABLED);
                }
             }
             else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.REQUESTING_LOCATION_PERMISSION)
             {
                 if(!m_bleManager.isLocationEnabledForScanning_byRuntimePermissions())
                 {
-                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
-                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                    handlePleaseResponse();
+                    updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
                 }
                 else
                 {
-                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ENABLED);
-                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                    handlePleaseResponse();
+                    updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.ENABLED);
                 }
             }
             else if(m_currentStage == BluetoothStartupHelperListener.EnablingStage.ENABLING_LOCATION_SERVICES)
             {
                 if(!m_bleManager.isLocationEnabledForScanning_byOsServices())
                 {
-                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
-                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                    handlePleaseResponse();
+                    updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.NEEDS_ENABLING);
                 }
                 else
                 {
-                    m_currentEvent.setEventStatus(BluetoothStartupHelperListener.Status.ENABLED);
-                    m_lastPlease = m_startupListener.onEvent(m_currentEvent);
-                    handlePleaseResponse();
+                    updateEventStatusAndPassEventToUser(BluetoothStartupHelperListener.Status.ENABLED);
                 }
-
             }
         }
     }
-
 }
 
