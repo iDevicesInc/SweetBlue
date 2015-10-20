@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue.utils;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerState;
@@ -94,6 +95,7 @@ public class BluetoothStartupHelper {
             final Context m_context;
             private final int m_requestCode;
             private final int m_stateCode;
+            private String m_dialogText = "";
 
             private Please(Context context, int stateCode, int requestCode)
             {
@@ -115,6 +117,16 @@ public class BluetoothStartupHelper {
             Context context()
             {
                 return m_context;
+            }
+
+            String dialogText()
+            {
+                return m_dialogText;
+            }
+
+            boolean shouldPopDialog()
+            {
+                return m_dialogText.equals("") ? false : true;
             }
 
             public static Please doNext(Context context)
@@ -140,6 +152,12 @@ public class BluetoothStartupHelper {
             public static Please stop(Context context)
             {
                 return new Please(context, END, NULL_REQUEST_CODE);
+            }
+
+            public Please withDialog(String message)
+            {
+                m_dialogText = message;
+                return this;
             }
         }
 
@@ -223,6 +241,26 @@ public class BluetoothStartupHelper {
     }
 
     public void handlePleaseResponse()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(m_lastPlease.context());
+        if(m_lastPlease.shouldPopDialog())
+        {
+            builder.setMessage(m_lastPlease.dialogText());
+            builder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    finishPleaseResponse();
+                }
+            });
+            builder.show();
+        }
+        else
+        {
+            finishPleaseResponse();
+        }
+    }
+
+    public void finishPleaseResponse()
     {
         if(m_lastPlease.stateCode() == BluetoothStartupHelperListener.Please.DO_NEXT || m_lastPlease.stateCode() == BluetoothStartupHelperListener.Please.DO_NEXT_WITH_REQUEST_CODE)
         {
