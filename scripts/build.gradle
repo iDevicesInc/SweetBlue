@@ -73,6 +73,9 @@ if (JavaVersion.current().isJava8Compatible()) {
     }
 }
 
+import org.gradle.logging.internal.OutputEvent
+import org.gradle.logging.internal.OutputEventListener
+
 // Generate javadocs
 task gendocs(type: Javadoc) {
     options.stylesheetFile = new File("./assets/doc_style.css")
@@ -86,6 +89,27 @@ task gendocs(type: Javadoc) {
     destinationDir = new File("${BUNDLE_FOLDER}/docs/api")
     source = sourceSets.main.allJava
     classpath += configurations.compile
+
+    // Check for warnings, and cause build to fail if there are any.
+    // This is a temporary solution until a more official solution
+    // makes it's way into Gradle.
+    def outputEvents = []
+            def listener=new OutputEventListener(){
+                    void onOutput(OutputEvent event){
+                        outputEvents << event
+                    }
+                };
+            doFirst {
+                getLogging().addOutputEventListener(listener)
+            }
+            doLast {
+                getLogging().removeOutputEventListener(listener)
+                outputEvents.each { e ->
+                    if(e.toString() =~ " warning -"){
+                        throw new GradleException("You have some javadoc warnings, please fix them!");
+                    }
+                }
+            }
 }
 
 task copyJavaDoc(type: Copy, dependsOn: gendocs) {
