@@ -249,8 +249,6 @@ public class BluetoothEnabler {
 
     private BluetoothEnablerListener.Please m_lastPlease;
     private BluetoothEnablerListener.Stage m_currentStage;
-    private BluetoothEnablerListener.BluetoothEnablerEvent m_currentEvent;
-
 
     public BluetoothEnabler(Activity activity)
     {
@@ -263,14 +261,14 @@ public class BluetoothEnabler {
         m_passedActivity = activity;
 
         m_currentStage = BluetoothEnablerListener.Stage.START;
-        m_currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.NULL);
+        BluetoothEnablerListener.BluetoothEnablerEvent startEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.NULL);
         m_startupListener = startupListener;
-        nextStage();
+        nextStage(startEvent);
     }
 
-    private void nextStage()
+    private void nextStage(BluetoothEnablerListener.BluetoothEnablerEvent nextEvent)
     {
-        if(m_currentEvent.stage() == BluetoothEnablerListener.Stage.START)
+        if(m_currentStage == BluetoothEnablerListener.Stage.START)
         {
             if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON)){
                 updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.NEEDS_ENABLING);
@@ -281,11 +279,11 @@ public class BluetoothEnabler {
         }
         else if(m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH)
         {
-            if(m_currentEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
+            if(nextEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
             {
                 updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG);
             }
-            else if(m_currentEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
+            else if(nextEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
             {
                 updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.SKIPPED);
             }
@@ -307,11 +305,11 @@ public class BluetoothEnabler {
             }
             else
             {
-                if(m_currentEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
+                if(nextEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
                 {
                     updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG);
                 }
-                else if(m_currentEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
+                else if(nextEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
                 {
                     updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.SKIPPED);
                 }
@@ -327,11 +325,11 @@ public class BluetoothEnabler {
         }
         else if(m_currentStage == BluetoothEnablerListener.Stage.LOCATION_SERVICES)
         {
-            if(m_currentEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
+            if(nextEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
             {
                 updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG);
             }
-            else if(m_currentEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
+            else if(nextEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
             {
                 updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.SKIPPED);
             }
@@ -403,17 +401,18 @@ public class BluetoothEnabler {
                 builder.show();
             }
         }
-        else if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerListener.Stage.LOCATION_SERVICES && !m_lastPlease.wasSkipped())
-        {
-            builder.setMessage(m_lastPlease.m_dialogText);
-            builder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
-            builder.show();
-        }
+        //PDZ- Handles popping a dialog after the last stage, LOCATION_SERVICES returns. Not currently supporting this feature
+//        else if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerListener.Stage.LOCATION_SERVICES && !m_lastPlease.wasSkipped())
+//        {
+//            builder.setMessage(m_lastPlease.m_dialogText);
+//            builder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    dialog.dismiss();
+//                }
+//            });
+//            builder.show();
+//        }
         else
         {
             finishPleaseResponse();
@@ -431,26 +430,26 @@ public class BluetoothEnabler {
         if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.DO_NEXT )
         {
             m_currentStage = m_currentStage.next();
-            m_currentEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
-            nextStage();
+            BluetoothEnablerListener.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
+            nextStage(nextEvent);
         }
         else if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.SKIP_NEXT)
         {
             m_currentStage = m_currentStage.next();
-            m_currentEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.SKIPPED);
-            nextStage();
+            BluetoothEnablerListener.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.SKIPPED);
+            nextStage(nextEvent);
         }
         else if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.END)
         {
-            m_currentStage = BluetoothEnablerListener.Stage.LOCATION_SERVICES;
-            m_currentEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
+//            m_currentStage = BluetoothEnablerListener.Stage.LOCATION_SERVICES;
+//            m_currentEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
         }
     }
 
     private void updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status newStatus)
     {
-        m_currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentEvent.stage(), newStatus);
-        m_lastPlease = m_startupListener.onEvent(m_currentEvent);
+        BluetoothEnablerListener.BluetoothEnablerEvent currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, newStatus);
+        m_lastPlease = m_startupListener.onEvent(currentEvent);
         handlePleaseResponse();
     }
 
