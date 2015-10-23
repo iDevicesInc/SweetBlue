@@ -7,49 +7,62 @@ import android.content.Intent;
 
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerState;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 
 /**
  * BluetoothEnabler is used to handle the new logic for getting BLE scan results that is introduced with {@link android.os.Build.VERSION_CODES#M}.  With {@link android.os.Build.VERSION_CODES#M} you need might need to request
  * {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} at runtime (behavior isn't too consistent)
  * as well as make sure that the user has turned on location services on their device.
  * <br><br>
- * BluetoothEnabler will first make sure that
- *
+ * To use this class create an instance of it in your activity and call the {@link #onActivityOrPermissionResult(int)} on the instance created in the two required methods. Nothing else needs to be done.
  */
 public class BluetoothEnabler {
 
     /**
-     * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler} to receive callbacks FINISH THIS
+     * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerListener)} to receive callbacks or simply use the provided class
+     * {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerListener} by caling {@link BluetoothEnabler#BluetoothEnabler(Activity)}. This listener will be the main
+     * way of handling different enabling events and their results.
      *
      */
     public static interface BluetoothEnablerListener
     {
         /**
          * Enumerates changes in the "enabling" stage before a
-         * Bluetooth LE scan is started. Used at {@link BluetoothEnablerEvent#stage()}.
+         * Bluetooth LE scan is started. Used at {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.BluetoothEnablerEvent} to denote
+         * what the current stage as well as in {@link BluetoothEnablerEvent#nextStage()} to give the following stage to the current one.
          */
         public static enum Stage
         {
             /**
-             * Used when the enabling cycle will begin. A dialog to the user can
-             * be shown here to explain the reason for showing system dialogs in
-             * the next stage(s).
+             * The initial enabling stage. This stage begins the process and kicks off the following stage {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage#BLUETOOTH}.
              */
             START,
 
             /**
-             * Used when checking if the device needs Bluetooth turned on and
+             * Used when checking if the device needs Bluetooth turned on and enabling Bluetooth if it is disabled.
              */
             BLUETOOTH,
+
+            /**
+             * Used when checking and requesting location permissions from the user. This stage will be skipped if the device isn't running {@link android.os.Build.VERSION_CODES#M}.
+             */
             LOCATION_PERMISSION,
+
+            /**
+             * Used when checking if the device needs Location services turned on and enabling Location services if they are disabled.
+             */
             LOCATION_SERVICES;
 
-            Stage next()
+
+            private Stage next()
             {
                 return ordinal() + 1 < values().length ? values()[ordinal() + 1] : LOCATION_SERVICES;
             }
         }
 
+        /**
+         * The Status of the current {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage}
+         */
         public static enum Status implements UsesCustomNull
         {
             /**
@@ -69,11 +82,6 @@ public class BluetoothEnabler {
             NOT_NEEDED,
 
             /**
-             * If the current stage needs to be enabled for BLE to be used properly
-             */
-            NEEDS_ENABLING, //If the current stage needs to be enabled by the user
-
-            /**
              * If there was a dialog for the current state and the user declined (denied) the dialog.
              */
             CANCELLED_BY_DIALOG,
@@ -89,7 +97,7 @@ public class BluetoothEnabler {
             SKIPPED,
 
             /**
-             * The START stage doesn't need anything to be done but it is still needed so we set it to NULL. Also satisfies the soft-contract of UsesCustomNull
+             * If the current stage hasn't been assigned any of the above Statuses. If nothing has been done in the stage yet or it hasn't been skipped then it is NULL
              */
             NULL;
 
@@ -102,22 +110,39 @@ public class BluetoothEnabler {
             }
         }
 
+        /**
+         * Events passed to {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener#onEvent(BluetoothEnablerEvent)} so that the programmer can assign logic to the user's decision to
+         * enable or disable certain required permissions and settings. Each event contains a {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} which holds the current
+         * enabling stage and a {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status} of that stage. Stages which haven't been performed yet start off as
+         * {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#NULL}, stages skipped are {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#SKIPPED} and
+         * stages that don't need anything done are {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#ALREADY_ENABLED}. Otherwise, the status of the stage is whatever the user selected.
+         */
         public static class BluetoothEnablerEvent extends Event
         {
+            /**
+             *
+             * Returns the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} following the Stage for this event.
+             */
             public Stage nextStage(){return m_stage.next();}
 
+            /**
+             * Returns the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} associated with this event.
+             */
             public Stage stage(){ return m_stage;}
             private final Stage m_stage;
 
+            /**
+             * Returns the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status} of the current Stage.
+             */
             public Status status(){ return m_status;}
             private final Status m_status;
 
-            BluetoothEnablerEvent(Stage stage)
+            private BluetoothEnablerEvent(Stage stage)
             {
-                this(stage, Status.NEEDS_ENABLING);
+                this(stage, Status.NULL);
             }
 
-            BluetoothEnablerEvent(Stage stage, Status status)
+            private BluetoothEnablerEvent(Stage stage, Status status)
             {
                 m_stage = stage;
                 m_status = status;
@@ -128,11 +153,16 @@ public class BluetoothEnabler {
                 return Utils_String.toString
                 (
                         this.getClass(),
-                        "stage", stage()
+                        "stage", stage(),
+                        "status", status()
                 );
             }
         }
 
+        /**
+         * Return value for the interface method {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener#onEvent(BluetoothEnablerEvent)}.
+         * Use static constructor methods to create instances.
+         */
         public static class Please
         {
             final static int DO_NEXT = 0;
@@ -145,7 +175,6 @@ public class BluetoothEnabler {
             private  Activity m_activity = null;
             private String m_dialogText = "";
             private int m_requestCode = NULL_REQUEST_CODE;
-
 
             private Please(int stateCode)
             {
@@ -162,33 +191,49 @@ public class BluetoothEnabler {
                 return m_dialogText.equals("") ? false : true;
             }
 
+            /**
+             * Perform the next {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage}.
+             */
             public static Please doNext()
             {
                 return new Please(DO_NEXT);
             }
 
+            /**
+             * Skip the next {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} and move the following one.
+             */
             public static Please skipNext()
             {
                 return new Please(SKIP_NEXT);
             }
 
+            /**
+             * Bypass all remaining stages and move to the end of the last stage; enabler will finish at this point
+             */
             public static Please stop()
             {
                 return new Please(END);
             }
 
+            /**
+             * If the next stage isn't skipped or {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#ALREADY_ENABLED} then pop a dialog before
+             */
             public Please withDialog(String message)
             {
                 m_dialogText = message;
                 return this;
             }
 
+            @Advanced
             public Please withActivity(Activity activity)
             {
                 m_activity = activity;
                 return this;
             }
 
+            /**
+             * Perform the next stage with the given requestCode
+             */
             public Please withRequestCode(int requestCode)
             {
                 m_requestCode = requestCode;
@@ -196,9 +241,15 @@ public class BluetoothEnabler {
             }
         }
 
+        /**
+         * Called after moving to the next {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage}
+         */
         Please onEvent(final BluetoothEnablerEvent e);
     }
 
+    /**
+     *
+     */
     public static class DefaultBluetoothEnablerListener implements BluetoothEnablerListener
     {
 
@@ -250,19 +301,27 @@ public class BluetoothEnabler {
     private BluetoothEnablerListener.Please m_lastPlease;
     private BluetoothEnablerListener.Stage m_currentStage;
 
+    /**
+     * A constructor which uses an instance of {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerListener} as the
+     * enabler listener and will take an activity from which the BleManager will get gotten.
+     */
     public BluetoothEnabler(Activity activity)
     {
         this(activity, new DefaultBluetoothEnablerListener());
     }
 
-    public BluetoothEnabler(Activity activity, BluetoothEnablerListener startupListener)
+    /**
+     * A constuctor which taken an activity and a custom implementation of {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener}. A BleManager will
+     * be obtained from the passed activity.
+     */
+    public BluetoothEnabler(Activity activity, BluetoothEnablerListener enablerListener)
     {
         m_bleManager = BleManager.get(activity);
         m_passedActivity = activity;
 
         m_currentStage = BluetoothEnablerListener.Stage.START;
         BluetoothEnablerListener.BluetoothEnablerEvent startEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.NULL);
-        m_startupListener = startupListener;
+        m_startupListener = enablerListener;
         nextStage(startEvent);
     }
 
@@ -270,12 +329,7 @@ public class BluetoothEnabler {
     {
         if(m_currentStage == BluetoothEnablerListener.Stage.START)
         {
-            if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON)){
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.NEEDS_ENABLING);
-            }
-            else {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.ALREADY_ENABLED);
-            }
+           updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.NULL);
         }
         else if(m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH)
         {
@@ -455,8 +509,8 @@ public class BluetoothEnabler {
 
 
     /**
-     *
-     * @param requestCode
+     * A required method to be placed in your activity's {@link Activity#onRequestPermissionsResult(int, String[], int[])} and {@link Activity#onActivityResult(int, int, Intent)} methods.
+     * This method will re-connect the enabler after the app is re-entered. Otherwise, the enabler won't continue.
      */
     public void onActivityOrPermissionResult(int requestCode)
     {
