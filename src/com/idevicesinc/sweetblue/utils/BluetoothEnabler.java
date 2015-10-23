@@ -168,6 +168,7 @@ public class BluetoothEnabler {
             final static int DO_NEXT = 0;
             final static int SKIP_NEXT = 1;
             final static int END = 3;
+            final static int PAUSE = 4;
 
             private final static int NULL_REQUEST_CODE = 51214; //Large random int because we need to make sure that there is low probability that the user is using the same
             private final int m_stateCode;
@@ -188,7 +189,7 @@ public class BluetoothEnabler {
 
             private boolean shouldPopDialog()
             {
-                return m_dialogText.equals("") ? false : true;
+                return m_dialogText.equals("") || m_stateCode == PAUSE ? false : true;
             }
 
             /**
@@ -213,6 +214,14 @@ public class BluetoothEnabler {
             public static Please stop()
             {
                 return new Please(END);
+            }
+
+            /**
+             * Pause the enabler. Call {@link #resume(Please)} to continue the process.
+             */
+            public static Please pause()
+            {
+                return new Please(PAUSE);
             }
 
             /**
@@ -248,7 +257,8 @@ public class BluetoothEnabler {
     }
 
     /**
-     *
+     * A default implementation of BluetoothEnablerListener used in {@link BluetoothEnabler#BluetoothEnabler(Activity)}. It provides a
+     * basic implementation for use/example and can be overridden.
      */
     public static class DefaultBluetoothEnablerListener implements BluetoothEnablerListener
     {
@@ -481,7 +491,11 @@ public class BluetoothEnabler {
 
     private void finishPleaseResponse(boolean wasCancelledByDialog)
     {
-        if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.DO_NEXT )
+        if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.PAUSE)
+        {
+
+        }
+        else if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.DO_NEXT )
         {
             m_currentStage = m_currentStage.next();
             BluetoothEnablerListener.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
@@ -550,6 +564,15 @@ public class BluetoothEnabler {
                 }
             }
         }
+    }
+
+    /**
+     * Resume the enabler with the given Please. Enabler will continue where is left off.
+     */
+    public void resume(BluetoothEnablerListener.Please please)
+    {
+        m_lastPlease = please;
+        handlePleaseResponse();
     }
 }
 
