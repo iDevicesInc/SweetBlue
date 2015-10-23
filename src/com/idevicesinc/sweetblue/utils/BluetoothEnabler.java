@@ -50,7 +50,7 @@ public class BluetoothEnabler {
             }
         }
 
-        public static enum Status
+        public static enum Status implements UsesCustomNull
         {
             /**
              * If the current stage has already been enabled on the device
@@ -86,16 +86,31 @@ public class BluetoothEnabler {
             /**
              * If the programmer of the application chose to skip a stage
              */
-            SKIPPED;
+            SKIPPED,
+
+            /**
+             * The START stage doesn't need anything to be done but it is still needed so we set it to NULL. Also satisfies the soft-contract of UsesCustomNull
+             */
+            NULL;
+
+            /**
+             * Returns <code>true</code> if <code>this</code> == {@link #NULL}.
+             */
+            @Override public boolean isNull()
+            {
+                return this == NULL;
+            }
         }
 
         public static class BluetoothEnablerEvent extends Event
         {
+            public Stage nextStage(){return m_stage.next();}
+
             public Stage stage(){ return m_stage;}
             private final Stage m_stage;
 
             public Status status(){ return m_status;}
-            private Status m_status;
+            private final Status m_status;
 
             BluetoothEnablerEvent(Stage stage)
             {
@@ -105,11 +120,6 @@ public class BluetoothEnabler {
             BluetoothEnablerEvent(Stage stage, Status status)
             {
                 m_stage = stage;
-                m_status = status;
-            }
-
-            private void setEventStatus(Status status)
-            {
                 m_status = status;
             }
 
@@ -127,27 +137,24 @@ public class BluetoothEnabler {
         {
             final static int DO_NEXT = 0;
             final static int SKIP_NEXT = 1;
-            final static int DO_NEXT_WITH_REQUEST_CODE = 2;
-            final static int SKIP_NEXT_WITH_REQUEST_CODE = 3;
-            final static int END = 4;
+            final static int END = 3;
 
-            private final static int NULL_REQUEST_CODE = 400; //Fix this to a better int
-            private final int m_requestCode;
+            private final static int NULL_REQUEST_CODE = 51214; //Large random int because we need to make sure that there is low probability that the user is using the same
             private final int m_stateCode;
 
             private  Activity m_activity = null;
             private String m_dialogText = "";
+            private int m_requestCode = NULL_REQUEST_CODE;
 
 
-            private Please(int stateCode, int requestCode)
+            private Please(int stateCode)
             {
-                m_requestCode = requestCode;
                 m_stateCode = stateCode;
             }
 
             private boolean wasSkipped()
             {
-                return m_stateCode == SKIP_NEXT_WITH_REQUEST_CODE || m_stateCode == SKIP_NEXT;
+                return m_stateCode == SKIP_NEXT;
             }
 
             private boolean shouldPopDialog()
@@ -157,27 +164,17 @@ public class BluetoothEnabler {
 
             public static Please doNext()
             {
-                return new Please(DO_NEXT, NULL_REQUEST_CODE);
-            }
-
-            public static Please doNextWithRequestCode(int requestCode)
-            {
-                return new Please(DO_NEXT_WITH_REQUEST_CODE, requestCode);
+                return new Please(DO_NEXT);
             }
 
             public static Please skipNext()
             {
-                return new Please(SKIP_NEXT, NULL_REQUEST_CODE);
-            }
-
-            public static Please skipNextWithRequestCode(int requestCode)
-            {
-                return new Please(SKIP_NEXT_WITH_REQUEST_CODE, requestCode);
+                return new Please(SKIP_NEXT);
             }
 
             public static Please stop()
             {
-                return new Please(END, NULL_REQUEST_CODE);
+                return new Please(END);
             }
 
             public Please withDialog(String message)
@@ -189,6 +186,12 @@ public class BluetoothEnabler {
             public Please withActivity(Activity activity)
             {
                 m_activity = activity;
+                return this;
+            }
+
+            public Please withRequestCode(int requestCode)
+            {
+                m_requestCode = requestCode;
                 return this;
             }
         }
@@ -204,20 +207,13 @@ public class BluetoothEnabler {
 
         @Override
         public Please onEvent(BluetoothEnablerEvent e) {
-            if(e.stage() == Stage.START)
+            if(e.nextStage() == Stage.BLUETOOTH)
             {
-                if(e.status() == Status.NEEDS_ENABLING)
-                {
-                    return Please.doNext().withDialog("This app requires Bluetooth to function properly but it is currently turned off. Please turn Bluetooth on.");
-                }
+                return Please.doNext().withDialog("This app requires Bluetooth to function properly but it is currently turned off. Please turn Bluetooth on.");
             }
-            else if(e.stage() == Stage.BLUETOOTH)
+            else if(e.nextStage() == Stage.LOCATION_PERMISSION)
             {
-                if(e.status() == Status.ALREADY_ENABLED)
-                {
-                    return Please.doNext().withDialog("Location permissions are needed for Bluetooth LE scan to show available devices. If you would like to see your devices please allow the Location permission.");
-                }
-                else if(e.status() == Status.ENABLED)
+                if(e.status() == Status.ALREADY_ENABLED || e.status() == Status.ENABLED)
                 {
                     return Please.doNext().withDialog("Location permissions are needed for Bluetooth LE scan to show available devices. If you would like to see your devices please allow the Location permission.");
                 }
@@ -225,32 +221,23 @@ public class BluetoothEnabler {
                 {
                     return Please.stop();
                 }
-                else if(e.status() == Status.SKIPPED) {
-                    return Please.doNext();
-                }
             }
-            else if(e.stage() == Stage.LOCATION_PERMISSION)
+            else if(e.nextStage() == Stage.LOCATION_SERVICES)
             {
-                if(e.status() == Status.ALREADY_ENABLED)
-                {
-                    return Please.doNext().withDialog("Location Services are needed for Bluetooth LE scan to show available devices. If you would like to see your devices please turn on Location Services.");
-                }
-                else if( e.status() == Status.ENABLED)
+                if(e.status() == Status.ALREADY_ENABLED || e.status() == Status.ENABLED)
                 {
                     return Please.doNext().withDialog("Location Services are needed for Bluetooth LE scan to show available devices. If you would like to see your devices please turn on Location Services.");
                 }
                 else if(e.status() == Status.CANCELLED_BY_DIALOG || e.status() == Status.CANCELLED_BY_INTENT)
                 {
                     return Please.stop();
-                }
-                else if(e.status() == Status.SKIPPED) {
-                    return Please.doNext();
                 }
             }
             else if(e.stage() == Stage.LOCATION_SERVICES)
             {
                 return Please.stop();
             }
+            //This will handle any SKIPPED steps since it will fall through all the if/else above
             return Please.doNext();
         }
     }
@@ -267,32 +254,16 @@ public class BluetoothEnabler {
 
     public BluetoothEnabler(Activity activity)
     {
-        this(activity, BleManager.get(activity));
-    }
-
-    public BluetoothEnabler(Activity activity, BleManager bleManager)
-    {
-        m_bleManager = bleManager;
-        m_passedActivity = activity;
-
-        m_currentStage = BluetoothEnablerListener.Stage.START;
-        m_currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
-        m_startupListener = new DefaultBluetoothEnablerListener();
-        nextStage();
+        this(activity, new DefaultBluetoothEnablerListener());
     }
 
     public BluetoothEnabler(Activity activity, BluetoothEnablerListener startupListener)
     {
-        this(activity, BleManager.get(activity), startupListener);
-    }
-
-    public BluetoothEnabler(Activity activity, BleManager bleManager, BluetoothEnablerListener startupListener)
-    {
-        m_bleManager = bleManager;
+        m_bleManager = BleManager.get(activity);
         m_passedActivity = activity;
 
         m_currentStage = BluetoothEnablerListener.Stage.START;
-        m_currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
+        m_currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.NULL);
         m_startupListener = startupListener;
         nextStage();
     }
@@ -457,13 +428,13 @@ public class BluetoothEnabler {
 
     private void finishPleaseResponse(boolean wasCancelledByDialog)
     {
-        if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.DO_NEXT || m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.DO_NEXT_WITH_REQUEST_CODE)
+        if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.DO_NEXT )
         {
             m_currentStage = m_currentStage.next();
             m_currentEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
             nextStage();
         }
-        else if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.SKIP_NEXT || m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.SKIP_NEXT_WITH_REQUEST_CODE)
+        else if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.SKIP_NEXT)
         {
             m_currentStage = m_currentStage.next();
             m_currentEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage, BluetoothEnablerListener.Status.SKIPPED);
@@ -478,7 +449,7 @@ public class BluetoothEnabler {
 
     private void updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status newStatus)
     {
-        m_currentEvent.setEventStatus(newStatus);
+        m_currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentEvent.stage(), newStatus);
         m_lastPlease = m_startupListener.onEvent(m_currentEvent);
         handlePleaseResponse();
     }
