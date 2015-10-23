@@ -196,7 +196,12 @@ public class BluetoothEnabler {
         Please onEvent(final BluetoothEnablerEvent e);
     }
 
-    private final BluetoothEnablerListener DEFAULT_STARTUP_LISTENER = new BluetoothEnablerListener() {
+    public static class DefaultBluetoothEnablerListener implements BluetoothEnablerListener
+    {
+
+        public DefaultBluetoothEnablerListener()
+        {}
+
         @Override
         public Please onEvent(BluetoothEnablerEvent e) {
             if(e.stage() == Stage.START)
@@ -248,13 +253,12 @@ public class BluetoothEnabler {
             }
             return Please.doNext();
         }
-    };
-
+    }
 
     private final BleManager m_bleManager;
     private final BluetoothEnablerListener m_startupListener;
 
-    private Activity m_passedActivity;
+    private final Activity m_passedActivity;
 
     private BluetoothEnablerListener.Please m_lastPlease;
     private BluetoothEnablerListener.Stage m_currentStage;
@@ -273,7 +277,7 @@ public class BluetoothEnabler {
 
         m_currentStage = BluetoothEnablerListener.Stage.START;
         m_currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_currentStage);
-        m_startupListener = DEFAULT_STARTUP_LISTENER;
+        m_startupListener = new DefaultBluetoothEnablerListener();
         nextStage();
     }
 
