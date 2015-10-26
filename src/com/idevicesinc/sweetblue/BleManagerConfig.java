@@ -376,7 +376,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			{
 				this.m_nativeInstance = nativeInstance;
 				this.m_advertisedServices = advertisedServices;
-				this.m_rawDeviceName = rawDeviceName;
+				this.m_rawDeviceName = rawDeviceName != null ? rawDeviceName : "";
 				this.m_normalizedDeviceName = normalizedDeviceName;
 				this.m_scanRecord = scanRecord != null ? scanRecord : BleDevice.EMPTY_BYTE_ARRAY;
 				this.m_rssi = rssi;
