@@ -1644,16 +1644,20 @@ public class BleManager
 
 		turnOff_private(/*removeAllBonds=*/true);
 
-		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener() {
+		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		{
 			@Override
-			public void onStateChange(PA_Task taskClass, PE_TaskState state) {
-				if (state.isEndingState()) {
+			public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			{
+				if( state.isEndingState() )
+				{
 					ResetListener nukeListeners = m_resetListeners;
 					m_resetListeners = null;
 					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-					if (nukeListeners != null) {
+					if( nukeListeners != null )
+					{
 						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
 						nukeListeners.onEvent(event);
 					}
@@ -1955,11 +1959,13 @@ public class BleManager
 	/**
 	 * Gets a known {@link BleDeviceState#DISCOVERED} device by MAC address, or {@link BleDevice#NULL} if there is no such device.
 	 */
-	public @Nullable(Prevalence.NEVER) BleDevice getDevice(String macAddress)
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice(final String macAddress)
 	{
 		enforceMainThread();
 
-		final BleDevice device = m_deviceMngr.get(macAddress);
+		final String macAddress_normalized = normalizeMacAddress(macAddress);
+
+		final BleDevice device = m_deviceMngr.get(macAddress_normalized);
 		
 		if( device != null )  return device;
 		
@@ -2447,7 +2453,9 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		final BleDevice existingDevice = this.getDevice(macAddress);
+		final String macAddress_normalized = normalizeMacAddress(macAddress);
+
+		final BleDevice existingDevice = this.getDevice(macAddress_normalized);
 
 		if( !existingDevice.isNull() )
 		{
@@ -2464,7 +2472,7 @@ public class BleManager
 			return existingDevice;
 		}
 
-		final BluetoothDevice device_native = newNativeDevice(macAddress);
+		final BluetoothDevice device_native = newNativeDevice(macAddress_normalized);
 
 		if( device_native == null ) //--- DRK > API says this should never happen...not trusting it!
 		{
@@ -2539,7 +2547,9 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		m_diskOptionsMngr.clear(macAddress);
+		final String macAddress_normalized = normalizeMacAddress(macAddress);
+
+		m_diskOptionsMngr.clear(macAddress_normalized);
 	}
 
 	/**
@@ -2965,6 +2975,26 @@ public class BleManager
 		if( false == allowAllThreads )
 		{
 			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
+		}
+	}
+
+	String normalizeMacAddress(final String macAddress)
+	{
+		final String macAddress_normalized = Utils_String.normalizeMacAddress(macAddress);
+
+		if( macAddress == macAddress_normalized )
+		{
+			return macAddress;
+		}
+		else if( macAddress.equals(macAddress_normalized) )
+		{
+			return macAddress;
+		}
+		else
+		{
+			getLogger().w("Given mac address " + macAddress + " has been auto-normalized to " + macAddress_normalized);
+
+			return macAddress_normalized;
 		}
 	}
 }

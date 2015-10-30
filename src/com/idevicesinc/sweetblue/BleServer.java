@@ -1495,7 +1495,9 @@ public class BleServer extends BleNode
 	{
 		enforceMainThread();
 
-		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
+		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
+
+		final BluetoothDevice nativeDevice = newNativeDevice(macAddress_normalized);
 
 		if( isNull() )
 		{
@@ -1506,7 +1508,7 @@ public class BleServer extends BleNode
 			return e;
 		}
 
-		if( !is(macAddress, CONNECTED ) )
+		if( !is(macAddress_normalized, CONNECTED ) )
 		{
 			final OutgoingListener.OutgoingEvent e = OutgoingListener.OutgoingEvent.EARLY_OUT__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid, futureData, OutgoingListener.Status.NOT_CONNECTED);
 
@@ -1555,7 +1557,9 @@ public class BleServer extends BleNode
 	{
 		enforceMainThread();
 
-		return m_stateTracker.getStateMask(macAddress);
+		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
+
+		return m_stateTracker.getStateMask(macAddress_normalized);
 	}
 
 	/**
@@ -1632,7 +1636,9 @@ public class BleServer extends BleNode
 	 */
 	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
-		return connect_internal(newNativeDevice(macAddress), stateListener, connectionFailListener);
+		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
+
+		return connect_internal(newNativeDevice(macAddress_normalized), stateListener, connectionFailListener);
 	}
 
 	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice)
@@ -1695,7 +1701,9 @@ public class BleServer extends BleNode
 
 	public boolean disconnect(final String macAddress)
 	{
-		return disconnect_private(macAddress, ConnectionFailListener.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
+		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
+
+		return disconnect_private(macAddress_normalized, ConnectionFailListener.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
 	}
 
 	private boolean disconnect_private(final String macAddress, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
