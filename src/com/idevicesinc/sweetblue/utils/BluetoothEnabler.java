@@ -64,7 +64,8 @@ public class BluetoothEnabler
             LOCATION_PERMISSION,
 
             /**
-             * Used when checking if the device needs Location services turned on and enabling Location services if they are disabled.
+             * Used when checking if the device needs Location services turned on and enabling Location services if they are disabled. This step isn't necessarily needed for overall
+             * Bluetooth scanning. It is only needed for Bluetooth Low Energy scanning in {@link android.os.Build.VERSION_CODES#M}; otherwise, SweetBlue will default to classic scanning.
              */
             LOCATION_SERVICES;
 
