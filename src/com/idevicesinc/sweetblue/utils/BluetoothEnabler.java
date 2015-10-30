@@ -1,11 +1,13 @@
 package com.idevicesinc.sweetblue.utils;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerState;
@@ -200,6 +202,7 @@ public class BluetoothEnabler
 
             private  Activity m_activity = null;
             private String m_dialogText = "";
+            private String m_toastText = "";
             private int m_requestCode = NULL_REQUEST_CODE;
             private boolean m_implicitActivityResultHandling = false;
 
@@ -216,6 +219,11 @@ public class BluetoothEnabler
             private boolean shouldPopDialog()
             {
                 return m_dialogText.equals("") || m_stateCode == PAUSE ? false : true;
+            }
+
+            private boolean shouldShowToast()
+            {
+                return !m_toastText.equals("");
             }
 
             /**
@@ -275,6 +283,15 @@ public class BluetoothEnabler
                 return this;
             }
 
+            /**
+             * Perform the next stage with a Toast
+             */
+            public Please withToast(String message)
+            {
+                m_toastText = message;
+                return this;
+            }
+
             public Please withImplicitActivityResultHandling()
             {
                 m_implicitActivityResultHandling = true;
@@ -307,15 +324,15 @@ public class BluetoothEnabler
                 {
                     if(!e.isEnabled(Stage.LOCATION_SERVICES) && !e.isEnabled(Stage.LOCATION_PERMISSION))
                     {
-                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires location permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services");
+                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires Location Permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services");
                     }
                     else if(!e.isEnabled(Stage.LOCATION_PERMISSION))
                     {
-                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires location permission to be able to scan for Bluetooth devices. Please accept to allow Location Permission");
+                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires Location Permission to be able to scan for Bluetooth devices. Please accept to allow Location Permission.").withToast("Please click the Permissions button, then enable Location, then press back");
                     }
                     else if(!e.isEnabled(Stage.LOCATION_SERVICES))
                     {
-                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires Location Services for improved Bluetooth device scanning. While it is not required, it is recommended that Location Services are turned on to improve device discovery");
+                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires Location Services for improved Bluetooth device scanning. While it is not required, it is recommended that Location Services are turned on to improve device discovery.").withToast("Please enable Location Services then press back button");
                     }
                     else
                     {
@@ -600,6 +617,18 @@ public class BluetoothEnabler
 
     private void finishPleaseResponse(boolean wasCancelledByDialog)
     {
+        if(m_lastPlease.shouldShowToast())
+        {
+            if(m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH && !m_passedActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION))
+            {
+                Toast.makeText(m_passedActivity, m_lastPlease.m_toastText, Toast.LENGTH_LONG).show();
+            }
+            else if(m_currentStage != BluetoothEnablerListener.Stage.BLUETOOTH)
+            {
+                Toast.makeText(m_passedActivity, m_lastPlease.m_toastText, Toast.LENGTH_LONG).show();
+            }
+        }
+
         if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.PAUSE)
         {
 
