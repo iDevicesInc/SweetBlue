@@ -20,7 +20,6 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
  */
 public class BluetoothEnabler
 {
-
     /**
      * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerListener)} to receive callbacks or simply use the provided class
      * {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerListener} by caling {@link BluetoothEnabler#BluetoothEnabler(Activity)}. This listener will be the main
@@ -168,20 +167,7 @@ public class BluetoothEnabler
              */
             public boolean isEnabled(Stage stage)
             {
-                BleManager bleManager = BleManager.get(m_activity);
-                if(stage == BluetoothEnablerListener.Stage.BLUETOOTH)
-                {
-                    return bleManager.isBleSupported() && bleManager.is(BleManagerState.ON);
-                }
-                else if(stage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION)
-                {
-                    return bleManager.isLocationEnabledForScanning_byRuntimePermissions();
-                }
-                else if(stage == BluetoothEnablerListener.Stage.LOCATION_SERVICES)
-                {
-                    return bleManager.isLocationEnabledForScanning_byOsServices();
-                }
-                return true;
+                return BluetoothEnabler.isEnabled(BleManager.get(m_activity), stage);
             }
 
             @Override public String toString()
@@ -356,6 +342,24 @@ public class BluetoothEnabler
             //This will handle any SKIPPED steps since it will fall through all the if/else above
             return Please.doNext();
         }
+    }
+
+
+    private static boolean isEnabled(BleManager bleManager, BluetoothEnablerListener.Stage stage)
+    {
+        if(stage == BluetoothEnablerListener.Stage.BLUETOOTH)
+        {
+            return bleManager.isBleSupported() && bleManager.is(BleManagerState.ON);
+        }
+        else if(stage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION)
+        {
+            return bleManager.isLocationEnabledForScanning_byRuntimePermissions();
+        }
+        else if(stage == BluetoothEnablerListener.Stage.LOCATION_SERVICES)
+        {
+            return bleManager.isLocationEnabledForScanning_byOsServices();
+        }
+        return true;
     }
 
     private final BleManager m_bleManager;
@@ -679,20 +683,7 @@ public class BluetoothEnabler
      */
     public boolean isEnabled(BluetoothEnablerListener.Stage stage)
     {
-
-        if(stage == BluetoothEnablerListener.Stage.BLUETOOTH)
-        {
-            return m_bleManager.isBleSupported() && m_bleManager.is(BleManagerState.ON);
-        }
-        else if(stage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION)
-        {
-            return m_bleManager.isLocationEnabledForScanning_byRuntimePermissions();
-        }
-        else if(stage == BluetoothEnablerListener.Stage.LOCATION_SERVICES)
-        {
-            return m_bleManager.isLocationEnabledForScanning_byOsServices();
-        }
-        return true;
+        return isEnabled(m_bleManager, stage);
     }
 
     /**
