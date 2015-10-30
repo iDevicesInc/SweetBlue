@@ -140,6 +140,9 @@ public class BluetoothEnabler
             }
             private final Stage m_stage;
 
+            /**
+             * Returns the {@link Activity} associated with the Event
+             */
             public Activity activity()
             {
                 return m_activity;
@@ -343,7 +346,6 @@ public class BluetoothEnabler
             return Please.doNext();
         }
     }
-
 
     private static boolean isEnabled(BleManager bleManager, BluetoothEnablerListener.Stage stage)
     {

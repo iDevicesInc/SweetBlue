@@ -17,6 +17,7 @@ import android.bluetooth.le.ScanCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.DeadObjectException;
 import android.os.Handler;
@@ -1753,8 +1754,18 @@ public class BleManager
 	{
 		if( Utils.isMarshmallow() )
 		{
-			callingActivity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, requestCode);
-		}
+			if(!isLocationEnabledForScanning_byRuntimePermissions() && !callingActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION))
+			{
+				Intent intent = new Intent();
+				intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+				Uri uri = Uri.fromParts("package", callingActivity.getPackageName(), null);
+				intent.setData(uri);
+				callingActivity.startActivity(intent);
+			}
+			else
+			{
+				callingActivity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, requestCode);
+			}		}
 		else
 		{
 			m_logger.w("BleManager.turnOnLocationWithIntent_forPermissions() is only applicable for API levels 23 and above so this method does nothing.");
