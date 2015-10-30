@@ -305,13 +305,6 @@ public class BluetoothEnabler
      */
     public static class DefaultBluetoothEnablerListener implements BluetoothEnablerListener
     {
-        private BleManager m_bleMngr;
-
-        public DefaultBluetoothEnablerListener(BleManager manager)
-        {
-            m_bleMngr = manager;
-        }
-
         @Override
         public Please onEvent(BluetoothEnablerEvent e)
         {
@@ -323,16 +316,15 @@ public class BluetoothEnabler
             {
                 if(e.status() == Status.ALREADY_ENABLED || e.status() == Status.ENABLED)
                 {
-//                    return Please.doNext().withDialog("Location permissions are needed for Bluetooth LE scan to show available devices. If you would like to see your devices please allow the Location permission.").withImplicitActivityResultHandling();
-                    if(!m_bleMngr.isLocationEnabledForScanning_byRuntimePermissions() && ! m_bleMngr.isLocationEnabledForScanning_byOsServices())
+                    if(!e.isEnabled(Stage.LOCATION_SERVICES) && !e.isEnabled(Stage.LOCATION_PERMISSION))
                     {
                         return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires location permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services");
                     }
-                    else if(!m_bleMngr.isLocationEnabledForScanning_byRuntimePermissions())
+                    else if(!e.isEnabled(Stage.LOCATION_PERMISSION))
                     {
-                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires location to be able to scan for Bluetooth devices. Please accept to allow Location Permission");
+                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires location permission to be able to scan for Bluetooth devices. Please accept to allow Location Permission");
                     }
-                    else if(!m_bleMngr.isLocationEnabledForScanning_byOsServices())
+                    else if(!e.isEnabled(Stage.LOCATION_SERVICES))
                     {
                         return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires Location Services for improved Bluetooth device scanning. While it is not required, it is recommended that Location Services are turned on to improve device discovery");
                     }
@@ -383,7 +375,7 @@ public class BluetoothEnabler
      */
     public BluetoothEnabler(Activity activity)
     {
-        this(activity, new DefaultBluetoothEnablerListener(BleManager.get(activity)));
+        this(activity, new DefaultBluetoothEnablerListener());
     }
 
     /**
