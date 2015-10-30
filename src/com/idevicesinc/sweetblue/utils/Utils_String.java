@@ -34,6 +34,7 @@ public class Utils_String extends Utils
 		String[] nameParts = deviceName.split("-");
 		String consistentName = nameParts[0];
 		consistentName = consistentName.toLowerCase();
+		consistentName = consistentName.trim();
 		consistentName = consistentName.replace(" ", "_");
 
 		return consistentName;

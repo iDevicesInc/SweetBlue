@@ -177,7 +177,7 @@ public class HistoricalDataQuery
 				m_query.m_select += ",";
 			}
 
-			m_query.m_select += " "+function+"(CAST("+column.getColumnName()+" AS INTEGER))";
+			m_query.m_select += " "+function+"(CAST(\"+column.getColumnName()+\" AS INTEGER))";
 //			m_query.m_selectParenCount++;
 
 			return new Part_Function(m_query);

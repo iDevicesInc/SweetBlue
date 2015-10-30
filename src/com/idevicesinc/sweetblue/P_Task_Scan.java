@@ -240,6 +240,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		if( false == Utils.isLollipop() )
 		{
 			getManager().ASSERT(false, "Tried to create ScanSettings for pre-lollipop!");
+
+			fail();
 		}
 		else
 		{
