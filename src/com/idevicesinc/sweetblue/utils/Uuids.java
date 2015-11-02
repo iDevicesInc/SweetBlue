@@ -63,7 +63,7 @@ public class Uuids
 	
 	public static final UUID CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID	= fromShort("2902");
 	
-	protected final static String BLUETOOTH_CONNECTED_HASH = "8bbe6625e4add9d9174f806ff7536b6089da6da9";
+	protected final static String BLUETOOTH_CONNECTED_HASH = "7b32c9883840ccc58988b0d88885d247e440e17d";
 	
 	/**
 	 * Convenience overload of {@link #fromShort(String, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
@@ -125,11 +125,105 @@ public class Uuids
 	 */
 	public static UUID fromShort(String assignedNumber, String uuidTemplate)
 	{
+		assignedNumber = chopOffHexPrefix(assignedNumber);
+
 		if( assignedNumber_earlyOut(assignedNumber, 4) )  return INVALID;
 
 		String uuid = uuidTemplate.substring(0, 4) + padAssignedNumber(assignedNumber, 4) + uuidTemplate.substring(8, uuidTemplate.length());
 
 		return fromString(uuid);
+	}
+
+	/**
+	 * Convenience overload of {@link #fromInt(String, String)}.
+	 */
+	public static UUID fromInt(int assignedNumber, String uuidTemplate)
+	{
+		return fromInt(assignedNumber, uuidTemplate);
+	}
+
+	/**
+	 * Convenience overload of {@link #fromInt(String, String)} that uses {@link #STANDARD_UUID_TEMPLATE}.
+	 */
+	public static UUID fromInt(String assignedNumber)
+	{
+		return fromInt(assignedNumber, STANDARD_UUID_TEMPLATE);
+	}
+
+	/**
+	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
+	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
+	 *
+	 * @param assignedNumber	A {@link String} of length <= 8 as the hex representation of a 4-byte (int) value, for example "12630102".
+	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
+	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
+	 */
+	public static UUID fromInt(String assignedNumber, String uuidTemplate)
+	{
+		assignedNumber = chopOffHexPrefix(assignedNumber);
+
+		if( assignedNumber_earlyOut(assignedNumber, 8) )  return INVALID;
+
+		String uuid = padAssignedNumber(assignedNumber, 8) + uuidTemplate.substring(8, uuidTemplate.length());
+
+		return fromString(uuid);
+	}
+
+	/**
+	 * Convenience forwarding of {@link UUID#fromString(String)}, {@link #fromShort(String)}, or {@link #fromInt(String)} depending on the length of string given.
+	 */
+	public static UUID fromString(final String value)
+	{
+		if( value.length() == 4 || (value.length() == 6 && hasHexPrefix(value)) )
+		{
+			return fromShort(value);
+		}
+		else if( value.length() == 8 || (value.length() == 10 && hasHexPrefix(value)) )
+		{
+			return fromInt(value);
+		}
+		else
+		{
+			return UUID.fromString(value);
+		}
+	}
+
+	private static boolean hasHexPrefix(final String string)
+	{
+		if( string == null )
+		{
+			return false;
+		}
+		else
+		{
+			if( string.length() > 2 )
+			{
+				if( string.charAt(0) == '0' && string.charAt(1) == 'x' )
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	private static String chopOffHexPrefix(final String string)
+	{
+		if( hasHexPrefix(string) )
+		{
+			return string.substring(2);
+		}
+		else
+		{
+			return string;
+		}
 	}
 
 	private static boolean assignedNumber_earlyOut(final String assignedNumber, final int length)
@@ -152,38 +246,5 @@ public class Uuids
 		}
 
 		return assignedNumber;
-	}
-
-	/**
-	 * Convenience overload of {@link #fromInt(String, String)}.
-	 */
-	public static UUID fromInt(int assignedNumber, String uuidTemplate)
-	{
-		return fromInt(assignedNumber, uuidTemplate);
-	}
-
-	/**
-	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
-	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
-	 *
-	 * @param assignedNumber	A {@link String} of length <= 8 as the hex representation of a 4-byte (int) value, for example "12630102".
-	 * @param uuidTemplate		See {@link #STANDARD_UUID_TEMPLATE} for an example.
-	 * @return {@link #INVALID} if there's any issue, otherwise a valid {@link UUID}.
-	 */
-	public static UUID fromInt(String assignedNumber, String uuidTemplate)
-	{
-		if( assignedNumber_earlyOut(assignedNumber, 8) )  return INVALID;
-
-		String uuid = padAssignedNumber(assignedNumber, 8) + uuidTemplate.substring(8, uuidTemplate.length());
-
-		return fromString(uuid);
-	}
-
-	/**
-	 * Convenience forwarding of {@link UUID#fromString(String)}.
-	 */
-	public static UUID fromString(final String value)
-	{
-		return UUID.fromString(value);
 	}
 }

@@ -8,12 +8,21 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Abstract base class for all events in SweetBlue, e.g. {@link State.ChangeEvent}.
  */
 public abstract class Event
 {
+	/**
+	 * More reader-friendly of {@link #isForAll(Object...)} or {@link #isForAny(Object...)} in the event you only have one parameter to match.
+	 */
+	public boolean isFor(final Object value)
+	{
+		return isForAll(value);
+	}
+
 	/**
 	 * Convenience query method to check if this event "is for"/relevant-to any of the supplied values.
 	 * For example for {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent} you could write
@@ -59,21 +68,29 @@ public abstract class Event
 	{
 		final ArrayList<Object> objects = getAllObjects();
 
-		for( int i = 0; i < objects.size(); i++ )
+		for( int j = 0; j < values.length; j++ )
 		{
-			final Object next = objects.get(i);
+			final Object jth = values[j];
 
-			if( next != null )
+			boolean foundMatch = false;
+
+			for( int i = 0; i < objects.size(); i++ )
 			{
-				for( int j = 0; j < values.length; j++ )
-				{
-					final Object jth = values[j];
+				final Object next = objects.get(i);
 
-					if( false == jth.equals(next) )
+				if( next != null )
+				{
+					if( true == jth.equals(next) )
 					{
-						return false;
+						foundMatch = true;
+						break;
 					}
 				}
+			}
+
+			if( false == foundMatch )
+			{
+				return false;
 			}
 		}
 
@@ -94,29 +111,11 @@ public abstract class Event
 			for( int i = 0; i < methods.length; i++ )
 			{
 				final Method ith = methods[i];
-
 				final Class<?> returnType = ith.getReturnType();
 
-				if( returnType == null || returnType.isPrimitive() || returnType.isArray() )
+				if( isComparableType(ith, returnType) )
 				{
-					// Skip these cause they're too generic to test equality for.
-					// E.g. ReadWriteEvent in BleDevice has mtu(), rssi(), etc.
-				}
-				else if( returnType == String.class && false == ith.getName().equals("macAddress") )
-				{
-					// Special case of only allowing String return value for mac address.
-					// Other methods that return String like Object.toString() are too generic and variable so we skip them.
-				}
-				else if( Unit.class.isAssignableFrom(returnType) )
-				{
-					// Skipping Units for same reason as skipping primitives.
-				}
-				else
-				{
-					if( ith.getParameterTypes().length == 0 )
-					{
-						toReturn.add(ith);
-					}
+					toReturn.add(ith);
 				}
 			}
 
@@ -125,6 +124,42 @@ public abstract class Event
 		else
 		{
 			return new ArrayList<Method>();
+		}
+	}
+
+	private static boolean isComparableType(final Method method, final Class<?> returnType)
+	{
+		if( returnType == null || returnType.isPrimitive() || returnType.isArray() )
+		{
+			// Skip these cause they're too generic to test equality for.
+			// E.g. ReadWriteEvent in BleDevice has mtu(), rssi(), etc.
+
+			return false;
+		}
+		else if( returnType == String.class )
+		{
+			if( method.getName().equals("toString") )
+			{
+				return false;
+			}
+			else
+			{
+				return method.getParameterTypes().length == 0;
+			}
+		}
+		else if( Unit.class.isAssignableFrom(returnType) )
+		{
+			// Skipping Units for same reason as skipping primitives.
+
+			return false;
+		}
+		else if( method.getParameterTypes().length == 0 )
+		{
+			return true;
+		}
+		else
+		{
+			return false;
 		}
 	}
 
@@ -164,7 +199,19 @@ public abstract class Event
 
 				if( value != null )
 				{
-					toReturn.add(value);
+					if( value instanceof List )
+					{
+						final List value_cast = (List) value;
+
+						for( int j = 0; j < value_cast.size(); j++ )
+						{
+							toReturn.add(value_cast.get(j));
+						}
+					}
+					else
+					{
+						toReturn.add(value);
+					}
 				}
 			}
 			catch(IllegalAccessException e)

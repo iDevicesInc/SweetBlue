@@ -8,7 +8,11 @@ SWEETBLUE_DOCS_DIR=$SWEETBLUE_DIR/docs/api/
 
 echo $SWEETBLUE_DOCS_DIR
 sh build_docs.sh
-
+if [ "$?" != 0 ];
+then
+	echo "Build failed! Fix errors, then run this script again."
+	exit 1
+fi
 read -n 1 -p "Are you SURE you want to upload? " sure
 if [ "$sure" == "y" -o "$sure" == "Y" ];
 then 

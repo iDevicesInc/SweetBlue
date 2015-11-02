@@ -206,7 +206,7 @@ public class BleDevice extends BleNode
 			 * example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
 			 * returned a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted,
 			 * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}. {@link ReadWriteEvent#gattStatus()}
-			 * will most likely be non-zero, and you can check the static fields in {@link BleStatuses} for more information.
+			 * will most likely be non-zero, and you can check against the static fields in {@link BleStatuses} for more information.
 			 *
 			 * @see ReadWriteEvent#gattStatus()
 			 */
@@ -1834,7 +1834,7 @@ public class BleDevice extends BleNode
 	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#NULL}, then the last disconnect is unknown because
 	 * (a) device has never been seen before,
 	 * (b) reason for disconnect was app being killed and {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>,
-	 * (c) app user cleared app data between app sessions, (d) etc., etc.
+	 * (c) app user cleared app data between app sessions or reinstalled the app.
 	 * <br><br>
 	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
 	 * the disconnect to happen, and thus *probably* would want to be automatically connected again as soon as the device is discovered.
@@ -2088,6 +2088,14 @@ public class BleDevice extends BleNode
 	}
 
 	/**
+	 * Returns the advertising flags, if any, parse from {@link #getScanRecord()}.
+	 */
+	public int getAdvertisingFlags()
+	{
+		return m_advertisingFlags;
+	}
+
+	/**
 	 * Returns the advertised services, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
 	 */
 	public @Nullable(Prevalence.NEVER) UUID[] getAdvertisedServices()
@@ -2096,6 +2104,32 @@ public class BleDevice extends BleNode
 
 		final UUID[] toReturn = m_advertisedServices.size() > 0 ? new UUID[m_advertisedServices.size()] : EMPTY_UUID_ARRAY;
 		return m_advertisedServices.toArray(toReturn);
+	}
+
+	/**
+	 * Returns the manufacturer data, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
+	 */
+	public @Nullable(Prevalence.NEVER) SparseArray<byte[]> getManufacturerData()
+	{
+		enforceMainThread();
+
+		final SparseArray<byte[]> toReturn = m_manufacturerData != null ? m_manufacturerData.clone() : new SparseArray<byte[]>();
+
+		return toReturn;
+	}
+
+	/**
+	 * Returns the manufacturer data, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
+	 */
+	public @Nullable(Prevalence.NEVER) Map<UUID, byte[]> getAdvertisedServiceData()
+	{
+		enforceMainThread();
+
+		final Map<UUID, byte[]> toReturn = new HashMap<UUID, byte[]>();
+
+		toReturn.putAll(m_serviceData);
+
+		return toReturn;
 	}
 
 	/**
@@ -5116,10 +5150,11 @@ public class BleDevice extends BleNode
 
 		if( is(UNBONDED) )
 		{
+			final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
 			final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
 			final boolean doPreBond = getManager().m_diskOptionsMngr.loadNeedsBonding(getMacAddress(), tryBondingWhileDisconnected_manageOnDisk);
 
-			if( doPreBond )
+			if( doPreBond && tryBondingWhileDisconnected )
 			{
 				bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
 

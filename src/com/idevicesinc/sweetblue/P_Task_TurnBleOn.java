@@ -2,6 +2,11 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 
+import com.idevicesinc.sweetblue.utils.Utils;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
 /**
  * 
  * 
@@ -59,7 +64,7 @@ class P_Task_TurnBleOn extends PA_Task
 			}
 		}
 	}
-	
+
 	@Override public PE_TaskPriority getPriority()
 	{
 		return PE_TaskPriority.CRITICAL;

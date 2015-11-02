@@ -36,7 +36,7 @@ public class BleManagerConfig extends BleDeviceConfig
 {
 	public static final double DEFAULT_AUTO_SCAN_PAUSE_TIME				= 3.0;
 	public static final double DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME 	= 0.5;
-	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/30.0;
+	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/50.0;
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 	
@@ -349,13 +349,21 @@ public class BleManagerConfig extends BleDeviceConfig
 			public State.ChangeIntent lastDisconnectIntent(){  return m_lastDisconnectIntent;  }
 			private final State.ChangeIntent m_lastDisconnectIntent;
 
-
+			/**
+			 * Returns the advertising flags, if any, parsed from {@link #scanRecord()}.
+			 */
 			public int advertisingFlags()  {  return m_advertisingFlags;  }
 			private final int m_advertisingFlags;
 
+			/**
+			 * Returns the manufacturer-specific data, if any, parsed from {@link #scanRecord()}.
+			 */
 			public SparseArray<byte[]> manufacturerData(){  return m_manufacturerData;  }
 			private final SparseArray<byte[]> m_manufacturerData;
 
+			/**
+			 * Returns the service data, if any, parsed from {@link #scanRecord()}.
+			 */
 			public Map<UUID, byte[]> serviceData()  {  return m_serviceData;  }
 			private final Map<UUID, byte[]> m_serviceData;
 
@@ -368,7 +376,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			{
 				this.m_nativeInstance = nativeInstance;
 				this.m_advertisedServices = advertisedServices;
-				this.m_rawDeviceName = rawDeviceName;
+				this.m_rawDeviceName = rawDeviceName != null ? rawDeviceName : "";
 				this.m_normalizedDeviceName = normalizedDeviceName;
 				this.m_scanRecord = scanRecord != null ? scanRecord : BleDevice.EMPTY_BYTE_ARRAY;
 				this.m_rssi = rssi;

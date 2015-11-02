@@ -132,6 +132,11 @@ public class Utils_Byte extends Utils
 		return destination;
 	}
 
+	public static byte[] subBytes(final byte[] source, final int sourceBegin)
+	{
+		return subBytes(source, sourceBegin, source.length-1);
+	}
+
 	public static void memcpy(byte[] dest, byte[] source, int size, int destOffset, int sourceOffset)
 	{
 		for(int i = 0; i < size; i++)

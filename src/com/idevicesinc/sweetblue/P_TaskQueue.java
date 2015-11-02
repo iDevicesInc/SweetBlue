@@ -200,7 +200,10 @@ class P_TaskQueue
 
 		while( getCurrent() == null && m_queue.size() > 0 )
 		{
-			dequeue();
+			if( false == dequeue() )
+			{
+				break;
+			}
 		}
 	}
 	
@@ -233,10 +236,10 @@ class P_TaskQueue
 		m_updateCount++;
 	}
 	
-	private void dequeue()
+	private boolean dequeue()
 	{
-		if( !m_mngr.ASSERT(m_current == null) )  return;
-		if( m_queue.size() == 0 )  return;
+		if( !m_mngr.ASSERT(m_current == null) )  return false;
+		if( m_queue.size() == 0 )  return false;
 		
 		for( int i = 0; i < m_queue.size(); i++ )
 		{
@@ -248,12 +251,16 @@ class P_TaskQueue
 				m_current = newPotentialCurrent;
 				m_current.arm();
 				m_current.tryExecuting();
+
+				print();
 				
-				break;
+				return true;
 			}
 		}
-		
+
 		print();
+
+		return false;
 	}
 	
 	public long getUpdateCount()

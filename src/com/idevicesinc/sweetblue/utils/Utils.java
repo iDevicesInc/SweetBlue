@@ -1,14 +1,21 @@
 package com.idevicesinc.sweetblue.utils;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Looper;
+import android.os.*;
+import android.provider.Settings;
+import android.text.TextUtils;
+
+import com.idevicesinc.sweetblue.BleStatuses;
 
 /**
  * Some static utility methods that are probably not very useful outside the library.
@@ -26,6 +33,131 @@ public class Utils
 	public static boolean isLollipop()
 	{
 		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+	}
+
+	public static boolean isMarshmallow()
+	{
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+	}
+
+	public static boolean isLocationEnabledForScanning_byManifestPermissions(final Context context)
+	{
+		if( Utils.isMarshmallow() )
+		{
+			return
+					Utils.hasManifestPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ||
+					Utils.hasManifestPermission(context, Manifest.permission.ACCESS_FINE_LOCATION);
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	public static boolean isLocationEnabledForScanning_byRuntimePermissions(final Context context)
+	{
+		if( Utils.isMarshmallow() )
+		{
+			return
+					context.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, android.os.Process.myPid(), android.os.Process.myUid())  == PackageManager.PERMISSION_GRANTED ||
+					context.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, android.os.Process.myPid(), android.os.Process.myUid())  == PackageManager.PERMISSION_GRANTED ;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	public static boolean hasManifestPermission(final Context context, final String permission)
+	{
+		try
+		{
+			PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS);
+
+			if( info.requestedPermissions != null )
+			{
+				for( String p : info.requestedPermissions )
+				{
+					if( p.equals(permission) )
+					{
+						return true;
+					}
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
+	 * Adapted from http://stackoverflow.com/a/22980843/4248895.
+	 */
+	public static boolean isLocationEnabledForScanning_byOsServices(Context context)
+	{
+		if( Utils.isMarshmallow() )
+		{
+			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT )
+			{
+				final int locationMode;
+
+				try
+				{
+					locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
+				}
+				catch(Settings.SettingNotFoundException e)
+				{
+					return false;
+				}
+
+				return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+			}
+			else
+			{
+				final String locationProviders = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+
+				return false == TextUtils.isEmpty(locationProviders);
+			}
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	public static boolean isLocationEnabledForScanning(final Context context)
+	{
+		if( false == Utils.isMarshmallow() )
+		{
+			return true;
+		}
+		else
+		{
+			if( false == isLocationEnabledForScanning_byManifestPermissions(context) )
+			{
+				return false;
+			}
+			else
+			{
+				if( false == isLocationEnabledForScanning_byRuntimePermissions(context) )
+				{
+					return false;
+				}
+				else
+				{
+					if( isLocationEnabledForScanning_byOsServices(context) )
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+			}
+		}
 	}
 
 	/**
