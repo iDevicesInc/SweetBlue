@@ -324,7 +324,7 @@ public class BluetoothEnabler
                 {
                     if(!e.isEnabled(Stage.LOCATION_SERVICES) && !e.isEnabled(Stage.LOCATION_PERMISSION))
                     {
-                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires Location Permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services");
+                        return Please.doNext().withImplicitActivityResultHandling().withDialog("Android Marshmallow (6.0+) requires Location Permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services").withToast("Please click the Permissions button, then enable Location, then press back");
                     }
                     else if(!e.isEnabled(Stage.LOCATION_PERMISSION))
                     {
@@ -348,6 +348,10 @@ public class BluetoothEnabler
             {
                 if(e.status() == Status.ALREADY_ENABLED || e.status() == Status.ENABLED)
                 {
+                    if(!e.isEnabled(Stage.LOCATION_SERVICES))
+                    {
+                        return Please.doNext().withImplicitActivityResultHandling().withToast("Please enable Location Services then press back button");
+                    }
                     return Please.doNext().withImplicitActivityResultHandling();
                 }
                 else if(e.status() == Status.CANCELLED_BY_DIALOG || e.status() == Status.CANCELLED_BY_INTENT)
@@ -425,15 +429,16 @@ public class BluetoothEnabler
             @Override
             public void onActivityResumed(Activity activity) {
                 //Activity resumes after startActivity (bluetooth) gets called
-                if(m_pausedByEnabler && activity == m_passedActivity && m_currentStage != BluetoothEnablerListener.Stage.START && m_lastPlease != null && m_lastPlease.m_implicitActivityResultHandling)
+                if(activity == m_passedActivity && m_pausedByEnabler && m_currentStage != BluetoothEnablerListener.Stage.START && m_lastPlease != null && m_lastPlease.m_implicitActivityResultHandling)
                 {
+                    m_pausedByEnabler = false;
                     BluetoothEnabler.this.onActivityOrPermissionResult(m_lastPlease.m_requestCode, true);
                 }
             }
 
             @Override
             public void onActivityPaused(Activity activity) {
-               if(m_currentStage != null && m_passedActivity == activity && m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH)
+               if(m_passedActivity == activity && m_currentStage != null && (m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH || m_currentStage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION))
                {
                    m_pausedByEnabler = true;
                }
@@ -617,7 +622,7 @@ public class BluetoothEnabler
 
     private void finishPleaseResponse(boolean wasCancelledByDialog)
     {
-        if(m_lastPlease.shouldShowToast())
+        if(m_lastPlease.shouldShowToast() && !wasCancelledByDialog)
         {
             if(m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH && !m_passedActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION))
             {
