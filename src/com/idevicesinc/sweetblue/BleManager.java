@@ -1760,7 +1760,7 @@ public class BleManager
 				intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
 				Uri uri = Uri.fromParts("package", callingActivity.getPackageName(), null);
 				intent.setData(uri);
-				callingActivity.startActivity(intent);
+				callingActivity.startActivityForResult(intent, requestCode);
 			}
 			else
 			{
