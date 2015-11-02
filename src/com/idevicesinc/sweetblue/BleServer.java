@@ -33,6 +33,8 @@ import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
+import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower;
+import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode;
 
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleServerState.*;
@@ -1720,7 +1722,7 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid));
 	}
@@ -1728,7 +1730,7 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, AdvertisingListener)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, AdvertisingListener listener)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, AdvertisingListener listener)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid), listener);
 	}
@@ -1736,7 +1738,7 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuids));
 	}
@@ -1744,7 +1746,7 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, AdvertisingListener)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, AdvertisingListener listener)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, AdvertisingListener listener)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuids), listener);
 	}
@@ -1752,7 +1754,7 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid, serviceData));
 	}
@@ -1760,7 +1762,7 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData, BleAdvertisingPacket.Option... options)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData, BleAdvertisingPacket.Option... options)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid, serviceData, options));
 	}
@@ -1768,7 +1770,7 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingPacket.Option... options)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingPacket.Option... options)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid, options));
 	}
@@ -1776,101 +1778,45 @@ public class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, BleAdvertisingPacket.Option... options)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, BleAdvertisingPacket.Option... options)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuids, options));
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)} which sets
-	 * no timeout period.
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingSettings, AdvertisingListener)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingMode mode, BleTransmissionPower power)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingSettings settings, AdvertisingListener listener)
 	{
-		return startAdvertising(new BleAdvertisingPacket(serviceUuid), mode, power, Interval.ZERO, null);
+		return startAdvertising(new BleAdvertisingPacket(serviceUuid), settings, listener);
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)} which sets
-	 * no timeout period.
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingSettings, AdvertisingListener)}.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingMode mode, BleTransmissionPower power, AdvertisingListener listener)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, BleAdvertisingSettings settings, AdvertisingListener listener)
 	{
-		return startAdvertising(new BleAdvertisingPacket(serviceUuid), mode, power, Interval.ZERO, listener);
+		return startAdvertising(new BleAdvertisingPacket(serviceUuids), settings, listener);
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)} which sets
-	 * no timeout period.
-	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout)
-	{
-		return startAdvertising(new BleAdvertisingPacket(serviceUuid), mode, power, timeout, null);
-	}
-
-	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)} which sets
-	 * no timeout period.
-	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout, AdvertisingListener listener)
-	{
-		return startAdvertising(new BleAdvertisingPacket(serviceUuid), mode, power, timeout, listener);
-	}
-
-
-	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}. This sets
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingSettings, AdvertisingListener)}. This sets
 	 * the {@link BleAdvertisingMode} to {@link BleAdvertisingMode#AUTO}, and {@link BleTransmissionPower} to {@link BleTransmissionPower#MEDIUM}, and
 	 * no timeout for the advertisement.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket)
 	{
-		return startAdvertising(advPacket, BleAdvertisingMode.AUTO, BleTransmissionPower.MEDIUM, Interval.ZERO, null);
+		return startAdvertising(advPacket, null);
 	}
 
 	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}. This sets
+	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingSettings, AdvertisingListener)}. This sets
 	 * the {@link BleAdvertisingMode} to {@link BleAdvertisingMode#AUTO}, and {@link BleTransmissionPower} to {@link BleTransmissionPower#MEDIUM}, and
 	 * no timeout for the advertisement.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket, AdvertisingListener listener)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket, AdvertisingListener listener)
 	{
-		return startAdvertising(advPacket, BleAdvertisingMode.AUTO, BleTransmissionPower.MEDIUM, Interval.ZERO, listener);
-	}
-
-	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}. This sets
-	 * the {@link BleTransmissionPower} to {@link BleTransmissionPower#MEDIUM}, with no timeout.
-	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket, BleAdvertisingMode mode)
-	{
-		return startAdvertising(advPacket, mode, BleTransmissionPower.MEDIUM, Interval.ZERO, null);
-	}
-
-	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}. This also
-	 * sets no timeout period (it will continue to advertise until you call {@link #stopAdvertising()}).
-	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power)
-	{
-		return startAdvertising(advertisePacket, mode, power, Interval.ZERO, null);
-	}
-
-	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}.
-	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout)
-	{
-		return startAdvertising(advertisePacket, mode, power, timeout, null);
-	}
-
-	/**
-	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingMode, BleTransmissionPower, Interval, AdvertisingListener)}, which sets no timeout
-	 * period.
-	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power, AdvertisingListener listener)
-	{
-		return startAdvertising(advertisePacket, mode, power, Interval.ZERO, listener);
+		return startAdvertising(advPacket, new BleAdvertisingSettings(BleAdvertisingMode.AUTO, BleTransmissionPower.MEDIUM, Interval.ZERO), listener);
 	}
 
 	/**
@@ -1878,7 +1824,7 @@ public class BleServer extends BleNode
 	 * only work for devices on Lollipop, or above. Even then, not every device supports advertising. Use
 	 * {@link BleManager#isAdvertisingSupported()} to check to see if the phone supports it.
 	 */
-	public AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout, AdvertisingListener listener)
+	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingSettings settings, AdvertisingListener listener)
 	{
 		enforceMainThread();
 
@@ -1894,6 +1840,13 @@ public class BleServer extends BleNode
 			getManager().getLogger().e("Advertising NOT supported on android OS's less than Lollipop!");
 
 			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.ANDROID_VERSION_NOT_SUPPORTED);
+		}
+
+		if (!isAdvertisingSupportedByChipset())
+		{
+			getManager().getLogger().e("Advertising NOT supported by current device's chipset!");
+
+			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.CHIPSET_NOT_SUPPORTED);
 		}
 
 		if (!getManager().is(BleManagerState.ON))
@@ -1914,7 +1867,7 @@ public class BleServer extends BleNode
 		{
 			getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
 
-			getManager().getTaskQueue().add(new P_Task_Advertise(this, advertisePacket, listener, mode, power, timeout));
+			getManager().getTaskQueue().add(new P_Task_Advertise(this, advertisePacket, settings, listener));
 			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.NULL);
 		}
 	}

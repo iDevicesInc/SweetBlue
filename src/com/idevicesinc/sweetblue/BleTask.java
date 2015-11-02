@@ -124,13 +124,8 @@ public enum BleTask
 	/**
 	 * Associated with {@link BleServer#startAdvertising(BleAdvertisingPacket)}, {@link BleServer#startAdvertising(BleAdvertisingPacket, BleServer.AdvertisingListener)}
 	 */
-	START_ADVERTISING,
+	START_ADVERTISING;
 
-	/**
-	 * Associated with {@link BleServer#stopAdvertising(BleServer.AdvertisingListener)}, {@link BleServer#stopAdvertising()}
-	 */
-	STOP_ADVERTISING;
-	
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
 	 */

@@ -6,6 +6,8 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode;
+import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower;
 
 
 class P_Task_Advertise extends PA_Task_RequiresBleOn {
@@ -45,6 +47,16 @@ class P_Task_Advertise extends PA_Task_RequiresBleOn {
         m_mode = mode;
         m_power = power;
         m_timeOut = timeout;
+    }
+
+    public P_Task_Advertise(BleServer server, BleAdvertisingPacket info, BleAdvertisingSettings settings, BleServer.AdvertisingListener listener)
+    {
+        super(server, null);
+        m_packet = info;
+        m_listener = listener;
+        m_mode = settings.getAdvertisingMode();
+        m_power = settings.getTransmissionPower();
+        m_timeOut = settings.getTimeout();
     }
 
     /*package*/ BleAdvertisingPacket getPacket()

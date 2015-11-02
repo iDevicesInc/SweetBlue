@@ -7,6 +7,8 @@ import android.os.ParcelUuid;
 
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode;
+import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower;
 
 import java.util.HashMap;
 import java.util.Map;
