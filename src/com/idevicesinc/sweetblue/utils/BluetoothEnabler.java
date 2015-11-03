@@ -268,7 +268,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * If the next stage isn't skipped or {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#ALREADY_ENABLED} then pop a dialog before
+             * If the next stage isn't skipped or {@see com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#ALREADY_ENABLED} then pop a dialog before
              */
             public Please withDialog(String message)
             {
