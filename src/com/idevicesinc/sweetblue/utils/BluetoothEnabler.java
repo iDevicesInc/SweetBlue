@@ -24,7 +24,7 @@ public class BluetoothEnabler
 {
 
     /**
-     * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerListener)} to receive callbacks or simply use the provided class
+     * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerListener)} to receive callbacks or simply use the provided class
      * {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerListener} by caling {@link BluetoothEnabler#BluetoothEnabler(Activity)}. This listener will be the main
      * way of handling different enabling events and their results.
      *
@@ -260,7 +260,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * Pause the enabler. Call {@link #resume(Please)} to continue the process.
+             * Pause the enabler. Call {@link BluetoothEnabler#resume(Please)} to continue the process.
              */
             public static Please pause()
             {
