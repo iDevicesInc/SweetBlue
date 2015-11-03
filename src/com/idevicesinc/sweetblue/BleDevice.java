@@ -1834,7 +1834,7 @@ public class BleDevice extends BleNode
 	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#NULL}, then the last disconnect is unknown because
 	 * (a) device has never been seen before,
 	 * (b) reason for disconnect was app being killed and {@link BleDeviceConfig#manageLastDisconnectOnDisk} was <code>false</code>,
-	 * (c) app user cleared app data between app sessions, (d) etc., etc.
+	 * (c) app user cleared app data between app sessions or reinstalled the app.
 	 * <br><br>
 	 * If {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}, then from a user experience perspective, the user may not have wanted
 	 * the disconnect to happen, and thus *probably* would want to be automatically connected again as soon as the device is discovered.

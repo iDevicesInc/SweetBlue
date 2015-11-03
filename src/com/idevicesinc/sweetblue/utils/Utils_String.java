@@ -27,6 +27,34 @@ public class Utils_String extends Utils
 		return s_toFixedFormat.format(value);
 	}
 
+	public static String normalizeMacAddress(final String macAddress)
+	{
+		final char[] commonDelimiters = {'-', '.', ' ', '_'};
+
+		if( macAddress == null )
+		{
+			return "";
+		}
+		else if( macAddress.length() == 0 )
+		{
+			return "";
+		}
+		else
+		{
+			for( int i = 0; i < commonDelimiters.length; i++ )
+			{
+				final String commonDelimiter_ith = String.valueOf(commonDelimiters[i]);
+
+				if( macAddress.contains(commonDelimiter_ith) )
+				{
+					return macAddress.replace(commonDelimiter_ith, ":");
+				}
+			}
+		}
+
+		return macAddress;
+	}
+
 	public static String normalizeDeviceName(String deviceName)
 	{
 		if( deviceName == null || deviceName.length() == 0 )  return "";
@@ -34,6 +62,7 @@ public class Utils_String extends Utils
 		String[] nameParts = deviceName.split("-");
 		String consistentName = nameParts[0];
 		consistentName = consistentName.toLowerCase();
+		consistentName = consistentName.trim();
 		consistentName = consistentName.replace(" ", "_");
 
 		return consistentName;

@@ -1739,7 +1739,7 @@ public class BleManager
 
 		if( false == Utils.isMarshmallow() )
 		{
-			m_logger.w("You may use this method but since you're at SDK level " + Build.VERSION.SDK_INT + " it is not necessary for scanning.");
+			m_logger.w("You may use this method but since the phone is at " + Build.VERSION.SDK_INT + " and the requirement is "+Build.VERSION_CODES.M+", it is not necessary for scanning.");
 		}
 	}
 
@@ -1750,6 +1750,7 @@ public class BleManager
 	 *
 	 * @see #isLocationEnabledForScanning_byRuntimePermissions()
 	 */
+	@TargetApi(Build.VERSION_CODES.M)
 	public void turnOnLocationWithIntent_forPermissions(final Activity callingActivity, int requestCode)
 	{
 		if( Utils.isMarshmallow() )
@@ -1969,11 +1970,13 @@ public class BleManager
 	/**
 	 * Gets a known {@link BleDeviceState#DISCOVERED} device by MAC address, or {@link BleDevice#NULL} if there is no such device.
 	 */
-	public @Nullable(Prevalence.NEVER) BleDevice getDevice(String macAddress)
+	public @Nullable(Prevalence.NEVER) BleDevice getDevice(final String macAddress)
 	{
 		enforceMainThread();
 
-		final BleDevice device = m_deviceMngr.get(macAddress);
+		final String macAddress_normalized = normalizeMacAddress(macAddress);
+
+		final BleDevice device = m_deviceMngr.get(macAddress_normalized);
 		
 		if( device != null )  return device;
 		
@@ -2461,7 +2464,9 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		final BleDevice existingDevice = this.getDevice(macAddress);
+		final String macAddress_normalized = normalizeMacAddress(macAddress);
+
+		final BleDevice existingDevice = this.getDevice(macAddress_normalized);
 
 		if( !existingDevice.isNull() )
 		{
@@ -2478,7 +2483,7 @@ public class BleManager
 			return existingDevice;
 		}
 
-		final BluetoothDevice device_native = newNativeDevice(macAddress);
+		final BluetoothDevice device_native = newNativeDevice(macAddress_normalized);
 
 		if( device_native == null ) //--- DRK > API says this should never happen...not trusting it!
 		{
@@ -2553,7 +2558,9 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		m_diskOptionsMngr.clear(macAddress);
+		final String macAddress_normalized = normalizeMacAddress(macAddress);
+
+		m_diskOptionsMngr.clear(macAddress_normalized);
 	}
 
 	/**
@@ -2979,6 +2986,26 @@ public class BleManager
 		if( false == allowAllThreads )
 		{
 			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
+		}
+	}
+
+	String normalizeMacAddress(final String macAddress)
+	{
+		final String macAddress_normalized = Utils_String.normalizeMacAddress(macAddress);
+
+		if( macAddress == macAddress_normalized )
+		{
+			return macAddress;
+		}
+		else if( macAddress.equals(macAddress_normalized) )
+		{
+			return macAddress;
+		}
+		else
+		{
+			getLogger().w("Given mac address " + macAddress + " has been auto-normalized to " + macAddress_normalized);
+
+			return macAddress_normalized;
 		}
 	}
 }

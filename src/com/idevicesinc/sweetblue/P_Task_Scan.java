@@ -240,6 +240,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		if( false == Utils.isLollipop() )
 		{
 			getManager().ASSERT(false, "Tried to create ScanSettings for pre-lollipop!");
+
+			fail();
 		}
 		else
 		{
@@ -400,7 +402,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	
 	@Override protected void update(double timeStep)
 	{
-		if( this.getState() == PE_TaskState.EXECUTING && getTimeout() == Interval.INFINITE.secs() )
+		if( this.getState() == PE_TaskState.EXECUTING  )
 		{
 			if( getTotalTimeExecuting() >= getMinimumScanTime() && getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek()) )
 			{
@@ -425,23 +427,20 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private boolean isSelfInterruptableBy(final PA_Task otherTask)
 	{
-		//--- DRK > This logic used to be part of isInterruptableBy but removed because scan task being interruptable
-		//---		by reads/writes gives a small chance that a bunch of writes could go out of order.
-		if( otherTask instanceof P_Task_Read || otherTask instanceof P_Task_Write || otherTask instanceof P_Task_ReadRssi )
+		if( otherTask.getPriority().ordinal() > PE_TaskPriority.FOR_NORMAL_READS_WRITES.ordinal() )
 		{
-			if( otherTask.getPriority().ordinal() > PE_TaskPriority.FOR_NORMAL_READS_WRITES.ordinal() )
-			{
-				return true;
-			}
-			else if( otherTask.getPriority().ordinal() >= this.getPriority().ordinal() )
-			{
-				//--- DRK > Not sure infinite timeout check really matters here.
-				return this.getTotalTimeExecuting() >= getMinimumScanTime();
-//				return getTimeout() == TIMEOUT_INFINITE && this.getTotalTimeExecuting() >= getManager().m_config.minimumScanTime;
-			}
+			return true;
 		}
-
-		return false;
+		else if( otherTask.getPriority().ordinal() >= this.getPriority().ordinal() )
+		{
+			//--- DRK > Not sure infinite timeout check really matters here.
+			return this.getTotalTimeExecuting() >= getMinimumScanTime();
+//				return getTimeout() == TIMEOUT_INFINITE && this.getTotalTimeExecuting() >= getManager().m_config.minimumScanTime;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override public boolean isInterruptableBy(PA_Task otherTask)

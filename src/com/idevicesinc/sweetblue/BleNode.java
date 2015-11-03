@@ -55,7 +55,7 @@ public abstract class BleNode implements UsesCustomNull
 		{
 			/**
 			 * Used when we didn't start the connection process, i.e. it came out of nowhere. Rare case but can happen, for example after
-			 * SweetBlue considers a connect timed out based on {@link BleDeviceConfig#taskTimeoutRequestFilter} but then it somehow
+			 * SweetBlue considers a connect timed out based on {@link BleNodeConfig#taskTimeoutRequestFilter} but then it somehow
 			 * does come in (shouldn't happen but who knows).
 			 */
 			UNKNOWN,
