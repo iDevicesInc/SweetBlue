@@ -260,7 +260,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * Pause the enabler. Call {@link BluetoothEnabler#resume(Please)} to continue the process.
+             * Pause the enabler. Call {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler#resume(Please)} to continue the process.
              */
             public static Please pause()
             {
