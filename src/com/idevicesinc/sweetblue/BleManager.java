@@ -1758,6 +1758,7 @@ public class BleManager
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
+	@TargetApi(Build.VERSION_CODES.M)
 	public boolean willLocationPermissionSystemDialogBeShown(Activity callingActivity)
 	{
 		SharedPreferences preferences = callingActivity.getSharedPreferences(LOCATION_PERMISSION_NAMESPACE, Context.MODE_PRIVATE);
