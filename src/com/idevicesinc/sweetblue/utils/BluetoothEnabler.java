@@ -1,6 +1,5 @@
 package com.idevicesinc.sweetblue.utils;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
@@ -22,27 +21,41 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
  */
 public class BluetoothEnabler
 {
+	/**
+	 * Overload of {@link #start(Activity)} that uses an instance {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerFilter}.
+	 */
+	public static BluetoothEnabler start(final Activity activity)
+	{
+		return new BluetoothEnabler(activity);
+	}
+
+	/**
+	 * Kicks off the complex flow needed to fully enable Bluetooth on Build versions greater than or equal to {@link android.os.Build.VERSION_CODES#M}.
+	 */
+	public static BluetoothEnabler start(final Activity activity, final BluetoothEnablerFilter filter)
+	{
+		return new BluetoothEnabler(activity, filter);
+	}
 
     /**
-     * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerListener)} to receive callbacks or simply use the provided class
-     * {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerListener} by caling {@link BluetoothEnabler#BluetoothEnabler(Activity)}. This listener will be the main
+     * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerFilter)} to receive callbacks or simply use the provided class
+     * {@link DefaultBluetoothEnablerFilter} by caling {@link BluetoothEnabler#BluetoothEnabler(Activity)}. This listener will be the main
      * way of handling different enabling events and their results.
      *
      */
-    public static interface BluetoothEnablerListener
+    public static interface BluetoothEnablerFilter
     {
         /**
          * Enumerates changes in the "enabling" stage before a
-         * Bluetooth LE scan is started. Used at {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.BluetoothEnablerEvent} to denote
+         * Bluetooth LE scan is started. Used at {@link BluetoothEnablerFilter.BluetoothEnablerEvent} to denote
          * what the current stage as well as in {@link BluetoothEnablerEvent#nextStage()} to give the following stage to the current one.
          */
         public static enum Stage implements UsesCustomNull
         {
-
             NULL,
 
             /**
-             * The initial enabling stage. This stage begins the process and kicks off the following stage {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage#BLUETOOTH}.
+             * The initial enabling stage. This stage begins the process and kicks off the following stage {@link BluetoothEnablerFilter.Stage#BLUETOOTH}.
              */
             START,
 
@@ -75,7 +88,7 @@ public class BluetoothEnabler
         }
 
         /**
-         * The Status of the current {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage}
+         * The Status of the current {@link BluetoothEnablerFilter.Stage}
          */
         public static enum Status implements UsesCustomNull
         {
@@ -95,7 +108,7 @@ public class BluetoothEnabler
             ENABLED,
 
             /**
-             * If the app wasn't compiled against {@link android.os.Build.VERSION_CODES#M} then the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage#LOCATION_PERMISSION} isn't needed
+             * If the app wasn't compiled against {@link android.os.Build.VERSION_CODES#M} then the {@link BluetoothEnablerFilter.Stage#LOCATION_PERMISSION} isn't needed
              * because the underlying function call{@link Activity#requestPermissions(String[], int)} doesn't exist for this SDK version.
              */
             NOT_NEEDED,
@@ -125,48 +138,35 @@ public class BluetoothEnabler
         }
 
         /**
-         * Events passed to {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener#onEvent(BluetoothEnablerEvent)} so that the programmer can assign logic to the user's decision to
-         * enable or disable certain required permissions and settings. Each event contains a {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} which holds the current
-         * enabling stage and a {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status} of that stage. Stages which haven't been performed yet start off as
-         * {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#NULL}, stages skipped are {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#SKIPPED} and
-         * stages that don't need anything done are {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#ALREADY_ENABLED}. Otherwise, the status of the stage is whatever the user selected.
+         * Events passed to {@link BluetoothEnablerFilter#onEvent(BluetoothEnablerEvent)} so that the programmer can assign logic to the user's decision to
+         * enable or disable certain required permissions and settings. Each event contains a {@link BluetoothEnablerFilter.Stage} which holds the current
+         * enabling stage and a {@link BluetoothEnablerFilter.Status} of that stage. Stages which haven't been performed yet start off as
+         * {@link BluetoothEnablerFilter.Status#NULL}, stages skipped are {@link BluetoothEnablerFilter.Status#SKIPPED} and
+         * stages that don't need anything done are {@link BluetoothEnablerFilter.Status#ALREADY_ENABLED}. Otherwise, the status of the stage is whatever the user selected.
          */
         public static class BluetoothEnablerEvent extends Event
         {
             /**
-             *
-             * Returns the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} following the Stage for this event.
+             * Returns the {@link BluetoothEnablerFilter.Stage} following the Stage for this event.
              */
-            public Stage nextStage()
-            {
-                return m_stage.next();
-            }
+            public Stage nextStage()  {  return m_stage.next();  }
 
             /**
-             * Returns the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} associated with this event.
+             * Returns the {@link BluetoothEnablerFilter.Stage} associated with this event.
              */
-            public Stage stage()
-            {
-                return m_stage;
-            }
+            public Stage stage() { return m_stage; }
             private final Stage m_stage;
 
             /**
-             * Returns the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status} of the current Stage.
+             * Returns the {@link BluetoothEnablerFilter.Status} of the current Stage.
              */
-            public Status status()
-            {
-                return m_status;
-            }
+            public Status status() { return m_status; }
             private final Status m_status;
 
             /**
              * Returns the {@link Activity} associated with the Event
              */
-            public Activity activity()
-            {
-                return m_activity;
-            }
+            public Activity activity() { return m_activity; }
             public final Activity m_activity;
 
             private BluetoothEnablerEvent(Activity activity, Stage stage, Status status)
@@ -177,7 +177,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * Returns whether the passed {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} is enabled.
+             * Returns whether the passed {@link BluetoothEnablerFilter.Stage} is enabled.
              */
             public boolean isEnabled(Stage stage)
             {
@@ -188,15 +188,16 @@ public class BluetoothEnabler
             {
                 return Utils_String.toString
                 (
-                        this.getClass(),
-                        "stage", stage(),
-                        "status", status()
+                    this.getClass(),
+                    "stage",        stage(),
+                    "status",       status(),
+                    "nextStage",    nextStage()
                 );
             }
         }
 
         /**
-         * Return value for the interface method {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener#onEvent(BluetoothEnablerEvent)}.
+         * Return value for the interface method {@link BluetoothEnablerFilter#onEvent(BluetoothEnablerEvent)}.
          * Use static constructor methods to create instances.
          */
         public static class Please
@@ -236,7 +237,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * Perform the next {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage}.
+             * Perform the next {@link BluetoothEnablerFilter.Stage}.
              */
             public static Please doNext()
             {
@@ -244,7 +245,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * Skip the next {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} and move the following one.
+             * Skip the next {@link BluetoothEnablerFilter.Stage} and move the following one.
              */
             public static Please skipNext()
             {
@@ -260,7 +261,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * Pause the enabler. Call {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler#resume(com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Please)} to continue the process.
+             * Pause the enabler. Call {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler#resume(BluetoothEnablerFilter.Please)} to continue the process.
              */
             public static Please pause()
             {
@@ -268,7 +269,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * If the next stage isn't skipped or {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Status#ALREADY_ENABLED} then pop a dialog before
+             * If the next stage isn't skipped or {@link BluetoothEnablerFilter.Status#ALREADY_ENABLED} then pop a dialog before
              */
             public Please withDialog(String message)
             {
@@ -309,7 +310,7 @@ public class BluetoothEnabler
         }
 
         /**
-         * Called after moving to the next {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage}
+         * Called after moving to the next {@link BluetoothEnablerFilter.Stage}
          */
         Please onEvent(final BluetoothEnablerEvent e);
     }
@@ -318,10 +319,9 @@ public class BluetoothEnabler
      * A default implementation of BluetoothEnablerListener used in {@link BluetoothEnabler#BluetoothEnabler(Activity)}. It provides a
      * basic implementation for use/example and can be overridden.
      */
-    public static class DefaultBluetoothEnablerListener implements BluetoothEnablerListener
+    public static class DefaultBluetoothEnablerFilter implements BluetoothEnablerFilter
     {
-        @Override
-        public Please onEvent(BluetoothEnablerEvent e)
+		@Override public Please onEvent(BluetoothEnablerEvent e)
         {
             final String locationPermissionAndServicesNeedEnablingString = "Android Marshmallow (6.0+) requires Location Permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services";
             final String locationPermissionNeedEnablingString = "Android Marshmallow (6.0+) requires Location Permission to be able to scan for Bluetooth devices. Please accept to allow Location Permission.";
@@ -339,7 +339,7 @@ public class BluetoothEnabler
                 {
                     if(!e.isEnabled(Stage.LOCATION_SERVICES) && !e.isEnabled(Stage.LOCATION_PERMISSION))
                     {
-                        if(BleManager.get(e.activity()).willLocationSystemDialogBeShown(e.activity()))
+                        if(BleManager.get(e.activity()).willLocationPermissionSystemDialogBeShown(e.activity()))
                         {
                             return Please.doNext().withImplicitActivityResultHandling().withDialog(locationPermissionAndServicesNeedEnablingString);
                         }
@@ -350,7 +350,7 @@ public class BluetoothEnabler
                     }
                     else if(!e.isEnabled(Stage.LOCATION_PERMISSION))
                     {
-                        if(BleManager.get(e.activity()).willLocationSystemDialogBeShown(e.activity()))
+                        if(BleManager.get(e.activity()).willLocationPermissionSystemDialogBeShown(e.activity()))
                         {
                             return Please.doNext().withImplicitActivityResultHandling().withDialog(locationPermissionNeedEnablingString);
                         }
@@ -370,7 +370,7 @@ public class BluetoothEnabler
                     return Please.stop();
                 }
             }
-            else if(e.nextStage() == Stage.LOCATION_SERVICES && e.stage() != Stage.LOCATION_SERVICES)
+            else if(e.nextStage() == Stage.LOCATION_SERVICES )
             {
                 if(e.status() == Status.ALREADY_ENABLED || e.status() == Status.ENABLED)
                 {
@@ -394,17 +394,17 @@ public class BluetoothEnabler
         }
     }
 
-    private static boolean isEnabled(BleManager bleManager, BluetoothEnablerListener.Stage stage)
+    private static boolean isEnabled(BleManager bleManager, BluetoothEnablerFilter.Stage stage)
     {
-        if(stage == BluetoothEnablerListener.Stage.BLUETOOTH)
+        if(stage == BluetoothEnablerFilter.Stage.BLUETOOTH)
         {
             return bleManager.isBleSupported() && bleManager.is(BleManagerState.ON);
         }
-        else if(stage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION)
+        else if(stage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION)
         {
             return bleManager.isLocationEnabledForScanning_byRuntimePermissions();
         }
-        else if(stage == BluetoothEnablerListener.Stage.LOCATION_SERVICES)
+        else if(stage == BluetoothEnablerFilter.Stage.LOCATION_SERVICES)
         {
             return bleManager.isLocationEnabledForScanning_byOsServices();
         }
@@ -412,99 +412,84 @@ public class BluetoothEnabler
     }
 
     private final BleManager m_bleManager;
-    private final BluetoothEnablerListener m_startupListener;
-
+    private final BluetoothEnablerFilter m_enablerFilter;
     private final Activity m_passedActivity;
+	private final Application.ActivityLifecycleCallbacks m_lifecycleCallback;
 
-    private BluetoothEnablerListener.Please m_lastPlease = null;
-    private BluetoothEnablerListener.Stage m_currentStage;
+
+    private BluetoothEnablerFilter.Please m_lastPlease = null;
+    private BluetoothEnablerFilter.Stage m_currentStage;
     private boolean m_pausedByEnabler;
 
-    private Application.ActivityLifecycleCallbacks m_lifecycleCallback;
-
     /**
-     * A constructor which uses an instance of {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerListener} as the
+     * A constructor which uses an instance of {@link DefaultBluetoothEnablerFilter} as the
      * enabler listener and will take an activity from which the BleManager will get gotten.
      */
-    public BluetoothEnabler(Activity activity)
+    private BluetoothEnabler(Activity activity)
     {
-        this(activity, new DefaultBluetoothEnablerListener());
+        this(activity, new DefaultBluetoothEnablerFilter());
     }
 
     /**
-     * A constructor which taken an activity and a custom implementation of {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener}. A BleManager will
+     * A constructor which taken an activity and a custom implementation of {@link BluetoothEnablerFilter}. A BleManager will
      * be obtained from the passed activity.
      */
-    public BluetoothEnabler(Activity activity, BluetoothEnablerListener enablerListener)
+    private BluetoothEnabler(Activity activity, BluetoothEnablerFilter enablerFilter)
     {
         m_bleManager = BleManager.get(activity);
         m_passedActivity = activity;
-        m_currentStage = BluetoothEnablerListener.Stage.START;
-        BluetoothEnablerListener.BluetoothEnablerEvent startEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerListener.Status.NULL);
+        m_currentStage = BluetoothEnablerFilter.Stage.START;
 
-        m_lifecycleCallback = new Application.ActivityLifecycleCallbacks() {
-            @Override
-            public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-            }
+        m_lifecycleCallback = new Application.ActivityLifecycleCallbacks()
+		{
+			@Override public void onActivityCreated(Activity activity, Bundle savedInstanceState){}
+			@Override public void onActivityStarted(Activity activity){}
+			@Override public void onActivityStopped(Activity activity){}
+			@Override public void onActivitySaveInstanceState(Activity activity, Bundle outState){}
+			@Override public void onActivityDestroyed(Activity activity){}
 
-            @Override
-            public void onActivityStarted(Activity activity) {
-
-            }
-
-            @Override
-            public void onActivityResumed(Activity activity) {
+			@Override public void onActivityResumed(Activity activity)
+			{
                 //Activity resumes after startActivity (bluetooth) gets called
-                if(activity == m_passedActivity && m_pausedByEnabler && m_currentStage != BluetoothEnablerListener.Stage.START && m_lastPlease != null && m_lastPlease.m_implicitActivityResultHandling)
+                if(activity == m_passedActivity && m_pausedByEnabler && m_currentStage != BluetoothEnablerFilter.Stage.START && m_lastPlease != null && m_lastPlease.m_implicitActivityResultHandling)
                 {
                     m_pausedByEnabler = false;
                     BluetoothEnabler.this.onActivityOrPermissionResult(m_lastPlease.m_requestCode, true);
                 }
             }
 
-            @Override
-            public void onActivityPaused(Activity activity) {
-               if(m_passedActivity == activity && m_currentStage != null && (m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH || m_currentStage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION))
+			@Override public void onActivityPaused(Activity activity)
+			{
+               if(m_passedActivity == activity && m_currentStage != null && (m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH || m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION))
                {
                    m_pausedByEnabler = true;
                }
             }
-
-            @Override
-            public void onActivityStopped(Activity activity) {
-            }
-
-            @Override
-            public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-
-            }
-
-            @Override
-            public void onActivityDestroyed(Activity activity) {
-
-            }
         };
 
         m_passedActivity.getApplication().registerActivityLifecycleCallbacks(m_lifecycleCallback);
-        m_startupListener = enablerListener;
+        m_enablerFilter = enablerFilter;
+
+		BluetoothEnablerFilter.BluetoothEnablerEvent startEvent = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.NULL);
+
         nextStage(startEvent);
     }
 
-    private void nextStage(BluetoothEnablerListener.BluetoothEnablerEvent nextEvent)
+    private void nextStage(BluetoothEnablerFilter.BluetoothEnablerEvent nextEvent)
     {
-        if(m_currentStage == BluetoothEnablerListener.Stage.START)
+        if(m_currentStage == BluetoothEnablerFilter.Stage.START)
         {
-            updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.NULL);
+            updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.NULL);
         }
-        else if(m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH)
+        else if(m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH)
         {
-            if(nextEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
+            if(nextEvent.status() == BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG)
             {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG);
+                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG);
             }
-            else if(nextEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
+            else if(nextEvent.status() == BluetoothEnablerFilter.Status.SKIPPED)
             {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.SKIPPED);
+                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.SKIPPED);
             }
             else if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON))
             {
@@ -513,24 +498,24 @@ public class BluetoothEnabler
             }
             else
             {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.ALREADY_ENABLED);
+                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ALREADY_ENABLED);
             }
         }
-        else if(m_currentStage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION)
+        else if(m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION)
         {
             if(!Utils.isMarshmallow())
             {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.NOT_NEEDED);
+                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.NOT_NEEDED);
             }
             else
             {
-                if(nextEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
+                if(nextEvent.status() == BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG)
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG);
                 }
-                else if(nextEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
+                else if(nextEvent.status() == BluetoothEnablerFilter.Status.SKIPPED)
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.SKIPPED);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.SKIPPED);
                 }
                 else if(!m_bleManager.isLocationEnabledForScanning_byRuntimePermissions())
                 {
@@ -539,19 +524,19 @@ public class BluetoothEnabler
                 }
                 else
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.ALREADY_ENABLED);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ALREADY_ENABLED);
                 }
             }
         }
-        else if(m_currentStage == BluetoothEnablerListener.Stage.LOCATION_SERVICES)
+        else if(m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_SERVICES)
         {
-            if(nextEvent.status() == BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG)
+            if(nextEvent.status() == BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG)
             {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG);
+                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG);
             }
-            else if(nextEvent.status() == BluetoothEnablerListener.Status.SKIPPED)
+            else if(nextEvent.status() == BluetoothEnablerFilter.Status.SKIPPED)
             {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.SKIPPED);
+                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.SKIPPED);
             }
             else if(!m_bleManager.isLocationEnabledForScanning_byOsServices())
             {
@@ -560,22 +545,22 @@ public class BluetoothEnabler
             }
             else
             {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.ALREADY_ENABLED);
+                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ALREADY_ENABLED);
             }
         }
     }
 
-    private boolean isNextStageAlreadyEnabled(BluetoothEnablerListener.Stage stage)
+    private boolean isNextStageAlreadyEnabled(BluetoothEnablerFilter.Stage stage)
     {
-        if(stage == BluetoothEnablerListener.Stage.BLUETOOTH)
+        if(stage == BluetoothEnablerFilter.Stage.BLUETOOTH)
         {
             return m_bleManager.isBleSupported() && m_bleManager.is(BleManagerState.ON);
         }
-        else if(stage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION)
+        else if(stage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION)
         {
             return m_bleManager.isLocationEnabledForScanning_byRuntimePermissions();
         }
-        else if(stage == BluetoothEnablerListener.Stage.LOCATION_SERVICES)
+        else if(stage == BluetoothEnablerFilter.Stage.LOCATION_SERVICES)
         {
             return m_bleManager.isLocationEnabledForScanning_byOsServices();
         }
@@ -589,9 +574,9 @@ public class BluetoothEnabler
             m_lastPlease.m_activity.startActivity(new Intent());
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(m_passedActivity);
-        if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH && !m_lastPlease.wasSkipped())
+        if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH && !m_lastPlease.wasSkipped())
         {
-            if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.END)
+            if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.END)
             {
                 builder.setMessage(m_lastPlease.m_dialogText);
                 builder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
@@ -652,40 +637,40 @@ public class BluetoothEnabler
             Toast.makeText(m_passedActivity, m_lastPlease.m_toastText, Toast.LENGTH_LONG).show();
         }
 
-        if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.PAUSE)
+        if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.PAUSE)
         {
 
         }
-        else if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.DO_NEXT )
+        else if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.DO_NEXT )
         {
             m_currentStage = m_currentStage.next();
-            BluetoothEnablerListener.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerListener.Status.NULL);
+            BluetoothEnablerFilter.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.NULL);
             nextStage(nextEvent);
         }
-        else if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.SKIP_NEXT)
+        else if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.SKIP_NEXT)
         {
             m_currentStage = m_currentStage.next();
-            BluetoothEnablerListener.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerListener.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerListener.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerListener.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerListener.Status.SKIPPED);
+            BluetoothEnablerFilter.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.SKIPPED);
             nextStage(nextEvent);
         }
-        else if(m_lastPlease.m_stateCode == BluetoothEnablerListener.Please.END)
+        else if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.END)
         {
-            m_currentStage = BluetoothEnablerListener.Stage.NULL;
+            m_currentStage = BluetoothEnablerFilter.Stage.NULL;
             m_passedActivity.getApplication().unregisterActivityLifecycleCallbacks(m_lifecycleCallback);
         }
     }
 
-    private void updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status newStatus)
+    private void updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status newStatus)
     {
-        BluetoothEnablerListener.BluetoothEnablerEvent currentEvent = new BluetoothEnablerListener.BluetoothEnablerEvent(m_passedActivity, m_currentStage, newStatus);
-        m_lastPlease = m_startupListener.onEvent(currentEvent);
+        BluetoothEnablerFilter.BluetoothEnablerEvent currentEvent = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, newStatus);
+        m_lastPlease = m_enablerFilter.onEvent(currentEvent);
         handlePleaseResponse();
     }
 
 
     /**
      * A potentially-required method to be placed in your activity's {@link Activity#onRequestPermissionsResult(int, String[], int[])} and {@link Activity#onActivityResult(int, int, Intent)} methods.
-     * This method will re-connect the enabler after the app is re-entered. Otherwise, the enabler won't continue unless {@link BluetoothEnablerListener.Please#withImplicitActivityResultHandling()} is called.
+     * This method will re-connect the enabler after the app is re-entered. Otherwise, the enabler won't continue unless {@link BluetoothEnablerFilter.Please#withImplicitActivityResultHandling()} is called.
      */
     public void onActivityOrPermissionResult(int requestCode)
     {
@@ -696,46 +681,46 @@ public class BluetoothEnabler
     {
         if(requestCode == m_lastPlease.m_requestCode && m_lastPlease.m_implicitActivityResultHandling == calledImplicitly)
         {
-            if(m_currentStage == BluetoothEnablerListener.Stage.BLUETOOTH)
+            if(m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH)
             {
                 if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON))
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_INTENT);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_INTENT);
                 }
                 else
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.ENABLED);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ENABLED);
                 }
             }
-            else if(m_currentStage == BluetoothEnablerListener.Stage.LOCATION_PERMISSION)
+            else if(m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION)
             {
                 if(!m_bleManager.isLocationEnabledForScanning_byRuntimePermissions())
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_INTENT);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_INTENT);
                 }
                 else
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.ENABLED);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ENABLED);
                 }
             }
-            else if(m_currentStage == BluetoothEnablerListener.Stage.LOCATION_SERVICES)
+            else if(m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_SERVICES)
             {
                 if(!m_bleManager.isLocationEnabledForScanning_byOsServices())
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.CANCELLED_BY_INTENT);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_INTENT);
                 }
                 else
                 {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerListener.Status.ENABLED);
+                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ENABLED);
                 }
             }
         }
     }
 
     /**
-     * Returns whether the passed {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} has been enabled.
+     * Returns whether the passed {@link BluetoothEnablerFilter.Stage} has been enabled.
      */
-    public boolean isEnabled(BluetoothEnablerListener.Stage stage)
+    public boolean isEnabled(BluetoothEnablerFilter.Stage stage)
     {
         return isEnabled(m_bleManager, stage);
     }
@@ -743,16 +728,16 @@ public class BluetoothEnabler
     /**
      * Resume the enabler with the given Please. Enabler will continue where is left off.
      */
-    public void resume(BluetoothEnablerListener.Please please)
+    public void resume(BluetoothEnablerFilter.Please please)
     {
         m_lastPlease = please;
         handlePleaseResponse();
     }
 
     /**
-     * Returns the current {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerListener.Stage} the enabler is on
+     * Returns the current {@link BluetoothEnablerFilter.Stage} the enabler is on
      */
-    public BluetoothEnablerListener.Stage getStage()
+    public BluetoothEnablerFilter.Stage getStage()
     {
         return m_currentStage;
     }

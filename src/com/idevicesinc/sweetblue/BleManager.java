@@ -1721,6 +1721,7 @@ public class BleManager
 	 * SweetBlue will fall back to classic discovery through {@link BluetoothAdapter#startDiscovery()} when you call {@link #startScan()} or overloads, so you may not have to use this.
 	 *
 	 * @see #isLocationEnabledForScanning_byOsServices()
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public void turnOnLocationWithIntent_forOsServices(final Activity callingActivity, int requestCode)
 	{
@@ -1731,6 +1732,8 @@ public class BleManager
 
 	/**
 	 * Overload of {@link #turnOnLocationWithIntent_forOsServices(Activity, int)} if you don't care about result.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public void turnOnLocationWithIntent_forOsServices(final Activity callingActivity)
 	{
@@ -1744,19 +1747,22 @@ public class BleManager
 		}
 	}
 
-	private static final String s_locationPermissionNamespace = "location_permission_namespace";
-	private static final String s_locationPermissionKey = "location_permission_key";
+	private static final String LOCATION_PERMISSION_NAMESPACE = "location_permission_namespace";
+	private static final String LOCATION_PERMISSION_KEY = "location_permission_key";
 
 	/**
-	 * Returns <code>true</code> if the app has never shown a request Location Permissions dialog or has shown a request Location Permission dialog and the user has yet to select "Never ask again". This method is used to weed out the false
+	 * Returns <code>true</code> if {@link #turnOnLocationWithIntent_forPermissions(Activity, int)} will pop a system dialog, <code>false</code> if it will bring
+	 * you to the OS's Application Settings. The <code>true</code> case happens if the app has never shown a request Location Permissions dialog or has shown a request Location Permission dialog and the user has yet to select "Never ask again". This method is used to weed out the false
 	 * negative from {@link Activity#shouldShowRequestPermissionRationale(String)} when the Location Permission has never been requested. Make sure to use this in conjunction with {@link #isLocationEnabledForScanning_byRuntimePermissions()}
 	 * which will tell you if permissions are already enabled.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
-	public boolean willLocationSystemDialogBeShown(Activity callingActivity)
+	public boolean willLocationPermissionSystemDialogBeShown(Activity callingActivity)
 	{
-		SharedPreferences preferences = callingActivity.getSharedPreferences(s_locationPermissionNamespace, Context.MODE_PRIVATE);
+		SharedPreferences preferences = callingActivity.getSharedPreferences(LOCATION_PERMISSION_NAMESPACE, Context.MODE_PRIVATE);
 		boolean hasNeverAskAgainBeenSelected = !callingActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION);//Call only returns true if Location permission has been previously denied. Returns false if "Never ask again" has been selected
-		boolean hasLocationPermissionSystemDialogShownOnce = preferences.getBoolean(s_locationPermissionKey, false);
+		boolean hasLocationPermissionSystemDialogShownOnce = preferences.getBoolean(LOCATION_PERMISSION_KEY, false);
 		return (!hasLocationPermissionSystemDialogShownOnce) || (hasLocationPermissionSystemDialogShownOnce && !hasNeverAskAgainBeenSelected);
 	}
 
@@ -1767,25 +1773,26 @@ public class BleManager
 	 * user can navigate to enable the permissions.
 	 *
 	 * @see #isLocationEnabledForScanning_byRuntimePermissions()
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	@TargetApi(Build.VERSION_CODES.M)
 	public void turnOnLocationWithIntent_forPermissions(final Activity callingActivity, int requestCode)
 	{
 		if( Utils.isMarshmallow() )
 		{
-			if(!isLocationEnabledForScanning_byRuntimePermissions() && !willLocationSystemDialogBeShown(callingActivity))
+			if( false == isLocationEnabledForScanning_byRuntimePermissions() && false == willLocationPermissionSystemDialogBeShown(callingActivity))
 			{
-				Intent intent = new Intent();
+				final Intent intent = new Intent();
 				intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-				Uri uri = Uri.fromParts("package", callingActivity.getPackageName(), null);
+				final Uri uri = Uri.fromParts("package", callingActivity.getPackageName(), null);
 				intent.setData(uri);
 				callingActivity.startActivityForResult(intent, requestCode);
 			}
 			else
 			{
+				final SharedPreferences.Editor editor = callingActivity.getSharedPreferences(LOCATION_PERMISSION_NAMESPACE, Context.MODE_PRIVATE).edit();
+				editor.putBoolean(LOCATION_PERMISSION_KEY, true).commit();
 				callingActivity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, requestCode);
-				SharedPreferences.Editor editor = callingActivity.getSharedPreferences(s_locationPermissionNamespace, Context.MODE_PRIVATE).edit();
-				editor.putBoolean(s_locationPermissionKey, true).commit();
 			}
 		}
 		else
@@ -1808,6 +1815,8 @@ public class BleManager
 	 * @see #turnOnLocationWithIntent_forPermissions(Activity, int)
 	 * @see #turnOnLocationWithIntent_forOsServices(Activity)
 	 * @see #turnOnLocationWithIntent_forOsServices(Activity, int)
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public boolean isLocationEnabledForScanning()
 	{
@@ -1819,6 +1828,8 @@ public class BleManager
 	 * or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} in your AndroidManifest.xml, <code>false</code> otherwise.
 	 *
 	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public boolean isLocationEnabledForScanning_byManifestPermissions()
 	{
@@ -1832,6 +1843,8 @@ public class BleManager
 	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
 	 *
 	 * @see #turnOnLocationWithIntent_forPermissions(Activity, int)
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public boolean isLocationEnabledForScanning_byRuntimePermissions()
 	{
@@ -1849,6 +1862,8 @@ public class BleManager
 	 *
 	 * @see #turnOnLocationWithIntent_forOsServices(Activity)
 	 * @see #turnOnLocationWithIntent_forOsServices(Activity, int)
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public boolean isLocationEnabledForScanning_byOsServices()
 	{
@@ -1861,6 +1876,8 @@ public class BleManager
 	 * Result will be posted as normal to {@link android.app.Activity#onActivityResult(int, int, Intent)}.
 	 * If current state is {@link BleManagerState#ON} or {@link BleManagerState#TURNING_ON}
 	 * this method early outs and does nothing.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public void turnOnWithIntent(Activity callingActivity, int requestCode)
 	{
@@ -1868,7 +1885,7 @@ public class BleManager
 
 		if( isAny(ON, TURNING_ON) )  return;
 
-		Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+		final Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 		callingActivity.startActivityForResult(enableBtIntent, requestCode);
 	}
 
