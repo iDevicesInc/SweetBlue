@@ -142,6 +142,9 @@ Getting Started
         
 4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
     ```java
+    // Helps you navigate the treacherous waters of Android M Location requirements for scanning.
+    BluetoothEnabler.start(this);
+    
     BleManager.get(this).startScan(
     
     new ScanFilter()
