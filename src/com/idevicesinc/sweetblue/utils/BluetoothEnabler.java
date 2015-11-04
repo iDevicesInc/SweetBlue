@@ -85,6 +85,11 @@ public class BluetoothEnabler
             {
                 return this == NULL;
             }
+
+            public boolean isLast()
+            {
+                return this == LOCATION_SERVICES;
+            }
         }
 
         /**
@@ -419,7 +424,7 @@ public class BluetoothEnabler
 
     private BluetoothEnablerFilter.Please m_lastPlease = null;
     private BluetoothEnablerFilter.Stage m_currentStage;
-    private boolean m_pausedByEnabler;
+    private boolean m_mayBePerformingSystemCall;
 
     /**
      * A constructor which uses an instance of {@link DefaultBluetoothEnablerFilter} as the
@@ -448,22 +453,22 @@ public class BluetoothEnabler
 			@Override public void onActivitySaveInstanceState(Activity activity, Bundle outState){}
 			@Override public void onActivityDestroyed(Activity activity){}
 
-			@Override public void onActivityResumed(Activity activity)
-			{
-                //Activity resumes after startActivity (bluetooth) gets called
-                if(activity == m_passedActivity && m_pausedByEnabler && m_currentStage != BluetoothEnablerFilter.Stage.START && m_lastPlease != null && m_lastPlease.m_implicitActivityResultHandling)
+            @Override public void onActivityPaused(Activity activity)
+            {
+                if(m_passedActivity == activity && m_currentStage != null && (m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH || m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION))
                 {
-                    m_pausedByEnabler = false;
-                    BluetoothEnabler.this.onActivityOrPermissionResult(m_lastPlease.m_requestCode, true);
+                    m_mayBePerformingSystemCall = true;
                 }
             }
 
-			@Override public void onActivityPaused(Activity activity)
+			@Override public void onActivityResumed(Activity activity)
 			{
-               if(m_passedActivity == activity && m_currentStage != null && (m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH || m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION))
-               {
-                   m_pausedByEnabler = true;
-               }
+                //Activity resumes after startActivity (bluetooth) gets called
+                if(activity == m_passedActivity && m_mayBePerformingSystemCall && m_currentStage != BluetoothEnablerFilter.Stage.START && m_lastPlease != null && m_lastPlease.m_implicitActivityResultHandling)
+                {
+                    m_mayBePerformingSystemCall = false;
+                    BluetoothEnabler.this.onActivityOrPermissionResult(m_lastPlease.m_requestCode, true);
+                }
             }
         };
 
@@ -569,10 +574,6 @@ public class BluetoothEnabler
 
     private void handlePleaseResponse()
     {
-        if(m_lastPlease.m_activity != null)
-        {
-            m_lastPlease.m_activity.startActivity(new Intent());
-        }
         AlertDialog.Builder builder = new AlertDialog.Builder(m_passedActivity);
         if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH && !m_lastPlease.wasSkipped())
         {
@@ -664,7 +665,15 @@ public class BluetoothEnabler
     {
         BluetoothEnablerFilter.BluetoothEnablerEvent currentEvent = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, newStatus);
         m_lastPlease = m_enablerFilter.onEvent(currentEvent);
-        handlePleaseResponse();
+
+        if( false == m_currentStage.isLast() )
+        {
+            handlePleaseResponse();
+        }
+        else
+        {
+            m_currentStage = BluetoothEnablerFilter.Stage.NULL;
+        }
     }
 
 
@@ -740,5 +749,15 @@ public class BluetoothEnabler
     public BluetoothEnablerFilter.Stage getStage()
     {
         return m_currentStage;
+    }
+
+    public boolean isPerformingSystemCall()
+    {
+        return m_mayBePerformingSystemCall && getStage().isNull() == false;
+    }
+
+    public boolean isDone()
+    {
+        return getStage().isNull() == true;
     }
 }
