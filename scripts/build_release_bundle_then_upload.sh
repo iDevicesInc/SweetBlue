@@ -5,6 +5,16 @@ ver=$(sh echo_version.sh)
 SWEETBLUE_DIR=sweetblue_${ver}
 SWEETBLUE_DOCS_DIR=$SWEETBLUE_DIR/docs/api/
 JAR_NAME=sweetblue_$ver
+
+# Run lint checks before doing the full build
+sh gradlew -b lint.gradle :lint
+
+if [ "$?" != 0 ];
+then
+	echo "Lint errors! Please fix them before running this again."
+	exit 1
+fi
+
 sh gradlew fullBuild
 if [ "$?" != 0 ];
 then
