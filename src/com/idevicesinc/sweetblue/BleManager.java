@@ -16,6 +16,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanCallback;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -1743,10 +1744,24 @@ public class BleManager
 		}
 	}
 
+	private static final String s_locationPermissionNamespace = "location_permission_namespace";
+	private static final String s_locationPermissionKey = "location_permission_key";
+
+	/**
+	 * Returns <code>false</code> if the app has never requested Location Permissions and shown the Location Permission dialog. This method is used to weed out the false
+	 * negative from {@link Activity#shouldShowRequestPermissionRationale(String)} when the Location Permission has never been requested.
+	 */
+	public boolean alreadyRequestedLocationPermission(Activity callingActivity)
+	{
+		SharedPreferences preferences = callingActivity.getSharedPreferences(s_locationPermissionNamespace, Context.MODE_PRIVATE);
+		return preferences.getBoolean(s_locationPermissionKey, false);
+	}
+
 	/**
 	 * If {@link #isLocationEnabledForScanning_byOsServices()} returns <code>false</code>, you can use this method to allow the user to enable location
 	 * through an OS intent. The result of the request (i.e. what the user chose) is passed back through {@link Activity#onRequestPermissionsResult(int, String[], int[])}
-	 * with the requestCode provided as the second parameter to this method.
+	 * with the requestCode provided as the second parameter to this method. If the user selected "Never ask again" the function will open up the app settings screen where the
+	 * user can navigate to enable the permissions.
 	 *
 	 * @see #isLocationEnabledForScanning_byRuntimePermissions()
 	 */
@@ -1755,7 +1770,7 @@ public class BleManager
 	{
 		if( Utils.isMarshmallow() )
 		{
-			if(!isLocationEnabledForScanning_byRuntimePermissions() && !callingActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION))
+			if(!isLocationEnabledForScanning_byRuntimePermissions() && !callingActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION) && alreadyRequestedLocationPermission(callingActivity))
 			{
 				Intent intent = new Intent();
 				intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
@@ -1766,7 +1781,10 @@ public class BleManager
 			else
 			{
 				callingActivity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, requestCode);
-			}		}
+				SharedPreferences.Editor editor = callingActivity.getSharedPreferences(s_locationPermissionNamespace, Context.MODE_PRIVATE).edit();
+				editor.putBoolean(s_locationPermissionKey, true).commit();
+			}
+		}
 		else
 		{
 			m_logger.w("BleManager.turnOnLocationWithIntent_forPermissions() is only applicable for API levels 23 and above so this method does nothing.");
