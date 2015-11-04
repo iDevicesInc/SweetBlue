@@ -1748,13 +1748,16 @@ public class BleManager
 	private static final String s_locationPermissionKey = "location_permission_key";
 
 	/**
-	 * Returns <code>false</code> if the app has never requested Location Permissions and shown the Location Permission dialog. This method is used to weed out the false
-	 * negative from {@link Activity#shouldShowRequestPermissionRationale(String)} when the Location Permission has never been requested.
+	 * Returns <code>true</code> if the app has never shown a request Location Permissions dialog or has shown a request Location Permission dialog and the user has yet to select "Never ask again". This method is used to weed out the false
+	 * negative from {@link Activity#shouldShowRequestPermissionRationale(String)} when the Location Permission has never been requested. Make sure to use this in conjunction with {@link #isLocationEnabledForScanning_byRuntimePermissions()}
+	 * which will tell you if permissions are already enabled.
 	 */
-	public boolean alreadyRequestedLocationPermission(Activity callingActivity)
+	public boolean willLocationSystemDialogBeShown(Activity callingActivity)
 	{
 		SharedPreferences preferences = callingActivity.getSharedPreferences(s_locationPermissionNamespace, Context.MODE_PRIVATE);
-		return preferences.getBoolean(s_locationPermissionKey, false);
+		boolean hasNeverAskAgainBeenSelected = !callingActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION);//Call only returns true if Location permission has been previously denied. Returns false if "Never ask again" has been selected
+		boolean hasLocationPermissionSystemDialogShownOnce = preferences.getBoolean(s_locationPermissionKey, false);
+		return (!hasLocationPermissionSystemDialogShownOnce) || (hasLocationPermissionSystemDialogShownOnce && !hasNeverAskAgainBeenSelected);
 	}
 
 	/**
@@ -1770,7 +1773,7 @@ public class BleManager
 	{
 		if( Utils.isMarshmallow() )
 		{
-			if(!isLocationEnabledForScanning_byRuntimePermissions() && !callingActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION) && alreadyRequestedLocationPermission(callingActivity))
+			if(!isLocationEnabledForScanning_byRuntimePermissions() && !willLocationSystemDialogBeShown(callingActivity))
 			{
 				Intent intent = new Intent();
 				intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
