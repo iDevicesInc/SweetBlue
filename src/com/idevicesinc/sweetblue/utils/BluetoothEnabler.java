@@ -14,10 +14,10 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 
 /**
  * BluetoothEnabler is used to handle the new logic for getting BLE scan results that is introduced with {@link android.os.Build.VERSION_CODES#M}.  With {@link android.os.Build.VERSION_CODES#M} you need might need to request
- * {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} at runtime (behavior isn't too consistent)
- * as well as make sure that the user has turned on location services on their device.
+ * {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} at runtime as well as make sure that the user has turned on location services on their device.
  * <br><br>
- * To use this class create an instance of it in your activity and call the {@link #onActivityOrPermissionResult(int)} on the instance created in the two required methods. Nothing else needs to be done.
+ * To use this class call {@link BluetoothEnabler#start(Activity)} or {@link BluetoothEnabler#start(Activity, BluetoothEnablerFilter)} in your activity and call the {@link #onActivityOrPermissionResult(int)} in {@link Activity#onActivityResult(int, int, Intent)} and
+ * {@link Activity#onRequestPermissionsResult(int, String[], int[])} if you want to handle it yourself. Nothing else needs to be done.
  */
 public class BluetoothEnabler
 {
@@ -38,20 +38,23 @@ public class BluetoothEnabler
 	}
 
     /**
-     * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerFilter)} to receive callbacks or simply use the provided class
-     * {@link DefaultBluetoothEnablerFilter} by caling {@link BluetoothEnabler#BluetoothEnabler(Activity)}. This listener will be the main
-     * way of handling different enabling events and their results.
-     *
+     * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler#start(Activity, BluetoothEnablerFilter)} to
+     * receive callbacks or simply use the provided class {@link DefaultBluetoothEnablerFilter} by calling {@link BluetoothEnabler#start(Activity)}.
+     * This filter will be the main way of handling different enabling events and their results.
      */
     public static interface BluetoothEnablerFilter
     {
         /**
-         * Enumerates changes in the "enabling" stage before a
+         * Enumerates changes in the "enabling" {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Stage} before a
          * Bluetooth LE scan is started. Used at {@link BluetoothEnablerFilter.BluetoothEnablerEvent} to denote
-         * what the current stage as well as in {@link BluetoothEnablerEvent#nextStage()} to give the following stage to the current one.
+         * what the current stage is as well as the {@link BluetoothEnablerEvent#nextStage()} to give the following stage to the current one.
+         * The order of the stages is: START -> BLUETOOTH -> LOCATION_PERMISSION -> LOCATION_SERVICES -> NULL.
          */
         public static enum Stage implements UsesCustomNull
         {
+            /**
+             * The final stage once the enabler has finished or has been stopped.
+             */
             NULL,
 
             /**
@@ -81,11 +84,17 @@ public class BluetoothEnabler
                 return ordinal() + 1 < values().length ? values()[ordinal() + 1] : NULL;
             }
 
+            /**
+             * Returns whether or not the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Stage} is {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Stage#NULL}.
+             */
             public boolean isNull()
             {
                 return this == NULL;
             }
 
+            /**
+             * Returns if the {@link BluetoothEnabler} is on the last {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Stage}
+             */
             public boolean isLast()
             {
                 return this == LOCATION_SERVICES;
@@ -98,7 +107,7 @@ public class BluetoothEnabler
         public static enum Status implements UsesCustomNull
         {
             /**
-             * If the current stage hasn't been assigned any of the above Statuses. If nothing has been done in the stage yet or it hasn't been skipped then it is NULL
+             * If the current stage hasn't been assigned any of the other Statuses. If nothing has been done in the stage yet or it hasn't been skipped then it is {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Status#NULL}.
              */
             NULL,
 
@@ -152,7 +161,7 @@ public class BluetoothEnabler
         public static class BluetoothEnablerEvent extends Event
         {
             /**
-             * Returns the {@link BluetoothEnablerFilter.Stage} following the Stage for this event.
+             * Returns the {@link BluetoothEnablerFilter.Stage} which follows the current stage of this event.
              */
             public Stage nextStage()  {  return m_stage.next();  }
 
@@ -189,6 +198,9 @@ public class BluetoothEnabler
                 return BluetoothEnabler.isEnabled(BleManager.get(m_activity), stage);
             }
 
+            /**
+             * Returns the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.BluetoothEnablerEvent} as a string
+             */
             @Override public String toString()
             {
                 return Utils_String.toString
@@ -250,7 +262,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * Skip the next {@link BluetoothEnablerFilter.Stage} and move the following one.
+             * Skip the next {@link BluetoothEnablerFilter.Stage} and move to the following one.
              */
             public static Please skipNext()
             {
@@ -266,7 +278,9 @@ public class BluetoothEnabler
             }
 
             /**
-             * Pause the enabler. Call {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler#resume(BluetoothEnablerFilter.Please)} to continue the process.
+             * Pauses the enabler. Calling this will cause the enabler to pause but not stop. This call allows you to do something in the activity before you resume the
+             * enabler and move to the next stage or stop it all together. Call {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler#resume(BluetoothEnablerFilter.Please)} to continue the process.
+             * For example, calling {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler#resume(BluetoothEnablerFilter.Please)} with Please.skipNext() will resume the enabler but skip the next stage.
              */
             public static Please pause()
             {
@@ -274,7 +288,8 @@ public class BluetoothEnabler
             }
 
             /**
-             * If the next stage isn't skipped or {@link BluetoothEnablerFilter.Status#ALREADY_ENABLED} then pop a dialog before
+             * If the next stage isn't skipped or {@link BluetoothEnablerFilter.Status#ALREADY_ENABLED} then pop a dialog before with the given message before
+             * performing the stage action.
              */
             public Please withDialog(String message)
             {
@@ -282,6 +297,10 @@ public class BluetoothEnabler
                 return this;
             }
 
+            /**
+             * Use the provided Activity to perform the stage action. Be *VERY* caution when using this. It is recommended to handle all enabling {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Stage}s
+             * in one activity to avoid sticky situations that arise from multiple activities.
+             */
             @Advanced
             public Please withActivity(Activity activity)
             {
@@ -290,7 +309,7 @@ public class BluetoothEnabler
             }
 
             /**
-             * Perform the next stage with the given requestCode
+             * Perform the next stage with the given requestCode used for {@link Activity#onActivityResult(int, int, Intent)} or {@link Activity#onRequestPermissionsResult(int, String[], int[])}.
              */
             public Please withRequestCode(int requestCode)
             {
@@ -299,7 +318,8 @@ public class BluetoothEnabler
             }
 
             /**
-             * Perform the next stage with a Toast
+             * Perform the next stage with a Toast. This is especially helpful for requesting Location Services as well as when the user has denied Location Permissions and selected "Never ask again"
+             * since, in these situations, the settings on the phone will be opened and the app won't be visible.
              */
             public Please withToast(String message)
             {
@@ -307,6 +327,12 @@ public class BluetoothEnabler
                 return this;
             }
 
+            /**
+             * Do the next stage with implicity activity result handling. This means that the next stage will be performed with the {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Please#NULL_REQUEST_CODE}
+             * and the {@link Activity#onActivityResult(int, int, Intent)} and {@link Activity#onRequestPermissionsResult(int, String[], int[])} calls will be implicitly handled internally in {@link BluetoothEnabler}.
+             * When using this for all {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Stage}s you don't need to add anything to the {@link Activity#onRequestPermissionsResult(int, String[], int[])} or
+             * {@link Activity#onActivityResult(int, int, Intent)} methods in your Activity.
+             */
             public Please withImplicitActivityResultHandling()
             {
                 m_implicitActivityResultHandling = true;
@@ -321,7 +347,7 @@ public class BluetoothEnabler
     }
 
     /**
-     * A default implementation of BluetoothEnablerListener used in {@link BluetoothEnabler#BluetoothEnabler(Activity)}. It provides a
+     * A default implementation of {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter} used in {@link BluetoothEnabler#BluetoothEnabler(Activity)}. It provides a
      * basic implementation for use/example and can be overridden.
      */
     public static class DefaultBluetoothEnablerFilter implements BluetoothEnablerFilter
@@ -426,19 +452,11 @@ public class BluetoothEnabler
     private BluetoothEnablerFilter.Stage m_currentStage;
     private boolean m_mayBePerformingSystemCall;
 
-    /**
-     * A constructor which uses an instance of {@link DefaultBluetoothEnablerFilter} as the
-     * enabler listener and will take an activity from which the BleManager will get gotten.
-     */
     private BluetoothEnabler(Activity activity)
     {
         this(activity, new DefaultBluetoothEnablerFilter());
     }
 
-    /**
-     * A constructor which taken an activity and a custom implementation of {@link BluetoothEnablerFilter}. A BleManager will
-     * be obtained from the passed activity.
-     */
     private BluetoothEnabler(Activity activity, BluetoothEnablerFilter enablerFilter)
     {
         m_bleManager = BleManager.get(activity);
@@ -607,18 +625,6 @@ public class BluetoothEnabler
                 builder.show();
             }
         }
-        //PDZ- Handles popping a dialog after the last stage, LOCATION_SERVICES returns. Not currently supporting this feature
-//        else if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerListener.Stage.LOCATION_SERVICES && !m_lastPlease.wasSkipped())
-//        {
-//            builder.setMessage(m_lastPlease.m_dialogText);
-//            builder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//                    dialog.dismiss();
-//                }
-//            });
-//            builder.show();
-//        }
         else
         {
             finishPleaseResponse();
@@ -679,7 +685,8 @@ public class BluetoothEnabler
 
     /**
      * A potentially-required method to be placed in your activity's {@link Activity#onRequestPermissionsResult(int, String[], int[])} and {@link Activity#onActivityResult(int, int, Intent)} methods.
-     * This method will re-connect the enabler after the app is re-entered. Otherwise, the enabler won't continue unless {@link BluetoothEnablerFilter.Please#withImplicitActivityResultHandling()} is called.
+     * This method will reconnect the enabler after the app is re-entered. Otherwise, the enabler won't continue. This method isn't necessarily needed if, for every stage, you use
+     * {@link BluetoothEnablerFilter.Please#withImplicitActivityResultHandling()} as that will let the {@link BluetoothEnabler} handle all results.
      */
     public void onActivityOrPermissionResult(int requestCode)
     {
@@ -727,7 +734,7 @@ public class BluetoothEnabler
     }
 
     /**
-     * Returns whether the passed {@link BluetoothEnablerFilter.Stage} has been enabled.
+     * Returns whether the passed {@link BluetoothEnablerFilter.Stage} is enabled.
      */
     public boolean isEnabled(BluetoothEnablerFilter.Stage stage)
     {
@@ -735,7 +742,8 @@ public class BluetoothEnabler
     }
 
     /**
-     * Resume the enabler with the given Please. Enabler will continue where is left off.
+     * Resume the enabler with the given Please. Enabler will continue where is left off. For example, calling {@link #resume(BluetoothEnablerFilter.Please)} with
+     * {@link BluetoothEnablerFilter.Please#doNext()} will resume the enabler and do the next stage.
      */
     public void resume(BluetoothEnablerFilter.Please please)
     {
@@ -751,11 +759,18 @@ public class BluetoothEnabler
         return m_currentStage;
     }
 
+    /**
+     * Returns whether the {@link BluetoothEnabler} is performing a system call. For example, this method will return <code>true</code> when the
+     * Location Services screen is open and waiting for the user to either press back or enable Location Services and press the back button.
+     */
     public boolean isPerformingSystemCall()
     {
         return m_mayBePerformingSystemCall && getStage().isNull() == false;
     }
 
+    /**
+     * Returns whether the {@link BluetoothEnabler} is done
+     */
     public boolean isDone()
     {
         return getStage().isNull() == true;
