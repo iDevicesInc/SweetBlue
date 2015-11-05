@@ -625,18 +625,6 @@ public class BluetoothEnabler
                 builder.show();
             }
         }
-        //PDZ- Handles popping a dialog after the last stage, LOCATION_SERVICES returns. Not currently supporting this feature
-//        else if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerListener.Stage.LOCATION_SERVICES && !m_lastPlease.wasSkipped())
-//        {
-//            builder.setMessage(m_lastPlease.m_dialogText);
-//            builder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//                    dialog.dismiss();
-//                }
-//            });
-//            builder.show();
-//        }
         else
         {
             finishPleaseResponse();
