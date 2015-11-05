@@ -192,10 +192,10 @@ Getting Started
         	if( e.isDone() )
         	{
         		e.bleManager().startScan(scanFilter, discoveryListener);
-		}
-            
-		return super.onEvent(e);
-	}
+        	}
+        	
+        	return super.onEvent(e);
+        }
     });
     ```
 
