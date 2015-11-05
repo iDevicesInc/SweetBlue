@@ -26,7 +26,7 @@ public class BluetoothEnabler
 	 */
 	public static BluetoothEnabler start(final Activity activity)
 	{
-		return new BluetoothEnabler(activity);
+		return start(activity, new DefaultBluetoothEnablerFilter());
 	}
 
 	/**
@@ -34,12 +34,27 @@ public class BluetoothEnabler
 	 */
 	public static BluetoothEnabler start(final Activity activity, final BluetoothEnablerFilter filter)
 	{
-		return new BluetoothEnabler(activity, filter);
+		if( s_instance != null && false == s_instance.isDone() )
+		{
+			s_instance.setNewFilter(filter);
+
+			return s_instance;
+		}
+		else
+		{
+			s_instance = new BluetoothEnabler(activity, filter);
+
+			return s_instance;
+		}
 	}
+
+	//--- DRK > Lazy singleton not ideal but protects enough against common misuse cases that it's probably justified.
+	//---		Can just make constructors public in future if people need it.
+	private static BluetoothEnabler s_instance;
 
     /**
      * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerFilter)} to receive callbacks or simply use the provided class
-     * {@link DefaultBluetoothEnablerFilter} by caling {@link BluetoothEnabler#BluetoothEnabler(Activity)}. This listener will be the main
+     * {@link DefaultBluetoothEnablerFilter} by calling {@link #start(Activity)}. This listener will be the main
      * way of handling different enabling events and their results.
      *
      */
@@ -81,6 +96,11 @@ public class BluetoothEnabler
                 return ordinal() + 1 < values().length ? values()[ordinal() + 1] : NULL;
             }
 
+			private Stage previous()
+			{
+				return ordinal() - 1 > 0 ? values()[ordinal() - 1] : NULL;
+			}
+
             public boolean isNull()
             {
                 return this == NULL;
@@ -90,6 +110,11 @@ public class BluetoothEnabler
             {
                 return this == LOCATION_SERVICES;
             }
+
+			public boolean isLocationRelated()
+			{
+				return this == LOCATION_SERVICES || this == LOCATION_PERMISSION;
+			}
         }
 
         /**
@@ -131,7 +156,12 @@ public class BluetoothEnabler
             /**
              * If the programmer of the application chose to skip a stage
              */
-            SKIPPED;
+            SKIPPED,
+
+			/**
+			 * If the programmer of the application chose to call {@link Please#stop()}.
+			 */
+			STOPPED;
 
             /**
              * Returns <code>true</code> if <code>this</code> == {@link #NULL}.
@@ -140,6 +170,16 @@ public class BluetoothEnabler
             {
                 return this == NULL;
             }
+
+            public boolean isCancelled()
+            {
+                return this == CANCELLED_BY_DIALOG || this == CANCELLED_BY_INTENT;
+            }
+
+			public boolean wasPreviouslyNotEnabled()
+			{
+				return this != ALREADY_ENABLED;
+			}
         }
 
         /**
@@ -152,15 +192,16 @@ public class BluetoothEnabler
         public static class BluetoothEnablerEvent extends Event
         {
             /**
-             * Returns the {@link BluetoothEnablerFilter.Stage} following the Stage for this event.
-             */
-            public Stage nextStage()  {  return m_stage.next();  }
-
-            /**
              * Returns the {@link BluetoothEnablerFilter.Stage} associated with this event.
              */
             public Stage stage() { return m_stage; }
             private final Stage m_stage;
+
+			/**
+			 * Returns the {@link BluetoothEnablerFilter.Stage} following the Stage for this event.
+			 */
+			public Stage nextStage() { return m_nextStage; }
+			private final Stage m_nextStage;
 
             /**
              * Returns the {@link BluetoothEnablerFilter.Status} of the current Stage.
@@ -174,9 +215,17 @@ public class BluetoothEnabler
             public Activity activity() { return m_activity; }
             public final Activity m_activity;
 
-            private BluetoothEnablerEvent(Activity activity, Stage stage, Status status)
+            public BleManager bleManager()  {  return BleManager.get(activity());  }
+
+			public boolean isDone()
+			{
+				return nextStage() == Stage.NULL;
+			}
+
+            private BluetoothEnablerEvent(Activity activity, Stage stage, Stage nextStage, Status status)
             {
                 m_stage = stage;
+				m_nextStage = nextStage;
                 m_status = status;
                 m_activity = activity;
             }
@@ -207,13 +256,14 @@ public class BluetoothEnabler
          */
         public static class Please
         {
-            final static int DO_NEXT = 0;
-            final static int SKIP_NEXT = 1;
-            final static int END = 3;
-            final static int PAUSE = 4;
+            final static int PE_Option__DO_NEXT		= 0;
+            final static int PE_Option__SKIP_NEXT	= 1;
+            final static int PE_Option__END			= 3;
+            final static int PE_Option__PAUSE		= 4;
 
             private final static int NULL_REQUEST_CODE = 51214; //Large random int because we need to make sure that there is low probability that the user is using the same
-            private final int m_stateCode;
+
+            private final int m_pleaseOption;
 
             private  Activity m_activity = null;
             private String m_dialogText = "";
@@ -221,32 +271,37 @@ public class BluetoothEnabler
             private int m_requestCode = NULL_REQUEST_CODE;
             private boolean m_implicitActivityResultHandling = false;
 
-            private Please(int stateCode)
+            private Please(int pleaseoption)
             {
-                m_stateCode = stateCode;
+                m_pleaseOption = pleaseoption;
             }
 
             private boolean wasSkipped()
             {
-                return m_stateCode == SKIP_NEXT;
+                return m_pleaseOption == PE_Option__SKIP_NEXT;
             }
 
-            private boolean shouldPopDialog()
+            private boolean shouldPopDialog(final Stage stage)
             {
-                return m_dialogText.equals("") || m_stateCode == PAUSE ? false : true;
+                return m_dialogText != null && m_dialogText.isEmpty() == false && m_pleaseOption == PE_Option__DO_NEXT && stage != Stage.NULL;
             }
 
-            private boolean shouldShowToast()
+            private boolean shouldShowToast(final Stage stage)
             {
-                return !m_toastText.equals("");
+                return m_toastText != null && m_toastText.isEmpty() == false && m_pleaseOption == PE_Option__DO_NEXT && stage != Stage.NULL;
             }
+
+			private Activity activityOrDefault(final Activity defaultActivity)
+			{
+				return m_activity != null ? m_activity : defaultActivity;
+			}
 
             /**
              * Perform the next {@link BluetoothEnablerFilter.Stage}.
              */
             public static Please doNext()
             {
-                return new Please(DO_NEXT);
+                return new Please(PE_Option__DO_NEXT);
             }
 
             /**
@@ -254,7 +309,7 @@ public class BluetoothEnabler
              */
             public static Please skipNext()
             {
-                return new Please(SKIP_NEXT);
+                return new Please(PE_Option__SKIP_NEXT);
             }
 
             /**
@@ -262,7 +317,7 @@ public class BluetoothEnabler
              */
             public static Please stop()
             {
-                return new Please(END);
+                return new Please(PE_Option__END);
             }
 
             /**
@@ -270,7 +325,7 @@ public class BluetoothEnabler
              */
             public static Please pause()
             {
-                return new Please(PAUSE);
+                return new Please(PE_Option__PAUSE);
             }
 
             /**
@@ -321,81 +376,84 @@ public class BluetoothEnabler
     }
 
     /**
-     * A default implementation of BluetoothEnablerListener used in {@link BluetoothEnabler#BluetoothEnabler(Activity)}. It provides a
+     * A default implementation of BluetoothEnablerListener used in {@link BluetoothEnabler#start(Activity)}. It provides a
      * basic implementation for use/example and can be overridden.
      */
     public static class DefaultBluetoothEnablerFilter implements BluetoothEnablerFilter
     {
 		@Override public Please onEvent(BluetoothEnablerEvent e)
         {
-            final String locationPermissionAndServicesNeedEnablingString = "Android Marshmallow (6.0+) requires Location Permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services";
-            final String locationPermissionNeedEnablingString = "Android Marshmallow (6.0+) requires Location Permission to be able to scan for Bluetooth devices. Please accept to allow Location Permission.";
-            final String locationServicesNeedEnablingString = "Android Marshmallow (6.0+) requires Location Services for improved Bluetooth device scanning. While it is not required, it is recommended that Location Services are turned on to improve device discovery.";
-            final String locationPermissionToastString = "Please click the Permissions button, then enable Location, then press back";
-            final String locationServicesToastString = "Please enable Location Services then press back button";
+			if( e.stage().isLocationRelated() && e.status().isCancelled() )
+			{
+				//--- DRK > Just making the judgement call here that app user is not keen on enabling any location-related stuff.
+				//---		You might want to override this method and pop an "OK, but scanning won't work..." dialog in your app.
+				return Please.stop();
+			}
+			else
+			{
+				if( e.nextStage() == Stage.BLUETOOTH )
+				{
+					return Please.doNext().withImplicitActivityResultHandling();
+				}
+				else if( e.nextStage() == Stage.LOCATION_PERMISSION )
+				{
+					final String locationPermissionToastString = "Please click the Permissions button, then enable Location, then press back twice.";
 
-            if(e.nextStage() == Stage.BLUETOOTH)
-            {
-                return Please.doNext().withImplicitActivityResultHandling();
-            }
-            else if(e.nextStage() == Stage.LOCATION_PERMISSION)
-            {
-                if(e.status() == Status.ALREADY_ENABLED || e.status() == Status.ENABLED)
-                {
-                    if(!e.isEnabled(Stage.LOCATION_SERVICES) && !e.isEnabled(Stage.LOCATION_PERMISSION))
-                    {
-                        if(BleManager.get(e.activity()).willLocationPermissionSystemDialogBeShown(e.activity()))
-                        {
-                            return Please.doNext().withImplicitActivityResultHandling().withDialog(locationPermissionAndServicesNeedEnablingString);
-                        }
-                        else
-                        {
-                            return Please.doNext().withImplicitActivityResultHandling().withDialog(locationPermissionAndServicesNeedEnablingString).withToast(locationPermissionToastString);
-                        }
-                    }
-                    else if(!e.isEnabled(Stage.LOCATION_PERMISSION))
-                    {
-                        if(BleManager.get(e.activity()).willLocationPermissionSystemDialogBeShown(e.activity()))
-                        {
-                            return Please.doNext().withImplicitActivityResultHandling().withDialog(locationPermissionNeedEnablingString);
-                        }
-                        else
-                        {
-                            return Please.doNext().withImplicitActivityResultHandling().withDialog(locationPermissionNeedEnablingString).withToast(locationPermissionToastString);
-                        }
-                    }
-                    else if(!e.isEnabled(Stage.LOCATION_SERVICES))
-                    {
-                        return Please.doNext().withImplicitActivityResultHandling().withDialog(locationServicesNeedEnablingString).withToast(locationServicesToastString);
-                    }
-                    return Please.stop();
-                }
-                else if(e.status() == Status.CANCELLED_BY_DIALOG || e.status() == Status.CANCELLED_BY_INTENT)
-                {
-                    return Please.stop();
-                }
-            }
-            else if(e.nextStage() == Stage.LOCATION_SERVICES )
-            {
-                if(e.status() == Status.ALREADY_ENABLED || e.status() == Status.ENABLED)
-                {
-                    if(!e.isEnabled(Stage.LOCATION_SERVICES))
-                    {
-                        return Please.doNext().withImplicitActivityResultHandling().withToast(locationServicesToastString);
-                    }
-                    return Please.doNext().withImplicitActivityResultHandling();
-                }
-                else if(e.status() == Status.CANCELLED_BY_DIALOG || e.status() == Status.CANCELLED_BY_INTENT)
-                {
-                    return Please.stop();
-                }
-            }
-            else if(e.stage() == Stage.LOCATION_SERVICES)
-            {
-                return Please.stop();
-            }
-            //This will handle any SKIPPED steps since it will fall through all the if/else above
-            return Please.doNext();
+					//--- DRK > If both location stages need enabling then we show one dialog to rule them all...
+					if( false == e.isEnabled(Stage.LOCATION_SERVICES) && false == e.isEnabled(Stage.LOCATION_PERMISSION) )
+					{
+						final String locationPermissionAndServicesNeedEnablingString = "Android Marshmallow (6.0+) requires Location Permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services.";
+
+						if( e.bleManager().willLocationPermissionSystemDialogBeShown(e.activity()) )
+						{
+							return Please.doNext()  .withImplicitActivityResultHandling()  .withDialog(locationPermissionAndServicesNeedEnablingString);
+						}
+						else
+						{
+							return Please.doNext()  .withImplicitActivityResultHandling()  .withDialog(locationPermissionAndServicesNeedEnablingString)  .withToast(locationPermissionToastString);
+						}
+					}
+
+					//--- DRK > Otherwise we show just one dialog for permissions.
+					else
+					{
+						final String locationPermissionNeedEnablingString = "Android Marshmallow (6.0+) requires Location Permission to be able to scan for Bluetooth devices. Please accept to allow Location Permission.";
+
+						if( e.bleManager().willLocationPermissionSystemDialogBeShown(e.activity()) )
+						{
+							return Please.doNext()  .withImplicitActivityResultHandling()  .withDialog(locationPermissionNeedEnablingString);
+						}
+						else
+						{
+							return Please.doNext()  .withImplicitActivityResultHandling()  .withDialog(locationPermissionNeedEnablingString)  .withToast(locationPermissionToastString);
+						}
+					}
+				}
+				else if( e.nextStage() == Stage.LOCATION_SERVICES )
+				{
+					final String locationServicesNeedEnablingString = "Android Marshmallow (6.0+) requires Location Services for improved Bluetooth device scanning. While it is not required, it is recommended that Location Services are turned on to improve device discovery.";
+					final String locationServicesToastString = "Please enable Location Services then press back.";
+
+					//--- DRK > Here it's a little confusing, but only showing dialog for enabling services if a one dialog to rule them all didn't previously come up.
+					if( e.status()/*(for permissions)*/.wasPreviouslyNotEnabled() )
+					{
+						return Please.doNext()  .withImplicitActivityResultHandling()  .withToast(locationServicesToastString);
+					}
+					else
+					{
+						return Please.doNext()  .withImplicitActivityResultHandling()  .withDialog(locationServicesNeedEnablingString)  .withToast(locationServicesToastString);
+					}
+				}
+				else if( e.nextStage() == Stage.NULL )
+				{
+					//--- DRK > All done...
+					return null;
+				}
+			}
+
+			e.bleManager().ASSERT(false, "Unhandled BluetoothEnabler event!");
+
+			return null;
         }
     }
 
@@ -413,27 +471,19 @@ public class BluetoothEnabler
         {
             return bleManager.isLocationEnabledForScanning_byOsServices();
         }
+
         return true;
     }
 
-    private final BleManager m_bleManager;
-    private final BluetoothEnablerFilter m_enablerFilter;
-    private final Activity m_passedActivity;
+    private /*finalish*/ BluetoothEnablerFilter m_enablerFilter;
+    private final Activity m_defaultActivity;
 	private final Application.ActivityLifecycleCallbacks m_lifecycleCallback;
 
-
     private BluetoothEnablerFilter.Please m_lastPlease = null;
-    private BluetoothEnablerFilter.Stage m_currentStage;
-    private boolean m_mayBePerformingSystemCall;
+    private BluetoothEnablerFilter.Stage m_currentStage = null;
 
-    /**
-     * A constructor which uses an instance of {@link DefaultBluetoothEnablerFilter} as the
-     * enabler listener and will take an activity from which the BleManager will get gotten.
-     */
-    private BluetoothEnabler(Activity activity)
-    {
-        this(activity, new DefaultBluetoothEnablerFilter());
-    }
+    private boolean m_performingSystemCall;
+	private boolean m_isForegrounded;
 
     /**
      * A constructor which taken an activity and a custom implementation of {@link BluetoothEnablerFilter}. A BleManager will
@@ -441,241 +491,225 @@ public class BluetoothEnabler
      */
     private BluetoothEnabler(Activity activity, BluetoothEnablerFilter enablerFilter)
     {
-        m_bleManager = BleManager.get(activity);
-        m_passedActivity = activity;
-        m_currentStage = BluetoothEnablerFilter.Stage.START;
+        m_defaultActivity = activity;
+		m_enablerFilter = enablerFilter;
+        m_lifecycleCallback = newLifecycleCallbacks();
 
-        m_lifecycleCallback = new Application.ActivityLifecycleCallbacks()
+        m_defaultActivity.getApplication().registerActivityLifecycleCallbacks(m_lifecycleCallback);
+		m_isForegrounded = true; // Assume we're foregrounded until told otherwise.
+		m_currentStage = BluetoothEnablerFilter.Stage.START;
+
+		dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.NULL);
+    }
+
+	private void dispatchEvent(final BluetoothEnablerFilter.Stage currentStage, final BluetoothEnablerFilter.Stage nextStage, final BluetoothEnablerFilter.Status status_currentStage)
+	{
+		final BluetoothEnablerFilter.BluetoothEnablerEvent e = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_defaultActivity, currentStage, nextStage, status_currentStage);
+
+		m_lastPlease = m_enablerFilter.onEvent(e);
+		m_currentStage = nextStage;
+
+		if( m_currentStage == BluetoothEnablerFilter.Stage.NULL )
 		{
-			@Override public void onActivityCreated(Activity activity, Bundle savedInstanceState){}
-			@Override public void onActivityStarted(Activity activity){}
-			@Override public void onActivityStopped(Activity activity){}
-			@Override public void onActivitySaveInstanceState(Activity activity, Bundle outState){}
-			@Override public void onActivityDestroyed(Activity activity){}
+			//--- DRK > We're done - either at the end of the process or user chose to stop it.
+		}
+		else
+		{
+			handlePleaseResponse_STEP1_maybeEarlyOutCauseNotNeeded(m_lastPlease);
+		}
+	}
 
-            @Override public void onActivityPaused(Activity activity)
-            {
-                if(m_passedActivity == activity && m_currentStage != null && (m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH || m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION))
-                {
-                    m_mayBePerformingSystemCall = true;
-                }
-            }
-
-			@Override public void onActivityResumed(Activity activity)
+	private void handlePleaseResponse_STEP1_maybeEarlyOutCauseNotNeeded(final BluetoothEnablerFilter.Please please)
+	{
+		switch(getStage())
+		{
+			case BLUETOOTH:
 			{
-                //Activity resumes after startActivity (bluetooth) gets called
-                if(activity == m_passedActivity && m_mayBePerformingSystemCall && m_currentStage != BluetoothEnablerFilter.Stage.START && m_lastPlease != null && m_lastPlease.m_implicitActivityResultHandling)
-                {
-                    m_mayBePerformingSystemCall = false;
-                    BluetoothEnabler.this.onActivityOrPermissionResult(m_lastPlease.m_requestCode, true);
-                }
-            }
-        };
+				//--- DRK > All Android versions needed bluetooth enable, duh.
+				handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(please);
 
-        m_passedActivity.getApplication().registerActivityLifecycleCallbacks(m_lifecycleCallback);
-        m_enablerFilter = enablerFilter;
+				break;
+			}
 
-		BluetoothEnablerFilter.BluetoothEnablerEvent startEvent = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.NULL);
+			case LOCATION_PERMISSION:
+			case LOCATION_SERVICES:
+			{
+				if( Utils.isMarshmallow() )
+				{
+					handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(please);
+				}
+				else
+				{
+					dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.NOT_NEEDED);
+				}
 
-        nextStage(startEvent);
-    }
+				break;
+			}
 
-    private void nextStage(BluetoothEnablerFilter.BluetoothEnablerEvent nextEvent)
+			case NULL: case START:
+			{
+				bleMngr().ASSERT(false, "Can't determine need for " + getStage());
+
+				return;
+			}
+		}
+	}
+
+	private void handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(final BluetoothEnablerFilter.Please please)
+	{
+		if( isEnabled(getStage()) )
+		{
+			dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.ALREADY_ENABLED);
+		}
+		else
+		{
+			handlePleaseResponse_STEP3_maybeEarlyOutFromPleaseResponse(please);
+		}
+	}
+
+	private void handlePleaseResponse_STEP3_maybeEarlyOutFromPleaseResponse(final BluetoothEnablerFilter.Please please)
+	{
+		if( please.m_pleaseOption == BluetoothEnablerFilter.Please.PE_Option__PAUSE )
+		{
+			//--- DRK > Do nothing, user has to call resume().
+		}
+		else if( please.m_pleaseOption == BluetoothEnablerFilter.Please.PE_Option__SKIP_NEXT )
+		{
+			//--- DRK > Recurse back into dispatchEvent().
+			dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.SKIPPED);
+		}
+		else if( please.m_pleaseOption == BluetoothEnablerFilter.Please.PE_Option__END )
+		{
+			//--- DRK > Recurse back into dispatchEvent().
+			dispatchEvent(getStage(), BluetoothEnablerFilter.Stage.NULL, BluetoothEnablerFilter.Status.STOPPED);
+		}
+		else if( please.m_pleaseOption == BluetoothEnablerFilter.Please.PE_Option__DO_NEXT )
+		{
+			handlePleaseResponse_STEP4_maybeShowAppDialog(please);
+		}
+		else
+		{
+			bleMngr().ASSERT(false, "Unhandled Please option case " + please.m_pleaseOption + " for " + BluetoothEnabler.class.getSimpleName());
+		}
+	}
+
+    private void handlePleaseResponse_STEP4_maybeShowAppDialog(final BluetoothEnablerFilter.Please please)
     {
-        if(m_currentStage == BluetoothEnablerFilter.Stage.START)
+        if( please.shouldPopDialog(m_currentStage) )
         {
-            updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.NULL);
-        }
-        else if(m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH)
-        {
-            if(nextEvent.status() == BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG)
-            {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG);
-            }
-            else if(nextEvent.status() == BluetoothEnablerFilter.Status.SKIPPED)
-            {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.SKIPPED);
-            }
-            else if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON))
-            {
-                Activity resultActivity = m_lastPlease.m_activity != null ? m_lastPlease.m_activity : m_passedActivity;
-                m_bleManager.turnOnWithIntent(resultActivity, m_lastPlease.m_requestCode);
-            }
-            else
-            {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ALREADY_ENABLED);
-            }
-        }
-        else if(m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION)
-        {
-            if(!Utils.isMarshmallow())
-            {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.NOT_NEEDED);
-            }
-            else
-            {
-                if(nextEvent.status() == BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG)
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG);
-                }
-                else if(nextEvent.status() == BluetoothEnablerFilter.Status.SKIPPED)
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.SKIPPED);
-                }
-                else if(!m_bleManager.isLocationEnabledForScanning_byRuntimePermissions())
-                {
-                    Activity resultActivity = m_lastPlease.m_activity != null ? m_lastPlease.m_activity : m_passedActivity;
-                    m_bleManager.turnOnLocationWithIntent_forPermissions(resultActivity, m_lastPlease.m_requestCode);
-                }
-                else
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ALREADY_ENABLED);
-                }
-            }
-        }
-        else if(m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_SERVICES)
-        {
-            if(nextEvent.status() == BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG)
-            {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG);
-            }
-            else if(nextEvent.status() == BluetoothEnablerFilter.Status.SKIPPED)
-            {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.SKIPPED);
-            }
-            else if(!m_bleManager.isLocationEnabledForScanning_byOsServices())
-            {
-                Activity resultActivity = m_lastPlease.m_activity != null ? m_lastPlease.m_activity : m_passedActivity;
-                m_bleManager.turnOnLocationWithIntent_forOsServices(resultActivity, m_lastPlease.m_requestCode);
-            }
-            else
-            {
-                updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ALREADY_ENABLED);
-            }
-        }
-    }
+           final AlertDialog.Builder builder = new AlertDialog.Builder(m_defaultActivity);
 
-    private boolean isNextStageAlreadyEnabled(BluetoothEnablerFilter.Stage stage)
-    {
-        if(stage == BluetoothEnablerFilter.Stage.BLUETOOTH)
-        {
-            return m_bleManager.isBleSupported() && m_bleManager.is(BleManagerState.ON);
-        }
-        else if(stage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION)
-        {
-            return m_bleManager.isLocationEnabledForScanning_byRuntimePermissions();
-        }
-        else if(stage == BluetoothEnablerFilter.Stage.LOCATION_SERVICES)
-        {
-            return m_bleManager.isLocationEnabledForScanning_byOsServices();
-        }
-        return true;
-    }
+			builder.setMessage(m_lastPlease.m_dialogText);
 
-    private void handlePleaseResponse()
-    {
-        AlertDialog.Builder builder = new AlertDialog.Builder(m_passedActivity);
-        if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH && !m_lastPlease.wasSkipped())
-        {
-            if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.END)
-            {
-                builder.setMessage(m_lastPlease.m_dialogText);
-                builder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finishPleaseResponse();
-                    }
-                });
-                builder.show();
-            }
-            else
-            {
-                builder.setMessage(m_lastPlease.m_dialogText);
-                builder.setNegativeButton("Deny", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finishPleaseResponse(true);
-                    }
-                });
+			builder.setNegativeButton("Deny", new DialogInterface.OnClickListener()
+			{
+				@Override public void onClick(DialogInterface dialog, int which)
+				{
+					handlePleaseResponse_STEP5_maybeEarlyOutFromDialogResponse(please, /*wasCancelledByDialog=*/true);
+				}
+			});
 
-                builder.setPositiveButton("Accept", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finishPleaseResponse();
-                    }
-                });
-                builder.show();
-            }
-        }
-        //PDZ- Handles popping a dialog after the last stage, LOCATION_SERVICES returns. Not currently supporting this feature
-//        else if(m_lastPlease.shouldPopDialog() && m_currentStage == BluetoothEnablerListener.Stage.LOCATION_SERVICES && !m_lastPlease.wasSkipped())
-//        {
-//            builder.setMessage(m_lastPlease.m_dialogText);
-//            builder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//                    dialog.dismiss();
-//                }
-//            });
-//            builder.show();
-//        }
-        else
-        {
-            finishPleaseResponse();
-        }
-    }
+			builder.setPositiveButton("Accept", new DialogInterface.OnClickListener()
+			{
+				@Override public void onClick(DialogInterface dialog, int which)
+				{
+					handlePleaseResponse_STEP5_maybeEarlyOutFromDialogResponse(please, /*wasCancelledByDialog=*/false);
+				}
+			});
 
-
-    private void finishPleaseResponse()
-    {
-        finishPleaseResponse(false);
-    }
-
-    private void finishPleaseResponse(boolean wasCancelledByDialog)
-    {
-        if(m_lastPlease.shouldShowToast() && !wasCancelledByDialog)
-        {
-            Toast.makeText(m_passedActivity, m_lastPlease.m_toastText, Toast.LENGTH_LONG).show();
-        }
-
-        if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.PAUSE)
-        {
-
-        }
-        else if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.DO_NEXT )
-        {
-            m_currentStage = m_currentStage.next();
-            BluetoothEnablerFilter.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.NULL);
-            nextStage(nextEvent);
-        }
-        else if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.SKIP_NEXT)
-        {
-            m_currentStage = m_currentStage.next();
-            BluetoothEnablerFilter.BluetoothEnablerEvent nextEvent = wasCancelledByDialog ? new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG) : new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, BluetoothEnablerFilter.Status.SKIPPED);
-            nextStage(nextEvent);
-        }
-        else if(m_lastPlease.m_stateCode == BluetoothEnablerFilter.Please.END)
-        {
-            m_currentStage = BluetoothEnablerFilter.Stage.NULL;
-            m_passedActivity.getApplication().unregisterActivityLifecycleCallbacks(m_lifecycleCallback);
-        }
-    }
-
-    private void updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status newStatus)
-    {
-        BluetoothEnablerFilter.BluetoothEnablerEvent currentEvent = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_passedActivity, m_currentStage, newStatus);
-        m_lastPlease = m_enablerFilter.onEvent(currentEvent);
-
-        if( false == m_currentStage.isLast() )
-        {
-            handlePleaseResponse();
+			builder.show();
         }
         else
         {
-            m_currentStage = BluetoothEnablerFilter.Stage.NULL;
+			//--- DRK > Skip step 5, no dialog shown.
+			handlePleaseResponse_STEP6_launchIntent(please);
         }
     }
 
+	private void handlePleaseResponse_STEP5_maybeEarlyOutFromDialogResponse(final BluetoothEnablerFilter.Please please, final boolean wasCancelledByDialog)
+	{
+		if( true == wasCancelledByDialog )
+		{
+			dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.CANCELLED_BY_DIALOG);
+		}
+		else
+		{
+			handlePleaseResponse_STEP6_launchIntent(please);
+		}
+	}
+
+    private void handlePleaseResponse_STEP6_launchIntent(final BluetoothEnablerFilter.Please please)
+    {
+		final Activity callingActivity = please.activityOrDefault(m_defaultActivity);
+
+		switch(getStage())
+		{
+			case BLUETOOTH:
+			{
+				onSystemCallStart();
+
+				bleMngr().turnOnWithIntent(callingActivity, please.m_requestCode);
+
+				break;
+			}
+
+			case LOCATION_PERMISSION:
+			{
+				onSystemCallStart();
+
+				bleMngr().turnOnLocationWithIntent_forPermissions(callingActivity, please.m_requestCode);
+
+				break;
+			}
+
+			case LOCATION_SERVICES:
+			{
+				onSystemCallStart();
+
+				bleMngr().turnOnLocationWithIntent_forOsServices(callingActivity, please.m_requestCode);
+
+				break;
+			}
+
+			case NULL: case START:
+			{
+				bleMngr().ASSERT(false, "Can't launch intent for " + getStage());
+
+				return;
+			}
+		}
+
+		handlePleaseResponse_STEP7_maybeShowToast(please);
+    }
+
+	private void handlePleaseResponse_STEP7_maybeShowToast(final BluetoothEnablerFilter.Please please)
+	{
+		if( please.shouldShowToast(getStage()) )
+		{
+			Toast.makeText(please.activityOrDefault(m_defaultActivity), please.m_toastText, Toast.LENGTH_LONG).show();
+		}
+
+		//--- DRK > Now we wait for onActivityResult or through implicit foreground listening to continue the process.
+	}
+
+	private void handlePleaseResponse_STEP8_receiveActivityResult(final BluetoothEnablerFilter.Please please, final int requestCode)
+	{
+		if( m_lastPlease.m_requestCode == requestCode )
+		{
+			if( false == isEnabled(getStage()) )
+			{
+				dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.CANCELLED_BY_INTENT);
+			}
+			else
+			{
+				dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.ENABLED);
+			}
+		}
+		else
+		{
+			//--- DRK > Request codes don't match so this is not a result we care about.
+		}
+	}
 
     /**
      * A potentially-required method to be placed in your activity's {@link Activity#onRequestPermissionsResult(int, String[], int[])} and {@link Activity#onActivityResult(int, int, Intent)} methods.
@@ -683,47 +717,17 @@ public class BluetoothEnabler
      */
     public void onActivityOrPermissionResult(int requestCode)
     {
-        onActivityOrPermissionResult(requestCode, false);
-    }
-
-    private void onActivityOrPermissionResult(int requestCode, boolean calledImplicitly)
-    {
-        if(requestCode == m_lastPlease.m_requestCode && m_lastPlease.m_implicitActivityResultHandling == calledImplicitly)
-        {
-            if(m_currentStage == BluetoothEnablerFilter.Stage.BLUETOOTH)
-            {
-                if(m_bleManager.isBleSupported() && !m_bleManager.is(BleManagerState.ON))
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_INTENT);
-                }
-                else
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ENABLED);
-                }
-            }
-            else if(m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_PERMISSION)
-            {
-                if(!m_bleManager.isLocationEnabledForScanning_byRuntimePermissions())
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_INTENT);
-                }
-                else
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ENABLED);
-                }
-            }
-            else if(m_currentStage == BluetoothEnablerFilter.Stage.LOCATION_SERVICES)
-            {
-                if(!m_bleManager.isLocationEnabledForScanning_byOsServices())
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.CANCELLED_BY_INTENT);
-                }
-                else
-                {
-                    updateEventStatusAndPassEventToUser(BluetoothEnablerFilter.Status.ENABLED);
-                }
-            }
-        }
+		if( m_lastPlease != null )
+		{
+			if( true == m_lastPlease.m_implicitActivityResultHandling )
+			{
+				//--- DRK > The filter opted for implicit handling so not passing this in.
+			}
+			else
+			{
+				handlePleaseResponse_STEP8_receiveActivityResult(m_lastPlease, requestCode);
+			}
+		}
     }
 
     /**
@@ -731,7 +735,7 @@ public class BluetoothEnabler
      */
     public boolean isEnabled(BluetoothEnablerFilter.Stage stage)
     {
-        return isEnabled(m_bleManager, stage);
+        return isEnabled(bleMngr(), stage);
     }
 
     /**
@@ -740,7 +744,8 @@ public class BluetoothEnabler
     public void resume(BluetoothEnablerFilter.Please please)
     {
         m_lastPlease = please;
-        handlePleaseResponse();
+
+		handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(please);
     }
 
     /**
@@ -753,11 +758,69 @@ public class BluetoothEnabler
 
     public boolean isPerformingSystemCall()
     {
-        return m_mayBePerformingSystemCall && getStage().isNull() == false;
+        return m_performingSystemCall && getStage().isNull() == false;
     }
 
     public boolean isDone()
     {
-        return getStage().isNull() == true;
+        return getStage() == BluetoothEnablerFilter.Stage.NULL;
     }
+
+
+
+
+
+	// REST OF THESE METHODS ARE PRIVATE FLUFF
+
+	private BleManager bleMngr()
+	{
+		return BleManager.get(m_defaultActivity);
+	}
+
+	private void onSystemCallStart()
+	{
+		m_performingSystemCall = true;
+	}
+
+	private void onSystemCallEnd()
+	{
+		m_performingSystemCall = false;
+	}
+
+	private Application.ActivityLifecycleCallbacks newLifecycleCallbacks()
+	{
+		return new Application.ActivityLifecycleCallbacks()
+		{
+			@Override public void onActivityCreated(Activity activity, Bundle savedInstanceState){}
+			@Override public void onActivityStarted(Activity activity){}
+			@Override public void onActivityStopped(Activity activity){}
+			@Override public void onActivitySaveInstanceState(Activity activity, Bundle outState){}
+			@Override public void onActivityDestroyed(Activity activity){}
+
+			@Override public void onActivityPaused(Activity activity)
+			{
+				m_isForegrounded = false;
+			}
+
+			@Override public void onActivityResumed(Activity activity)
+			{
+				if( false == m_isForegrounded && true == m_performingSystemCall )
+				{
+					onSystemCallEnd();
+
+					if( m_lastPlease != null && true == m_lastPlease.m_implicitActivityResultHandling )
+					{
+						handlePleaseResponse_STEP8_receiveActivityResult(m_lastPlease, m_lastPlease.m_requestCode);
+					}
+				}
+
+				m_isForegrounded = true;
+			}
+		};
+	}
+
+	private void setNewFilter(final BluetoothEnablerFilter filter)
+	{
+		m_enablerFilter = filter;
+	}
 }
