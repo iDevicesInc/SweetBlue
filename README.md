@@ -174,14 +174,14 @@ Getting Started
 	    							if( e.wasSuccess() )
 	    							{
 	    								Log.i("", "Battery level is " + e.data_byte() + "%");
-	    							}
-	    						}
-	    					});
-	    				}
-	    			}
-	    		});
-	    	}
-   	}
+								}
+							}
+						});
+					}
+				}
+			});
+		}
+	}
     };
     
     // Helps you navigate the treacherous waters of Android M Location requirements for scanning.
