@@ -151,8 +151,10 @@ Getting Started
     		return Please.acknowledgeIf(e.name_normalized().contains("my_device"))
     		             .thenStopScan();
     	}
-    },
+    };
     
+    // New BleDevice instances are provided through this listener.
+    // Nested listeners then listen for connection and read results.
     final DiscoveryListener discoveryListener = new DiscoveryListener()
     {
     	@Override public void onEvent(DiscoveryEvent e)
@@ -179,21 +181,21 @@ Getting Started
 	    			}
 	    		});
 	    	}
-    	}
-    });
+    	 }
+    };
     
     // Helps you navigate the treacherous waters of Android M Location requirements for scanning.
     BluetoothEnabler.start(this, new DefaultBluetoothEnablerFilter()
     {
-        @Override public Please onEvent(BluetoothEnablerEvent e)
-        {
-            if( e.isDone() )
-            {
-                e.bleManager().startScan(scanFilter, discoveryListener);
-            }
+    	@Override public Please onEvent(BluetoothEnablerEvent e)
+    	{
+        	if( e.isDone() )
+        	{
+        		e.bleManager().startScan(scanFilter, discoveryListener);
+		}
             
-            return super.onEvent(e);
-        }
+		return super.onEvent(e);
+	}
     });
     ```
 
