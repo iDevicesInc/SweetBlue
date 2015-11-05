@@ -181,7 +181,7 @@ Getting Started
 	    			}
 	    		});
 	    	}
-    	 }
+   	}
     };
     
     // Helps you navigate the treacherous waters of Android M Location requirements for scanning.
