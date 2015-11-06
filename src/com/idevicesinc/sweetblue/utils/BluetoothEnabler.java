@@ -37,15 +37,13 @@ public class BluetoothEnabler
 		if( s_instance != null && false == s_instance.isDone() )
 		{
 			s_instance.setNewFilter(filter);
-
-			return s_instance;
 		}
 		else
 		{
 			s_instance = new BluetoothEnabler(activity, filter);
-
-			return s_instance;
 		}
+
+        return s_instance;
 	}
 
 	//--- DRK > Lazy singleton not ideal but protects enough against common misuse cases that it's probably justified.
@@ -525,7 +523,7 @@ public class BluetoothEnabler
 		{
 			case BLUETOOTH:
 			{
-				//--- DRK > All Android versions needed bluetooth enable, duh.
+				//--- DRK > All Android versions needed bluetooth enabled, duh.
 				handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(please);
 
 				break;
@@ -546,7 +544,8 @@ public class BluetoothEnabler
 				break;
 			}
 
-			case NULL: case START:
+			case NULL:
+			case START:
 			{
 				bleMngr().ASSERT(false, "Can't determine need for " + getStage());
 
@@ -671,7 +670,8 @@ public class BluetoothEnabler
 				break;
 			}
 
-			case NULL: case START:
+			case NULL:
+			case START:
 			{
 				bleMngr().ASSERT(false, "Can't launch intent for " + getStage());
 
@@ -694,7 +694,7 @@ public class BluetoothEnabler
 
 	private void handlePleaseResponse_STEP8_receiveActivityResult(final BluetoothEnablerFilter.Please please, final int requestCode)
 	{
-		if( m_lastPlease.m_requestCode == requestCode )
+		if( m_lastPlease != null && m_lastPlease.m_requestCode == requestCode )
 		{
 			if( false == isEnabled(getStage()) )
 			{
