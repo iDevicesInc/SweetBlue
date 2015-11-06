@@ -46,7 +46,7 @@ public class BluetoothEnabler
         return s_instance;
 	}
 
-	//--- DRK > Lazy singleton not ideal but protects enough against common misuse cases that it's probably justified.
+	//--- DRK > Lazy singleton probably not ideal but protects enough against common misuse cases that it's probably justified.
 	//---		Can just make constructors public in future if people need it.
 	private static BluetoothEnabler s_instance;
 

@@ -1237,6 +1237,8 @@ public class BleManager
 	 *
 	 * @see BleManagerConfig#autoScanActiveTime
 	 * @see BleManagerConfig#autoScanPauseInterval
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime)
 	{
@@ -1245,6 +1247,8 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you too.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, DiscoveryListener discoveryListener)
 	{
@@ -1253,6 +1257,8 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but adds a filter too.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter)
 	{
@@ -1261,6 +1267,8 @@ public class BleManager
 
 	/**
 	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you too and adds a filter.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
 	public void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter, DiscoveryListener discoveryListener)
 	{
@@ -1319,6 +1327,8 @@ public class BleManager
 	/**
 	 * Starts a scan that will continue indefinitely until {@link #stopScan()} is called.
 	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
+	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan()
@@ -1328,6 +1338,8 @@ public class BleManager
 
 	/**
 	 * Calls {@link #startScan(Interval, BleManagerConfig.ScanFilter)} with {@link Interval#INFINITE}.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
@@ -1339,6 +1351,8 @@ public class BleManager
 	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
 	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
+	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan(DiscoveryListener discoveryListener)
@@ -1348,6 +1362,8 @@ public class BleManager
 
 	/**
 	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, BleManager.DiscoveryListener)}
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
@@ -1359,6 +1375,8 @@ public class BleManager
 	/**
 	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, BleManager.DiscoveryListener)}
 	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
+	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan(Interval scanTime, DiscoveryListener discoveryListener)
@@ -1369,6 +1387,8 @@ public class BleManager
 	/**
 	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
 	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
+	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
 	public boolean startScan(ScanFilter filter, DiscoveryListener discoveryListener)
@@ -1378,6 +1398,8 @@ public class BleManager
 
 	/**
 	 * Starts a scan that will generally last for the given time (roughly).
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
@@ -1399,6 +1421,8 @@ public class BleManager
 	 * distance calculations the location could get pretty accurate. For example a department store app could sprinkle a few dozen beacons throughout its store and
 	 * if you had their app running they would know exactly where you are. Not an everyday concern, and it makes BLE even more annoying to implement on Android,
 	 * but Google is understandably erring on the side of privacy and security for its users.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
 	 * @return <code>true</code> if scan started, <code>false></code> otherwise - usually this means this manager is not {@link BleManagerState#ON}.
 	 */
@@ -1424,15 +1448,15 @@ public class BleManager
 			final String enabledC = reasonC ? ENABLED : DISABLED;
 
 			m_logger.w
-					(
-							"As of Android M, in order for low energy scan results to return you must have the following:\n" +
-									"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
-									"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
-									"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
-									"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
-									"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
-									"Good luck!"
-					);
+			(
+				"As of Android M, in order for low energy scan results to return you must have the following:\n" +
+				"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
+				"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
+				"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
+				"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
+				"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
+				"Good luck!"
+			);
 		}
 	}
 
