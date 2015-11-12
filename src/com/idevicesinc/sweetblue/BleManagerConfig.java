@@ -21,6 +21,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -253,6 +254,12 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Default is {@link BleScanMode#AUTO} - see {@link BleScanMode} for more details.
 	 */
 	public BleScanMode scanMode								= BleScanMode.AUTO;
+
+	/**
+	 * Default is <code>null</code> - provide an instance here that will be called at the end of {@link BleManager#update(double)}.
+	 * This might be useful for extension/wrapper libraries or apps that want to tie into the {@link BleManager} instance's existing update loop.
+	 */
+	public UpdateLoop.Callback updateLoopCallback			= null;
 	
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.

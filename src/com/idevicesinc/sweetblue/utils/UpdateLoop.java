@@ -19,7 +19,7 @@ public class UpdateLoop
 		/**
 		 * Gives you the amount of time that has passed in seconds since the last callback.
 		 */
-		void onUpdate(double timestep);
+		void onUpdate(double timestep_seconds);
 	}
 	
 	private final Runnable m_autoUpdateRunnable = new Runnable()
@@ -60,7 +60,7 @@ public class UpdateLoop
 	{
 		return new UpdateLoop(new Callback()
 		{
-			@Override public void onUpdate(double timestep)
+			@Override public void onUpdate(double timestep_seconds)
 			{
 
 			}

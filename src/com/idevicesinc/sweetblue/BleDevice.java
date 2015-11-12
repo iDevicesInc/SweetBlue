@@ -3017,7 +3017,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(ConnectionFailListener failListener)
 	{
-		return connect(null, failListener);
+		return connect((StateListener)null, failListener);
 	}
 
 	/**
@@ -3103,6 +3103,16 @@ public class BleDevice extends BleNode
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener)
 	{
 		return connect(initTxn, stateListener, (ConnectionFailListener) null);
+	}
+
+	/**
+	 * Yet another overload.
+	 *
+	 * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+	 */
+	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authTxn, ConnectionFailListener connectionFailListener)
+	{
+		return connect(authTxn, (StateListener) null, connectionFailListener);
 	}
 
 	/**

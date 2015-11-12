@@ -188,8 +188,11 @@ public enum BleDeviceState implements State
 	{
 		return this.bit() | bits;
 	}
-	
-	static BleDeviceState[] VALUES()
+
+	/**
+	 * Returns same as {@link #values()}, but for performance reasons this does not return a new array every time.
+	 */
+	public static BleDeviceState[] VALUES()
 	{
 		s_values = s_values != null ? s_values : values();
 		

@@ -27,7 +27,17 @@ public class Utils_String extends Utils
 		return s_toFixedFormat.format(value);
 	}
 
+	public static String bytesToMacAddress(final byte[] raw)
+	{
+		return String.format("%02X:%02X:%02X:%02X:%02X:%02X", raw[0],raw[1],raw[2],raw[3],raw[4],raw[5]);
+	}
+
 	public static String normalizeMacAddress(final String macAddress)
+	{
+		return normalizeMacAddress_replaceDelimiters(macAddress.toUpperCase());
+	}
+
+	public static String normalizeMacAddress_replaceDelimiters(final String macAddress)
 	{
 		final char[] commonDelimiters = {'-', '.', ' ', '_'};
 

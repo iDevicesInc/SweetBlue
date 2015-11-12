@@ -539,8 +539,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 		return config;
 	}
 
-	@Override protected BleManagerConfig clone()
+	@Override protected BleDeviceConfig clone()
 	{
-		return (BleManagerConfig) super.clone();
+		return (BleDeviceConfig) super.clone();
 	}
 }

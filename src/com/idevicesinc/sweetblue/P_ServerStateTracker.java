@@ -45,11 +45,12 @@ class P_ServerStateTracker
 
 	void doStateTransition(final String macAddress, final BleServerState oldState, final BleServerState newState, final State.ChangeIntent intent, final int gattStatus)
 	{
-		final int oldState_bit = oldState != BleServerState.NULL ? oldState.bit() : 0x0;
-		final int newState_bit = newState.bit();
-
-		final int intentBits = intent == State.ChangeIntent.INTENTIONAL ? 0xFFFFFFFF : 0x00000000;
 		final int currentBits = m_server.getStateMask(macAddress);
+
+		final int oldState_bit = false == oldState.isNull() ? oldState.bit() : 0x0;
+		final int newState_bit = newState.bit();
+		final int intentBits = intent == State.ChangeIntent.INTENTIONAL ? 0xFFFFFFFF : 0x00000000;
+
 		final int oldBits = (currentBits | oldState_bit) & ~newState_bit;
 		final int newBits = (currentBits | newState_bit) & ~oldState_bit;
 		final int intentMask = (oldBits | newBits) & intentBits;

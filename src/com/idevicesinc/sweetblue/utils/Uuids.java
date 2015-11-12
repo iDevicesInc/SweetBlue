@@ -188,6 +188,11 @@ public class Uuids
 		}
 	}
 
+	public static UUID random()
+	{
+		return UUID.randomUUID();
+	}
+
 	private static boolean hasHexPrefix(final String string)
 	{
 		if( string == null )
