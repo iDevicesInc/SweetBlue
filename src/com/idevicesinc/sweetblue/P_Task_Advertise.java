@@ -1,8 +1,10 @@
 package com.idevicesinc.sweetblue;
 
+import android.annotation.TargetApi;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.os.Build;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -10,6 +12,7 @@ import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode;
 import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower;
 
 
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
     private final BleAdvertisingPacket m_packet;

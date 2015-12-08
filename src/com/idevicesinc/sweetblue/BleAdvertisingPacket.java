@@ -1,8 +1,10 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.annotation.TargetApi;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
+import android.os.Build;
 import android.os.ParcelUuid;
 
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
@@ -283,6 +285,7 @@ public class BleAdvertisingPacket {
         return (m_options & Option.INCLUDE_TX_POWER.bit()) == Option.INCLUDE_TX_POWER.bit();
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     /*package*/ AdvertiseSettings getNativeSettings(BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout) {
         AdvertiseSettings.Builder settings = new AdvertiseSettings.Builder();
         settings.setAdvertiseMode(mode.getNativeMode());
@@ -292,6 +295,7 @@ public class BleAdvertisingPacket {
         return settings.build();
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     /*package*/ AdvertiseData getNativeData() {
         AdvertiseData.Builder data = new AdvertiseData.Builder();
         for (UUID id : serviceUuids)

@@ -1010,9 +1010,17 @@ public class BleManager
 	/**
 	 * Checks to see if the device supports advertising.
 	 */
+	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 	public boolean isAdvertisingSupportedByChipset()
 	{
-		return getNativeAdapter().isMultipleAdvertisementSupported();
+		if( isAdvertisingSupportedByAndroidVersion() )
+		{
+			return getNativeAdapter().isMultipleAdvertisementSupported();
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/**

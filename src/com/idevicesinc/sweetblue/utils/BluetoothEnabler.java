@@ -16,11 +16,22 @@ import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 
 /**
- * BluetoothEnabler is used to handle the new logic for getting BLE scan results that is introduced with {@link android.os.Build.VERSION_CODES#M}.  With {@link android.os.Build.VERSION_CODES#M} you need might need to request
- * {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} at runtime (behavior isn't too consistent)
- * as well as make sure that the user has turned on location services on their device.
+ * This class is used to handle the new hairy logic for getting bluetooth low-energy scan results that is introduced with {@link android.os.Build.VERSION_CODES#M}.
+ * With {@link android.os.Build.VERSION_CODES#M} you need to have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION}
+ * in your AndroidManifest.xml, and also enable them at runtime, AND also make sure location services are on.
  * <br><br>
- * To use this class create an instance of it in your activity and call the {@link #onActivityOrPermissionResult(int)} on the instance created in the two required methods. Nothing else needs to be done.
+ * This class is simply a convenience that wraps various helper methods of {@link BleManager} (see the "See Also" section, which has enough links that it might give you
+ * an idea of why {@link BluetoothEnabler} was written). As such you don't need to use it, but in combination with {@link BluetoothEnabler.DefaultBluetoothEnablerFilter}
+ * it comes in handy as a one-line addition to most simple apps.
+ *
+ * @see BleManager#isLocationEnabledForScanning()
+ * @see BleManager#isLocationEnabledForScanning_byManifestPermissions()
+ * @see BleManager#isLocationEnabledForScanning_byRuntimePermissions()
+ * @see BleManager#isLocationEnabledForScanning_byOsServices()
+ * @see BleManager#turnOnLocationWithIntent_forPermissions(Activity, int)
+ * @see BleManager#turnOnLocationWithIntent_forOsServices(Activity, int)
+ * @see BleManager#turnOnWithIntent(Activity, int)
+ * @see BleManager#willLocationPermissionSystemDialogBeShown(Activity)
  */
 public class BluetoothEnabler
 {
@@ -322,7 +333,7 @@ public class BluetoothEnabler
 
             private boolean shouldPopDialog(final Stage stage)
             {
-                return m_dialogText != null && m_dialogText.isEmpty() == false && m_pleaseOption == PE_Option__DO_NEXT && stage != Stage.NULL;
+                return m_dialogText != null && m_dialogText.isEmpty() == false;
             }
 
             private boolean shouldShowToast(final Stage stage)
@@ -424,15 +435,15 @@ public class BluetoothEnabler
         {
 			if( e.stage().isLocationRelated() && e.status().isCancelled() )
 			{
-				//--- DRK > Just making the judgement call here that app user is not keen on enabling any location-related stuff.
-				//---		You might want to override this method and pop an "OK, but scanning won't work..." dialog in your app.
-				return Please.stop();
+				final String fineButDotDotDot = "Denying location access means low-energy scanning will not work.";
+
+				return Please.stop().withDialog(fineButDotDotDot);
 			}
 			else if( e.stage() == Stage.LOCATION_PERMISSION && e.status() == Status.MANIFEST_PERMISSION_NEEDED )
 			{
 				final String manifestPermissionWarning = "App needs " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in its AndroidManifest.xml!";
 
-				return Please.stop().withToast(manifestPermissionWarning);
+				return Please.stop().withDialog(manifestPermissionWarning);
 			}
 			else
 			{
@@ -616,7 +627,9 @@ public class BluetoothEnabler
 		}
 		else if( please.m_pleaseOption == BluetoothEnablerFilter.Please.PE_Option__END )
 		{
+			handlePleaseResponse_STEP3a_maybeShowClosingDialog(please);
 			handlePleaseResponse_STEP8_maybeShowToast(please);
+
 			//--- DRK > Recurse back into dispatchEvent().
 			dispatchEvent(getStage(), BluetoothEnablerFilter.Stage.NULL, BluetoothEnablerFilter.Status.STOPPED);
 		}
@@ -627,6 +640,25 @@ public class BluetoothEnabler
 		else
 		{
 			bleMngr().ASSERT(false, "Unhandled Please option case " + please.m_pleaseOption + " for " + BluetoothEnabler.class.getSimpleName());
+		}
+	}
+
+	private void handlePleaseResponse_STEP3a_maybeShowClosingDialog(final BluetoothEnablerFilter.Please please)
+	{
+		if( please.shouldPopDialog(getStage()) )
+		{
+			final AlertDialog.Builder builder = new AlertDialog.Builder(please.activityOrDefault(m_defaultActivity));
+
+			builder.setMessage(m_lastPlease.m_dialogText);
+
+			builder.setNeutralButton("OK", new DialogInterface.OnClickListener()
+			{
+				@Override public void onClick(DialogInterface dialog, int which)
+				{
+				}
+			});
+
+			builder.show();
 		}
 	}
 
@@ -653,7 +685,7 @@ public class BluetoothEnabler
     {
         if( please.shouldPopDialog(getStage()) )
         {
-           final AlertDialog.Builder builder = new AlertDialog.Builder(m_defaultActivity);
+           final AlertDialog.Builder builder = new AlertDialog.Builder(please.activityOrDefault(m_defaultActivity));
 
 			builder.setMessage(m_lastPlease.m_dialogText);
 

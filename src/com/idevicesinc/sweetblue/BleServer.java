@@ -677,9 +677,9 @@ public class BleServer extends BleNode
 	}
 
 	/**
-	 * Provide an implementation to {@link BleServer#setListener_Advertising(AdvertisingListener)}, and
-	 * {@link BleManager#setListener_Advertising(AdvertisingListener)} to receive a callback
-	 * when using {@link #startAdvertising(BleAdvertisingPacket)} for the m_status.
+	 * Provide an implementation to {@link BleServer#setListener_Advertising(BleServer.AdvertisingListener)}, and
+	 * {@link BleManager#setListener_Advertising(BleServer.AdvertisingListener)} to receive a callback
+	 * when using {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
 	public static interface AdvertisingListener
 	{

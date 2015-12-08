@@ -111,7 +111,7 @@ public class BleAdvertisingSettings {
     /**
      * Overload of {@link #BleAdvertisingSettings(BleAdvertisingMode, BleTransmissionPower, Interval)}, which sets
      * the {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode} to {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode#AUTO},
-     * {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower} to {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower@MEDIUM},
+     * {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower} to {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower#MEDIUM},
      * and the timeout to {@link Interval#ZERO} (no timeout).
      */
     public BleAdvertisingSettings() {
@@ -138,7 +138,7 @@ public class BleAdvertisingSettings {
     /**
      * Overload of {@link #BleAdvertisingSettings(BleAdvertisingMode, BleTransmissionPower, Interval)}, which sets the
      * {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode} to {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode#AUTO}, and
-     * {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower} to {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower@MEDIUM}.
+     * {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower} to {@link com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower#MEDIUM}.
      */
     public BleAdvertisingSettings(Interval timeout) {
         this(BleAdvertisingMode.AUTO, BleTransmissionPower.MEDIUM, timeout);
