@@ -65,7 +65,7 @@ Features
 
 Getting Started
 ===============
-1. if using **Android Studio** or **Gradle**...
+1. If using **Android Studio** or **Gradle**...
   1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/src/main/lib/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
   2. Open the app module's `build.gradle` file.
   3. If building with source, your gradle file should look something like this:
