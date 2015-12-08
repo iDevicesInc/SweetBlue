@@ -4,7 +4,7 @@
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>
 <a href="http://75.144.199.157:7117/job/SweetBlue%20Library/">
-  <img align="right" src="https://img.shields.io/badge/version-2.40.29-blue.svg" />
+  <img align="right" src="https://img.shields.io/badge/version-2.42.29-blue.svg" />
   <img align="right" src="http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue%20Library"/>
 </a>
 <p align="center">

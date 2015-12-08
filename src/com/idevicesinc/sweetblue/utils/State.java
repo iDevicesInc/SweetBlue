@@ -247,6 +247,11 @@ public interface State extends UsesCustomNull, BitwiseEnum
 			
 			return NULL;
 		}
+
+		public int bits()
+		{
+			return this == INTENTIONAL ? 0xFFFFFFFF : 0x00000000;
+		}
 	}
 	
 	/**

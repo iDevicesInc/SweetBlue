@@ -125,10 +125,10 @@ public class Utils_Byte extends Utils
 		return binaryData;
 	}
 
-	public static byte[] subBytes(byte[] source, int sourceBegin, int sourceEnd)
+	public static byte[] subBytes(byte[] source, int sourceBegin_index_inclusive, int sourceEnd_index_exclusive)
 	{
-		byte[] destination = new byte[sourceEnd - sourceBegin];
-		System.arraycopy(source, sourceBegin, destination, 0, sourceEnd - sourceBegin);
+		byte[] destination = new byte[sourceEnd_index_exclusive - sourceBegin_index_inclusive];
+		System.arraycopy(source, sourceBegin_index_inclusive, destination, 0, sourceEnd_index_exclusive - sourceBegin_index_inclusive);
 		return destination;
 	}
 

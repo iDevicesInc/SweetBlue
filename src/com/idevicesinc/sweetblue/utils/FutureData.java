@@ -12,6 +12,19 @@ import java.util.UUID;
 public interface FutureData
 {
 	/**
+	 * Convenience constant implementation that just returns an empty byte array.
+	 */
+	public static FutureData EMPTY = new FutureData()
+	{
+		private final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
+		@Override public byte[] getData()
+		{
+			return EMPTY_BYTE_ARRAY;
+		}
+	};
+
+	/**
 	 * Return the data that should (for example) be sent to a peripheral through {@link com.idevicesinc.sweetblue.BleDevice#write(UUID, FutureData)}.
 	 */
 	byte[] getData();

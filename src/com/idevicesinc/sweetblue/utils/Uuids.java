@@ -134,12 +134,19 @@ public class Uuids
 		return fromString(uuid);
 	}
 
+	public static UUID fromInt(final int assignedNumber)
+	{
+		return fromInt(assignedNumber, STANDARD_UUID_TEMPLATE);
+	}
+
 	/**
 	 * Convenience overload of {@link #fromInt(String, String)}.
 	 */
 	public static UUID fromInt(int assignedNumber, String uuidTemplate)
 	{
-		return fromInt(assignedNumber, uuidTemplate);
+		final String hex = Integer.toHexString(assignedNumber);
+
+		return fromInt(hex, uuidTemplate);
 	}
 
 	/**
@@ -151,7 +158,7 @@ public class Uuids
 	}
 
 	/**
-	 * Replaces the characters at indices 4, 5, 6, and 7 of <code>uuidTemplate</code> with the
+	 * Replaces the characters at indices 0-7 (inclusive) of <code>uuidTemplate</code> with the
 	 * <code>assignedNumber</code> parameter and returns the resulting {@link UUID} using {@link UUID#fromString(String)}.
 	 *
 	 * @param assignedNumber	A {@link String} of length <= 8 as the hex representation of a 4-byte (int) value, for example "12630102".
@@ -186,6 +193,17 @@ public class Uuids
 		{
 			return UUID.fromString(value);
 		}
+	}
+
+	/**
+	 * Parses the first 8 characters of the string representations of the given {@link UUID} as an integer hex string.
+	 */
+	public static int getInt(final UUID uuid)
+	{
+		final String firstChunk = uuid.toString().substring(0, 8);
+		final int toReturn = Integer.parseInt(firstChunk, 16);
+
+		return toReturn;
 	}
 
 	public static UUID random()
