@@ -272,5 +272,6 @@ public class Utils_ScanRecord extends Utils
 		long msb = BASE_UUID.getUuid().getMostSignificantBits() + (shortUuid << 32);
 		long lsb = BASE_UUID.getUuid().getLeastSignificantBits();
 		return new UUID(msb, lsb);
+
 	}
 }

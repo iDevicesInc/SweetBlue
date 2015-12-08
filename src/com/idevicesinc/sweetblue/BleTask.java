@@ -119,8 +119,13 @@ public enum BleTask
 	/**
 	 * Associated with {@link BleDevice#reliableWrite_execute()}.
 	 */
-	RELIABLE_WRITE;
-	
+	RELIABLE_WRITE,
+
+	/**
+	 * Associated with {@link BleServer#startAdvertising(BleAdvertisingPacket)}, {@link BleServer#startAdvertising(BleAdvertisingPacket, BleServer.AdvertisingListener)}
+	 */
+	START_ADVERTISING;
+
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.
 	 */

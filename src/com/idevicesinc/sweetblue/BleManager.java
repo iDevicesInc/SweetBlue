@@ -285,9 +285,9 @@ public class BleManager
 				return Utils_String.toString
 				(
 					this.getClass(),
-					"entered",			Utils_String.toString(enterMask(),		BleManagerState.VALUES()),
-					"exited",			Utils_String.toString(exitMask(),		BleManagerState.VALUES()),
-					"current",			Utils_String.toString(newStateBits(),	BleManagerState.VALUES())
+					"entered",			Utils_String.toString(enterMask(), BleManagerState.VALUES()),
+					"exited",			Utils_String.toString(exitMask(), BleManagerState.VALUES()),
+					"current",			Utils_String.toString(newStateBits(), BleManagerState.VALUES())
 				);
 			}
 		}
@@ -783,6 +783,7 @@ public class BleManager
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
 	IncomingListener m_defaultServerIncomingListener;
 	BleServer.ServiceAddListener m_serviceAddListener;
+	BleServer.AdvertisingListener m_advertisingListener;
 //    final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
@@ -995,6 +996,33 @@ public class BleManager
 		boolean hasBLE = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
 
 		return hasBLE;
+	}
+
+	/**
+	 * Checks to see if the device is running an Android OS which supports
+	 * advertising.
+	 */
+	public boolean isAdvertisingSupportedByAndroidVersion()
+	{
+		return Utils.isLollipop();
+	}
+
+	/**
+	 * Checks to see if the device supports advertising.
+	 */
+	public boolean isAdvertisingSupportedByChipset()
+	{
+		return getNativeAdapter().isMultipleAdvertisementSupported();
+	}
+
+	/**
+	 * Checks to see if the device supports advertising BLE services.
+	 */
+	public boolean isAdvertisingSupported()
+	{
+		enforceMainThread();
+
+		return isAdvertisingSupportedByAndroidVersion() && isAdvertisingSupportedByChipset();
 	}
 
 	/**
@@ -1227,6 +1255,16 @@ public class BleManager
 		enforceMainThread();
 
 		m_nativeStateTracker.setListener(listener);
+	}
+
+	/**
+	 * Set a listener here to be notified of the result of starting to advertise.
+	 */
+	public void setListener_Advertising(BleServer.AdvertisingListener listener)
+	{
+		enforceMainThread();
+
+		m_advertisingListener = listener;
 	}
 
 	/**
@@ -1677,14 +1715,14 @@ public class BleManager
 			@Override
 			public void onStateChange(PA_Task taskClass, PE_TaskState state)
 			{
-				if( state.isEndingState() )
+				if (state.isEndingState())
 				{
 					ResetListener nukeListeners = m_resetListeners;
 					m_resetListeners = null;
 					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-					if( nukeListeners != null )
+					if (nukeListeners != null)
 					{
 						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
 						nukeListeners.onEvent(event);
