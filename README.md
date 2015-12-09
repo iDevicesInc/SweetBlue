@@ -36,7 +36,7 @@ Features
 *	Plain old Java with zero API-level dependencies.
 *	Rich, queryable state tracking that makes UI integration a breeze.
 *	Automatic service discovery.
-*	Full support for Ble server functionality including advertising for supported devices.
+*	Full support for server role including advertising.
 *	Built-in time series database for easily storing and querying historical data from past reads and notifications.
 *	Easy RSSI tracking with built-in polling and caching, including distance and friendly signal strength calculations.
 *	Highly configurable scanning with min/max time limits, periodic bursts, advanced filtering, and more.
