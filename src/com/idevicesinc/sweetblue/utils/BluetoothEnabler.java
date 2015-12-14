@@ -60,6 +60,30 @@ public class BluetoothEnabler
         }
     }
 
+    /**
+     * Static equivalent of {@link #resume(BluetoothEnablerFilter.Please)} that you can use to call down into the
+     * singleton created by {@link #start(Activity, BluetoothEnablerFilter)} (or overloads).
+     */
+    public static void resume_static(final BluetoothEnablerFilter.Please please)
+    {
+        if( s_instance != null )
+        {
+            s_instance.resume(please);
+        }
+    }
+
+    /**
+     * Static equivalent of {@link #onActivityOrPermissionResult(int)} that you can use to call down into the
+     * singleton created by {@link #start(Activity, BluetoothEnablerFilter)} (or overloads).
+     */
+    public static void onActivityOrPermissionResult_static(int requestCode)
+    {
+        if( s_instance != null )
+        {
+            s_instance.onActivityOrPermissionResult(requestCode);
+        }
+    }
+
 	/**
 	 * Overload of {@link #start(Activity)} that uses an instance {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerFilter}.
 	 */
@@ -549,7 +573,8 @@ public class BluetoothEnabler
 		final BluetoothEnablerFilter.BluetoothEnablerEvent e = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_defaultActivity, currentStage, nextStage, status_currentStage, this);
 
 		m_lastPlease = m_enablerFilter.onEvent(e);
-		m_currentStage = nextStage;
+        m_lastPlease = m_lastPlease != null ? m_lastPlease : BluetoothEnablerFilter.Please.stop();
+        m_currentStage = nextStage;
 
 		if( m_currentStage == BluetoothEnablerFilter.Stage.NULL )
 		{
@@ -832,9 +857,18 @@ public class BluetoothEnabler
      */
     public void resume(BluetoothEnablerFilter.Please please)
     {
-        m_lastPlease = please;
+        if( isDone() )
+        {
+            Log.e(BluetoothEnabler.class.getSimpleName(), "Can't resume " + BluetoothEnabler.class.getSimpleName() + " because it's already done.");
 
-		handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(please);
+            return;
+        }
+        else
+        {
+            m_lastPlease = please;
+
+            handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(please);
+        }
     }
 
     /**

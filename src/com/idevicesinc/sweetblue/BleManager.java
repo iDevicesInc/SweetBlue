@@ -1883,6 +1883,15 @@ public class BleManager
 	}
 
 	/**
+	 * Tells you whether a call to {@link #startScan()} (or overloads), will succeed or not. Basically a convenience for checking if both
+	 * {@link #isLocationEnabledForScanning()} and {@link #is(BleManagerState)} with {@link BleManagerState#SCANNING} return <code>true</code>.
+	 */
+	public boolean isScanningReady()
+	{
+		return isLocationEnabledForScanning() && is(ON);
+	}
+
+	/**
 	 * Returns <code>true</code> if location is enabled to a degree that allows scanning on {@link android.os.Build.VERSION_CODES#M} and above.
 	 * If this returns <code>false</code> it means you're on Android M and you either (A) do not have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION}
 	 * (or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} in your AndroidManifest.xml, see {@link #isLocationEnabledForScanning_byManifestPermissions()}), or (B)
