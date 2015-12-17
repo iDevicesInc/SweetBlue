@@ -82,53 +82,62 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * {
  *     {@literal @}Override protected void onCreate(Bundle savedInstanceState)
  *      {
- *          super.onCreate(savedInstanceState);
+ *          // A ScanFilter decides whether a BleDevice instance will be created
+ *          // and passed to the DiscoveryListener implementation below.
+ *         final ScanFilter scanFilter = new ScanFilter()
+ *         {
+ *            {@literal @}Override public Please onEvent(ScanEvent e)
+ *             {
+ *                 return Please.acknowledgeIf(e.name_normalized().contains("my_device"))
+ *                              .thenStopScan();
+ *             }
+ *         };
  *
- *          BleManager.get(this).startScan(new ScanFilter()
- *          {
- *             {@literal @}Override public Please onEvent(ScanEvent e)
- *              {
- *                  return Please.acknowledgeIf(e.name_normalized().contains("my_device"))
- *                               .thenStopScan();
- *              }
- *          },
+ *         // New BleDevice instances are provided through this listener.
+ *         // Nested listeners then listen for connection and read results.
+ *         final DiscoveryListener discoveryListener = new DiscoveryListener()
+ *         {
+ *            {@literal @}Override public void onEvent(DiscoveryEvent e)
+ *             {
+ *                 if( e.was(LifeCycle.DISCOVERED) )
+ *                 {
+ *                     e.device().connect(new StateListener()
+ *                     {
+ *                        {@literal @}Override public void onEvent(StateEvent e)
+ *                         {
+ *                             if( e.didEnter(BleDeviceState.INITIALIZED) )
+ *                             {
+ *                                 e.device().read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
+ *                                 {
+ *                                    {@literal @}Override public void onEvent(ReadWriteEvent e)
+ *                                     {
+ *                                         if( e.wasSuccess() )
+ *                                         {
+ *                                             Log.i("", "Battery level is " + e.data_byte() + "%");
+ *                                         }
+ *                                     }
+ *                                 });
+ *                             }
+ *                         }
+ *                     });
+ *                 }
+ *             }
+ *         };
  *
- *          new BleManager.DiscoveryListener()
- *          {
- *             {@literal @}Override public void onEvent(DiscoveryEvent event)
- *              {
- *                  if( event.was(LifeCycle.DISCOVERED) )
- *                  {
- *                      event.device().connect(new BleDevice.StateListener()
- *                      {
- *                         {@literal @}Override public void onEvent(StateEvent event)
- *                          {
- *                              if( event.didEnter(BleDeviceState.INITIALIZED) )
- *                              {
- *                                  String toastText = event.device().getDebugName() + " just initialized!";
- *                                  Toast.makeText(MyActivity.this, toastText, Toast.LENGTH_LONG).show();
- *                              }
- *                          }
- *                      });
- *                  }
- *              }
- *          });
- *       }
+ *         // Helps you navigate the treacherous waters of Android M Location requirements for scanning.
+ *         BluetoothEnabler.start(this, new DefaultBluetoothEnablerFilter()
+ *         {
+ *            {@literal @}Override public Please onEvent(BluetoothEnablerEvent e)
+ *             {
+ *                 if( e.isDone() )
+ *                 {
+ *                     e.bleManager().startScan(scanFilter, discoveryListener);
+ *                 }
  *
- *     {@literal @}Override protected void onResume()
- *      {
- *          super.onResume();
- *
- *          BleManager.get(this).onResume();
- *      }
- *
- *     {@literal @}Override protected void onPause()
- *      {
- *          super.onPause();
- *
- *          BleManager.get(this).onPause();
- *      }
- * }
+ *                 return super.onEvent(e);
+ *             }
+ *         });
+ *    }
  * </code>
  * </pre>
  */

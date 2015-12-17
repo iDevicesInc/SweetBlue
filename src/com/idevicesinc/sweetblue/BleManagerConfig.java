@@ -35,10 +35,29 @@ import com.idevicesinc.sweetblue.utils.Uuids;
  */
 public class BleManagerConfig extends BleDeviceConfig
 {
+	/**
+	 * Default value for {@link #autoScanPauseInterval}.
+	 */
 	public static final double DEFAULT_AUTO_SCAN_PAUSE_TIME				= 3.0;
+
+	/**
+	 * Default value for {@link #autoScanDelayAfterResume}.
+	 */
 	public static final double DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME 	= 0.5;
+
+	/**
+	 * Default value for {@link #autoUpdateRate}.
+	 */
 	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/50.0;
+
+	/**
+	 * Default value for {@link #uhOhCallbackThrottle}.
+	 */
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
+
+	/**
+	 * Default value for {@link #scanReportDelay}.
+	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 	
 	static final BleManagerConfig NULL = new BleManagerConfig();

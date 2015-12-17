@@ -32,10 +32,20 @@ import com.idevicesinc.sweetblue.utils.*;
  */
 public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 {
+	/**
+	 * Default value for {@link #minScanTimeNeededForUndiscovery}.
+	 */
 	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
-	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
-	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 
+	/**
+	 * Default value for {@link #nForAverageRunningReadTime} and {@link #nForAverageRunningWriteTime}.
+	 */
+	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
+
+	/**
+	 * This is a good default value for {@link #undiscoveryKeepAlive}. By default {@link #undiscoveryKeepAlive} is {@link Interval#DISABLED}.
+	 */
+	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 	
 	/**
 	 * Default value for {@link #rssiAutoPollRate}.
@@ -90,7 +100,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Boolean autoGetServices								= true;
 	
 	/**
-	 * Default is <code>false</code>se - if true and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
+	 * Default is <code>false</code> - if <code>true</code> and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
 	 * or {@link BleDevice#startChangeTrackingPoll(UUID, Interval, BleDevice.ReadWriteListener)()} with identical
 	 * parameters then two identical polls would run which would probably be wasteful and unintentional.
 	 * This option provides a defense against that situation.

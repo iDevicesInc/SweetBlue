@@ -85,7 +85,7 @@ public class BluetoothEnabler
     }
 
 	/**
-	 * Overload of {@link #start(Activity)} that uses an instance {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerFilter}.
+	 * Overload of {@link #start(Activity, BluetoothEnablerFilter)} that uses an instance of {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.DefaultBluetoothEnablerFilter}.
 	 */
 	public static BluetoothEnabler start(final Activity activity)
 	{
@@ -115,9 +115,7 @@ public class BluetoothEnabler
 
     /**
      * Provide an implementation to {@link BluetoothEnabler#BluetoothEnabler(Activity, BluetoothEnablerFilter)} to receive callbacks or simply use the provided class
-     * {@link DefaultBluetoothEnablerFilter} by calling {@link #start(Activity)}. This listener will be the main
-     * way of handling different enabling events and their results.
-     *
+     * {@link DefaultBluetoothEnablerFilter} by calling {@link #start(Activity)}.
      */
     public static interface BluetoothEnablerFilter
     {
@@ -128,6 +126,9 @@ public class BluetoothEnabler
          */
         public static enum Stage implements UsesCustomNull
         {
+			/**
+			 * Fulfills the soft contract of {@link UsesCustomNull}.
+			 */
             NULL,
 
             /**
@@ -183,9 +184,9 @@ public class BluetoothEnabler
          */
         public static enum Status implements UsesCustomNull
         {
-            /**
-             * If the current stage hasn't been assigned any of the above Statuses. If nothing has been done in the stage yet or it hasn't been skipped then it is NULL
-             */
+			/**
+			 * Fulfills the soft contract of {@link UsesCustomNull}.
+			 */
             NULL,
 
             /**
@@ -270,6 +271,11 @@ public class BluetoothEnabler
 			public Stage nextStage() { return m_nextStage; }
 			private final Stage m_nextStage;
 
+			/**
+			 * Returns the {@link BluetoothEnablerFilter.Stage} following the Stage for this event.
+			 */
+			public Stage previousStage() { return m_stage.previous(); }
+
             /**
              * Returns the {@link BluetoothEnablerFilter.Status} of the current Stage.
              */
@@ -280,13 +286,22 @@ public class BluetoothEnabler
              * Returns the {@link Activity} associated with the Event
              */
             public Activity activity() { return m_activity; }
-            public final Activity m_activity;
+			private final Activity m_activity;
 
 			/**
 			 * Returns the {@link BluetoothEnabler} associated with the Event.
 			 */
 			public BluetoothEnabler enabler() { return m_enabler; }
-			public final BluetoothEnabler m_enabler;
+			private final BluetoothEnabler m_enabler;
+
+			/**
+			 * Returns the arbitrary app-specific data passed to BluetoothEnabler.BluetoothEnablerFilter.Please#withAppData(Object), or <code>null</code>.
+			 *
+			 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.Please#withAppData(Object)
+			 */
+			public Object appData() {  return m_appData;  }
+			private final Object m_appData;
+
 
             public BleManager bleManager()  {  return BleManager.get(activity());  }
 
@@ -295,13 +310,14 @@ public class BluetoothEnabler
 				return nextStage() == Stage.NULL;
 			}
 
-            private BluetoothEnablerEvent(Activity activity, Stage stage, Stage nextStage, Status status, BluetoothEnabler enabler)
+            private BluetoothEnablerEvent(Activity activity, Stage stage, Stage nextStage, Status status, BluetoothEnabler enabler, final Object appData)
             {
                 m_stage = stage;
 				m_nextStage = nextStage;
                 m_status = status;
                 m_activity = activity;
 				m_enabler = enabler;
+				m_appData = appData;
             }
 
             /**
@@ -344,6 +360,7 @@ public class BluetoothEnabler
             private String m_toastText = "";
             private int m_requestCode = NULL_REQUEST_CODE;
             private boolean m_implicitActivityResultHandling = false;
+			private Object m_appData = null;
 
             private Please(int pleaseoption)
             {
@@ -410,6 +427,17 @@ public class BluetoothEnabler
                 m_dialogText = message;
                 return this;
             }
+
+			/**
+			 * Add arbitrary app-specific data which will be passed to the next {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler.BluetoothEnablerFilter.BluetoothEnablerEvent}
+			 * through
+			 */
+			public Please withAppData(final Object appData)
+			{
+				m_appData = appData;
+
+				return this;
+			}
 
             @Advanced
             public Please withActivity(Activity activity)
@@ -552,8 +580,7 @@ public class BluetoothEnabler
 	private boolean m_isForegrounded;
 
     /**
-     * A constructor which taken an activity and a custom implementation of {@link BluetoothEnablerFilter}. A BleManager will
-     * be obtained from the passed activity.
+     * A constructor which taken an activity and a custom implementation of {@link BluetoothEnablerFilter}.
      */
     private BluetoothEnabler(Activity activity, BluetoothEnablerFilter enablerFilter)
     {
@@ -570,7 +597,9 @@ public class BluetoothEnabler
 
 	private void dispatchEvent(final BluetoothEnablerFilter.Stage currentStage, final BluetoothEnablerFilter.Stage nextStage, final BluetoothEnablerFilter.Status status_currentStage)
 	{
-		final BluetoothEnablerFilter.BluetoothEnablerEvent e = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_defaultActivity, currentStage, nextStage, status_currentStage, this);
+		final Object appData = m_lastPlease != null ? m_lastPlease.m_appData : null;
+
+		final BluetoothEnablerFilter.BluetoothEnablerEvent e = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_defaultActivity, currentStage, nextStage, status_currentStage, this, appData);
 
 		m_lastPlease = m_enablerFilter.onEvent(e);
         m_lastPlease = m_lastPlease != null ? m_lastPlease : BluetoothEnablerFilter.Please.stop();

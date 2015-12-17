@@ -82,6 +82,8 @@ task gendocs(type: Javadoc) {
     options.windowTitle = "SweetBlue"
     options.memberLevel = JavadocMemberLevel.PROTECTED
     options.author = true
+    //exclude '**/backend/**'
+    //excludes = ["com.idevicesinc.sweetblue.backend"]
     options.linksOffline('http://d.android.com/reference', System.getenv("ANDROID_HOME") + '/docs/reference')
     String v = "${SEMVER}"
     version = v.replace("_", '.')
