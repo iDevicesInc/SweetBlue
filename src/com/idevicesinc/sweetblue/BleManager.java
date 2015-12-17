@@ -20,6 +20,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.Handler;
 import android.provider.Settings;
@@ -814,6 +815,9 @@ public class BleManager
 	private BleManager(Context context, BleManagerConfig config)
 	{
 		m_context = context.getApplicationContext();
+
+		addLifecycleCallbacks();
+
 		m_config = config.clone();
 		initLogger();
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
@@ -3148,6 +3152,49 @@ public class BleManager
 			getLogger().w("Given mac address " + macAddress + " has been auto-normalized to " + macAddress_normalized);
 
 			return macAddress_normalized;
+		}
+	}
+
+	private Application.ActivityLifecycleCallbacks newLifecycleCallbacks()
+	{
+		return new Application.ActivityLifecycleCallbacks()
+		{
+			@Override public void onActivityCreated(Activity activity, Bundle savedInstanceState){}
+			@Override public void onActivityStarted(Activity activity){}
+			@Override public void onActivityStopped(Activity activity){}
+			@Override public void onActivitySaveInstanceState(Activity activity, Bundle outState){}
+			@Override public void onActivityDestroyed(Activity activity){}
+
+			@Override public void onActivityPaused(Activity activity)
+			{
+				if( m_config.autoPauseResumeDetection == true )
+				{
+					BleManager.this.onPause();
+				}
+			}
+
+			@Override public void onActivityResumed(Activity activity)
+			{
+				if( m_config.autoPauseResumeDetection == true )
+				{
+					BleManager.this.onResume();
+				}
+			}
+		};
+	}
+
+	private void addLifecycleCallbacks()
+	{
+		if( getApplicationContext() instanceof Application )
+		{
+			final Application application = (Application) getApplicationContext();
+			final Application.ActivityLifecycleCallbacks callbacks = newLifecycleCallbacks();
+
+			application.registerActivityLifecycleCallbacks(callbacks);
+		}
+		else
+		{
+			//--- DRK > Not sure if this is practically possible but nothing we can do here I suppose.
 		}
 	}
 }

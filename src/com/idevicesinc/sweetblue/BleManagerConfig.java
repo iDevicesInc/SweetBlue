@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import android.app.Application;
+import android.app.Application.ActivityLifecycleCallbacks;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
@@ -168,6 +170,12 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean forcePreLollipopScan						= false;
+
+	/**
+	 * Default is <code>true</code> - Controls whether {@link BleManager#onResume()} and {@link BleManager#onPause()} will get called
+	 * automatically by using {@link android.app.Application.ActivityLifecycleCallbacks}.
+	 */
+	public boolean autoPauseResumeDetection				= true;
 	
 	/**
 	 * Default is {@value #DEFAULT_UH_OH_CALLBACK_THROTTLE} seconds - {@link BleManager.UhOhListener.UhOh} callbacks from {@link BleManager.UhOhListener}
