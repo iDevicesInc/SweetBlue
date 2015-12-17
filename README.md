@@ -143,8 +143,8 @@ Getting Started
         
 4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
     ```java
-    // A ScanFilter decides whether a BleDevice instance will be created
-    // and passed to the DiscoveryListener implementation below.
+    // A ScanFilter decides whether a BleDevice instance will be created from a
+    // BLE advertisement and passed to the DiscoveryListener implementation below.
     final ScanFilter scanFilter = new ScanFilter()
     {
     	@Override public Please onEvent(ScanEvent e)
@@ -185,7 +185,7 @@ Getting Started
     	}
 };
     
-    // Helps you navigate the treacherous waters of Android M Location requirements for scanning.
+    // This is helps you navigate the treacherous waters of Android M Location requirements for scanning.
     BluetoothEnabler.start(this, new DefaultBluetoothEnablerFilter()
     {
     	@Override public Please onEvent(BluetoothEnablerEvent e)
