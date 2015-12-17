@@ -144,7 +144,7 @@ Getting Started
 4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
     ```java
     // A ScanFilter decides whether a BleDevice instance will be created
-    //  and passed to the DiscoveryListener implementation below.
+    // and passed to the DiscoveryListener implementation below.
     final ScanFilter scanFilter = new ScanFilter()
     {
     	@Override public Please onEvent(ScanEvent e)
