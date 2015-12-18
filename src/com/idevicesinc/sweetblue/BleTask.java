@@ -107,6 +107,11 @@ public enum BleTask
 	SET_MTU,
 
 	/**
+	 * Associated with {@link BleDevice#setConnectionPriority(BleConnectionPriority, BleDevice.ReadWriteListener)} or overloads.
+	 */
+	SET_CONNECTION_PRIORITY,
+
+	/**
 	 * Associated with {@link BleDevice#readDescriptor(UUID, UUID, BleDevice.ReadWriteListener)} or overloads.
 	 */
 	READ_DESCRIPTOR,

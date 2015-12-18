@@ -395,9 +395,15 @@ public class BleDevice extends BleNode
 			MTU,
 
 			/**
-			 *
+			 * The {@link ReadWriteEvent} is coming in from using <code>reliableWrite_*()</code> overloads such as {@link BleDevice#reliableWrite_begin(ReadWriteListener)},
+			 * {@link BleDevice#reliableWrite_execute()}, etc.
 			 */
-			RELIABLE_WRITE;
+			RELIABLE_WRITE,
+
+			/**
+			 * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)} or overloads.
+			 */
+			CONNECTION_PRIORITY;
 
 			@Override public boolean isNull()
 			{
@@ -485,8 +491,9 @@ public class BleDevice extends BleNode
 			private final int m_rssi;
 
 			/**
-			 * This value gets set as a result of a {@link BleDevice#setMtu(int, ReadWriteListener)} call. It will
-			 * always be equivalent to {@link BleDevice#getMtu()} but is included here for convenience.
+			 * This value gets set as a result of a {@link BleDevice#setMtu(int, ReadWriteListener)} call. The value returned
+			 * will be the same as that given to {@link BleDevice#setMtu(int, ReadWriteListener)}, which means it will be the
+			 * same as {@link BleDevice#getMtu()} if {@link #status()} equals {@link ReadWriteListener.Status#SUCCESS}.
 			 *
 			 * @see BleDevice#getMtu()
 			 */
@@ -546,6 +553,16 @@ public class BleDevice extends BleNode
 			public boolean solicited() {  return m_solicited;  }
 			private final boolean m_solicited;
 
+			/**
+			 * This value gets set as a result of a {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)} call. The value returned
+			 * will be the same as that given to {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)}, which means it will be the
+			 * same as {@link BleDevice#getConnectionPriority()} if {@link #status()} equals {@link ReadWriteListener.Status#SUCCESS}.
+			 *
+			 * @see BleDevice#getConnectionPriority()
+			 */
+			public BleConnectionPriority connectionPriority() {  return m_connectionPriority;  }
+			private final BleConnectionPriority m_connectionPriority;
+
 			ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
 			{
 				this.m_device = device;
@@ -562,6 +579,7 @@ public class BleDevice extends BleNode
 				this.m_rssi = device.getRssi();
 				this.m_mtu = device.getMtu();
 				this.m_solicited = solicited;
+				this.m_connectionPriority = device.getConnectionPriority();
 			}
 
 			ReadWriteEvent(BleDevice device, Type type, int rssi, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
@@ -580,6 +598,7 @@ public class BleDevice extends BleNode
 				this.m_rssi = status == Status.SUCCESS ? rssi : device.getRssi();
 				this.m_mtu = device.getMtu();
 				this.m_solicited = solicited;
+				this.m_connectionPriority = device.getConnectionPriority();
 			}
 
 			ReadWriteEvent(BleDevice device, int mtu, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
@@ -598,6 +617,26 @@ public class BleDevice extends BleNode
 				this.m_rssi = device.getRssi();
 				this.m_mtu = status == Status.SUCCESS ? mtu : device.getMtu();
 				this.m_solicited = solicited;
+				this.m_connectionPriority = device.getConnectionPriority();
+			}
+
+			ReadWriteEvent(BleDevice device, BleConnectionPriority connectionPriority, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
+			{
+				this.m_device = device;
+				this.m_charUuid = NON_APPLICABLE_UUID;
+				this.m_descUuid = NON_APPLICABLE_UUID;
+				this.m_serviceUuid = NON_APPLICABLE_UUID;
+				this.m_type = Type.WRITE;
+				this.m_target = Target.CONNECTION_PRIORITY;
+				this.m_status = status;
+				this.m_gattStatus = gattStatus;
+				this.m_totalTime = Interval.secs(totalTime);
+				this.m_transitTime = Interval.secs(transitTime);
+				this.m_data = EMPTY_BYTE_ARRAY;
+				this.m_rssi = device.getRssi();
+				this.m_mtu = device.getMtu();
+				this.m_solicited = solicited;
+				this.m_connectionPriority = connectionPriority;
 			}
 
 			static ReadWriteEvent NULL(BleDevice device)
@@ -743,6 +782,18 @@ public class BleDevice extends BleNode
 							"target",			target(),
 							"mtu",				mtu(),
 							"gattStatus",		device().getManager().getLogger().gattStatus(gattStatus())
+						);
+					}
+					else if( target() == Target.CONNECTION_PRIORITY )
+					{
+						return Utils_String.toString
+						(
+							this.getClass(),
+							"status",				status(),
+							"type",					type(),
+							"target",				target(),
+							"connectionPriority",	connectionPriority(),
+							"gattStatus",			device().getManager().getLogger().gattStatus(gattStatus())
 						);
 					}
 					else
@@ -1559,6 +1610,7 @@ public class BleDevice extends BleNode
 	private final BleDeviceOrigin m_origin;
 	private BleDeviceOrigin m_origin_latest;
 
+	private BleConnectionPriority m_connectionPriority = BleConnectionPriority.MEDIUM;
 	private int m_mtu = 0;
 	private int m_rssi = 0;
 	private int m_advertisingFlags = 0x0;
@@ -3912,7 +3964,73 @@ public class BleDevice extends BleNode
 	}
 
 	/**
-	 * Returns the "maximum transmission unit" value set by {@link #setMtu(int ReadWriteListener)}, or {@link BleDeviceConfig#DEFAULT_MTU_SIZE} if
+	 * Same as {@link #setConnectionPriority(BleConnectionPriority, ReadWriteListener)} but use this method when you don't much care when/if the connection priority is updated.
+	 *
+	 * @return (same as {@link #setConnectionPriority(BleConnectionPriority, ReadWriteListener)}).
+	 */
+	@Advanced
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority(final BleConnectionPriority connectionPriority)
+	{
+		return setConnectionPriority(connectionPriority, null);
+	}
+
+	/**
+	 * Wrapper for {@link BluetoothGatt#requestConnectionPriority(int)} which attempts to change the connection priority for a given connection.
+	 * This will eventually update the value returned by {@link #getConnectionPriority()} but it is not
+	 * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
+	 * this call to succeed.
+	 *
+	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+	 */
+	@Advanced
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority(final BleConnectionPriority connectionPriority, final ReadWriteListener listener)
+	{
+		enforceMainThread();
+
+		return setConnectionPriority_private(connectionPriority, listener, getOverrideReadWritePriority());
+	}
+
+	private @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority_private(final BleConnectionPriority connectionPriority, final ReadWriteListener listener, final PE_TaskPriority taskPriority)
+	{
+		if( false == Utils.isLollipop() )
+		{
+			final ReadWriteEvent e = new ReadWriteEvent(this, connectionPriority, ReadWriteListener.Status.ANDROID_VERSION_NOT_SUPPORTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, /*solicited=*/true);
+
+			invokeReadWriteCallback(listener, e);
+
+			return e;
+		}
+		else
+		{
+			final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
+
+			if( earlyOutResult != null )
+			{
+				invokeReadWriteCallback(listener, earlyOutResult);
+
+				return earlyOutResult;
+			}
+			else
+			{
+				getTaskQueue().add(new P_Task_RequestConnectionPriority(this, listener, m_txnMngr.getCurrent(), taskPriority, connectionPriority));
+
+				return NULL_READWRITE_EVENT();
+			}
+		}
+	}
+
+	/**
+	 * Returns the connection priority value set by {@link #setConnectionPriority(BleConnectionPriority, ReadWriteListener)}, or {@link BleDeviceConfig#DEFAULT_MTU_SIZE} if
+	 * it was never set explicitly.
+	 */
+	@Advanced
+	public BleConnectionPriority getConnectionPriority()
+	{
+		return m_connectionPriority;
+	}
+
+	/**
+	 * Returns the "maximum transmission unit" value set by {@link #setMtu(int, ReadWriteListener)}, or {@link BleDeviceConfig#DEFAULT_MTU_SIZE} if
 	 * it was never set explicitly.
 	 */
 	@Advanced
@@ -5063,6 +5181,11 @@ public class BleDevice extends BleNode
 		m_mtu = mtu;
 	}
 
+	void updateConnectionPriority(final BleConnectionPriority connectionPriority)
+	{
+		m_connectionPriority = connectionPriority;
+	}
+
 	private void clearMtu()
 	{
 		updateMtu(0);
@@ -5372,6 +5495,14 @@ public class BleDevice extends BleNode
 			if( isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM) )
 			{
 				setMtu_private(m_mtu, null, PE_TaskPriority.FOR_PRIORITY_READS_WRITES);
+			}
+		}
+
+		if( m_connectionPriority != BleConnectionPriority.MEDIUM )
+		{
+			if( isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM) )
+			{
+				setConnectionPriority_private(m_connectionPriority, null, PE_TaskPriority.FOR_PRIORITY_READS_WRITES);
 			}
 		}
 

@@ -57,7 +57,7 @@ class P_DeviceServiceManager extends PA_ServiceManager
 			}
 		}
 		
-		if( target == Target.RSSI || target == Target.MTU )  return null;
+		if( target == Target.RSSI || target == Target.MTU || target == Target.CONNECTION_PRIORITY )  return null;
 		
 		final BluetoothGattCharacteristic characteristic = m_device.getNativeCharacteristic(serviceUuid, characteristicUuid);
 		final BluetoothGattDescriptor descriptor = m_device.getNativeDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
