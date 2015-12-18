@@ -3980,6 +3980,9 @@ public class BleDevice extends BleNode
 	 * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
 	 * this call to succeed.
 	 *
+	 * @see #setConnectionPriority(BleConnectionPriority, ReadWriteListener)
+	 * @see #getConnectionPriority()
+	 *
 	 * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
 	 */
 	@Advanced

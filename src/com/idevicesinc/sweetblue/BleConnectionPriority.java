@@ -5,7 +5,8 @@ import android.bluetooth.le.ScanSettings;
 
 /**
  * This enum enforces compile-time constraints over various public static int CONNECTION_PRIORITY_* members
- * of {@link android.bluetooth.BluetoothGatt}.
+ * of {@link android.bluetooth.BluetoothGatt} and is passed to {@link BleDevice#setConnectionPriority(BleConnectionPriority, BleDevice.ReadWriteListener)}
+ * and returned from {@link BleDevice#getConnectionPriority()}.
  */
 public enum BleConnectionPriority
 {
