@@ -198,13 +198,16 @@ class P_TaskQueue
 		else if( tryInsertingIntoQueue(newTask) ) {}
 		else { addToBack(newTask); }
 
-		while( getCurrent() == null && m_queue.size() > 0 )
-		{
-			if( false == dequeue() )
-			{
-				break;
-			}
-		}
+		//--- DRK > Commenting out because of possible race condition when immediate native stack errors recurse
+		//---		back to front-end before front-end's state reflects the fact that the task (added to empty queue) is going on.
+		//---		See start of service discovery for an example.
+//		while( getCurrent() == null && m_queue.size() > 0 )
+//		{
+//			if( false == dequeue() )
+//			{
+//				break;
+//			}
+//		}
 	}
 	
 	double getTime()
