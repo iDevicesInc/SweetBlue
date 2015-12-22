@@ -4,4 +4,4 @@ android:
   components:
     - android-23
     - build-tools-23.0.0
-script: sh build_release_bundle.sh
+script: ./build_release_bundle.sh
