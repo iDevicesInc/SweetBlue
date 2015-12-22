@@ -3,4 +3,4 @@ before_script: cd scripts
 android:
   components:
     - android-23
-script: gradlew check
+script: ./gradlew check
