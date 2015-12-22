@@ -1,2 +1,2 @@
 language: java
-before_scripts: cd scripts
+before_script: cd scripts
