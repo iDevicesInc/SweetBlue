@@ -168,9 +168,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				{
 					//--- DRK > Classic discovery still seems to work as long as we have permissions.
 					//---		In other words if location services are off we can still do classic scanning.
-					tryClassicDiscovery(getIntent(), /*suppressUhOh=*/true);
-
-					m_mode = Mode_CLASSIC;
+					execute_classic();
 				}
 				else
 				{
@@ -190,22 +188,70 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		final boolean forcePreLollipopScan = getManager().m_config.forcePreLollipopScan;
 
-		if( true == forcePreLollipopScan || false == Utils.isLollipop() )
+		//--- DRK > This config option is deprecated, but it still needs to take precedence for backwards compatibility until v3.
+		if( forcePreLollipopScan )
 		{
-			m_mode = startNativeScan_preLollipop(getIntent());
-
-			if( m_mode == Mode_NULL )
-			{
-				fail();
-			}
+			execute_preLollipop();
 		}
 		else
 		{
-			m_mode = Mode_BLE;
-			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			final BleScanMode scanMode = getManager().m_config.scanMode != null ? getManager().m_config.scanMode : BleScanMode.AUTO;
 
-			startNativeScan_postLollipop();
+			if( scanMode == BleScanMode.AUTO )
+			{
+				final boolean isPhonePreLollipop =  false == Utils.isLollipop();
+
+				if( isPhonePreLollipop )
+				{
+					execute_preLollipop();
+				}
+				else
+				{
+					execute_postLollipop();
+				}
+			}
+			else if( scanMode == BleScanMode.CLASSIC )
+			{
+				execute_classic();
+			}
+			else if( scanMode == BleScanMode.PRE_LOLLIPOP )
+			{
+				execute_preLollipop();
+			}
+			else if( scanMode.isLollipopScanMode() )
+			{
+				execute_postLollipop();
+			}
+			else
+			{
+				getManager().ASSERT(false, "Unhandled BleScanMode: " + scanMode);
+			}
 		}
+	}
+
+	private void execute_classic()
+	{
+		tryClassicDiscovery(getIntent(), /*suppressUhOh=*/true);
+
+		m_mode = Mode_CLASSIC;
+	}
+
+	private void execute_preLollipop()
+	{
+		m_mode = startNativeScan_preLollipop(getIntent());
+
+		if( m_mode == Mode_NULL )
+		{
+			fail();
+		}
+	}
+
+	private void execute_postLollipop()
+	{
+		m_mode = Mode_BLE;
+		getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		startNativeScan_postLollipop();
 	}
 
 	private void startNativeScan_postLollipop()

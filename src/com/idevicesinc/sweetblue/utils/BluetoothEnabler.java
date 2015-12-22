@@ -20,6 +20,8 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
  * With {@link android.os.Build.VERSION_CODES#M} you need to have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION}
  * in your AndroidManifest.xml, and also enable them at runtime, AND also make sure location services are on.
  * <br><br>
+ * See more information at <a href="https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues">https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues</a> https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues</a>
+ * <br><br>
  * This class is simply a convenience that wraps various helper methods of {@link BleManager} (see the "See Also" section, which has enough links that it might give you
  * an idea of why {@link BluetoothEnabler} was written). As such you don't need to use it, but in combination with {@link BluetoothEnabler.DefaultBluetoothEnablerFilter}
  * it comes in handy as a one-line addition to most simple apps.
@@ -32,6 +34,7 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
  * @see BleManager#turnOnLocationWithIntent_forOsServices(Activity, int)
  * @see BleManager#turnOnWithIntent(Activity, int)
  * @see BleManager#willLocationPermissionSystemDialogBeShown(Activity)
+ * @see <a href="https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues">https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues</a> https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues</a>
  */
 public class BluetoothEnabler
 {
