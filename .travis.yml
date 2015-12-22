@@ -1,2 +1,5 @@
-language: java
+language: android
 before_script: cd scripts
+android:
+  components:
+    - android-23
