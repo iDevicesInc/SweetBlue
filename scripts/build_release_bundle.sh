@@ -1,12 +1,12 @@
 #!/bin/sh
-#source ./config_paths.sh
-ANDROID_API_LEVEL=23
-SWEETBLUE_SRC_PATH=../src
-STAGE=script_output
-JAR_NAME=sweetblue_$SEMVER
-JAVADOC_JAR_NAME="sweetblue_${SEMVER}-javadoc"
-SOURCES_JAR_NAME="sweetblue_${SEMVER}-sources"
-BUNDLE_FOLDER=$STAGE/$JAR_NAME
+source ./config_paths.sh
+#ANDROID_API_LEVEL=23
+#SWEETBLUE_SRC_PATH=../src
+#STAGE=script_output
+#JAR_NAME=sweetblue_$SEMVER
+#JAVADOC_JAR_NAME="sweetblue_${SEMVER}-javadoc"
+#SOURCES_JAR_NAME="sweetblue_${SEMVER}-sources"
+#BUNDLE_FOLDER=$STAGE/$JAR_NAME
 
 ARG=$1
 
