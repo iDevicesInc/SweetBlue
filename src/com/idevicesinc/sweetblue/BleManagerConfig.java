@@ -167,7 +167,10 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Default is <code>false</code> - Only applicable for Lollipop and up (i.e. > 5.0), this will force the use of the deprecated "pre-lollipop"
 	 * scanning API, that is {@link BluetoothAdapter#startLeScan(BluetoothAdapter.LeScanCallback)}. There is no known reason you would
 	 * want this, but including it just in case.
+	 *
+	 * @deprecated Use {@link #scanMode} with {@link BleScanMode#PRE_LOLLIPOP} instead.
 	 */
+	@Deprecated
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean forcePreLollipopScan						= false;
 
