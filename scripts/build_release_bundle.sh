@@ -1,5 +1,5 @@
 #!/bin/sh
-source config_paths.sh
+source ./config_paths.sh
 
 ARG=$1
 
