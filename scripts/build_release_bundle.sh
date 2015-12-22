@@ -10,7 +10,7 @@ source ./config_paths.sh
 
 ARG=$1
 
-./gradlew -b lint.gradle :lint
+#./gradlew -b lint.gradle :lint
 
 if [ "$?" != 0 ];
 then
