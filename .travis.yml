@@ -4,6 +4,7 @@ android:
   components:
   - android-23
   - build-tools-23.0.0
+  - documentation
   - extra-android-support
   - extra-android-m2repository
 script: ./build_release_bundle.sh
