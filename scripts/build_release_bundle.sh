@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 source ./config_paths.sh
 #ANDROID_API_LEVEL=23
 #SWEETBLUE_SRC_PATH=../src
