@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
+
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.utils.Utils;
