@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue.utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -79,5 +80,32 @@ public class Utils_Reflection extends Utils
 //				e.printStackTrace();
 			}
 		}
+	}
+
+	public static boolean callBooleanReturnMethod(final Object instance, final String methodName)
+	{
+		return callBooleanReturnMethod(instance, methodName, null);
+	}
+
+	public static boolean callBooleanReturnMethod(final Object instance, final String methodName, final Class[] paramTypes, final Object ... params)
+	{
+		try
+		{
+			final Method method = instance.getClass().getMethod(methodName, paramTypes);
+			final Boolean result = (Boolean) method.invoke(instance, params);
+
+			if( result == null || !result )
+			{
+				return false;
+			}
+		}
+		catch (Exception e)
+		{
+			Log.e("SweetBlue", "Problem calling method: " + methodName + " - " + e);
+
+			return false;
+		}
+
+		return true;
 	}
 }

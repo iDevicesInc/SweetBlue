@@ -5540,9 +5540,10 @@ public class BleDevice extends BleNode
 			gattStatus,
 			DISCOVERED, true,
 			DISCONNECTED, true,
-			BONDING, m_nativeWrapper.isNativelyBonding(),
-			BONDED, m_nativeWrapper.isNativelyBonded(),
-			UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+			// Commenting these out because of un-thought-of case where you unbond then immediately disconnect...native bond state is still BONDED but abstracted state is UNBONDED so a state transition occurs where it shouldn't.
+//			BONDING, m_nativeWrapper.isNativelyBonding(),
+//			BONDED, m_nativeWrapper.isNativelyBonded(),
+//			UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
 			RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
 			ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY,
 

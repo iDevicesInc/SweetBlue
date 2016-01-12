@@ -4,6 +4,8 @@ import java.lang.reflect.Method;
 
 import android.annotation.SuppressLint;
 
+import com.idevicesinc.sweetblue.utils.Utils_Reflection;
+
 class P_Task_Unbond extends PA_Task_RequiresBleOn
 {
 	private static final String METHOD_NAME__REMOVE_BOND			= "removeBond";
@@ -69,34 +71,12 @@ class P_Task_Unbond extends PA_Task_RequiresBleOn
 	
 	private boolean removeBond()
 	{
-		return callMethod(METHOD_NAME__REMOVE_BOND);
+		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__REMOVE_BOND);
 	}
 	
 	private boolean cancelBondProcess()
 	{
-		return callMethod(METHOD_NAME__CANCEL_BOND_PROCESS);
-	}
-	
-	private boolean callMethod(final String name)
-	{
-		try
-		{
-	        Method method = getDevice().getNative().getClass().getMethod(name, (Class[]) null);
-	        Boolean result = (Boolean) method.invoke(getDevice().getNative(), (Object[]) null);
-	        
-	        if( result == null || !result )
-	        {
-	        	return false;
-	        }
-	    }
-		catch (Exception e)
-		{
-			getManager().ASSERT(false, "Problem calling method: " + name + " - " + e);
-			
-			return false;
-	    }
-		
-		return true;
+		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CANCEL_BOND_PROCESS);
 	}
 	
 	@Override public boolean isExplicit()
