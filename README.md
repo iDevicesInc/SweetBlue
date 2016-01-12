@@ -185,7 +185,9 @@ Getting Started
     	}
 };
     
-    // This is helps you navigate the treacherous waters of Android M Location requirements for scanning.
+    // This class helps you navigate the treacherous waters of Android M Location requirements for scanning.
+    // First it enables bluetooth itself, then location permissions, then location services. The latter two
+    // are only needed in Android M.
     BluetoothEnabler.start(this, new DefaultBluetoothEnablerFilter()
     {
     	@Override public Please onEvent(BluetoothEnablerEvent e)
