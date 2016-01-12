@@ -156,6 +156,8 @@ Getting Started
     
     // New BleDevice instances are provided through this listener.
     // Nested listeners then listen for connection and read results.
+    // Obviously you will want to structure your actual code a little better.
+    // The deep nesting simply demonstrates the async-callback-based nature of the API.
     final DiscoveryListener discoveryListener = new DiscoveryListener()
     {
     	@Override public void onEvent(DiscoveryEvent e)
