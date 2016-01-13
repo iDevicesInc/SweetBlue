@@ -213,7 +213,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * There is however also a overload method that's made invisible using the "hide" annotation that takes an int
 	 * representing the desired transport mode. The default for {@link BluetoothDevice#createBond()} is {@link BluetoothDevice#TRANSPORT_AUTO}.
 	 * You can look at the source to see that this is the case. The thing is, you *never* want the Android stack to automatically decide something.
-	 * So if you set <code>useLeTransportForBonding</code> then SweetBlue will use the "private" overloaded method with
+	 * So if you set <code>useLeTransportForBonding</code> to true then SweetBlue will use the "private" overloaded method with
 	 * {@link BluetoothDevice#TRANSPORT_LE}. This workaround anecdotally fixed bonding issues with LG G4 and Samsung S6 phones.
 	 * Anecdotally because the public {@link BluetoothDevice#createBond()} was not working, tried the private one, it worked,
 	 * but then the public {@link BluetoothDevice#createBond()} also worked flawlessly after that.
