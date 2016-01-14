@@ -1,59 +1,49 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.utils.OtaWrite;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 
 
-public class BleWriteTransaction extends BleTransaction.Ota
+public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice.ReadWriteListener
 {
 
     /**
-     * Class used to dictate what should happen if a write fail happens. This class is only used
-     * if a {@link FailListener} has been set. Otherwise, {@link #fail()} is called on a write fail.
-     * Use static methods to specify what to do on fail; {@link #next()}, {@link #retry()}, or
-     * {@link #stop()}.
+     * Data class used to store writes in a queue for this {@link BleWriteTransaction}.
      */
-    public static class Please
+    public static class OtaWrite
     {
 
-        private enum Action
-        {
-            NEXT,
-            RETRY,
-            STOP
-        }
+        private final UUID charUuid;
+        private final UUID serviceUuid;
+        private final byte[] data;
 
-        private Action action;
 
-        private Please(Action action)
+        /**
+         * Use this constructor if you need to specify the service {@link UUID}, as well
+         * as the characteristic {@link UUID}.
+         */
+        public OtaWrite(UUID serviceUuid, UUID charUuid, byte[] data)
         {
-            this.action = action;
+            this.serviceUuid = serviceUuid;
+            this.charUuid = charUuid;
+            this.data = data;
         }
 
         /**
-         * Tells the transaction to proceed to the next write in the queue, and ignore the one that failed.
+         * Constructor for creating an OtaWrite to be stored in the queue for a {@link BleWriteTransaction}.
          */
-        public static Please next()
+        public OtaWrite(UUID charUuid, byte[] data)
         {
-            return new Please(Action.NEXT);
+            this.serviceUuid = null;
+            this.charUuid = charUuid;
+            this.data = data;
         }
 
-        /**
-         * Tells the transaction to retry the failed write again.
-         */
-        public static Please retry()
+        /*package*/ boolean hasServiceUuid()
         {
-            return new Please(Action.RETRY);
-        }
-
-        /**
-         * Stops the transaction, and clears all remaining writes from the queue.
-         */
-        public static Please stop()
-        {
-            return new Please(Action.STOP);
+            return serviceUuid != null;
         }
 
     }
@@ -62,81 +52,140 @@ public class BleWriteTransaction extends BleTransaction.Ota
      * Interface for handling failures when writing. This also specifies how the transaction should
      * proceed on error.
      *
-     * @see com.idevicesinc.sweetblue.BleWriteTransaction.Please
+     * @see com.idevicesinc.sweetblue.BleWriteTransaction.FailListener.Please
      */
     public interface FailListener
     {
-        Please onWriteFail(BleDevice.ReadWriteListener.ReadWriteEvent e);
+
+        /**
+         * Class used to dictate what should happen if a write fail happens.
+         * Use static methods to specify what to do on a write fail; {@link #next()}, {@link #retry()}, or
+         * {@link #stop()}.
+         */
+        public static class Please
+        {
+
+            private enum Action
+            {
+                NEXT,
+                RETRY,
+                STOP
+            }
+
+            private Action action;
+
+            private Please(Action action)
+            {
+                this.action = action;
+            }
+
+            /**
+             * Tells the transaction to proceed to the next write in the queue, and ignore the one that failed.
+             */
+            public static Please next()
+            {
+                return new Please(Action.NEXT);
+            }
+
+            /**
+             * Tells the transaction to retry the failed write again.
+             */
+            public static Please retry()
+            {
+                return new Please(Action.RETRY);
+            }
+
+            /**
+             * Stops the transaction, and clears all remaining writes from the queue.
+             */
+            public static Please stop()
+            {
+                return new Please(Action.STOP);
+            }
+
+        }
+
+        public Please onWriteFail(BleDevice.ReadWriteListener.ReadWriteEvent e);
+    }
+
+    /**
+     * Interface for listening between each write made in the queue. This allows you to perform
+     * operations between each write. You then supply {@link Please#proceed()} to continue the transaction,
+     * or {@link Please#cancel()} to cancel the transaction.
+     */
+    public interface WriteQueueListener
+    {
+
+        /**
+         * Class used to tell this {@link BleWriteTransaction} to either proceed to the next write,
+         * or cancel this transaction.
+         */
+        public static class Please
+        {
+
+            private final boolean proceed;
+
+            private Please(boolean proceed)
+            {
+                this.proceed = proceed;
+            }
+
+            /**
+             * Proceed to the next write in the queue.
+             */
+            public static Please proceed()
+            {
+                return new Please(true);
+            }
+
+            /**
+             * Cancels this {@link BleWriteTransaction}.
+             */
+            public static Please cancel()
+            {
+                return new Please(false);
+            }
+
+        }
+
+        public Please onWriteComplete(BleDevice.ReadWriteListener.ReadWriteEvent e);
+
     }
 
 
     private final ArrayList<OtaWrite> writeQueue = new ArrayList<>();
-    private FailListener mfailListener;
+    private final FailListener mfailListener;
+    private final WriteQueueListener mWriteListener;
 
-    private BleDevice.ReadWriteListener mListener = new BleDevice.ReadWriteListener()
-    {
-        @Override public void onEvent(ReadWriteEvent e)
-        {
-            if (e.wasSuccess())
-            {
-                writeQueue.remove(0);
-                if (hasMore())
-                {
-                    performNextWrite();
-                }
-                else
-                {
-                    succeed();
-                }
-            }
-            else
-            {
-                if (mfailListener != null)
-                {
-                    Please please = mfailListener.onWriteFail(e);
-                    switch (please.action)
-                    {
-                        case NEXT:
-                            writeQueue.remove(0);
-                            if (hasMore())
-                            {
-                                performNextWrite();
-                            }
-                            else
-                            {
-                                succeed();
-                            }
-                            break;
-                        case RETRY:
-                            performNextWrite();
-                            break;
-                        case STOP:
-                            writeQueue.clear();
-                            succeed();
-                    }
-                }
-                else
-                {
-                    fail();
-                }
-            }
-        }
-    };
 
     /**
      * Use this constructor if you don't plan on setting a {@link FailListener} to listen for
      * write fails in the queue. The transaction will abort if any writes fail.
      */
-    public BleWriteTransaction() {
-        this(null);
+    public BleWriteTransaction()
+    {
+        this(null, null);
     }
 
     /**
+     * Overload of {@link #BleWriteTransaction(WriteQueueListener, FailListener)}.
      * Instantiate a new BleWriteTransaction with a {@link FailListener} to tell the transaction how
      * to proceed on write fails.
      */
-    public BleWriteTransaction(FailListener failListener) {
+    public BleWriteTransaction(FailListener failListener)
+    {
+        this(null, failListener);
+    }
+
+    /**
+     * Instantiate a new {@link BleWriteTransaction} with a {@link com.idevicesinc.sweetblue.BleWriteTransaction.WriteQueueListener}, which
+     * allows you to perform operations between each write in the queue, and a {@link com.idevicesinc.sweetblue.BleWriteTransaction.FailListener} to
+     * tell the Transaction what to do on a write failure.
+     */
+    public BleWriteTransaction(WriteQueueListener writeListener, FailListener failListener)
+    {
         super();
+        mWriteListener = writeListener;
         mfailListener = failListener;
     }
 
@@ -158,19 +207,21 @@ public class BleWriteTransaction extends BleTransaction.Ota
     }
 
     /**
-     * Set the {@link FailListener} for this transaction.
-     */
-    public void setWriteFailListener(FailListener failListener) {
-        mfailListener = failListener;
-    }
-
-    /**
      * Add an {@link OtaWrite} to the write queue. You can chain this method, to make it easier to add multiple
      * writes.
      */
     public BleWriteTransaction add(OtaWrite write)
     {
         writeQueue.add(write);
+        return this;
+    }
+
+    /**
+     * Add a Collection of writes to the write queue.
+     */
+    public BleWriteTransaction addAll(Collection<OtaWrite> writes)
+    {
+        writeQueue.addAll(writes);
         return this;
     }
 
@@ -195,9 +246,10 @@ public class BleWriteTransaction extends BleTransaction.Ota
     }
 
     /**
-     * Returns the size of the write queue.
+     * Returns how many writes are still in the queue.
      */
-    public int size() {
+    public int size()
+    {
         return writeQueue.size();
     }
 
@@ -211,11 +263,72 @@ public class BleWriteTransaction extends BleTransaction.Ota
         final OtaWrite mCurWrite = writeQueue.get(0);
         if (mCurWrite.hasServiceUuid())
         {
-            getDevice().write(mCurWrite.getServiceUuid(), mCurWrite.getCharUuid(), mCurWrite.getData(), mListener);
+            getDevice().write(mCurWrite.serviceUuid, mCurWrite.charUuid, mCurWrite.data, this);
         }
         else
         {
-            getDevice().write(mCurWrite.getCharUuid(), mCurWrite.getData(), mListener);
+            getDevice().write(mCurWrite.charUuid, mCurWrite.data, this);
+        }
+    }
+
+    @Override public void onEvent(ReadWriteEvent e)
+    {
+        if (e.wasSuccess())
+        {
+            writeQueue.remove(0);
+            if (hasMore())
+            {
+                if (mWriteListener != null)
+                {
+                    if (mWriteListener.onWriteComplete(e).proceed)
+                    {
+                        performNextWrite();
+                    }
+                    else
+                    {
+                        fail();
+                    }
+                }
+                else
+                {
+                    performNextWrite();
+                }
+            }
+            else
+            {
+                succeed();
+            }
+        }
+        else
+        {
+            if (mfailListener != null)
+            {
+                FailListener.Please please = mfailListener.onWriteFail(e);
+                switch (please.action)
+                {
+                    case NEXT:
+                        writeQueue.remove(0);
+                        if (hasMore())
+                        {
+                            performNextWrite();
+                        }
+                        else
+                        {
+                            succeed();
+                        }
+                        break;
+                    case RETRY:
+                        performNextWrite();
+                        break;
+                    case STOP:
+                        writeQueue.clear();
+                        succeed();
+                }
+            }
+            else
+            {
+                fail();
+            }
         }
     }
 
