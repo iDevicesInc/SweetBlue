@@ -3,7 +3,6 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
-import com.idevicesinc.sweetblue.utils.State;
 
 /**
  * This enum enforces compile-time constraints over various public static int PROPERTY_ members

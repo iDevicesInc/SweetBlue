@@ -1,9 +1,16 @@
 package com.idevicesinc.sweetblue;
 
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothDevice;
+
+import com.idevicesinc.sweetblue.utils.Utils_Reflection;
+
+import java.lang.reflect.Method;
 
 class P_Task_Bond extends PA_Task_RequiresBleOn
 {
+	private static final String METHOD_NAME__CREATE_BOND			= "createBond";
+
 	//--- DRK > Originally used because for tab 4 (and any other bonding failure during connection) we'd force disconnect from the connection failing
 	//---		and then put another bond task on the queue, but because we hadn't actually yet killed the transaction lock, the bond task would
 	//---		cut the unbond task in the queue. Not adding bonding task in the disconnect flow now though so this is probably useless for future use.
@@ -61,10 +68,10 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 			}
 			else if( false == m_explicit )
 			{
-				// DRK > Fail cause we're not natively bonding and this task was implicit, meaning we should be.
+				// DRK > Fail cause we're not natively bonding and this task was implicit, meaning we should be implicitly bonding.
 				fail();
 			}
-			else if( false == getDevice().getNative().createBond() )
+			else if( false == createBond() )
 			{
 				failImmediately();
 
@@ -72,7 +79,42 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
 			}
 		}
 	}
-	
+
+	private boolean createBond()
+	{
+		final boolean useLeTransportForBonding = BleDeviceConfig.bool(getDevice().conf_device().useLeTransportForBonding, getDevice().conf_mngr().useLeTransportForBonding);
+
+		if( useLeTransportForBonding )
+		{
+			final boolean theSneakyWayWorked = createBond_theSneakyWay();
+
+			if( theSneakyWayWorked == false )
+			{
+				return createBond_theNormalWay();
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else
+		{
+			return createBond_theNormalWay();
+		}
+	}
+
+	private boolean createBond_theNormalWay()
+	{
+		return getDevice().getNative().createBond();
+	}
+
+	private boolean createBond_theSneakyWay()
+	{
+		final Class[] paramTypes = new Class[]{int.class};
+
+		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CREATE_BOND, paramTypes, BluetoothDevice.TRANSPORT_LE);
+	}
+
 	@Override public boolean isMoreImportantThan(PA_Task task)
 	{
 		if( task instanceof P_Task_TxnLock )

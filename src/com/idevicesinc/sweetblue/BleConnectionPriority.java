@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.le.ScanSettings;
 
 /**
  * This enum enforces compile-time constraints over various public static int CONNECTION_PRIORITY_* members

@@ -6,14 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import android.app.Application;
-import android.app.Application.ActivityLifecycleCallbacks;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.SparseArray;
-
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
@@ -198,6 +194,12 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Interval autoScanDelayAfterResume				= Interval.secs(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
+
+	/**
+	 * Default is {@link Interval#DISABLED}. If set, this will automatically start scanning after the specified {@link Interval}.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public Interval autoScanDelayAfterBleTurnsOn			= Interval.DISABLED;
 
 	/**
 	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices.
