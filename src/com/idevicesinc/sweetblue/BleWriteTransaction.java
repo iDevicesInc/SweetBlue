@@ -10,45 +10,6 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
 {
 
     /**
-     * Data class used to store writes in a queue for this {@link BleWriteTransaction}.
-     */
-    public static class OtaWrite
-    {
-
-        private final UUID charUuid;
-        private final UUID serviceUuid;
-        private final byte[] data;
-
-
-        /**
-         * Use this constructor if you need to specify the service {@link UUID}, as well
-         * as the characteristic {@link UUID}.
-         */
-        public OtaWrite(UUID serviceUuid, UUID charUuid, byte[] data)
-        {
-            this.serviceUuid = serviceUuid;
-            this.charUuid = charUuid;
-            this.data = data;
-        }
-
-        /**
-         * Constructor for creating an OtaWrite to be stored in the queue for a {@link BleWriteTransaction}.
-         */
-        public OtaWrite(UUID charUuid, byte[] data)
-        {
-            this.serviceUuid = null;
-            this.charUuid = charUuid;
-            this.data = data;
-        }
-
-        /*package*/ boolean hasServiceUuid()
-        {
-            return serviceUuid != null;
-        }
-
-    }
-
-    /**
      * Interface for handling failures when writing. This also specifies how the transaction should
      * proceed on error.
      *
@@ -153,7 +114,7 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
     }
 
 
-    private final ArrayList<OtaWrite> writeQueue = new ArrayList<>();
+    private final ArrayList<BleDevice.WriteBuilder> writeQueue = new ArrayList<>();
     private final FailListener mfailListener;
     private final WriteQueueListener mWriteListener;
 
@@ -207,10 +168,10 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
     }
 
     /**
-     * Add an {@link OtaWrite} to the write queue. You can chain this method, to make it easier to add multiple
+     * Add an {@link BleDevice.WriteBuilder} to the write queue. You can chain this method, to make it easier to add multiple
      * writes.
      */
-    public BleWriteTransaction add(OtaWrite write)
+    public BleWriteTransaction add(BleDevice.WriteBuilder write)
     {
         writeQueue.add(write);
         return this;
@@ -219,7 +180,7 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
     /**
      * Add a Collection of writes to the write queue.
      */
-    public BleWriteTransaction addAll(Collection<OtaWrite> writes)
+    public BleWriteTransaction addAll(Collection<BleDevice.WriteBuilder> writes)
     {
         writeQueue.addAll(writes);
         return this;
@@ -231,7 +192,7 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
      */
     public BleWriteTransaction add(UUID charUuid, byte[] data)
     {
-        writeQueue.add(new OtaWrite(charUuid, data));
+        writeQueue.add(new BleDevice.WriteBuilder().setCharacteristicUUID(charUuid).setBytes(data));
         return this;
     }
 
@@ -241,7 +202,7 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
      */
     public BleWriteTransaction add(UUID serviceUuid, UUID charUuid, byte[] data)
     {
-        writeQueue.add(new OtaWrite(serviceUuid, charUuid, data));
+        writeQueue.add(new BleDevice.WriteBuilder().setServiceUUID(serviceUuid).setCharacteristicUUID(charUuid).setBytes(data));
         return this;
     }
 
@@ -255,20 +216,13 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
 
     private boolean hasMore()
     {
-        return writeQueue.size() > 0;
+        return size() > 0;
     }
 
     private void performNextWrite()
     {
-        final OtaWrite mCurWrite = writeQueue.get(0);
-        if (mCurWrite.hasServiceUuid())
-        {
-            getDevice().write(mCurWrite.serviceUuid, mCurWrite.charUuid, mCurWrite.data, this);
-        }
-        else
-        {
-            getDevice().write(mCurWrite.charUuid, mCurWrite.data, this);
-        }
+        final BleDevice.WriteBuilder mCurWrite = writeQueue.get(0);
+        getDevice().write(mCurWrite, this);
     }
 
     @Override public void onEvent(ReadWriteEvent e)
@@ -278,6 +232,8 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
             writeQueue.remove(0);
             if (hasMore())
             {
+                // If a WriteListener has been set, check to see if it should continue or not. If the listener is NOT
+                // set, then we simply proceed to the next.
                 if (mWriteListener != null)
                 {
                     if (mWriteListener.onWriteComplete(e).proceed)
