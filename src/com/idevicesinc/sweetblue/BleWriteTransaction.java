@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 
-public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice.ReadWriteListener
+public class BleWriteTransaction extends BleTransaction.Ota
 {
 
     /**
@@ -113,6 +113,69 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
 
     }
 
+    private final BleDevice.ReadWriteListener mListener = new BleDevice.ReadWriteListener()
+    {
+        @Override public void onEvent(ReadWriteEvent e)
+        {
+            if (e.wasSuccess())
+            {
+                writeQueue.remove(0);
+                if (hasMore())
+                {
+                    if (mWriteListener != null)
+                    {
+                        if (mWriteListener.onWriteComplete(e).proceed)
+                        {
+                            performNextWrite();
+                        }
+                        else
+                        {
+                            fail();
+                        }
+                    }
+                    else
+                    {
+                        performNextWrite();
+                    }
+                }
+                else
+                {
+                    succeed();
+                }
+            }
+            else
+            {
+                if (mfailListener != null)
+                {
+                    FailListener.Please please = mfailListener.onWriteFail(e);
+                    switch (please.action)
+                    {
+                        case NEXT:
+                            writeQueue.remove(0);
+                            if (hasMore())
+                            {
+                                performNextWrite();
+                            }
+                            else
+                            {
+                                succeed();
+                            }
+                            break;
+                        case RETRY:
+                            performNextWrite();
+                            break;
+                        case STOP:
+                            writeQueue.clear();
+                            succeed();
+                    }
+                }
+                else
+                {
+                    fail();
+                }
+            }
+        }
+    };
 
     private final ArrayList<BleDevice.WriteBuilder> writeQueue = new ArrayList<>();
     private final FailListener mfailListener;
@@ -192,7 +255,7 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
      */
     public BleWriteTransaction add(UUID charUuid, byte[] data)
     {
-        writeQueue.add(new BleDevice.WriteBuilder().setCharacteristicUUID(charUuid).setBytes(data));
+        writeQueue.add(new BleDevice.WriteBuilder(charUuid).setBytes(data));
         return this;
     }
 
@@ -202,12 +265,12 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
      */
     public BleWriteTransaction add(UUID serviceUuid, UUID charUuid, byte[] data)
     {
-        writeQueue.add(new BleDevice.WriteBuilder().setServiceUUID(serviceUuid).setCharacteristicUUID(charUuid).setBytes(data));
+        writeQueue.add(new BleDevice.WriteBuilder(serviceUuid, charUuid).setBytes(data));
         return this;
     }
 
     /**
-     * Returns how many writes are still in the queue.
+     * Returns how many write operations are left in the queue.
      */
     public int size()
     {
@@ -222,70 +285,7 @@ public class BleWriteTransaction extends BleTransaction.Ota implements BleDevice
     private void performNextWrite()
     {
         final BleDevice.WriteBuilder mCurWrite = writeQueue.get(0);
-        getDevice().write(mCurWrite, this);
-    }
-
-    @Override public void onEvent(ReadWriteEvent e)
-    {
-        if (e.wasSuccess())
-        {
-            writeQueue.remove(0);
-            if (hasMore())
-            {
-                // If a WriteListener has been set, check to see if it should continue or not. If the listener is NOT
-                // set, then we simply proceed to the next.
-                if (mWriteListener != null)
-                {
-                    if (mWriteListener.onWriteComplete(e).proceed)
-                    {
-                        performNextWrite();
-                    }
-                    else
-                    {
-                        fail();
-                    }
-                }
-                else
-                {
-                    performNextWrite();
-                }
-            }
-            else
-            {
-                succeed();
-            }
-        }
-        else
-        {
-            if (mfailListener != null)
-            {
-                FailListener.Please please = mfailListener.onWriteFail(e);
-                switch (please.action)
-                {
-                    case NEXT:
-                        writeQueue.remove(0);
-                        if (hasMore())
-                        {
-                            performNextWrite();
-                        }
-                        else
-                        {
-                            succeed();
-                        }
-                        break;
-                    case RETRY:
-                        performNextWrite();
-                        break;
-                    case STOP:
-                        writeQueue.clear();
-                        succeed();
-                }
-            }
-            else
-            {
-                fail();
-            }
-        }
+        getDevice().write(mCurWrite, mListener);
     }
 
 }
