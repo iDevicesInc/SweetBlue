@@ -1,11 +1,9 @@
 package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.*;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -25,7 +23,6 @@ import android.os.DeadObjectException;
 import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
-
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
@@ -33,7 +30,6 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
-
 import com.idevicesinc.sweetblue.BleServer.IncomingListener;
 import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;

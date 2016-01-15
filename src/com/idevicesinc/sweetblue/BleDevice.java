@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -18,7 +18,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.util.SparseArray;
-
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
@@ -35,7 +34,6 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
-
 import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
 
 /**
@@ -58,6 +56,166 @@ public class BleDevice extends BleNode
 	 */
 	@Immutable
 	public static final BleDevice NULL = new BleDevice(null, null, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
+
+	/**
+	 * Builder class for sending a write over BLE. Use this class to set the service and/or characteristic
+	 * UUIDs, and the data you'd like to write. This class provides convenience methods for sending
+	 * booleans, ints, shorts, longs, and Strings. Use with {@link #write(WriteBuilder)},
+	 * or {@link #write(WriteBuilder, ReadWriteListener)}.
+	 */
+	public static class WriteBuilder
+	{
+
+		private UUID serviceUUID = null;
+		private UUID charUUID = null;
+		private FutureData data = null;
+		private boolean bigEndian = true;
+
+
+		/**
+		 * Basic constructor. You must at the very least call {@link #setCharacteristicUUID(UUID)}, and one of the
+		 * methods that add data ({@link #setBytes(byte[])}, {@link #setInt(int)}, etc..) before attempting to
+		 * send the write.
+		 */
+		public WriteBuilder() {
+			this(/*bigEndian*/true, null, null);
+		}
+
+		/**
+		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
+		 * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
+		 *       				or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
+		 */
+		public WriteBuilder(boolean isBigEndian) {
+			this(isBigEndian, null, null);
+		}
+
+		/**
+		 * Overload of {@link  com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
+		 * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
+		 *       				or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
+		 */
+		public WriteBuilder(boolean isBigEndian, UUID characteristicUUID) {
+			this(isBigEndian, null, characteristicUUID);
+		}
+
+		/**
+		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID)}.
+		 */
+		public WriteBuilder(UUID characteristicUUID) {
+			this(/*bigendian*/true, null, characteristicUUID);
+		}
+
+		/**
+		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID)}.
+		 */
+		public WriteBuilder(UUID serviceUUID, UUID characteristicUUID) {
+			this(/*bigendian*/true, serviceUUID, characteristicUUID);
+		}
+
+		/**
+		 * Main constructor to use. All other constructors overload this one.
+		 * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
+		 *       				or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
+		 */
+		public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID) {
+			bigEndian = isBigEndian;
+			this.serviceUUID = serviceUUID;
+			charUUID = characteristicUUID;
+		}
+
+
+		/**
+		 * Set the service UUID for this write. This is only needed when you have characteristics with identical uuids under different services.
+		 */
+		public WriteBuilder setServiceUUID(UUID uuid) {
+			serviceUUID = uuid;
+			return this;
+		}
+
+		/**
+		 * Set the characteristic UUID to write to.
+		 */
+		public WriteBuilder setCharacteristicUUID(UUID uuid) {
+			charUUID = uuid;
+			return this;
+		}
+
+		/**
+		 * Set the raw bytes to write.
+		 */
+		public WriteBuilder setBytes(byte[] data) {
+			this.data = new PresentData(data);
+			return this;
+		}
+
+		/**
+		 * Set the boolean to write.
+		 */
+		public WriteBuilder setBoolean(boolean value) {
+			data = new PresentData(value ? new byte[] { 0x1 } : new byte[] { 0x0 });
+			return this;
+		}
+
+		/**
+		 * Set an int to be written.
+		 */
+		public WriteBuilder setInt(int val) {
+			final byte[] d = Utils_Byte.intToBytes(val);
+			if (bigEndian) {
+				Utils_Byte.reverseBytes(d);
+			}
+			data = new PresentData(d);
+			return this;
+		}
+
+		/**
+		 * Set a short to be written.
+		 */
+		public WriteBuilder setShort(short val) {
+			final byte[] d = Utils_Byte.shortToBytes(val);
+			if (bigEndian) {
+				Utils_Byte.reverseBytes(d);
+			}
+			data = new PresentData(d);
+			return this;
+		}
+
+		/**
+		 * Set a long to be written.
+		 */
+		public WriteBuilder setLong(long val) {
+			final byte[] d = Utils_Byte.longToBytes(val);
+			if (bigEndian) {
+				Utils_Byte.reverseBytes(d);
+			}
+			data = new PresentData(d);
+			return this;
+		}
+
+		/**
+		 * Set a string to be written. This method also allows you to specify the string encoding. If the encoding
+		 * fails, then {@link String#getBytes()} is used instead, which uses "UTF-8" by default.
+		 */
+		public WriteBuilder setString(String value, String stringEncoding) {
+			byte[] bytes;
+			try {
+				bytes = value.getBytes(stringEncoding);
+			} catch (UnsupportedEncodingException e) {
+				bytes = value.getBytes();
+			}
+			data = new PresentData(bytes);
+			return this;
+		}
+
+		/**
+		 * Set a string to be written. This defaults to "UTF-8" encoding.
+		 */
+		public WriteBuilder setString(String value) {
+			return setString(value, "UTF-8");
+		}
+
+	}
 
 	/**
 	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
@@ -3684,6 +3842,29 @@ public class BleDevice extends BleNode
 		stopPoll(uuids, null, null);
 	}
 
+
+	/**
+	 * Writes to the device without a callback.
+	 *
+	 * @return (same as {@link #write(UUID, UUID, byte[])}).
+	 *
+	 * @see #write(UUID, UUID, byte[])
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder) {
+		return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data);
+	}
+
+	/**
+	 * Writes to the device with a callback.
+	 *
+	 * @return (same as {@link #write(UUID, UUID, byte[], ReadWriteListener)}).
+	 *
+	 * @see #write(UUID, UUID, byte[], ReadWriteListener)
+	 */
+	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder, ReadWriteListener listener) {
+		return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data, listener);
+	}
+
 	/**
 	 * Writes to the device without a callback.
 	 *
@@ -5544,9 +5725,10 @@ public class BleDevice extends BleNode
 			gattStatus,
 			DISCOVERED, true,
 			DISCONNECTED, true,
-			BONDING, m_nativeWrapper.isNativelyBonding(),
-			BONDED, m_nativeWrapper.isNativelyBonded(),
-			UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+			// Commenting these out because of un-thought-of case where you unbond then immediately disconnect...native bond state is still BONDED but abstracted state is UNBONDED so a state transition occurs where it shouldn't.
+//			BONDING, m_nativeWrapper.isNativelyBonding(),
+//			BONDED, m_nativeWrapper.isNativelyBonded(),
+//			UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
 			RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
 			ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY,
 

@@ -4,7 +4,7 @@
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>
 <a href="http://75.144.199.157:7117/job/SweetBlue%20Library/">
-  <img align="right" src="https://img.shields.io/badge/version-2.49.32-blue.svg" />
+  <img align="right" src="https://img.shields.io/badge/version-2.49.35-blue.svg" />
   <img align="right" src="http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue%20Library"/>
 </a>
 <p align="center">
@@ -156,6 +156,8 @@ Getting Started
     
     // New BleDevice instances are provided through this listener.
     // Nested listeners then listen for connection and read results.
+    // Obviously you will want to structure your actual code a little better.
+    // The deep nesting simply demonstrates the async-callback-based nature of the API.
     final DiscoveryListener discoveryListener = new DiscoveryListener()
     {
     	@Override public void onEvent(DiscoveryEvent e)
@@ -185,7 +187,9 @@ Getting Started
     	}
 };
     
-    // This is helps you navigate the treacherous waters of Android M Location requirements for scanning.
+    // This class helps you navigate the treacherous waters of Android M Location requirements for scanning.
+    // First it enables bluetooth itself, then location permissions, then location services. The latter two
+    // are only needed in Android M.
     BluetoothEnabler.start(this, new DefaultBluetoothEnablerFilter()
     {
     	@Override public Please onEvent(BluetoothEnablerEvent e)

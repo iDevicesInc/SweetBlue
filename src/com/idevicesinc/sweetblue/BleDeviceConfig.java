@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -35,37 +36,37 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	/**
 	 * Default value for {@link #minScanTimeNeededForUndiscovery}.
 	 */
-	public static final double DEFAULT_MINIMUM_SCAN_TIME				= 5.0;
+	public static final double DEFAULT_MINIMUM_SCAN_TIME		= 5.0;
 
 	/**
 	 * Default value for {@link #nForAverageRunningReadTime} and {@link #nForAverageRunningWriteTime}.
 	 */
-	public static final int DEFAULT_RUNNING_AVERAGE_N					= 10;
+	public static final int DEFAULT_RUNNING_AVERAGE_N			= 10;
 
 	/**
 	 * This is a good default value for {@link #undiscoveryKeepAlive}. By default {@link #undiscoveryKeepAlive} is {@link Interval#DISABLED}.
 	 */
-	public static final double DEFAULT_SCAN_KEEP_ALIVE					= DEFAULT_MINIMUM_SCAN_TIME*2.5;
+	public static final double DEFAULT_SCAN_KEEP_ALIVE			= DEFAULT_MINIMUM_SCAN_TIME*2.5;
 	
 	/**
 	 * Default value for {@link #rssiAutoPollRate}.
 	 */
-	public static final double DEFAULT_RSSI_AUTO_POLL_RATE				= 10.0;
+	public static final double DEFAULT_RSSI_AUTO_POLL_RATE		= 10.0;
 	
 	/**
 	 * Default fallback value for {@link #rssi_min}.
 	 */
-	public static final int DEFAULT_RSSI_MIN							= -120;
+	public static final int DEFAULT_RSSI_MIN					= -120;
 	
 	/**
 	 * Default fallback value for {@link #rssi_max}.
 	 */
-	public static final int DEFAULT_RSSI_MAX							= -30;
+	public static final int DEFAULT_RSSI_MAX					= -30;
 
 	/**
 	 * Default value for {@link #defaultTxPower}.
 	 */
-	public static final int DEFAULT_TX_POWER							= -50;
+	public static final int DEFAULT_TX_POWER					= -50;
 	
 	/**
 	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},
@@ -205,6 +206,22 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
 	public Boolean useGattRefresh								= false;
+
+
+	/**
+	 * Default is <code>true</code> - The normal way to bond in the native API is to use {@link BluetoothDevice#createBond()}.
+	 * There is however also a overload method that's made invisible using the "hide" annotation that takes an int
+	 * representing the desired transport mode. The default for {@link BluetoothDevice#createBond()} is {@link BluetoothDevice#TRANSPORT_AUTO}.
+	 * You can look at the source to see that this is the case. The thing is, you *never* want the Android stack to automatically decide something.
+	 * So if you set <code>useLeTransportForBonding</code> to true then SweetBlue will use the "private" overloaded method with
+	 * {@link BluetoothDevice#TRANSPORT_LE}. This workaround anecdotally fixed bonding issues with LG G4 and Samsung S6 phones.
+	 * Anecdotally because the public {@link BluetoothDevice#createBond()} was not working, tried the private one, it worked,
+	 * but then the public {@link BluetoothDevice#createBond()} also worked flawlessly after that.
+	 * But again, regardless, you should always choose explicit behavior over automatic when dealing with Android BLE.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	@Nullable(Prevalence.NORMAL)
+	public Boolean useLeTransportForBonding						= true;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be

@@ -1,7 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import android.bluetooth.BluetoothGattCharacteristic;
-
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import android.bluetooth.BluetoothGattDescriptor;
 

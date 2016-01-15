@@ -64,4 +64,16 @@ class P_Task_TurnBleOff extends PA_Task
 	{
 		return BleTask.TURN_BLE_OFF;
 	}
+
+	public boolean isMoreImportantThan(PA_Task task)
+	{
+		if( task instanceof P_Task_Unbond )
+		{
+			return false;
+		}
+		else
+		{
+			return super.isMoreImportantThan(task);
+		}
+	}
 }
