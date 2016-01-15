@@ -69,6 +69,39 @@ public class BleDevice extends BleNode
 		private UUID serviceUUID = null;
 		private UUID charUUID = null;
 		private FutureData data = null;
+		private boolean bigEndian = true;
+
+
+		/**
+		 * Basic constructor. You must at the very least call {@link #setCharacteristicUUID(UUID)}, and one of the
+		 * methods that add data ({@link #setBytes(byte[])}, {@link #setInt(int)}, etc..) before attempting to
+		 * send the write.
+		 */
+		public WriteBuilder() {
+			this(/*bigEndian*/true, null, null);
+		}
+
+		public WriteBuilder(boolean isBigEndian) {
+			this(isBigEndian, null, null);
+		}
+
+		public WriteBuilder(boolean isBigEndian, UUID characteristicUUID) {
+			this(isBigEndian, null, characteristicUUID);
+		}
+
+		public WriteBuilder(UUID characteristicUUID) {
+			this(/*bigendian*/true, null, characteristicUUID);
+		}
+
+		public WriteBuilder(UUID serviceUUID, UUID characteristicUUID) {
+			this(/*bigendian*/true, serviceUUID, characteristicUUID);
+		}
+
+		public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID) {
+			bigEndian = isBigEndian;
+			this.serviceUUID = serviceUUID;
+			charUUID = characteristicUUID;
+		}
 
 
 		/**
@@ -107,7 +140,7 @@ public class BleDevice extends BleNode
 		 * Set an int to be written. If the remote device is {@link java.nio.ByteOrder#BIG_ENDIAN}, pass true,
 		 * and SweetBlue will reverse the bytes for you.
 		 */
-		public WriteBuilder setInt(int val, boolean bigEndian) {
+		public WriteBuilder setInt(int val) {
 			final byte[] d = Utils_Byte.intToBytes(val);
 			if (bigEndian) {
 				Utils_Byte.reverseBytes(d);
@@ -117,17 +150,10 @@ public class BleDevice extends BleNode
 		}
 
 		/**
-		 * Overload of {@link #setInt(int, boolean)}, assuming the remote device is {@link java.nio.ByteOrder#BIG_ENDIAN}.
-		 */
-		public WriteBuilder setInt(int value) {
-			return setInt(value, true);
-		}
-
-		/**
 		 * Set a short to be written. If the remote device is {@link java.nio.ByteOrder#BIG_ENDIAN}, pass true,
 		 * and SweetBlue will reverse the bytes for you.
 		 */
-		public WriteBuilder setShort(short val, boolean bigEndian) {
+		public WriteBuilder setShort(short val) {
 			final byte[] d = Utils_Byte.shortToBytes(val);
 			if (bigEndian) {
 				Utils_Byte.reverseBytes(d);
@@ -140,7 +166,7 @@ public class BleDevice extends BleNode
 		 * Set a long to be written. If the remote device is {@link java.nio.ByteOrder#BIG_ENDIAN}, pass true,
 		 * and SweetBlue will reverse the bytes for you.
 		 */
-		public WriteBuilder setLong(long val, boolean bigEndian) {
+		public WriteBuilder setLong(long val) {
 			final byte[] d = Utils_Byte.longToBytes(val);
 			if (bigEndian) {
 				Utils_Byte.reverseBytes(d);
