@@ -1,9 +1,9 @@
-#!/bin/sh
-source config_paths.sh
+#!/bin/bash
+source ./config_paths.sh
 
 ARG=$1
 
-sh gradlew -b lint.gradle :lint
+#./gradlew -b lint.gradle :lint
 
 if [ "$?" != 0 ];
 then
@@ -13,16 +13,16 @@ fi
 
 if [ "$ARG" == "info" ]
 then
-	sh gradlew fullBuild --info
+	./gradlew fullBuild --info
 	cp $STAGE/sweetblue.zip $STAGE/$JAR_NAME.zip
 elif [ "$ARG" == "stacktrace" ]
 then
-	sh gradlew fullBuild --stacktrace
+	./gradlew fullBuild --stacktrace
 	cp $STAGE/sweetblue.zip $STAGE/$JAR_NAME.zip
 elif [ "$ARG" == "no_zip" ]
 then
-	sh gradlew bundleNoZip
+	./gradlew bundleNoZip
 else
-	sh gradlew fullBuild
+	./gradlew fullBuild
 	cp $STAGE/sweetblue.zip $STAGE/$JAR_NAME.zip	
 fi

@@ -98,6 +98,7 @@
     <issue id="MissingId" severity="ignore" />
     <issue id="MissingPrefix" severity="ignore" />
     <issue id="MissingQuantity" severity="ignore" />
+    <issue id="MissingPermission" severity="ignore" />
     <issue id="MissingRegistered" severity="ignore" />
     <issue id="MissingSuperCall" severity="ignore" />
     <issue id="MissingTranslation" severity="ignore" />

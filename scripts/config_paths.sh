@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 source ./config_versions.sh
 
