@@ -81,22 +81,43 @@ public class BleDevice extends BleNode
 			this(/*bigEndian*/true, null, null);
 		}
 
+		/**
+		 * Overload of {@link #WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
+		 * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
+		 *       				or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
+		 */
 		public WriteBuilder(boolean isBigEndian) {
 			this(isBigEndian, null, null);
 		}
 
+		/**
+		 * Overload of {@link #WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
+		 * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
+		 *       				or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
+		 */
 		public WriteBuilder(boolean isBigEndian, UUID characteristicUUID) {
 			this(isBigEndian, null, characteristicUUID);
 		}
 
+		/**
+		 * Overload of {@link #WriteBuilder(boolean, UUID, UUID)}.
+		 */
 		public WriteBuilder(UUID characteristicUUID) {
 			this(/*bigendian*/true, null, characteristicUUID);
 		}
 
+		/**
+		 * Overload of {@link #WriteBuilder(boolean, UUID, UUID)}.
+		 */
 		public WriteBuilder(UUID serviceUUID, UUID characteristicUUID) {
 			this(/*bigendian*/true, serviceUUID, characteristicUUID);
 		}
 
+		/**
+		 * Main constructor to use. All other constructors overload this one.
+		 * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
+		 *       				or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
+		 */
 		public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID) {
 			bigEndian = isBigEndian;
 			this.serviceUUID = serviceUUID;
@@ -137,8 +158,7 @@ public class BleDevice extends BleNode
 		}
 
 		/**
-		 * Set an int to be written. If the remote device is {@link java.nio.ByteOrder#BIG_ENDIAN}, pass true,
-		 * and SweetBlue will reverse the bytes for you.
+		 * Set an int to be written.
 		 */
 		public WriteBuilder setInt(int val) {
 			final byte[] d = Utils_Byte.intToBytes(val);
@@ -150,8 +170,7 @@ public class BleDevice extends BleNode
 		}
 
 		/**
-		 * Set a short to be written. If the remote device is {@link java.nio.ByteOrder#BIG_ENDIAN}, pass true,
-		 * and SweetBlue will reverse the bytes for you.
+		 * Set a short to be written.
 		 */
 		public WriteBuilder setShort(short val) {
 			final byte[] d = Utils_Byte.shortToBytes(val);
@@ -163,8 +182,7 @@ public class BleDevice extends BleNode
 		}
 
 		/**
-		 * Set a long to be written. If the remote device is {@link java.nio.ByteOrder#BIG_ENDIAN}, pass true,
-		 * and SweetBlue will reverse the bytes for you.
+		 * Set a long to be written.
 		 */
 		public WriteBuilder setLong(long val) {
 			final byte[] d = Utils_Byte.longToBytes(val);
