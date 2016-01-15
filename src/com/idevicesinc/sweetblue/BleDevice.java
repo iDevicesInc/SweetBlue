@@ -82,7 +82,7 @@ public class BleDevice extends BleNode
 		}
 
 		/**
-		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
+		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
 		 * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
 		 *       				or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
 		 */
@@ -91,7 +91,7 @@ public class BleDevice extends BleNode
 		}
 
 		/**
-		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
+		 * Overload of {@link  com.idevicesinc.sweetblue.BleDevice.WriteBuilder#WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
 		 * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
 		 *       				or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
 		 */
@@ -100,14 +100,14 @@ public class BleDevice extends BleNode
 		}
 
 		/**
-		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder(boolean, UUID, UUID)}.
+		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#WriteBuilder(boolean, UUID, UUID)}.
 		 */
 		public WriteBuilder(UUID characteristicUUID) {
 			this(/*bigendian*/true, null, characteristicUUID);
 		}
 
 		/**
-		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder(boolean, UUID, UUID)}.
+		 * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#WriteBuilder(boolean, UUID, UUID)}.
 		 */
 		public WriteBuilder(UUID serviceUUID, UUID characteristicUUID) {
 			this(/*bigendian*/true, serviceUUID, characteristicUUID);
