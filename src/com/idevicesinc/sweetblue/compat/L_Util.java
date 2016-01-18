@@ -59,7 +59,7 @@ public class L_Util
 
     private static List<L_ScanResult> toLScanResults(List<ScanResult> results) {
         int size = results.size();
-        List<L_ScanResult> res = new ArrayList<>(size);
+        List<L_ScanResult> res = new ArrayList<L_ScanResult>(size);
         for (int i = 0; i < size; i++) {
             res.add(toLScanResult(results.get(i)));
         }
