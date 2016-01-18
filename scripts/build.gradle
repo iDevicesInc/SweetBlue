@@ -263,17 +263,15 @@ task cleanFolders << {
 
 task updateReadmeVersion << {
     String dver = SEMVER.replace("_", ".")
-    exec {
-        workingDir '../'
-        executable 'sed'
-        args "-i", "", "s/version-.*-blue/version-${dver}-blue/g", "README.md"
-    }
+    File read = new File('../README.md')
+    String r = read.getText('UTF-8')
+    r = r.replaceFirst('version-.*-blue', "version-${dver}-blue")
+    read.write(r, 'UTF-8')
     String hash = DigestUtils.sha1Hex("${SEMVER}")
-    exec {
-        workingDir '../src/com/idevicesinc/sweetblue/utils'
-        executable 'sed'
-        args "-i", "", "s/BLUETOOTH_CONNECTED_HASH = \".*\"/BLUETOOTH_CONNECTED_HASH = \"${hash}\"/g", "Uuids.java"
-    }
+    File uuid = new File('../src/com/idevicesinc/sweetblue/utils/Uuids.java')
+    String u = uuid.getText('UTF-8')
+    u.replace('BLUETOOTH_CONNECTED_HASH = \".*\"', "BLUETOOTH_CONNTECTED_HASH = \"${hash}\"")
+    uuid.write(u, 'UTF-8')
 }
 
 def checkStyleWarningsFile = 'build/reports/checkstyle/checkstyle.xml'
