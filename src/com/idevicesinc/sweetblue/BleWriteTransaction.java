@@ -177,7 +177,7 @@ public class BleWriteTransaction extends BleTransaction.Ota
         }
     };
 
-    private final ArrayList<BleDevice.WriteBuilder> writeQueue = new ArrayList<>();
+    private final ArrayList<BleDevice.WriteBuilder> writeQueue = new ArrayList<BleDevice.WriteBuilder>();
     private final FailListener mfailListener;
     private final WriteQueueListener mWriteListener;
 
