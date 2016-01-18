@@ -272,14 +272,14 @@ public class BleWriteTransaction extends BleTransaction.Ota
     /**
      * Returns how many write operations are left in the queue.
      */
-    public int size()
+    public int remaining()
     {
         return writeQueue.size();
     }
 
     private boolean hasMore()
     {
-        return size() > 0;
+        return remaining() > 0;
     }
 
     private void performNextWrite()
