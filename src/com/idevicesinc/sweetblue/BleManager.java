@@ -41,6 +41,8 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
+import com.idevicesinc.sweetblue.compat.L_Util;
+import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
@@ -1019,12 +1021,11 @@ public class BleManager
 	/**
 	 * Checks to see if the device supports advertising.
 	 */
-	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 	public boolean isAdvertisingSupportedByChipset()
 	{
 		if( isAdvertisingSupportedByAndroidVersion() )
 		{
-			return getNativeAdapter().isMultipleAdvertisementSupported();
+			return L_Util.isAdvertisingSupportedByChipset(this);
 		}
 		else
 		{
@@ -1839,13 +1840,12 @@ public class BleManager
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
-	@TargetApi(Build.VERSION_CODES.M)
 	public boolean willLocationPermissionSystemDialogBeShown(Activity callingActivity)
 	{
 		if( Utils.isMarshmallow() )
 		{
 			SharedPreferences preferences = callingActivity.getSharedPreferences(LOCATION_PERMISSION_NAMESPACE, Context.MODE_PRIVATE);
-			boolean hasNeverAskAgainBeenSelected = !callingActivity.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION);//Call only returns true if Location permission has been previously denied. Returns false if "Never ask again" has been selected
+			boolean hasNeverAskAgainBeenSelected = !M_Util.shouldShowRequestPermissionRationale(callingActivity);//Call only returns true if Location permission has been previously denied. Returns false if "Never ask again" has been selected
 			boolean hasLocationPermissionSystemDialogShownOnce = preferences.getBoolean(LOCATION_PERMISSION_KEY, false);
 
 			return (!hasLocationPermissionSystemDialogShownOnce) || (hasLocationPermissionSystemDialogShownOnce && !hasNeverAskAgainBeenSelected);
@@ -1865,7 +1865,6 @@ public class BleManager
 	 * @see #isLocationEnabledForScanning_byRuntimePermissions()
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
-	@TargetApi(Build.VERSION_CODES.M)
 	public void turnOnLocationWithIntent_forPermissions(final Activity callingActivity, int requestCode)
 	{
 		if( Utils.isMarshmallow() )
@@ -1882,7 +1881,7 @@ public class BleManager
 			{
 				final SharedPreferences.Editor editor = callingActivity.getSharedPreferences(LOCATION_PERMISSION_NAMESPACE, Context.MODE_PRIVATE).edit();
 				editor.putBoolean(LOCATION_PERMISSION_KEY, true).commit();
-				callingActivity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, requestCode);
+				M_Util.requestPermissions(callingActivity, requestCode);
 			}
 		}
 		else
@@ -2943,10 +2942,9 @@ public class BleManager
     	}
     }
 
-	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	private void stopNativeScan_nested_postLollipop(ScanCallback scanCallback_postLollipop)
+	private void stopNativeScan_nested_postLollipop()
 	{
-		getNativeAdapter().getBluetoothLeScanner().stopScan(scanCallback_postLollipop);
+		L_Util.stopNativeScan(this);
 	}
 
 	void stopNativeScan(final P_Task_Scan scanTask)
@@ -2957,7 +2955,7 @@ public class BleManager
 			{
 				if( Utils.isLollipop() )
 				{
-					stopNativeScan_nested_postLollipop(scanTask.getScanCallback_postLollipop());
+					stopNativeScan_nested_postLollipop();
 				}
 				else
 				{
