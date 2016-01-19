@@ -4,10 +4,11 @@ buildscript {
         mavenCentral()
     }
     dependencies {        
-        classpath 'commons-codec:commons-codec:1.8'   
+        classpath 'commons-codec:commons-codec:1.8'
     }
 }
 apply plugin: 'java'
+apply plugin: 'maven'
 apply plugin: 'checkstyle'
 
 version = '1.0'
@@ -297,3 +298,18 @@ gradle.startParameter.taskNames.each {
 }
 
 gradle.startParameter.taskNames = expandedTaskList.flatten()
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.groupId = 'com.idevicesinc'
+            pom.artifactId = 'sweetblue'
+            pom.version = SEMVER.replace('_', '.')
+            pom.project {
+                name 'SweetBlue'
+                description 'SweetBlue Android Bluetooth Library'
+            }
+            repository(url: System.getenv("ARCHIVA_URL"))
+        }
+    }
+}
