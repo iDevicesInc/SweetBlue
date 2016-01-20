@@ -82,12 +82,12 @@ public class Utils_Reflection extends Utils
 		}
 	}
 
-	public static boolean callBooleanReturnMethod(final Object instance, final String methodName)
+	public static boolean callBooleanReturnMethod(final Object instance, final String methodName, boolean showError)
 	{
-		return callBooleanReturnMethod(instance, methodName, null);
+		return callBooleanReturnMethod(instance, methodName, null, showError);
 	}
 
-	public static boolean callBooleanReturnMethod(final Object instance, final String methodName, final Class[] paramTypes, final Object ... params)
+	public static boolean callBooleanReturnMethod(final Object instance, final String methodName, final Class[] paramTypes, boolean showError, final Object ... params)
 	{
 		try
 		{
@@ -101,7 +101,10 @@ public class Utils_Reflection extends Utils
 		}
 		catch (Exception e)
 		{
-			Log.e("SweetBlue", "Problem calling method: " + methodName + " - " + e);
+			if (showError)
+			{
+				Log.e("SweetBlue", "Problem calling method: " + methodName + " - " + e);
+			}
 
 			return false;
 		}

@@ -71,12 +71,12 @@ class P_Task_Unbond extends PA_Task_RequiresBleOn
 	
 	private boolean removeBond()
 	{
-		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__REMOVE_BOND);
+		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__REMOVE_BOND, getManager().m_config.loggingEnabled);
 	}
 	
 	private boolean cancelBondProcess()
 	{
-		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CANCEL_BOND_PROCESS);
+		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CANCEL_BOND_PROCESS, getManager().m_config.loggingEnabled);
 	}
 	
 	@Override public boolean isExplicit()

@@ -113,15 +113,23 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
         }
         else
         {
+            m_failReason = BleStatuses.BOND_FAIL_REASON_NOT_AVAILABLE;
             return false;
         }
     }
 
     private boolean createBond_theSneakyWay()
     {
-        final Class[] paramTypes = new Class[]{int.class};
+        if (Utils.isKitKat())
+        {
+            final Class[] paramTypes = new Class[]{int.class};
 
-        return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CREATE_BOND, paramTypes, BluetoothDevice.TRANSPORT_LE);
+            return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CREATE_BOND, paramTypes, getManager().m_config.loggingEnabled, BluetoothDevice.TRANSPORT_LE);
+        }
+        else
+        {
+            return false;
+        }
     }
 
     @Override public boolean isMoreImportantThan(PA_Task task)
