@@ -14,8 +14,8 @@ apply plugin: 'checkstyle'
 version = '1.0'
 
 sourceSets {
-    main.java.srcDir '../src/'        
-    test.java.srcDir '../test/'            
+    main.java.srcDir '../src/'
+    test.java.srcDir '../test/'
 }
 
 // Set base variables

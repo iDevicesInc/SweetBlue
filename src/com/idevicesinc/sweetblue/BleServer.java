@@ -1711,10 +1711,13 @@ public class BleServer extends BleNode
 	{
 		enforceMainThread();
 
-		P_Task_Advertise adtask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
-		if (adtask != null)
+		if (Utils.isLollipop())
 		{
-			return adtask.getPacket().hasUuid(serviceUuid);
+			P_Task_Advertise adtask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
+			if (adtask != null)
+			{
+				return adtask.getPacket().hasUuid(serviceUuid);
+			}
 		}
 		return false;
 	}
@@ -1879,13 +1882,17 @@ public class BleServer extends BleNode
 	{
 		enforceMainThread();
 
-		final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
-		if (adTask != null)
+		if (Utils.isLollipop())
 		{
-			adTask.stopAdvertising();
-			adTask.clearFromQueue();
+
+			final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
+			if (adTask != null)
+			{
+				adTask.stopAdvertising();
+				adTask.clearFromQueue();
+			}
+			getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
 		}
-		getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
 	}
 
 	/**
