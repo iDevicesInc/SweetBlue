@@ -26,13 +26,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private final int m_retryCountMax = 3;
 
-	private final L_Util.L_ScanCallback m_scanCallback_postLollipop = new L_Util.L_ScanCallback()
+	private final L_Util.ScanCallback m_scanCallback_postLollipop = new L_Util.ScanCallback()
 	{
 
 		// Taken from android source.
 		public static final int SCAN_FAILED_ALREADY_STARTED = 1;
 
-		@Override public void onScanResult(final int callbackType, final L_Util.L_ScanResult result)
+		@Override public void onScanResult(final int callbackType, final L_Util.ScanResult result)
 		{
 			if( getManager().getUpdateLoop().postNeeded() )
 			{
@@ -50,14 +50,14 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 		}
 
-		private void onScanResult_mainThread(final int callbackType, final L_Util.L_ScanResult result)
+		private void onScanResult_mainThread(final int callbackType, final L_Util.ScanResult result)
 		{
 			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 			getManager().onDiscoveredFromNativeStack(result.getDevice(), result.getRssi(), result.getRecord());
 		}
 
-		@Override public void onBatchScanResults(final List<L_Util.L_ScanResult> results)
+		@Override public void onBatchScanResults(final List<L_Util.ScanResult> results)
 		{
 			if( getManager().getUpdateLoop().postNeeded() )
 			{
@@ -75,13 +75,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 		}
 
-		private void onBatchScanResults_mainThread(final List<L_Util.L_ScanResult> results)
+		private void onBatchScanResults_mainThread(final List<L_Util.ScanResult> results)
 		{
 			if( results != null )
 			{
 				for( int i = 0; i < results.size(); i++ )
 				{
-					final L_Util.L_ScanResult result_ith = results.get(i);
+					final L_Util.ScanResult result_ith = results.get(i);
 
 					if( result_ith != null )
 					{
@@ -137,7 +137,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		return m_explicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 	}
 
-	public L_Util.L_ScanCallback getScanCallback_postLollipop()
+	public L_Util.ScanCallback getScanCallback_postLollipop()
 	{
 		return m_scanCallback_postLollipop;
 	}

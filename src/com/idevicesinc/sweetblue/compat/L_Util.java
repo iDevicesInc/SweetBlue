@@ -3,14 +3,11 @@ package com.idevicesinc.sweetblue.compat;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Pointer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +20,15 @@ public class L_Util
     private L_Util() {}
 
 
-    public interface L_ScanCallback {
-        void onScanResult(int callbackType, L_ScanResult result);
-        void onBatchScanResults(List<L_ScanResult> results);
+    public interface ScanCallback
+    {
+        void onScanResult(int callbackType, ScanResult result);
+        void onBatchScanResults(List<ScanResult> results);
         void onScanFailed(int errorCode);
     }
 
-    public static class L_ScanResult {
+    public static class ScanResult
+    {
         private BluetoothDevice device;
         private int rssi;
         private byte[] record;
@@ -47,35 +46,35 @@ public class L_Util
         }
     }
 
-    private static L_ScanCallback m_UserCallback;
+    private static ScanCallback m_UserCallback;
 
-    private static L_ScanResult toLScanResult(ScanResult result) {
-        L_ScanResult res = new L_ScanResult();
+    private static ScanResult toLScanResult(android.bluetooth.le.ScanResult result) {
+        ScanResult res = new ScanResult();
         res.device = result.getDevice();
         res.rssi = result.getRssi();
         res.record = result.getScanRecord().getBytes();
         return res;
     }
 
-    private static List<L_ScanResult> toLScanResults(List<ScanResult> results) {
+    private static List<ScanResult> toLScanResults(List<android.bluetooth.le.ScanResult> results) {
         int size = results.size();
-        List<L_ScanResult> res = new ArrayList<L_ScanResult>(size);
+        List<ScanResult> res = new ArrayList<ScanResult>(size);
         for (int i = 0; i < size; i++) {
             res.add(toLScanResult(results.get(i)));
         }
         return res;
     }
 
-    private static ScanCallback m_callback = new ScanCallback()
+    private static android.bluetooth.le.ScanCallback m_callback = new android.bluetooth.le.ScanCallback()
     {
-        @Override public void onScanResult(int callbackType, ScanResult result)
+        @Override public void onScanResult(int callbackType, android.bluetooth.le.ScanResult result)
         {
             if (m_UserCallback != null) {
                 m_UserCallback.onScanResult(callbackType, toLScanResult(result));
             }
         }
 
-        @Override public void onBatchScanResults(List<ScanResult> results)
+        @Override public void onBatchScanResults(List<android.bluetooth.le.ScanResult> results)
         {
             if (m_UserCallback != null) {
                 m_UserCallback.onBatchScanResults(toLScanResults(results));
@@ -90,7 +89,7 @@ public class L_Util
         }
     };
 
-    static ScanCallback getNativeCallback() {
+    static android.bluetooth.le.ScanCallback getNativeCallback() {
         return m_callback;
     }
 
@@ -111,7 +110,7 @@ public class L_Util
         return device.getNativeGatt().requestConnectionPriority(mode);
     }
 
-    public static void startNativeScan(BleManager mgr, int scanMode, Interval scanReportDelay, L_ScanCallback listener) {
+    public static void startNativeScan(BleManager mgr, int scanMode, Interval scanReportDelay, ScanCallback listener) {
 
         final ScanSettings settings = buildSettings(mgr, scanMode, scanReportDelay).build();
 
@@ -134,7 +133,7 @@ public class L_Util
         return builder;
     }
 
-    static void startScan(BleManager mgr, ScanSettings scanSettings, L_ScanCallback listener) {
+    static void startScan(BleManager mgr, ScanSettings scanSettings, ScanCallback listener) {
         m_UserCallback = listener;
         mgr.getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
     }

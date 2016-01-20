@@ -24,7 +24,7 @@ public class M_Util
         context.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, requestCode);
     }
 
-    public static void startNativeScan(BleManager mgr, int scanMode, Interval scanReportDelay, L_Util.L_ScanCallback listener) {
+    public static void startNativeScan(BleManager mgr, int scanMode, Interval scanReportDelay, L_Util.ScanCallback listener) {
         final ScanSettings.Builder builder = L_Util.buildSettings(mgr, scanMode, scanReportDelay);
 
         builder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
