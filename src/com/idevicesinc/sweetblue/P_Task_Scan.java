@@ -429,7 +429,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		if( this.getState() == PE_TaskState.EXECUTING  )
 		{
-			if( getTotalTimeExecuting() >= getMinimumScanTime() && getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek()) )
+			if( getTotalTimeExecuting() >= getMinimumScanTime() || (getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek())) )
 			{
 				selfInterrupt();
 			}
@@ -452,7 +452,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private boolean isSelfInterruptableBy(final PA_Task otherTask)
 	{
-		if( otherTask.getPriority().ordinal() > PE_TaskPriority.FOR_NORMAL_READS_WRITES.ordinal() )
+		if( otherTask.getPriority().ordinal() > PE_TaskPriority.TRIVIAL.ordinal() )
 		{
 			return true;
 		}
