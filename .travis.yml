@@ -1,5 +1,5 @@
 language: android
-before_script: cd scripts
+before_script: cd app
 android:
   components:
   - android-23
@@ -7,7 +7,7 @@ android:
   - doc
   - extra-android-support
   - extra-android-m2repository
-script: ./build_release_bundle.sh
+script: ./gradlew fullBuild
 cache:
   directories:
   - $HOME/.gradle/caches/
