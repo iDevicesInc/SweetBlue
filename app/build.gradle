@@ -335,16 +335,21 @@ gradle.startParameter.taskNames.each {
 
 gradle.startParameter.taskNames = expandedTaskList.flatten()
 
+ext.ARCHIVA_URL = System.getenv("ARCHIVA_URL")
+ext.a_user = System.getenv("ARCHIVA_USER")
+ext.a_pw = System.getenv("ARCHIVA_PW")
+
+
 uploadArchives {
     repositories {
         mavenDeployer {
-            //beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
             pom.groupId = 'com.idevicesinc'
             pom.artifactId = 'sweetblue'
 
-            repository(url: 'http://10.0.1.239:5819/repository/internal') {
-                //authentication(userName: someuser, password: somepass)
+            repository(url: "${ARCHIVA_URL}") {
+                authentication(userName: "${a_user}", password: "${a_pw}")
             }
 
             pom.project {
