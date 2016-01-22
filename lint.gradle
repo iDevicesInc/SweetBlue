@@ -20,14 +20,14 @@ android {
 
     sourceSets {
     	main {
-    		Manifest.srcFile 'AndroidManifest.xml'
+    		manifest.srcFile 'AndroidManifest.xml'
     		java.srcDir '../src'
-    		resources.srcDir '../src'
+    		res.srcDir '../src'
     	}
     	release {
-    		Manifest.srcFile 'AndroidManifest.xml'
+    		manifest.srcFile 'AndroidManifest.xml'
     		java.srcDir '../src'
-    		resources.srcDir '../src'
+    		res.srcDir '../src'
     	}
     	test.java.srcDir '../test'
     }    
