@@ -362,6 +362,18 @@ uploadArchives {
     }
 }
 
+import org.gradle.plugins.signing.Sign
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.allTasks.any { it instanceof Sign }) {
+
+        allprojects { ext."signing.keyId" = System.getenv("SIGN_ID") }
+        allprojects { ext."signing.secretKeyRingFile" = System.getenv("SIGN_RING") }
+        allprojects { ext."signing.password" = System.getenv("SIGN_PW") }
+
+    }
+}
+
 signing {
     required { /*gradle.taskGraph.hasTask("uploadArchives")*/ true }
     sign configurations.archives
