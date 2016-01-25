@@ -3,13 +3,13 @@ before_script: ./prebuild.sh
 android:
   components:
   - android-23
-  - build-tools
+  - tools
+  - build-tools-23.0.2
   - doc
   - extra-android-support
   - extra-android-m2repository
   - platform-tools
 script: ./gradlew fullBuild
-after_script: cat /home/travis/build/iDevicesInc/SweetBlue/build/outputs/lint-results.xml
 cache:
   directories:
   - $HOME/.gradle/caches/
