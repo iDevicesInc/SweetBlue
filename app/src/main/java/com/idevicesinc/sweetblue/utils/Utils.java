@@ -40,6 +40,10 @@ public class Utils
 		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
 	}
 
+	public static boolean isKitKat() {
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+	}
+
 	public static boolean isLocationEnabledForScanning_byManifestPermissions(final Context context)
 	{
 		if( Utils.isMarshmallow() )

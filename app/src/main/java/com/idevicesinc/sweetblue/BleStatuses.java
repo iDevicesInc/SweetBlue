@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 
 /**
@@ -29,6 +30,12 @@ public class BleStatuses
 	 * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.
 	 */
 	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= GATT_STATUS_NOT_APPLICABLE;
+
+	/**
+	 * Used when attempting to bond on a device whose API level is less than 19, or does not have access to android's
+	 * {@link BluetoothDevice#createBond()} method.
+	 */
+	public static final int BOND_FAIL_REASON_NOT_AVAILABLE						= 42;
 
 
 	/**

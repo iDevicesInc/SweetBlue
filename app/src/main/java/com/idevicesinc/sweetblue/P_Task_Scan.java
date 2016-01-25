@@ -1,19 +1,14 @@
 package com.idevicesinc.sweetblue;
 
-import android.annotation.TargetApi;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanRecord;
-import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.os.Build;
-
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.compat.L_Util;
+import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
-
 import java.util.List;
 
-@TargetApi(Build.VERSION_CODES.M)
+
 class P_Task_Scan extends PA_Task_RequiresBleOn
 {
 	static final int Mode_NULL			= -1;
@@ -31,9 +26,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private final int m_retryCountMax = 3;
 
-	private final ScanCallback m_scanCallback_postLollipop = false == Utils.isLollipop() ? null : new ScanCallback()
+	private final L_Util.ScanCallback m_scanCallback_postLollipop = new L_Util.ScanCallback()
 	{
-		public void onScanResult(final int callbackType, final ScanResult result)
+
+		// Taken from android source.
+		public static final int SCAN_FAILED_ALREADY_STARTED = 1;
+
+		@Override public void onScanResult(final int callbackType, final L_Util.ScanResult result)
 		{
 			if( getManager().getUpdateLoop().postNeeded() )
 			{
@@ -51,16 +50,14 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 		}
 
-		private void onScanResult_mainThread(final int callbackType, final ScanResult result)
+		private void onScanResult_mainThread(final int callbackType, final L_Util.ScanResult result)
 		{
 			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			final ScanRecord scanRecord = result.getScanRecord();
-
-			getManager().onDiscoveredFromNativeStack(result.getDevice(), result.getRssi(), scanRecord.getBytes());
+			getManager().onDiscoveredFromNativeStack(result.getDevice(), result.getRssi(), result.getRecord());
 		}
 
-		public void onBatchScanResults(final List<ScanResult> results)
+		@Override public void onBatchScanResults(final List<L_Util.ScanResult> results)
 		{
 			if( getManager().getUpdateLoop().postNeeded() )
 			{
@@ -78,13 +75,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 		}
 
-		private void onBatchScanResults_mainThread(final List<ScanResult> results)
+		private void onBatchScanResults_mainThread(final List<L_Util.ScanResult> results)
 		{
 			if( results != null )
 			{
 				for( int i = 0; i < results.size(); i++ )
 				{
-					final ScanResult result_ith = results.get(i);
+					final L_Util.ScanResult result_ith = results.get(i);
 
 					if( result_ith != null )
 					{
@@ -94,7 +91,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 		}
 
-		public void onScanFailed(final int errorCode)
+		@Override public void onScanFailed(final int errorCode)
 		{
 			if( getManager().getUpdateLoop().postNeeded() )
 			{
@@ -126,7 +123,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 		}
 	};
-	
+
 	public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, boolean isPoll)
 	{
 		super(manager, listener);
@@ -140,7 +137,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		return m_explicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
 	}
 
-	public ScanCallback getScanCallback_postLollipop()
+	public L_Util.ScanCallback getScanCallback_postLollipop()
 	{
 		return m_scanCallback_postLollipop;
 	}
@@ -291,30 +288,12 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 		else
 		{
-			final ScanSettings.Builder builder = new ScanSettings.Builder();
-			builder.setScanMode(scanMode);
-
-			if( getManager().getNativeAdapter().isOffloadedScanBatchingSupported() )
-			{
-				final Interval scanReportDelay = getManager().m_config.scanReportDelay;
-				final long scanReportDelay_millis = false == Interval.isDisabled(scanReportDelay) ? scanReportDelay.millis() : 0;
-				builder.setReportDelay(scanReportDelay_millis);
-			}
-			else
-			{
-				builder.setReportDelay(0);
-			}
-
 			if( Utils.isMarshmallow() )
 			{
-				builder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
-				builder.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE);
-				builder.setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT);
+				M_Util.startNativeScan(getManager(), scanMode, getManager().m_config.scanReportDelay, m_scanCallback_postLollipop);
+			} else {
+				L_Util.startNativeScan(getManager(), scanMode, getManager().m_config.scanReportDelay, m_scanCallback_postLollipop);
 			}
-
-			final ScanSettings scanSettings = builder.build();
-
-			getManager().getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_scanCallback_postLollipop);
 		}
 	}
 
@@ -450,7 +429,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		if( this.getState() == PE_TaskState.EXECUTING  )
 		{
-			if( getTotalTimeExecuting() >= getMinimumScanTime() && getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek()) )
+			if( getTotalTimeExecuting() >= getMinimumScanTime() || (getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek())) )
 			{
 				selfInterrupt();
 			}
@@ -473,7 +452,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private boolean isSelfInterruptableBy(final PA_Task otherTask)
 	{
-		if( otherTask.getPriority().ordinal() > PE_TaskPriority.FOR_NORMAL_READS_WRITES.ordinal() )
+		if( otherTask.getPriority().ordinal() > PE_TaskPriority.TRIVIAL.ordinal() )
 		{
 			return true;
 		}

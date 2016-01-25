@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.bluetooth.BluetoothGatt;
 import android.os.Build;
 
+import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -141,7 +142,6 @@ class P_ReliableWriteManager
 		}
 	}
 
-	@TargetApi(Build.VERSION_CODES.KITKAT)
 	private void abortReliableWrite()
 	{
 		if( Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2 )
@@ -150,7 +150,7 @@ class P_ReliableWriteManager
 		}
 		else
 		{
-			m_device.getNativeGatt().abortReliableWrite();
+			K_Util.abortReliableWrite(m_device);
 		}
 	}
 

@@ -21,7 +21,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.lang.reflect.Method;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+
 class P_BleManager_Listeners
 {
 	private static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";

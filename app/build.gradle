@@ -388,5 +388,4 @@ artifacts {
     //archives javadocJar
     archives sourceJar
     //archives new File(JAR_DIR + "/" + JAVADOC_JAR_NAME)
-
 }

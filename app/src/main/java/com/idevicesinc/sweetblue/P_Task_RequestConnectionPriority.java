@@ -1,12 +1,11 @@
 package com.idevicesinc.sweetblue;
 
-import android.annotation.TargetApi;
-import android.bluetooth.BluetoothGatt;
-import android.os.Build;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
+
 
 class P_Task_RequestConnectionPriority extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {
@@ -40,12 +39,11 @@ class P_Task_RequestConnectionPriority extends PA_Task_Transactionable implement
 		getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(status, gattStatus, m_connectionPriority));
 	}
 
-	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 	@Override public void execute()
 	{
 		if( Utils.isLollipop() )
 		{
-			if( false == getDevice().getNativeGatt().requestConnectionPriority(m_connectionPriority.getNativeMode()) )
+			if( false == L_Util.requestConnectionPriority(getDevice(), m_connectionPriority.getNativeMode()) )
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}
