@@ -10,7 +10,7 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    buildToolsVersion '23.0.0'
+    buildToolsVersion '23.0.2'
 	compileSdkVersion 23
     
 	defaultConfig {
@@ -20,14 +20,12 @@ android {
 
     sourceSets {
     	main {
-    		manifest.srcFile 'AndroidManifest.xml'
+    		manifest.srcFile 'app/src/main/AndroidManifest.xml'
     		java.srcDir '../src'
-    		resources.srcDir '../src'
     	}
     	release {
-    		manifest.srcFile 'AndroidManifest.xml'
+    		manifest.srcFile 'app/src/main/AndroidManifest.xml'
     		java.srcDir '../src'
-    		resources.srcDir '../src'
     	}
     	test.java.srcDir '../test'
     }    

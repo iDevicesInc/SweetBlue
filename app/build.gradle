@@ -7,20 +7,26 @@ buildscript {
         classpath 'commons-codec:commons-codec:1.8'
     }
 }
-apply plugin: 'java'
-apply plugin: 'maven'
+
+apply plugin: 'com.android.library'
 apply plugin: 'checkstyle'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
-version = '1.0'
+version = "${SEMVER}".replace("_", ".")
 
-sourceSets {
-    main.java.srcDir '../src/'
-    test.java.srcDir '../test/'
+android {
+    compileSdkVersion 23
+    buildToolsVersion = '23.0.2'
+
+    defaultConfig {
+        minSdkVersion 18
+    }
 }
 
 // Set base variables
 ext.JAR_BASE_NAME = "sweetblue_${SEMVER}"
-ext.BUNDLE_FOLDER = STAGE + "/" + JAR_BASE_NAME
+ext.BUNDLE_FOLDER = projectDir.absolutePath + "/" + STAGE + "/" + JAR_BASE_NAME
 ext.JAR_DIR = BUNDLE_FOLDER + "/jars"
 ext.JAR_NAME = JAR_BASE_NAME + ".jar"
 ext.JAVADOC_JAR_NAME = JAR_BASE_NAME + "-javadoc.jar"
@@ -37,16 +43,14 @@ repositories {
 }
 
 dependencies {    
-    compile files("${ANDROID_JAR}")
     testCompile 'junit:junit:4.10'
     testCompile 'org.robolectric:robolectric:2.4'
 }
 
-import org.apache.commons.codec.digest.DigestUtils
 
 // Task definitions
 task checker(type: Checkstyle) {
-    configFile file("./config/checkstyle/checkstyle.xml")
+    configFile file("../scripts/config/checkstyle/checkstyle.xml")
     source '../src'
     include '**/*.java'
     exclude '**/gen/**'
@@ -54,17 +58,22 @@ task checker(type: Checkstyle) {
 }
 
 // Creates Sweetblue jar
-jar {
-    archiveName = JAR_NAME    
-    destinationDir = new File(JAR_DIR)    
+task jar(type: Jar, dependsOn: "compileReleaseSources") {
+    from 'build/intermediates/classes/release'
+    archiveName = JAR_NAME
+    destinationDir = new File(JAR_DIR)
+    group = "sweetblue"
+    description = "Generates a Sweetblue jar."
 }
 
 // Create the source Jar
 task sourceJar(type: Jar, dependsOn: jar) {
     archiveName = SOURCES_JAR_NAME
     classifier = 'sources'
-    from sourceSets.main.allSource
+    from android.sourceSets.main.java.sourceFiles
     destinationDir = new File(JAR_DIR)
+    group = "sweetblue"
+    description = "Generates SweetBlue sources jar."
 }
 
 // disable the crazy super-strict doclint tool in Java 8
@@ -79,19 +88,21 @@ import org.gradle.logging.internal.OutputEventListener
 
 // Generate javadocs
 task gendocs(type: Javadoc) {
-    options.stylesheetFile = new File("./assets/doc_style.css")
+    String path = rootDir.absolutePath + "/scripts/assets/doc_style.css"
+    options.stylesheetFile = new File(path)
     options.windowTitle = "SweetBlue"
     options.memberLevel = JavadocMemberLevel.PROTECTED
     options.author = true
     //exclude '**/backend/**'
     //excludes = ["com.idevicesinc.sweetblue.backend"]
-    options.linksOffline('http://d.android.com/reference', System.getenv("ANDROID_HOME") + '/docs/reference')
+    String home = android.getSdkDirectory().getAbsolutePath()
+    options.linksOffline('http://d.android.com/reference', home + '/docs/reference')
     String v = "${SEMVER}"
     version = v.replace("_", '.')
     options.setDocTitle("SweetBlue " + version + " API")
     destinationDir = new File("${BUNDLE_FOLDER}/docs/api")
-    source = sourceSets.main.allJava
-    classpath += configurations.compile
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 
     // Check for warnings, and cause build to fail if there are any.
     // This is a temporary solution until a more official solution
@@ -113,33 +124,37 @@ task gendocs(type: Javadoc) {
                     }
                 }
             }
+    group = "sweetblue"
 }
 
-task copyJavaDoc(type: Copy, dependsOn: gendocs) {
-    checkDir("${BUNDLE_FOLDER}/docs/api")
-    from "docs/api"
-    into "${BUNDLE_FOLDER}/docs/api"
-}
+//task copyJavaDoc(type: Copy, dependsOn: gendocs) {
+//    checkDir("${BUNDLE_FOLDER}/docs/api")
+//    from "docs/api"
+//    into "${BUNDLE_FOLDER}/docs/api"
+//}
 
 // Create javadoc jar file
-task javadocJar(type: Jar, dependsOn: copyJavaDoc) {
-    classifier = 'javadoc'
+task javadocJar(type: Jar, dependsOn: gendocs) {
     archiveName = JAVADOC_JAR_NAME
+    classifier = 'javadoc'
     from gendocs.destinationDir
     destinationDir = new File(JAR_DIR)
+    group = "sweetblue"
+    description = "Generates the javadoc jar."
 }
 
 // Copy the src directory, and Readme file 
 task copyFiles << {
     checkDir("${BUNDLE_FOLDER}")
     copy {
-        from "../src"
+        from "src/main/java"
         into "${BUNDLE_FOLDER}/src"
     }
     copy {
         from "../README.md"
         into BUNDLE_FOLDER
     }
+    group = "sweetblue"
 }
 
 def checkDir(String dir) {
@@ -150,12 +165,13 @@ def checkDir(String dir) {
 }
 
 // Pull down the samples repo
-task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
+task getSamples(dependsOn: [jar, sourceJar, javadocJar]) << {
     // If the directory already exists, wipe it out, and start over
     // again, so this doesn't fail the build
-    File f = new File("${STAGE}/samples")
+    String samplePath = projectDir.absolutePath + "/${STAGE}/samples"
+    File f = new File(samplePath)
     if (f.exists()) {
-        delete "${STAGE}/samples"
+        delete "${samplePath}"
     }
 
     // When running on the build server, we need to inject the username and password
@@ -163,9 +179,9 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
     String gu = System.getenv("G_UNAME")
     def r;
     if (!gu || !gu.trim()) {
-        r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples".execute()
+        r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}".execute()
     } else {
-        String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${STAGE}/samples"
+        String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}"
         r = run.execute()                
     }
     r.waitFor()
@@ -173,7 +189,7 @@ task getSamples(dependsOn: [build, sourceJar, javadocJar]) << {
     if (!v.equals("0")) {
         throw new RuntimeException(r.errorStream.text)
     }
-
+    group = "sweetblue"
 }
 
 
@@ -188,6 +204,7 @@ task copySamples(dependsOn: [copyFiles, getSamples] ) << {
         from d
         into "${BUNDLE_FOLDER}/samples"
     }
+    group = "sweetblue"
 }
 
 // Creates a new gradle build task for the input build.gradle file
@@ -239,8 +256,14 @@ task copyAndRenameJars(dependsOn: copySamples) << {
             into file.getAbsolutePath() + ECLIPSE_SUFFIX
             rename("_${SEMVER}", "")
         }
+        copy {
+            from '../local.properties'
+            into file.getAbsolutePath() + "/android_studio"
+        }
         buildSampleTask(file.getAbsolutePath()).execute()
+        delete(file.getAbsolutePath() + "/android_studio/local.properties")
     }
+    group = "sweetblue"
 }
 
 task copyGPL(dependsOn: copyAndRenameJars) << {
@@ -248,31 +271,39 @@ task copyGPL(dependsOn: copyAndRenameJars) << {
         from "../LICENSE"
         into "${BUNDLE_FOLDER}"
     }
+    group = "sweetblue"
 }
 
 task zipTrial(type: Zip, dependsOn: copyGPL) {
     from "${BUNDLE_FOLDER}"
     archiveName = "sweetblue.zip"
     destinationDir = new File("${STAGE}")
+    group = "sweetblue"
 }
 
-task zipJar(dependsOn: [zipTrial])
+task zipJar(dependsOn: [zipTrial]) {
+    group = "sweetblue"
+    description = "Pulls down samples, builds them, and zips up all SweetBlue files."
+}
 
 task cleanFolders << {
     delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
 }
 
+import org.apache.commons.codec.digest.DigestUtils
+
 task updateReadmeVersion << {
     String dver = SEMVER.replace("_", ".")
-    File read = new File('../README.md')
+    File read = new File(rootDir.absolutePath + '/README.md')
     String r = read.getText('UTF-8')
     r = r.replaceFirst('version-.*-blue', "version-${dver}-blue")
     read.write(r, 'UTF-8')
-    String hash = DigestUtils.sha1Hex("${SEMVER}")
-    File uuid = new File('../src/com/idevicesinc/sweetblue/utils/Uuids.java')
+    String hash = DigestUtils.shaHex("${SEMVER}")
+    File uuid = new File(projectDir.absolutePath + '/src/main/java/com/idevicesinc/sweetblue/utils/Uuids.java')
     String u = uuid.getText('UTF-8')
-    u.replace('BLUETOOTH_CONNECTED_HASH = \".*\"', "BLUETOOTH_CONNTECTED_HASH = \"${hash}\"")
+    u = u.replaceFirst('BLUETOOTH_CONNECTED_HASH = \".*\"', "BLUETOOTH_CONNECTED_HASH = \"${hash}\"")
     uuid.write(u, 'UTF-8')
+    group = "sweetblue"
 }
 
 def checkStyleWarningsFile = 'build/reports/checkstyle/checkstyle.xml'
@@ -284,12 +315,18 @@ task verifyNoCheckstyleWarnings(type: GradleBuild) {
             throw new GradleException("Checkstyle detected warnings! For more info, check $warningsFile")
         }
     }
+    group = "sweetblue"
 }
 
 def buildAliases = [
     'bundleNoZip' : ['copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'updateReadmeVersion' ],
     'fullBuild' : [ 'copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'zipJar', 'updateReadmeVersion', 'cleanFolders' ]    
 ]
+
+task fullBuild(dependsOn: [ copyAndRenameJars, verifyNoCheckstyleWarnings, zipJar, updateReadmeVersion ]) {
+    group = "sweetblue"
+    description = "Perform full build, and zip up all files for release."
+}
 
 def expandedTaskList = []
 
@@ -299,17 +336,58 @@ gradle.startParameter.taskNames.each {
 
 gradle.startParameter.taskNames = expandedTaskList.flatten()
 
+ext.ARCHIVA_URL = System.getenv("ARCHIVA_URL")
+ext.a_user = System.getenv("ARCHIVA_USER")
+ext.a_pw = System.getenv("ARCHIVA_PW")
+
+
 uploadArchives {
     repositories {
         mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
             pom.groupId = 'com.idevicesinc'
             pom.artifactId = 'sweetblue'
-            pom.version = SEMVER.replace('_', '.')
+
+            repository(url: "${ARCHIVA_URL}") {
+                authentication(userName: "${a_user}", password: "${a_pw}")
+            }
+
             pom.project {
                 name 'SweetBlue'
-                description 'SweetBlue Android Bluetooth Library'
+                packaging 'aar'
+                description 'Android Bluetooth (BLE) library'
+                url 'http://idevicesinc.com/sweetblue'
             }
-            repository(url: System.getenv("ARCHIVA_URL"))
         }
     }
+}
+
+import org.gradle.plugins.signing.Sign
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.allTasks.any { it instanceof Sign }) {
+
+        allprojects { ext."signing.keyId" = System.getenv("SIGN_ID") }
+        allprojects { ext."signing.secretKeyRingFile" = System.getenv("SIGN_RING") }
+        allprojects { ext."signing.password" = System.getenv("SIGN_PW") }
+
+    }
+}
+
+signing {
+    required { /*gradle.taskGraph.hasTask("uploadArchives")*/ true }
+    sign configurations.archives
+}
+
+task androidJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+artifacts {
+    //archives javadocJar
+    archives sourceJar
+    //archives new File(JAR_DIR + "/" + JAVADOC_JAR_NAME)
+
 }

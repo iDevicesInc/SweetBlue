@@ -4,7 +4,7 @@
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>
 <a href="http://75.144.199.157:7117/job/SweetBlue%20Library/">
-  <img align="right" src="https://img.shields.io/badge/version-2.49.35-blue.svg" />
+  <img align="right" src="https://img.shields.io/badge/version-2.49.36-blue.svg" />
   <img align="right" src="http://75.144.199.157:7117/buildStatus/icon?job=SweetBlue%20Library"/>
 </a>
 <p align="center">
@@ -75,7 +75,7 @@ Getting Started
     
     android {
         compileSdkVersion 23
-        buildToolsVersion '23.0.0'
+        buildToolsVersion '23.0.2'
         
         defaultConfig {
             minSdkVersion 18
@@ -97,7 +97,7 @@ Getting Started
     
     android {
         compileSdkVersion 23
-        buildToolsVersion '23.0.0'
+        buildToolsVersion '23.0.2'
         
         defaultConfig {
             minSdkVersion 18
