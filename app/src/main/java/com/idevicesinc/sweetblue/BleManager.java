@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.*;
+
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -2299,6 +2301,15 @@ public class BleManager
 	}
 
 	/**
+	 * Same as {@link #getDevices()}, but with the devices sorted using {@link BleManagerConfig#defaultListComparator}, which
+	 * by default sorts by {@link BleDevice#getName_debug()}.
+	 */
+	public @Nullable(Prevalence.NEVER) BleDeviceIterator getDevices_sorted()
+	{
+		return new BleDeviceIterator(getDevices_List_sorted());
+	}
+
+	/**
 	 * Overload of {@link #getDevices()} that returns a {@link java.util.List} for you.
 	 */
 	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List()
@@ -2306,6 +2317,16 @@ public class BleManager
 		enforceMainThread();
 
 		return (List<BleDevice>) m_deviceMngr.getList().clone();
+	}
+
+	/**
+	 * Same as {@link #getDevices_List()}, but sorts the list using {@link BleManagerConfig#defaultListComparator}.
+	 */
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List_sorted()
+	{
+		enforceMainThread();
+
+		return (List<BleDevice>) m_deviceMngr.getList_sorted().clone();
 	}
 
 	/**
@@ -2459,7 +2480,17 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		return m_deviceMngr.getDevices_List(state);
+		return m_deviceMngr.getDevices_List(false, state);
+	}
+
+	/**
+	 * Same as {@link #getDevices_List(BleDeviceState)} except the list is sorted using {@link BleManagerConfig#defaultListComparator}.
+	 */
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List_sorted(final BleDeviceState state)
+	{
+		enforceMainThread();
+
+		return m_deviceMngr.getDevices_List(true, state);
 	}
 
 	/**
@@ -2478,7 +2509,17 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		return m_deviceMngr.getDevices_List(query);
+		return m_deviceMngr.getDevices_List(false, query);
+	}
+
+	/**
+	 * Same as {@link #getDevices_List(Object...)} except the list is sorted using {@link BleManagerConfig#defaultListComparator}.
+	 */
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List_sorted(final Object ... query)
+	{
+		enforceMainThread();
+
+		return m_deviceMngr.getDevices_List(true, query);
 	}
 
 	/**
@@ -2496,7 +2537,17 @@ public class BleManager
 	{
 		enforceMainThread();
 
-		return m_deviceMngr.getDevices_List(mask_BleDeviceState);
+		return m_deviceMngr.getDevices_List(false, mask_BleDeviceState);
+	}
+
+	/**
+	 * Same as {@link #getDevices_List(int)} except the list is sorted using {@link BleManagerConfig#defaultListComparator}.
+	 */
+	public @Nullable(Prevalence.NEVER) List<BleDevice> getDevices_List_sorted(final int mask_BleDeviceState)
+	{
+		enforceMainThread();
+
+		return m_deviceMngr.getDevices_List(true, mask_BleDeviceState);
 	}
 
 	/**
