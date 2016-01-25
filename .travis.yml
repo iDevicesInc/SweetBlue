@@ -3,7 +3,7 @@ before_script: ./prebuild.sh
 android:
   components:
   - android-23
-  - build-tools-23.0.0
+  - build-tools-23.0.2
   - doc
   - extra-android-support
   - extra-android-m2repository
