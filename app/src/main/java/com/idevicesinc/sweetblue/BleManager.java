@@ -873,7 +873,7 @@ public class BleManager
 
 	private void initLogger()
 	{
-		m_logger = new P_Logger(m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled);
+		m_logger = new P_Logger(m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled, m_config.logger);
 	}
 
 	private void initConfigDependentMembers()
