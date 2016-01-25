@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -310,6 +311,12 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public List<UuidNameMap> uuidNameMaps					= null;
+
+	/**
+	 * Default is {@link com.idevicesinc.sweetblue.BleManagerConfig.DeviceNameComparator}. This specifies how to
+	 * sort the list of devices in {@link BleManager}.
+	 */
+	public Comparator<BleDevice> defaultListComparator					= new DeviceNameComparator();
 	
 	//--- DRK > Not sure if this is useful so keeping it package private for now.
 	int	connectionFailUhOhCount								= 0;
@@ -600,6 +607,18 @@ public class BleManagerConfig extends BleDeviceConfig
 		@Override public Please onEvent(final ScanEvent e)
 		{
 			return Please.acknowledgeIf( Utils.haveMatchingIds(e.advertisedServices(), m_whitelist) );
+		}
+	}
+
+	/**
+	 * Default sorter class for sorting the list of devices in {@link BleManager}. This sorts by
+	 * {@link BleDevice#getName_debug()}.
+	 */
+	public static class DeviceNameComparator implements Comparator<BleDevice> {
+
+		@Override public int compare(BleDevice lhs, BleDevice rhs)
+		{
+			return lhs.getName_debug().compareTo(rhs.getName_debug());
 		}
 	}
 	

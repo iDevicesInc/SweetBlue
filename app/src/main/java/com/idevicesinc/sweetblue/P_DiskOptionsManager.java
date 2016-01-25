@@ -1,7 +1,10 @@
 package com.idevicesinc.sweetblue;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import android.content.Context;
@@ -216,7 +219,9 @@ class P_DiskOptionsManager
 
 		if( map != null )
 		{
-			return map.keySet().iterator();
+			List<String> keys = new ArrayList<String>(map.keySet());
+			Collections.sort(keys);
+			return keys.iterator();
 		}
 		else
 		{
