@@ -1,5 +1,5 @@
 language: android
-before_script: ./gradlew -b lint.gradle :lint
+before_script: ./prebuild.sh
 android:
   components:
   - android-23
