@@ -12,6 +12,7 @@ app/script_output
 **/doc
 **/docs
 **/scripts/script_output
+local.properties
 samples/hello_ble/.settings/org.eclipse.jdt.core.prefs
 
 samples/ble_util/.settings/org.eclipse.jdt.core.prefs
