@@ -22,12 +22,10 @@ android {
     	main {
     		manifest.srcFile 'app/src/main/AndroidManifest.xml'
     		java.srcDir '../src'
-    		res.srcDir '../src'
     	}
     	release {
     		manifest.srcFile 'app/src/main/AndroidManifest.xml'
     		java.srcDir '../src'
-    		res.srcDir '../src'
     	}
     	test.java.srcDir '../test'
     }    
