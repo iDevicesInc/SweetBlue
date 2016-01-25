@@ -75,7 +75,7 @@ Getting Started
     
     android {
         compileSdkVersion 23
-        buildToolsVersion '23.0.0'
+        buildToolsVersion '23.0.2'
         
         defaultConfig {
             minSdkVersion 18
@@ -97,7 +97,7 @@ Getting Started
     
     android {
         compileSdkVersion 23
-        buildToolsVersion '23.0.0'
+        buildToolsVersion '23.0.2'
         
         defaultConfig {
             minSdkVersion 18
