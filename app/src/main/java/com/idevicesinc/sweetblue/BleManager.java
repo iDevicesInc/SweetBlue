@@ -789,6 +789,7 @@ public class BleManager
 	private boolean m_triedToStartScanAfterTurnedOn = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
+	private boolean m_ready = false;
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
@@ -3066,6 +3067,21 @@ public class BleManager
 		m_deviceMngr.purgeStaleDevices(scanTime, m_deviceMngr_cache, m_discoveryListener);
 	}
 
+	boolean ready() {
+		if (!m_ready)
+		{
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+			{
+				m_ready = is(ON);
+			}
+			else
+			{
+				m_ready = is(ON) && isLocationEnabledForScanning_byRuntimePermissions() && isLocationEnabledForScanning_byOsServices();
+			}
+		}
+		return m_ready;
+	}
+
 	/**
 	 * This method is made public in case you want to tie the library in to an update loop
 	 * from another codebase. Generally you should leave {@link BleManagerConfig#autoUpdateRate}
@@ -3097,13 +3113,18 @@ public class BleManager
 			m_timeNotScanning += timeStep_seconds;
 		}
 
+		if ( m_timeTurnedOn == 0 && is(ON) )
+		{
+			m_timeTurnedOn = System.currentTimeMillis();
+		}
+
 		boolean startScan = false;
 
-		if( Interval.isEnabled(m_config.autoScanActiveTime) )
+		if( Interval.isEnabled(m_config.autoScanActiveTime) && ready() )
 		{
 			if( m_isForegrounded )
 			{
-				if (Interval.isEnabled(m_config.autoScanDelayAfterBleTurnsOn) && !m_triedToStartScanAfterTurnedOn && System.currentTimeMillis() - m_timeTurnedOn >= Interval.secs(m_config.autoScanDelayAfterBleTurnsOn))
+				if (Interval.isEnabled(m_config.autoScanDelayAfterBleTurnsOn) && !m_triedToStartScanAfterTurnedOn && (System.currentTimeMillis() - m_timeTurnedOn) >= m_config.autoScanDelayAfterBleTurnsOn.millis())
 				{
 					m_triedToStartScanAfterTurnedOn = true;
 
