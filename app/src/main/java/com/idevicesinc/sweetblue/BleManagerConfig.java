@@ -74,6 +74,15 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean loggingEnabled							= false;
+
+
+	/**
+	 * Default is {@link DefaultLogger} - which prints the log statements to Android's logcat. If you want to
+	 * pipe the log statements elsewhere, create a class which implements {@link SweetLogger}, and set this field
+	 * with an instance of it. If {@link #loggingEnabled} is not set, then this option will not affect anything.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public SweetLogger logger						= new DefaultLogger();
 	
 	/**
 	 * Default is <code>false</code> - this option may help mitigate crashes with "Unfortunately,
