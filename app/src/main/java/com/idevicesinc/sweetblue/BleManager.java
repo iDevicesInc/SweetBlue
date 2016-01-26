@@ -784,8 +784,9 @@ public class BleManager
 
 	private double m_timeForegrounded = 0.0;
 	private double m_timeNotScanning = 0.0;
+	private long m_timeTurnedOn = 0;
 	private boolean m_doingInfiniteScan = false;
-
+	private boolean m_triedToStartScanAfterTurnedOn = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
 
@@ -834,6 +835,10 @@ public class BleManager
 		else
 		{
 			nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
+		}
+
+		if (m_timeTurnedOn == 0 && nativeState.overlaps(BluetoothAdapter.STATE_ON)) {
+			m_timeTurnedOn = System.currentTimeMillis();
 		}
 
 		m_stateTracker = new P_BleStateTracker(this);
@@ -1506,17 +1511,17 @@ public class BleManager
 			final String enabledC = reasonC ? ENABLED : DISABLED;
 
 			Log.w
-			(
-				BleManager.class.getSimpleName(),
+					(
+							BleManager.class.getSimpleName(),
 
-				"As of Android M, in order for low energy scan results to return you must have the following:\n" +
-				"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
-				"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
-				"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
-				"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
-				"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
-				"Good luck!"
-			);
+							"As of Android M, in order for low energy scan results to return you must have the following:\n" +
+									"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
+									"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
+									"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
+									"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
+									"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
+									"Good luck!"
+					);
 		}
 	}
 
@@ -1674,6 +1679,9 @@ public class BleManager
 		}
 
 		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
+		if (m_timeTurnedOn == 0) {
+			m_timeTurnedOn = System.currentTimeMillis();
+		}
 	}
 
 	/**
@@ -3093,13 +3101,25 @@ public class BleManager
 
 		if( Interval.isEnabled(m_config.autoScanActiveTime) )
 		{
-			if( m_isForegrounded && Interval.isEnabled(m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_timeForegrounded >= Interval.secs(m_config.autoScanDelayAfterResume) )
+			if( m_isForegrounded )
 			{
-				m_triedToStartScanAfterResume = true;
-
-				if( !is(SCANNING) )
+				if (Interval.isEnabled(m_config.autoScanDelayAfterBleTurnsOn) && !m_triedToStartScanAfterTurnedOn && System.currentTimeMillis() - m_timeTurnedOn >= Interval.secs(m_config.autoScanDelayAfterBleTurnsOn))
 				{
-					startScan = true;
+					m_triedToStartScanAfterTurnedOn = true;
+
+					if (!is(SCANNING))
+					{
+						startScan = true;
+					}
+				}
+				else if ( Interval.isEnabled(m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_timeForegrounded >= Interval.secs(m_config.autoScanDelayAfterResume) )
+				{
+					m_triedToStartScanAfterResume = true;
+
+					if (!is(SCANNING))
+					{
+						startScan = true;
+					}
 				}
 			}
 			else if( !is(SCANNING) )
