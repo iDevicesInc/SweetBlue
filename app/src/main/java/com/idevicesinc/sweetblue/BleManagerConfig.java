@@ -197,16 +197,17 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval autoScanDelayAfterResume				= Interval.secs(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
 
 	/**
-	 * Default is {@link Interval#DISABLED}. If set, this will automatically start scanning after the specified {@link Interval}.
+	 * Default is {@link Interval#DISABLED}. If set, this will automatically start scanning after the specified {@link Interval}. This also
+	 * depends on {@link #autoScanActiveTime}, in that if that value is not set, this value will do nothing.
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Interval autoScanDelayAfterBleTurnsOn			= Interval.DISABLED;
 
 	/**
 	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices.
-	 * Used in conjunction with {@link #autoScanPauseInterval}, {@link #autoScanPauseTimeWhileAppIsBackgrounded}, and {@link #autoScanDelayAfterResume},
-	 * this option allows the library to periodically send off scan "pulses" that last {@link #autoScanActiveTime} seconds.
-	 * Use {@link BleManager#startPeriodicScan(Interval, Interval)} to adjust this behavior while the library is running.
+	 * Used in conjunction with {@link #autoScanPauseInterval}, {@link #autoScanPauseTimeWhileAppIsBackgrounded}, {@link #autoScanDelayAfterResume},
+	 * and {@link #autoScanDelayAfterBleTurnsOn}, this option allows the library to periodically send off scan "pulses" that last
+	 * {@link #autoScanActiveTime} seconds. Use {@link BleManager#startPeriodicScan(Interval, Interval)} to adjust this behavior while the library is running.
 	 * If either {@link #autoScanActiveTime} or {@link #autoScanPauseInterval} is {@link Interval#DISABLED} then auto scanning is disabled.
 	 * It can also be turned off with {@link BleManager#stopPeriodicScan()}.
 	 *

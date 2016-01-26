@@ -19,3 +19,4 @@ samples/ble_util/.settings/org.eclipse.jdt.core.prefs
 app/build
 app/script_output/
 local.properties
+app/app.iml
