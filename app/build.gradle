@@ -1,17 +1,12 @@
-buildscript {
-    repositories {
-        jcenter()
-        mavenCentral()
-    }
-    dependencies {        
-        classpath 'commons-codec:commons-codec:1.8'
-    }
+plugins {
+    id 'org.hidetake.ssh' version '1.1.4'
 }
 
 apply plugin: 'com.android.library'
 apply plugin: 'checkstyle'
 apply plugin: 'maven'
 apply plugin: 'signing'
+
 
 version = "${SEMVER}".replace("_", ".")
 
@@ -35,18 +30,18 @@ ext.ANDROID_JAR = System.getenv("ANDROID_HOME") + "/platforms/android-" + ANDROI
 ext.AS_SUFFIX = "/android_studio/app/libs"
 ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
-sourceCompatibility = '1.6'
-targetCompatibility = '1.6'
+sourceCompatibility = '1.7'
+targetCompatibility = '1.7'
 
 repositories {
     mavenCentral()
 }
 
-dependencies {    
+dependencies {
     testCompile 'junit:junit:4.10'
     testCompile 'org.robolectric:robolectric:2.4'
+    //sshAntTask 'org.apache.ant:ant-jsch:1.9.2', 'jsch:jsch:0.1.48'
 }
-
 
 // Task definitions
 task checker(type: Checkstyle) {
@@ -108,30 +103,24 @@ task gendocs(type: Javadoc) {
     // This is a temporary solution until a more official solution
     // makes it's way into Gradle.
     def outputEvents = []
-            def listener=new OutputEventListener(){
-                    void onOutput(OutputEvent event){
-                        outputEvents << event
-                    }
-                };
-            doFirst {
-                getLogging().addOutputEventListener(listener)
+    def listener = new OutputEventListener() {
+        void onOutput(OutputEvent event) {
+            outputEvents << event
+        }
+    };
+    doFirst {
+        getLogging().addOutputEventListener(listener)
+    }
+    doLast {
+        getLogging().removeOutputEventListener(listener)
+        outputEvents.each { e ->
+            if (e.toString() =~ " warning -") {
+                throw new GradleException("You have some javadoc warnings, please fix them!");
             }
-            doLast {
-                getLogging().removeOutputEventListener(listener)
-                outputEvents.each { e ->
-                    if(e.toString() =~ " warning -"){
-                        throw new GradleException("You have some javadoc warnings, please fix them!");
-                    }
-                }
-            }
+        }
+    }
     group = "sweetblue"
 }
-
-//task copyJavaDoc(type: Copy, dependsOn: gendocs) {
-//    checkDir("${BUNDLE_FOLDER}/docs/api")
-//    from "docs/api"
-//    into "${BUNDLE_FOLDER}/docs/api"
-//}
 
 // Create javadoc jar file
 task javadocJar(type: Jar, dependsOn: gendocs) {
@@ -182,7 +171,7 @@ task getSamples(dependsOn: [jar, sourceJar, javadocJar]) << {
         r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}".execute()
     } else {
         String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}"
-        r = run.execute()                
+        r = run.execute()
     }
     r.waitFor()
     String v = r.exitValue()
@@ -198,8 +187,8 @@ ext.sourcesJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-sources.jar"
 ext.javadocJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-javadoc.jar"
 
 // Copy the samples to the bundle folder
-task copySamples(dependsOn: [copyFiles, getSamples] ) << {
-    String d = "${STAGE}/samples/samples"    
+task copySamples(dependsOn: [copyFiles, getSamples]) << {
+    String d = "${STAGE}/samples/samples"
     copy {
         from d
         into "${BUNDLE_FOLDER}/samples"
@@ -218,13 +207,15 @@ def buildSampleTask(buildDir) {
 // Copy the new sweetblue jar, sourcejar, and javadoc jars to each sample AS
 // project, and build 
 task copyAndRenameJars(dependsOn: copySamples) << {
-    File sampleDir = new File("${BUNDLE_FOLDER}/samples/")    
-    FileCollection collection = files { sampleDir.listFiles(new FileFilter() {
-    @Override
-    public boolean accept(File file) {
-        return !file.isHidden();
+    File sampleDir = new File("${BUNDLE_FOLDER}/samples/")
+    FileCollection collection = files {
+        sampleDir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return !file.isHidden();
+            }
+        })
     }
-}) }
     collection.each { File file ->
         copy {
             from mainJar
@@ -277,13 +268,23 @@ task copyGPL(dependsOn: copyAndRenameJars) << {
 task zipTrial(type: Zip, dependsOn: copyGPL) {
     from "${BUNDLE_FOLDER}"
     archiveName = "sweetblue.zip"
-    destinationDir = new File("${STAGE}")
+    destinationDir = new File(projectDir.absolutePath + "/${STAGE}")
     group = "sweetblue"
 }
 
 task zipJar(dependsOn: [zipTrial]) {
     group = "sweetblue"
     description = "Pulls down samples, builds them, and zips up all SweetBlue files."
+
+    doLast {
+        copy {
+            from projectDir.absolutePath + "/${STAGE}/sweetblue.zip"
+            into projectDir.absolutePath + "/${STAGE}"
+            rename { String fileName ->
+                fileName.replace("sweetblue.zip", "${JAR_BASE_NAME}.zip")
+            }
+        }
+    }
 }
 
 task cleanFolders << {
@@ -319,11 +320,11 @@ task verifyNoCheckstyleWarnings(type: GradleBuild) {
 }
 
 def buildAliases = [
-    'bundleNoZip' : ['copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'updateReadmeVersion' ],
-    'fullBuild' : [ 'copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'zipJar', 'updateReadmeVersion', 'cleanFolders' ]    
+        'bundleNoZip': ['copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'updateReadmeVersion'],
+        'fullBuild'  : ['copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'zipJar', 'updateReadmeVersion', 'cleanFolders']
 ]
 
-task fullBuild(dependsOn: [ copyAndRenameJars, verifyNoCheckstyleWarnings, zipJar, updateReadmeVersion ]) {
+task fullBuild(dependsOn: [copyAndRenameJars, verifyNoCheckstyleWarnings, zipJar, updateReadmeVersion]) {
     group = "sweetblue"
     description = "Perform full build, and zip up all files for release."
 }
@@ -385,8 +386,46 @@ task androidJavadocs(type: Javadoc) {
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 }
 
+remotes {
+    webServer {
+        host = System.getenv("SWEETBLUE_SERVER_ADDRESS")
+        user = System.getenv("SWEETBLUE_COM_FTP_USERNAME")
+        password = System.getenv("SWEETBLUE_COM_FTP_PASSWORD")
+    }
+}
+
+task uploadZips(dependsOn: zipTrial) {
+    group = "upload"
+    description = "Upload zip files to iDevices public web server."
+
+    doLast {
+        ssh.run {
+            session(remotes.webServer) {
+                put from: projectDir.absolutePath + "/${STAGE}/${JAR_BASE_NAME}.zip", into: '/var/www/html/sweetblue/downloads'
+                put from: projectDir.absolutePath + "/${STAGE}/sweetblue.zip", into: '/var/www/html/sweetblue/downloads'
+            }
+        }
+    }
+}
+
+task uploadDocs(dependsOn: gendocs) {
+    group = "upload"
+    description = "Upload docs to iDevices public web server."
+
+    doLast {
+        ssh.run {
+            session(remotes.webServer) {
+                put from: "/${BUNDLE_FOLDER}/docs/api", into: '/var/www/html/sweetblue/docs'
+            }
+        }
+    }
+}
+
+task uploadToIDevServer(dependsOn: [uploadZips, uploadDocs]) {
+    group = "upload"
+    description = "Upload zip files and docs to iDevices server."
+}
+
 artifacts {
-    //archives javadocJar
     archives sourceJar
-    //archives new File(JAR_DIR + "/" + JAVADOC_JAR_NAME)
 }
