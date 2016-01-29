@@ -74,6 +74,15 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean loggingEnabled							= false;
+
+
+	/**
+	 * Default is {@link DefaultLogger} - which prints the log statements to Android's logcat. If you want to
+	 * pipe the log statements elsewhere, create a class which implements {@link SweetLogger}, and set this field
+	 * with an instance of it. If {@link #loggingEnabled} is not set, then this option will not affect anything.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public SweetLogger logger						= new DefaultLogger();
 	
 	/**
 	 * Default is <code>false</code> - this option may help mitigate crashes with "Unfortunately,
@@ -197,16 +206,17 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval autoScanDelayAfterResume				= Interval.secs(DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME);
 
 	/**
-	 * Default is {@link Interval#DISABLED}. If set, this will automatically start scanning after the specified {@link Interval}.
+	 * Default is {@link Interval#DISABLED}. If set, this will automatically start scanning after the specified {@link Interval}. This also
+	 * depends on {@link #autoScanActiveTime}, in that if that value is not set, this value will do nothing.
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Interval autoScanDelayAfterBleTurnsOn			= Interval.DISABLED;
 
 	/**
 	 * Default is {@link Interval#DISABLED} - Length of time in seconds that the library will automatically scan for devices.
-	 * Used in conjunction with {@link #autoScanPauseInterval}, {@link #autoScanPauseTimeWhileAppIsBackgrounded}, and {@link #autoScanDelayAfterResume},
-	 * this option allows the library to periodically send off scan "pulses" that last {@link #autoScanActiveTime} seconds.
-	 * Use {@link BleManager#startPeriodicScan(Interval, Interval)} to adjust this behavior while the library is running.
+	 * Used in conjunction with {@link #autoScanPauseInterval}, {@link #autoScanPauseTimeWhileAppIsBackgrounded}, {@link #autoScanDelayAfterResume},
+	 * and {@link #autoScanDelayAfterBleTurnsOn}, this option allows the library to periodically send off scan "pulses" that last
+	 * {@link #autoScanActiveTime} seconds. Use {@link BleManager#startPeriodicScan(Interval, Interval)} to adjust this behavior while the library is running.
 	 * If either {@link #autoScanActiveTime} or {@link #autoScanPauseInterval} is {@link Interval#DISABLED} then auto scanning is disabled.
 	 * It can also be turned off with {@link BleManager#stopPeriodicScan()}.
 	 *
@@ -440,10 +450,11 @@ public class BleManagerConfig extends BleDeviceConfig
 				final List<UUID> serviceUuids = new ArrayList<UUID>();
 				final SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
 				final Map<UUID, byte[]> serviceData = new HashMap<UUID, byte[]>();
+				final String name = rawDeviceName != null ? rawDeviceName : Utils_ScanRecord.parseName(scanRecord);
 
 				Utils_ScanRecord.parseScanRecord(scanRecord, advFlags, txPower, serviceUuids, manufacturerData, serviceData);
 
-				final ScanEvent e = new ScanEvent(device_native, serviceUuids, rawDeviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent, txPower.value, manufacturerData, serviceData, advFlags.value);
+				final ScanEvent e = new ScanEvent(device_native, serviceUuids, name, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent, txPower.value, manufacturerData, serviceData, advFlags.value);
 
 				return e;
 			}

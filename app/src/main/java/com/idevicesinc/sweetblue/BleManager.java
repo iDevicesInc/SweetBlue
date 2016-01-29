@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.Handler;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
@@ -55,6 +56,7 @@ import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 /**
@@ -784,10 +786,12 @@ public class BleManager
 
 	private double m_timeForegrounded = 0.0;
 	private double m_timeNotScanning = 0.0;
+	private long m_timeTurnedOn = 0;
 	private boolean m_doingInfiniteScan = false;
-
+	private boolean m_triedToStartScanAfterTurnedOn = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_triedToStartScanAfterResume = false;
+	private boolean m_ready = false;
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
@@ -836,6 +840,10 @@ public class BleManager
 			nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
 		}
 
+		if (m_timeTurnedOn == 0 && nativeState.overlaps(BluetoothAdapter.STATE_ON)) {
+			m_timeTurnedOn = System.currentTimeMillis();
+		}
+
 		m_stateTracker = new P_BleStateTracker(this);
 		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
@@ -873,7 +881,7 @@ public class BleManager
 
 	private void initLogger()
 	{
-		m_logger = new P_Logger(m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled);
+		m_logger = new P_Logger(m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled, m_config.logger);
 	}
 
 	private void initConfigDependentMembers()
@@ -1506,17 +1514,17 @@ public class BleManager
 			final String enabledC = reasonC ? ENABLED : DISABLED;
 
 			Log.w
-			(
-				BleManager.class.getSimpleName(),
+					(
+							BleManager.class.getSimpleName(),
 
-				"As of Android M, in order for low energy scan results to return you must have the following:\n" +
-				"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
-				"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
-				"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
-				"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
-				"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
-				"Good luck!"
-			);
+							"As of Android M, in order for low energy scan results to return you must have the following:\n" +
+									"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
+									"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
+									"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
+									"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
+									"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
+									"Good luck!"
+					);
 		}
 	}
 
@@ -1674,6 +1682,9 @@ public class BleManager
 		}
 
 		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
+		if (m_timeTurnedOn == 0) {
+			m_timeTurnedOn = System.currentTimeMillis();
+		}
 	}
 
 	/**
@@ -2849,7 +2860,7 @@ public class BleManager
 
 		try
 		{
-			rawDeviceName = device_native.getName();
+			rawDeviceName = TextUtils.isEmpty(device_native.getName()) ? Utils_ScanRecord.parseName(scanRecord_nullable) : device_native.getName();
 		}
 
 		//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.
@@ -2870,7 +2881,7 @@ public class BleManager
 			return;
 		}
 
-		final String loggedDeviceName = rawDeviceName != null ? rawDeviceName : "<NO_NAME>";
+		final String loggedDeviceName = rawDeviceName;
 
 		final String macAddress = device_native.getAddress();
 		BleDevice device_sweetblue = m_deviceMngr.get(macAddress);
@@ -2916,7 +2927,7 @@ public class BleManager
 
     	if ( device_sweetblue == null )
     	{
-			final String name_native = device_native.getName();
+			final String name_native = rawDeviceName;//device_native.getName();
 
     		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
     		device_sweetblue = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
@@ -3058,6 +3069,21 @@ public class BleManager
 		m_deviceMngr.purgeStaleDevices(scanTime, m_deviceMngr_cache, m_discoveryListener);
 	}
 
+	boolean ready() {
+		if (!m_ready)
+		{
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+			{
+				m_ready = is(ON);
+			}
+			else
+			{
+				m_ready = is(ON) && isLocationEnabledForScanning_byRuntimePermissions() && isLocationEnabledForScanning_byOsServices();
+			}
+		}
+		return m_ready;
+	}
+
 	/**
 	 * This method is made public in case you want to tie the library in to an update loop
 	 * from another codebase. Generally you should leave {@link BleManagerConfig#autoUpdateRate}
@@ -3089,17 +3115,34 @@ public class BleManager
 			m_timeNotScanning += timeStep_seconds;
 		}
 
+		if ( m_timeTurnedOn == 0 && is(ON) )
+		{
+			m_timeTurnedOn = System.currentTimeMillis();
+		}
+
 		boolean startScan = false;
 
-		if( Interval.isEnabled(m_config.autoScanActiveTime) )
+		if( Interval.isEnabled(m_config.autoScanActiveTime) && ready() )
 		{
-			if( m_isForegrounded && Interval.isEnabled(m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_timeForegrounded >= Interval.secs(m_config.autoScanDelayAfterResume) )
+			if( m_isForegrounded )
 			{
-				m_triedToStartScanAfterResume = true;
-
-				if( !is(SCANNING) )
+				if (Interval.isEnabled(m_config.autoScanDelayAfterBleTurnsOn) && !m_triedToStartScanAfterTurnedOn && (System.currentTimeMillis() - m_timeTurnedOn) >= m_config.autoScanDelayAfterBleTurnsOn.millis())
 				{
-					startScan = true;
+					m_triedToStartScanAfterTurnedOn = true;
+
+					if (!is(SCANNING))
+					{
+						startScan = true;
+					}
+				}
+				else if ( Interval.isEnabled(m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_timeForegrounded >= Interval.secs(m_config.autoScanDelayAfterResume) )
+				{
+					m_triedToStartScanAfterResume = true;
+
+					if (!is(SCANNING))
+					{
+						startScan = true;
+					}
 				}
 			}
 			else if( !is(SCANNING) )

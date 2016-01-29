@@ -21,6 +21,7 @@ import com.idevicesinc.sweetblue.utils.UuidNameMap_ListWrapper;
 
 class P_Logger
 {
+
 	private String[] m_debugThreadNamePool;
 	private int m_poolIndex = 0;
 	private final HashMap<Integer, String> m_threadNames = new HashMap<Integer, String>();
@@ -31,9 +32,12 @@ class P_Logger
 	private HashMap<Integer, String> m_unbondReasonCodes = null;
 	private boolean m_enabled;
 	private final UuidNameMap_ListWrapper m_nameMap;
+	private SweetLogger m_logger = null;
+
 	
-	public P_Logger(String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, boolean enabled)
-	{		
+	public P_Logger(String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, boolean enabled, SweetLogger logger)
+	{
+		m_logger = logger;
 		m_debugThreadNamePool = debugThreadNamePool;
 		m_nameMap = new UuidNameMap_ListWrapper(debugUuidNameDicts);
 		m_enabled = enabled;
@@ -160,7 +164,14 @@ class P_Logger
 	private void log_private(int level, String tag, String message, StackTraceElement trace)
 	{
 		message = prefixMessage(trace.getMethodName(), message);
-		Log.println(level, tag, message);
+		if (m_logger != null)
+		{
+			m_logger.onLogEntry(level, tag, message);
+		}
+		else
+		{
+			Log.println(level, tag, message);
+		}
 	}
 	
 	public void d(String tag, String message)
