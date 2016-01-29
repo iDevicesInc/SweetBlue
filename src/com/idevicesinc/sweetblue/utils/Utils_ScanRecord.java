@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import android.bluetooth.le.*;
 import android.os.ParcelUuid;
+import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
@@ -195,6 +196,45 @@ public class Utils_ScanRecord extends Utils
 		{
 			Log.e(TAG, "unable to parse scan record: " + Arrays.toString(scanRecord));
 		}
+	}
+
+	public static String parseName(byte[] scanRecord) {
+		String name = "<NO_NAME>";
+		int currentPos = 0;
+		try
+		{
+			while( currentPos < scanRecord.length )
+			{
+				// length is unsigned int.
+				int length = scanRecord[currentPos++] & 0xFF;
+				if( length == 0 )
+				{
+					break;
+				}
+				// Note the length includes the length of the field type itself.
+				int dataLength = length - 1;
+				// fieldType is unsigned int.
+				int fieldType = scanRecord[currentPos++] & 0xFF;
+				switch( fieldType )
+				{
+					case DATA_TYPE_LOCAL_NAME_COMPLETE:
+						String n = new String(extractBytes(scanRecord, currentPos, dataLength));
+						if (!TextUtils.isEmpty(n)) {
+							name = n;
+						}
+						break;
+					default:
+						// Just ignore, we don't handle such data type.
+						break;
+				}
+				currentPos += dataLength;
+			}
+		}
+		catch(Exception e)
+		{
+			Log.e(TAG, "unable to parse scan record: " + Arrays.toString(scanRecord));
+		}
+		return name;
 	}
 
 	// Parse service UUIDs.

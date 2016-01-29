@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.Handler;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
@@ -51,6 +52,7 @@ import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 /**
@@ -2799,7 +2801,7 @@ public class BleManager
 
 		try
 		{
-			rawDeviceName = device_native.getName();
+			rawDeviceName = TextUtils.isEmpty(device_native.getName()) ? Utils_ScanRecord.parseName(scanRecord_nullable) : device_native.getName();
 		}
 
 		//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.
@@ -2820,7 +2822,7 @@ public class BleManager
 			return;
 		}
 
-		final String loggedDeviceName = rawDeviceName != null ? rawDeviceName : "<NO_NAME>";
+		final String loggedDeviceName = rawDeviceName;
 
 		final String macAddress = device_native.getAddress();
 		BleDevice device_sweetblue = m_deviceMngr.get(macAddress);
@@ -2866,7 +2868,7 @@ public class BleManager
 
     	if ( device_sweetblue == null )
     	{
-			final String name_native = device_native.getName();
+			final String name_native = rawDeviceName;//device_native.getName();
 
     		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
     		device_sweetblue = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
