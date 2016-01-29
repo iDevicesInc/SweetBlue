@@ -450,10 +450,11 @@ public class BleManagerConfig extends BleDeviceConfig
 				final List<UUID> serviceUuids = new ArrayList<UUID>();
 				final SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
 				final Map<UUID, byte[]> serviceData = new HashMap<UUID, byte[]>();
+				final String name = rawDeviceName != null ? rawDeviceName : Utils_ScanRecord.parseName(scanRecord);
 
 				Utils_ScanRecord.parseScanRecord(scanRecord, advFlags, txPower, serviceUuids, manufacturerData, serviceData);
 
-				final ScanEvent e = new ScanEvent(device_native, serviceUuids, rawDeviceName, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent, txPower.value, manufacturerData, serviceData, advFlags.value);
+				final ScanEvent e = new ScanEvent(device_native, serviceUuids, name, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent, txPower.value, manufacturerData, serviceData, advFlags.value);
 
 				return e;
 			}
