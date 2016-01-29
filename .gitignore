@@ -12,5 +12,11 @@ scripts/script_output/
 **/docs
 **/scripts/script_output
 samples/hello_ble/.settings/org.eclipse.jdt.core.prefs
-
 samples/ble_util/.settings/org.eclipse.jdt.core.prefs
+/.idea/workspace.xml
+/.idea/libraries
+/.idea/runConfigurations.xml
+app/build
+app/script_output/
+local.properties
+app/app.iml
