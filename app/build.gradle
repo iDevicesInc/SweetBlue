@@ -40,7 +40,6 @@ repositories {
 dependencies {
     testCompile 'junit:junit:4.10'
     testCompile 'org.robolectric:robolectric:2.4'
-    //sshAntTask 'org.apache.ant:ant-jsch:1.9.2', 'jsch:jsch:0.1.48'
 }
 
 // Task definitions
@@ -287,25 +286,39 @@ task zipJar(dependsOn: [zipTrial]) {
     }
 }
 
+def String getHexString(byte[] data) {
+    def hex = "0123456789abcdef".toCharArray();
+    StringBuilder b = new StringBuilder();
+    for (int i = 0; i < data.length; i++) {
+        int v = data[i] & 0xFF;
+        b.append(hex[v >>> 4]);
+        b.append(hex[v & 0x0F]);
+    }
+    return b.toString().trim();
+}
+
+task bumpVersion {
+    group = "sweetblue"
+    description = "Updates readme file with the latest version number, and updates hash in Uuids.java"
+    doLast {
+        MessageDigest md = MessageDigest.getInstance("SHA1")
+        byte[] res = md.digest(version.getBytes())
+        String hash = getHexString(res)
+        File uuids = new File(projectDir.absolutePath + "/src/main/java/com/idevicesinc/sweetblue/utils/Uuids.java")
+        String contents = uuids.getText('UTF-8')
+        contents = contents.replaceAll("BLUETOOTH_CONNECTED_HASH = \".*\"", "BLUETOOTH_CONNECTED_HASH = \"${hash}\"")
+        uuids.write(contents, 'UTF-8')
+        File readme = new File(rootDir.absolutePath + "/README.md")
+        contents = readme.getText('UTF-8')
+        contents = contents.replaceAll("version-.*-blue", "version-${version}-blue")
+        readme.write(contents, 'UTF-8')
+    }
+}
+
 task cleanFolders << {
     delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
 }
 
-import org.apache.commons.codec.digest.DigestUtils
-
-task updateReadmeVersion << {
-    String dver = SEMVER.replace("_", ".")
-    File read = new File(rootDir.absolutePath + '/README.md')
-    String r = read.getText('UTF-8')
-    r = r.replaceFirst('version-.*-blue', "version-${dver}-blue")
-    read.write(r, 'UTF-8')
-    String hash = DigestUtils.shaHex("${SEMVER}")
-    File uuid = new File(projectDir.absolutePath + '/src/main/java/com/idevicesinc/sweetblue/utils/Uuids.java')
-    String u = uuid.getText('UTF-8')
-    u = u.replaceFirst('BLUETOOTH_CONNECTED_HASH = \".*\"', "BLUETOOTH_CONNECTED_HASH = \"${hash}\"")
-    uuid.write(u, 'UTF-8')
-    group = "sweetblue"
-}
 
 def checkStyleWarningsFile = 'build/reports/checkstyle/checkstyle.xml'
 
@@ -320,11 +333,11 @@ task verifyNoCheckstyleWarnings(type: GradleBuild) {
 }
 
 def buildAliases = [
-        'bundleNoZip': ['copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'updateReadmeVersion'],
-        'fullBuild'  : ['copyAndRenameJars', 'verifyNoCheckstyleWarnings', 'zipJar', 'updateReadmeVersion', 'cleanFolders']
+        'bundleNoZip': ['copyAndRenameJars', 'bumpVersion', 'verifyNoCheckstyleWarnings'],
+        'fullBuild'  : ['copyAndRenameJars', 'bumpVersion', 'verifyNoCheckstyleWarnings', 'zipJar', 'cleanFolders']
 ]
 
-task fullBuild(dependsOn: [copyAndRenameJars, verifyNoCheckstyleWarnings, zipJar, updateReadmeVersion]) {
+task fullBuild(dependsOn: [copyAndRenameJars, bumpVersion, verifyNoCheckstyleWarnings, zipJar]) {
     group = "sweetblue"
     description = "Perform full build, and zip up all files for release."
 }
@@ -365,6 +378,8 @@ uploadArchives {
 }
 
 import org.gradle.plugins.signing.Sign
+import java.security.MessageDigest
+
 
 gradle.taskGraph.whenReady { taskGraph ->
     if (taskGraph.allTasks.any { it instanceof Sign }) {
