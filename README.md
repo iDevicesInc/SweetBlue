@@ -3,7 +3,7 @@
 <b>|</b>&nbsp;<a href='#getting-started'>Getting Started</a>
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>
-<a href="http://75.144.199.157:7117/job/SweetBlue%20Library/">
+<a href="https://travis-ci.org/iDevicesInc/SweetBlue">
   <img align="right" src="https://img.shields.io/badge/version-2.50.37-blue.svg" />
   <img align="right" src="https://travis-ci.org/iDevicesInc/SweetBlue.svg?branch=master"/>
 </a>
@@ -91,7 +91,31 @@ Getting Started
     }
     
     ```
-  4. Else if building with JAR, it should look something like this:
+    
+  4. If you're building with source from github, the sourceSet path is a bit different:
+  
+    ```gradle
+                 
+      android {
+          compileSdkVersion 23
+          buildToolsVersion '23.0.2'
+          
+          defaultConfig {
+              minSdkVersion 18
+              targetSdkVersion 23
+              ...
+          }
+      
+          sourceSets {
+              main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'
+              ...
+          }
+          ...
+      }
+      
+      ```
+    
+  5. Else if building with JAR, it should look something like this:
 
     ```gradle
     
