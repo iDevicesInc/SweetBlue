@@ -84,14 +84,38 @@ Getting Started
         }
     
         sourceSets {
-            main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'
+            main.java.srcDirs += 'src/main/lib/sweetblue/src'
             ...
         }
         ...
     }
     
     ```
-  4. Else if building with JAR, it should look something like this:
+    
+  4. If you're building with source from github, the sourceSet path is a bit different:
+  
+    ```gradle
+                 
+      android {
+          compileSdkVersion 23
+          buildToolsVersion '23.0.2'
+          
+          defaultConfig {
+              minSdkVersion 18
+              targetSdkVersion 23
+              ...
+          }
+      
+          sourceSets {
+              main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'
+              ...
+          }
+          ...
+      }
+      
+      ```
+    
+  5. Else if building with JAR, it should look something like this:
 
     ```gradle
     
