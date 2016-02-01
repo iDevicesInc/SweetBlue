@@ -3,7 +3,7 @@
 <b>|</b>&nbsp;<a href='#getting-started'>Getting Started</a>
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>
-<a href="http://75.144.199.157:7117/job/SweetBlue%20Library/">
+<a href="https://travis-ci.org/iDevicesInc/SweetBlue">
   <img align="right" src="https://img.shields.io/badge/version-2.50.37-blue.svg" />
   <img align="right" src="https://travis-ci.org/iDevicesInc/SweetBlue.svg?branch=master"/>
 </a>

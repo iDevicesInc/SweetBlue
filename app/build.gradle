@@ -311,6 +311,7 @@ task bumpVersion {
         File readme = new File(rootDir.absolutePath + "/README.md")
         contents = readme.getText('UTF-8')
         contents = contents.replaceAll("version-.*-blue", "version-${version}-blue")
+        contents = contents.replaceAll("sweetblue:.*'", "sweetblue:${version}'")
         readme.write(contents, 'UTF-8')
     }
 }
