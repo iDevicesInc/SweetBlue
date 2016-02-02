@@ -903,6 +903,60 @@ public class BleDevice extends BleNode
 			}
 
 			/**
+			 * Convenience method that attempts to parse {@link #data()} as an {@link int}.
+			 * @param reverse - Set to true if you are connecting to a device with BIG_ENDIAN byte order, to automatically reverse the bytes before conversion.
+			 */
+			public @Nullable(Prevalence.NEVER) int data_int(boolean reverse)
+			{
+				if (reverse)
+				{
+					byte[] data = data();
+					Utils_Byte.reverseBytes(data);
+					return Utils_Byte.bytesToInt(data);
+				}
+				else
+				{
+					return Utils_Byte.bytesToInt(data());
+				}
+			}
+
+			/**
+			 * Convenience method that attempts to parse {@link #data()} as an {@link short}.
+			 * @param reverse - Set to true if you are connecting to a device with BIG_ENDIAN byte order, to automatically reverse the bytes before conversion.
+			 */
+			public @Nullable(Prevalence.NEVER) short data_short(boolean reverse)
+			{
+				if (reverse)
+				{
+					byte[] data = data();
+					Utils_Byte.reverseBytes(data);
+					return Utils_Byte.bytesToShort(data);
+				}
+				else
+				{
+					return Utils_Byte.bytesToShort(data());
+				}
+			}
+
+			/**
+			 * Convenience method that attempts to parse {@link #data()} as an {@link long}.
+			 * @param reverse - Set to true if you are connecting to a device with BIG_ENDIAN byte order, to automatically reverse the bytes before conversion.
+			 */
+			public @Nullable(Prevalence.NEVER) long data_long(boolean reverse)
+			{
+				if (reverse)
+				{
+					byte[] data = data();
+					Utils_Byte.reverseBytes(data);
+					return Utils_Byte.bytesToLong(data);
+				}
+				else
+				{
+					return Utils_Byte.bytesToLong(data());
+				}
+			}
+
+			/**
 			 * Forwards {@link Type#isNull()}.
 			 */
 			@Override public boolean isNull()
