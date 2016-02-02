@@ -3145,7 +3145,7 @@ public class BleManager
 					}
 				}
 			}
-			else if( !is(SCANNING) )
+			if( !is(SCANNING) )
 			{
 				double scanInterval = Interval.secs(m_isForegrounded ? m_config.autoScanPauseInterval : m_config.autoScanPauseTimeWhileAppIsBackgrounded);
 

@@ -429,7 +429,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		if( this.getState() == PE_TaskState.EXECUTING  )
 		{
-			if( getTotalTimeExecuting() >= getMinimumScanTime() || (getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek())) )
+			if( getTotalTimeExecuting() >= getMinimumScanTime() && (getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek())) )
 			{
 				selfInterrupt();
 			}
