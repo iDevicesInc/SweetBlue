@@ -95,7 +95,7 @@ Getting Started
   4. If you're building with source from github, the sourceSet path is a bit different:
   
     ```gradle
-                 
+      
       android {
           compileSdkVersion 23
           buildToolsVersion '23.0.2'
@@ -107,7 +107,7 @@ Getting Started
           }
       
           sourceSets {
-              main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'
+              main.java.srcDirs += 'src/main/lib/sweetblue/src'
               ...
           }
           ...
@@ -137,6 +137,7 @@ Getting Started
     }
     
     ```
+    
 2. Else if using **Eclipse**...
   1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/libs/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
   2. Open the `Package Explorer` view.

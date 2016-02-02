@@ -297,6 +297,8 @@ def String getHexString(byte[] data) {
     return b.toString().trim();
 }
 
+import java.security.MessageDigest
+
 task bumpVersion {
     group = "sweetblue"
     description = "Updates readme file with the latest version number, and updates hash in Uuids.java"
@@ -378,9 +380,19 @@ uploadArchives {
     }
 }
 
-import org.gradle.plugins.signing.Sign
-import java.security.MessageDigest
+task uploadInternal(type: Upload) {
+    group = "upload"
+    description = "Uploads artifact to our internal maven repository"
+    configuration = configurations.archives
+    uploadDescriptor = true
+    repositories {
+        mavenDeployer {
+            repository(url: "http://10.0.1.239:5819/repository/internal")
+        }
+    }
+}
 
+import org.gradle.plugins.signing.Sign
 
 gradle.taskGraph.whenReady { taskGraph ->
     if (taskGraph.allTasks.any { it instanceof Sign }) {
