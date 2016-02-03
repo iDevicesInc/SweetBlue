@@ -26,7 +26,6 @@ ext.JAR_DIR = BUNDLE_FOLDER + "/jars"
 ext.JAR_NAME = JAR_BASE_NAME + ".jar"
 ext.JAVADOC_JAR_NAME = JAR_BASE_NAME + "-javadoc.jar"
 ext.SOURCES_JAR_NAME = JAR_BASE_NAME + "-sources.jar"
-ext.ANDROID_JAR = System.getenv("ANDROID_HOME") + "/platforms/android-" + ANDROID_API_LEVEL + "/android.jar"
 ext.AS_SUFFIX = "/android_studio/app/libs"
 ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
