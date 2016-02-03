@@ -107,7 +107,7 @@ Getting Started
           }
       
           sourceSets {
-              main.java.srcDirs += 'src/main/lib/sweetblue/src'
+              main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'
               ...
           }
           ...
