@@ -382,11 +382,23 @@ uploadArchives {
 task uploadInternal(type: Upload) {
     group = "upload"
     description = "Uploads artifact to our internal maven repository"
-    configuration = configurations.archives
+    configuration = uploadArchives.configuration
     uploadDescriptor = true
     repositories {
         mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            pom.groupId = 'com.idevicesinc'
+            pom.artifactId = 'sweetblue'
+
             repository(url: "http://10.0.1.239:5819/repository/internal")
+
+            pom.project {
+                name 'SweetBlue'
+                packaging 'aar'
+                description 'Android Bluetooth (BLE) library'
+                url 'http://idevicesinc.com/sweetblue'
+            }
         }
     }
 }
