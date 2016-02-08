@@ -4,7 +4,6 @@ import android.bluetooth.le.ScanSettings;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.compat.M_Util;
-import com.idevicesinc.sweetblue.utils.BleManagerConfigScanTest;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import java.util.List;
@@ -26,8 +25,6 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	private final double m_scanTime;
 
 	private final int m_retryCountMax = 3;
-
-	private BleManagerConfigScanTest m_scanTestConfig;
 
 	private final L_Util.ScanCallback m_scanCallback_postLollipop = new L_Util.ScanCallback()
 	{
@@ -131,17 +128,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	{
 		super(manager, listener);
 
-		if (manager.m_config instanceof BleManagerConfigScanTest)
-		{
-			m_scanTestConfig = (BleManagerConfigScanTest) manager.m_config;
-		}
 		m_scanTime = scanTime;
 		m_isPoll = isPoll;
-	}
-
-	@Override protected boolean isUnitTest()
-	{
-		return m_scanTestConfig != null;
 	}
 
 	public E_Intent getIntent()
@@ -195,50 +183,22 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private boolean isLocationEnabledForScanning_byOsServices()
 	{
-		if (isUnitTest())
-		{
-			return m_scanTestConfig.locationEnabledForScanning_byOsServices;
-		}
-		else
-		{
-			return getManager().isLocationEnabledForScanning_byOsServices();
-		}
+		return getManager().isLocationEnabledForScanning_byOsServices();
 	}
 
 	private boolean isLocationEnabledForScanning_byRuntimePermissions()
 	{
-		if (isUnitTest())
-		{
-			return m_scanTestConfig.locationEnabledForScanning_byRuntimePermissions;
-		}
-		else
-		{
-			return getManager().isLocationEnabledForScanning_byRuntimePermissions();
-		}
+		return getManager().isLocationEnabledForScanning_byRuntimePermissions();
 	}
 
 	private boolean isLocationEnabledForScanning()
 	{
-		if (isUnitTest())
-		{
-			return m_scanTestConfig.locationEnabledForScanning;
-		}
-		else
-		{
-			return getManager().isLocationEnabledForScanning();
-		}
+		return getManager().isLocationEnabledForScanning();
 	}
 
 	private boolean isBluetoothEnabled()
 	{
-		if (isUnitTest())
-		{
-			return m_scanTestConfig.btEnabled;
-		}
-		else
-		{
-			return getManager().getNative().getAdapter().isEnabled();
-		}
+		return getManager().isBluetoothEnabled();
 	}
 
 	private void execute_locationEnabledFlow()
@@ -348,16 +308,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 		else
 		{
-			if (!isUnitTest())
+			if (Utils.isMarshmallow())
 			{
-				if (Utils.isMarshmallow())
-				{
-					M_Util.startNativeScan(getManager(), scanMode, getManager().m_config.scanReportDelay, m_scanCallback_postLollipop);
-				}
-				else
-				{
-					L_Util.startNativeScan(getManager(), scanMode, getManager().m_config.scanReportDelay, m_scanCallback_postLollipop);
-				}
+				getManager().startMScan(scanMode, m_scanCallback_postLollipop);
+			}
+			else
+			{
+				getManager().startLScan(scanMode, m_scanCallback_postLollipop);
 			}
 		}
 	}
@@ -451,26 +408,12 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private void stopLeScan()
 	{
-		if (isUnitTest())
-		{
-
-		}
-		else
-		{
-			getManager().getNativeAdapter().stopLeScan(getManager().m_listeners.m_scanCallback_preLollipop);
-		}
+		getManager().stopLeScan();
 	}
 
 	private boolean startLeScan()
 	{
-		if (isUnitTest())
-		{
-			return true;
-		}
-		else
-		{
-			return getManager().getNativeAdapter().startLeScan(getManager().m_listeners.m_scanCallback_preLollipop);
-		}
+		return getManager().startLeScan();
 	}
 
 	private boolean tryClassicDiscovery(final E_Intent intent, final boolean suppressUhOh)
@@ -511,14 +454,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private boolean startClassicDiscovery()
 	{
-		if (isUnitTest())
-		{
-			return true;
-		}
-		else
-		{
-			return getManager().getNativeAdapter().startDiscovery();
-		}
+		return getManager().startClassicDiscovery();
 	}
 	
 	private double getMinimumScanTime()

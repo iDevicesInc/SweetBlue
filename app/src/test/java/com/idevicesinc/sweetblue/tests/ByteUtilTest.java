@@ -15,7 +15,8 @@ import static org.junit.Assert.assertFalse;
 
 @Config(manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
-public class TestByteUtil {
+public class ByteUtilTest
+{
 
     @Test
     public void intTest() {

@@ -15,12 +15,12 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.annotations.UnitTest;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -302,7 +302,28 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Default is <code>null</code> - provide an instance here that will be called at the end of {@link BleManager#update(double)}.
 	 * This might be useful for extension/wrapper libraries or apps that want to tie into the {@link BleManager} instance's existing update loop.
 	 */
-	public UpdateLoop.Callback updateLoopCallback			= null;
+	public PI_UpdateLoop.Callback updateLoopCallback			= null;
+
+	/**
+	 * This allows the use of custom {@link PI_UpdateLoop} for the internal processing of SweetBlue. This is only exposed
+	 * for unit testing purposes, you should never change this unless you know the internals of SweetBlue intimately.
+	 */
+	@UnitTest
+	public PI_UpdateLoop.IUpdateLoopFactory updateLoopFactory	= new PI_UpdateLoop.DefaultUpdateLoopFactory();
+
+	/**
+	 * Allows overriding of Ble Status's. This is only used for unit testing, and shouldn't be
+	 * used at all.
+	 */
+	@UnitTest
+	public PI_BleStatusHelper bleStatusHelper 					= null;
+
+	/**
+	 * Allows overriding of Ble scanning behaviour in SweetBlue. This is only used for unit
+	 * testing, and should not be used at all.
+	 */
+	@UnitTest
+	public PI_BleScanner bleScanner								= null;
 	
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.

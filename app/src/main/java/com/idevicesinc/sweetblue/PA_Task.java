@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
 
-import com.idevicesinc.sweetblue.utils.BleManagerConfigScanTest;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -46,8 +45,6 @@ abstract class PA_Task
 	
 	private int m_defaultOrdinal = ORDINAL_NOT_YET_ASSIGNED; // until added to the queue and assigned an actual ordinal.
 
-	private boolean unitTesting = false;
-
 
     public PA_Task(BleServer server, I_StateListener listener)
     {
@@ -67,7 +64,6 @@ abstract class PA_Task
 	{
 		m_device = null;
 		m_manager = manager;
-		unitTesting = manager.m_config instanceof BleManagerConfigScanTest;
 //		m_maxRetries = 0;
 		m_timeCreated = System.currentTimeMillis();
 		
@@ -80,10 +76,6 @@ abstract class PA_Task
 		{
 			m_stateListener = listener;
 		}
-	}
-
-	protected boolean isUnitTest() {
-		return unitTesting;
 	}
 	
 	protected abstract BleTask getTaskType();
