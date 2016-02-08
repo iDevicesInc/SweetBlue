@@ -142,8 +142,6 @@ public class UpdateLoop implements PI_UpdateLoop
 	{
 		//--- DRK > This can technically take a little time to initialize after 
 		//---		this class is constructed so wait for it if needed.
-		//--- RB > If unit testing, we don't use a Handler at all, so we'll
-		//---       return here
 		while(m_handler == null) {}
 	}
 

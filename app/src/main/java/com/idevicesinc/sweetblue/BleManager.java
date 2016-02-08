@@ -818,7 +818,6 @@ public class BleManager
 	final P_BleManager_Listeners m_listeners;
 	private final P_BleStateTracker m_stateTracker;
 	final P_NativeBleStateTracker m_nativeStateTracker;
-	//private 	 UpdateLoop m_updateLoop;
 	private PI_UpdateLoop m_updateLoop;
 	private final P_TaskQueue m_taskQueue;
 	private 	P_UhOhThrottler m_uhOhThrottler;
