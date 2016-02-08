@@ -677,7 +677,7 @@ public class BleManager
 		void onEvent(final AssertEvent e);
 	}
 
-	public class DefaultBleStatusHelper implements PI_BleStatusHelper {
+	private class DefaultBleStatusHelper implements PI_BleStatusHelper {
 
 		@Override public boolean isLocationEnabledForScanning_byOsServices()
 		{
@@ -701,7 +701,7 @@ public class BleManager
 
 	}
 
-	public class DefaultBleScanner implements PI_BleScanner
+	private class DefaultBleScanner implements PI_BleScanner
 	{
 
 		@Override public boolean startClassicDiscovery()
