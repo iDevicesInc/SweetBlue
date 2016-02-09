@@ -2,9 +2,9 @@ package com.idevicesinc.sweetblue;
 
 
 import android.app.Activity;
-
 import java.util.HashMap;
 import java.util.Map;
+
 
 public class P_StringHandler
 {
