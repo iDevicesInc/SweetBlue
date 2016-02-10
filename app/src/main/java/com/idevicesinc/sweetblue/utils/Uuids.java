@@ -63,7 +63,7 @@ public class Uuids
 	
 	public static final UUID CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID	= fromShort("2902");
 	
-	protected final static String BLUETOOTH_CONNECTED_HASH = "1686e1668006965f55d3db7ed8d68383e7afcb61";
+	protected final static String BLUETOOTH_CONNECTED_HASH = "f03d23625081afe1b1dc636fe426043cecd1937a";
 
 	
 	/**
