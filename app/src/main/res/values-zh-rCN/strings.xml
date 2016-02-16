@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">如果拒絕位置資訊存取權限，則無法使用低功耗掃描功能。</string>
+    <string name="sb_app_needs_permission">此應用程式的 AndroidManifest.xml 中必須有 android.permission.ACCESS_COARSE_LOCATION 或 android.permission.ACCESS_FINE_LOCATION！</string>
+    <string name="sb_location_permission_toast">請按一下 [權限] 按鈕，然後啟用定位功能，最後按返回兩次。</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) 需要位置權限才能搜尋藍牙裝置。請按下 [接受] 以便授予位置權限。</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) 需要應用程式的位置權限才能搜尋藍牙裝置。\n\nMarshmallow 也需要定位服務才能提高藍牙裝置搜尋能力。雖然這並非應用程式的必要選項，但還是建議您啟用這項功能，以便提高裝置搜尋能力。\n\n請按下 [接受] 以便授予位置權限和定位服務權限。</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) 需要定位服務才能提高藍牙裝置掃描能力。雖然這並非必要選項，但還是建議您啟用定位服務，以便提高裝置搜尋能力。</string>
+    <string name="sb_location_services_toast">請啟用定位服務，然後按返回。</string>
+    <string name="sb_ok">好</string>
+    <string name="sb_deny">拒絕</string>
+    <string name="sb_accept">接受</string>
+</resources>
