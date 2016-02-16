@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Wenn Sie den Zugriff auf Standortdienste verweigern, können mit BLE keine Geräte erkannt werden.</string>
+    <string name="sb_app_needs_permission">Die App erfordert android.permission.ACCESS_COARSE_LOCATION oder android.permission.ACCESS_FINE_LOCATION in AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Bitte klicken Sie auf den Button der Genehmigungen, erlauben Sie den Zugriff auf die Standortdienste und drücken Sie dann zweimal auf die Zurück-Taste.</string>
+    <string name="sb_requires_location_permission">Bei Android Marshmallow (ab 6.0) ist der Zugriff auf Standortdienste erforderlich, um Bluetooth-Geräte zu finden. Bitte gewähren Sie den Zugriff.</string>
+    <string name="sb_requires_location_permission_and_services">Bei Android Marshmallow (ab 6.0) ist der Zugriff auf Standortdienste erforderlich, um Bluetooth-Geräte zu finden.\n\nBei Marshmallow ist der Zugriff auf Standortdienste hilfreich, jedoch nicht zwingend für die Verwendung der App erforderlich. Er wird empfohlen, um Geräte besser zu erkennen.\n\nBitte gewähren Sie den Zugriff auf Standortdienste.</string>
+    <string name="sb_location_services_needs_enabling">Bei Android Marshmallow (ab 6.0) ist der Zugriff auf Standortdienste hilfreich, jedoch nicht zwingend für die Verwendung der App erforderlich. Er wird empfohlen, um Geräte über Bluetooth besser zu erkennen.</string>
+    <string name="sb_location_services_toast">Bitte gewähren Sie den Zugriff auf Standortdienste und drücken Sie dann auf die Zurück-Taste.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Ablehnen</string>
+    <string name="sb_accept">Akzeptieren</string>
+</resources>

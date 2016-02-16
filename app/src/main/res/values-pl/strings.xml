@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Odrzucenie dostępu do lokalizacji spowoduje brak możliwości skanowania z ograniczonym poborem energii.</string>
+    <string name="sb_app_needs_permission">Aplikacja potrzebuje android.permission.ACCESS_COARSE_LOCATION or android.permission.ACCESS_FINE_LOCATION in its AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Proszę nacisnąć przycisk Pozwolenia, po czym włączyć opcję Lokalizacja i nacisnąć Wróć dwa razy.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) potrzebuje zgody na dostęp do lokalizacji, aby móc skanować urządzenia Bluetooth. Proszę wyrazić zgodę na dostęp do lokalizacji.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) potrzebuje zgody na dostęp do lokalizacji, aby móc skanować urządzenia Bluetooth.\n\nMarshmallow również potrzebuje dostępu do usług lokalizacyjnych, aby zapewnić lepsze wyszukiwanie urządzeń Bluetooth. Wyrażenie zgody na dostęp do lokalizacji nie jest wymagane do korzystania z tej aplikacji, jednak zalecane, aby zapewnić lepsze wyszukiwanie urządzeń.\n\nProszę wyrazić zgodę na dostęp do lokalizacji i na usługi lokalizacyjne.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) potrzebuje zgody na dostęp do lokalizacji, aby zapewnić lepsze skanowanie urządzeń Bluetooth. Wyrażenie zgody na dostęp do lokalizacji nie jest wymagane, jednak zaleca się włączenie usług lokalizacyjnych, aby zapewnić lepsze wyszukiwanie urządzeń.</string>
+    <string name="sb_location_services_toast">Proszę włączyć Usługi lokalizacyjne, po czym nacisnąć \"Wróć\" dwa razy.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Odmów</string>
+    <string name="sb_accept">Akceptuj</string>
+</resources>

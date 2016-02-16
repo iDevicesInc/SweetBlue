@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Om du nekar tillgång till platstjänster fungerar inte low energy-skanning.</string>
+    <string name="sb_app_needs_permission">Appen behöver android.permission.ACCESS_COARSE_LOCATION eller android.permission.ACCESS_FINE_LOCATION i sitt AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Vänligen tryck på Behörigheter-knappen, aktivera Plats och tryck sedan på Tillbaka två gånger.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) kräver Platsåtkomst för att kunna skanna efter Bluetooth-enheter. Vänligen acceptera för att tillåta Platsåtkomst.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) kräver Platsåtkomst för att appen ska kunna skanna efter Bluetooth-enhterer.\n\nMarshmallow behöver Platstjänster för att förbättra upptäckt av Bluetooth-enheter. Det är inget krav för att appen ska fungea, men rekommenderas för att bättre upptäcka andra enheter.\n\nVänligen acceptera för att tillåta Platsåtkomst och Platstjänster.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) använder Platstjänster för att förbättra skanning efter Bluetooth-enheter. Det är inget krav för att appen ska fungera, men det rekommenderas att Platstjänster är aktiverat för att bättre upptäcka andra enheter.</string>
+    <string name="sb_location_services_toast">Vänligen aktivera Platstjänster och knacka därefter på tillbaka.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Neka</string>
+    <string name="sb_accept">Godkänn</string>
+</resources>
