@@ -16,6 +16,7 @@ samples/ble_util/.settings/org.eclipse.jdt.core.prefs
 /.idea/workspace.xml
 /.idea/libraries
 /.idea/runConfigurations.xml
+/.idea/modules.xml
 app/build
 app/script_output/
 local.properties
