@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Zakázání přístupu ke službám zjišťování polohy znamená, že nebude fungovat nízkoenergetické vyhledávání.</string>
+    <string name="sb_app_needs_permission">Aplikace vyžaduje v souboru AndroidManifest.xml oprávnění android.permission.ACCESS_COARSE_LOCATION nebo android.permission.ACCESS_FINE_LOCATION!</string>
+    <string name="sb_location_permission_toast">Klikněte na tlačítko Oprávnění, povolte položku Poloha a stiskněte dvakrát tlačítko Zpět.</string>
+    <string name="sb_requires_location_permission">Systém Android Marshmallow (6.0+) požaduje k vyhledávání zařízení Bluetooth oprávnění Poloha. Kliknutím na tlačítko Přijmout povolte oprávnění Poloha.</string>
+    <string name="sb_requires_location_permission_and_services">Systém Android Marshmallow (6.0+) požaduje, aby aplikace, která vyhledává zařízení Bluetooth, měla oprávnění Poloha.\n\nSystém Marshmallow rovněž požaduje ke zlepšení zjišťování zařízení Bluetooth služby zjišťování polohy. Tyto služby nejsou nutné k používání této aplikace, ale jsou doporučeny k lepšímu zjišťování zařízení.\n\nKliknutím na tlačítko Přijmout povolte oprávnění Poloha a služby zjišťování polohy.</string>
+    <string name="sb_location_services_needs_enabling">Systém Android Marshmallow (6.0+) požaduje ke zlepšení vyhledávání zařízení Bluetooth služby zjišťování polohy. Tyto služby nejsou nutné, ale je doporučeno je zapnout, aby bylo možné zlepšit zjišťování zařízení.</string>
+    <string name="sb_location_services_toast">Povolte služby zjišťování polohy a stiskněte tlačítko Zpět.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Odmítnout</string>
+    <string name="sb_accept">Přijmout</string>
+</resources>

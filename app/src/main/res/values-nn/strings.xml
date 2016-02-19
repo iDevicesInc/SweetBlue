@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Hvis du avslår stedstjenester, vil du ikke kunne bruke enhetsoppdagelse på lav energi.</string>
+    <string name="sb_app_needs_permission">Appen trenger android.permission.ACCESS_COARSE_LOCATION eller android.permission.ACCESS_FINE_LOCATION i AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Vennligst klikk på knappen Tillatelser, deretter aktiver Sted og trykk tilbake to ganger.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) krever Stedstjenester for å kunne se etter andre Bluetooth-enheter. Vennligst godta å bruke Stedstjenester.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) krever Stedstillatelse for å kunne se etter andre Bluetooth-enheter.\n\nMarshmallow krever også Stedstjenester for å forbedre Bluetooth-scanning. Mens det imidlertid ikke er påkrevd for å bruke denne applikasjonen, er det anbefalt for bedre oppdagelse av andre enheter.\n\nVennligst godta å bruke Stedstjenester.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) krever Stedstjenester for forbedret Bluetooth-scanning. Mens det imidlertid ikke er påkrevd, er det anbefalt å slå denne innstillingen på for å forbedre enhetsoppdagelse.</string>
+    <string name="sb_location_services_toast">Vennligst tillat Stedstjenester og så trykk tilbake.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Avslå</string>
+    <string name="sb_accept">Godta</string>
+</resources>

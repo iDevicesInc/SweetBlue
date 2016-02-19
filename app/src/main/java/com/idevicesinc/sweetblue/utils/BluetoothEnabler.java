@@ -1,6 +1,5 @@
 package com.idevicesinc.sweetblue.utils;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
@@ -10,9 +9,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
-
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerState;
+import com.idevicesinc.sweetblue.P_StringHandler;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 
 /**
@@ -490,13 +489,13 @@ public class BluetoothEnabler
         {
 			if( e.stage().isLocationRelated() && e.status().isCancelled() )
 			{
-				final String fineButDotDotDot = "Denying location access means low-energy scanning will not work.";
+                final String fineButDotDotDot = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.DENYING_LOCATION_ACCESS);
 
 				return Please.stop().withDialog(fineButDotDotDot);
 			}
 			else if( e.stage() == Stage.LOCATION_PERMISSION && e.status() == Status.MANIFEST_PERMISSION_NEEDED )
 			{
-				final String manifestPermissionWarning = "App needs " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in its AndroidManifest.xml!";
+				final String manifestPermissionWarning = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.APP_NEEDS_PERMISSION);
 
 				return Please.stop().withDialog(manifestPermissionWarning);
 			}
@@ -508,14 +507,14 @@ public class BluetoothEnabler
 				}
 				else if( e.nextStage() == Stage.LOCATION_PERMISSION )
 				{
-					final String locationPermissionToastString = "Please click the Permissions button, then enable Location, then press back twice.";
+					final String locationPermissionToastString = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.LOCATION_PERMISSION_TOAST);
 
 					//--- DRK > If both location stages need enabling then we show one dialog to rule them all,
 					//---		otherwise we show just one dialog for permissions.
 					final String dialogString =
 							false == e.isEnabled(Stage.LOCATION_SERVICES) && false == e.isEnabled(Stage.LOCATION_PERMISSION) ?
-							"Android Marshmallow (6.0+) requires Location Permission to the app to be able to scan for Bluetooth devices.\n\nMarshmallow also requires Location Services to improve Bluetooth device discovery.  While it is not required for use in this app, it is recommended to better discover devices.\n\nPlease accept to allow Location Permission and Services." :
-							"Android Marshmallow (6.0+) requires Location Permission to be able to scan for Bluetooth devices. Please accept to allow Location Permission.";
+                                    P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.REQUIRES_LOCATION_PERMISSION_AND_SERVICES) :
+                                    P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.REQUIRES_LOCATION_PERMISSION);
 
 					if( e.bleManager().willLocationPermissionSystemDialogBeShown(e.activity()) )
 					{
@@ -528,8 +527,8 @@ public class BluetoothEnabler
 				}
 				else if( e.nextStage() == Stage.LOCATION_SERVICES )
 				{
-					final String locationServicesNeedEnablingString = "Android Marshmallow (6.0+) requires Location Services for improved Bluetooth device scanning. While it is not required, it is recommended that Location Services are turned on to improve device discovery.";
-					final String locationServicesToastString = "Please enable Location Services then press back.";
+					final String locationServicesNeedEnablingString = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.LOCATION_SERVICES_NEEDS_ENABLING);
+					final String locationServicesToastString = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.LOCATION_SERVICES_TOAST);
 
 					//--- DRK > Here it's a little confusing, but only showing dialog for enabling services if a one dialog to rule them all didn't previously come up.
 					if( e.status()/*(for permissions)*/.wasPreviouslyNotEnabled() )
@@ -708,7 +707,7 @@ public class BluetoothEnabler
 
 			builder.setMessage(m_lastPlease.m_dialogText);
 
-			builder.setNeutralButton("OK", new DialogInterface.OnClickListener()
+			builder.setNeutralButton(P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.OK), new DialogInterface.OnClickListener()
 			{
 				@Override public void onClick(DialogInterface dialog, int which)
 				{
@@ -746,7 +745,7 @@ public class BluetoothEnabler
 
 			builder.setMessage(m_lastPlease.m_dialogText);
 
-			builder.setNegativeButton("Deny", new DialogInterface.OnClickListener()
+			builder.setNegativeButton(P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.DENY), new DialogInterface.OnClickListener()
 			{
 				@Override public void onClick(DialogInterface dialog, int which)
 				{
@@ -754,7 +753,7 @@ public class BluetoothEnabler
 				}
 			});
 
-			builder.setPositiveButton("Accept", new DialogInterface.OnClickListener()
+			builder.setPositiveButton(P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.ACCEPT), new DialogInterface.OnClickListener()
 			{
 				@Override public void onClick(DialogInterface dialog, int which)
 				{
