@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Если запретить доступ к геоданным, BLE-сканирование перестанет работать.</string>
+    <string name="sb_app_needs_permission">Для приложения нужно указать android.permission.ACCESS_COARSE_LOCATION или android.permission.ACCESS_FINE_LOCATION в файле AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Нажмите кнопку «Разрешения», включите определение местоположения, а затем дважды нажмите «Назад».</string>
+    <string name="sb_requires_location_permission">Чтобы можно было сканировать устройства с Bluetooth, системе Android Marshmallow (6.0 и более поздней версии) требуется доступ к геоданным. Нажмите «Принять», чтобы разрешить доступ.</string>
+    <string name="sb_requires_location_permission_and_services">Чтобы приложение сканировало устройства с Bluetooth, системе Android Marshmallow (6.0 и более поздней версии) требуется доступ к геоданным.\n\nТакже для улучшенного обнаружения устройств с Bluetooth системе нужно определение местоположения. Когда оно не требуется в приложении, рекомендуем его использовать.\n\nНажмите «Принять», чтобы разрешить доступ к геоданным и включить определение местоположения.</string>
+    <string name="sb_location_services_needs_enabling">Для улучшенного сканирования устройств с Bluetooth системе Android Marshmallow (6.0 и более поздней версии) нужно определение местоположения. Когда эта функция не требуется, рекомендуем включить ее, чтобы улучшить обнаружение устройств.</string>
+    <string name="sb_location_services_toast">Включите определение местоположения и нажмите «Назад».</string>
+    <string name="sb_ok">ОК</string>
+    <string name="sb_deny">Отклонить</string>
+    <string name="sb_accept">Принять</string>
+</resources>

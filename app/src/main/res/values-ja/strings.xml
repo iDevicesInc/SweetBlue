@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">位置情報へのアクセスを許可しない場合、省エネルギーのスキャン機能はご利用いただけません。</string>
+    <string name="sb_app_needs_permission">android.permission.ACCESS_COARSE_LOCATIONまたはandroid.permission.ACCESS_FINE_LOCATIONがアプリのAndroidManifest.xmlに含まれている必要があります。</string>
+    <string name="sb_location_permission_toast">パーミッションボタンをクリックしてから位置情報をオンにし、2回押して戻ります。</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+)では、Bluetooth端末をスキャンする際に位置情報のパーミッション（許可）が必要となります。必ず許可するようにしてください。</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+)では、アプリ内でBluetooth端末をスキャンする際に位置情報のパーミッション（許可）が必要となります。\n\nMarshmallowではさらに、Bluetooth端末をより検出しやすくするため、位置情報サービスの使用が求められます。位置情報サービスはアプリ内では必須ではありませんが、端末を検出しやすくするため使用が推奨されています。\n\n位置情報のパーミッションとサービスを許可するようにしてください。</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+)では、Bluetooth省エネ端末のスキャンの向上のため、位置情報サービスが必要となります。端末の検出をより行いやすくするため、位置情報サービスをオンにすることを強くお勧めします。</string>
+    <string name="sb_location_services_toast">位置情報サービスをオンにしてから戻ってください。</string>
+    <string name="sb_ok">ＯＫ</string>
+    <string name="sb_deny">拒否</string>
+    <string name="sb_accept">許可</string>
+</resources>

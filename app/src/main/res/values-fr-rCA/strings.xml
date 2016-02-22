@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Refuser l\'accès de localisation signifie que le balayage à faible énergie ne fonctionnera pas.</string>
+    <string name="sb_app_needs_permission">L\'application nécessite : android.permission.ACCESS_COARSE_LOCATION or android.permission.ACCESS_FINE_LOCATION in its AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Veuillez appuyer sur la touche des permissions, ensuite activer la localisation, puis appuyer sur le retour deux fois.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) requiert la permission de localisation afin de pouvoir balayer pour des appareils Bluetooth. Veuillez accepter pour autoriser la permission de localisation. </string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) requiert la permission de localisation afin de pouvoir balayer pour des appareils Bluetooth.\n\nMarshmallow requiert aussi les services de localisation pour améliorer la découverte d\'appareils Bluetooth. Bien qu\'elle ne soit pas requise pour l\'utilisation de cette application, elle est recommandée afin de mieux découvrir des appareils.\n\nVeuillez accepter afin d\'autoriser la permission et les services de localisation.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) requiert les services de localisation pour le balayage amélioré d\'appareils Bluetooth. Il est recommandé que les services de localisation soient activés pour améliorer la découverte d\'appareils.</string>
+    <string name="sb_location_services_toast">Veuillez activer la localisation des services puis appuyez sur le retour.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Refuser</string>
+    <string name="sb_accept">Accepter</string>
+</resources>

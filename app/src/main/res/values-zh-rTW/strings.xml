@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">拒绝位置服务，意味着将不能进行低能量扫描。</string>
+    <string name="sb_app_needs_permission">本应用需要在其 AndroidManifest.xml 文件中有 android.permission.ACCESS_COARSE_LOCATION 或 android.permission.ACCESS_FINE_LOCATION！</string>
+    <string name="sb_location_permission_toast">请点按”权限“按钮，启用”定位“，然后按两次后退。</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) 需要定位权限才能扫描蓝牙设备。请接受以允许定位权限。</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) 需要定位权限才能扫描蓝牙设备。\n\nMarshmallow 也需要定位服务，才能改进蓝牙设备发现。尽管本应用不需要，但建议您将定位服务打开，以获得更好的设备发现能力。\n\n请接受，以允许使用定位权限和定位服务。</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) 需要定位服务才能使用改进的蓝牙设备扫描功能。尽管不需要，但建议将定位服务打开，以提高设备发现能力。</string>
+    <string name="sb_location_services_toast">请启用定位服务，然后按后退。</string>
+    <string name="sb_ok">好</string>
+    <string name="sb_deny">拒绝</string>
+    <string name="sb_accept">接受</string>
+</resources>

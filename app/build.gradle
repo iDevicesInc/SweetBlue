@@ -26,7 +26,6 @@ ext.JAR_DIR = BUNDLE_FOLDER + "/jars"
 ext.JAR_NAME = JAR_BASE_NAME + ".jar"
 ext.JAVADOC_JAR_NAME = JAR_BASE_NAME + "-javadoc.jar"
 ext.SOURCES_JAR_NAME = JAR_BASE_NAME + "-sources.jar"
-ext.ANDROID_JAR = System.getenv("ANDROID_HOME") + "/platforms/android-" + ANDROID_API_LEVEL + "/android.jar"
 ext.AS_SUFFIX = "/android_studio/app/libs"
 ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
@@ -131,12 +130,16 @@ task javadocJar(type: Jar, dependsOn: gendocs) {
     description = "Generates the javadoc jar."
 }
 
-// Copy the src directory, and Readme file 
+// Copy the src and res directories, and Readme file
 task copyFiles << {
     checkDir("${BUNDLE_FOLDER}")
     copy {
         from "src/main/java"
         into "${BUNDLE_FOLDER}/src"
+    }
+    copy {
+        from "src/main/res"
+        into "${BUNDLE_FOLDER}/res"
     }
     copy {
         from "../README.md"
@@ -383,11 +386,23 @@ uploadArchives {
 task uploadInternal(type: Upload) {
     group = "upload"
     description = "Uploads artifact to our internal maven repository"
-    configuration = configurations.archives
+    configuration = uploadArchives.configuration
     uploadDescriptor = true
     repositories {
         mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            pom.groupId = 'com.idevicesinc'
+            pom.artifactId = 'sweetblue'
+
             repository(url: "http://10.0.1.239:5819/repository/internal")
+
+            pom.project {
+                name 'SweetBlue'
+                packaging 'aar'
+                description 'Android Bluetooth (BLE) library'
+                url 'http://idevicesinc.com/sweetblue'
+            }
         }
     }
 }
