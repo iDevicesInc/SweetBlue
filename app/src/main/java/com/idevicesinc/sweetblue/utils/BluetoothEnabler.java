@@ -106,6 +106,8 @@ public class BluetoothEnabler
 		else
 		{
 			s_instance = new BluetoothEnabler(activity, filter);
+            s_instance.dispatchEvent(s_instance.getStage(), s_instance.getStage().next(), BluetoothEnablerFilter.Status.NULL);
+
 		}
 
         return s_instance;
@@ -593,8 +595,6 @@ public class BluetoothEnabler
         m_defaultActivity.getApplication().registerActivityLifecycleCallbacks(m_lifecycleCallback);
 		m_isForegrounded = true; // Assume we're foregrounded until told otherwise.
 		m_currentStage = BluetoothEnablerFilter.Stage.START;
-
-		dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.NULL);
     }
 
 	private void dispatchEvent(final BluetoothEnablerFilter.Stage currentStage, final BluetoothEnablerFilter.Stage nextStage, final BluetoothEnablerFilter.Status status_currentStage)
