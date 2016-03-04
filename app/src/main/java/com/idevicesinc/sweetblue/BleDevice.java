@@ -2418,7 +2418,19 @@ public class BleDevice extends BleNode
 	{
 		enforceMainThread();
 
-		final byte[] toReturn = m_scanInfo.getManufacturerData() != null ? m_scanInfo.getManufacturerData().clone() : new byte[32];
+		final byte[] toReturn = m_scanInfo.getManufacturerData() != null ? m_scanInfo.getManufacturerData().clone() : new byte[0];
+
+		return toReturn;
+	}
+
+	/**
+	 * Returns the manufacturer id, if any, parsed from {@link #getScanRecord()} }. May be -1 if not set
+     */
+	public int getManufacturerId()
+	{
+		enforceMainThread();
+
+		final int toReturn = m_scanInfo.getManufacturerId();
 
 		return toReturn;
 	}
