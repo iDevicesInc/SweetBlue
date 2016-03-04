@@ -209,6 +209,10 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 
 	/**
+	 * The below explanation is wrong, only in that the default is now <code>false</code>. This is for backwards
+	 * compatibility, as a customer noted bonding not working after this change. This will most likely go back to being
+	 * <code>true</code> when version 3 comes out.
+	 *
 	 * Default is <code>true</code> - The normal way to bond in the native API is to use {@link BluetoothDevice#createBond()}.
 	 * There is however also a overload method that's made invisible using the "hide" annotation that takes an int
 	 * representing the desired transport mode. The default for {@link BluetoothDevice#createBond()} is {@link BluetoothDevice#TRANSPORT_AUTO}.
@@ -221,7 +225,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
-	public Boolean useLeTransportForBonding						= true;
+	public Boolean useLeTransportForBonding						= false;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
