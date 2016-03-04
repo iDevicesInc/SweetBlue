@@ -437,7 +437,7 @@ remotes {
     }
 }
 
-task uploadZips(dependsOn: zipTrial) {
+task uploadZips(dependsOn: zipJar) {
     group = "upload"
     description = "Upload zip files to iDevices public web server."
 
