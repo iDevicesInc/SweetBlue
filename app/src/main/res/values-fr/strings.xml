@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Refuser l\'accès à la position empêche le fonctionnement de l\'analyse \"énergie basse\".</string>
+    <string name="sb_app_needs_permission">L\'application doit android.permission.ACCESS_COARSE_LOCATION ou android.permission.ACCESS_FINE_LOCATION dans son AndroidManifest.xml !</string>
+    <string name="sb_location_permission_toast">Cliquez sur le bouton Autorisations, autorisez les services de localisation puis appuyez deux fois sur Retour.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) demande l\'Autorisation des Services de localisation pour pouvoir rechercher des appareils Bluetooth. Veuillez autoriser les services de localisation.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) demande l\'autorisation des Services de localisation pour que l\'application puisse détecter les appareils Bluetooth.\n\nMarshmallow demande également l\'activation des Services de localisation pour améliorer la détection d\'appareils Bluetooth. Si l\'activation des services de localisation n\'est pas obligatoire, elle est conseillée pour améliorer la détection d\'appareils.\n\nVeuillez autoriser les Services de localisation.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) demande l\'autorisation des Services de localisation pour rechercher des appareils Bluetooth avec plus d\'efficacité. Si l\'activation des services de localisation n\'est pas obligatoire, elle est conseillée pour améliorer la détection d\'appareils.</string>
+    <string name="sb_location_services_toast">Activez les services de localisation puis appuyez sur Retour.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Refuser</string>
+    <string name="sb_accept">Accepter</string>
+</resources>

@@ -20,19 +20,23 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import android.bluetooth.le.*;
+import android.nfc.Tag;
 import android.os.ParcelUuid;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
 
+import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleNodeConfig;
+import com.idevicesinc.sweetblue.SweetLogger;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 
 /**
@@ -73,7 +77,7 @@ public class Utils_ScanRecord extends Utils
 	/**
 	 *
 	 */
-	public static @Nullable(Nullable.Prevalence.NEVER) List<UUID> parseServiceUuids(final byte[] scanRecord)
+	@Deprecated  public static @Nullable(Nullable.Prevalence.NEVER) List<UUID> parseServiceUuids(final byte[] scanRecord)
 	{
 		final ArrayList<UUID> serviceUuids = new ArrayList<UUID>();
 
@@ -82,7 +86,111 @@ public class Utils_ScanRecord extends Utils
 		return serviceUuids;
 	}
 
-	public static void parseScanRecord(final byte[] scanRecord, final Pointer<Integer> advFlags_out_nullable, final Pointer<Integer> txPower_nullable, final List<UUID> serviceUuids_out_nullable, final SparseArray<byte[]> manufacturerData_out_nullable, final Map<UUID, byte[]> serviceData_out_nullable)
+	public static BleScanInfo parseScanRecord(final byte[] scanRecord)
+	{
+		Pointer<Integer> txPower = new Pointer<>();
+		txPower.value = BleNodeConfig.INVALID_TX_POWER;
+
+		Pointer<Integer> advFlags = new Pointer<>();
+		advFlags.value = -1;
+
+		Map<UUID, byte[]> serviceData = new HashMap<UUID, byte[]>();
+		serviceData.clear();
+
+		List<UUID> serviceUUIDs =  new ArrayList<UUID>();
+		serviceUUIDs.clear();
+
+		int mfgId = -1;
+		byte[] mfgData = new byte[34];
+
+		if(scanRecord == null)
+		{
+			return null;
+		}
+
+		int currentPos = 0;
+		String localName = null;
+		while( currentPos < scanRecord.length ) {
+			// length is unsigned int.
+			int length = scanRecord[currentPos++] & 0xFF;
+			if (length == 0) {
+				break;
+			}
+			// Note the length includes the length of the field type itself.
+			int dataLength = length - 1;
+			// fieldType is unsigned int.
+			int fieldType = scanRecord[currentPos++] & 0xFF;
+			switch (fieldType) {
+				case DATA_TYPE_FLAGS:
+					advFlags.value = scanRecord[currentPos] & 0xFF;
+					break;
+				case DATA_TYPE_SERVICE_UUIDS_16_BIT_PARTIAL:
+				case DATA_TYPE_SERVICE_UUIDS_16_BIT_COMPLETE:
+					parseServiceUuid(scanRecord, currentPos, dataLength, UUID_BYTES_16_BIT, serviceUUIDs);
+					break;
+				case DATA_TYPE_SERVICE_UUIDS_32_BIT_PARTIAL:
+				case DATA_TYPE_SERVICE_UUIDS_32_BIT_COMPLETE:
+					parseServiceUuid(scanRecord, currentPos, dataLength, UUID_BYTES_32_BIT, serviceUUIDs);
+					break;
+				case DATA_TYPE_SERVICE_UUIDS_128_BIT_PARTIAL:
+				case DATA_TYPE_SERVICE_UUIDS_128_BIT_COMPLETE:
+					parseServiceUuid(scanRecord, currentPos, dataLength, UUID_BYTES_128_BIT, serviceUUIDs);
+					break;
+				case DATA_TYPE_LOCAL_NAME_SHORT:
+				case DATA_TYPE_LOCAL_NAME_COMPLETE:
+					try
+					{
+						localName = new String(extractBytes(scanRecord, currentPos, dataLength));
+					}
+					catch(Exception e)
+					{
+						Log.e(TAG, "unable to parse name");
+					}
+					break;
+				case DATA_TYPE_TX_POWER_LEVEL:
+					txPower.value = (int) scanRecord[currentPos];
+					break;
+				case DATA_TYPE_SERVICE_DATA:
+					// The first two bytes of the service data are service data UUID in little
+					// endian. The rest bytes are service data.
+					try
+					{
+						int serviceUuidLength = UUID_BYTES_16_BIT;
+						byte[] serviceDataUuidBytes = extractBytes(scanRecord, currentPos, serviceUuidLength);
+						UUID serviceDataUuid = parseUuidFrom(serviceDataUuidBytes);
+						byte[] serviceDataArray = extractBytes(scanRecord, currentPos + serviceUuidLength, dataLength - serviceUuidLength);
+						serviceData.put(serviceDataUuid, serviceDataArray);
+					}
+					catch(Exception e)
+					{
+						Log.e(TAG, "unable to parse service data");
+					}
+
+					break;
+				case DATA_TYPE_MANUFACTURER_SPECIFIC_DATA:
+					// The first two bytes of the manufacturer specific data are
+					// manufacturer ids in little endian.
+					try
+					{
+						mfgId = ((scanRecord[currentPos + 1] & 0xFF) << 8) + (scanRecord[currentPos] & 0xFF);
+						mfgData = extractBytes(scanRecord, currentPos + 2, dataLength - 2);
+					}
+					catch(Exception e)
+					{
+						Log.e(TAG, "unable to parse manufactuer data");
+					}
+
+					break;
+				default:
+					// Just ignore, we don't handle such data type.
+					break;
+			}
+			currentPos += dataLength;
+		}
+		return new BleScanInfo(advFlags, txPower, serviceUUIDs, mfgId, mfgData, serviceData, localName);
+	}
+
+	@Deprecated public static void parseScanRecord(final byte[] scanRecord, final Pointer<Integer> advFlags_out_nullable, final Pointer<Integer> txPower_nullable, final List<UUID> serviceUuids_out_nullable, final SparseArray<byte[]> manufacturerData_out_nullable, final Map<UUID, byte[]> serviceData_out_nullable)
 	{
 		if( txPower_nullable != null )
 		{
@@ -240,18 +348,26 @@ public class Utils_ScanRecord extends Utils
 	// Parse service UUIDs.
 	private static int parseServiceUuid(byte[] scanRecord, int currentPos, int dataLength, int uuidLength, final List<UUID> serviceUuids_nullable)
 	{
-		while( dataLength > 0 )
+		try
 		{
-			byte[] uuidBytes = extractBytes(scanRecord, currentPos, uuidLength);
-
-			if( serviceUuids_nullable != null )
+			while( dataLength > 0 )
 			{
-				serviceUuids_nullable.add(parseUuidFrom(uuidBytes));
-			}
+				byte[] uuidBytes = extractBytes(scanRecord, currentPos, uuidLength);
 
-			dataLength -= uuidLength;
-			currentPos += uuidLength;
+				if( serviceUuids_nullable != null )
+				{
+					serviceUuids_nullable.add(parseUuidFrom(uuidBytes));
+				}
+
+				dataLength -= uuidLength;
+				currentPos += uuidLength;
+			}
 		}
+		catch(Exception e)
+		{
+			Log.e(TAG, "unable to parse service uuid of length " + dataLength);
+		}
+
 		return currentPos;
 	}
 

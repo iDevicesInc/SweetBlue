@@ -4,7 +4,11 @@
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>
 <a href="https://travis-ci.org/iDevicesInc/SweetBlue">
+<<<<<<< HEAD
   <img align="right" src="https://img.shields.io/badge/version-2.51.39b-blue.svg" />
+=======
+  <img align="right" src="https://img.shields.io/badge/version-2.51.40-blue.svg" />
+>>>>>>> dev
   <img align="right" src="https://travis-ci.org/iDevicesInc/SweetBlue.svg?branch=master"/>
 </a>
 <p align="center">
@@ -85,6 +89,7 @@ Getting Started
     
         sourceSets {
             main.java.srcDirs += 'src/main/lib/sweetblue/src'
+            main.res.srcDirs += 'src/main/lib/sweetblue/res'
             ...
         }
         ...
@@ -107,7 +112,8 @@ Getting Started
           }
       
           sourceSets {
-              main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'
+              main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'              
+              main.res.srcDirs += 'src/main/lib/sweetblue/app/src/main/res'
               ...
           }
           ...

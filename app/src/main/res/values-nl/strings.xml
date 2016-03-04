@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Zonder locatietoegang werkt Low Energy-scannen niet.</string>
+    <string name="sb_app_needs_permission">App vereist android.permission.ACCESS_COARSE_LOCATION of android.permission.ACCESS_FINE_LOCATION in AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Klik op de knop Toestemmingen, schakel Locatie in en druk vervolgens tweemaal op terug.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) vereist Locatietoestemming om te scannen naar Bluetooth-apparaten. Accepteer om Locatietoestemming toe te staan.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) vereist Locatietoestemming voor de app om te scannen naar Bluetooth-apparaten.\n\nMarshmallow vereist ook Locatieservices om het detecteren van Bluetooth-apparaten te verbeteren. Het is niet vereist voor gebruik in de app, het wordt wel aanbevolen om apparaten beter te detecteren.\n\nAccepteer om Locatietoestemming- en services toe te staan.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) vereist Locatieservices om beter Bluetooth-apparaten te kunnen detecteren. We raden de inschakeling van Locatieservices aan om apparaatdetectie te verbeteren.</string>
+    <string name="sb_location_services_toast">Schakel Locatieservices in en druk op terug.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Afwijzen</string>
+    <string name="sb_accept">Accepteren</string>
+</resources>

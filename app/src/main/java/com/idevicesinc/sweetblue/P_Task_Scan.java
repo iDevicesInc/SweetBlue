@@ -237,7 +237,14 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 			else if( scanMode.isLollipopScanMode() )
 			{
-				execute_postLollipop();
+				if (Utils.isLollipop())
+				{
+					execute_postLollipop();
+				}
+				else
+				{
+					execute_preLollipop();
+				}
 			}
 			else
 			{
