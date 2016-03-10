@@ -32,19 +32,25 @@ public enum BleScanMode
 	/**
 	 * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_LOW_POWER}.
 	 * For phones lower than Lollipop, {@link #PRE_LOLLIPOP} will automatically be used instead.
+	 * @deprecated - This will be removed in v3. Use {@link BleScanPower#LOW_POWER} instead.
 	 */
+	@Deprecated
 	LOW_POWER(ScanSettings.SCAN_MODE_LOW_POWER),
 
 	/**
 	 * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_BALANCED}.
 	 * For phones lower than Lollipop, {@link #PRE_LOLLIPOP} will automatically be used instead.
+	 * @deprecated - This will be removed in v3. Use {@link BleScanPower#MEDIUM_POWER} instead.
 	 */
+	@Deprecated
 	MEDIUM_POWER(ScanSettings.SCAN_MODE_BALANCED),
 
 	/**
 	 * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_LOW_LATENCY}.
 	 * For phones lower than Lollipop, {@link #PRE_LOLLIPOP} will automatically be used instead.
+	 * @deprecated - This will be removed in v3. Use {@link BleScanPower#HIGH_POWER} instead.
 	 */
+	@Deprecated
 	HIGH_POWER(ScanSettings.SCAN_MODE_LOW_LATENCY);
 
 	private final int m_nativeMode;
@@ -62,6 +68,7 @@ public enum BleScanMode
 		return m_nativeMode;
 	}
 
+	@Deprecated
 	public boolean isLollipopScanMode()
 	{
 		return this == LOW_POWER || this == MEDIUM_POWER || this == HIGH_POWER;

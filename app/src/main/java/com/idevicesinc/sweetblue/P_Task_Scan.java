@@ -204,7 +204,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				}
 				else
 				{
-					execute_postLollipop();
+					execute_postLollipop(false);
 				}
 			}
 			else if( scanMode == BleScanMode.CLASSIC )
@@ -217,9 +217,11 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 			else if( scanMode.isLollipopScanMode() )
 			{
+				// TODO - Remove this log statement in v3
+				getLogger().w("It looks like you're using a deprecated BleScanMode. This will be removed in v3. The deprecated options have moved to BleScanPower.");
 				if (Utils.isLollipop())
 				{
-					execute_postLollipop();
+					execute_postLollipop(true);
 				}
 				else
 				{
@@ -250,41 +252,51 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 	}
 
-	private void execute_postLollipop()
+	// TODO - Remove boolean argument in v3
+	private void execute_postLollipop(boolean usingDeprecatedMode)
 	{
 		m_mode = Mode_BLE;
 		getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-		startNativeScan_postLollipop();
+		startNativeScan_postLollipop(usingDeprecatedMode);
 	}
 
-	private void startNativeScan_postLollipop()
+	// TODO - Remove boolean argument in v3
+	private void startNativeScan_postLollipop(boolean usingDeprecatedMode)
 	{
 		final BleScanMode scanMode_abstracted = getManager().m_config.scanMode;
+		final BleScanPower scanPower_abstracted = getManager().m_config.scanPower;
 
 		final int scanMode;
 
-		if( scanMode_abstracted == null || scanMode_abstracted == BleScanMode.AUTO )
+		if (usingDeprecatedMode)
 		{
-			if( getManager().isForegrounded() )
+			scanMode = scanMode_abstracted.getNativeMode();
+		}
+		else
+		{
+			if (scanPower_abstracted == null || scanPower_abstracted == BleScanPower.AUTO)
 			{
-				if( m_isPoll || m_scanTime == Double.POSITIVE_INFINITY )
+				if (getManager().isForegrounded())
 				{
-					scanMode = ScanSettings.SCAN_MODE_BALANCED;
+					if (m_isPoll || m_scanTime == Double.POSITIVE_INFINITY)
+					{
+						scanMode = ScanSettings.SCAN_MODE_BALANCED;
+					}
+					else
+					{
+						scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+					}
 				}
 				else
 				{
-					scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+					scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
 				}
 			}
 			else
 			{
-				scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
+				scanMode = scanPower_abstracted.getNativeMode();
 			}
-		}
-		else
-		{
-			scanMode = scanMode_abstracted.getNativeMode();
 		}
 
 		if( false == Utils.isLollipop() )
