@@ -5,6 +5,9 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
+import com.idevicesinc.sweetblue.BleManagerState;
+import com.idevicesinc.sweetblue.BleScanMode;
+import com.idevicesinc.sweetblue.BleScanPower;
 import com.idevicesinc.sweetblue.PI_BleScanner;
 import com.idevicesinc.sweetblue.PI_BleStatusHelper;
 import com.idevicesinc.sweetblue.PI_UpdateLoop;
@@ -12,6 +15,8 @@ import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import org.junit.Before;
 import org.robolectric.Robolectric;
+
+import java.lang.reflect.Method;
 import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertNotNull;
 
@@ -20,17 +25,21 @@ public abstract class BaseBleTest
 {
 
     BleManager m_mgr;
+    BleManagerConfig m_config;
+
+    abstract PI_BleScanner getScanner();
+    abstract PI_BleStatusHelper getStatusHelper();
 
     @Before
     public void setup()
     {
         Activity activity = Robolectric.setupActivity(Activity.class);
-        BleManagerConfig sConfig = new BleManagerConfig();
-        sConfig.allowCallsFromAllThreads = true;
-        sConfig.updateLoopFactory = new TestUpdateLoopFactory();
-        sConfig.bleScanner = getScanner();
-        sConfig.bleStatusHelper = getStatusHelper();
-        final BleManager mgr = BleManager.get(activity, sConfig);
+        m_config = new BleManagerConfig();
+        m_config.allowCallsFromAllThreads = true;
+        m_config.updateLoopFactory = new TestUpdateLoopFactory();
+        m_config.bleScanner = getScanner();
+        m_config.bleStatusHelper = getStatusHelper();
+        final BleManager mgr = BleManager.get(activity, m_config);
         assertNotNull(mgr);
         m_mgr = mgr;
         m_mgr.onResume();
@@ -51,8 +60,40 @@ public abstract class BaseBleTest
         semaphore.acquire();
     }
 
-    abstract PI_BleScanner getScanner();
-    abstract PI_BleStatusHelper getStatusHelper();
+    public BleScanMode getScanMode(BleManagerState state)
+    {
+        BleScanMode mode = BleScanMode.AUTO;
+        if (state == BleManagerState.SCANNING)
+        {
+            try
+            {
+                Method getMode = state.getClass().getDeclaredMethod("getScanMode", null);
+                getMode.setAccessible(true);
+                mode = (BleScanMode) getMode.invoke(state, null);
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return mode;
+    }
+
+    public BleScanPower getScanPower(BleManagerState state)
+    {
+        BleScanPower power = BleScanPower.AUTO;
+        if (state == BleManagerState.SCANNING)
+        {
+            try {
+                Method getPower = state.getClass().getDeclaredMethod("getScanPower", null);
+                getPower.setAccessible(true);
+                power = (BleScanPower) getPower.invoke(state, null);
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return power;
+    }
 
     interface TestOp
     {

@@ -73,6 +73,31 @@ public enum BleManagerState implements State
 	{
 		m_nativeCode = nativeCode;
 	}
+
+	private BleScanMode m_mode;
+	private BleScanPower m_power;
+
+	BleManagerState setScanMode(BleScanMode mode)
+	{
+		m_mode = mode;
+		return this;
+	}
+
+	BleManagerState setPower(BleScanPower power)
+	{
+		m_power = power;
+		return this;
+	}
+
+	BleScanMode getScanMode()
+	{
+		return m_mode;
+	}
+
+	BleScanPower getScanPower()
+	{
+		return m_power;
+	}
 	
 	/**
 	 * Returns the analogous native code, if applicable. For example {@link BluetoothAdapter#STATE_OFF},
