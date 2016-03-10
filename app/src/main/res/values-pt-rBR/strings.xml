@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Recusar o acesso à localização fará com que o escaneamento com pouca energia não funcione.</string>
+    <string name="sb_app_needs_permission">O aplicativo precisa de android.permission.ACCESS_COARSE_LOCATION ou android.permission.ACCESS_FINE_LOCATION iem seu AndroidManifest.xml.</string>
+    <string name="sb_location_permission_toast">Clique no botão Permissões, ative a Localização e pressione Voltar duas vezes.</string>
+    <string name="sb_requires_location_permission">O Android Marshmallow (6.0+) requer a Permissão de localização para poder escanear dispositivos Bluetooth. Aceite para ativar a Permissão de localização.</string>
+    <string name="sb_requires_location_permission_and_services">O Android Marshmallow (6.0+) requer a Permissão de localização para poder escanear dispositivos Bluetooth.\n\nO Marshmallow também requer Serviços de localização para melhorar a detecção de dispositivos Bluetooth. Embora não seja necessário para usar neste aplicativo, é recomendado para detectar melhor os dispositivos.\n\nAceite para ativar Permissão e serviços de localização.</string>
+    <string name="sb_location_services_needs_enabling">O Android Marshmallow (6.0+) requer Serviços de localização para um melhor escaneamento de dispositivos Bluetooth. Embora não seja necessário, é recomendado que os Serviços de localização estejam ativados para uma melhor detecção de dispositivos.</string>
+    <string name="sb_location_services_toast">Ative Serviços de localização e pressione Voltar.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Recusar</string>
+    <string name="sb_accept">Aceitar</string>
+</resources>

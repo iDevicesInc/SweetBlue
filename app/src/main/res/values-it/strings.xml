@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Se rifiuti l\'accesso alla tua posizione, la scansione a basa potenza non funzionerà.</string>
+    <string name="sb_app_needs_permission">L\'app necessita di android.permission.ACCESS_COARSE_LOCATION o android.permission.ACCESS_FINE_LOCATION in AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Fare clic sul pulsante Autorizzazioni, abilitare Posizione e quindi premere due volte su Indietro.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) richiede l\'autorizzazione alla geolocalizzazione per eseguire la scansione dei dispositivi Bluetooth. Si prega di fornire tale autorizzazione.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) richiede l\'autorizzazione alla geolocalizzazione per eseguire la scansione dei dispositivi Bluetooth.\n\nMarshmallow richiede inoltre i servizi di localizzazione per migliorare la rilevazione dei dispositivi Bluetooth. Tale autorizzazione non è necessaria per l\'app, ma è consigliata per migliorare l\'individuazione dei dispositivi.\n\nSi prega di fornire l\'autorizzazione e di abilitare i servizi.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) richiede i servizi di localizzazione per migliorare la scansione dei dispositivi Bluetooth. È consigliabile, anche se non obbligatorio, abilitare questi servizi per migliorare la rilevazione dei dispositivi.</string>
+    <string name="sb_location_services_toast">Abilitare i servizi di localizzazione e quindi premere Indietro</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Rifiuta</string>
+    <string name="sb_accept">Accetta</string>
+</resources>

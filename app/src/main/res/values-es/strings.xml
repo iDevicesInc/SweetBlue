@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Si se deniega el acceso a la localización el escaneo de baja energía no funcionará.</string>
+    <string name="sb_app_needs_permission">La aplicación necesita android.permission.ACCESS_COARSE_LOCATION o android.permission.ACCESS_FINE_LOCATION en su AndroidManifest.xml.</string>
+    <string name="sb_location_permission_toast">Haz clic en el botón Permisos, activa la Localización y luego pulsa atrás dos veces.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) necesita permiso de localización para poder escanear en busca de dispositivos Bluetooth. Acepta este mensaje para permitir el permiso de localización.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) necesita permiso de localización para la aplicación para que se pueda escanear en busca de dispositivos Bluetooth.\n\nMarshmallow también necesita los servicios de localización para mejorar la detección de dispositivos Bluetooth. A pesar de que su uso no es obligatorio en esta aplicación, se recomienda para mejorar la detección de dispositivos.\n\nAcepta este mensaje para permitir el permiso y los servicios de localización.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) necesita los servicios de localización para el escaneo de dispositivos Bluetooth de baja energía. Se recomienda encarecidamente activar los servicios de localización para mejorar la detección de dispositivos.</string>
+    <string name="sb_location_services_toast">Activa los servicios de localización y luego pulsa atrás.</string>
+    <string name="sb_ok">Aceptar</string>
+    <string name="sb_deny">Denegar</string>
+    <string name="sb_accept">Aceptar</string>
+</resources>

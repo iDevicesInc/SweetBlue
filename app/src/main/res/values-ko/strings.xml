@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">위치 서비스를 사용하지 않으면 저전력 스캔이 불가능합니다.</string>
+    <string name="sb_app_needs_permission">앱의 AndroidManifest.xml 안에 android.permission.ACCESS_COARSE_LOCATION 또는 android.permission.ACCESS_FINE_LOCATION이 필요합니다!</string>
+    <string name="sb_location_permission_toast">허용 버튼을 클릭하고 위치 서비스를 켠 후 뒤로 가기를 두 번 누르세요.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow(6.0+)가 블루투스 기기를 스캔하려면 위치 서비스를 허용해야 합니다. 위치 서비스 허용을 선택해주세요.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow(6.0+)가 블루투스 기기를 스캔하려면 위치 서비스를 허용해야 합니다.\n\n또한 Marshmallow가 블루투스 기기 스캔 성능을 향상시키려면 위치 서비스가 필요합니다. 이 앱에서 반드시 필요하지는 않으나 스캔 성능 향상에 권장합니다.\n\n위치 서비스 허용 및 서비스 사용을 선택해주세요.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow(6.0+)가 블루투스 기기를 보다 정확히 스캔하려면 위치 서비스를 허용해야 합니다. 이 앱에서 반드시 필요하지는 않으나 스캔 성능 향상에 권장합니다.</string>
+    <string name="sb_location_services_toast">위치 서비스를 켠 후 뒤로 가기를 누르세요.</string>
+    <string name="sb_ok">확인</string>
+    <string name="sb_deny">허용 안함</string>
+    <string name="sb_accept">허용</string>
+</resources>

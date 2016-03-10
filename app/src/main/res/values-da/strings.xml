@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' standalone='no'?>
+<resources>
+    <string name="sb_denying_location_access">Hvis du nægter adgang til placering, virker lavenergiscanning ikke.</string>
+    <string name="sb_app_needs_permission">Appen har brug for android.permission.ACCESS_COARSE_LOCATION eller android.permission.ACCESS_FINE_LOCATION i dens AndroidManifest.xml!</string>
+    <string name="sb_location_permission_toast">Klik på knappen Tilladelser, aktiver Placering, og tryk så to gange på tilbage.</string>
+    <string name="sb_requires_location_permission">Android Marshmallow (6.0+) kræver placeringstilladelse for at kunne scanne for Bluetooth-enheder. Accepter for at give placeringstilladelse.</string>
+    <string name="sb_requires_location_permission_and_services">Android Marshmallow (6.0+) kræver placeringstilladelse, for at appen kan scanne for Bluetooth-enheder.\n\nMarshmallow kræver også placeringsservices for at forbedre opdagelse af Bluetooth-enheder.  Selvom det ikke kræves til brug i denne app, anbefales det for bedre at kunne opdage enheder.\n\nAccepter for at give placeringstilladelse og tillade placeringsservices.</string>
+    <string name="sb_location_services_needs_enabling">Android Marshmallow (6.0+) kræver placeringsservices for at forbedre scanning for Bluetooth-enheder. Det er ikke obligatorisk, men det anbefales at slå placeringsservices til for at forbedre opdagelse af enheder.</string>
+    <string name="sb_location_services_toast">Aktiver placeringsservices, og tryk så på tilbage.</string>
+    <string name="sb_ok">OK</string>
+    <string name="sb_deny">Nægt</string>
+    <string name="sb_accept">Accepter</string>
+</resources>

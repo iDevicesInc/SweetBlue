@@ -1,6 +1,54 @@
 package com.idevicesinc.sweetblue;
 
-import static com.idevicesinc.sweetblue.BleDeviceState.*;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+import android.content.BroadcastReceiver;
+
+import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
+import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
+import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
+import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
+import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
+import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
+import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Immutable;
+import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.utils.BleScanInfo;
+import com.idevicesinc.sweetblue.utils.Distance;
+import com.idevicesinc.sweetblue.utils.EmptyIterator;
+import com.idevicesinc.sweetblue.utils.EpochTime;
+import com.idevicesinc.sweetblue.utils.EpochTimeRange;
+import com.idevicesinc.sweetblue.utils.Event;
+import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
+import com.idevicesinc.sweetblue.utils.ForEach_Returning;
+import com.idevicesinc.sweetblue.utils.ForEach_Void;
+import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.HistoricalData;
+import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Percent;
+import com.idevicesinc.sweetblue.utils.PresentData;
+import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
+import com.idevicesinc.sweetblue.utils.TimeEstimator;
+import com.idevicesinc.sweetblue.utils.UsesCustomNull;
+import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
+import com.idevicesinc.sweetblue.utils.Utils_Rssi;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
+import com.idevicesinc.sweetblue.utils.Utils_State;
+import com.idevicesinc.sweetblue.utils.Utils_String;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -10,31 +58,26 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-import android.content.BroadcastReceiver;
-import android.util.SparseArray;
-import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
-import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
-import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
-import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
-import com.idevicesinc.sweetblue.utils.*;
-import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
-import com.idevicesinc.sweetblue.annotations.Advanced;
-import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.annotations.Immutable;
-import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
-import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
+
+import static com.idevicesinc.sweetblue.BleDeviceState.ADVERTISING;
+import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATED;
+import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATING;
+import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
+import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
+import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTED;
+import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTING;
+import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTING_OVERALL;
+import static com.idevicesinc.sweetblue.BleDeviceState.DISCONNECTED;
+import static com.idevicesinc.sweetblue.BleDeviceState.DISCOVERED;
+import static com.idevicesinc.sweetblue.BleDeviceState.DISCOVERING_SERVICES;
+import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZED;
+import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
+import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
+import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
+import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_SHORT_TERM;
+import static com.idevicesinc.sweetblue.BleDeviceState.SERVICES_DISCOVERED;
+import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
+import static com.idevicesinc.sweetblue.BleDeviceState.UNDISCOVERED;
 
 /**
  * This is the one other class you will use the most besides {@link BleManager}.
@@ -1829,9 +1872,7 @@ public class BleDevice extends BleNode
 	private Integer m_knownTxPower = null;
 	private byte[] m_scanRecord = EMPTY_BYTE_ARRAY;
 
-	private final List<UUID> m_advertisedServices = new ArrayList<UUID>();
-	private SparseArray<byte[]> m_manufacturerData = null;
-	private final Map<UUID, byte[]> m_serviceData = new HashMap<UUID, byte[]>();
+	private BleScanInfo m_scanInfo = new BleScanInfo();
 
 	private boolean m_useAutoConnect = false;
 	private boolean m_alwaysUseAutoConnect = false;
@@ -2366,18 +2407,30 @@ public class BleDevice extends BleNode
 	{
 		enforceMainThread();
 
-		final UUID[] toReturn = m_advertisedServices.size() > 0 ? new UUID[m_advertisedServices.size()] : EMPTY_UUID_ARRAY;
-		return m_advertisedServices.toArray(toReturn);
+		final UUID[] toReturn = m_scanInfo.getServiceUUIDS().size() > 0 ? new UUID[m_scanInfo.getServiceUUIDS().size()] : EMPTY_UUID_ARRAY;
+		return m_scanInfo.getServiceUUIDS().toArray(toReturn);
 	}
 
 	/**
 	 * Returns the manufacturer data, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
 	 */
-	public @Nullable(Prevalence.NEVER) SparseArray<byte[]> getManufacturerData()
+	public @Nullable(Prevalence.NEVER) byte[] getManufacturerData()
 	{
 		enforceMainThread();
 
-		final SparseArray<byte[]> toReturn = m_manufacturerData != null ? m_manufacturerData.clone() : new SparseArray<byte[]>();
+		final byte[] toReturn = m_scanInfo.getManufacturerData() != null ? m_scanInfo.getManufacturerData().clone() : new byte[0];
+
+		return toReturn;
+	}
+
+	/**
+	 * Returns the manufacturer id, if any, parsed from {@link #getScanRecord()} }. May be -1 if not set
+     */
+	public int getManufacturerId()
+	{
+		enforceMainThread();
+
+		final int toReturn = m_scanInfo.getManufacturerId();
 
 		return toReturn;
 	}
@@ -2391,7 +2444,7 @@ public class BleDevice extends BleNode
 
 		final Map<UUID, byte[]> toReturn = new HashMap<UUID, byte[]>();
 
-		toReturn.putAll(m_serviceData);
+		toReturn.putAll(m_scanInfo.getServiceData());
 
 		return toReturn;
 	}
@@ -5378,26 +5431,22 @@ public class BleDevice extends BleNode
 
 			m_advertisingFlags = scanEvent_nullable.advertisingFlags();
 
-			m_advertisedServices.clear();
-			m_advertisedServices.addAll(scanEvent_nullable.advertisedServices());
+			m_scanInfo.clearServiceUUIDs();
+			m_scanInfo.populateServiceUUIDs(scanEvent_nullable.advertisedServices());
 
-			m_manufacturerData = scanEvent_nullable.manufacturerData();
+			m_scanInfo.setManufacturerId(scanEvent_nullable.manufacturerId());
+			m_scanInfo.setManufacturerData(scanEvent_nullable.manufacturerData());
 
-			m_serviceData.clear();
-			m_serviceData.putAll(scanEvent_nullable.serviceData());
+			m_scanInfo.clearServiceData();
+			m_scanInfo.populateServiceData(scanEvent_nullable.serviceData());
 		}
 		else if( scanRecord_nullable != null )
 		{
 			m_scanRecord = scanRecord_nullable;
 
-			m_manufacturerData = m_manufacturerData != null ? m_manufacturerData : new SparseArray<byte[]>();
-			final Pointer<Integer> txPower = new Pointer<Integer>();
-			final Pointer<Integer> advFlags = new Pointer<Integer>();
+			m_scanInfo = Utils_ScanRecord.parseScanRecord(scanRecord_nullable);
 
-			Utils_ScanRecord.parseScanRecord(scanRecord_nullable, advFlags, txPower, m_advertisedServices, m_manufacturerData, m_serviceData);
-
-			m_advertisingFlags = advFlags.value;
-			updateKnownTxPower(txPower.value);
+			updateKnownTxPower(m_scanInfo.getTxPower().value);
 		}
 	}
 
@@ -5627,7 +5676,7 @@ public class BleDevice extends BleNode
 		//--- case shouldn't really come up much or at all with that in place.
 		if (!getManager().hasDevice(getMacAddress()))
 		{
-			getManager().onDiscovered_fromRogueAutoConnect(this, /*newlyDiscovered=*/true, m_advertisedServices, getScanRecord(), getRssi());
+			getManager().onDiscovered_fromRogueAutoConnect(this, /*newlyDiscovered=*/true, m_scanInfo.getServiceUUIDS(), getScanRecord(), getRssi());
 		}
 
 		//--- DRK > Some trapdoor logic for bad android ble bug.

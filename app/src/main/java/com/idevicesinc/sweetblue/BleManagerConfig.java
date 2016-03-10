@@ -15,6 +15,7 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
@@ -414,8 +415,14 @@ public class BleManagerConfig extends BleDeviceConfig
 			/**
 			 * Returns the manufacturer-specific data, if any, parsed from {@link #scanRecord()}.
 			 */
-			public SparseArray<byte[]> manufacturerData(){  return m_manufacturerData;  }
-			private final SparseArray<byte[]> m_manufacturerData;
+			public SparseArray<byte[]> manufacturerCombinedData(){  return m_manufacturerCombinedData;  }
+			private final SparseArray<byte[]> m_manufacturerCombinedData;
+
+			public byte[] manufacturerData(){ return m_manufacturerData;}
+			private byte[] m_manufacturerData;
+
+			public int manufacturerId(){ return m_manufacturerId;}
+			private int m_manufacturerId;
 
 			/**
 			 * Returns the service data, if any, parsed from {@link #scanRecord()}.
@@ -423,24 +430,26 @@ public class BleManagerConfig extends BleDeviceConfig
 			public Map<UUID, byte[]> serviceData()  {  return m_serviceData;  }
 			private final Map<UUID, byte[]> m_serviceData;
 
-			ScanEvent
-			(
-				BluetoothDevice nativeInstance, List<UUID> advertisedServices, String rawDeviceName,
-				String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent,
-				final int txPower, final SparseArray<byte[]> manufacturerData, final Map<UUID, byte[]> serviceData, final int advFlags
+			ScanEvent(
+					BluetoothDevice nativeInstance, String rawDeviceName,
+					String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent,
+					BleScanInfo scanInfo
 			)
 			{
 				this.m_nativeInstance = nativeInstance;
-				this.m_advertisedServices = advertisedServices;
+				this.m_advertisedServices = scanInfo.getServiceUUIDS();
 				this.m_rawDeviceName = rawDeviceName != null ? rawDeviceName : "";
 				this.m_normalizedDeviceName = normalizedDeviceName;
 				this.m_scanRecord = scanRecord != null ? scanRecord : BleDevice.EMPTY_BYTE_ARRAY;
 				this.m_rssi = rssi;
 				this.m_lastDisconnectIntent = lastDisconnectIntent;
-				this.m_txPower = txPower;
-				this.m_advertisingFlags = advFlags;
-				this.m_manufacturerData = manufacturerData;
-				this.m_serviceData = serviceData;
+				this.m_txPower = scanInfo.getTxPower().value;
+				this.m_advertisingFlags = scanInfo.getAdvFlags().value;
+				this.m_manufacturerData = scanInfo.getManufacturerData();
+				this.m_manufacturerId = scanInfo.getManufacturerId();
+				this.m_serviceData = scanInfo.getServiceData();
+
+				this.m_manufacturerCombinedData = new SparseArray<>();
 			}
 
 			/*package*/ static ScanEvent fromScanRecord(final BluetoothDevice device_native, final String rawDeviceName, final String normalizedDeviceName, final int rssi, final State.ChangeIntent lastDisconnectIntent, final byte[] scanRecord)
@@ -452,9 +461,9 @@ public class BleManagerConfig extends BleDeviceConfig
 				final Map<UUID, byte[]> serviceData = new HashMap<UUID, byte[]>();
 				final String name = rawDeviceName != null ? rawDeviceName : Utils_ScanRecord.parseName(scanRecord);
 
-				Utils_ScanRecord.parseScanRecord(scanRecord, advFlags, txPower, serviceUuids, manufacturerData, serviceData);
+				BleScanInfo scanInfo = Utils_ScanRecord.parseScanRecord(scanRecord);
 
-				final ScanEvent e = new ScanEvent(device_native, serviceUuids, name, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent, txPower.value, manufacturerData, serviceData, advFlags.value);
+				final ScanEvent e = new ScanEvent(device_native, name, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent, scanInfo);
 
 				return e;
 			}

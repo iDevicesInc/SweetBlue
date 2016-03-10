@@ -130,12 +130,16 @@ task javadocJar(type: Jar, dependsOn: gendocs) {
     description = "Generates the javadoc jar."
 }
 
-// Copy the src directory, and Readme file 
+// Copy the src and res directories, and Readme file
 task copyFiles << {
     checkDir("${BUNDLE_FOLDER}")
     copy {
         from "src/main/java"
         into "${BUNDLE_FOLDER}/src"
+    }
+    copy {
+        from "src/main/res"
+        into "${BUNDLE_FOLDER}/res"
     }
     copy {
         from "../README.md"
@@ -433,7 +437,7 @@ remotes {
     }
 }
 
-task uploadZips(dependsOn: zipTrial) {
+task uploadZips(dependsOn: zipJar) {
     group = "upload"
     description = "Upload zip files to iDevices public web server."
 
