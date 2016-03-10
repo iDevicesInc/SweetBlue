@@ -300,6 +300,12 @@ public class BleManagerConfig extends BleDeviceConfig
 	public BleScanMode scanMode								= BleScanMode.AUTO;
 
 	/**
+	 * NOTE: This is ONLY applicable on devices running Lollipop or above.
+	 * Default is {@link BleScanPower#AUTO} = see {@link BleScanPower} for more details.
+	 */
+	public BleScanPower scanPower							= BleScanPower.AUTO;
+
+	/**
 	 * Default is <code>null</code> - provide an instance here that will be called at the end of {@link BleManager#update(double)}.
 	 * This might be useful for extension/wrapper libraries or apps that want to tie into the {@link BleManager} instance's existing update loop.
 	 */
