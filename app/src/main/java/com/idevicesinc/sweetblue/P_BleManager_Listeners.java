@@ -4,19 +4,16 @@ import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.State;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.lang.reflect.Method;
@@ -187,7 +184,7 @@ class P_BleManager_Listeners
 
 	private void post(final Runnable runnable)
 	{
-		final UpdateLoop updateLoop = m_mngr.getUpdateLoop();
+		final PI_UpdateLoop updateLoop = m_mngr.getUpdateLoop();
 
 		updateLoop.postIfNeeded(runnable);
 	}

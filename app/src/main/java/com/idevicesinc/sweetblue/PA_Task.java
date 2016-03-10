@@ -45,6 +45,7 @@ abstract class PA_Task
 	
 	private int m_defaultOrdinal = ORDINAL_NOT_YET_ASSIGNED; // until added to the queue and assigned an actual ordinal.
 
+
     public PA_Task(BleServer server, I_StateListener listener)
     {
         this(server.getManager(), listener);

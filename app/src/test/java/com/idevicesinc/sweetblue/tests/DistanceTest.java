@@ -5,7 +5,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 
-public class TestDistance {
+public class DistanceTest
+{
 
     @Test
     public void smokeTests() {

@@ -12,7 +12,7 @@ import android.bluetooth.BluetoothProfile;
 import com.idevicesinc.sweetblue.BleServer.IncomingListener;
 import static com.idevicesinc.sweetblue.BleServer.IncomingListener.*;
 import static com.idevicesinc.sweetblue.BleServer.OutgoingListener.*;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
+
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -99,7 +99,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	private void post(final Runnable runnable)
 	{
-		final UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
+		final PI_UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
 
 		updateLoop.postIfNeeded(runnable);
 	}

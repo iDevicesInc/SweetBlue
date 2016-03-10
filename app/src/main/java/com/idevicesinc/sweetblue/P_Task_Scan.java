@@ -127,7 +127,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, boolean isPoll)
 	{
 		super(manager, listener);
-		
+
 		m_scanTime = scanTime;
 		m_isPoll = isPoll;
 	}
@@ -153,15 +153,15 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		//---		but then by the time we get here it can be false. isExecutable() is currently not thread-safe
 		//---		either, thus we're doing the manual check in the native stack. Before 5.0 the scan would just fail
 		//---		so we'd fail as we do below, but Android 5.0 makes this an exception for at least some phones (OnePlus One (A0001)).
-		if( false == getManager().getNative().getAdapter().isEnabled() )
+		if( false == isBluetoothEnabled() )
 		{
 			fail();
 		}
 		else
 		{
-			if( false == getManager().isLocationEnabledForScanning() )
+			if( false == isLocationEnabledForScanning() )
 			{
-				if( true == getManager().isLocationEnabledForScanning_byRuntimePermissions() && false == getManager().isLocationEnabledForScanning_byOsServices() )
+				if( true == isLocationEnabledForScanning_byRuntimePermissions() && false == isLocationEnabledForScanning_byOsServices() )
 				{
 					//--- DRK > Classic discovery still seems to work as long as we have permissions.
 					//---		In other words if location services are off we can still do classic scanning.
@@ -179,6 +179,26 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				execute_locationEnabledFlow();
 			}
 		}
+	}
+
+	private boolean isLocationEnabledForScanning_byOsServices()
+	{
+		return getManager().isLocationEnabledForScanning_byOsServices();
+	}
+
+	private boolean isLocationEnabledForScanning_byRuntimePermissions()
+	{
+		return getManager().isLocationEnabledForScanning_byRuntimePermissions();
+	}
+
+	private boolean isLocationEnabledForScanning()
+	{
+		return getManager().isLocationEnabledForScanning();
+	}
+
+	private boolean isBluetoothEnabled()
+	{
+		return getManager().isBluetoothEnabled();
 	}
 
 	private void execute_locationEnabledFlow()
@@ -295,11 +315,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 		else
 		{
-			if( Utils.isMarshmallow() )
+			if (Utils.isMarshmallow())
 			{
-				M_Util.startNativeScan(getManager(), scanMode, getManager().m_config.scanReportDelay, m_scanCallback_postLollipop);
-			} else {
-				L_Util.startNativeScan(getManager(), scanMode, getManager().m_config.scanReportDelay, m_scanCallback_postLollipop);
+				getManager().startMScan(scanMode, m_scanCallback_postLollipop);
+			}
+			else
+			{
+				getManager().startLScan(scanMode, m_scanCallback_postLollipop);
 			}
 		}
 	}
@@ -313,7 +335,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 		while( retryCount <= m_retryCountMax )
 		{
-			final boolean success = getManager().getNativeAdapter().startLeScan(getManager().m_listeners.m_scanCallback_preLollipop);
+			final boolean success = startLeScan();
 
 			if( success )
 			{
@@ -348,7 +370,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 					//---		Android somehow, sometimes, keeps the same actual BleManager instance in memory, so it's not
 					//---		far-fetched to assume that the scan from the previous app run can sometimes still be ongoing.
 					//m_btMngr.getAdapter().stopLeScan(m_listeners.m_scanCallback);
-					getManager().getNativeAdapter().stopLeScan(getManager().m_listeners.m_scanCallback_preLollipop);
+					stopLeScan();
 				}
 				else
 				{
@@ -391,11 +413,21 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 	}
 
+	private void stopLeScan()
+	{
+		getManager().stopLeScan();
+	}
+
+	private boolean startLeScan()
+	{
+		return getManager().startLeScan();
+	}
+
 	private boolean tryClassicDiscovery(final E_Intent intent, final boolean suppressUhOh)
 	{
 		if( getManager().m_config.revertToClassicDiscoveryIfNeeded )
 		{
-			if( false == getManager().getNativeAdapter().startDiscovery() )
+			if( false == startClassicDiscovery() )
 			{
 				getLogger().w("Classic discovery failed to start!");
 
@@ -425,6 +457,11 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			return false;
 		}
+	}
+
+	private boolean startClassicDiscovery()
+	{
+		return getManager().startClassicDiscovery();
 	}
 	
 	private double getMinimumScanTime()

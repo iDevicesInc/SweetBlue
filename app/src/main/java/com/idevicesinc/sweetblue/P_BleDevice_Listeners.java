@@ -14,7 +14,6 @@ import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 class P_BleDevice_Listeners extends BluetoothGattCallback
@@ -119,7 +118,7 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 	private void post(final Runnable runnable)
 	{
-		final UpdateLoop updateLoop = m_device.getManager().getUpdateLoop();
+		final PI_UpdateLoop updateLoop = m_device.getManager().getUpdateLoop();
 
 		updateLoop.postIfNeeded(runnable);
 	}
