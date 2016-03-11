@@ -257,6 +257,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private void execute_classic()
 	{
+		BleManagerState.SCANNING.setScanMode(BleScanMode.CLASSIC);
+		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		tryClassicDiscovery(getIntent(), /*suppressUhOh=*/true);
 
 		m_mode = Mode_CLASSIC;
@@ -264,6 +266,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private void execute_preLollipop()
 	{
+		BleManagerState.SCANNING.setScanMode(BleScanMode.PRE_LOLLIPOP);
+		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_mode = startNativeScan_preLollipop(getIntent());
 
 		if( m_mode == Mode_NULL )
@@ -275,8 +279,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	// TODO - Remove boolean argument in v3
 	private void execute_postLollipop(boolean usingDeprecatedMode)
 	{
+		BleManagerState.SCANNING.setScanMode(BleScanMode.AUTO);
 		m_mode = Mode_BLE;
-		getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		startNativeScan_postLollipop(usingDeprecatedMode);
 	}
@@ -291,6 +295,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 		if (usingDeprecatedMode)
 		{
+			BleManagerState.SCANNING.setPower(BleScanPower.fromBleScanMode(scanMode_abstracted));
 			scanMode = scanMode_abstracted.getNativeMode();
 		}
 		else
@@ -301,24 +306,28 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				{
 					if (m_isPoll || m_scanTime == Double.POSITIVE_INFINITY)
 					{
+						BleManagerState.SCANNING.setPower(BleScanPower.MEDIUM_POWER);
 						scanMode = ScanSettings.SCAN_MODE_BALANCED;
 					}
 					else
 					{
+						BleManagerState.SCANNING.setPower(BleScanPower.HIGH_POWER);
 						scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
 					}
 				}
 				else
 				{
+					BleManagerState.SCANNING.setPower(BleScanPower.LOW_POWER);
 					scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
 				}
 			}
 			else
 			{
+				BleManagerState.SCANNING.setPower(scanPower_abstracted);
 				scanMode = scanPower_abstracted.getNativeMode();
 			}
 		}
-
+		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		if( false == Utils.isLollipop() )
 		{
 			getManager().ASSERT(false, "Tried to create ScanSettings for pre-lollipop!");

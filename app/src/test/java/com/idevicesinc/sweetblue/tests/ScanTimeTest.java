@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Config(manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
-public class ScanTest extends BaseBleTest
+public class ScanTimeTest extends BaseBleTest
 {
 
     private static final int LEEWAY = 250;
