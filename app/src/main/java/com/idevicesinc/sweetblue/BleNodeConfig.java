@@ -905,6 +905,95 @@ public class BleNodeConfig
 		Please onEvent(final ReconnectEvent e);
 	}
 
+	static class DefaultNullReconnectFilter implements ReconnectFilter
+	{
+		public static final Please DEFAULT_INITIAL_RECONNECT_DELAY	= Please.retryInstantly();
+
+		public static final Interval SHORT_TERM_ATTEMPT_RATE		= Interval.secs(1.0);
+
+		public static final Interval SHORT_TERM_TIMEOUT				= Interval.FIVE_SECS;
+
+		private final Please m_please__SHORT_TERM__SHOULD_TRY_AGAIN;
+		private final Interval m_timeout__SHORT_TERM__SHOULD_CONTINUE;
+
+		public DefaultNullReconnectFilter()
+		{
+			this
+					(
+							DefaultReconnectFilter.SHORT_TERM_ATTEMPT_RATE,
+							DefaultReconnectFilter.SHORT_TERM_TIMEOUT
+					);
+		}
+
+		public DefaultNullReconnectFilter(final Interval reconnectRate__SHORT_TERM, final Interval timeout__SHORT_TERM)
+		{
+			m_please__SHORT_TERM__SHOULD_TRY_AGAIN = Please.retryIn(reconnectRate__SHORT_TERM);
+
+			m_timeout__SHORT_TERM__SHOULD_CONTINUE = timeout__SHORT_TERM;
+		}
+
+		@Override public Please onEvent(final ReconnectEvent e)
+		{
+			if( e.type().isShouldTryAgain() )
+			{
+				if( e.failureCount() == 0 )
+				{
+					return DEFAULT_INITIAL_RECONNECT_DELAY;
+				}
+				else
+				{
+					if( e.type().isShortTerm() )
+					{
+						return m_please__SHORT_TERM__SHOULD_TRY_AGAIN;
+					}
+					else
+					{
+						return Please.stopRetrying();
+					}
+				}
+			}
+			else if( e.type().isShouldContinue() )
+			{
+				if( e.node() instanceof BleDevice )
+				{
+					final boolean definitelyPersist = BleDeviceState.CONNECTING_OVERALL.overlaps(e.device().getNativeStateMask()) &&
+							BleDeviceState.CONNECTED.overlaps(e.device().getNativeStateMask());
+
+					//--- DRK > We don't interrupt if we're in the middle of connecting
+					//---		but this will be the last attempt if it fails.
+					if( definitelyPersist )
+					{
+						return Please.persist();
+					}
+					else
+					{
+						return shouldContinue(e);
+					}
+				}
+				else
+				{
+					return shouldContinue(e);
+				}
+			}
+			else
+			{
+				return Please.stopRetrying();
+			}
+		}
+
+		private Please shouldContinue(final ReconnectEvent e)
+		{
+			if( e.type().isShortTerm() )
+			{
+				return Please.persistIf(e.totalTimeReconnecting().lt(m_timeout__SHORT_TERM__SHOULD_CONTINUE));
+			}
+			else
+			{
+				return Please.stopRetrying();
+			}
+		}
+	}
+
 	/**
 	 * Default implementation of {@link ReconnectFilter} that uses {@link ReconnectFilter.Please#retryInstantly()} for the
 	 * first reconnect attempt, and from then on uses the {@link Interval} rate passed to the constructor

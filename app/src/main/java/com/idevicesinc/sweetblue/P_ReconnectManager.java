@@ -147,7 +147,7 @@ class P_ReconnectManager
 	void update(double timeStep)
 	{
 		if( !isRunning() )  return;
-		
+
 		m_totalTime += timeStep;
 		
 		if( !m_isShortTerm && !m_device.is(BleDeviceState.RECONNECTING_LONG_TERM) )  return;

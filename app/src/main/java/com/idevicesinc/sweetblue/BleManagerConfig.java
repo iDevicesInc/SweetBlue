@@ -60,7 +60,15 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 	
-	static final BleManagerConfig NULL = new BleManagerConfig();
+	static final BleManagerConfig NULL = new BleManagerConfigNull();
+
+	static class BleManagerConfigNull extends BleManagerConfig {
+		{
+			reconnectFilter	= new DefaultNullReconnectFilter();
+		}
+	}
+
+
 	
 	/**
 	 * Maximum amount of time for a classic scan to run. This was determined based on experimentation.
