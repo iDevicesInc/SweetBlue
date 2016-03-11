@@ -7,17 +7,15 @@ import com.idevicesinc.sweetblue.BleScanMode;
 import com.idevicesinc.sweetblue.PI_BleScanner;
 import com.idevicesinc.sweetblue.PI_BleStatusHelper;
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
 import java.util.concurrent.Semaphore;
 
 
-@Config(manifest = Config.NONE)
+@Config(manifest = Config.NONE, sdk = 21)
 @RunWith(RobolectricTestRunner.class)
 public class ScanModeTest extends BaseBleTest
 {
@@ -26,6 +24,7 @@ public class ScanModeTest extends BaseBleTest
     public void scanModeClassicTest() throws Exception
     {
         m_config.scanMode = BleScanMode.CLASSIC;
+        m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
             @Override public void run(final Semaphore semaphore)
@@ -36,7 +35,60 @@ public class ScanModeTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanMode(BleManagerState.SCANNING) == BleScanMode.CLASSIC);
+                            assertTrue(getScanMode() == BleScanMode.CLASSIC);
+                            m_mgr.stopScan();
+                            semaphore.release();
+                        }
+                    }
+                });
+                m_mgr.startScan(Interval.FIVE_SECS);
+            }
+        });
+    }
+
+    @Test
+    public void scanModePreLollipop() throws Exception
+    {
+        m_config.scanMode = BleScanMode.PRE_LOLLIPOP;
+        m_mgr.setConfig(m_config);
+        doTestOperation(new TestOp()
+        {
+            @Override public void run(final Semaphore semaphore)
+            {
+                m_mgr.setListener_State(new BleManager.StateListener()
+                {
+                    @Override public void onEvent(StateEvent e)
+                    {
+                        if (e.didEnter(BleManagerState.SCANNING))
+                        {
+                            assertTrue(getScanMode() == BleScanMode.PRE_LOLLIPOP);
+                            m_mgr.stopScan();
+                            semaphore.release();
+                        }
+                    }
+                });
+                m_mgr.startScan(Interval.FIVE_SECS);
+            }
+        });
+    }
+
+    @Test
+    public void scanModeAuto() throws Exception
+    {
+        m_config.scanMode = BleScanMode.AUTO;
+        m_mgr.setConfig(m_config);
+        doTestOperation(new TestOp()
+        {
+            @Override public void run(final Semaphore semaphore)
+            {
+                m_mgr.setListener_State(new BleManager.StateListener()
+                {
+                    @Override public void onEvent(StateEvent e)
+                    {
+                        if (e.didEnter(BleManagerState.SCANNING))
+                        {
+                            assertTrue(getScanMode() == BleScanMode.AUTO);
+                            m_mgr.stopScan();
                             semaphore.release();
                         }
                     }

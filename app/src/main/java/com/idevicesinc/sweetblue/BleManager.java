@@ -816,7 +816,7 @@ public class BleManager
 		final P_DeviceManager m_deviceMngr;
 		final P_DeviceManager m_deviceMngr_cache;
 	final P_BleManager_Listeners m_listeners;
-	private final P_BleStateTracker m_stateTracker;
+	final P_BleStateTracker m_stateTracker;
 	final P_NativeBleStateTracker m_nativeStateTracker;
 	private PI_UpdateLoop m_updateLoop;
 	private final P_TaskQueue m_taskQueue;
@@ -1661,7 +1661,8 @@ public class BleManager
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
-			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+			m_stateTracker.append(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs(), isPoll));
 		}
