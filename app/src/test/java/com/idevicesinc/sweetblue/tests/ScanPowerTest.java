@@ -142,7 +142,7 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // We're in the foreground, and NOT running an infinite scan, so this should be High power here
+                            // We're in the foreground, and running an infinite scan, so this should be Medium power here
                             assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -170,7 +170,7 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // We're in the foreground, and NOT running an infinite scan, so this should be High power here
+                            // We're in the background, so this should be low power here
                             assertTrue(getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             m_mgr.onResume();
