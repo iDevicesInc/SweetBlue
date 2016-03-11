@@ -2,7 +2,9 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 
+import com.idevicesinc.sweetblue.annotations.UnitTest;
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
 
@@ -36,11 +38,18 @@ public enum BleManagerState implements State
 	 * Analogous to {@link BluetoothAdapter#STATE_TURNING_OFF}.
 	 */
 	TURNING_OFF			(BluetoothAdapter.STATE_TURNING_OFF),
+
+	/**
+	 * This is the state that {@link BleManager} is in after calling {@link BleManager#startScan()} or related overloads. The {@link BleManager}
+	 * will only be in this state for a very short period before moving to {@link #SCANNING}.
+	 *
+	 * @see BleManager#startScan()
+	 */
+	STARTING_SCAN,
 	
 	/**
-	 * This is the state that {@link BleManager} is in after calling {@link BleManager#startScan()} or related overloads.
-	 * 
-	 * @see BleManager#startScan()
+	 * This is the state that {@link BleManager} is in when scanning actually starts.
+	 *
 	 */
 	SCANNING,
 	
@@ -72,6 +81,36 @@ public enum BleManagerState implements State
 	private BleManagerState(int nativeCode)
 	{
 		m_nativeCode = nativeCode;
+	}
+
+	private BleScanMode m_mode;
+	private BleScanPower m_power;
+
+
+	@UnitTest
+	BleManagerState setScanMode(BleScanMode mode)
+	{
+		m_mode = mode;
+		return this;
+	}
+
+	@UnitTest
+	BleManagerState setPower(BleScanPower power)
+	{
+		m_power = power;
+		return this;
+	}
+
+	@UnitTest
+	BleScanMode getScanMode()
+	{
+		return m_mode;
+	}
+
+	@UnitTest
+	BleScanPower getScanPower()
+	{
+		return m_power;
 	}
 	
 	/**
