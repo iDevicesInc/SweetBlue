@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import static com.idevicesinc.sweetblue.BleManagerState.OFF;
+import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -645,7 +647,15 @@ class P_BleManager_Listeners
 			{
 				final Method method = BluetoothAdapter.class.getDeclaredMethod("getLeState");
 				final Integer state = (Integer) method.invoke(m_mngr.getNativeAdapter());
-
+				final Integer state2 = m_mngr.getNativeAdapter().getState();
+				// This is to fix an issue on the S7 (and perhaps other phones as well), where the OFF
+				// state is never returned from the getLeState method. This is because the BLE_ states represent if LE only mode is on/off. This does NOT
+				// relate to the Bluetooth radio being on/off. So, we check if STATE_BLE_ON, and the normal getState() method returns OFF, we
+				// will return a state of OFF here.
+				if (state == BleStatuses.STATE_BLE_ON && state2 == OFF.getNativeCode())
+				{
+					return state2;
+				}
 				return state;
 			}
 			catch (Exception e)
