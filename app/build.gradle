@@ -360,6 +360,16 @@ ext.ARCHIVA_URL = System.getenv("ARCHIVA_URL")
 ext.a_user = System.getenv("ARCHIVA_USER")
 ext.a_pw = System.getenv("ARCHIVA_PW")
 
+import org.gradle.plugins.signing.Sign
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.allTasks.any { it instanceof Sign }) {
+
+        allprojects { ext."signing.keyId" = System.getenv("SIGN_ID") }
+        allprojects { ext."signing.secretKeyRingFile" = System.getenv("SIGN_RING") }
+        allprojects { ext."signing.password" = System.getenv("SIGN_PW") }
+    }
+}
 
 uploadArchives {
     repositories {
@@ -368,6 +378,7 @@ uploadArchives {
 
             pom.groupId = 'com.idevicesinc'
             pom.artifactId = 'sweetblue'
+
 
             repository(url: "${ARCHIVA_URL}") {
                 authentication(userName: "${a_user}", password: "${a_pw}")
@@ -404,18 +415,6 @@ task uploadInternal(type: Upload) {
                 url 'http://idevicesinc.com/sweetblue'
             }
         }
-    }
-}
-
-import org.gradle.plugins.signing.Sign
-
-gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.allTasks.any { it instanceof Sign }) {
-
-        allprojects { ext."signing.keyId" = System.getenv("SIGN_ID") }
-        allprojects { ext."signing.secretKeyRingFile" = System.getenv("SIGN_RING") }
-        allprojects { ext."signing.password" = System.getenv("SIGN_PW") }
-
     }
 }
 

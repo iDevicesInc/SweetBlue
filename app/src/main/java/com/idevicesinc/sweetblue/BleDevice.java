@@ -5568,7 +5568,7 @@ public class BleDevice extends BleNode
 
 		final Object[] extraBondingStates;
 
-		if( is(UNBONDED) )
+		if( is(UNBONDED) && Utils.isKitKat())
 		{
 			final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
 			final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
