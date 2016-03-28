@@ -216,7 +216,12 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			if( scanMode == BleScanMode.AUTO )
 			{
-				final boolean isPhonePreLollipop =  false == Utils.isLollipop();
+				// Hard coding this to true for now. From what we've seen, the pre-Lollipop scanning API
+				// works better than the post API. So, we'll default to the preLollipop scanning API when
+				// using auto mode (this way, if the user wants to use the newer API, they can).
+				// See https://code.google.com/p/android/issues/detail?id=82463 for more info
+				final boolean isPhonePreLollipop = true;
+				//final boolean isPhonePreLollipop =  false == Utils.isLollipop();
 
 				if( isPhonePreLollipop )
 				{
