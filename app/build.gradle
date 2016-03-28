@@ -343,7 +343,7 @@ def buildAliases = [
         'fullBuild'  : ['copyAndRenameJars', 'bumpVersion', 'verifyNoCheckstyleWarnings', 'zipJar', 'cleanFolders']
 ]
 
-task fullBuild(dependsOn: [copyAndRenameJars, bumpVersion, verifyNoCheckstyleWarnings, zipJar]) {
+task fullBuild(dependsOn: [copyAndRenameJars, bumpVersion, check, verifyNoCheckstyleWarnings, zipJar]) {
     group = "sweetblue"
     description = "Perform full build, and zip up all files for release."
 }

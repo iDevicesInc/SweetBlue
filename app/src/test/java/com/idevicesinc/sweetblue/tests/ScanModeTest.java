@@ -7,6 +7,8 @@ import com.idevicesinc.sweetblue.BleScanMode;
 import com.idevicesinc.sweetblue.PI_BleScanner;
 import com.idevicesinc.sweetblue.PI_BleStatusHelper;
 import com.idevicesinc.sweetblue.utils.Interval;
+
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -87,7 +89,10 @@ public class ScanModeTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanMode() == BleScanMode.AUTO);
+                            // TODO - Swap the following 2 lines once the lollipop scanning API
+                            // actually works at least as well as the pre-lollipop API.
+                            //assertTrue(getScanMode() == BleScanMode.AUTO);
+                            assertTrue(getScanMode() == BleScanMode.PRE_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
