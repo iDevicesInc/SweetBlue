@@ -308,6 +308,10 @@ public class Utils_ScanRecord extends Utils
 
 	public static String parseName(byte[] scanRecord) {
 		String name = "<NO_NAME>";
+		if (scanRecord == null)
+		{
+			return name;
+		}
 		int currentPos = 0;
 		try
 		{

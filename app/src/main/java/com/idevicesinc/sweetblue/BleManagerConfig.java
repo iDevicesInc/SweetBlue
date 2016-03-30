@@ -472,17 +472,17 @@ public class BleManagerConfig extends BleDeviceConfig
 			)
 			{
 				this.m_nativeInstance = nativeInstance;
-				this.m_advertisedServices = scanInfo.getServiceUUIDS();
+				this.m_advertisedServices = scanInfo != null ? scanInfo.getServiceUUIDS() : new ArrayList<UUID>(0);
 				this.m_rawDeviceName = rawDeviceName != null ? rawDeviceName : "";
 				this.m_normalizedDeviceName = normalizedDeviceName;
 				this.m_scanRecord = scanRecord != null ? scanRecord : BleDevice.EMPTY_BYTE_ARRAY;
 				this.m_rssi = rssi;
 				this.m_lastDisconnectIntent = lastDisconnectIntent;
-				this.m_txPower = scanInfo.getTxPower().value;
-				this.m_advertisingFlags = scanInfo.getAdvFlags().value;
-				this.m_manufacturerData = scanInfo.getManufacturerData();
-				this.m_manufacturerId = scanInfo.getManufacturerId();
-				this.m_serviceData = scanInfo.getServiceData();
+				this.m_txPower = scanInfo != null ? scanInfo.getTxPower().value : 0;
+				this.m_advertisingFlags = scanInfo != null ? scanInfo.getAdvFlags().value : 0;
+				this.m_manufacturerData = scanInfo != null ? scanInfo.getManufacturerData() : BleDevice.EMPTY_BYTE_ARRAY;
+				this.m_manufacturerId = scanInfo != null ? scanInfo.getManufacturerId() : 0;
+				this.m_serviceData = scanInfo != null ? scanInfo.getServiceData() : new HashMap<UUID, byte[]>(0);
 
 				this.m_manufacturerCombinedData = new SparseArray<>();
 			}
