@@ -127,7 +127,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, boolean isPoll)
 	{
 		super(manager, listener);
-		
+
 		m_scanTime = scanTime;
 		m_isPoll = isPoll;
 	}
@@ -153,15 +153,15 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		//---		but then by the time we get here it can be false. isExecutable() is currently not thread-safe
 		//---		either, thus we're doing the manual check in the native stack. Before 5.0 the scan would just fail
 		//---		so we'd fail as we do below, but Android 5.0 makes this an exception for at least some phones (OnePlus One (A0001)).
-		if( false == getManager().getNative().getAdapter().isEnabled() )
+		if( false == isBluetoothEnabled() )
 		{
 			fail();
 		}
 		else
 		{
-			if( false == getManager().isLocationEnabledForScanning() )
+			if( false == isLocationEnabledForScanning() )
 			{
-				if( true == getManager().isLocationEnabledForScanning_byRuntimePermissions() && false == getManager().isLocationEnabledForScanning_byOsServices() )
+				if( true == isLocationEnabledForScanning_byRuntimePermissions() && false == isLocationEnabledForScanning_byOsServices() )
 				{
 					//--- DRK > Classic discovery still seems to work as long as we have permissions.
 					//---		In other words if location services are off we can still do classic scanning.
@@ -181,6 +181,26 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 	}
 
+	private boolean isLocationEnabledForScanning_byOsServices()
+	{
+		return getManager().isLocationEnabledForScanning_byOsServices();
+	}
+
+	private boolean isLocationEnabledForScanning_byRuntimePermissions()
+	{
+		return getManager().isLocationEnabledForScanning_byRuntimePermissions();
+	}
+
+	private boolean isLocationEnabledForScanning()
+	{
+		return getManager().isLocationEnabledForScanning();
+	}
+
+	private boolean isBluetoothEnabled()
+	{
+		return getManager().isBluetoothEnabled();
+	}
+
 	private void execute_locationEnabledFlow()
 	{
 		final boolean forcePreLollipopScan = getManager().m_config.forcePreLollipopScan;
@@ -196,7 +216,12 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			if( scanMode == BleScanMode.AUTO )
 			{
-				final boolean isPhonePreLollipop =  false == Utils.isLollipop();
+				// Hard coding this to true for now. From what we've seen, the pre-Lollipop scanning API
+				// works better than the post API. So, we'll default to the preLollipop scanning API when
+				// using auto mode (this way, if the user wants to use the newer API, they can).
+				// See https://code.google.com/p/android/issues/detail?id=82463 for more info
+				final boolean isPhonePreLollipop = true;
+				//final boolean isPhonePreLollipop =  false == Utils.isLollipop();
 
 				if( isPhonePreLollipop )
 				{
@@ -204,7 +229,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				}
 				else
 				{
-					execute_postLollipop();
+					execute_postLollipop(false);
 				}
 			}
 			else if( scanMode == BleScanMode.CLASSIC )
@@ -217,9 +242,11 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 			else if( scanMode.isLollipopScanMode() )
 			{
+				// TODO - Remove this log statement in v3
+				getLogger().w("It looks like you're using a deprecated BleScanMode. This will be removed in v3. The deprecated options have moved to BleScanPower.");
 				if (Utils.isLollipop())
 				{
-					execute_postLollipop();
+					execute_postLollipop(true);
 				}
 				else
 				{
@@ -235,6 +262,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private void execute_classic()
 	{
+		BleManagerState.SCANNING.setScanMode(BleScanMode.CLASSIC);
+		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		tryClassicDiscovery(getIntent(), /*suppressUhOh=*/true);
 
 		m_mode = Mode_CLASSIC;
@@ -242,6 +271,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 	private void execute_preLollipop()
 	{
+		BleManagerState.SCANNING.setScanMode(BleScanMode.PRE_LOLLIPOP);
+		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_mode = startNativeScan_preLollipop(getIntent());
 
 		if( m_mode == Mode_NULL )
@@ -250,43 +281,58 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 	}
 
-	private void execute_postLollipop()
+	// TODO - Remove boolean argument in v3
+	private void execute_postLollipop(boolean usingDeprecatedMode)
 	{
+		BleManagerState.SCANNING.setScanMode(BleScanMode.AUTO);
 		m_mode = Mode_BLE;
-		getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-		startNativeScan_postLollipop();
+		startNativeScan_postLollipop(usingDeprecatedMode);
 	}
 
-	private void startNativeScan_postLollipop()
+	// TODO - Remove boolean argument in v3
+	private void startNativeScan_postLollipop(boolean usingDeprecatedMode)
 	{
 		final BleScanMode scanMode_abstracted = getManager().m_config.scanMode;
+		final BleScanPower scanPower_abstracted = getManager().m_config.scanPower;
 
 		final int scanMode;
 
-		if( scanMode_abstracted == null || scanMode_abstracted == BleScanMode.AUTO )
+		if (usingDeprecatedMode)
 		{
-			if( getManager().isForegrounded() )
+			BleManagerState.SCANNING.setPower(BleScanPower.fromBleScanMode(scanMode_abstracted));
+			scanMode = scanMode_abstracted.getNativeMode();
+		}
+		else
+		{
+			if (scanPower_abstracted == null || scanPower_abstracted == BleScanPower.AUTO)
 			{
-				if( m_isPoll || m_scanTime == Double.POSITIVE_INFINITY )
+				if (getManager().isForegrounded())
 				{
-					scanMode = ScanSettings.SCAN_MODE_BALANCED;
+					if (m_isPoll || m_scanTime == Double.POSITIVE_INFINITY)
+					{
+						BleManagerState.SCANNING.setPower(BleScanPower.MEDIUM_POWER);
+						scanMode = ScanSettings.SCAN_MODE_BALANCED;
+					}
+					else
+					{
+						BleManagerState.SCANNING.setPower(BleScanPower.HIGH_POWER);
+						scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+					}
 				}
 				else
 				{
-					scanMode = ScanSettings.SCAN_MODE_LOW_LATENCY;
+					BleManagerState.SCANNING.setPower(BleScanPower.LOW_POWER);
+					scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
 				}
 			}
 			else
 			{
-				scanMode = ScanSettings.SCAN_MODE_LOW_POWER;
+				BleManagerState.SCANNING.setPower(scanPower_abstracted);
+				scanMode = scanPower_abstracted.getNativeMode();
 			}
 		}
-		else
-		{
-			scanMode = scanMode_abstracted.getNativeMode();
-		}
-
+		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		if( false == Utils.isLollipop() )
 		{
 			getManager().ASSERT(false, "Tried to create ScanSettings for pre-lollipop!");
@@ -295,11 +341,13 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 		else
 		{
-			if( Utils.isMarshmallow() )
+			if (Utils.isMarshmallow())
 			{
-				M_Util.startNativeScan(getManager(), scanMode, getManager().m_config.scanReportDelay, m_scanCallback_postLollipop);
-			} else {
-				L_Util.startNativeScan(getManager(), scanMode, getManager().m_config.scanReportDelay, m_scanCallback_postLollipop);
+				getManager().startMScan(scanMode, m_scanCallback_postLollipop);
+			}
+			else
+			{
+				getManager().startLScan(scanMode, m_scanCallback_postLollipop);
 			}
 		}
 	}
@@ -313,7 +361,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 		while( retryCount <= m_retryCountMax )
 		{
-			final boolean success = getManager().getNativeAdapter().startLeScan(getManager().m_listeners.m_scanCallback_preLollipop);
+			final boolean success = startLeScan();
 
 			if( success )
 			{
@@ -348,7 +396,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 					//---		Android somehow, sometimes, keeps the same actual BleManager instance in memory, so it's not
 					//---		far-fetched to assume that the scan from the previous app run can sometimes still be ongoing.
 					//m_btMngr.getAdapter().stopLeScan(m_listeners.m_scanCallback);
-					getManager().getNativeAdapter().stopLeScan(getManager().m_listeners.m_scanCallback_preLollipop);
+					stopLeScan();
 				}
 				else
 				{
@@ -391,11 +439,21 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 		}
 	}
 
+	private void stopLeScan()
+	{
+		getManager().stopLeScan();
+	}
+
+	private boolean startLeScan()
+	{
+		return getManager().startLeScan();
+	}
+
 	private boolean tryClassicDiscovery(final E_Intent intent, final boolean suppressUhOh)
 	{
 		if( getManager().m_config.revertToClassicDiscoveryIfNeeded )
 		{
-			if( false == getManager().getNativeAdapter().startDiscovery() )
+			if( false == startClassicDiscovery() )
 			{
 				getLogger().w("Classic discovery failed to start!");
 
@@ -425,6 +483,11 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 			return false;
 		}
+	}
+
+	private boolean startClassicDiscovery()
+	{
+		return getManager().startClassicDiscovery();
 	}
 	
 	private double getMinimumScanTime()

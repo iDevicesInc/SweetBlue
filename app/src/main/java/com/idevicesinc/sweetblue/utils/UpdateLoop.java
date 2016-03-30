@@ -1,26 +1,15 @@
 package com.idevicesinc.sweetblue.utils;
 
-import com.idevicesinc.sweetblue.annotations.Lambda;
-
 import android.os.Handler;
 import android.os.Looper;
+
+import com.idevicesinc.sweetblue.PI_UpdateLoop;
 
 /**
  * Zero-dependency (besides Android) utility class for creating an update loop.
  */
-public class UpdateLoop
+public class UpdateLoop implements PI_UpdateLoop
 {
-	/**
-	 * A callback where you handle the update time step.
-	 */
-	@Lambda
-	public static interface Callback
-	{
-		/**
-		 * Gives you the amount of time that has passed in seconds since the last callback.
-		 */
-		void onUpdate(double timestep_seconds);
-	}
 	
 	private final Runnable m_autoUpdateRunnable = new Runnable()
 	{
@@ -45,6 +34,7 @@ public class UpdateLoop
 	private long m_autoUpdateRate = 0;
 	private Handler m_handler;
 	private final Callback m_callback;
+
 	
 	public static UpdateLoop newMainThreadLoop(Callback callback)
 	{
@@ -73,7 +63,8 @@ public class UpdateLoop
 		
 		initHandler(runOnMainThread);
 	}
-	
+
+	@Override
 	public boolean isRunning()
 	{
 		return m_isRunning;
@@ -114,7 +105,8 @@ public class UpdateLoop
 			m_handler.postDelayed(m_autoUpdateRunnable, m_autoUpdateRate);
 		}
 	}
-	
+
+	@Override
 	public void start(double updateRate)
 	{
 		if( updateRate == 0.0 )  return;
@@ -128,10 +120,12 @@ public class UpdateLoop
 		
 		m_autoUpdateRate = (long) (updateRate * 1000);
 		m_lastAutoUpdateTime = System.currentTimeMillis();
-		
+
 		postUpdate();
+
 	}
-	
+
+	@Override
 	public void stop()
 	{
 		if( !m_isRunning )  return;
@@ -140,7 +134,7 @@ public class UpdateLoop
 		{
 			m_handler.removeCallbacks(m_autoUpdateRunnable);
 		}
-		
+
 		m_isRunning = false;
 	}
 	
@@ -150,14 +144,17 @@ public class UpdateLoop
 		//---		this class is constructed so wait for it if needed.
 		while(m_handler == null) {}
 	}
-	
+
+	@Override
 	public void forcePost(Runnable runnable)
 	{
 		waitForHandler();
-		
+
 		m_handler.postDelayed(runnable, 1);
+
 	}
 
+	@Override
 	public Handler getHandler()
 	{
 		waitForHandler();
@@ -165,22 +162,17 @@ public class UpdateLoop
 		return m_handler;
 	}
 
+	@Override
 	public boolean postNeeded()
 	{
 		return m_handler.getLooper().getThread() != Thread.currentThread();
 	}
-	
+
+	@Override
 	public void postIfNeeded(Runnable runnable)
 	{
 		waitForHandler();
-		
-		if( false == postNeeded() )
-		{
-			runnable.run();
-		}
-		else
-		{
-			m_handler.post(runnable);
-		}
+
+		m_handler.post(runnable);
 	}
 }

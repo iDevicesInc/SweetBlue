@@ -15,13 +15,13 @@ import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.annotations.UnitTest;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -60,7 +60,15 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 	
-	static final BleManagerConfig NULL = new BleManagerConfig();
+	static final BleManagerConfig NULL = new BleManagerConfigNull();
+
+	static class BleManagerConfigNull extends BleManagerConfig {
+		{
+			reconnectFilter	= new DefaultNullReconnectFilter();
+		}
+	}
+
+
 	
 	/**
 	 * Maximum amount of time for a classic scan to run. This was determined based on experimentation.
@@ -300,10 +308,37 @@ public class BleManagerConfig extends BleDeviceConfig
 	public BleScanMode scanMode								= BleScanMode.AUTO;
 
 	/**
+	 * NOTE: This is ONLY applicable on devices running Lollipop or above.
+	 * Default is {@link BleScanPower#AUTO} = see {@link BleScanPower} for more details.
+	 */
+	public BleScanPower scanPower							= BleScanPower.AUTO;
+
+	/**
 	 * Default is <code>null</code> - provide an instance here that will be called at the end of {@link BleManager#update(double)}.
 	 * This might be useful for extension/wrapper libraries or apps that want to tie into the {@link BleManager} instance's existing update loop.
 	 */
-	public UpdateLoop.Callback updateLoopCallback			= null;
+	public PI_UpdateLoop.Callback updateLoopCallback			= null;
+
+	/**
+	 * This allows the use of custom {@link PI_UpdateLoop} for the internal processing of SweetBlue. This is only exposed
+	 * for unit testing purposes, you should never change this unless you know the internals of SweetBlue intimately.
+	 */
+	@UnitTest
+	public PI_UpdateLoop.IUpdateLoopFactory updateLoopFactory	= new PI_UpdateLoop.DefaultUpdateLoopFactory();
+
+	/**
+	 * Allows overriding of Ble Status's. This is only used for unit testing, and shouldn't be
+	 * used at all.
+	 */
+	@UnitTest
+	public PI_BleStatusHelper bleStatusHelper 					= null;
+
+	/**
+	 * Allows overriding of Ble scanning behaviour in SweetBlue. This is only used for unit
+	 * testing, and should not be used at all.
+	 */
+	@UnitTest
+	public PI_BleScanner bleScanner								= null;
 	
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
@@ -437,17 +472,17 @@ public class BleManagerConfig extends BleDeviceConfig
 			)
 			{
 				this.m_nativeInstance = nativeInstance;
-				this.m_advertisedServices = scanInfo.getServiceUUIDS();
+				this.m_advertisedServices = scanInfo != null ? scanInfo.getServiceUUIDS() : new ArrayList<UUID>(0);
 				this.m_rawDeviceName = rawDeviceName != null ? rawDeviceName : "";
 				this.m_normalizedDeviceName = normalizedDeviceName;
 				this.m_scanRecord = scanRecord != null ? scanRecord : BleDevice.EMPTY_BYTE_ARRAY;
 				this.m_rssi = rssi;
 				this.m_lastDisconnectIntent = lastDisconnectIntent;
-				this.m_txPower = scanInfo.getTxPower().value;
-				this.m_advertisingFlags = scanInfo.getAdvFlags().value;
-				this.m_manufacturerData = scanInfo.getManufacturerData();
-				this.m_manufacturerId = scanInfo.getManufacturerId();
-				this.m_serviceData = scanInfo.getServiceData();
+				this.m_txPower = scanInfo != null ? scanInfo.getTxPower().value : 0;
+				this.m_advertisingFlags = scanInfo != null ? scanInfo.getAdvFlags().value : 0;
+				this.m_manufacturerData = scanInfo != null ? scanInfo.getManufacturerData() : BleDevice.EMPTY_BYTE_ARRAY;
+				this.m_manufacturerId = scanInfo != null ? scanInfo.getManufacturerId() : 0;
+				this.m_serviceData = scanInfo != null ? scanInfo.getServiceData() : new HashMap<UUID, byte[]>(0);
 
 				this.m_manufacturerCombinedData = new SparseArray<>();
 			}

@@ -2,18 +2,15 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.*;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.ScanCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -680,6 +677,59 @@ public class BleManager
 		void onEvent(final AssertEvent e);
 	}
 
+	private class DefaultBleStatusHelper implements PI_BleStatusHelper {
+
+		@Override public boolean isLocationEnabledForScanning_byOsServices()
+		{
+			return Utils.isLocationEnabledForScanning_byOsServices(getApplicationContext());
+		}
+
+		@Override public boolean isLocationEnabledForScanning_byRuntimePermissions()
+		{
+			return Utils.isLocationEnabledForScanning_byRuntimePermissions(getApplicationContext());
+		}
+
+		@Override public boolean isLocationEnabledForScanning()
+		{
+			return Utils.isLocationEnabledForScanning(getApplicationContext());
+		}
+
+		@Override public boolean isBluetoothEnabled()
+		{
+			return BleManager.this.getNative().getAdapter().isEnabled();
+		}
+
+	}
+
+	private class DefaultBleScanner implements PI_BleScanner
+	{
+
+		@Override public boolean startClassicDiscovery()
+		{
+			return getNativeAdapter().startDiscovery();
+		}
+
+		@Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
+		{
+			L_Util.startNativeScan(BleManager.this, scanMode, delay, callback);
+		}
+
+		@Override public void startMScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
+		{
+			M_Util.startNativeScan(BleManager.this, scanMode, delay, callback);
+		}
+
+		@Override public boolean startLeScan(BluetoothAdapter.LeScanCallback callback)
+		{
+			return getNativeAdapter().startLeScan(m_listeners.m_scanCallback_preLollipop);
+		}
+
+		@Override public void stopLeScan(BluetoothAdapter.LeScanCallback callback)
+		{
+			getNativeAdapter().stopLeScan(callback);
+		}
+	}
+
 	private final UpdateLoop.Callback m_updateLoopCallback = new UpdateLoop.Callback()
 	{
 		@Override public void onUpdate(double timestep_seconds)
@@ -766,9 +816,9 @@ public class BleManager
 		final P_DeviceManager m_deviceMngr;
 		final P_DeviceManager m_deviceMngr_cache;
 	final P_BleManager_Listeners m_listeners;
-	private final P_BleStateTracker m_stateTracker;
+	final P_BleStateTracker m_stateTracker;
 	final P_NativeBleStateTracker m_nativeStateTracker;
-	private 	 UpdateLoop m_updateLoop;
+	private PI_UpdateLoop m_updateLoop;
 	private final P_TaskQueue m_taskQueue;
 	private 	P_UhOhThrottler m_uhOhThrottler;
 				P_WakeLockManager m_wakeLockMngr;
@@ -823,6 +873,14 @@ public class BleManager
 		addLifecycleCallbacks();
 
 		m_config = config.clone();
+		if (m_config.bleStatusHelper == null)
+		{
+			m_config.bleStatusHelper = new DefaultBleStatusHelper();
+		}
+		if (m_config.bleScanner == null)
+		{
+			m_config.bleScanner = new DefaultBleScanner();
+		}
 		initLogger();
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
@@ -848,7 +906,7 @@ public class BleManager
 		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
 		m_nativeStateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-		m_mainThreadHandler = new Handler(m_context.getMainLooper());
+		m_mainThreadHandler = initHandler();
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
 		m_deviceMngr = new P_DeviceManager(this);
@@ -859,6 +917,18 @@ public class BleManager
 		initConfigDependentMembers();
 
 		m_logger.printBuildInfo();
+	}
+
+	private Handler initHandler()
+	{
+//		if (m_config instanceof BleManagerConfigTest && ((BleManagerConfigTest) m_config).looper != null)
+//		{
+//			return new Handler(((BleManagerConfigTest) m_config).looper);
+//		}
+//		else
+		{
+			return new Handler(m_context.getMainLooper());
+		}
 	}
 
 	/**
@@ -877,6 +947,36 @@ public class BleManager
 		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
 		this.initLogger();
 		this.initConfigDependentMembers();
+	}
+
+	/*package*/boolean isBluetoothEnabled()
+	{
+		return m_config.bleStatusHelper.isBluetoothEnabled();
+	}
+
+	/*package*/boolean startClassicDiscovery()
+	{
+		return m_config.bleScanner.startClassicDiscovery();
+	}
+
+	/*package*/void startLScan(int scanMode, L_Util.ScanCallback callback)
+	{
+		m_config.bleScanner.startLScan(scanMode, m_config.scanReportDelay, callback);
+	}
+
+	/*package*/void startMScan(int scanMode, L_Util.ScanCallback callback)
+	{
+		m_config.bleScanner.startMScan(scanMode, m_config.scanReportDelay, callback);
+	}
+
+	/*package*/boolean startLeScan()
+	{
+		return m_config.bleScanner.startLeScan(m_listeners.m_scanCallback_preLollipop);
+	}
+
+	/*package*/void stopLeScan()
+	{
+		m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
 	}
 
 	private void initLogger()
@@ -911,11 +1011,11 @@ public class BleManager
 
 		if( m_config.runOnMainThread )
 		{
-			m_updateLoop = UpdateLoop.newMainThreadLoop(m_updateLoopCallback);
+			m_updateLoop = m_config.updateLoopFactory.newMainThreadLoop(m_updateLoopCallback);
 		}
 		else
 		{
-			m_updateLoop = UpdateLoop.newAnonThreadLoop(m_updateLoopCallback);
+			m_updateLoop = m_config.updateLoopFactory.newAnonThreadLoop(m_updateLoopCallback);
 		}
 
 		if( Interval.isEnabled(m_config.autoUpdateRate) )
@@ -1561,7 +1661,8 @@ public class BleManager
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
-			m_stateTracker.append(BleManagerState.SCANNING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+			m_stateTracker.append(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs(), isPoll));
 		}
@@ -1931,7 +2032,7 @@ public class BleManager
 	 */
 	public boolean isLocationEnabledForScanning()
 	{
-		return Utils.isLocationEnabledForScanning(getApplicationContext());
+		return m_config.bleStatusHelper.isLocationEnabledForScanning();
 	}
 
 	/**
@@ -1959,7 +2060,7 @@ public class BleManager
 	 */
 	public boolean isLocationEnabledForScanning_byRuntimePermissions()
 	{
-		return Utils.isLocationEnabledForScanning_byRuntimePermissions(getApplicationContext());
+		return m_config.bleStatusHelper.isLocationEnabledForScanning_byRuntimePermissions();
 	}
 
 	/**
@@ -1978,7 +2079,7 @@ public class BleManager
 	 */
 	public boolean isLocationEnabledForScanning_byOsServices()
 	{
-		return Utils.isLocationEnabledForScanning_byOsServices(getApplicationContext());
+		return m_config.bleStatusHelper.isLocationEnabledForScanning_byOsServices();
 	}
 
 	/**
@@ -2779,7 +2880,7 @@ public class BleManager
 	//--- DRK > Smooshing together a bunch of package-private accessors here.
 	P_BleStateTracker			getStateTracker(){				return m_stateTracker;				}
 	P_NativeBleStateTracker		getNativeStateTracker(){		return m_nativeStateTracker;		}
-	public UpdateLoop			getUpdateLoop(){				return m_updateLoop;				}
+	public PI_UpdateLoop getUpdateLoop(){				return m_updateLoop;				}
 	P_BluetoothCrashResolver	getCrashResolver(){				return m_crashResolver;				}
 	P_TaskQueue					getTaskQueue(){					return m_taskQueue;					}
 	P_Logger					getLogger(){					return m_logger;					}

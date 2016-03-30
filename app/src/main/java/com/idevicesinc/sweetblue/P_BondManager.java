@@ -12,6 +12,7 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.UUID;
 
@@ -213,7 +214,12 @@ class P_BondManager
 		{
 			return false;
 		}
-		
+
+		if (!Utils.isKitKat())
+		{
+			return false;
+		}
+
 		final Boolean bond = please_nullable.bond_private();
 		
 		if( bond == null )

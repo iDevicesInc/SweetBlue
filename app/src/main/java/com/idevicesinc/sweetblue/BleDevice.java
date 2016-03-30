@@ -947,7 +947,7 @@ public class BleDevice extends BleNode
 
 			/**
 			 * Convenience method that attempts to parse {@link #data()} as an int.
-			 * @param reverse - Set to true if you are connecting to a device with BIG_ENDIAN byte order, to automatically reverse the bytes before conversion.
+			 * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
 			 */
 			public @Nullable(Prevalence.NEVER) int data_int(boolean reverse)
 			{
@@ -965,7 +965,7 @@ public class BleDevice extends BleNode
 
 			/**
 			 * Convenience method that attempts to parse {@link #data()} as a short.
-			 * @param reverse - Set to true if you are connecting to a device with BIG_ENDIAN byte order, to automatically reverse the bytes before conversion.
+			 * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
 			 */
 			public @Nullable(Prevalence.NEVER) short data_short(boolean reverse)
 			{
@@ -983,7 +983,7 @@ public class BleDevice extends BleNode
 
 			/**
 			 * Convenience method that attempts to parse {@link #data()} as a long.
-			 * @param reverse - Set to true if you are connecting to a device with BIG_ENDIAN byte order, to automatically reverse the bytes before conversion.
+			 * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
 			 */
 			public @Nullable(Prevalence.NEVER) long data_long(boolean reverse)
 			{
@@ -5568,7 +5568,7 @@ public class BleDevice extends BleNode
 
 		final Object[] extraBondingStates;
 
-		if( is(UNBONDED) )
+		if( is(UNBONDED) && Utils.isKitKat())
 		{
 			final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
 			final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);

@@ -5,7 +5,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 
-public class TestPercent {
+public class PercentTest
+{
 
     @Test
     public void smokeTests() {

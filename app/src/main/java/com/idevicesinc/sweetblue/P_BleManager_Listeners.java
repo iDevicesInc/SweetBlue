@@ -1,22 +1,22 @@
 package com.idevicesinc.sweetblue;
 
+import static com.idevicesinc.sweetblue.BleManagerState.OFF;
+import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
+import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.State;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.lang.reflect.Method;
@@ -64,7 +64,7 @@ class P_BleManager_Listeners
 			
 			//--- DRK > Got this assert to trip by putting a breakpoint in constructor of NativeDeviceWrapper
 			//---		and waiting, but now can't reproduce.
-			if( !m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && m_mngr.is(SCANNING)) )  return;
+			if( !m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && m_mngr.isAny(SCANNING, STARTING_SCAN)) )  return;
 			
 			if( state.isEndingState() )
 			{
@@ -187,7 +187,7 @@ class P_BleManager_Listeners
 
 	private void post(final Runnable runnable)
 	{
-		final UpdateLoop updateLoop = m_mngr.getUpdateLoop();
+		final PI_UpdateLoop updateLoop = m_mngr.getUpdateLoop();
 
 		updateLoop.postIfNeeded(runnable);
 	}
@@ -648,7 +648,15 @@ class P_BleManager_Listeners
 			{
 				final Method method = BluetoothAdapter.class.getDeclaredMethod("getLeState");
 				final Integer state = (Integer) method.invoke(m_mngr.getNativeAdapter());
-
+				final Integer state2 = m_mngr.getNativeAdapter().getState();
+				// This is to fix an issue on the S7 (and perhaps other phones as well), where the OFF
+				// state is never returned from the getLeState method. This is because the BLE_ states represent if LE only mode is on/off. This does NOT
+				// relate to the Bluetooth radio being on/off. So, we check if STATE_BLE_ON, and the normal getState() method returns OFF, we
+				// will return a state of OFF here.
+				if (state == BleStatuses.STATE_BLE_ON && state2 == OFF.getNativeCode())
+				{
+					return state2;
+				}
 				return state;
 			}
 			catch (Exception e)
