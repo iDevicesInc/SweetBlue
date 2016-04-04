@@ -2,8 +2,10 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.*;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import android.Manifest;
 import android.app.Activity;
@@ -2401,6 +2403,31 @@ public class BleManager
 		enforceMainThread();
 
 		return m_diskOptionsMngr.getPreviouslyConnectedDevices();
+	}
+
+
+	/**
+	 * Convenience method to return a list of currently bonded devices. This simply calls
+	 * {@link BluetoothAdapter#getBondedDevices()}, and wraps all bonded devices into the
+	 * {@link BleDevice} class.
+     */
+	public Set<BleDevice> getDevices_Bonded()
+	{
+		enforceMainThread();
+
+		Set<BluetoothDevice> native_bonded_devices = getNativeAdapter().getBondedDevices();
+		Set<BleDevice> bonded_devices = new HashSet<>(native_bonded_devices.size());
+		BleDevice device;
+		for (BluetoothDevice d : native_bonded_devices)
+		{
+			device = getDevice(d.getAddress());
+			if (device.isNull())
+			{
+				device = newDevice(d.getAddress());
+			}
+			bonded_devices.add(device);
+		}
+		return bonded_devices;
 	}
 
 	/**
