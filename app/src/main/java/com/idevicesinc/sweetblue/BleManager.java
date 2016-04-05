@@ -2407,11 +2407,11 @@ public class BleManager
 
 
 	/**
-	 * Convenience method to return a list of currently bonded devices. This simply calls
-	 * {@link BluetoothAdapter#getBondedDevices()}, and wraps all bonded devices into the
-	 * {@link BleDevice} class.
+	 * Convenience method to return a {@link Set} of currently bonded devices. This simply calls
+	 * {@link BluetoothAdapter#getBondedDevices()}, and wraps all bonded devices into separate
+	 * {@link BleDevice} classes.
      */
-	public Set<BleDevice> getDevices_Bonded()
+	public Set<BleDevice> getDevices_bonded()
 	{
 		enforceMainThread();
 
