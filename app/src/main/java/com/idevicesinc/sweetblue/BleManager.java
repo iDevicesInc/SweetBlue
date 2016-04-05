@@ -873,14 +873,7 @@ public class BleManager
 		addLifecycleCallbacks();
 
 		m_config = config.clone();
-		if (m_config.bleStatusHelper == null)
-		{
-			m_config.bleStatusHelper = new DefaultBleStatusHelper();
-		}
-		if (m_config.bleScanner == null)
-		{
-			m_config.bleScanner = new DefaultBleScanner();
-		}
+		checkUnitTestConfigOptions();
 		initLogger();
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
@@ -906,7 +899,7 @@ public class BleManager
 		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
 		m_nativeStateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-		m_mainThreadHandler = initHandler();
+		m_mainThreadHandler = new Handler(m_context.getMainLooper());
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
 		m_deviceMngr = new P_DeviceManager(this);
@@ -919,15 +912,15 @@ public class BleManager
 		m_logger.printBuildInfo();
 	}
 
-	private Handler initHandler()
+	private void checkUnitTestConfigOptions()
 	{
-//		if (m_config instanceof BleManagerConfigTest && ((BleManagerConfigTest) m_config).looper != null)
-//		{
-//			return new Handler(((BleManagerConfigTest) m_config).looper);
-//		}
-//		else
+		if (m_config.bleStatusHelper == null)
 		{
-			return new Handler(m_context.getMainLooper());
+			m_config.bleStatusHelper = new DefaultBleStatusHelper();
+		}
+		if (m_config.bleScanner == null)
+		{
+			m_config.bleScanner = new DefaultBleScanner();
 		}
 	}
 
@@ -945,6 +938,7 @@ public class BleManager
 		}
 
 		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
+		checkUnitTestConfigOptions();
 		this.initLogger();
 		this.initConfigDependentMembers();
 	}
