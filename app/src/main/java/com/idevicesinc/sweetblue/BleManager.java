@@ -728,7 +728,14 @@ public class BleManager
 
 		@Override public void stopLeScan(BluetoothAdapter.LeScanCallback callback)
 		{
-			getNativeAdapter().stopLeScan(callback);
+			if (m_config.scanMode == BleScanMode.POST_LOLLIPOP)
+			{
+				L_Util.stopNativeScan(BleManager.this);
+			}
+			else
+			{
+				getNativeAdapter().stopLeScan(callback);
+			}
 		}
 	}
 
@@ -2205,11 +2212,15 @@ public class BleManager
 	{
 		m_timeNotScanning = 0.0;
 
+		// Specifically stop the scan
+		m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
+
 		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
 		{
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
 
+		m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_stateTracker.remove(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
