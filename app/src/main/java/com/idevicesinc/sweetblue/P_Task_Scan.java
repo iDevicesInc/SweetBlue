@@ -240,6 +240,10 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				execute_preLollipop();
 			}
+			else if( scanMode == BleScanMode.POST_LOLLIPOP )
+			{
+				execute_postLollipop(false);
+			}
 			else if( scanMode.isLollipopScanMode() )
 			{
 				// TODO - Remove this log statement in v3
