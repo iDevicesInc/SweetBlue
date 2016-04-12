@@ -650,7 +650,10 @@ class P_BleManager_Listeners
 		{
 			try
 			{
-				m_getLeState_marshmallow = BluetoothAdapter.class.getDeclaredMethod("getLeState");
+				if (m_getLeState_marshmallow == null)
+				{
+					m_getLeState_marshmallow = BluetoothAdapter.class.getDeclaredMethod("getLeState");
+				}
 				m_refState = (Integer) m_getLeState_marshmallow.invoke(m_mngr.getNativeAdapter());
 				m_state = m_mngr.getNativeAdapter().getState();
 				// This is to fix an issue on the S7 (and perhaps other phones as well), where the OFF
