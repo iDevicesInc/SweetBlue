@@ -1018,6 +1018,7 @@ public class BleManager
 		}
 		else
 		{
+			m_config.allowCallsFromAllThreads = true;
 			m_updateLoop = m_config.updateLoopFactory.newAnonThreadLoop(m_updateLoopCallback);
 		}
 
