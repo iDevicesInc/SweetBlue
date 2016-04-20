@@ -1,15 +1,10 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import android.bluetooth.BluetoothDevice;
-
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.ScanEvent;
-import com.idevicesinc.sweetblue.utils.State;
+
 
 class P_ScanFilterManager
 {

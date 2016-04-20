@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 /**
@@ -177,7 +178,7 @@ public abstract class BleTransaction
 	
 	/**
 	 * Call this from subclasses to indicate that the transaction has failed. Usually you call this in your
-	 * {@link BleDevice.ReadWriteListener#onEvent(BleDevice.ReadWriteListener.ReadWriteEvent)}
+	 * {@link BleDevice.ReadWriteListener#onEvent(Event)}
 	 * when {@link Status} is something other than {@link Status#SUCCESS}. If you do so,
 	 * {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} will be set.
 	 * 
