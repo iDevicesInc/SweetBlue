@@ -149,10 +149,13 @@ public class BleManagerConfig extends BleDeviceConfig
 	
 	/**
 	 * Default is <code>true</code> - SweetBlue originally ran most operations on its own internal thread based on
-	 * some theories that since proved invalid. While the library can still sort of do so, it's now 
+	 * some theories that since proved invalid. While the library can do so, it's now
 	 * recommended to run on the main thread in order to avoid any possible multithreading issues.
+	 * Note that if this is set to false, then allowCallsFromAllThreads will automatically be set to <code>true</code>.
+	 * Setting this to false will result in a smoother UI experience, at the cost of the possibility of multithreading
+	 * issues, as stated above. Use at your own risk.
 	 */
-	boolean runOnMainThread									= true;
+	public boolean runOnMainThread									= true;
 	
 	/**
 	 * Default is <code>true</code> - whether all callbacks are posted to the main thread or from SweetBlue's internal

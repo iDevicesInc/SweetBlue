@@ -33,6 +33,7 @@ import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Returning;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -266,7 +267,7 @@ public class BleDevice extends BleNode
 	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ReadWriteListener
+	public static interface ReadWriteListener extends GenericListener_Void<ReadWriteEvent>
 	{
 		/**
 		 * A value returned to {@link ReadWriteListener#onEvent(ReadWriteEvent)}
@@ -6308,17 +6309,17 @@ public class BleDevice extends BleNode
 
 		if (listener_nullable != null)
 		{
-			listener_nullable.onEvent(event);
+			postEvent(listener_nullable, event);
 		}
 
 		if (m_defaultReadWriteListener != null)
 		{
-			m_defaultReadWriteListener.onEvent(event);
+			postEvent(m_defaultReadWriteListener, event);
 		}
 
 		if (getManager() != null && getManager().m_defaultReadWriteListener != null)
 		{
-			getManager().m_defaultReadWriteListener.onEvent(event);
+			postEvent(getManager().m_defaultReadWriteListener, event);
 		}
 
 		m_txnMngr.onReadWriteResultCallbacksCalled();
@@ -6439,4 +6440,27 @@ public class BleDevice extends BleNode
 		return "NULL";
 	}
 	// static String NULL_MAC = "DE:AD:BE:EF:BA:BE";
+
+	private void postEvent(final GenericListener_Void listener, final Event event)
+	{
+		if (getManager().m_config.runOnMainThread && !Utils.isOnMainThread())
+		{
+			postEventOnMain(listener, event);
+		}
+		else
+		{
+			listener.onEvent(event);
+		}
+	}
+
+	private void postEventOnMain(final GenericListener_Void listener, final Event event)
+	{
+		getManager().m_mainThreadHandler.post(new Runnable()
+		{
+			@Override public void run()
+			{
+				listener.onEvent(event);
+			}
+		});
+	}
 }
