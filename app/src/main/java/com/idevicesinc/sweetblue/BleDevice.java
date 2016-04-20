@@ -267,10 +267,10 @@ public class BleDevice extends BleNode
 	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ReadWriteListener extends GenericListener_Void<ReadWriteEvent>
+	public static interface ReadWriteListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<ReadWriteListener.ReadWriteEvent>
 	{
 		/**
-		 * A value returned to {@link ReadWriteListener#onEvent(ReadWriteEvent)}
+		 * A value returned to {@link ReadWriteListener#onEvent(Event)}
 		 * by way of {@link ReadWriteEvent#status} that indicates success of the
 		 * operation or the reason for its failure. This enum is <i>not</i>
 		 * meant to match up with {@link BluetoothGatt}.GATT_* values in any way.
@@ -616,8 +616,8 @@ public class BleDevice extends BleNode
 		/**
 		 * Provides a bunch of information about a completed read, write, or notification.
 		 */
-		@Immutable
-		public static class ReadWriteEvent extends Event implements UsesCustomNull
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class ReadWriteEvent extends com.idevicesinc.sweetblue.utils.Event implements com.idevicesinc.sweetblue.utils.UsesCustomNull
 		{
 			/**
 			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid} isn't used for the {@link ReadWriteEvent}
@@ -1071,7 +1071,7 @@ public class BleDevice extends BleNode
 		/**
 		 * Called when a read or write is complete or when a notification comes in or when a notification is enabled/disabled.
 		 */
-		void onEvent(final ReadWriteEvent e);
+//		void onEvent(final ReadWriteEvent e);
 	}
 
 	/**
@@ -1381,7 +1381,7 @@ public class BleDevice extends BleNode
 			/**
 			 * If {@link ConnectionFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or
 			 * {@link Status#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called somewhere in or
-			 * downstream of {@link ReadWriteListener#onEvent(ReadWriteEvent)}, then the {@link ReadWriteEvent} passed there will be returned
+			 * downstream of {@link ReadWriteListener#onEvent(Event)}, then the {@link ReadWriteEvent} passed there will be returned
 			 * here. Otherwise, this will return a {@link ReadWriteEvent} for which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
 			 */
 			public ReadWriteListener.ReadWriteEvent txnFailReason() {  return m_txnFailReason;  }
