@@ -2214,7 +2214,7 @@ public class BleManager
 		m_timeNotScanning = 0.0;
 
 		// Specifically stop the scan
-		m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
+		//m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
 
 		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
 		{
@@ -3149,7 +3149,7 @@ public class BleManager
 		{
 			try
 			{
-				if( Utils.isLollipop() )
+				if( m_config.scanMode == BleScanMode.POST_LOLLIPOP && Utils.isLollipop() )
 				{
 					stopNativeScan_nested_postLollipop();
 				}
