@@ -317,6 +317,20 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public BondFilter bondFilter								= new DefaultBondFilter();
 
 	/**
+	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Auth} which will be used when
+	 * auto connecting.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public BleTransaction.Auth defaultAuthTransaction			= null;
+
+	/**
+	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Init} which will be used when
+	 * auto connecting.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public BleTransaction.Init defaultInitTransaction			= null;
+
+	/**
 	 * As of now there are two main default uses for this class...
 	 * <br><br>
 	 * The first is that in at least some cases it's not possible to determine beforehand whether a given characteristic requires
