@@ -12,6 +12,7 @@ abstract class P_Task
     private BleDevice mDevice;
     private BleServer mServer;
     private IStateListener mStateListener;
+    private long mTimeExecuting;
 
 
     public P_Task(BleServer server, IStateListener listener)

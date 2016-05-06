@@ -1,7 +1,5 @@
 package com.idevicesinc.sweetblue.utils;
 
-import com.idevicesinc.sweetblue.BleServices;
-
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;

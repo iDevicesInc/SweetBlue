@@ -33,4 +33,7 @@ public interface ManagerStateListener extends P_BaseStateListener<ManagerStateLi
                     "current",      Utils_String.toString(newStateBits(), BleManagerState.VALUES()));
         }
     }
+
+    @Override
+    void onEvent(StateEvent event);
 }

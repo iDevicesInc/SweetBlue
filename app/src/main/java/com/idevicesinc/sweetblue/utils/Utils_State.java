@@ -1,6 +1,5 @@
 package com.idevicesinc.sweetblue.utils;
 
-import com.idevicesinc.sweetblue.BleDeviceState;
 
 /**
  * Some helper utilities for dealing with {@link State} implementors.

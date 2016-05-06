@@ -21,7 +21,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * In general, if this annotation isn't used, you may assume {@link Prevalence#NEVER}.
  */
 
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 public @interface Nullable
 {
 	Prevalence value();// default Prevalence.NORMAL;

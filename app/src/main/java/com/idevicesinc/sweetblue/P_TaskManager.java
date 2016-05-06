@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Utils_String;
-
 import java.util.LinkedList;
 
 
