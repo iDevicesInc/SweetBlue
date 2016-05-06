@@ -89,4 +89,9 @@ public class P_PostManager
         mUIHandler.removeCallbacks(updateRunnable);
     }
 
+    boolean isOnSweetBlueThread()
+    {
+        return Thread.currentThread() == mUpdateHandler.getLooper().getThread();
+    }
+
 }

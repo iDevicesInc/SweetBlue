@@ -1,14 +1,18 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Utils_String;
+
 import java.util.LinkedList;
+
 
 public class P_TaskManager
 {
 
     private final LinkedList<P_Task> mTaskQueue;
-    private P_Task mCurrent;
+    private volatile P_Task mCurrent;
     private final BleManager mBleManager;
+    private volatile long mUpdateCount;
 
 
     public P_TaskManager(BleManager mgr)
@@ -17,28 +21,49 @@ public class P_TaskManager
         mBleManager = mgr;
     }
 
-    public void update(long curTimeMs)
+    // This returns true if there are tasks in the queue, or there is a task executing currently
+    public boolean update(long curTimeMs)
     {
+        boolean hasTasks = mTaskQueue.size() > 0 || !isCurrentNull();
         // If the queue has items in it, and there's no current task, get the next task to execute
-        if (mTaskQueue.size() > 0 && isCurrentNull())
+        if (hasTasks && isCurrentNull())
         {
-            mCurrent = getNextTask(true);
+            mCurrent = mTaskQueue.poll();
             mCurrent.executeTask();
         }
         else
         {
-            // Check to see if the current task is interruptible, and if so, see if there's a higher
-            // priority task to execute. If there is, interrupt the current task, and the higher priority
-            // task will be executed on the next update cycle.
+            // Check to see if the current task is interruptible, and if so, check the next item in the queue,
+            // which will be the highest priority item in the queue. If it's not higher than the current task,
+            // we leave the current task alone. Otherwise, null out the current task, then interrupt it. Then,
+            // the higher priority task will get polled on the next update cycle.
             if (!isCurrentNull() && mCurrent.isInterruptible())
             {
-                P_Task task = getNextTask(false);
-                if (task.hasHigherPriority(mCurrent))
+                P_Task task = mTaskQueue.peek();
+                if (task.hasHigherPriorityThan(mCurrent))
                 {
-                    mCurrent.interrupt();
+                    P_Task tempTask = mCurrent;
+                    mCurrent = null;
+                    tempTask.interrupt();
                 }
             }
         }
+        if (!isCurrentNull())
+        {
+            mCurrent.update(curTimeMs);
+        }
+        mUpdateCount++;
+        return hasTasks;
+    }
+
+    BleManager getManager()
+    {
+        return mBleManager;
+    }
+
+    long getUpdateCount()
+    {
+        return mUpdateCount;
     }
 
     private boolean isCurrentNull()
@@ -46,36 +71,6 @@ public class P_TaskManager
         return mCurrent == null || mCurrent.isNull();
     }
 
-    private P_Task getNextTask(boolean removeFromQueue)
-    {
-        int size = mTaskQueue.size();
-        if (size == 1)
-        {
-            if (removeFromQueue)
-            {
-                return mTaskQueue.poll();
-            }
-            else
-            {
-                return mTaskQueue.peek();
-            }
-        }
-        P_Task curTask = mTaskQueue.peekFirst();
-        P_Task tempTask;
-        for (int i = 0; i < size; i++)
-        {
-            tempTask = mTaskQueue.get(i);
-            if (tempTask.hasHigherPriority(curTask) && tempTask.isExecutable())
-            {
-                curTask = tempTask;
-            }
-        }
-        if (removeFromQueue)
-        {
-            mTaskQueue.remove(curTask);
-        }
-        return curTask;
-    }
 
     public void succeedTask(P_Task task)
     {
@@ -93,24 +88,119 @@ public class P_TaskManager
         }
     }
 
-    public void add(P_Task task)
+    public void add(final P_Task task)
     {
         if (!task.isNull())
         {
-            mTaskQueue.add(task);
+            if (getManager().isOnSweetBlueThread())
+            {
+                add_private(task);
+            }
+            else
+            {
+                getManager().mPostManager.postToUpdateThread(new Runnable()
+                {
+                    @Override public void run()
+                    {
+                        add_private(task);
+                    }
+                });
+            }
         }
     }
 
-    public void addInterruptedTask(P_Task task)
+    private void add_private(P_Task task)
+    {
+        if (mTaskQueue.size() == 0)
+        {
+            mTaskQueue.add(task);
+        }
+        else
+        {
+            int size = mTaskQueue.size();
+            for (int i = 0; i < size; i++)
+            {
+                if (task.hasHigherPriorityThan(mTaskQueue.get(i)))
+                {
+                    mTaskQueue.add(i, task);
+                    task.addedToQueue();
+                    return;
+                }
+            }
+            // If we got here, then the newtask is lower priority than all other tasks in the queue,
+            // so we can just add it at the end
+            mTaskQueue.add(task);
+        }
+        task.addedToQueue();
+    }
+
+    public void addInterruptedTask(final P_Task task)
     {
         // Add the interrupted task to the beginning of the queue, so that it starts
         // next after the task which interrupted it is done executing.
-        mTaskQueue.push(task);
+        if (getManager().isOnSweetBlueThread())
+        {
+            addInterrupted_private(task);
+        }
+        else
+        {
+            getManager().mPostManager.postToUpdateThread(new Runnable()
+            {
+                @Override public void run()
+                {
+                    addInterrupted_private(task);
+                }
+            });
+        }
     }
 
-    public void cancel(P_Task task)
+    private void addInterrupted_private(P_Task task)
+    {
+        if (mTaskQueue.size() == 0)
+        {
+            mTaskQueue.push(task);
+        }
+        else
+        {
+            int size = mTaskQueue.size();
+            for (int i = 0; i < size; i++)
+            {
+                if (task.hasHigherOrTheSamePriorityThan(mTaskQueue.get(i)))
+                {
+                    mTaskQueue.add(i, task);
+                    task.addedToQueue();
+                    return;
+                }
+            }
+            // If we got here, it means all other tasks are higher priority, so we'll just add this
+            // to the end of the queue.
+            mTaskQueue.add(task);
+        }
+        task.addedToQueue();
+    }
+
+    public void cancel(final P_Task task)
+    {
+        if (getManager().isOnSweetBlueThread())
+        {
+            cancel_private(task);
+        }
+        else
+        {
+            getManager().mPostManager.postToUpdateThread(new Runnable()
+            {
+                @Override public void run()
+                {
+                    cancel_private(task);
+                }
+            });
+        }
+    }
+
+    private void cancel_private(P_Task task)
     {
         mTaskQueue.remove(task);
+        task.onCanceled();
     }
 
     public P_Task getCurrent()
@@ -118,4 +208,20 @@ public class P_TaskManager
         return mCurrent != null ? mCurrent : P_Task.NULL;
     }
 
+    void print()
+    {
+        if (getManager().getLogger().isEnabled())
+        {
+            getManager().getLogger().i(toString());
+        }
+    }
+
+    @Override public String toString()
+    {
+        final String current = mCurrent != null ? mCurrent.toString() : "no current task";
+
+        final String queue = mTaskQueue.size() > 0 ? mTaskQueue.toString() : "[queue empty]";
+
+        return Utils_String.concatStrings(current, " ", queue);
+    }
 }

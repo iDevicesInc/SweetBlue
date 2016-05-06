@@ -159,6 +159,26 @@ public class Utils_String extends Utils
 		return spannableString;
 	}
 
+	public static String concatStrings(String... strings)
+	{
+		StringBuilder b = new StringBuilder();
+		for (String s : strings)
+		{
+			b.append(s);
+		}
+		return b.toString();
+	}
+
+	public static String makeString(Object... objects)
+	{
+		StringBuilder b = new StringBuilder();
+		for (Object o : objects)
+		{
+			b.append(o);
+		}
+		return b.toString();
+	}
+
 	public static String toString(int mask, State[] values)
 	{
 		StringBuilder builder = new StringBuilder();

@@ -12,12 +12,18 @@ public class BleManager
 
     private static BleManager sInstance;
 
+    private static final int SPINDOWN_BUFFER_TIME = 5000;
+
     private Context mContext;
     BleManagerConfig mConfig;
     private SweetBlueHandlerThread mThread;
     private UpdateRunnable mUpdateRunnable;
     P_PostManager mPostManager;
-    private P_TaskManager mTaskManager;
+    P_TaskManager mTaskManager;
+    private P_Logger mLogger;
+    private P_NativeBleStateTracker mNativeStateTracker;
+    private long mLastTaskExecution;
+    private long mUpdateInterval;
 
 
     private BleManager(Context context)
@@ -30,6 +36,7 @@ public class BleManager
         mContext = context.getApplicationContext();
         mConfig = config;
         mTaskManager = new P_TaskManager(this);
+        mNativeStateTracker = new P_NativeBleStateTracker(this);
         initConfigDependantMembers();
     }
 
@@ -77,8 +84,15 @@ public class BleManager
         }
     }
 
+    boolean isOnSweetBlueThread()
+    {
+        return mPostManager.isOnSweetBlueThread();
+    }
+
     private void initConfigDependantMembers()
     {
+
+        mConfig.initMaps();
 
         Handler mUpdateHandler;
         Handler mUIHandler;
@@ -105,12 +119,37 @@ public class BleManager
             mUpdateHandler = mThread.prepareHandler();
         }
         mPostManager = new P_PostManager(mUIHandler, mUpdateHandler);
-        mPostManager.postToUpdateThreadDelayed(mUpdateRunnable, mConfig.updateThreadInterval);
+        mUpdateInterval = mConfig.updateThreadIntervalMs;
+        mPostManager.postToUpdateThreadDelayed(mUpdateRunnable, mUpdateInterval);
+        mLogger = new P_Logger(mConfig.debugThreadNames, mConfig.uuidNameMaps, mConfig.logger, mConfig.loggingEnabled);
+    }
+
+    P_Logger getLogger()
+    {
+        return mLogger;
     }
 
     private void update(long curTimeMs)
     {
-        mTaskManager.update(curTimeMs);
+        if (mTaskManager.update(curTimeMs))
+        {
+            // The task manager reported that there are tasks to process (or are being processed)
+            // So, we record this time, and make sure the update interval is at full speed.
+            mLastTaskExecution = curTimeMs;
+            mUpdateInterval = mConfig.updateThreadIntervalMs;
+        }
+
+        if (mConfig.updateCallback != null)
+        {
+            mConfig.updateCallback.onUpdate(curTimeMs);
+        }
+
+        if (mLastTaskExecution + SPINDOWN_BUFFER_TIME < curTimeMs)
+        {
+            // If the last task execution happened more than the spindown buffer time ago, then we spin down
+            // the update cycle, so we're not chewing up CPU/battery power unnecessarily.
+            mUpdateInterval = mConfig.updateThreadIdleIntervalMs;
+        }
     }
 
 
@@ -123,7 +162,7 @@ public class BleManager
             update(System.currentTimeMillis());
             if (mPostManager != null && mConfig != null)
             {
-                mPostManager.postToUpdateThreadDelayed(this, mConfig.updateThreadInterval);
+                mPostManager.postToUpdateThreadDelayed(this, mUpdateInterval);
             }
         }
     }
