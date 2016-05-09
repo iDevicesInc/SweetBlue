@@ -16,6 +16,11 @@ android {
 
     defaultConfig {
         minSdkVersion 18
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
 }
 

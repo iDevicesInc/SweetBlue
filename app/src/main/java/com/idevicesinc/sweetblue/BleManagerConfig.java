@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.os.Looper;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -24,6 +25,8 @@ public class BleManagerConfig
     public Interval taskTimeout                             = Interval.DISABLED;
     public List<UuidNameMap> uuidNameMaps					= null;
     public UpdateCallback updateCallback                    = null;
+
+    Looper updateLooper                                     = null;
 
 
     final String[] debugThreadNames =

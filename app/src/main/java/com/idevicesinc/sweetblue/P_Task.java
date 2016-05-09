@@ -13,21 +13,22 @@ abstract class P_Task
     private BleServer mServer;
     private IStateListener mStateListener;
     private long mTimeExecuting;
+    private long mTimeCreated;
 
 
     public P_Task(BleServer server, IStateListener listener)
     {
-        this(server.getManager().mTaskManager, listener);
+        this(server.getManager().mTaskManager, listener, true);
         mServer = server;
     }
 
     public P_Task(BleDevice device, IStateListener listener)
     {
-        this(device.getManager().mTaskManager, listener);
+        this(device.getManager().mTaskManager, listener, true);
         mDevice = device;
     }
 
-    public P_Task(P_TaskManager mgr, IStateListener listener)
+    public P_Task(P_TaskManager mgr, IStateListener listener, boolean getCreateTime)
     {
         mTaskMgr = mgr;
         if (listener == null && this instanceof IStateListener)
@@ -39,6 +40,16 @@ abstract class P_Task
             mStateListener = listener;
         }
         setState(P_TaskState.CREATED);
+        if (getCreateTime)
+        {
+            mTimeCreated = System.currentTimeMillis();
+        }
+    }
+
+    P_Task(P_TaskManager mgr, long timeCreated, IStateListener listener)
+    {
+        this(mgr, listener, false);
+        mTimeCreated = timeCreated;
     }
 
     private P_Task()
@@ -48,6 +59,7 @@ abstract class P_Task
 
 
     public abstract P_TaskPriority getPriority();
+
     public abstract void execute();
 
 
@@ -90,6 +102,16 @@ abstract class P_Task
     BleManager getManager()
     {
         return mTaskMgr.getManager();
+    }
+
+    long timeCreated()
+    {
+        return mTimeCreated;
+    }
+
+    boolean requeued()
+    {
+        return mState == P_TaskState.REQUEUED;
     }
 
     private void setState(P_TaskState state)

@@ -1,10 +1,12 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.Message;
 
 
 public class BleManager
@@ -84,6 +86,15 @@ public class BleManager
         }
     }
 
+    public BluetoothAdapter getNativeAdapter()
+    {
+        // TODO
+        // TODO
+        // TODO
+        // TODO Actually implement this
+        return null;
+    }
+
     boolean isOnSweetBlueThread()
     {
         return mPostManager.isOnSweetBlueThread();
@@ -114,9 +125,16 @@ public class BleManager
         else
         {
             mUIHandler = new Handler(Looper.getMainLooper());
-            mThread = new SweetBlueHandlerThread();
-            mThread.start();
-            mUpdateHandler = mThread.prepareHandler();
+            if (mConfig.updateLooper == null)
+            {
+                mThread = new SweetBlueHandlerThread();
+                mThread.start();
+                mUpdateHandler = mThread.prepareHandler();
+            }
+            else
+            {
+                mUpdateHandler = new Handler(mConfig.updateLooper);
+            }
         }
         mPostManager = new P_PostManager(mUIHandler, mUpdateHandler);
         mUpdateInterval = mConfig.updateThreadIntervalMs;
@@ -179,7 +197,12 @@ public class BleManager
 
         public Handler prepareHandler()
         {
-            mHandler = new Handler(getLooper());
+            mHandler = new Handler(getLooper()){
+                @Override public void handleMessage(Message msg)
+                {
+                    super.handleMessage(msg);
+                }
+            };
             return mHandler;
         }
     }

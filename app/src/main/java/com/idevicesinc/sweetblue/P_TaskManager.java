@@ -2,6 +2,9 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Utils_String;
+
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 
@@ -12,12 +15,14 @@ public class P_TaskManager
     private volatile P_Task mCurrent;
     private final BleManager mBleManager;
     private volatile long mUpdateCount;
+    private TaskSorter mTaskSorter;
 
 
     public P_TaskManager(BleManager mgr)
     {
         mTaskQueue = new LinkedList<>();
         mBleManager = mgr;
+        mTaskSorter = new TaskSorter();
     }
 
     // This returns true if there are tasks in the queue, or there is a task executing currently
@@ -116,21 +121,48 @@ public class P_TaskManager
         }
         else
         {
-            int size = mTaskQueue.size();
-            for (int i = 0; i < size; i++)
-            {
-                if (task.hasHigherPriorityThan(mTaskQueue.get(i)))
-                {
-                    mTaskQueue.add(i, task);
-                    task.addedToQueue();
-                    return;
-                }
-            }
+//            int size = mTaskQueue.size();
+//            for (int i = 0; i < size; i++)
+//            {
+//                if (task.hasHigherPriorityThan(mTaskQueue.get(i)))
+//                {
+//                    mTaskQueue.add(i, task);
+//                    task.addedToQueue();
+//                    return;
+//                }
+//            }
+
             // If we got here, then the newtask is lower priority than all other tasks in the queue,
             // so we can just add it at the end
             mTaskQueue.add(task);
+            Collections.sort(mTaskQueue, mTaskSorter);
         }
         task.addedToQueue();
+    }
+
+    private class TaskSorter implements Comparator<P_Task>
+    {
+
+        @Override public int compare(P_Task lhs, P_Task rhs)
+        {
+            int comp = rhs.getPriority().compareTo(lhs.getPriority());
+            if (comp != 0)
+            {
+                return comp;
+            }
+            else
+            {
+                if (lhs.requeued() && !rhs.requeued())
+                {
+                    return -1;
+                }
+                else if (rhs.requeued())
+                {
+                    return 1;
+                }
+                return lhs.timeCreated() < rhs.timeCreated() ? -1 : (lhs.timeCreated() == rhs.timeCreated() ? 0 : 1);
+            }
+        }
     }
 
     public void addInterruptedTask(final P_Task task)
