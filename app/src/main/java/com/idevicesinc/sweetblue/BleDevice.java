@@ -4095,7 +4095,9 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
 	{
-		return writeDescriptor(characteristicUuid, descriptorUuid, data, listener);
+		final UUID serviceUuid = null;
+
+		return writeDescriptor(serviceUuid, characteristicUuid, descriptorUuid, data, listener);
 	}
 
 	/**
