@@ -3110,7 +3110,7 @@ public class BleManager
 		{
 			try
 			{
-				if( Utils.isLollipop() )
+				if( m_config.scanMode.isLollipopScanMode() && Utils.isLollipop() )
 				{
 					stopNativeScan_nested_postLollipop();
 				}
