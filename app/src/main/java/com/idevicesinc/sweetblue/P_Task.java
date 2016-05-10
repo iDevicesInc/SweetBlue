@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 
@@ -12,6 +13,7 @@ abstract class P_Task
     private BleDevice mDevice;
     private BleServer mServer;
     private IStateListener mStateListener;
+    private long mLastUpdate;
     private long mTimeExecuting;
     private long mTimeCreated;
 
@@ -62,6 +64,8 @@ abstract class P_Task
 
     public abstract void execute();
 
+    public void update(long curTimeMs)
+    {}
 
     public boolean isInterruptible()
     {
@@ -107,6 +111,11 @@ abstract class P_Task
     long timeCreated()
     {
         return mTimeCreated;
+    }
+
+    long timeExecuting()
+    {
+        return mTimeExecuting;
     }
 
     boolean requeued()
@@ -185,8 +194,34 @@ abstract class P_Task
         return this == NULL;
     }
 
-    void update(long curTimeMs)
+    void updateTask(long curTimeMs)
     {
+        if (mLastUpdate != 0)
+        {
+            mTimeExecuting += (curTimeMs - mLastUpdate);
+        }
+        mLastUpdate = curTimeMs;
+        update(curTimeMs);
+    }
+
+    void onTaskTimedOut()
+    {
+        setState(P_TaskState.TIMED_OUT);
+    }
+
+    void checkTimeOut()
+    {
+        if (Interval.isDisabled(getManager().mConfig.taskTimeout))
+        {
+            return;
+        }
+        else
+        {
+            if (mTimeExecuting >= getManager().mConfig.taskTimeout.millis())
+            {
+                mTaskMgr.timeOut(this);
+            }
+        }
     }
 
     /**

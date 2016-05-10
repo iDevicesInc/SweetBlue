@@ -41,7 +41,7 @@ public class P_TaskManager
             // which will be the highest priority item in the queue. If it's not higher than the current task,
             // we leave the current task alone. Otherwise, null out the current task, then interrupt it. Then,
             // the higher priority task will get polled on the next update cycle.
-            if (!isCurrentNull() && mCurrent.isInterruptible())
+            if (!isCurrentNull() && mCurrent.isInterruptible() && mTaskQueue.size() > 0)
             {
                 P_Task task = mTaskQueue.peek();
                 if (task.hasHigherPriorityThan(mCurrent))
@@ -54,7 +54,9 @@ public class P_TaskManager
         }
         if (!isCurrentNull())
         {
-            mCurrent.update(curTimeMs);
+            mCurrent.updateTask(curTimeMs);
+            // Checks if this task should be timed out. If it should, the task then calls timeOut(P_Task).
+            mCurrent.checkTimeOut();
         }
         mUpdateCount++;
         return hasTasks;
@@ -121,48 +123,11 @@ public class P_TaskManager
         }
         else
         {
-//            int size = mTaskQueue.size();
-//            for (int i = 0; i < size; i++)
-//            {
-//                if (task.hasHigherPriorityThan(mTaskQueue.get(i)))
-//                {
-//                    mTaskQueue.add(i, task);
-//                    task.addedToQueue();
-//                    return;
-//                }
-//            }
-
-            // If we got here, then the newtask is lower priority than all other tasks in the queue,
-            // so we can just add it at the end
             mTaskQueue.add(task);
+            // Sort the list, first by priority, then by the time it was created, or if it's requeued.
             Collections.sort(mTaskQueue, mTaskSorter);
         }
         task.addedToQueue();
-    }
-
-    private class TaskSorter implements Comparator<P_Task>
-    {
-
-        @Override public int compare(P_Task lhs, P_Task rhs)
-        {
-            int comp = rhs.getPriority().compareTo(lhs.getPriority());
-            if (comp != 0)
-            {
-                return comp;
-            }
-            else
-            {
-                if (lhs.requeued() && !rhs.requeued())
-                {
-                    return -1;
-                }
-                else if (rhs.requeued())
-                {
-                    return 1;
-                }
-                return lhs.timeCreated() < rhs.timeCreated() ? -1 : (lhs.timeCreated() == rhs.timeCreated() ? 0 : 1);
-            }
-        }
     }
 
     public void addInterruptedTask(final P_Task task)
@@ -210,6 +175,30 @@ public class P_TaskManager
         task.addedToQueue();
     }
 
+    public void timeOut(final P_Task task)
+    {
+        if (getManager().isOnSweetBlueThread())
+        {
+            timeOut_private(task);
+        }
+        else
+        {
+            getManager().mPostManager.postToUpdateThread(new Runnable()
+            {
+                @Override public void run()
+                {
+                    timeOut_private(task);
+                }
+            });
+        }
+    }
+
+    private void timeOut_private(P_Task task)
+    {
+        mCurrent = null;
+        task.onTaskTimedOut();
+    }
+
     public void cancel(final P_Task task)
     {
         if (getManager().isOnSweetBlueThread())
@@ -254,5 +243,30 @@ public class P_TaskManager
         final String queue = mTaskQueue.size() > 0 ? mTaskQueue.toString() : "[queue empty]";
 
         return Utils_String.concatStrings(current, " ", queue);
+    }
+
+    private class TaskSorter implements Comparator<P_Task>
+    {
+
+        @Override public int compare(P_Task lhs, P_Task rhs)
+        {
+            int comp = rhs.getPriority().compareTo(lhs.getPriority());
+            if (comp != 0)
+            {
+                return comp;
+            }
+            else
+            {
+                if (lhs.requeued() && !rhs.requeued())
+                {
+                    return -1;
+                }
+                else if (rhs.requeued())
+                {
+                    return 1;
+                }
+                return lhs.timeCreated() < rhs.timeCreated() ? -1 : (lhs.timeCreated() == rhs.timeCreated() ? 0 : 1);
+            }
+        }
     }
 }

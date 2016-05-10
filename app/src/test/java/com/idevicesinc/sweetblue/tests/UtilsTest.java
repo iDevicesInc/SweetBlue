@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 public class UtilsTest
@@ -36,7 +37,7 @@ public class UtilsTest
         adIds.add(Uuids.BATTERY_SERVICE_UUID);
         List<UUID> looking = new ArrayList<UUID>();
         looking.add(Uuids.BATTERY_LEVEL);
-        assert Utils.haveMatchingIds(adIds, looking);
+        assertTrue(Utils.haveMatchingIds(adIds, looking));
         looking.clear();
         looking.add(Uuids.DEVICE_INFORMATION_SERVICE_UUID);
         assertFalse(Utils.haveMatchingIds(adIds, looking));
