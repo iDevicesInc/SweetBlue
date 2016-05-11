@@ -30,11 +30,12 @@ public class P_Task_Looper extends P_Task
 
     @Override public void execute()
     {
-        int loops = mLoopCount == null ? new Random().nextInt(2500) + 1 : mLoopCount;
+        int loops = mLoopCount == null ? new Random().nextInt(250) + 1 : mLoopCount;
         for (int i = 0; i < loops; i++)
         {
             System.currentTimeMillis();
         }
         succeed();
     }
+
 }

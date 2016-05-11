@@ -41,7 +41,14 @@ public class P_PostManager
         }
         else
         {
-            mUpdateHandler.post(action);
+            if (isOnSweetBlueThread())
+            {
+                action.run();
+            }
+            else
+            {
+                mUpdateHandler.post(action);
+            }
         }
     }
 

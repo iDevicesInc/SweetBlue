@@ -7,5 +7,9 @@ public enum P_TaskPriority
     LOW,
     MEDIUM,
     HIGH,
-    CRITICAL;
+    CRITICAL,
+    /**
+     * This has it's own priority, as this NEEDS to complete before anything else (namely turning off BLE).
+     */
+    UNBOND;
 }

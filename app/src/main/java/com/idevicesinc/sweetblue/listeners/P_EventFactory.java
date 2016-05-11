@@ -10,4 +10,9 @@ public class P_EventFactory
     {
         return new NativeStateListener.NativeStateEvent(mgr, oldStateBits, newStateBits, status);
     }
+
+    public static ManagerStateListener.StateEvent newManagerStateEvent(BleManager mgr, int oldStateBits, int newStateBits, int status)
+    {
+        return new ManagerStateListener.StateEvent(mgr, oldStateBits, newStateBits, status);
+    }
 }

@@ -166,6 +166,16 @@ abstract class P_Task
         return getPriority().ordinal() >= task.getPriority().ordinal();
     }
 
+    void onInterrupted()
+    {
+        setState(P_TaskState.INTERRUPTED);
+    }
+
+    boolean isExecuting()
+    {
+        return mState == P_TaskState.EXECUTING;
+    }
+
     public boolean interrupt()
     {
         if (isInterruptible() && mState == P_TaskState.EXECUTING)
@@ -180,12 +190,26 @@ abstract class P_Task
     public void succeed()
     {
         mTaskMgr.succeedTask(this);
+    }
+
+    public void redundant()
+    {
+        mTaskMgr.clearTask(this);
+        setState(P_TaskState.REDUNDANT);
+    }
+
+    void onSucceed()
+    {
         setState(P_TaskState.SUCCEEDED);
     }
 
     public void fail()
     {
         mTaskMgr.failTask(this);
+    }
+
+    void onFail()
+    {
         setState(P_TaskState.FAILED);
     }
 
@@ -202,6 +226,16 @@ abstract class P_Task
         }
         mLastUpdate = curTimeMs;
         update(curTimeMs);
+    }
+
+    BleDevice getDevice()
+    {
+        return mDevice;
+    }
+
+    BleServer getServer()
+    {
+        return mServer;
     }
 
     void onTaskTimedOut()

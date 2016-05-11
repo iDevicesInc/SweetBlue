@@ -3,22 +3,20 @@ package com.idevicesinc.sweetblue;
 
 import android.app.Activity;
 import android.os.Looper;
-
+import com.idevicesinc.sweetblue.utils.Interval;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
 import java.util.Random;
 import java.util.concurrent.Semaphore;
-
-import static org.junit.Assert.assertThat;
+import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 21)
+@Config(manifest = Config.NONE, sdk = 23)
 @RunWith(RobolectricTestRunner.class)
 public class TasksTest
 {
@@ -33,100 +31,56 @@ public class TasksTest
 
 
     @Test
-    public void testTaskLoadAndStrictOrder() throws Exception
-    {
-
-        final Semaphore s = new Semaphore(0);
-
-        new TestThread(new TestRunnable()
-        {
-
-            P_TaskManager mgr;
-
-            @Override public void setup(Looper looper)
-            {
-                BleManagerConfig config = new BleManagerConfig();
-                config.updateLooper = Looper.myLooper();
-                BleManager bleMgr = BleManager.get(mActivity, config);
-                mgr = new P_TaskManager(bleMgr);
-                int taskCount = 1000;
-                final TaskStrictOrderStateListener listener = new TaskStrictOrderStateListener(taskCount, s);
-                int pri = 0;
-                for (int i = 0; i < taskCount; i++)
-                {
-                    if (pri > 4)
-                    {
-                        pri = 0;
-                    }
-                    P_Task_Looper loop = new P_Task_Looper(mgr, listener, P_TaskPriority.values()[pri]);
-                    mgr.add(loop);
-                    pri++;
-                }
-            }
-
-            @Override public void update()
-            {
-                mgr.update(System.currentTimeMillis());
-            }
-        }).start();
-
-        s.acquire();
-    }
-
-    @Test
     public void testRandomOrder() throws Exception
     {
-        final Semaphore s = new Semaphore(0);
+        final Semaphore mSemaphore = new Semaphore(0);
+        final AtomicBoolean mKeepRunning = new AtomicBoolean(true);
 
-        new TestThread(new TestRunnable()
+        new UnitTestThread(new UnitTestRunnable()
         {
 
-            P_TaskManager mgr;
+            P_TaskManager mManager;
 
-            @Override public void setup(Looper looper)
+            @Override public BleManager setup(Looper looper)
             {
-                BleManagerConfig config = new BleManagerConfig();
-                config.updateLooper = Looper.myLooper();
-                BleManager bleMgr = BleManager.get(mActivity, config);
-                mgr = new P_TaskManager(bleMgr);
+                BleManager bleMgr = BleManager.get(mActivity, getConfig());
+                mManager = bleMgr.mTaskManager;
                 int taskCount = 1000;
-                final TaskRandomOrderStateListener listener = new TaskRandomOrderStateListener(taskCount, s);
-                int pri;
+                final TaskRandomOrderStateListener listener = new TaskRandomOrderStateListener(taskCount, mSemaphore, mKeepRunning);
                 Random r = new Random();
                 for (int i = 0; i < taskCount; i++)
                 {
-                    pri = r.nextInt(5);
-                    P_Task_Looper loop = new P_Task_Looper(mgr, listener, P_TaskPriority.values()[pri]);
-                    mgr.add(loop);
+                    P_Task_Looper loop = new P_Task_Looper(mManager, listener, P_TaskPriority.values()[r.nextInt(6)]);
+                    mManager.add(loop);
                 }
+                return bleMgr;
             }
 
-            @Override public void update()
+            @Override public boolean update()
             {
-                mgr.update(System.currentTimeMillis());
+                return mKeepRunning.get();
             }
         }).start();
 
-        s.acquire();
+        mSemaphore.acquire();
     }
 
     @Test
     public void testRequeuing() throws Exception
     {
-        final Semaphore s = new Semaphore(0);
+        final Semaphore mSemaphore = new Semaphore(0);
+        final AtomicBoolean mKeepRunning = new AtomicBoolean(true);
 
-        new TestThread(new TestRunnable()
+        new UnitTestThread(new UnitTestRunnable()
         {
 
-            P_TaskManager mgr;
+            P_TaskManager mManager;
 
-            @Override public void setup(Looper looper)
+            @Override public BleManager setup(Looper looper)
             {
-                BleManagerConfig config = new BleManagerConfig();
-                config.updateLooper = Looper.myLooper();
-                BleManager bleMgr = BleManager.get(mActivity, config);
-                mgr = new P_TaskManager(bleMgr);
-                P_Task_LongRunner longer = new P_Task_LongRunner(mgr, new P_Task.IStateListener()
+                BleManager bleMgr = BleManager.get(mActivity, getConfig());
+                mManager = bleMgr.mTaskManager;
+                P_Task_LongRunner longer = new P_Task_LongRunner(mManager, new P_Task.IStateListener()
                 {
 
                     boolean executed, requeued, interrupted;
@@ -144,7 +98,8 @@ public class TasksTest
                             requeued = true;
                             assertTrue(executed);
                             assertTrue(interrupted);
-                            s.release();
+                            mSemaphore.release();
+                            mKeepRunning.set(false);
                         }
                         if (state == P_TaskState.EXECUTING)
                         {
@@ -154,204 +109,136 @@ public class TasksTest
                         }
                     }
                 }, P_TaskPriority.MEDIUM);
-                mgr.add(longer);
+                mManager.add(longer);
                 int taskCount = 50;
 
                 Random r = new Random();
                 for (int i = 0; i < taskCount; i++)
                 {
-                    P_Task_Looper loop = new P_Task_Looper(mgr, null, P_TaskPriority.values()[r.nextInt(5)]);
-                    mgr.add(loop);
+                    P_Task_Looper loop = new P_Task_Looper(mManager, null, P_TaskPriority.values()[r.nextInt(5)]);
+                    mManager.add(loop);
                 }
-
+                return bleMgr;
             }
 
             int count = 0;
             boolean addedHigherTasks = false;
 
-            @Override public void update()
+            @Override public boolean update()
             {
-                mgr.update(System.currentTimeMillis());
                 count++;
                 if (count > 25 && !addedHigherTasks)
                 {
                     addedHigherTasks = true;
-                    P_Task_Looper loop = new P_Task_Looper(mgr, new P_Task.IStateListener()
-                    {
-                        @Override public void onStateChanged(P_Task task, P_TaskState state)
-                        {
-                            if (state == P_TaskState.EXECUTING)
-                            {
-                                int i = 0;
-                                i++;
-                            }
-                        }
-                    }, P_TaskPriority.HIGH);
-                    mgr.add(loop);
+                    P_Task_Looper loop = new P_Task_Looper(mManager, null, P_TaskPriority.HIGH);
+                    mManager.add(loop);
                 }
+                return mKeepRunning.get();
             }
         }).start();
 
-        s.acquire();
+        mSemaphore.acquire();
     }
 
-    private class P_Task_LongRunner extends P_Task
+    @Test
+    public void testTimeOut() throws Exception
     {
-        private final P_TaskPriority mPriority;
+        final Semaphore mSemaphore = new Semaphore(0);
 
-        public P_Task_LongRunner(P_TaskManager mgr, IStateListener listener, P_TaskPriority priority)
-        {
-            super(mgr, listener, true);
-            mPriority = priority;
-        }
+        final Interval TASK_TIMEOUT = Interval.FIVE_SECS;
+        final int MIN_GOAL = (int) TASK_TIMEOUT.millis() - 50;
+        final int MAX_GOAL = (int) TASK_TIMEOUT.millis() + 50;
 
-        @Override public P_TaskPriority getPriority()
+        new UnitTestThread(new UnitTestRunnable()
         {
-            return mPriority;
-        }
 
-        @Override public boolean isInterruptible()
-        {
-            return true;
-        }
+            P_TaskManager mManager;
+            boolean mKeepRunning = true;
 
-        @Override public void execute()
-        {
-        }
-
-        @Override public void update(long curTimeMs)
-        {
-            if (timeExecuting() >= 30000)
+            @Override public BleManager setup(Looper looper)
             {
-                succeed();
+                BleManagerConfig config = getConfig();
+                config.taskTimeout = TASK_TIMEOUT;
+                BleManager bleMgr = BleManager.get(mActivity, config);
+                mManager = bleMgr.mTaskManager;
+                P_Task_LongRunner task = new P_Task_LongRunner(mManager, new P_Task.IStateListener()
+                {
+                    long time;
+
+                    @Override public void onStateChanged(P_Task task, P_TaskState state)
+                    {
+                        if (state == P_TaskState.EXECUTING)
+                        {
+                            time = System.currentTimeMillis();
+                        }
+                        if (state == P_TaskState.TIMED_OUT)
+                        {
+                            time = System.currentTimeMillis() - time;
+                            assertTrue(time > MIN_GOAL && time < MAX_GOAL);
+                            mSemaphore.release();
+                            mKeepRunning = false;
+                        }
+                    }
+                }, P_TaskPriority.HIGH);
+                mManager.add(task);
+
+                return bleMgr;
             }
-        }
+
+            @Override public boolean update()
+            {
+                return mKeepRunning;
+            }
+        }).start();
+
+        mSemaphore.acquire();
     }
 
-    private class TestThread extends Thread
+    private static BleManagerConfig getConfig()
     {
-
-        private final TestRunnable testRunnable;
-        private boolean mRunning = true;
-
-        public TestThread(TestRunnable testRunnable)
-        {
-            super("TestThread");
-            this.testRunnable = testRunnable;
-        }
-
-        @Override public void run()
-        {
-            Looper.prepare();
-            if (testRunnable != null)
-            {
-                testRunnable.setup(Looper.myLooper());
-            }
-            while (mRunning)
-            {
-                if (testRunnable != null)
-                {
-                    testRunnable.update();
-                }
-                try
-                {
-                    Thread.sleep(25);
-                } catch (Exception e)
-                {
-                }
-            }
-            Looper.loop();
-        }
-    }
-
-    private interface TestRunnable
-    {
-        void setup(Looper looper);
-
-        void update();
+        BleManagerConfig config = new BleManagerConfig();
+        config.updateLooper = Looper.myLooper();
+        return config;
     }
 
     private class TaskRandomOrderStateListener implements P_Task.IStateListener
     {
 
-        private final Semaphore semaphore;
-        private final int taskCount;
-        private P_TaskPriority curPriority;
-        private int curFinishedTasks;
+        private final Semaphore mSemaphore;
+        private final int mTaskCount;
+        private P_TaskPriority mCurPriority;
+        private int mCurFinishedTasks;
+        private final AtomicBoolean mKeepRunning;
 
 
-        public TaskRandomOrderStateListener(int taskCount, Semaphore sem)
+        public TaskRandomOrderStateListener(int taskCount, Semaphore sem, AtomicBoolean keepRunning)
         {
-            this.taskCount = taskCount;
-            semaphore = sem;
+            this.mTaskCount = taskCount;
+            mSemaphore = sem;
+            this.mKeepRunning = keepRunning;
         }
 
         @Override public void onStateChanged(P_Task task, P_TaskState state)
         {
             if (state == P_TaskState.SUCCEEDED || state == P_TaskState.FAILED)
             {
-                if (curPriority != null)
+                if (mCurPriority != null)
                 {
-                    assertTrue(task.getPriority().ordinal() <= curPriority.ordinal());
-                    if (task.getPriority().ordinal() < curPriority.ordinal())
+                    assertTrue(task.getPriority().ordinal() <= mCurPriority.ordinal());
+                    if (task.getPriority().ordinal() < mCurPriority.ordinal())
                     {
-                        curPriority = task.getPriority();
+                        mCurPriority = task.getPriority();
                     }
                 }
                 else
                 {
-                    curPriority = task.getPriority();
+                    mCurPriority = task.getPriority();
                 }
-                curFinishedTasks++;
-                if (curFinishedTasks >= taskCount)
+                mCurFinishedTasks++;
+                if (mCurFinishedTasks >= mTaskCount)
                 {
-                    semaphore.release();
-                }
-            }
-        }
-    }
-
-    private class TaskStrictOrderStateListener implements P_Task.IStateListener
-    {
-
-        private final Semaphore semaphore;
-        private final int taskCount;
-        private int curFinishedTasks;
-        private int priChange;
-        private int priInterval;
-        private P_TaskPriority curPriority = P_TaskPriority.CRITICAL;
-
-
-        public TaskStrictOrderStateListener(int taskCount, Semaphore sem)
-        {
-            this.taskCount = taskCount;
-            if (taskCount % 5 != 0)
-            {
-                throw new RuntimeException("Task count MUST be divisible by 5.");
-            }
-            priChange = taskCount / 5;
-            priInterval = priChange;
-            priChange++;
-            semaphore = sem;
-        }
-
-        @Override public void onStateChanged(P_Task task, P_TaskState state)
-        {
-            if (state == P_TaskState.SUCCEEDED || state == P_TaskState.FAILED)
-            {
-                curFinishedTasks++;
-                if (curFinishedTasks >= priChange)
-                {
-                    assertTrue(task.getPriority().compareTo(curPriority) < 0);
-                    if (curPriority != P_TaskPriority.TRIVIAL)
-                    {
-                        curPriority = P_TaskPriority.values()[curPriority.ordinal() - 1];
-                    }
-                    priChange += priInterval;
-                }
-                if (curFinishedTasks >= taskCount)
-                {
-                    semaphore.release();
+                    mSemaphore.release();
+                    mKeepRunning.set(false);
                 }
             }
         }

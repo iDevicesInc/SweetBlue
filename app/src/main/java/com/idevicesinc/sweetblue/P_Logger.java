@@ -35,7 +35,7 @@ class P_Logger
     private final UuidNameMap_ListWrapper m_nameMap;
     private SweetLogger m_logger = null;
 
-    public P_Logger(String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, SweetLogger logger, boolean enabled)
+    public P_Logger(P_PostManager mPostManager, String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, SweetLogger logger, boolean enabled)
     {
         m_logger = logger;
         m_debugThreadNamePool = debugThreadNamePool;
@@ -45,7 +45,7 @@ class P_Logger
         if (m_enabled)
         {
             // Get the thread name of the main thread first, then get the thread name of the update thread
-            BleManager.get().mPostManager.postToMain(new Runnable()
+            mPostManager.postToMain(new Runnable()
             {
                 @Override public void run()
                 {

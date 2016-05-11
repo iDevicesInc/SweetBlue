@@ -25,13 +25,14 @@ public class BleManagerConfig
     public Interval taskTimeout                             = Interval.DISABLED;
     public List<UuidNameMap> uuidNameMaps					= null;
     public UpdateCallback updateCallback                    = null;
+    public boolean manageCpuWakeLock                        = true;
 
     Looper updateLooper                                     = null;
 
 
     final String[] debugThreadNames =
             {
-                    "AMY", "BEN", "CAM", "DON", "ELI", "FAY", "GUS", "HAL", "IAN", "JAY", "LEO",
+                    "MAIN", "UPDATE", "CAM", "DON", "ELI", "FAY", "GUS", "HAL", "IAN", "JAY", "LEO",
                     "MAX", "NED", "OLA", "PAT", "RON", "SAL", "TED", "VAL", "WES", "YEE", "ZED"
             };
 

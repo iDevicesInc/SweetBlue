@@ -101,25 +101,25 @@ public class BleStatuses
     /**
      * Indicates the local Bluetooth adapter is off.
      */
-    static final int STATE_OFF = BluetoothAdapter.STATE_OFF;
+    public static final int STATE_OFF = BluetoothAdapter.STATE_OFF;
 
     /**
      * Indicates the local Bluetooth adapter is turning on. However local
      * clients should wait for {@link #STATE_ON} before attempting to
      * use the adapter.
      */
-    static final int STATE_TURNING_ON = BluetoothAdapter.STATE_TURNING_ON;
+    public static final int STATE_TURNING_ON = BluetoothAdapter.STATE_TURNING_ON;
 
     /**
      * Indicates the local Bluetooth adapter is on, and ready for use.
      */
-    static final int STATE_ON = BluetoothAdapter.STATE_ON;
+    public static final int STATE_ON = BluetoothAdapter.STATE_ON;
 
     /**
      * Indicates the local Bluetooth adapter is turning off. Local clients
      * should immediately attempt graceful disconnection of any remote links.
      */
-    static final int STATE_TURNING_OFF = BluetoothAdapter.STATE_TURNING_OFF;
+    public static final int STATE_TURNING_OFF = BluetoothAdapter.STATE_TURNING_OFF;
 
     /**
      * Indicates the local Bluetooth adapter is turning Bluetooth LE mode on.
