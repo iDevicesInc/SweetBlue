@@ -139,11 +139,11 @@ public class P_TaskManager
         }
     }
 
-    public void failTask(final P_Task task)
+    public void failTask(final P_Task task, final boolean immediate)
     {
         if (mBleManager.isOnSweetBlueThread())
         {
-            failTask_private(task);
+            failTask_private(task, immediate);
         }
         else
         {
@@ -151,13 +151,13 @@ public class P_TaskManager
             {
                 @Override public void run()
                 {
-                    failTask_private(task);
+                    failTask_private(task, immediate);
                 }
             });
         }
     }
 
-    private void failTask_private(P_Task task)
+    private void failTask_private(P_Task task, boolean immediate)
     {
         if (mCurrent == task)
         {
@@ -167,7 +167,7 @@ public class P_TaskManager
         {
             mTaskQueue.remove(task);
         }
-        task.onFail();
+        task.onFail(immediate);
     }
 
     public void clearTask(P_Task task)
@@ -178,30 +178,30 @@ public class P_TaskManager
         }
     }
 
-    public void failTask(Class<? extends P_Task> taskClass, BleManager mgr)
+    public void failTask(Class<? extends P_Task> taskClass, BleManager mgr, boolean immediate)
     {
         P_Task task = findTask(taskClass, mgr, null, null);
         if (task != null)
         {
-            failTask(task);
+            failTask(task, immediate);
         }
     }
 
-    public void failTask(Class<? extends P_Task> taskClass, BleDevice device)
+    public void failTask(Class<? extends P_Task> taskClass, BleDevice device, boolean immediate)
     {
         P_Task task = findTask(taskClass, null, device, null);
         if (task != null)
         {
-            failTask(task);
+            failTask(task, immediate);
         }
     }
 
-    public void failTask(Class<? extends P_Task> taskClass, BleServer server)
+    public void failTask(Class<? extends P_Task> taskClass, BleServer server, boolean immediate)
     {
         P_Task task = findTask(taskClass, null, null, server);
         if (task != null)
         {
-            failTask(task);
+            failTask(task, immediate);
         }
     }
 

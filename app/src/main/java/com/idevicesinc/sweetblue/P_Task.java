@@ -229,12 +229,24 @@ abstract class P_Task
 
     public void fail()
     {
-        mTaskMgr.failTask(this);
+        mTaskMgr.failTask(this, false);
     }
 
-    void onFail()
+    public void failImmediately()
     {
-        setState(P_TaskState.FAILED);
+        mTaskMgr.failTask(this, true);
+    }
+
+    void onFail(boolean immediate)
+    {
+        if (immediate)
+        {
+            setState(P_TaskState.FAILED_IMMEDIATELY);
+        }
+        else
+        {
+            setState(P_TaskState.FAILED);
+        }
     }
 
     public boolean isNull()

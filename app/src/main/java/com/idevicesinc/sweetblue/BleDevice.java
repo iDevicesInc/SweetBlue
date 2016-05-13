@@ -150,11 +150,7 @@ public class BleDevice extends BleNode
 
     public BluetoothGatt getNativeGatt()
     {
-        // TODO
-        // TODO
-        // TODO
-        // TODO Actually implement this
-        return null;
+        return mNativeWrapper.getGatt();
     }
 
     @Override public String getMacAddress()
@@ -315,7 +311,7 @@ public class BleDevice extends BleNode
         if (!isAny(CONNECTING, CONNECTED, CONNECTING_OVERALL))
         {
             stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTING_OVERALL, true);
-            mNativeWrapper.connect();
+            getManager().mTaskManager.add(new P_Task_Connect(this, null));
         }
     }
 
@@ -325,9 +321,17 @@ public class BleDevice extends BleNode
         connect();
     }
 
+    void doNativeConnect()
+    {
+        mNativeWrapper.connect();
+    }
+
     public void disconnect()
     {
-        // TODO - Implement this
+        if (!isAny(DISCONNECTED, DISCONNECTING))
+        {
+            getManager().mTaskManager.add(new P_Task_Disconnect(this, null));
+        }
     }
 
     public void disconnect_remote()
@@ -350,7 +354,8 @@ public class BleDevice extends BleNode
     void onConnected()
     {
         stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTED, true, DISCOVERING_SERVICES, true, CONNECTING, false, CONNECTING_OVERALL, false, DISCONNECTED, false);
-        mNativeWrapper.discoverServices();
+        getManager().mTaskManager.succeedTask(P_Task_Connect.class, this);
+        getManager().mTaskManager.add(new P_Task_DiscoverServices(this, null));
     }
 
     void onConnecting()
@@ -361,17 +366,27 @@ public class BleDevice extends BleNode
     void onConnectionFailed(int gattStatus)
     {
         stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, CONNECTED, false, CONNECTING, false, CONNECTING_OVERALL, false, DISCONNECTED, true);
+        getManager().mTaskManager.failTask(P_Task_Connect.class, this, false);
     }
 
     void onDisconnected()
     {
-        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, DISCONNECTED, true, CONNECTED, false, CONNECTING, false, CONNECTING_OVERALL, false);
+        stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, DISCONNECTED, true, ADVERTISING, true, DISCOVERED, true);
+        getManager().mTaskManager.succeedTask(P_Task_Disconnect.class, this);
+    }
+
+    void onDisconnected(int gattStatus)
+    {
+        stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, DISCONNECTED, true, ADVERTISING, true, DISCOVERED, true);
     }
 
     void onServicesDiscovered()
     {
         stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true);
         // TODO - Move on to next stage, which should be running any auth/init transactions
+        // TODO - For now, succeeding connect task here, until txns are implemented
+
+        getManager().mTaskManager.succeedTask(P_Task_Connect.class, this);
     }
 
     DeviceConnectionFailListener getConnectionFailListener()

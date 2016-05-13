@@ -28,6 +28,11 @@ class P_NativeDeviceWrapper
         mGatt.discoverServices();
     }
 
+    public BluetoothGatt getGatt()
+    {
+        return mGatt;
+    }
+
     private class GattCallbacks extends BluetoothGattCallback
     {
 
@@ -53,7 +58,14 @@ class P_NativeDeviceWrapper
                     // TODO - Should we do anything here?
                     break;
                 case BluetoothProfile.STATE_DISCONNECTED:
-                    mDevice.onDisconnected();
+                    if (Utils.isSuccess(status))
+                    {
+                        mDevice.onDisconnected();
+                    }
+                    else
+                    {
+                        mDevice.onDisconnected(status);
+                    }
                     break;
             }
 
@@ -63,10 +75,12 @@ class P_NativeDeviceWrapper
         {
             if (Utils.isSuccess(status))
             {
+                getManager().mTaskManager.succeedTask(P_Task_DiscoverServices.class, mDevice);
                 mDevice.onServicesDiscovered();
             }
             else
             {
+                getManager().mTaskManager.failTask(P_Task_DiscoverServices.class, mDevice, false);
                 onConnectionFail(status);
             }
         }
@@ -120,7 +134,7 @@ class P_NativeDeviceWrapper
 
     private void onConnectionFail(int gattStatus)
     {
-        getManager().mTaskManager.failTask(P_Task_Connect.class, mDevice);
+        getManager().mTaskManager.failTask(P_Task_Connect.class, mDevice, false);
         mDevice.onConnectionFailed(gattStatus);
         // TODO - Implement connection fail listener stuff
     }

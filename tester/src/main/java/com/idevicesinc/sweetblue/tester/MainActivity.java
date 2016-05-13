@@ -15,6 +15,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
+import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleManagerState;
@@ -63,6 +64,19 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
                 device.connect();
+            }
+        });
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener()
+        {
+            @Override public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                BleDevice device = mDevices.get(position);
+                if (device.is(BleDeviceState.CONNECTED))
+                {
+                    device.disconnect();
+                    return true;
+                }
+                return false;
             }
         });
 

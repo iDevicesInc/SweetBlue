@@ -62,6 +62,11 @@ public enum BleDeviceState implements State
     ADVERTISING,
 
     /**
+     * Analogous to {@link BluetoothProfile#STATE_DISCONNECTING}.
+     */
+    DISCONNECTING,
+
+    /**
      * The device will always be in this state while {@link #CONNECTED} is not active. Analogous to {@link BluetoothProfile#STATE_DISCONNECTED}.
      */
     DISCONNECTED,

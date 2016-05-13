@@ -119,7 +119,7 @@ public class P_BleReceiverManager
                         // TODO - Disconnect all for turning off
                     }
                 }
-                mManager.mTaskManager.failTask(P_Task_TurnBleOn.class, mManager);
+                mManager.mTaskManager.failTask(P_Task_TurnBleOn.class, mManager, false);
                 break;
 
             case BleStatuses.STATE_OFF:
@@ -131,7 +131,7 @@ public class P_BleReceiverManager
                     return;
                 }
 
-                mManager.mTaskManager.failTask(P_Task_TurnBleOn.class, mManager);
+                mManager.mTaskManager.failTask(P_Task_TurnBleOn.class, mManager, false);
 
                 mManager.mTaskManager.succeedTask(P_Task_TurnBleOff.class, mManager);
                 // TODO - Undiscover all devices
@@ -143,11 +143,11 @@ public class P_BleReceiverManager
                     mManager.mTaskManager.add(new P_Task_TurnBleOn(mManager.mTaskManager));
                 }
 
-                mManager.mTaskManager.failTask(P_Task_TurnBleOff.class, mManager);
+                mManager.mTaskManager.failTask(P_Task_TurnBleOff.class, mManager, false);
                 break;
 
             case BleStatuses.STATE_ON:
-                mManager.mTaskManager.failTask(P_Task_TurnBleOff.class, mManager);
+                mManager.mTaskManager.failTask(P_Task_TurnBleOff.class, mManager, false);
                 mManager.mTaskManager.succeedTask(P_Task_TurnBleOn.class, mManager);
                 break;
         }

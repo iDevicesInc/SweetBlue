@@ -17,7 +17,7 @@ public class P_Task_Connect extends P_Task_RequiresBleOn
     {
         super(device, listener);
 
-        mPriority = priority == null ? P_TaskPriority.HIGH : priority;
+        mPriority = priority == null ? P_TaskPriority.MEDIUM : priority;
         mExplicit = explicit;
     }
 
@@ -28,6 +28,6 @@ public class P_Task_Connect extends P_Task_RequiresBleOn
 
     @Override public void execute()
     {
-
+        getDevice().doNativeConnect();
     }
 }

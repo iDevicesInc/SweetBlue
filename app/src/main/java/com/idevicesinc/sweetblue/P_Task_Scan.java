@@ -53,6 +53,17 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
         }
     }
 
+    @Override public boolean isInterruptible()
+    {
+        return true;
+    }
+
+    @Override void onInterrupted()
+    {
+        super.onInterrupted();
+        getManager().mScanManager.stopScanNoStateChange();
+    }
+
     @Override void checkTimeOut(long curTimeMs)
     {
         if (Interval.isEnabled(mScanTime) && !isPaused())
