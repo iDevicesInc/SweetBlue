@@ -77,7 +77,7 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		 */
 		public boolean didEnter(T_State state)
 		{
-			return state.didEnter(oldStateBits(), newStateBits());
+			return state.overlaps(enterMask());
 		}
 		
 		/**
@@ -85,7 +85,7 @@ public interface State extends UsesCustomNull, BitwiseEnum
 		 */
 		public boolean didExit(T_State state)
 		{
-			return state.didExit(oldStateBits(), newStateBits());
+			return state.overlaps(exitMask());
 		}
 
 		/**

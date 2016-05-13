@@ -4,6 +4,7 @@ package com.idevicesinc.sweetblue.listeners;
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.utils.State;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 
 public interface DeviceStateListener extends P_BaseStateListener<DeviceStateListener.StateEvent>
 {
@@ -50,6 +51,11 @@ public interface DeviceStateListener extends P_BaseStateListener<DeviceStateList
         public int gattStatus()
         {
             return mGattStatus;
+        }
+
+        @Override public String toString()
+        {
+            return Utils_String.toString(newStateBits(), BleDeviceState.VALUES());
         }
     }
 

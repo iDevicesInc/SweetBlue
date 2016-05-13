@@ -1,105 +1,174 @@
 package com.idevicesinc.sweetblue.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class BleScanInfo
-{
-    private int m_manufactuerId;
-    private byte[] m_manufacturerData;
-    private final Pointer<Integer> m_advFlags;
-    private final Pointer<Integer> m_txPower;
-    private final List<UUID> m_serviceUuids;
-    private final Map<UUID, byte[]> m_serviceData;
-    private String m_localName;
 
-    public BleScanInfo()
+public class BleScanInfo implements UsesCustomNull, Cloneable
+{
+
+    public final static BleScanInfo NULL = new BleScanInfo(true);
+
+    private int mManufacturerId;
+    private byte[] mManufacturerData;
+    private final Pointer<Integer> mAdvFlags;
+    private final Pointer<Integer> mTxPower;
+    private final List<UUID> mServiceUuids;
+    private final Map<UUID, byte[]> mServiceData;
+    private String mLocalName;
+    private byte[] mScanRecord;
+    private boolean mIsNull;
+
+
+    public BleScanInfo(boolean isNull)
     {
-        m_manufactuerId = -1;
-        m_manufacturerData = new byte[32];
-        m_advFlags = new Pointer<>(0);
-        m_txPower = new Pointer<>(0);
-        m_serviceUuids = new ArrayList<>();
-        m_serviceData = new HashMap<>();
-        m_localName = "";
+        mManufacturerId = -1;
+        mIsNull = isNull;
+        if (mIsNull)
+        {
+            mManufacturerData = null;
+            mAdvFlags = null;
+            mTxPower = null;
+            mServiceUuids = null;
+            mServiceData = null;
+            mLocalName = null;
+        }
+        else
+        {
+            mManufacturerData = new byte[32];
+            mAdvFlags = new Pointer<>(0);
+            mTxPower = new Pointer<>(0);
+            mServiceUuids = new ArrayList<>();
+            mServiceData = new HashMap<>();
+            mLocalName = "";
+        }
     }
 
-    public BleScanInfo(Pointer<Integer> advFlags, Pointer<Integer> txPower, List<UUID> serviceUuids, int mfgId, byte[] mfgData, Map<UUID, byte[]> serviceData, String localName)
+    public void setRawScanRecord(byte[] scanRecord)
     {
-        m_advFlags = advFlags;
-        m_txPower = txPower;
-        m_serviceUuids = serviceUuids;
-        m_manufactuerId = mfgId;
-        m_manufacturerData = mfgData;
-        m_serviceData = serviceData;
-        m_localName = localName;
+        mScanRecord = scanRecord;
     }
 
     public void clearServiceData()
     {
-        m_serviceData.clear();
+        mServiceData.clear();
     }
 
     public void populateServiceData(Map<UUID, byte[]> data)
     {
-        m_serviceData.putAll(data);
+        mServiceData.putAll(data);
     }
 
     public void clearServiceUUIDs()
     {
-        m_serviceUuids.clear();
+        mServiceUuids.clear();
     }
 
     public void populateServiceUUIDs(List<UUID> uuids)
     {
-        m_serviceUuids.addAll(uuids);
+        mServiceUuids.addAll(uuids);
     }
 
     public void setManufacturerId(int id)
     {
-        m_manufactuerId = id;
+        mManufacturerId = id;
     }
 
     public void setManufacturerData(byte[] data)
     {
-        m_manufacturerData = data;
+        mManufacturerData = data;
+    }
+
+    public void setAdvFlags(int advFlags)
+    {
+        mAdvFlags.value = advFlags;
+    }
+
+    public void setTxPower(int power)
+    {
+        mTxPower.value = power;
+    }
+
+    public void setName(String name)
+    {
+        mLocalName = name;
+    }
+
+    public byte[] getRawScanRecord()
+    {
+        return mScanRecord;
     }
 
     public int getManufacturerId()
     {
-        return m_manufactuerId;
+        return mManufacturerId;
     }
 
     public byte[] getManufacturerData()
     {
-        return m_manufacturerData;
+        return mManufacturerData;
     }
 
     public Pointer<Integer> getAdvFlags()
     {
-        return m_advFlags;
+        return mAdvFlags;
     }
 
     public Pointer<Integer> getTxPower()
     {
-        return m_txPower;
+        return mTxPower;
     }
 
     public List<UUID> getServiceUUIDS()
     {
-        return m_serviceUuids;
+        return mServiceUuids;
     }
 
     public Map<UUID, byte[]> getServiceData()
     {
-        return m_serviceData;
+        return mServiceData;
     }
 
     public String getName()
     {
-        return m_localName;
+        return mLocalName;
+    }
+
+    @Override public boolean equals(Object o)
+    {
+        if (o instanceof BleScanInfo)
+        {
+            BleScanInfo otherInfo = (BleScanInfo) o;
+            if (otherInfo.isNull() && isNull())
+            {
+                return true;
+            }
+            return otherInfo.mLocalName.equals(mLocalName) && otherInfo.getTxPower() == mTxPower && Arrays.equals(otherInfo.getManufacturerData(), mManufacturerData);
+        }
+        else
+        {
+            return super.equals(o);
+        }
+    }
+
+    @Override public BleScanInfo clone()
+    {
+        try
+        {
+            return (BleScanInfo) super.clone();
+        }
+        catch (CloneNotSupportedException e)
+        {
+        }
+        return null;
+    }
+
+    @Override public boolean isNull()
+    {
+        return mIsNull;
     }
 }

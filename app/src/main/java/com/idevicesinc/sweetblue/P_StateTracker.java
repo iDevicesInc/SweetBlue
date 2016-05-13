@@ -51,8 +51,6 @@ abstract class P_StateTracker
             return;
         }
 
-//        append_assert(newState);
-
         setStateMask(mStateMask | newState.bit(), intent == E_Intent.INTENTIONAL ? newState.bit() : 0x0, status);
     }
 

@@ -8,10 +8,12 @@ public class P_PostManager
 
     private final Handler mUIHandler;
     private final Handler mUpdateHandler;
+    private final BleManager mManager;
 
 
-    public P_PostManager(Handler uiHandler, Handler updateHandler)
+    public P_PostManager(BleManager mgr, Handler uiHandler, Handler updateHandler)
     {
+        mManager = mgr;
         mUIHandler = uiHandler;
         mUpdateHandler = updateHandler;
     }
@@ -23,7 +25,7 @@ public class P_PostManager
 
     public void post(Runnable action)
     {
-        if (BleManager.get().mConfig.runOnUIThread)
+        if (mManager.mConfig.runOnUIThread)
         {
             mUIHandler.post(action);
         }
@@ -35,7 +37,7 @@ public class P_PostManager
 
     public void postCallback(Runnable action)
     {
-        if (BleManager.get().mConfig.postCallbacksToUIThread)
+        if (mManager.mConfig.postCallbacksToUIThread)
         {
             mUIHandler.post(action);
         }
@@ -64,7 +66,7 @@ public class P_PostManager
 
     public void postDelayed(Runnable action, long delay)
     {
-        if (BleManager.get().mConfig.runOnUIThread)
+        if (mManager.mConfig.runOnUIThread)
         {
             mUIHandler.postDelayed(action, delay);
         }
@@ -76,7 +78,7 @@ public class P_PostManager
 
     public void postCallbackDelayed(Runnable action, long delay)
     {
-        if (BleManager.get().mConfig.postCallbacksToUIThread)
+        if (mManager.mConfig.postCallbacksToUIThread)
         {
             mUIHandler.postDelayed(action, delay);
         }

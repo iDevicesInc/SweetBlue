@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 import java.util.Collections;
@@ -58,7 +59,7 @@ public class P_TaskManager
         {
             mCurrent.updateTask(curTimeMs);
             // Checks if this task should be timed out. If it should, the task then calls timeOut(P_Task).
-            mCurrent.checkTimeOut();
+            mCurrent.checkTimeOut(curTimeMs);
         }
         mUpdateCount++;
         return hasTasksInQueue || !isCurrentNull();
@@ -300,6 +301,33 @@ public class P_TaskManager
             Collections.sort(mTaskQueue, mTaskSorter);
         }
         task.addedToQueue();
+    }
+
+    void interruptTask(Class<? extends P_Task> taskClass, BleManager mgr)
+    {
+        if (mCurrent != null)
+        {
+            if (matches(mCurrent, taskClass, mgr, null, null))
+            {
+                interruptTask(mCurrent);
+            }
+        }
+    }
+
+    void interruptTask(Class<? extends P_Task> taskClass, BleDevice device)
+    {
+        if (matches(mCurrent, taskClass, null, device, null))
+        {
+            interruptTask(mCurrent);
+        }
+    }
+
+    void interruptTask(Class<? extends P_Task> taskClass, BleServer server)
+    {
+        if (matches(mCurrent, taskClass, null, null, server))
+        {
+            interruptTask(mCurrent);
+        }
     }
 
     private void interruptTask(P_Task task)

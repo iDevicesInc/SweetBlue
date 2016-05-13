@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -36,6 +37,8 @@ public class P_BleReceiverManager
         IntentFilter filter = new IntentFilter();
 
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 
         return filter;
     }
@@ -50,7 +53,28 @@ public class P_BleReceiverManager
             {
                 onNativeBleStateChanged(intent);
             }
+            else if (action.equals(BluetoothDevice.ACTION_FOUND))
+            {
+                onDeviceFound_classic(intent);
+            }
+            else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED))
+            {
+                onClassicDiscoveryFinished();
+            }
         }
+    }
+
+    private void onDeviceFound_classic(Intent intent)
+    {
+        final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
+
+        mManager.mScanManager.postScanResult(device_native, rssi, null);
+    }
+
+    private void onClassicDiscoveryFinished()
+    {
+        mManager.mTaskManager.interruptTask(P_Task_Scan.class, mManager);
     }
 
     private void onNativeBleStateChanged(Intent intent)

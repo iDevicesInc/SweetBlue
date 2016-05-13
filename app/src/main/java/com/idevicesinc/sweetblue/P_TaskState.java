@@ -21,6 +21,12 @@ enum P_TaskState
     REQUEUED,
 
     /**
+     * The task is the current task, and was executing at one time, but is now paused. A task can only
+     * be {@link #PAUSED} if it's the current task.
+     */
+    PAUSED,
+
+    /**
      * The task is executing it's task.
      */
     EXECUTING,

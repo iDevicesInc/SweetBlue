@@ -1,15 +1,31 @@
 package com.idevicesinc.sweetblue;
 
 
-public class BleServer
+public class BleServer extends BleNode
 {
 
-    BleManager getManager()
+    public BleServer(BleManager mgr)
     {
-        // TODO
-        // TODO
-        // TODO
-        // TODO Implement this is return a cached instance of the manager
-        return BleManager.get();
+        super(mgr);
+    }
+
+    @Override public String getMacAddress()
+    {
+        return null;
+    }
+
+    @Override public <T extends BleNodeConfig> T getConfig()
+    {
+        return null;
+    }
+
+    @Override P_ServiceManager newServiceManager()
+    {
+        return null;
+    }
+
+    @Override public boolean isNull()
+    {
+        return false;
     }
 }

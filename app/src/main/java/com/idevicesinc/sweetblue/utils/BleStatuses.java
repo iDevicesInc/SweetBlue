@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue.utils;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanSettings;
 
 /**
  * A collection of various BLE status codes that for whatever reason are not exposed through Android's
@@ -135,6 +136,26 @@ public class BleStatuses
      * Indicates the local Bluetooth adapter is turning off LE only mode.
      */
 	/*package*/ static final int STATE_BLE_TURNING_OFF = 16;
+
+    /**
+     * Represents ScanSettings.SCAN_MODE_LOW_POWER, which is only available in Android L and above.
+     */
+    public static final int SCAN_MODE_LOW_POWER = 0;
+
+    /**
+     * Represents ScanSettings.SCAN_MODE_BALANCED, which is only available in Android L and above.
+     */
+    public static final int SCAN_MODE_BALANCED = 1;
+
+    /**
+     * Represents ScanSettings.SCAN_MODE_LOW_LATENCY, which is only available in Android L and above.
+     */
+    public static final int SCAN_MODE_LOW_LATENCY = 2;
+
+    /**
+     * Represents ScanSettings.SCAN_MODE_OPPORTUNISTIC, which is only available in Android M and above.
+     */
+    public static final int SCAN_MODE_OPPORTUNISTIC = -1;
 
     //--- DRK > List from https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.3_r1.1/stack/include/gatt_api.h
     //---		Copy/pasting here for easier reference or in case that resource disappears or something.

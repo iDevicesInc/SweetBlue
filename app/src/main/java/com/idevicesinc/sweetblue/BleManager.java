@@ -1,27 +1,35 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.app.Activity;
+import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-
+import android.text.TextUtils;
+import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
+import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
+import com.idevicesinc.sweetblue.listeners.P_EventFactory;
+import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.P_StateTracker.E_Intent;
-
-import static com.idevicesinc.sweetblue.BleManagerState.OFF;
-import static com.idevicesinc.sweetblue.BleManagerState.TURNING_ON;
-import static com.idevicesinc.sweetblue.BleManagerState.ON;
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
+import com.idevicesinc.sweetblue.utils.Utils_String;
+import static com.idevicesinc.sweetblue.BleManagerState.*;;
 
 
 public class BleManager
 {
 
-    private static BleManager sInstance;
+    static BleManager sInstance;
 
     private static final int SPINDOWN_BUFFER_TIME = 5000;
 
@@ -41,6 +49,12 @@ public class BleManager
     private BluetoothManager mNativeManager;
     private P_BleReceiverManager mReceiverManager;
     private P_WakeLockManager mWakeLockManager;
+    private P_DeviceManager mDeviceManager;
+    DeviceStateListener mDefaultStateListener;
+    private DiscoveryListener mDiscoveryListener;
+    P_ScanManager mScanManager;
+    private boolean mForegrounded = false;
+    private LifecycleListener mLifecycleListener;
 
 
     private BleManager(Context context)
@@ -63,6 +77,7 @@ public class BleManager
         {
             nativeState = BleManagerState.get(mNativeManager.getAdapter().getState());
         }
+        mDeviceManager = new P_DeviceManager(this);
         mNativeStateTracker = new P_NativeBleStateTracker(this);
         mNativeStateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
         mStateTracker = new P_BleStateTracker(this);
@@ -70,13 +85,7 @@ public class BleManager
         mTaskManager = new P_TaskManager(this);
         mReceiverManager = new P_BleReceiverManager(this);
 
-
         initConfigDependantMembers();
-    }
-
-    static BleManager get()
-    {
-        return sInstance;
     }
 
     public static BleManager get(Context context)
@@ -104,6 +113,16 @@ public class BleManager
     public void setManagerStateListener(ManagerStateListener listener)
     {
         mStateTracker.setListener(listener);
+    }
+
+    public void setDefaultDeviceStateListener(DeviceStateListener listener)
+    {
+        mDefaultStateListener = listener;
+    }
+
+    public void setDiscoveryListener(DiscoveryListener listener)
+    {
+        mDiscoveryListener = listener;
     }
 
     public void turnOn()
@@ -136,26 +155,6 @@ public class BleManager
         return false;
     }
 
-    int getStateMask()
-    {
-        return mStateTracker.getState();
-    }
-
-    int getNativeStateMask()
-    {
-        return mNativeStateTracker.getState();
-    }
-
-    P_NativeBleStateTracker getNativeStateTracker()
-    {
-        return mNativeStateTracker;
-    }
-
-    P_BleStateTracker getStateTracker()
-    {
-        return mStateTracker;
-    }
-
     public BluetoothManager getNativeManager()
     {
         return mNativeManager;
@@ -177,6 +176,45 @@ public class BleManager
         initConfigDependantMembers();
     }
 
+    public void startScan()
+    {
+        startScan_private(Interval.DISABLED, Interval.DISABLED);
+    }
+
+    public void startScan(Interval scanTime)
+    {
+        startScan_private(scanTime, Interval.DISABLED);
+    }
+
+    public void startPeriodicScan(Interval scanTime, Interval pauseTime)
+    {
+        startScan_private(scanTime, pauseTime);
+    }
+
+    public void stopScan()
+    {
+        if (is(SCANNING))
+        {
+            mScanManager.stopScan();
+            mTaskManager.succeedTask(P_Task_Scan.class, this);
+        }
+    }
+
+    public boolean isForegrounded()
+    {
+        return mForegrounded;
+    }
+
+    public void onPause()
+    {
+        mForegrounded = false;
+    }
+
+    public void onResume()
+    {
+        mForegrounded = true;
+    }
+
     public void shutdown()
     {
         mPostManager.removeCallbacks(mUpdateRunnable);
@@ -187,61 +225,31 @@ public class BleManager
         }
     }
 
+
+
+    int getStateMask()
+    {
+        return mStateTracker.getState();
+    }
+
+    int getNativeStateMask()
+    {
+        return mNativeStateTracker.getState();
+    }
+
+    P_NativeBleStateTracker getNativeStateTracker()
+    {
+        return mNativeStateTracker;
+    }
+
+    P_BleStateTracker getStateTracker()
+    {
+        return mStateTracker;
+    }
+
     boolean isOnSweetBlueThread()
     {
         return mPostManager.isOnSweetBlueThread();
-    }
-
-    private void initConfigDependantMembers()
-    {
-
-        mConfig.initMaps();
-
-        Handler mUpdateHandler;
-        Handler mUIHandler;
-
-        if (mUpdateRunnable != null)
-        {
-            mPostManager.removeCallbacks(mUpdateRunnable);
-        }
-        else
-        {
-            mUpdateRunnable = new UpdateRunnable();
-        }
-
-        if( mWakeLockManager == null )
-        {
-            mWakeLockManager = new P_WakeLockManager(this, mConfig.manageCpuWakeLock);
-        }
-        else if( mWakeLockManager != null && mConfig.manageCpuWakeLock == false )
-        {
-            mWakeLockManager.clear();
-            mWakeLockManager = new P_WakeLockManager(this, mConfig.manageCpuWakeLock);
-        }
-
-        if (mConfig.runOnUIThread)
-        {
-            mUpdateHandler = new Handler(Looper.getMainLooper());
-            mUIHandler = mUpdateHandler;
-        }
-        else
-        {
-            mUIHandler = new Handler(Looper.getMainLooper());
-            if (mConfig.updateLooper == null)
-            {
-                mThread = new SweetBlueHandlerThread();
-                mThread.start();
-                mUpdateHandler = mThread.prepareHandler();
-            }
-            else
-            {
-                mUpdateHandler = new Handler(mConfig.updateLooper);
-            }
-        }
-        mPostManager = new P_PostManager(mUIHandler, mUpdateHandler);
-        mUpdateInterval = mConfig.updateThreadIntervalMs;
-        mPostManager.postToUpdateThreadDelayed(mUpdateRunnable, mUpdateInterval);
-        mLogger = new P_Logger(mPostManager, mConfig.debugThreadNames, mConfig.uuidNameMaps, mConfig.logger, mConfig.loggingEnabled);
     }
 
     P_Logger getLogger()
@@ -249,7 +257,7 @@ public class BleManager
         return mLogger;
     }
 
-    /*package*/ void update(long curTimeMs)
+    void update(long curTimeMs)
     {
         if (mTaskManager.update(curTimeMs))
         {
@@ -272,7 +280,211 @@ public class BleManager
         }
     }
 
+    void onDiscoveredFromNativeStack(final BluetoothDevice device_native, int rssi, byte[] scanRecord_nullable)
+    {
+        //--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
+        //---		Here the scan task will be interrupted but still potentially has enough time to
+        //---		discover another device or two. We're checking the enum state as opposed to the native
+        //---		integer state because in this case the "turn off ble" task hasn't started yet and thus
+        //---		hasn't called down into native code and thus the native state hasn't changed.
+        if( false == is(ON) )  return;
 
+        //--- DRK > Not sure if queued up messages to library's thread can sneak in a device discovery event
+        //---		after user called stopScan(), so just a check to prevent unexpected callbacks to the user.
+        if( false == is(SCANNING) )  return;
+
+
+        final String macAddress = device_native.getAddress();
+        final BleScanInfo mScanInfo = Utils_ScanRecord.parseScanRecord(scanRecord_nullable);
+
+        // ---> RB > We keep track of all the ways you can get the device's name. The most reliable way seems to be
+        // getting it from the native device. However, sometimes it's not so reliable, and you have to get it by
+        // parsing the scan record. The "device_name" is what we determine to be the best. By that I mean whichever
+        // name is not null/empty. It has been observed however, that both may not be null/empty, so we store both
+        // so that they are both available.
+        String native_name = device_native.getName();
+        String device_name = native_name;
+        String name_record = mScanInfo.getName();
+
+        if (TextUtils.isEmpty(native_name))
+        {
+            device_name = mScanInfo.getName();
+
+            if (TextUtils.isEmpty(device_name))
+            {
+                String[] address_split = macAddress.split(":");
+                String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
+                device_name = Utils_String.concatStrings("<No_Name_", lastFourOfMac, ">");
+            }
+        }
+
+        BleDevice device = mDeviceManager.get(macAddress);
+
+        DiscoveryListener.LifeCycle cycle;
+        if (device == null)
+        {
+            if (mConfig.defaultScanFilter != null)
+            {
+                ScanFilter.Please please = mConfig.defaultScanFilter.onEvent(new ScanFilter.ScanEvent(device_native, mScanInfo, native_name, device_name, rssi));
+                if (!please.ack())
+                {
+                    return;
+                }
+            }
+            cycle = DiscoveryListener.LifeCycle.DISCOVERED;
+            device = new BleDevice(this, device_native, BleDeviceOrigin.FROM_DISCOVERY, null, device_name, false);
+            device.setNameFromScanRecord(name_record);
+            device.setNameFromNative(native_name);
+            mDeviceManager.add(device);
+            device.onNewlyDiscovered(rssi, mScanInfo, BleDeviceOrigin.FROM_DISCOVERY);
+            mLogger.d(Utils_String.concatStrings("Found device with name: ", device.getName()));
+        }
+        else
+        {
+            cycle = DiscoveryListener.LifeCycle.REDISCOVERED;
+            device.onRediscovered(device_native, mScanInfo, rssi, BleDeviceOrigin.FROM_DISCOVERY);
+            device.setNameFromScanRecord(name_record);
+            device.setNameFromNative(native_name);
+        }
+
+
+        if (mDiscoveryListener != null)
+        {
+            final DiscoveryListener.DiscoveryEvent event = P_EventFactory.newDiscoveryEvent(device, cycle);
+            mPostManager.postCallback(new Runnable()
+            {
+                @Override public void run()
+                {
+                    mDiscoveryListener.onEvent(event);
+                }
+            });
+        }
+    }
+
+
+
+    private void startScan_private(Interval scanTime, Interval pauseTime)
+    {
+        if (!is(SCANNING))
+        {
+            mTaskManager.add(new P_Task_Scan(mTaskManager, null, scanTime, pauseTime));
+        }
+    }
+
+    private void initConfigDependantMembers()
+    {
+
+        mConfig.initMaps();
+
+        if (mUpdateRunnable != null)
+        {
+            mPostManager.removeCallbacks(mUpdateRunnable);
+        }
+        else
+        {
+            mUpdateRunnable = new UpdateRunnable();
+        }
+
+        if( mWakeLockManager == null )
+        {
+            mWakeLockManager = new P_WakeLockManager(this, mConfig.manageCpuWakeLock);
+        }
+        else if( mWakeLockManager != null && mConfig.manageCpuWakeLock == false )
+        {
+            mWakeLockManager.clear();
+            mWakeLockManager = new P_WakeLockManager(this, mConfig.manageCpuWakeLock);
+        }
+
+        initPostManager();
+
+        mUpdateInterval = mConfig.updateThreadIntervalMs;
+        mPostManager.postToUpdateThreadDelayed(mUpdateRunnable, mUpdateInterval);
+        mLogger = new P_Logger(mPostManager, mConfig.debugThreadNames, mConfig.uuidNameMaps, mConfig.logger, mConfig.loggingEnabled);
+        mScanManager = new P_ScanManager(this);
+        initLifeCycleCallbacks();
+    }
+
+    private void initLifeCycleCallbacks()
+    {
+        if (mContext instanceof Application)
+        {
+            if (mConfig.autoPauseResumeDetection)
+            {
+                mLifecycleListener = new LifecycleListener();
+                ((Application) mContext).registerActivityLifecycleCallbacks(mLifecycleListener);
+            }
+            else
+            {
+                if (mLifecycleListener != null)
+                {
+                    ((Application) mContext).unregisterActivityLifecycleCallbacks(mLifecycleListener);
+                }
+            }
+        }
+    }
+
+    private void initPostManager()
+    {
+        Handler mUpdateHandler;
+        Handler mUIHandler;
+        if (mConfig.runOnUIThread)
+        {
+            mUpdateHandler = new Handler(Looper.getMainLooper());
+            mUIHandler = mUpdateHandler;
+        }
+        else
+        {
+            mUIHandler = new Handler(Looper.getMainLooper());
+            if (mConfig.updateLooper == null)
+            {
+                mThread = new SweetBlueHandlerThread();
+                mThread.start();
+                mUpdateHandler = mThread.prepareHandler();
+            }
+            else
+            {
+                mUpdateHandler = new Handler(mConfig.updateLooper);
+            }
+        }
+        mPostManager = new P_PostManager(this, mUIHandler, mUpdateHandler);
+    }
+
+
+
+
+    private class LifecycleListener implements Application.ActivityLifecycleCallbacks
+    {
+
+        @Override public void onActivityCreated(Activity activity, Bundle savedInstanceState)
+        {
+        }
+
+        @Override public void onActivityStarted(Activity activity)
+        {
+        }
+
+        @Override public void onActivityResumed(Activity activity)
+        {
+            onResume();
+        }
+
+        @Override public void onActivityPaused(Activity activity)
+        {
+            onPause();
+        }
+
+        @Override public void onActivityStopped(Activity activity)
+        {
+        }
+
+        @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState)
+        {
+        }
+
+        @Override public void onActivityDestroyed(Activity activity)
+        {
+        }
+    }
 
     private class UpdateRunnable implements Runnable
     {

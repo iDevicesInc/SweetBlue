@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
@@ -108,6 +109,11 @@ abstract class P_Task
         return mTaskMgr.getManager();
     }
 
+    P_TaskManager getTaskManager()
+    {
+        return mTaskMgr;
+    }
+
     long timeCreated()
     {
         return mTimeCreated;
@@ -121,6 +127,19 @@ abstract class P_Task
     boolean requeued()
     {
         return mState == P_TaskState.REQUEUED;
+    }
+
+    void pause()
+    {
+        setState(P_TaskState.PAUSED);
+    }
+
+    void resume()
+    {
+        if (isPaused())
+        {
+            setState(P_TaskState.EXECUTING);
+        }
     }
 
     private void setState(P_TaskState state)
@@ -139,7 +158,7 @@ abstract class P_Task
                     }
                     getLogger().i(logText);
                 }
-                else if (mState == P_TaskState.EXECUTING)
+                else if (mState == P_TaskState.EXECUTING || mState == P_TaskState.PAUSED)
                 {
                     mTaskMgr.print();
                 }
@@ -174,6 +193,11 @@ abstract class P_Task
     boolean isExecuting()
     {
         return mState == P_TaskState.EXECUTING;
+    }
+
+    boolean isPaused()
+    {
+        return mState == P_TaskState.PAUSED;
     }
 
     public boolean interrupt()
@@ -243,13 +267,9 @@ abstract class P_Task
         setState(P_TaskState.TIMED_OUT);
     }
 
-    void checkTimeOut()
+    void checkTimeOut(long curTimeMs)
     {
-        if (Interval.isDisabled(getManager().mConfig.taskTimeout))
-        {
-            return;
-        }
-        else
+        if (Interval.isEnabled(getManager().mConfig.taskTimeout))
         {
             if (mTimeExecuting >= getManager().mConfig.taskTimeout.millis())
             {

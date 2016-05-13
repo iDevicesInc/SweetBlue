@@ -50,7 +50,7 @@ class P_Logger
                 @Override public void run()
                 {
                     getThreadName(Process.myTid());
-                    BleManager.get().mPostManager.postToUpdateThread(new Runnable()
+                    BleManager.sInstance.mPostManager.postToUpdateThread(new Runnable()
                     {
                         @Override public void run()
                         {

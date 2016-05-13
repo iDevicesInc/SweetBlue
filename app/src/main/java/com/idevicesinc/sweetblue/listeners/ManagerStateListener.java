@@ -30,6 +30,8 @@ public interface ManagerStateListener extends P_BaseStateListener<ManagerStateLi
                     getClass(),
                     "entered",      Utils_String.toString(enterMask(), BleManagerState.VALUES()),
                     "exited",       Utils_String.toString(exitMask(), BleManagerState.VALUES()),
+                    "oldStateBits", Utils_String.toString(oldStateBits(), BleManagerState.VALUES()),
+                    "newStateBits", Utils_String.toString(newStateBits(), BleManagerState.VALUES()),
                     "current",      Utils_String.toString(newStateBits(), BleManagerState.VALUES()));
         }
     }
