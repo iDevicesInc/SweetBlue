@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -13,13 +14,15 @@ class P_NativeDeviceWrapper
 {
 
     private final BleDevice mDevice;
+    private final BluetoothDevice mNativeDevice;
     private final GattCallbacks mGattCallbacks;
     private BluetoothGatt mGatt;
 
 
-    P_NativeDeviceWrapper(BleDevice device)
+    P_NativeDeviceWrapper(BleDevice device, BluetoothDevice nativeDevice)
     {
         mDevice = device;
+        mNativeDevice = nativeDevice;
         mGattCallbacks = new GattCallbacks();
     }
 
@@ -33,6 +36,16 @@ class P_NativeDeviceWrapper
         return mGatt;
     }
 
+    public BluetoothDevice getNativeDevice()
+    {
+        return mNativeDevice;
+    }
+
+    public String getMacAddress()
+    {
+        return mNativeDevice.getAddress();
+    }
+
     private class GattCallbacks extends BluetoothGattCallback
     {
 
@@ -42,7 +55,14 @@ class P_NativeDeviceWrapper
             switch (newState)
             {
                 case BluetoothProfile.STATE_CONNECTED:
-                    mDevice.onConnected();
+                    if (Utils.isSuccess(status))
+                    {
+                        mDevice.onConnected();
+                    }
+                    else
+                    {
+                        onConnectionFail(status);
+                    }
                     break;
                 case BluetoothProfile.STATE_CONNECTING:
                     if (Utils.isSuccess(status))
@@ -129,12 +149,11 @@ class P_NativeDeviceWrapper
 
     void connect()
     {
-        mGatt = mDevice.getNative().connectGatt(getManager().getAppContext(), false, mGattCallbacks);
+        mGatt = mNativeDevice.connectGatt(getManager().getAppContext(), false, mGattCallbacks);
     }
 
     private void onConnectionFail(int gattStatus)
     {
-        getManager().mTaskManager.failTask(P_Task_Connect.class, mDevice, false);
         mDevice.onConnectionFailed(gattStatus);
         // TODO - Implement connection fail listener stuff
     }

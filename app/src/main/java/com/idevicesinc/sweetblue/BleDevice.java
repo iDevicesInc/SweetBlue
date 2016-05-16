@@ -26,7 +26,6 @@ public class BleDevice extends BleNode
     public final static BleDevice NULL = new BleDevice(null, null, null, null, null, true);
 
     private final boolean mIsNull;
-    private final BluetoothDevice mNativeDevice;
     private int mRssi;
     private final P_DeviceStateTracker mStateTracker;
     private final P_DeviceStateTracker mStateTracker_shortTermReconnect;
@@ -47,7 +46,6 @@ public class BleDevice extends BleNode
     BleDevice(BleManager mgr, BluetoothDevice nativeDevice, BleDeviceOrigin origin, BleDeviceConfig config_nullable, String deviceName, boolean isNull)
     {
         super(mgr);
-        mNativeDevice = nativeDevice;
         mIsNull = isNull;
         mOrigin = origin;
         mOrigin_last = mOrigin;
@@ -58,7 +56,7 @@ public class BleDevice extends BleNode
             mStateTracker = new P_DeviceStateTracker(this, false);
             mStateTracker_shortTermReconnect = new P_DeviceStateTracker(this, true);
             stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCONNECTED, true);
-            mNativeWrapper = new P_NativeDeviceWrapper(this);
+            mNativeWrapper = new P_NativeDeviceWrapper(this, nativeDevice);
         }
         else
         {
@@ -145,7 +143,7 @@ public class BleDevice extends BleNode
 
     public BluetoothDevice getNative()
     {
-        return mNativeDevice;
+        return mNativeWrapper.getNativeDevice();
     }
 
     public BluetoothGatt getNativeGatt()
@@ -155,7 +153,7 @@ public class BleDevice extends BleNode
 
     @Override public String getMacAddress()
     {
-        return mNativeDevice.getAddress();
+        return mNativeWrapper.getMacAddress();
     }
 
     void setNameFromNative(String name)

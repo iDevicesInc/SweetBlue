@@ -140,6 +140,21 @@ public class BleManager
         mTaskManager.add(new P_Task_TurnBleOn(mTaskManager));
     }
 
+    public void turnOff()
+    {
+        if (isAny(TURNING_OFF, OFF))
+        {
+            return;
+        }
+
+        if (is(ON))
+        {
+            mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, TURNING_OFF, true, ON, false);
+        }
+
+        mTaskManager.add(new P_Task_TurnBleOff(mTaskManager));
+    }
+
     public boolean is(BleManagerState state)
     {
         return state.overlaps(getStateMask());
