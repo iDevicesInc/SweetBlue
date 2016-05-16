@@ -4,6 +4,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothAdapter;
 
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 
 public enum BleManagerState implements State
@@ -42,6 +43,12 @@ public enum BleManagerState implements State
      *
      */
     SCANNING,
+
+    /**
+     * This is the state that {@link BleManager} is in when running a periodic scan ({@link BleManager#startPeriodicScan(Interval, Interval)}), and
+     * is currently in the pause state, but the scan task is still "executing".
+     */
+    SCAN_PAUSED,
 
     /**
      * This is the state that {@link BleManager} is in after calling {@link BleManager#reset()}.

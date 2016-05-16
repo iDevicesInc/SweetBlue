@@ -11,6 +11,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.List;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
+import static com.idevicesinc.sweetblue.BleManagerState.SCAN_PAUSED;
 
 
 class P_ScanManager
@@ -31,7 +32,7 @@ class P_ScanManager
 
     public void startScan()
     {
-        mManager.getStateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true);
+        mManager.getStateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCAN_PAUSED, false);
         switch (mManager.mConfig.scanApi)
         {
             case CLASSIC:
@@ -109,6 +110,10 @@ class P_ScanManager
         if (doStateChange)
         {
             mManager.getStateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false);
+        }
+        else
+        {
+            mManager.getStateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, SCAN_PAUSED, true);
         }
     }
 
