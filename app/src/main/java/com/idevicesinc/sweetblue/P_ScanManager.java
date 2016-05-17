@@ -25,8 +25,34 @@ class P_ScanManager
     public P_ScanManager(BleManager mgr)
     {
         mManager = mgr;
-        mPreLollipopScanCallback = new PreLollipopScanCallback();
-        mPostLollipopScanCallback = new PostLollipopScanCallback();
+        BleScanAPI scanAPI = mgr.mConfig.scanApi;
+        switch (scanAPI)
+        {
+            case CLASSIC:
+                mPreLollipopScanCallback = null;
+                mPostLollipopScanCallback = null;
+                break;
+            case PRE_LOLLIPOP:
+                mPreLollipopScanCallback = new PreLollipopScanCallback();
+                mPostLollipopScanCallback = null;
+                break;
+            case POST_LOLLIPOP:
+                if(Utils.isLollipop())
+                {
+                    mPreLollipopScanCallback = null;
+                    mPostLollipopScanCallback = new PostLollipopScanCallback();
+                }
+                else
+                {
+                    mPreLollipopScanCallback = new PreLollipopScanCallback();
+                    mPostLollipopScanCallback = null;
+                }
+                break;
+            default:
+                mPreLollipopScanCallback = new PreLollipopScanCallback();
+                mPostLollipopScanCallback = null;
+                break;
+        }
     }
 
 
@@ -202,6 +228,21 @@ class P_ScanManager
         {
             mManager.getLogger().e(Utils_String.concatStrings("Post lollipop scan failed with error code ", String.valueOf(errorCode)));
         }
+    }
+
+    boolean isPreLollipopScan()
+    {
+        return mPreLollipopScanCallback != null && mPostLollipopScanCallback == null;
+    }
+
+    boolean isPostLollipopScan()
+    {
+        return mPreLollipopScanCallback == null && mPostLollipopScanCallback != null;
+    }
+
+    boolean isClassicScan()
+    {
+        return mPreLollipopScanCallback == null && mPostLollipopScanCallback == null;
     }
 
 }

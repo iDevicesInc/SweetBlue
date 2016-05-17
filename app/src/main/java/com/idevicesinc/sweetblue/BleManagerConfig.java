@@ -35,7 +35,7 @@ public class BleManagerConfig extends BleDeviceConfig
     public BleScanPower scanPower                          = BleScanPower.AUTO;
     public ScanFilter defaultScanFilter                     = null;
     public boolean autoPauseResumeDetection                 = true;
-
+    public
 
 
 
