@@ -35,9 +35,11 @@ public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<Blueto
     }
 
     @Test
-    public void testBleOff()
+    public void testBleOff() throws Exception
     {
         testActivity.turnBluetoothOff();
+
+        Thread.sleep(2000); //Pause to wait for the device to update its state
 
         assertEquals(!bleAdapter.isEnabled(), bleManager.is(BleManagerState.OFF));
     }
@@ -46,6 +48,8 @@ public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<Blueto
     public void testBleOn() throws Exception
     {
         testActivity.turnBluetoothOn();
+
+        Thread.sleep(2000); //Pause to wait for the device to update its state
 
         assertTrue(bleAdapter.isEnabled());
 
