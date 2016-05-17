@@ -238,6 +238,8 @@ public class BleManager
         {
             mThread.quit();
         }
+
+        sInstance = null;
     }
 
 

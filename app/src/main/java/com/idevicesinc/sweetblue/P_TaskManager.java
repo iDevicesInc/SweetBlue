@@ -35,7 +35,14 @@ public class P_TaskManager
         if (hasTasksInQueue && isCurrentNull())
         {
             mCurrent = mTaskQueue.poll();
-            mCurrent.executeTask();
+            if(mCurrent.isExecutable())
+            {
+                mCurrent.executeTask();
+            }
+            else
+            {
+                mCurrent.fail();
+            }
         }
         else
         {

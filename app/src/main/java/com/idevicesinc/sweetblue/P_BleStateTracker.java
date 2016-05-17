@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
+import com.idevicesinc.sweetblue.utils.State;
 
 
 class P_BleStateTracker extends P_StateTracker
@@ -36,5 +37,11 @@ class P_BleStateTracker extends P_StateTracker
                 }
             });
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return super.toString(BleManagerState.VALUES());
     }
 }

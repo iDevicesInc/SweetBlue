@@ -21,6 +21,6 @@ abstract class P_Task_RequiresBleOn extends P_Task
 
     @Override public boolean isExecutable()
     {
-        return BleManagerState.ON.overlaps(getManager().getNativeStateMask());
+        return super.isExecutable() && getManager().is(BleManagerState.ON);
     }
 }

@@ -8,7 +8,7 @@ import com.idevicesinc.sweetblue.BleManagerState;
 
 import org.junit.Test;
 
-public class BluetoothPowerTest extends ActivityInstrumentationTestCase2<BluetoothPowerActivity>
+public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<BluetoothPowerActivity>
 {
     BluetoothPowerActivity testActivity;
 
@@ -16,7 +16,7 @@ public class BluetoothPowerTest extends ActivityInstrumentationTestCase2<Bluetoo
 
     BluetoothAdapter bleAdapter;
 
-    public BluetoothPowerTest()
+    public ABluetoothPowerTest()
     {
         super(BluetoothPowerActivity.class);
     }
@@ -30,37 +30,24 @@ public class BluetoothPowerTest extends ActivityInstrumentationTestCase2<Bluetoo
         testActivity = getActivity();
 
         bleManager = BleManager.get(testActivity);
+
+        bleAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
     @Test
-    public void testBluetoothPower()
+    public void testBleOff()
     {
-        assertNotNull(testActivity);
-
-        bleAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        assertEquals(bleAdapter.isEnabled(), bleManager.is(BleManagerState.ON));
-
-        if(bleAdapter.isEnabled())
-        {
-            toggleBLEOff();
-        }
-        else
-        {
-            toggleBLEOn();
-        }
-    }
-
-    private void toggleBLEOff()
-    {
-        bleManager.turnOff();
+        testActivity.turnBluetoothOff();
 
         assertEquals(!bleAdapter.isEnabled(), bleManager.is(BleManagerState.OFF));
     }
 
-    private void toggleBLEOn()
+    @Test
+    public void testBleOn() throws Exception
     {
-        bleManager.turnOn();
+        testActivity.turnBluetoothOn();
+
+        assertTrue(bleAdapter.isEnabled());
 
         assertEquals(bleAdapter.isEnabled(), bleManager.is(BleManagerState.ON));
     }
