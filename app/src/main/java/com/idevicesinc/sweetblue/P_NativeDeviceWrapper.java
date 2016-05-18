@@ -67,7 +67,7 @@ class P_NativeDeviceWrapper
                 case BluetoothProfile.STATE_CONNECTED:
                     if (Utils.isSuccess(status))
                     {
-                        mDevice.onConnected();
+                        onDeviceConnected();
                     }
                     else
                     {
@@ -77,7 +77,7 @@ class P_NativeDeviceWrapper
                 case BluetoothProfile.STATE_CONNECTING:
                     if (Utils.isSuccess(status))
                     {
-                        mDevice.onConnecting();
+                        onDeviceConnecting();
                     }
                     else
                     {
@@ -91,11 +91,11 @@ class P_NativeDeviceWrapper
                 case BluetoothProfile.STATE_DISCONNECTED:
                     if (Utils.isSuccess(status))
                     {
-                        mDevice.onDisconnected();
+                        onDeviceDisconnected();
                     }
                     else
                     {
-                        mDevice.onDisconnected(status);
+                        onDeviceDisconnected(status);
                     }
                     break;
             }
@@ -148,6 +148,26 @@ class P_NativeDeviceWrapper
         @Override public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
         {
         }
+    }
+
+    void onDeviceConnected()
+    {
+        mDevice.onConnected();
+    }
+
+    void onDeviceConnecting()
+    {
+        mDevice.onConnecting();
+    }
+
+    void onDeviceDisconnected()
+    {
+        mDevice.onDisconnected();
+    }
+
+    void onDeviceDisconnected(int status)
+    {
+        mDevice.onDisconnected(status);
     }
 
     void updateGattInstance(BluetoothGatt gatt)

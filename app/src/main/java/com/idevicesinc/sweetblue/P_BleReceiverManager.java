@@ -42,6 +42,8 @@ public class P_BleReceiverManager
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
         return filter;
     }
@@ -68,6 +70,30 @@ public class P_BleReceiverManager
             {
                 onNativeBondStateChanged(intent);
             }
+            else if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED))
+            {
+                onNativeDisconnectRequested(intent);
+            }
+            else if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED))
+            {
+                onNativeDeviceDisconnected(intent);
+            }
+        }
+    }
+
+    private void onNativeDisconnectRequested(Intent intent)
+    {
+
+    }
+
+    private void onNativeDeviceDisconnected(Intent intent)
+    {
+        P_Task curTask = mManager.mTaskManager.getCurrent();
+        if (!(curTask instanceof P_Task_Disconnect))
+        {
+            final BluetoothDevice native_device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            final BleDevice device = mManager.getDevice(native_device.getAddress());
+            device.onDisconnected();
         }
     }
 

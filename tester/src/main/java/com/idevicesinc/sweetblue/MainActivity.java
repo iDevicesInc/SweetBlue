@@ -10,16 +10,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import com.idevicesinc.sweetblue.tester.R;
+
 
 public class MainActivity extends AppCompatActivity
 {
