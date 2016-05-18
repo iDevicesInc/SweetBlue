@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="com.idevicesinc.sweetblue.MainActivity"
             android:screenOrientation="sensorPortrait"
             android:configChanges="keyboardHidden|keyboard|orientation">
             <intent-filter>
@@ -24,7 +24,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".BluetoothPowerActivity"
+        <activity android:name="com.idevicesinc.sweetblue.BluetoothPowerActivity"
             android:screenOrientation="sensorPortrait"
             android:configChanges="keyboardHidden|keyboard|orientation">
             <intent-filter>
@@ -34,9 +34,19 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".BleScanActivity"
+        <activity android:name="com.idevicesinc.sweetblue.BleScanActivity"
             android:screenOrientation="sensorPortrait"
             android:configChanges="keyboardHidden|keyboard|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity android:name="com.idevicesinc.sweetblue.TaskManagerIdleActivity"
+                  android:screenOrientation="sensorPortrait"
+                  android:configChanges="keyboardHidden|keyboard|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

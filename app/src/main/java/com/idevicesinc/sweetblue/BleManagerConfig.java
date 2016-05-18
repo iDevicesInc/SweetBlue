@@ -22,7 +22,7 @@ public class BleManagerConfig extends BleDeviceConfig
 
     public boolean runOnUIThread                            = false;
     public boolean postCallbacksToUIThread                  = true;
-    public int updateThreadIntervalMs                       = 25;
+    public UpdateThreadSpeed updateThreadSpeed              = UpdateThreadSpeed.TWENTY_FIVE_MS;
     public int updateThreadIdleIntervalMs                   = 500;
     public boolean loggingEnabled                           = false;
     public SweetLogger logger                               = new DefaultLogger();
@@ -35,7 +35,7 @@ public class BleManagerConfig extends BleDeviceConfig
     public BleScanPower scanPower                          = BleScanPower.AUTO;
     public ScanFilter defaultScanFilter                     = null;
     public boolean autoPauseResumeDetection                 = true;
-
+    public int delayBeforeIdleMs                            = 250;
 
 
 

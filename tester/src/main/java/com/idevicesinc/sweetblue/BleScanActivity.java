@@ -1,15 +1,13 @@
-package com.idevicesinc.sweetblue.tester;
+package com.idevicesinc.sweetblue;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
-import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManagerConfig;
-import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.tester.R;
 
 public class BleScanActivity extends Activity
 {

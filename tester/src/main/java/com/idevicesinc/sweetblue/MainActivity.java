@@ -1,26 +1,16 @@
-package com.idevicesinc.sweetblue.tester;
+package com.idevicesinc.sweetblue;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.BleDeviceState;
-import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManagerConfig;
-import com.idevicesinc.sweetblue.BleManagerState;
-import com.idevicesinc.sweetblue.BleScanAPI;
-import com.idevicesinc.sweetblue.BleScanPower;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
@@ -28,6 +18,8 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.idevicesinc.sweetblue.tester.R;
 
 public class MainActivity extends AppCompatActivity
 {

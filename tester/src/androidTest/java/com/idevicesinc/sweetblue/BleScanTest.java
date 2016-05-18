@@ -1,12 +1,11 @@
-package com.idevicesinc.sweetblue.tester;
+package com.idevicesinc.sweetblue;
 
 import android.os.Handler;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 
-import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 import org.junit.Test;
 
@@ -154,6 +153,56 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         }, 11000);
 
         finishedSemaphore.acquire();
+    }
+
+    @Test
+    public void testScanAPIPostLollipop()
+    {
+        BleManagerConfig config = new BleManagerConfig();
+
+        config.scanApi = BleScanAPI.POST_LOLLIPOP;
+
+        bleManager = BleManager.get(testActivity, config);
+
+        bleManager.startScan();
+
+        P_ScanManager scanManager = bleManager.mScanManager;
+
+        assertTrue(Utils.isLollipop());
+
+        assertTrue(scanManager.isPostLollipopScan());
+    }
+
+    @Test
+    public void testScanAPIPreLollipop()
+    {
+        BleManagerConfig config = new BleManagerConfig();
+
+        config.scanApi = BleScanAPI.PRE_LOLLIPOP;
+
+        bleManager = BleManager.get(testActivity, config);
+
+        bleManager.startScan();
+
+        P_ScanManager scanManager = bleManager.mScanManager;
+
+        assertTrue(scanManager.isPreLollipopScan());
+    }
+
+    @Test
+    public void testScanAPIClassic()
+    {
+        BleManagerConfig config = new BleManagerConfig();
+
+        config.scanApi = BleScanAPI.CLASSIC;
+
+        bleManager = BleManager.get(testActivity, config);
+
+        bleManager.startScan();
+
+        P_ScanManager scanManager = bleManager.mScanManager;
+
+        assertTrue(scanManager.isClassicScan());
     }
 
     @Test

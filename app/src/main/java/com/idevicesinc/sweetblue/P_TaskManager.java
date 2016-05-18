@@ -295,6 +295,8 @@ public class P_TaskManager
         if (mTaskQueue.size() == 0)
         {
             mTaskQueue.add(task);
+
+            mBleManager.wake();
         }
         else
         {
