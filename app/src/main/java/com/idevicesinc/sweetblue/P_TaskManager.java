@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.util.Log;
+
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
@@ -300,6 +302,8 @@ public class P_TaskManager
         if (mTaskQueue.size() == 0)
         {
             mTaskQueue.add(task);
+
+            mBleManager.wake();
         }
         else
         {

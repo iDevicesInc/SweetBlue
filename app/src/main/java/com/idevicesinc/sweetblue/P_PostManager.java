@@ -93,10 +93,16 @@ public class P_PostManager
         mUpdateHandler.postDelayed(action, delay);
     }
 
-    public void removeCallbacks(Runnable updateRunnable)
+    public void removeUICallbacks(Runnable uiRunnable)
     {
-        mUIHandler.removeCallbacks(updateRunnable);
+        mUIHandler.removeCallbacks(uiRunnable);
     }
+
+    public void removeUpdateCallbacks(Runnable updateRunnable)
+    {
+        mUpdateHandler.removeCallbacks(updateRunnable);
+    }
+
 
     boolean isOnSweetBlueThread()
     {

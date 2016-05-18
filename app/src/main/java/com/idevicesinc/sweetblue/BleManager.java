@@ -31,8 +31,6 @@ public class BleManager
 
     static BleManager sInstance;
 
-    private static final int SPINDOWN_BUFFER_TIME = 5000;
-
     private Context mContext;
     BleManagerConfig mConfig;
     private SweetBlueHandlerThread mThread;
@@ -232,7 +230,7 @@ public class BleManager
 
     public void shutdown()
     {
-        mPostManager.removeCallbacks(mUpdateRunnable);
+        mPostManager.removeUpdateCallbacks(mUpdateRunnable);
         mReceiverManager.onDestroy();
         if (!mConfig.runOnUIThread && mThread != null)
         {
@@ -281,7 +279,8 @@ public class BleManager
             // The task manager reported that there are tasks to process (or are being processed)
             // So, we record this time, and make sure the update interval is at full speed.
             mLastTaskExecution = curTimeMs;
-            mUpdateInterval = mConfig.updateThreadIntervalMs;
+            mUpdateInterval = mConfig.updateThreadSpeed.getMilliseconds();
+            mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
         }
 
         if (mConfig.updateCallback != null)
@@ -289,11 +288,12 @@ public class BleManager
             mConfig.updateCallback.onUpdate(curTimeMs);
         }
 
-        if (mLastTaskExecution + SPINDOWN_BUFFER_TIME < curTimeMs)
+        if (mLastTaskExecution + mConfig.delayBeforeIdleMs < curTimeMs)
         {
-            // If the last task execution happened more than the spindown buffer time ago, then we spin down
+            // If the last task execution happened more than the idle delay buffer time ago, then we spin down
             // the update cycle, so we're not chewing up CPU/battery power unnecessarily.
             mUpdateInterval = mConfig.updateThreadIdleIntervalMs;
+            mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, true);
         }
     }
 
@@ -395,7 +395,7 @@ public class BleManager
 
         if (mUpdateRunnable != null)
         {
-            mPostManager.removeCallbacks(mUpdateRunnable);
+            mPostManager.removeUpdateCallbacks(mUpdateRunnable);
         }
         else
         {
@@ -414,7 +414,7 @@ public class BleManager
 
         initPostManager();
 
-        mUpdateInterval = mConfig.updateThreadIntervalMs;
+        mUpdateInterval = mConfig.updateThreadSpeed.getMilliseconds();
         mPostManager.postToUpdateThreadDelayed(mUpdateRunnable, mUpdateInterval);
         mLogger = new P_Logger(mPostManager, mConfig.debugThreadNames, mConfig.uuidNameMaps, mConfig.logger, mConfig.loggingEnabled);
         mScanManager = new P_ScanManager(this);
@@ -538,4 +538,17 @@ public class BleManager
         }
     }
 
+    long getUpdateSpeed()
+    {
+        return mUpdateInterval;
+    }
+
+    void wake()
+    {
+        mUpdateInterval =  mConfig.updateThreadSpeed.getMilliseconds();
+
+        mPostManager.removeUpdateCallbacks(mUpdateRunnable);
+
+        mPostManager.postToUpdateThread(mUpdateRunnable);
+    }
 }
