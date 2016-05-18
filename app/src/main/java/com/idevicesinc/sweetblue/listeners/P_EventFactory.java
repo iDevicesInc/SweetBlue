@@ -3,6 +3,8 @@ package com.idevicesinc.sweetblue.listeners;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
+import com.idevicesinc.sweetblue.P_DeviceStateTracker;
+import com.idevicesinc.sweetblue.utils.State;
 
 import java.util.UUID;
 
@@ -37,6 +39,11 @@ public class P_EventFactory
     public static DiscoveryListener.DiscoveryEvent newDiscoveryEvent(BleDevice device, DiscoveryListener.LifeCycle lifeCycle)
     {
         return new DiscoveryListener.DiscoveryEvent(device, lifeCycle);
+    }
+
+    public static BondListener.BondEvent newBondEvent(BleDevice device, BondListener.Status status, int failReason, State.ChangeIntent intent)
+    {
+        return new BondListener.BondEvent(device, status, failReason, intent);
     }
 
 }

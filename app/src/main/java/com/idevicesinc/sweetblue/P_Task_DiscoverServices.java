@@ -6,9 +6,6 @@ import java.lang.reflect.Method;
 class P_Task_DiscoverServices extends P_Task_RequiresConnection
 {
 
-    private Method mRefreshMethod = null;
-
-
     public P_Task_DiscoverServices(BleDevice device, IStateListener listener)
     {
         super(device, listener);
@@ -41,10 +38,7 @@ class P_Task_DiscoverServices extends P_Task_RequiresConnection
     {
         try
         {
-            if (mRefreshMethod == null)
-            {
-                mRefreshMethod = getDevice().getNativeGatt().getClass().getMethod("refresh", (Class[]) null);
-            }
+            Method mRefreshMethod = getDevice().getNativeGatt().getClass().getMethod("refresh", (Class[]) null);
             mRefreshMethod.invoke(getDevice().getNativeGatt(), (Object[]) null);
         }
         catch (Exception e)

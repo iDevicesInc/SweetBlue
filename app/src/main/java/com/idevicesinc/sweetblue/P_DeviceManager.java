@@ -5,6 +5,8 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 
 class P_DeviceManager
@@ -12,6 +14,7 @@ class P_DeviceManager
 
     private final HashMap<String, BleDevice> mMap = new HashMap<String, BleDevice>();
     private final ArrayList<BleDevice> mList = new ArrayList<BleDevice>();
+    private final Set<String> mConnectedList = new HashSet<>(0);
     private final BleManager mManager;
 
     private boolean mUpdating = false;

@@ -1,9 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Utils_String;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -48,17 +46,14 @@ public class P_TaskManager
         {
             // Check to see if the current task is interruptible, and if so, check the next item in the queue,
             // which will be the highest priority item in the queue. If it's not higher than the current task,
-            // we leave the current task alone. Otherwise, null out the current task, then interrupt it. Then,
-            // the higher priority task will get polled on the next update cycle.
+            // we leave the current task alone. Otherwise, interrupt it. Then, the higher priority task will
+            // get polled on the next update cycle.
             if (!isCurrentNull() && mCurrent.isInterruptible() && hasTasksInQueue)
             {
                 P_Task task = mTaskQueue.peek();
                 if (task.hasHigherPriorityThan(mCurrent))
                 {
-//                    P_Task tempTask = mCurrent;
-//                    mCurrent = null;
                     interruptTask(mCurrent);
-                    //tempTask.interrupt();
                 }
             }
         }

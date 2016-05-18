@@ -15,6 +15,8 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 public class P_BleReceiverManager
 {
 
+    private static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
+
     private final BleManager mManager;
     private int mNativeState;
     private BleReceiver mReceiver;
@@ -38,6 +40,7 @@ public class P_BleReceiverManager
 
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         filter.addAction(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 
         return filter;
@@ -61,7 +64,42 @@ public class P_BleReceiverManager
             {
                 onClassicDiscoveryFinished();
             }
+            else if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED))
+            {
+                onNativeBondStateChanged(intent);
+            }
         }
+    }
+
+    private void onNativeBondStateChanged(Intent intent)
+    {
+        final int newState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
+        final int previousState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
+        final BluetoothDevice native_device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        final BleDevice device = mManager.getDevice(native_device.getAddress());
+
+        int failReason;
+
+        if (newState == BluetoothDevice.BOND_NONE)
+        {
+            failReason = intent.getIntExtra(BluetoothDevice_EXTRA_REASON, BluetoothDevice.ERROR);
+
+            if (failReason != BleStatuses.BOND_SUCCESS)
+            {
+                mManager.getLogger().w(mManager.getLogger().gattUnbondReason(failReason));
+            }
+        }
+        else
+        {
+            failReason = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
+        }
+
+        if (!device.isNull())
+        {
+            // Forward the state change to the native wrapper
+            device.mNativeWrapper.onBondStateChanged(previousState, newState, failReason);
+        }
+
     }
 
     private void onDeviceFound_classic(Intent intent)

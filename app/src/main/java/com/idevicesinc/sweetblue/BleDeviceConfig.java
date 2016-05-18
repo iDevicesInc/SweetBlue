@@ -14,6 +14,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
      */
     public Boolean useGattRefresh								= false;
 
+    /**
+     * The number of times SweetBlue will retry connecting to a device, if it fails. Default is <code>3</code>.
+     */
+    public int reconnectionTries                                = 3;
+
+    public boolean useLeTransportForBonding                     = false;
+
 
     @Override protected BleDeviceConfig clone()
     {

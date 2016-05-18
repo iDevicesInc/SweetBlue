@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
+import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
@@ -17,6 +18,7 @@ abstract class P_Task
     private long mLastUpdate;
     private long mTimeExecuting;
     private long mTimeCreated;
+    int mFailReason = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 
 
     public P_Task(BleServer server, IStateListener listener)

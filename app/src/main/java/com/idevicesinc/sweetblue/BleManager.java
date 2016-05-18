@@ -13,6 +13,8 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+
+import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
@@ -51,6 +53,7 @@ public class BleManager
     private P_WakeLockManager mWakeLockManager;
     private P_DeviceManager mDeviceManager;
     DeviceStateListener mDefaultStateListener;
+    BondListener mDefaultBondListener;
     private DiscoveryListener mDiscoveryListener;
     P_ScanManager mScanManager;
     private boolean mForegrounded = false;
@@ -118,6 +121,11 @@ public class BleManager
     public void setDefaultDeviceStateListener(DeviceStateListener listener)
     {
         mDefaultStateListener = listener;
+    }
+
+    public void setDefaultBondListener(BondListener listener)
+    {
+        mDefaultBondListener = listener;
     }
 
     public void setDiscoveryListener(DiscoveryListener listener)
@@ -193,7 +201,7 @@ public class BleManager
 
     public void startScan()
     {
-        startScan_private(Interval.DISABLED, Interval.DISABLED);
+        startScan_private(Interval.INFINITE, Interval.DISABLED);
     }
 
     public void startScan(Interval scanTime)
@@ -208,10 +216,23 @@ public class BleManager
 
     public void stopScan()
     {
-        if (is(SCANNING))
+        if (isAny(SCANNING, SCAN_PAUSED))
         {
             mScanManager.stopScan();
             mTaskManager.succeedTask(P_Task_Scan.class, this);
+        }
+    }
+
+    public BleDevice getDevice(String macAddress)
+    {
+        final BleDevice device = mDeviceManager.get(macAddress);
+        if (device == null)
+        {
+            return BleDevice.NULL;
+        }
+        else
+        {
+            return device;
         }
     }
 
@@ -308,7 +329,7 @@ public class BleManager
 
         //--- DRK > Not sure if queued up messages to library's thread can sneak in a device discovery event
         //---		after user called stopScan(), so just a check to prevent unexpected callbacks to the user.
-        if( false == is(SCANNING) )  return;
+        if( false == isAny(SCANNING, SCAN_PAUSED) )  return;
 
 
         final String macAddress = device_native.getAddress();
@@ -382,7 +403,7 @@ public class BleManager
 
     private void startScan_private(Interval scanTime, Interval pauseTime)
     {
-        if (!is(SCANNING))
+        if (!isAny(SCANNING, SCAN_PAUSED))
         {
             mTaskManager.add(new P_Task_Scan(mTaskManager, null, scanTime, pauseTime));
         }

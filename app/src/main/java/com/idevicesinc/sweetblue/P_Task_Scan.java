@@ -21,7 +21,7 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
         super(manager, listener);
         mScanTime = scanTime;
         mPauseTime = pauseTime;
-        mPeriodicScan = Interval.isEnabled(mScanTime) && Interval.isEnabled(pauseTime);
+        mPeriodicScan = Interval.isEnabled(mScanTime) && Interval.isEnabled(mPauseTime);
     }
 
     @Override public P_TaskPriority getPriority()
@@ -61,7 +61,7 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
     @Override void onInterrupted()
     {
         super.onInterrupted();
-        getManager().mScanManager.stopScanNoStateChange();
+        getManager().mScanManager.pauseScan();
     }
 
     @Override void checkTimeOut(long curTimeMs)
@@ -84,7 +84,7 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
                 {
                     mLastScanUpdate = 0;
                     mTimeScanning = 0;
-                    getManager().mScanManager.stopScanNoStateChange();
+                    getManager().mScanManager.pauseScan();
                     pause();
                 }
             }

@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity
                     mStartScan.setEnabled(false);
                     mStopScan.setEnabled(true);
                 }
-                else if (event.didExit(BleManagerState.SCANNING))
+                else if (event.didExit(BleManagerState.SCANNING) && !event.didEnter(BleManagerState.SCAN_PAUSED))
                 {
                     mStartScan.setEnabled(true);
                     mStopScan.setEnabled(false);

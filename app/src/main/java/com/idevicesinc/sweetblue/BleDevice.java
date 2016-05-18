@@ -6,10 +6,12 @@ import android.bluetooth.BluetoothGatt;
 import android.text.TextUtils;
 
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
+import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
@@ -24,6 +26,7 @@ public class BleDevice extends BleNode
 {
 
     public final static BleDevice NULL = new BleDevice(null, null, null, null, null, true);
+    public final static String NULL_STRING = "NULL";
 
     private final boolean mIsNull;
     private int mRssi;
@@ -40,7 +43,9 @@ public class BleDevice extends BleNode
     private String mName_scanRecord;
     private String mName_device;
     private DeviceConnectionFailListener mConnectionFailListener;
-    private final P_NativeDeviceWrapper mNativeWrapper;
+    final P_NativeDeviceWrapper mNativeWrapper;
+    private P_ReconnectManager mReconnectManager;
+    private BondListener mBondListener;
 
 
     BleDevice(BleManager mgr, BluetoothDevice nativeDevice, BleDeviceOrigin origin, BleDeviceConfig config_nullable, String deviceName, boolean isNull)
@@ -57,12 +62,14 @@ public class BleDevice extends BleNode
             mStateTracker_shortTermReconnect = new P_DeviceStateTracker(this, true);
             stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCONNECTED, true);
             mNativeWrapper = new P_NativeDeviceWrapper(this, nativeDevice);
+            mReconnectManager = new P_ReconnectManager(this);
         }
         else
         {
             mName_device = "NULL";
             mStateTracker = new P_DeviceStateTracker(this, false);
             mNativeWrapper = null;
+            mReconnectManager = null;
             stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
             mStateTracker_shortTermReconnect = null;
         }
@@ -77,6 +84,7 @@ public class BleDevice extends BleNode
 
         mConfig = config == null ? null : config.clone();
 
+        mReconnectManager.setMaxReconnectTries(getConfig().reconnectionTries);
         // TODO - There's more to do here
     }
 
@@ -363,8 +371,15 @@ public class BleDevice extends BleNode
 
     void onConnectionFailed(int gattStatus)
     {
-        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, CONNECTED, false, CONNECTING, false, CONNECTING_OVERALL, false, DISCONNECTED, true);
-        getManager().mTaskManager.failTask(P_Task_Connect.class, this, false);
+        if (mReconnectManager.shouldFail())
+        {
+            stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, CONNECTED, false, CONNECTING, false, CONNECTING_OVERALL, false, DISCONNECTED, true);
+            getManager().mTaskManager.failTask(P_Task_Connect.class, this, false);
+        }
+        else
+        {
+            mReconnectManager.reconnect(gattStatus);
+        }
     }
 
     void onDisconnected()
@@ -387,6 +402,55 @@ public class BleDevice extends BleNode
         getManager().mTaskManager.succeedTask(P_Task_Connect.class, this);
     }
 
+    void onBonding(P_StateTracker.E_Intent intent)
+    {
+        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_NativeDeviceWrapper.RESET_TO_BONDING);
+    }
+
+    void onBond(P_StateTracker.E_Intent intent)
+    {
+        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_NativeDeviceWrapper.RESET_TO_BONDED);
+        postBondEvent(intent, BleStatuses.BOND_SUCCESS, BondListener.Status.SUCCESS);
+    }
+
+    void onBondFailed(P_StateTracker.E_Intent intent, int failReason, BondListener.Status status)
+    {
+        stateTracker().update(intent, failReason, P_NativeDeviceWrapper.RESET_TO_UNBONDED);
+        postBondEvent(intent, failReason, status);
+    }
+
+    void onUnbond(P_StateTracker.E_Intent intent)
+    {
+        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_NativeDeviceWrapper.RESET_TO_UNBONDED);
+        postBondEvent(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BondListener.Status.SUCCESS);
+    }
+
+    private void postBondEvent(P_StateTracker.E_Intent intent, int failReason, BondListener.Status status)
+    {
+        if (mBondListener != null)
+        {
+            final BondListener.BondEvent event = P_EventFactory.newBondEvent(this, status, failReason, intent.convert());
+            getManager().mPostManager.postCallback(new Runnable()
+            {
+                @Override public void run()
+                {
+                    mBondListener.onEvent(event);
+                }
+            });
+        }
+        if (getManager().mDefaultBondListener != null)
+        {
+            final BondListener.BondEvent event = P_EventFactory.newBondEvent(this, status, failReason, intent.convert());
+            getManager().mPostManager.postCallback(new Runnable()
+            {
+                @Override public void run()
+                {
+                    getManager().mDefaultBondListener.onEvent(event);
+                }
+            });
+        }
+    }
+
     DeviceConnectionFailListener getConnectionFailListener()
     {
         return mConnectionFailListener;
@@ -402,11 +466,6 @@ public class BleDevice extends BleNode
         return "DE:CA:FF:C0:FF:EE";
     }
 
-    static String NULL_STRING()
-    {
-        return "NULL";
-    }
-
     public void disconnectWithReason(P_TaskPriority priority, Status bleTurningOff, Timing notApplicable, int gattStatusNotApplicable, int bondFailReasonNotApplicable, ReadWriteEvent readWriteEvent)
     {
         // TODO - Implement this
@@ -416,11 +475,12 @@ public class BleDevice extends BleNode
     {
         if (isNull())
         {
-            return NULL_STRING();
+            return NULL_STRING;
         }
         else
         {
             return Utils_String.concatStrings(getName(), " ", stateTracker().toString());
         }
     }
+
 }

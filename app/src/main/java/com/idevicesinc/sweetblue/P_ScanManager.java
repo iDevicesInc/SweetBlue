@@ -60,7 +60,7 @@ class P_ScanManager
         stopScan_private(true);
     }
 
-    void stopScanNoStateChange()
+    void pauseScan()
     {
         stopScan_private(false);
     }
@@ -86,7 +86,7 @@ class P_ScanManager
         }
     }
 
-    public void stopScan_private(boolean doStateChange)
+    public void stopScan_private(boolean stopping)
     {
         switch (mManager.mConfig.scanApi)
         {
@@ -107,7 +107,7 @@ class P_ScanManager
             case PRE_LOLLIPOP:
                 stopScanPreLollipop();
         }
-        if (doStateChange)
+        if (stopping)
         {
             mManager.getStateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false);
         }
