@@ -314,6 +314,21 @@ public class BleManager
         return newDevice;
     }
 
+    public void clearConnectedDevice(String macAddress)
+    {
+        mDeviceManager.clearConnectedDevice(macAddress);
+    }
+
+    public void clearAllConnectedDevices()
+    {
+        mDeviceManager.clearAllConnectedDevices();
+    }
+
+
+    void deviceConnected(BleDevice device)
+    {
+        mDeviceManager.deviceConnected(device);
+    }
 
     int getStateMask()
     {

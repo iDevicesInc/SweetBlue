@@ -317,7 +317,7 @@ public class BleDevice extends BleNode
     {
         if (!isAny(CONNECTING, CONNECTED, CONNECTING_OVERALL))
         {
-            if (getConfig().bondBeforeConnecting && is(BONDED))
+            if (getConfig().bondBeforeConnecting && !is(BONDED))
             {
                 getManager().mTaskManager.add(new P_Task_Bond(this, null));
             }
@@ -365,6 +365,7 @@ public class BleDevice extends BleNode
     void onConnected()
     {
         stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTED, true, DISCOVERING_SERVICES, true, CONNECTING, false, CONNECTING_OVERALL, false, DISCONNECTED, false);
+        getManager().deviceConnected(this);
         getManager().mTaskManager.succeedTask(P_Task_Connect.class, this);
         getManager().mTaskManager.add(new P_Task_DiscoverServices(this, null));
     }

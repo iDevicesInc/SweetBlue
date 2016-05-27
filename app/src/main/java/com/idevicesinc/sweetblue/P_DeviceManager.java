@@ -135,6 +135,23 @@ class P_DeviceManager
         mUpdating = false;
     }
 
+    void clearConnectedDevice(String macAddress)
+    {
+        if (mConnectedList.remove(macAddress))
+        {
+            mPersistanceManager.storePreviouslyConnectedDevices(mConnectedList);
+        }
+    }
+
+    void clearAllConnectedDevices()
+    {
+        if (mConnectedList.size() > 0)
+        {
+            mConnectedList.clear();
+            mPersistanceManager.storePreviouslyConnectedDevices(mConnectedList);
+        }
+    }
+
     Set<String> previouslyConnectedDevices()
     {
         return mConnectedList;
