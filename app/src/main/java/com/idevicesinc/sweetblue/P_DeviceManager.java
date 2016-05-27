@@ -16,6 +16,7 @@ class P_DeviceManager
     private final ArrayList<BleDevice> mList = new ArrayList<BleDevice>();
     private final Set<String> mConnectedList = new HashSet<>(0);
     private final BleManager mManager;
+    private final P_PersistanceManager mPersistanceManager;
 
     private boolean mUpdating = false;
 
@@ -23,6 +24,8 @@ class P_DeviceManager
     P_DeviceManager(BleManager mgr)
     {
         mManager = mgr;
+        mPersistanceManager = new P_PersistanceManager(mManager);
+        mConnectedList.addAll(mPersistanceManager.getPreviouslyConnectedDevices());
     }
 
     public ArrayList<BleDevice> getList()
@@ -67,6 +70,15 @@ class P_DeviceManager
     public BleDevice get(String macAddress)
     {
         return mMap.get(macAddress);
+    }
+
+    void deviceConnected(BleDevice device)
+    {
+        if (!mConnectedList.contains(device.getMacAddress()))
+        {
+            mConnectedList.add(device.getMacAddress());
+            mPersistanceManager.storePreviouslyConnectedDevices(mConnectedList);
+        }
     }
 
     void add(BleDevice device)
@@ -121,6 +133,11 @@ class P_DeviceManager
         }
 
         mUpdating = false;
+    }
+
+    Set<String> previouslyConnectedDevices()
+    {
+        return mConnectedList;
     }
 
     public BleDevice get(int index)

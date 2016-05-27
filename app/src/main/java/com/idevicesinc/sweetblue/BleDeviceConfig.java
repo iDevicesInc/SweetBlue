@@ -21,6 +21,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
     public boolean useLeTransportForBonding                     = false;
 
+    public boolean bondBeforeConnecting                         = false;
+
 
     @Override protected BleDeviceConfig clone()
     {

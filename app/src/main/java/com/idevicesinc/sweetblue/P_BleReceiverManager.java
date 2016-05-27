@@ -88,11 +88,10 @@ public class P_BleReceiverManager
 
     private void onNativeDeviceDisconnected(Intent intent)
     {
-        P_Task curTask = mManager.mTaskManager.getCurrent();
-        if (!(curTask instanceof P_Task_Disconnect))
+        final BluetoothDevice native_device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        final BleDevice device = mManager.getDevice(native_device.getAddress());
+        if (!mManager.mTaskManager.isCurrent(P_Task_Disconnect.class, device) && !device.isAny(BleDeviceState.CONNECTING_OVERALL, BleDeviceState.DISCONNECTED))
         {
-            final BluetoothDevice native_device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            final BleDevice device = mManager.getDevice(native_device.getAddress());
             device.onDisconnected();
         }
     }
@@ -123,7 +122,7 @@ public class P_BleReceiverManager
         if (!device.isNull())
         {
             // Forward the state change to the native wrapper
-            device.mNativeWrapper.onBondStateChanged(previousState, newState, failReason);
+            device.mGattManager.onBondStateChanged(previousState, newState, failReason);
         }
 
     }

@@ -11,17 +11,20 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
+import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 
-class P_NativeDeviceWrapper
+class P_GattManager
 {
 
     final static Object[] RESET_TO_UNBONDED = new Object[]{BONDED, false, BONDING, false, UNBONDED, true};
     final static Object[] RESET_TO_BONDING = new Object[]{BONDED, false, BONDING, true, UNBONDED, false};
     final static Object[] RESET_TO_BONDED = new Object[]{BONDED, true, BONDING, false, UNBONDED, false};
+
 
     private final BleDevice mDevice;
     private final BluetoothDevice mNativeDevice;
@@ -29,16 +32,19 @@ class P_NativeDeviceWrapper
     private BluetoothGatt mGatt;
 
 
-    P_NativeDeviceWrapper(BleDevice device, BluetoothDevice nativeDevice)
+    P_GattManager(BleDevice device, BluetoothDevice nativeDevice)
     {
         mDevice = device;
         mNativeDevice = nativeDevice;
         mGattCallbacks = new GattCallbacks();
     }
 
-    public void discoverServices()
+    public void discoverServices(final P_Task_DiscoverServices task)
     {
-        mGatt.discoverServices();
+        if (!mGatt.discoverServices())
+        {
+            task.discoverServicesImmediatelyFailed();
+        }
     }
 
     public BluetoothGatt getGatt()
@@ -61,6 +67,7 @@ class P_NativeDeviceWrapper
 
         @Override public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
         {
+            getManager().getLogger().e(Utils_String.makeString("Connection state change. Status: ", status, " Newstate: ", newState));
             updateGattInstance(gatt);
             switch (newState)
             {
@@ -98,6 +105,8 @@ class P_NativeDeviceWrapper
                         onDeviceDisconnected(status);
                     }
                     break;
+                default:
+                    Log.e("NativeBluetoothState", Utils_String.makeString("Got state ", newState, " with a status of ", status, ", and it was unhandled!"));
             }
 
         }
@@ -112,7 +121,7 @@ class P_NativeDeviceWrapper
             else
             {
                 getManager().mTaskManager.failTask(P_Task_DiscoverServices.class, mDevice, false);
-                onConnectionFail(status);
+                //onConnectionFail(status);
             }
         }
 
@@ -162,11 +171,21 @@ class P_NativeDeviceWrapper
 
     void onDeviceDisconnected()
     {
+        closeGatt();
         mDevice.onDisconnected();
+    }
+
+    private void closeGatt()
+    {
+        if (mGatt != null)
+        {
+            mGatt.close();
+        }
     }
 
     void onDeviceDisconnected(int status)
     {
+        closeGatt();
         mDevice.onDisconnected(status);
     }
 
@@ -175,6 +194,23 @@ class P_NativeDeviceWrapper
         if (mGatt != gatt)
         {
             mGatt = gatt;
+        }
+    }
+
+    void checkCurrentBondState()
+    {
+        int curState = mNativeDevice.getBondState();
+        switch (curState)
+        {
+            case BluetoothDevice.BOND_NONE:
+                mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, RESET_TO_UNBONDED);
+                break;
+            case BluetoothDevice.BOND_BONDING:
+                mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, RESET_TO_BONDING);
+                break;
+            case BluetoothDevice.BOND_BONDED:
+                mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, RESET_TO_BONDED);
+                break;
         }
     }
 
@@ -249,11 +285,20 @@ class P_NativeDeviceWrapper
 
     void connect()
     {
-        mGatt = mNativeDevice.connectGatt(getManager().getAppContext(), false, mGattCallbacks);
+        mNativeDevice.connectGatt(getManager().getAppContext(), false, mGattCallbacks);
+    }
+
+    void disconnect()
+    {
+        if (mGatt != null)
+        {
+            mGatt.disconnect();
+        }
     }
 
     private void onConnectionFail(int gattStatus)
     {
+        closeGatt();
         mDevice.onConnectionFailed(gattStatus);
         // TODO - Implement connection fail listener stuff
     }

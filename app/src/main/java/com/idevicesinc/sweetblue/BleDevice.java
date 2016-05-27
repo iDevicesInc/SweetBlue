@@ -3,7 +3,6 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.text.TextUtils;
 
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.listeners.BondListener;
@@ -41,9 +40,9 @@ public class BleDevice extends BleNode
     private BleScanInfo mScanInfo;
     private String mName_native;
     private String mName_scanRecord;
-    private String mName_device;
+    String mName_device;
     private DeviceConnectionFailListener mConnectionFailListener;
-    final P_NativeDeviceWrapper mNativeWrapper;
+    final P_GattManager mGattManager;
     private P_ReconnectManager mReconnectManager;
     private BondListener mBondListener;
 
@@ -61,14 +60,16 @@ public class BleDevice extends BleNode
             mStateTracker = new P_DeviceStateTracker(this, false);
             mStateTracker_shortTermReconnect = new P_DeviceStateTracker(this, true);
             stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCONNECTED, true);
-            mNativeWrapper = new P_NativeDeviceWrapper(this, nativeDevice);
+            mGattManager = new P_GattManager(this, nativeDevice);
+            mGattManager.checkCurrentBondState();
             mReconnectManager = new P_ReconnectManager(this);
+            mReconnectManager.setMaxReconnectTries(getConfig().reconnectionTries);
         }
         else
         {
             mName_device = "NULL";
             mStateTracker = new P_DeviceStateTracker(this, false);
-            mNativeWrapper = null;
+            mGattManager = null;
             mReconnectManager = null;
             stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
             mStateTracker_shortTermReconnect = null;
@@ -151,17 +152,17 @@ public class BleDevice extends BleNode
 
     public BluetoothDevice getNative()
     {
-        return mNativeWrapper.getNativeDevice();
+        return mGattManager.getNativeDevice();
     }
 
     public BluetoothGatt getNativeGatt()
     {
-        return mNativeWrapper.getGatt();
+        return mGattManager.getGatt();
     }
 
     @Override public String getMacAddress()
     {
-        return mNativeWrapper.getMacAddress();
+        return mGattManager.getMacAddress();
     }
 
     void setNameFromNative(String name)
@@ -316,6 +317,10 @@ public class BleDevice extends BleNode
     {
         if (!isAny(CONNECTING, CONNECTED, CONNECTING_OVERALL))
         {
+            if (getConfig().bondBeforeConnecting && is(BONDED))
+            {
+                getManager().mTaskManager.add(new P_Task_Bond(this, null));
+            }
             stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTING_OVERALL, true);
             getManager().mTaskManager.add(new P_Task_Connect(this, null));
         }
@@ -329,7 +334,7 @@ public class BleDevice extends BleNode
 
     void doNativeConnect()
     {
-        mNativeWrapper.connect();
+        mGattManager.connect();
     }
 
     public void disconnect()
@@ -390,6 +395,12 @@ public class BleDevice extends BleNode
 
     void onDisconnected(int gattStatus)
     {
+        if (getManager().mTaskManager.isCurrent(P_Task_Connect.class, this))
+        {
+            onConnectionFailed(gattStatus);
+            return;
+        }
+
         stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, DISCONNECTED, true, ADVERTISING, true, DISCOVERED, true);
     }
 
@@ -404,24 +415,24 @@ public class BleDevice extends BleNode
 
     void onBonding(P_StateTracker.E_Intent intent)
     {
-        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_NativeDeviceWrapper.RESET_TO_BONDING);
+        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_GattManager.RESET_TO_BONDING);
     }
 
     void onBond(P_StateTracker.E_Intent intent)
     {
-        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_NativeDeviceWrapper.RESET_TO_BONDED);
+        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_GattManager.RESET_TO_BONDED);
         postBondEvent(intent, BleStatuses.BOND_SUCCESS, BondListener.Status.SUCCESS);
     }
 
     void onBondFailed(P_StateTracker.E_Intent intent, int failReason, BondListener.Status status)
     {
-        stateTracker().update(intent, failReason, P_NativeDeviceWrapper.RESET_TO_UNBONDED);
+        stateTracker().update(intent, failReason, P_GattManager.RESET_TO_UNBONDED);
         postBondEvent(intent, failReason, status);
     }
 
     void onUnbond(P_StateTracker.E_Intent intent)
     {
-        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_NativeDeviceWrapper.RESET_TO_UNBONDED);
+        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_GattManager.RESET_TO_UNBONDED);
         postBondEvent(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BondListener.Status.SUCCESS);
     }
 

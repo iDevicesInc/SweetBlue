@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.scanApi = BleScanAPI.POST_LOLLIPOP;
+        config.bondBeforeConnecting = true;
         config.postCallbacksToUIThread = true;
         mgr = BleManager.get(this, config);
         mgr.setManagerStateListener(new ManagerStateListener()

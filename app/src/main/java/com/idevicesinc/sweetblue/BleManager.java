@@ -25,6 +25,10 @@ import com.idevicesinc.sweetblue.P_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import static com.idevicesinc.sweetblue.BleManagerState.*;;
 
 
@@ -261,6 +265,54 @@ public class BleManager
         sInstance = null;
     }
 
+    public Set<BleDevice> getPreviouslyConnectedDevices()
+    {
+        Set<String> devList = mDeviceManager.previouslyConnectedDevices();
+        Set<BleDevice> devices = new HashSet<>(devList.size());
+        BleDevice tmpDevice;
+        for (String mac : devList)
+        {
+            tmpDevice = newDevice(mac);
+            if (!tmpDevice.isNull())
+            {
+                devices.add(tmpDevice);
+            }
+        }
+        return devices;
+    }
+
+    public BleDevice newDevice(String macAddress)
+    {
+        return newDevice(macAddress, null);
+    }
+
+    public BleDevice newDevice(String macAddress, BleDeviceConfig config)
+    {
+        return newDevice(macAddress, null, config);
+    }
+
+    public BleDevice newDevice(String macAddress, String deviceName, BleDeviceConfig config)
+    {
+        final BleDevice existingDevice = getDevice(macAddress);
+        if (!existingDevice.isNull())
+        {
+            if (config != null)
+            {
+                existingDevice.setConfig(config);
+            }
+            return existingDevice;
+        }
+
+        final BluetoothDevice nativeDevice = getNativeAdapter().getRemoteDevice(macAddress);
+        if (nativeDevice == null)
+        {
+            return BleDevice.NULL;
+        }
+
+        final BleDevice newDevice = new BleDevice(this, nativeDevice, BleDeviceOrigin.EXPLICIT, config, deviceName, false);
+        postDeviceDiscovery(newDevice, DiscoveryListener.LifeCycle.DISCOVERED);
+        return newDevice;
+    }
 
 
     int getStateMask()
@@ -385,10 +437,14 @@ public class BleManager
             device.setNameFromNative(native_name);
         }
 
+        postDeviceDiscovery(device, cycle);
+    }
 
+    private void postDeviceDiscovery(BleDevice device, DiscoveryListener.LifeCycle lifecycle)
+    {
         if (mDiscoveryListener != null)
         {
-            final DiscoveryListener.DiscoveryEvent event = P_EventFactory.newDiscoveryEvent(device, cycle);
+            final DiscoveryListener.DiscoveryEvent event = P_EventFactory.newDiscoveryEvent(device, lifecycle);
             mPostManager.postCallback(new Runnable()
             {
                 @Override public void run()
@@ -398,8 +454,6 @@ public class BleManager
             });
         }
     }
-
-
 
     private void startScan_private(Interval scanTime, Interval pauseTime)
     {

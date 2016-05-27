@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.BleStatuses;
+
 import java.lang.reflect.Method;
 
 class P_Task_DiscoverServices extends P_Task_RequiresConnection
@@ -25,13 +27,20 @@ class P_Task_DiscoverServices extends P_Task_RequiresConnection
             refresh();
         }
 
-        if (!getDevice().getNativeGatt().discoverServices())
-        {
-            failImmediately();
+        getDevice().mGattManager.discoverServices(this);
 
-            // TODO - Throw error to errorlistener
-        }
+    }
 
+    @Override void onFail(boolean immediate)
+    {
+        super.onFail(immediate);
+        getDevice().onConnectionFailed(BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+    }
+
+    void discoverServicesImmediatelyFailed()
+    {
+        failImmediately();
+        // TODO - Throw error to errorlistener
     }
 
     private void refresh()

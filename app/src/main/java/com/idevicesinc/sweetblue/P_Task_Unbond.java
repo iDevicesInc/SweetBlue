@@ -1,8 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.bluetooth.BluetoothDevice;
-
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 
 class P_Task_Unbond extends P_Task_RequiresBleOn
@@ -33,11 +31,11 @@ class P_Task_Unbond extends P_Task_RequiresBleOn
 
     @Override public void execute()
     {
-        if (!getDevice().mNativeWrapper.isBonded())
+        if (!getDevice().mGattManager.isBonded())
         {
             getManager().getLogger().w("Device is not bonded!");
         }
-        else if (getDevice().mNativeWrapper.isBonding())
+        else if (getDevice().mGattManager.isBonding())
         {
             if (!cancelBonding())
             {
