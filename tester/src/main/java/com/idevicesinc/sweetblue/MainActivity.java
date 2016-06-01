@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity
     private Button mStartScan;
     private Button mStopScan;
     private ScanAdaptor mAdaptor;
-    private ArrayList<BleDevice> mDevices;
+    //private ArrayList<BleDevice> mDevices;
 
 
     @Override
@@ -36,15 +36,22 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        BleManagerConfig config = new BleManagerConfig();
+        config.loggingEnabled = true;
+        config.scanApi = BleScanAPI.POST_LOLLIPOP;
+        config.bondBeforeConnecting = true;
+        config.postCallbacksToUIThread = true;
+        mgr = BleManager.get(this, config);
+
         mListView = (ListView) findViewById(R.id.listView);
-        mDevices = new ArrayList<>(0);
-        mAdaptor = new ScanAdaptor(this, mDevices);
+        //mDevices = new ArrayList<>(0);
+        mAdaptor = new ScanAdaptor(this, mgr.getDeviceList());
         mListView.setAdapter(mAdaptor);
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                BleDevice device = mDevices.get(position);
+                BleDevice device = mgr.getDeviceList().get(position);
                 device.setStateListener(new DeviceStateListener()
                 {
                     @Override public void onEvent(StateEvent event)
@@ -60,7 +67,7 @@ public class MainActivity extends AppCompatActivity
         {
             @Override public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
             {
-                BleDevice device = mDevices.get(position);
+                BleDevice device = mgr.getDeviceList().get(position);
                 if (device.is(BleDeviceState.CONNECTED))
                 {
                     device.disconnect();
@@ -87,12 +94,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        BleManagerConfig config = new BleManagerConfig();
-        config.loggingEnabled = true;
-        config.scanApi = BleScanAPI.POST_LOLLIPOP;
-        config.bondBeforeConnecting = true;
-        config.postCallbacksToUIThread = true;
-        mgr = BleManager.get(this, config);
+
         mgr.setManagerStateListener(new ManagerStateListener()
         {
             @Override public void onEvent(StateEvent event)
@@ -119,7 +121,7 @@ public class MainActivity extends AppCompatActivity
             {
                 if (e.was(LifeCycle.DISCOVERED))
                 {
-                    mDevices.add(e.device());
+                    //mDevices.add(e.device());
                     mAdaptor.notifyDataSetChanged();
                 }
                 else if (e.was(LifeCycle.REDISCOVERED))

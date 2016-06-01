@@ -33,7 +33,7 @@ public class P_TaskManager
         if (hasTasksInQueue && isCurrentNull())
         {
             mCurrent = mTaskQueue.poll();
-            if(mCurrent.isExecutable())
+            if (mCurrent.isExecutable())
             {
                 mCurrent.executeTask();
             }
@@ -61,7 +61,11 @@ public class P_TaskManager
         {
             mCurrent.updateTask(curTimeMs);
             // Checks if this task should be timed out. If it should, the task then calls timeOut(P_Task).
-            mCurrent.checkTimeOut(curTimeMs);
+            // Check if it's null, as it may have failed out, or canceled in the updateTask method.
+            if (mCurrent != null)
+            {
+                mCurrent.checkTimeOut(curTimeMs);
+            }
         }
         mUpdateCount++;
         return hasTasksInQueue || !isCurrentNull();
@@ -440,6 +444,18 @@ public class P_TaskManager
     public P_Task getCurrent()
     {
         return mCurrent != null ? mCurrent : P_Task.NULL;
+    }
+
+    public <T extends P_Task> T getCurrent(Class<? extends P_Task> taskClass, BleDevice device)
+    {
+        if (mCurrent.getClass().equals(taskClass) && mCurrent.getDevice().equals(device))
+        {
+            return (T) mCurrent;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     void print()

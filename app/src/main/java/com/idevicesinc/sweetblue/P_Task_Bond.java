@@ -4,6 +4,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 
 import com.idevicesinc.sweetblue.compat.K_Util;
+import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
@@ -50,6 +51,14 @@ public class P_Task_Bond extends P_Task_RequiresBleOn
                 failImmediately();
                 getManager().getLogger().w("Bond failed immediately!");
             }
+        }
+    }
+
+    @Override public void update(long curTimeMs)
+    {
+        if (timeExecuting() > 10000) {
+            getDevice().onBondFailed(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.BOND_FAIL_REASON_NOT_AVAILABLE, BondListener.Status.FAILED_EVENTUALLY);
+            fail();
         }
     }
 

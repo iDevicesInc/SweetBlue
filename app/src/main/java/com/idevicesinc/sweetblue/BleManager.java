@@ -26,6 +26,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -322,6 +323,11 @@ public class BleManager
     public void clearAllConnectedDevices()
     {
         mDeviceManager.clearAllConnectedDevices();
+    }
+
+    public ArrayList<BleDevice> getDeviceList()
+    {
+        return mDeviceManager.getList();
     }
 
 

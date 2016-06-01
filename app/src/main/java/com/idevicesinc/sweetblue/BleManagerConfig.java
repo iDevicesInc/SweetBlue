@@ -88,7 +88,7 @@ public class BleManagerConfig extends BleDeviceConfig
             mWhiteList.add(uuid);
         }
 
-        public DefaultScanFilter(Collection whitelist)
+        public DefaultScanFilter(Collection<UUID> whitelist)
         {
             mWhiteList = new ArrayList<>(whitelist);
         }

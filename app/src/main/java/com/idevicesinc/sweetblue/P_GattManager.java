@@ -6,14 +6,20 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.util.Log;
 
+import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
+import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+
+import java.util.List;
+import java.util.UUID;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
@@ -60,6 +66,22 @@ class P_GattManager
     public String getMacAddress()
     {
         return mNativeDevice.getAddress();
+    }
+
+    public void read(UUID charUuid) {
+        BluetoothGattCharacteristic bchar = null;
+        List<BluetoothGattService> services = mGatt.getServices();
+        for (BluetoothGattService service : services) {
+            bchar = service.getCharacteristic(charUuid);
+            if (bchar != null)
+            {
+                break;
+            }
+        }
+        if (bchar != null)
+        {
+            mGatt.readCharacteristic(bchar);
+        }
     }
 
     private class GattCallbacks extends BluetoothGattCallback
@@ -179,6 +201,7 @@ class P_GattManager
     {
         if (mGatt != null)
         {
+            mGatt.disconnect();
             mGatt.close();
         }
     }
@@ -285,7 +308,14 @@ class P_GattManager
 
     void connect()
     {
-        mNativeDevice.connectGatt(getManager().getAppContext(), false, mGattCallbacks);
+        if (Utils.isMarshmallow())
+        {
+            M_Util.connect(mNativeDevice, getManager().getAppContext(), mGattCallbacks);
+        }
+        else
+        {
+            mNativeDevice.connectGatt(getManager().getAppContext(), false, mGattCallbacks);
+        }
     }
 
     void disconnect()

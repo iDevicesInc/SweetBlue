@@ -18,6 +18,8 @@ import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
+import java.util.UUID;
+
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 
@@ -315,7 +317,7 @@ public class BleDevice extends BleNode
 
     public void connect()
     {
-        if (!isAny(CONNECTING, CONNECTED, CONNECTING_OVERALL))
+        if (!isAny(CONNECTING, CONNECTED, CONNECTING_OVERALL) || isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM))
         {
             if (getConfig().bondBeforeConnecting && !is(BONDED))
             {
@@ -330,11 +332,6 @@ public class BleDevice extends BleNode
     {
         mConnectionFailListener = failListener;
         connect();
-    }
-
-    void doNativeConnect()
-    {
-        mGattManager.connect();
     }
 
     public void disconnect()
@@ -360,6 +357,17 @@ public class BleDevice extends BleNode
         mNullReadWriteEvent = ReadWriteEvent.NULL(this);
 
         return mNullReadWriteEvent;
+    }
+
+    public void read(UUID charUuid, ReadWriteListener listener)
+    {
+        // TODO
+    }
+
+
+    void doNativeConnect()
+    {
+        mGattManager.connect();
     }
 
     void onConnected()
@@ -398,6 +406,7 @@ public class BleDevice extends BleNode
     {
         if (getManager().mTaskManager.isCurrent(P_Task_Connect.class, this))
         {
+            getManager().mTaskManager.failTask(P_Task_Connect.class, this, false);
             onConnectionFailed(gattStatus);
             return;
         }
