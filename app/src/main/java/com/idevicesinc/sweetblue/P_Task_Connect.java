@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.compat.M_Util;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 import android.bluetooth.BluetoothGatt;
 
@@ -51,8 +53,15 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			final boolean useAutoConnect = getDevice().shouldUseAutoConnect();
 			
 			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
-			
-			m_gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
+
+			if (Utils.isMarshmallow())
+			{
+				m_gatt = M_Util.connect(getDevice().getNative(), getManager().getApplicationContext(), getDevice().getListeners());
+			}
+			else
+			{
+				m_gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
+			}
 			
 			if( m_gatt == null )
 			{

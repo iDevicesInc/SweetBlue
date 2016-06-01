@@ -4,7 +4,11 @@ package com.idevicesinc.sweetblue.compat;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 import android.os.Build;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -34,6 +38,11 @@ public class M_Util
         final ScanSettings scanSettings = builder.build();
 
         L_Util.startScan(mgr, scanSettings, listener);
+    }
+
+    public static BluetoothGatt connect(BluetoothDevice device, Context context, BluetoothGattCallback callback)
+    {
+        return device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE);
     }
 
 }
