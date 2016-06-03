@@ -362,6 +362,32 @@ public class BleDevice extends BleNode
     public void read(UUID charUuid, ReadWriteListener listener)
     {
         // TODO
+        read(null, charUuid, listener);
+    }
+
+    public void read(UUID serviceUuid, UUID charUuid, ReadWriteListener listener)
+    {
+        getManager().mTaskManager.add(new P_Task_Read(this, null, serviceUuid, charUuid, listener));
+    }
+
+    public void enableNotify(UUID serviceUuid, UUID charUuid, ReadWriteListener listener)
+    {
+        getManager().mTaskManager.add(new P_Task_ToggleNotify(this, null, serviceUuid, charUuid, true, listener));
+    }
+
+    public void enableNotify(UUID charUuid, ReadWriteListener listener)
+    {
+        enableNotify(null, charUuid, listener);
+    }
+
+    public void disableNotify(UUID serviceUuid, UUID charUuid, ReadWriteListener listener)
+    {
+        getManager().mTaskManager.add(new P_Task_ToggleNotify(this, null, serviceUuid, charUuid, false, listener));
+    }
+
+    public void disableNotify(UUID charUuid, ReadWriteListener listener)
+    {
+        disableNotify(null, charUuid, listener);
     }
 
 

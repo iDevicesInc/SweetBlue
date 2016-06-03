@@ -63,8 +63,6 @@ abstract class P_Task
     }
 
 
-    public abstract P_TaskPriority getPriority();
-
     public abstract void execute();
 
     public void update(long curTimeMs)
@@ -316,6 +314,8 @@ abstract class P_Task
         String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
         return Utils_String.concatStrings(name, "(", mState.name(), deviceEntry, addition, ")");
     }
+
+    public abstract P_TaskPriority getPriority();
 
     interface IStateListener
     {

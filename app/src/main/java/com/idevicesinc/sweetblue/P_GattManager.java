@@ -8,15 +8,18 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
+import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.List;
 import java.util.UUID;
@@ -68,20 +71,102 @@ class P_GattManager
         return mNativeDevice.getAddress();
     }
 
-    public void read(UUID charUuid) {
+    public boolean read(UUID serviceUuid, UUID charUuid)
+    {
+        BluetoothGattCharacteristic bchar = getCharacteristic(serviceUuid, charUuid);
+        if (bchar != null)
+        {
+            mGatt.readCharacteristic(bchar);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public boolean write(UUID serviceUuid, UUID charUuid)
+    {
+        BluetoothGattCharacteristic bchar = getCharacteristic(serviceUuid, charUuid);
+        if (bchar != null)
+        {
+            mGatt.writeCharacteristic(bchar);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public boolean enableNotify(UUID serviceUuid, UUID charUuid, boolean enable)
+    {
+        BluetoothGattCharacteristic bchar = getCharacteristic(serviceUuid, charUuid);
+        if (bchar != null)
+        {
+            boolean success;
+            success = mGatt.setCharacteristicNotification(bchar, enable);
+            if (!success)
+            {
+                return false;
+            }
+            BluetoothGattDescriptor desc = bchar.getDescriptor(Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID);
+            if (desc == null)
+            {
+                return false;
+            }
+            byte[] writeValue;
+            if ((bchar.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0x0)
+            {
+                writeValue = enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
+            }
+            else
+            {
+                writeValue = enable ? BluetoothGattDescriptor.ENABLE_INDICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
+            }
+            desc.setValue(writeValue);
+            mGatt.writeDescriptor(desc);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private BluetoothGattService getService(UUID serviceUuid)
+    {
+        return mGatt.getService(serviceUuid);
+    }
+
+    private BluetoothGattCharacteristic getCharacteristic(UUID charUuid)
+    {
         BluetoothGattCharacteristic bchar = null;
         List<BluetoothGattService> services = mGatt.getServices();
-        for (BluetoothGattService service : services) {
+        for (BluetoothGattService service : services)
+        {
             bchar = service.getCharacteristic(charUuid);
             if (bchar != null)
             {
                 break;
             }
         }
-        if (bchar != null)
+        return bchar;
+    }
+
+    private BluetoothGattCharacteristic getCharacteristic(UUID serviceUuid, UUID charUuid)
+    {
+        if (serviceUuid == null)
         {
-            mGatt.readCharacteristic(bchar);
+            return getCharacteristic(charUuid);
         }
+        BluetoothGattService service = getService(serviceUuid);
+        BluetoothGattCharacteristic bchar = null;
+        if (service != null)
+        {
+            bchar = service.getCharacteristic(charUuid);
+        }
+        return bchar;
     }
 
     private class GattCallbacks extends BluetoothGattCallback
@@ -149,10 +234,29 @@ class P_GattManager
 
         @Override public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
         {
+            P_Task_Read read = getManager().mTaskManager.getCurrent(P_Task_Read.class, mDevice);
+            if (read != null)
+            {
+                final byte[] val = characteristic.getValue() == null ? null : characteristic.getValue().clone();
+                ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, characteristic.getService().getUuid(), characteristic.getUuid(),
+                        ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID, ReadWriteListener.Type.READ, ReadWriteListener.Target.CHARACTERISTIC, val,
+                        ReadWriteListener.Status.SUCCESS, status, 0, 0, true);
+                read.onRead(event);
+                // TODO - Also post the read event to the "catch-all" listener stored in BleManager
+            }
         }
 
         @Override public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
         {
+            P_Task_Write write = getManager().mTaskManager.getCurrent(P_Task_Write.class, mDevice);
+            if (write != null)
+            {
+                ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, characteristic.getService().getUuid(), characteristic.getUuid(),
+                        ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID, ReadWriteListener.Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC, write.getValue(),
+                        ReadWriteListener.Status.SUCCESS, status, 0, 0, true);
+                write.onWrite(event);
+                // TODO - Also post the write event to the "catch-all" listener stored in BleManager
+            }
         }
 
         // Notifications/Indications
@@ -174,6 +278,17 @@ class P_GattManager
 
         @Override public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
         {
+            P_Task_ToggleNotify notify = getManager().mTaskManager.getCurrent(P_Task_ToggleNotify.class, mDevice);
+            if (notify != null)
+            {
+                ReadWriteListener.Type type = notify.enabling() ? ReadWriteListener.Type.ENABLING_NOTIFICATION : ReadWriteListener.Type.DISABLING_NOTIFICATION;
+                ReadWriteListener.Status rwStatus = Utils.isSuccess(status) ? ReadWriteListener.Status.SUCCESS : ReadWriteListener.Status.FAILED_TO_TOGGLE_NOTIFICATION;
+                ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(),
+                        ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID, type, ReadWriteListener.Target.DESCRIPTOR, new byte[0],
+                        rwStatus, status, 0, 0, true);
+                notify.onToggleNotifyResult(event);
+                // TODO - Also post the notify result event to the "catch-all" listener stored in BleManager
+            }
         }
 
         @Override public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
