@@ -9,8 +9,6 @@ public final class DefaultBluetoothEnablerController extends BluetoothEnablerCon
 {
     protected static BluetoothEnablerConfig mConfig;
 
-    private static Semaphore mSemaphore;
-
     public DefaultBluetoothEnablerController(final BluetoothEnablerConfig config)
     {
         super();
@@ -93,7 +91,7 @@ public final class DefaultBluetoothEnablerController extends BluetoothEnablerCon
         }
         else if(event.isFor(BluetoothEnabler.BluetoothEnablerState.FINALIZE))
         {
-            mSemaphore.release();
+
         }
 
         return BluetoothEnabler.Please.doNext();
@@ -105,11 +103,6 @@ public final class DefaultBluetoothEnablerController extends BluetoothEnablerCon
         {
             mConfig.initStrings(context);
         }
-    }
-
-    static void setSemaphore(Semaphore semaphore)
-    {
-        mSemaphore = semaphore;
     }
 
     public static class Please extends BluetoothEnabler.Please
