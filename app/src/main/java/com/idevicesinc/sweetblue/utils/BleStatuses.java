@@ -26,6 +26,8 @@ public class BleStatuses
      */
     public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 
+    public static final int GATT_CONNECT_TIMEOUT                        = 8771;
+
     /**
      * Used on {@link BleDevice.BondListener.BondEvent#failReason()} when {@link BleDevice.BondListener.BondEvent#status()}
      * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.

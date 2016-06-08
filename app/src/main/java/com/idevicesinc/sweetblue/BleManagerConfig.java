@@ -58,13 +58,13 @@ public class BleManagerConfig extends BleDeviceConfig
 
     /**
      * Default sorter class for sorting the list of devices in {@link BleManager}. This sorts by
-     * {@link BleDevice#getName_debug()}.
+     * {@link BleDevice#getName()}.
      */
     public static class DeviceNameComparator implements Comparator<BleDevice> {
 
         @Override public int compare(BleDevice lhs, BleDevice rhs)
         {
-            return lhs.getName_debug().compareTo(rhs.getName_debug());
+            return lhs.getName().compareTo(rhs.getName());
         }
     }
 
@@ -87,7 +87,7 @@ public class BleManagerConfig extends BleDeviceConfig
             mWhiteList.add(uuid);
         }
 
-        public DefaultScanFilter(Collection whitelist)
+        public DefaultScanFilter(Collection<UUID> whitelist)
         {
             mWhiteList = new ArrayList<>(whitelist);
         }

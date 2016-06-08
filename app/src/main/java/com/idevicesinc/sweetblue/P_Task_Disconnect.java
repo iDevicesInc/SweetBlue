@@ -44,6 +44,6 @@ public class P_Task_Disconnect extends P_Task_RequiresConnection
             return;
         }
         getDevice().stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.DISCONNECTING, true);
-        getDevice().getNativeGatt().disconnect();
+        getDevice().mGattManager.disconnect();
     }
 }

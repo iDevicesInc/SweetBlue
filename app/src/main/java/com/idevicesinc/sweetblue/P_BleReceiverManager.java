@@ -42,6 +42,8 @@ public class P_BleReceiverManager
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
         return filter;
     }
@@ -68,6 +70,29 @@ public class P_BleReceiverManager
             {
                 onNativeBondStateChanged(intent);
             }
+            else if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED))
+            {
+                onNativeDisconnectRequested(intent);
+            }
+            else if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED))
+            {
+                onNativeDeviceDisconnected(intent);
+            }
+        }
+    }
+
+    private void onNativeDisconnectRequested(Intent intent)
+    {
+
+    }
+
+    private void onNativeDeviceDisconnected(Intent intent)
+    {
+        final BluetoothDevice native_device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        final BleDevice device = mManager.getDevice(native_device.getAddress());
+        if (!mManager.mTaskManager.isCurrent(P_Task_Disconnect.class, device) && !device.isAny(BleDeviceState.CONNECTING_OVERALL, BleDeviceState.DISCONNECTED))
+        {
+            device.onDisconnected();
         }
     }
 
@@ -97,7 +122,7 @@ public class P_BleReceiverManager
         if (!device.isNull())
         {
             // Forward the state change to the native wrapper
-            device.mNativeWrapper.onBondStateChanged(previousState, newState, failReason);
+            device.mGattManager.onBondStateChanged(previousState, newState, failReason);
         }
 
     }

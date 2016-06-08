@@ -333,7 +333,7 @@ public interface DeviceConnectionFailListener extends P_BaseConnectionFailListen
                     return Utils_String.toString
                             (
                                     this.getClass(),
-                                    "device",				device().getName_debug(),
+                                    "device",				device().getName(),
                                     "status", 				status(),
                                     "timing",				timing(),
                                     "bondFailReason",       P_Gateway.gattUnbondReason(device().getManager(), bondFailReason()),
@@ -345,7 +345,7 @@ public interface DeviceConnectionFailListener extends P_BaseConnectionFailListen
                     return Utils_String.toString
                             (
                                     this.getClass(),
-                                    "device",				device().getName_debug(),
+                                    "device",				device().getName(),
                                     "status", 				status(),
                                     "timing",				timing(),
                                     "gattStatus",			P_Gateway.gattStatus(device().getManager(), gattStatus()),

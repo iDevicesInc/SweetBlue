@@ -15,6 +15,7 @@ public class P_TaskManager
     private final BleManager mBleManager;
     private volatile long mUpdateCount;
     private TaskSorter mTaskSorter;
+    private boolean atomicTxnRunning;
 
 
     public P_TaskManager(BleManager mgr)
@@ -33,7 +34,7 @@ public class P_TaskManager
         if (hasTasksInQueue && isCurrentNull())
         {
             mCurrent = mTaskQueue.poll();
-            if(mCurrent.isExecutable())
+            if (mCurrent.isExecutable())
             {
                 mCurrent.executeTask();
             }
@@ -61,7 +62,11 @@ public class P_TaskManager
         {
             mCurrent.updateTask(curTimeMs);
             // Checks if this task should be timed out. If it should, the task then calls timeOut(P_Task).
-            mCurrent.checkTimeOut(curTimeMs);
+            // Check if it's null, as it may have failed out, or canceled in the updateTask method.
+            if (mCurrent != null)
+            {
+                mCurrent.checkTimeOut(curTimeMs);
+            }
         }
         mUpdateCount++;
         return hasTasksInQueue || !isCurrentNull();
@@ -109,7 +114,7 @@ public class P_TaskManager
         }
         else
         {
-            mTaskQueue.remove(task);
+            removeTask(task);
         }
         task.onSucceed();
     }
@@ -167,7 +172,7 @@ public class P_TaskManager
         }
         else
         {
-            mTaskQueue.remove(task);
+            removeTask(task);
         }
         task.onFail(immediate);
     }
@@ -304,6 +309,10 @@ public class P_TaskManager
             // Sort the list, first by priority, then by the time it was created, or if it's requeued.
             Collections.sort(mTaskQueue, mTaskSorter);
         }
+        if (task.getPriority() == P_TaskPriority.ATOMIC_TRANSACTION)
+        {
+            atomicTxnRunning = true;
+        }
         task.addedToQueue();
     }
 
@@ -431,15 +440,36 @@ public class P_TaskManager
         }
     }
 
-    private void cancel_private(P_Task task)
+    private void removeTask(P_Task task)
     {
         mTaskQueue.remove(task);
+        if (mTaskQueue.peekFirst().getPriority() != P_TaskPriority.ATOMIC_TRANSACTION)
+        {
+            atomicTxnRunning = false;
+        }
+    }
+
+    private void cancel_private(P_Task task)
+    {
+        removeTask(task);
         task.onCanceled();
     }
 
     public P_Task getCurrent()
     {
         return mCurrent != null ? mCurrent : P_Task.NULL;
+    }
+
+    public <T extends P_Task> T getCurrent(Class<? extends P_Task> taskClass, BleDevice device)
+    {
+        if (mCurrent != null && mCurrent.getClass().equals(taskClass) && mCurrent.getDevice().equals(device))
+        {
+            return (T) mCurrent;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     void print()
@@ -523,6 +553,15 @@ public class P_TaskManager
             }
             else
             {
+                if (atomicTxnRunning)
+                {
+                    comp = lhs.getDevice().mTxnManager.getCurrent().mTimeStarted < rhs.getDevice().mTxnManager.getCurrent().mTimeStarted ? -1 :
+                            (lhs.getDevice().mTxnManager.getCurrent().mTimeStarted == rhs.getDevice().mTxnManager.getCurrent().mTimeStarted ? 0 : 1);
+                    if (comp != 0)
+                    {
+                        return comp;
+                    }
+                }
                 if (lhs.requeued() && !rhs.requeued())
                 {
                     return -1;
