@@ -19,7 +19,6 @@ import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.HashMap;
-import java.util.concurrent.Semaphore;
 
 public class BluetoothEnabler
 {
@@ -103,7 +102,7 @@ public class BluetoothEnabler
 
                 if(Utils.isLocationEnabledForScanning_byOsServices(bleManager.getAppContext()))
                 {
-                    currentState = BluetoothEnablerState.FINALIZE;
+                    currentState = BluetoothEnablerState.DONE;
                 }
             }
         }
@@ -200,7 +199,7 @@ public class BluetoothEnabler
 
     private void processPleaseResponse(Please response)
     {
-        if(mStateTracker.currentState == BluetoothEnablerState.FINALIZE)
+        if(mStateTracker.currentState == BluetoothEnablerState.DONE)
         {
             bleManager.setManagerReady();
             return;
@@ -253,7 +252,7 @@ public class BluetoothEnabler
         }
         else if(response.action == Please.END)
         {
-            mStateTracker.update(new BluetoothEnablerStateEvent(BluetoothEnablerState.FINALIZE, BluetoothEnablerStateEvent.Status.ENABLER_ENDED));
+            mStateTracker.update(new BluetoothEnablerStateEvent(BluetoothEnablerState.DONE, BluetoothEnablerStateEvent.Status.ENABLER_ENDED));
         }
     }
 
@@ -363,6 +362,8 @@ public class BluetoothEnabler
 
         private Status status = Status.SUCCEEDED;
 
+        private HashMap<BluetoothEnablerState, BluetoothEnablerStateEvent.Status> historyMap;
+
         BluetoothEnablerStateEvent(BluetoothEnablerState state, Status status)
         {
             this.state = state;
@@ -387,6 +388,30 @@ public class BluetoothEnabler
         public Status status()
         {
             return status;
+        }
+
+        /**
+         * @return the history of the states and their statuses
+         */
+        public HashMap<BluetoothEnablerState, BluetoothEnablerStateEvent.Status> history()
+        {
+            return historyMap;
+        }
+
+        boolean isScanningReady()
+        {
+            if(Utils.isMarshmallow())
+            {
+                if(bleManager.isBleSupported() && bleManager.is(BleManagerState.ON) &&
+                        Utils.isLocationEnabledForScanning_byRuntimePermissions(mCallingActivity) && Utils.isLocationEnabledForScanning_byOsServices(mCallingActivity))
+                    return true;
+                return false;
+            }
+
+            if(bleManager.isBleSupported() && bleManager.is(BleManagerState.ON))
+                return true;
+
+            return false;
         }
 
         public enum Status
@@ -423,6 +448,8 @@ public class BluetoothEnabler
             historyMap.put(event.state, event.status);
 
             currentState = event.state;
+
+            event.historyMap = this.historyMap;
 
             Please response = mController.onEvent(event);
 
@@ -487,11 +514,11 @@ public class BluetoothEnabler
          * The ultimate state. This is reached immediately if {@link Please#end()} is called or if all previous states have been advanced through. This is used to finish up
          * anything that needs to be done after enabling everything.
          */
-        FINALIZE;
+        DONE;
 
         public BluetoothEnablerState nextState()
         {
-            return ordinal() + 1 == BluetoothEnablerState.values().length ? FINALIZE : values()[ordinal() + 1];
+            return ordinal() + 1 == BluetoothEnablerState.values().length ? DONE : values()[ordinal() + 1];
         }
     }
 

@@ -3,8 +3,6 @@ package com.idevicesinc.sweetblue;
 import android.app.AlertDialog;
 import android.content.Context;
 
-import java.util.concurrent.Semaphore;
-
 public final class DefaultBluetoothEnablerController extends BluetoothEnablerController
 {
     protected static BluetoothEnablerConfig mConfig;
@@ -89,9 +87,11 @@ public final class DefaultBluetoothEnablerController extends BluetoothEnablerCon
 
             return Please.end();
         }
-        else if(event.isFor(BluetoothEnabler.BluetoothEnablerState.FINALIZE))
+        else if(event.isFor(BluetoothEnabler.BluetoothEnablerState.DONE))
         {
-
+            if (listener != null) {
+                listener.onFinished(event.isScanningReady());
+            }
         }
 
         return BluetoothEnabler.Please.doNext();

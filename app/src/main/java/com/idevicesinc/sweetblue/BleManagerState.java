@@ -64,7 +64,12 @@ public enum BleManagerState implements State
     /**
      * This is the state that {@link BleManager} is in when all required permissions and services (if any) are enabled for scanning to work.
      */
-    READY;
+    SCAN_READY,
+
+    /**
+     * This is the state that the {@link BleManager} is in when it requires some permissions or services for scanning.
+     */
+    SCAN_NOT_READY;
 
     private final int mNativeCode;
     private static BleManagerState[] sValues;
