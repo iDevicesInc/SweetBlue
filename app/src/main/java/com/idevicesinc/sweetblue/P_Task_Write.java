@@ -4,10 +4,8 @@ import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 
 import java.util.UUID;
 
-/**
- * Created by ryanbis on 6/3/16.
- */
-public class P_Task_Write extends P_Task_RequiresConnection
+
+public class P_Task_Write extends P_Task_Transactionable
 {
 
     private UUID mServiceUuid;
@@ -47,8 +45,9 @@ public class P_Task_Write extends P_Task_RequiresConnection
         return mValue;
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override P_TaskPriority defaultPriority()
     {
         return P_TaskPriority.MEDIUM;
     }
+
 }

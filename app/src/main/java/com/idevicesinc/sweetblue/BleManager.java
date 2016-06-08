@@ -18,7 +18,9 @@ import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
+import com.idevicesinc.sweetblue.listeners.NotifyListener;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
+import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.P_StateTracker.E_Intent;
@@ -57,6 +59,8 @@ public class BleManager
     private P_DeviceManager mDeviceManager;
     DeviceStateListener mDefaultStateListener;
     BondListener mDefaultBondListener;
+    NotifyListener mDefaultNotifyListener;
+    ReadWriteListener mDefaultReadWriteListener;
     private DiscoveryListener mDiscoveryListener;
     P_ScanManager mScanManager;
     private boolean mForegrounded = false;
@@ -124,6 +128,16 @@ public class BleManager
     public void setDefaultDeviceStateListener(DeviceStateListener listener)
     {
         mDefaultStateListener = listener;
+    }
+
+    public void setDefaultNotifyListener(NotifyListener listener)
+    {
+        mDefaultNotifyListener = listener;
+    }
+
+    public void setDefaultReadWriteListener(ReadWriteListener listener)
+    {
+        mDefaultReadWriteListener = listener;
     }
 
     public void setDefaultBondListener(BondListener listener)

@@ -109,7 +109,7 @@ public interface DiscoveryListener
             return Utils_String.toString
                     (
                             this.getClass(),
-                            "device", device().getName_debug(),
+                            "device", device().getName(),
                             "lifeCycle", lifeCycle(),
                             "rssi", rssi(),
                             "rssi_percent", rssi_percent()

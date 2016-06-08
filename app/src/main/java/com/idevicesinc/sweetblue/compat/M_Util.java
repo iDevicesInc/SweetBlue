@@ -44,4 +44,9 @@ public class M_Util
         device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE);
     }
 
+    public static void connect(BluetoothDevice device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
+    {
+        device.connectGatt(context, useAutoConnect, callback, BluetoothDevice.TRANSPORT_LE);
+    }
+
 }

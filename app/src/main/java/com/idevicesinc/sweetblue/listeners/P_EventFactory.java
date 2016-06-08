@@ -46,4 +46,9 @@ public class P_EventFactory
         return new BondListener.BondEvent(device, status, failReason, intent);
     }
 
+    public static NotifyListener.NotifyEvent newNotifyEvent(BleDevice device, UUID serviceUuid, UUID charUuid, byte[] data, NotifyListener.Type type, NotifyListener.Status status)
+    {
+        return new NotifyListener.NotifyEvent(device, serviceUuid, charUuid, data, status, type);
+    }
+
 }

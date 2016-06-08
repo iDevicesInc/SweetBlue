@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 
 import java.util.UUID;
 
-public class P_Task_ToggleNotify extends P_Task_RequiresConnection
+public class P_Task_ToggleNotify extends P_Task_Transactionable
 {
 
     private UUID mServiceUuid;
@@ -57,8 +57,9 @@ public class P_Task_ToggleNotify extends P_Task_RequiresConnection
         return mEnable;
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override P_TaskPriority defaultPriority()
     {
         return P_TaskPriority.MEDIUM;
     }
+
 }

@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import java.util.UUID;
 
 
-public class P_Task_Read extends P_Task_RequiresConnection
+public class P_Task_Read extends P_Task_Transactionable
 {
 
     private ReadWriteListener mListener;
@@ -26,7 +26,7 @@ public class P_Task_Read extends P_Task_RequiresConnection
         mServiceUuid = serviceUuid;
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override P_TaskPriority defaultPriority()
     {
         return P_TaskPriority.MEDIUM;
     }

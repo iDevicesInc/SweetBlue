@@ -310,7 +310,7 @@ abstract class P_Task
         String name = getClass().getSimpleName();
         name = name.replace("P_Task_", "");
 
-        String deviceEntry = mDevice != null ? " " + mDevice.getName_debug() : "";
+        String deviceEntry = mDevice != null ? " " + mDevice.getName() : "";
         String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
         return Utils_String.concatStrings(name, "(", mState.name(), deviceEntry, addition, ")");
     }

@@ -188,7 +188,7 @@ public interface BondListener
                 return Utils_String.toString
                         (
                                 this.getClass(),
-                                "device",			device().getName_debug(),
+                                "device",			device().getName(),
                                 "status",			status(),
                                 "failReason",       P_Gateway.gattUnbondReason(device().getManager(), failReason()),
                                 "intent",			intent()

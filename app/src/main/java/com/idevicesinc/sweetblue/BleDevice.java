@@ -3,23 +3,22 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
+import com.idevicesinc.sweetblue.listeners.NotifyListener;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Percent;
+import com.idevicesinc.sweetblue.utils.Utils_Rssi;
 import com.idevicesinc.sweetblue.utils.Utils_String;
-
 import java.util.UUID;
-
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 
@@ -37,7 +36,7 @@ public class BleDevice extends BleNode
     private BleDeviceOrigin mOrigin_last;
     private BleDeviceConfig mConfig;
     private BleConnectionPriority mConnectionPriority = BleConnectionPriority.MEDIUM;
-    private int mMtu = 0;
+    private int mMtu = BleDeviceConfig.DEFAULT_MTU_SIZE;
     private ReadWriteEvent mNullReadWriteEvent;
     private BleScanInfo mScanInfo;
     private String mName_native;
@@ -47,6 +46,8 @@ public class BleDevice extends BleNode
     final P_GattManager mGattManager;
     private P_ReconnectManager mReconnectManager;
     private BondListener mBondListener;
+    private NotifyListener mNotifyListener;
+    final P_TransactionManager mTxnManager;
 
 
     BleDevice(BleManager mgr, BluetoothDevice nativeDevice, BleDeviceOrigin origin, BleDeviceConfig config_nullable, String deviceName, boolean isNull)
@@ -66,6 +67,7 @@ public class BleDevice extends BleNode
             mGattManager.checkCurrentBondState();
             mReconnectManager = new P_ReconnectManager(this);
             mReconnectManager.setMaxReconnectTries(getConfig().reconnectionTries);
+            mTxnManager = new P_TransactionManager(this);
         }
         else
         {
@@ -75,6 +77,7 @@ public class BleDevice extends BleNode
             mReconnectManager = null;
             stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
             mStateTracker_shortTermReconnect = null;
+            mTxnManager = null;
         }
     }
 
@@ -101,9 +104,29 @@ public class BleDevice extends BleNode
         mStateTracker.setListener(listener);
     }
 
+    public void setConnectionFailListener(DeviceConnectionFailListener failListener)
+    {
+        mConnectionFailListener = failListener;
+    }
+
+    public void setNotifyListener(NotifyListener listener)
+    {
+        mNotifyListener = listener;
+    }
+
     public int getMtu()
     {
         return mMtu;
+    }
+
+    public boolean setMtu(int mtuSize, ReadWriteListener listener)
+    {
+        if (mtuSize > 22 && mtuSize <= 517 && is(CONNECTED))
+        {
+            getManager().mTaskManager.add(new P_Task_RequestMtu(this, null, mtuSize, listener));
+            return true;
+        }
+        return false;
     }
 
     public BleConnectionPriority getConnectionPriority()
@@ -114,15 +137,6 @@ public class BleDevice extends BleNode
     public void setConnectionPriority(BleConnectionPriority priority, ReadWriteListener listener)
     {
         // TODO - Actually implement this.
-    }
-
-    public String getName_debug()
-    {
-        // TODO
-        // TODO
-        // TODO
-        // TODO Actually implement this
-        return "";
     }
 
     /**
@@ -167,48 +181,6 @@ public class BleDevice extends BleNode
         return mGattManager.getMacAddress();
     }
 
-    void setNameFromNative(String name)
-    {
-        mName_native = name;
-    }
-
-    void setNameFromScanRecord(String name)
-    {
-        mName_scanRecord = name;
-    }
-
-    void onNewlyDiscovered(int rssi, BleScanInfo scanInfo, BleDeviceOrigin origin)
-    {
-        mOrigin_last = origin;
-        mRssi = rssi;
-        onDiscovered_private(rssi, scanInfo);
-        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY);
-    }
-
-    void onRediscovered(BluetoothDevice device_native, BleScanInfo scanInfo, int rssi, BleDeviceOrigin origin)
-    {
-        mOrigin_last = origin;
-        onDiscovered_private(rssi, scanInfo);
-        //mNativeDevice = device_native;
-        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ADVERTISING, true);
-    }
-
-    private void onDiscovered_private(int rssi, BleScanInfo scanInfo)
-    {
-        if (!scanInfo.isNull())
-        {
-            if (mScanInfo == null || !mScanInfo.equals(scanInfo))
-            {
-                mScanInfo = scanInfo.clone();
-            }
-        }
-    }
-
-    private void updateRssi(int rssi)
-    {
-        mRssi = rssi;
-    }
-
     public int getTxPower()
     {
         return mScanInfo.getTxPower().value;
@@ -222,20 +194,6 @@ public class BleDevice extends BleNode
     public byte[] getManufacturerData()
     {
         return mScanInfo.getManufacturerData();
-    }
-
-    void update(long curTimeMs)
-    {
-    }
-
-    P_DeviceStateTracker stateTracker()
-    {
-        return mStateTracker;
-    }
-
-    int getStateMask()
-    {
-        return stateTracker().getState();
     }
 
     public boolean is(BleDeviceState state)
@@ -282,7 +240,12 @@ public class BleDevice extends BleNode
 
     public Percent getRssiPercent()
     {
-        return Percent.fromInt(mRssi);
+        if (isNull())
+        {
+            return Percent.ZERO;
+        }
+        final double percent = Utils_Rssi.percent(getRssi(), getConfig().rssi_min, getConfig().rssi_max);
+        return Percent.fromDouble_clamped(percent);
     }
 
     public boolean isNull()
@@ -315,11 +278,30 @@ public class BleDevice extends BleNode
         // TODO - Implement this
     }
 
+    public void connect(BleTransaction.Auth authTxn)
+    {
+        mTxnManager.setAuthTxn(authTxn);
+        connect();
+    }
+
+    public void connect(BleTransaction.Init initTxn)
+    {
+        mTxnManager.setInitTxn(initTxn);
+        connect();
+    }
+
+    public void connect(BleTransaction.Auth authTxn, BleTransaction.Init initTxn)
+    {
+        mTxnManager.setAuthTxn(authTxn);
+        mTxnManager.setInitTxn(initTxn);
+        connect();
+    }
+
     public void connect()
     {
         if (!isAny(CONNECTING, CONNECTED, CONNECTING_OVERALL) || isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM))
         {
-            if (getConfig().bondBeforeConnecting && !is(BONDED))
+            if (getConfig().bondBeforeConnecting && (!mGattManager.isBonded() || mGattManager.isBonding()))
             {
                 getManager().mTaskManager.add(new P_Task_Bond(this, null));
             }
@@ -367,12 +349,20 @@ public class BleDevice extends BleNode
 
     public void read(UUID serviceUuid, UUID charUuid, ReadWriteListener listener)
     {
-        getManager().mTaskManager.add(new P_Task_Read(this, null, serviceUuid, charUuid, listener));
+        if (!isNull())
+        {
+            final P_Task_Read read = new P_Task_Read(this, null, serviceUuid, charUuid, listener);
+            addTask(read);
+        }
     }
 
     public void enableNotify(UUID serviceUuid, UUID charUuid, ReadWriteListener listener)
     {
-        getManager().mTaskManager.add(new P_Task_ToggleNotify(this, null, serviceUuid, charUuid, true, listener));
+        if (!isNull())
+        {
+            P_Task_ToggleNotify toggle = new P_Task_ToggleNotify(this, null, serviceUuid, charUuid, true, listener);
+            addTask(toggle);
+        }
     }
 
     public void enableNotify(UUID charUuid, ReadWriteListener listener)
@@ -382,7 +372,11 @@ public class BleDevice extends BleNode
 
     public void disableNotify(UUID serviceUuid, UUID charUuid, ReadWriteListener listener)
     {
-        getManager().mTaskManager.add(new P_Task_ToggleNotify(this, null, serviceUuid, charUuid, false, listener));
+        if (!isNull())
+        {
+            final P_Task_ToggleNotify toggle = new P_Task_ToggleNotify(this, null, serviceUuid, charUuid, false, listener);
+            addTask(toggle);
+        }
     }
 
     public void disableNotify(UUID charUuid, ReadWriteListener listener)
@@ -390,6 +384,93 @@ public class BleDevice extends BleNode
         disableNotify(null, charUuid, listener);
     }
 
+    public void disconnectWithReason(P_TaskPriority priority, Status bleTurningOff, Timing notApplicable, int gattStatusNotApplicable, int bondFailReasonNotApplicable, ReadWriteEvent readWriteEvent)
+    {
+        // TODO - Implement this
+    }
+
+    public void performOta(BleTransaction.Ota otaTxn)
+    {
+        if (!is(INITIALIZED))
+        {
+            // TODO - Throw error here
+            return;
+        }
+        if (is(PERFORMING_OTA))
+        {
+            // TODO - Throw error here
+            return;
+        }
+        mTxnManager.start(otaTxn);
+    }
+
+    @Override public String toString()
+    {
+        if (isNull())
+        {
+            return NULL_STRING;
+        }
+        else
+        {
+            return Utils_String.concatStrings(getName(), " ", stateTracker().toString());
+        }
+    }
+
+
+
+
+    void setNameFromNative(String name)
+    {
+        mName_native = name;
+    }
+
+    void setNameFromScanRecord(String name)
+    {
+        mName_scanRecord = name;
+    }
+
+    void onNewlyDiscovered(int rssi, BleScanInfo scanInfo, BleDeviceOrigin origin)
+    {
+        mOrigin_last = origin;
+        mRssi = rssi;
+        onDiscovered_private(rssi, scanInfo);
+        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY);
+    }
+
+    void onRediscovered(BluetoothDevice device_native, BleScanInfo scanInfo, int rssi, BleDeviceOrigin origin)
+    {
+        mOrigin_last = origin;
+        onDiscovered_private(rssi, scanInfo);
+        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ADVERTISING, true);
+    }
+
+    void update(long curTimeMs)
+    {
+    }
+
+    P_DeviceStateTracker stateTracker()
+    {
+        return mStateTracker;
+    }
+
+    int getStateMask()
+    {
+        return stateTracker().getState();
+    }
+
+    void onNotify(final NotifyListener.NotifyEvent event)
+    {
+        if (mNotifyListener != null)
+        {
+            getManager().mPostManager.postCallback(new Runnable()
+            {
+                @Override public void run()
+                {
+                    mNotifyListener.onEvent(event);
+                }
+            });
+        }
+    }
 
     void doNativeConnect()
     {
@@ -442,11 +523,31 @@ public class BleDevice extends BleNode
 
     void onServicesDiscovered()
     {
-        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true);
+        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true,
+                AUTHENTICATING, true);
         // TODO - Move on to next stage, which should be running any auth/init transactions
         // TODO - For now, succeeding connect task here, until txns are implemented
 
         getManager().mTaskManager.succeedTask(P_Task_Connect.class, this);
+
+        if (mTxnManager.getAuthTxn() != null)
+        {
+            mTxnManager.start(mTxnManager.getAuthTxn());
+        }
+        else
+        {
+            stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AUTHENTICATED, true, AUTHENTICATING, false,
+                    INITIALIZING, true);
+            if (mTxnManager.getInitTxn() != null)
+            {
+                mTxnManager.start(mTxnManager.getInitTxn());
+            }
+            else
+            {
+                stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, INITIALIZED, true, INITIALIZING, false);
+            }
+
+        }
     }
 
     void onBonding(P_StateTracker.E_Intent intent)
@@ -470,6 +571,11 @@ public class BleDevice extends BleNode
     {
         stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_GattManager.RESET_TO_UNBONDED);
         postBondEvent(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BondListener.Status.SUCCESS);
+    }
+
+    DeviceConnectionFailListener getConnectionFailListener()
+    {
+        return mConnectionFailListener;
     }
 
     private void postBondEvent(P_StateTracker.E_Intent intent, int failReason, BondListener.Status status)
@@ -498,9 +604,49 @@ public class BleDevice extends BleNode
         }
     }
 
-    DeviceConnectionFailListener getConnectionFailListener()
+    private void onDiscovered_private(int rssi, BleScanInfo scanInfo)
     {
-        return mConnectionFailListener;
+        if (!scanInfo.isNull())
+        {
+            if (mScanInfo == null || !mScanInfo.equals(scanInfo))
+            {
+                mScanInfo = scanInfo.clone();
+            }
+        }
+        if (rssi < 0)
+        {
+            updateRssi(rssi);
+        }
+    }
+
+    private void updateRssi(int rssi)
+    {
+        mRssi = rssi;
+    }
+
+    private void addTask(P_Task task)
+    {
+        if (mTxnManager.isRunning())
+        {
+            if (mTxnManager.isTransactionOperation())
+            {
+                // If it's an atomic transaction, and a transactionable task, then change the priority so it ends up
+                // before any other task with lower priority.
+                if (mTxnManager.isAtomic() && task instanceof P_Task_Transactionable)
+                {
+                    ((P_Task_Transactionable)task).mPriority = P_TaskPriority.ATOMIC_TRANSACTION;
+                }
+                getManager().mTaskManager.add(task);
+            }
+            else
+            {
+                mTxnManager.queueTask(task);
+            }
+        }
+        else
+        {
+            getManager().mTaskManager.add(task);
+        }
     }
 
     /**
@@ -511,23 +657,6 @@ public class BleDevice extends BleNode
     static String NULL_MAC()
     {
         return "DE:CA:FF:C0:FF:EE";
-    }
-
-    public void disconnectWithReason(P_TaskPriority priority, Status bleTurningOff, Timing notApplicable, int gattStatusNotApplicable, int bondFailReasonNotApplicable, ReadWriteEvent readWriteEvent)
-    {
-        // TODO - Implement this
-    }
-
-    @Override public String toString()
-    {
-        if (isNull())
-        {
-            return NULL_STRING;
-        }
-        else
-        {
-            return Utils_String.concatStrings(getName(), " ", stateTracker().toString());
-        }
     }
 
 }

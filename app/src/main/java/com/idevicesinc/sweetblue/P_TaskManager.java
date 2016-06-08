@@ -15,6 +15,7 @@ public class P_TaskManager
     private final BleManager mBleManager;
     private volatile long mUpdateCount;
     private TaskSorter mTaskSorter;
+    private boolean atomicTxnRunning;
 
 
     public P_TaskManager(BleManager mgr)
@@ -113,7 +114,7 @@ public class P_TaskManager
         }
         else
         {
-            mTaskQueue.remove(task);
+            removeTask(task);
         }
         task.onSucceed();
     }
@@ -171,7 +172,7 @@ public class P_TaskManager
         }
         else
         {
-            mTaskQueue.remove(task);
+            removeTask(task);
         }
         task.onFail(immediate);
     }
@@ -308,6 +309,10 @@ public class P_TaskManager
             // Sort the list, first by priority, then by the time it was created, or if it's requeued.
             Collections.sort(mTaskQueue, mTaskSorter);
         }
+        if (task.getPriority() == P_TaskPriority.ATOMIC_TRANSACTION)
+        {
+            atomicTxnRunning = true;
+        }
         task.addedToQueue();
     }
 
@@ -435,9 +440,18 @@ public class P_TaskManager
         }
     }
 
-    private void cancel_private(P_Task task)
+    private void removeTask(P_Task task)
     {
         mTaskQueue.remove(task);
+        if (mTaskQueue.peekFirst().getPriority() != P_TaskPriority.ATOMIC_TRANSACTION)
+        {
+            atomicTxnRunning = false;
+        }
+    }
+
+    private void cancel_private(P_Task task)
+    {
+        removeTask(task);
         task.onCanceled();
     }
 
@@ -448,7 +462,7 @@ public class P_TaskManager
 
     public <T extends P_Task> T getCurrent(Class<? extends P_Task> taskClass, BleDevice device)
     {
-        if (mCurrent.getClass().equals(taskClass) && mCurrent.getDevice().equals(device))
+        if (mCurrent != null && mCurrent.getClass().equals(taskClass) && mCurrent.getDevice().equals(device))
         {
             return (T) mCurrent;
         }
@@ -539,6 +553,15 @@ public class P_TaskManager
             }
             else
             {
+                if (atomicTxnRunning)
+                {
+                    comp = lhs.getDevice().mTxnManager.getCurrent().mTimeStarted < rhs.getDevice().mTxnManager.getCurrent().mTimeStarted ? -1 :
+                            (lhs.getDevice().mTxnManager.getCurrent().mTimeStarted == rhs.getDevice().mTxnManager.getCurrent().mTimeStarted ? 0 : 1);
+                    if (comp != 0)
+                    {
+                        return comp;
+                    }
+                }
                 if (lhs.requeued() && !rhs.requeued())
                 {
                     return -1;

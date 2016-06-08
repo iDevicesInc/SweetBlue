@@ -8,12 +8,12 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
-import android.text.TextUtils;
 import android.util.Log;
 
+import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.listeners.BondListener;
-import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
+import com.idevicesinc.sweetblue.listeners.NotifyListener;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
@@ -116,7 +116,7 @@ class P_GattManager
                 return false;
             }
             byte[] writeValue;
-            if ((bchar.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0x0)
+            if (isCharNotify(bchar))
             {
                 writeValue = enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
             }
@@ -132,6 +132,11 @@ class P_GattManager
         {
             return false;
         }
+    }
+
+    private boolean isCharNotify(BluetoothGattCharacteristic bchar)
+    {
+        return (bchar.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0x0;
     }
 
     private BluetoothGattService getService(UUID serviceUuid)
@@ -203,13 +208,20 @@ class P_GattManager
                     Log.e("NativeBluetoothState", "Got STATE_DISCONNECTING!!");
                     break;
                 case BluetoothProfile.STATE_DISCONNECTED:
-                    if (Utils.isSuccess(status))
+                    final P_Task_Connect connect = getManager().mTaskManager.getCurrent(P_Task_Connect.class, mDevice);
+                    if (connect != null)
+                    {
+                        onConnectionFail(status);
+                        return;
+                    }
+                    final P_Task_Disconnect disconnect = getManager().mTaskManager.getCurrent(P_Task_Disconnect.class, mDevice);
+                    if (disconnect != null)
                     {
                         onDeviceDisconnected();
                     }
                     else
                     {
-                        onDeviceDisconnected(status);
+                        onConnectionFail(status);
                     }
                     break;
                 default:
@@ -220,6 +232,7 @@ class P_GattManager
 
         @Override public void onServicesDiscovered(BluetoothGatt gatt, int status)
         {
+            updateGattInstance(gatt);
             if (Utils.isSuccess(status))
             {
                 getManager().mTaskManager.succeedTask(P_Task_DiscoverServices.class, mDevice);
@@ -234,6 +247,7 @@ class P_GattManager
 
         @Override public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
         {
+            updateGattInstance(gatt);
             P_Task_Read read = getManager().mTaskManager.getCurrent(P_Task_Read.class, mDevice);
             if (read != null)
             {
@@ -248,51 +262,100 @@ class P_GattManager
 
         @Override public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
         {
+            updateGattInstance(gatt);
             P_Task_Write write = getManager().mTaskManager.getCurrent(P_Task_Write.class, mDevice);
             if (write != null)
             {
-                ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, characteristic.getService().getUuid(), characteristic.getUuid(),
+                final ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, characteristic.getService().getUuid(), characteristic.getUuid(),
                         ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID, ReadWriteListener.Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC, write.getValue(),
                         ReadWriteListener.Status.SUCCESS, status, 0, 0, true);
                 write.onWrite(event);
-                // TODO - Also post the write event to the "catch-all" listener stored in BleManager
+                getManager().mPostManager.postCallback(new Runnable()
+                {
+                    @Override public void run()
+                    {
+                        if (getManager().mDefaultReadWriteListener != null)
+                        {
+                            getManager().mDefaultReadWriteListener.onEvent(event);
+                        }
+                    }
+                });
             }
         }
 
         // Notifications/Indications
         @Override public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
         {
+            updateGattInstance(gatt);
+            NotifyListener.Type type = isCharNotify(characteristic) ? NotifyListener.Type.NOTIFICATION : NotifyListener.Type.INDICATION;
+            final NotifyListener.NotifyEvent event = P_EventFactory.newNotifyEvent(mDevice, characteristic.getService().getUuid(),
+                    characteristic.getUuid(), characteristic.getValue(), type, NotifyListener.Status.SUCCESS);
+            mDevice.onNotify(event);
+            getManager().mPostManager.postCallback(new Runnable()
+            {
+                @Override public void run()
+                {
+                    if (getManager().mDefaultNotifyListener != null)
+                    {
+                        getManager().mDefaultNotifyListener.onEvent(event);
+                    }
+                }
+            });
         }
 
         @Override public void onMtuChanged(BluetoothGatt gatt, int mtu, int status)
         {
+            updateGattInstance(gatt);
+            P_Task_RequestMtu task = getManager().mTaskManager.getCurrent(P_Task_RequestMtu.class, mDevice);
+            if (task != null)
+            {
+                boolean success = Utils.isSuccess(status);
+                ReadWriteListener.Status mtuStatus = success ? ReadWriteListener.Status.SUCCESS : ReadWriteListener.Status.REMOTE_GATT_FAILURE;
+                ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, ReadWriteListener.Type.WRITE, mDevice.getRssi(),
+                        mtuStatus, status, 0, 0, true);
+                task.onMtuChangeResult(event);
+            }
+
         }
 
         @Override public void onReliableWriteCompleted(BluetoothGatt gatt, int status)
         {
+            updateGattInstance(gatt);
         }
 
         @Override public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
         {
+            updateGattInstance(gatt);
         }
 
         @Override public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
         {
+            updateGattInstance(gatt);
             P_Task_ToggleNotify notify = getManager().mTaskManager.getCurrent(P_Task_ToggleNotify.class, mDevice);
             if (notify != null)
             {
                 ReadWriteListener.Type type = notify.enabling() ? ReadWriteListener.Type.ENABLING_NOTIFICATION : ReadWriteListener.Type.DISABLING_NOTIFICATION;
                 ReadWriteListener.Status rwStatus = Utils.isSuccess(status) ? ReadWriteListener.Status.SUCCESS : ReadWriteListener.Status.FAILED_TO_TOGGLE_NOTIFICATION;
-                ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(),
+                final ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(),
                         ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID, type, ReadWriteListener.Target.DESCRIPTOR, new byte[0],
                         rwStatus, status, 0, 0, true);
                 notify.onToggleNotifyResult(event);
-                // TODO - Also post the notify result event to the "catch-all" listener stored in BleManager
+                getManager().mPostManager.postCallback(new Runnable()
+                {
+                    @Override public void run()
+                    {
+                        if (getManager().mDefaultReadWriteListener != null)
+                        {
+                            getManager().mDefaultReadWriteListener.onEvent(event);
+                        }
+                    }
+                });
             }
         }
 
         @Override public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
         {
+            updateGattInstance(gatt);
         }
     }
 
@@ -411,6 +474,11 @@ class P_GattManager
         }
     }
 
+    void requestMtuChange(int mtu)
+    {
+        L_Util.requestMtu(mDevice, mtu);
+    }
+
     boolean isBonded()
     {
         return mNativeDevice.getBondState() == BluetoothDevice.BOND_BONDED;
@@ -425,11 +493,11 @@ class P_GattManager
     {
         if (Utils.isMarshmallow())
         {
-            M_Util.connect(mNativeDevice, getManager().getAppContext(), mGattCallbacks);
+            M_Util.connect(mNativeDevice, getManager().getAppContext(), getManager().mConfig.useAndroidAutoConnect, mGattCallbacks);
         }
         else
         {
-            mNativeDevice.connectGatt(getManager().getAppContext(), false, mGattCallbacks);
+            mNativeDevice.connectGatt(getManager().getAppContext(), getManager().mConfig.useAndroidAutoConnect, mGattCallbacks);
         }
     }
 
