@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.scanApi = BleScanAPI.POST_LOLLIPOP;
-        config.bondBeforeConnecting = true;
+//        config.bondBeforeConnecting = true;
         // Drop adv UUID
         config.defaultScanFilter = new BleManagerConfig.DefaultScanFilter(Uuids.fromString("12630000-cc25-497d-9854-9b6c02c77054"));
         config.postCallbacksToUIThread = true;
