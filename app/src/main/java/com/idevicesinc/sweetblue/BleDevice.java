@@ -287,20 +287,48 @@ public class BleDevice extends BleNode
 
     public void connect(BleTransaction.Auth authTxn)
     {
-        mTxnManager.setAuthTxn(authTxn);
-        connect();
+        connect(authTxn, null, null, mConnectionFailListener);
     }
 
     public void connect(BleTransaction.Init initTxn)
     {
-        mTxnManager.setInitTxn(initTxn);
-        connect();
+        connect(null, initTxn, null, mConnectionFailListener);
     }
 
     public void connect(BleTransaction.Auth authTxn, BleTransaction.Init initTxn)
     {
+        connect(authTxn, initTxn, null, mConnectionFailListener);
+    }
+
+    public void connect(DeviceConnectionFailListener failListener)
+    {
+        connect(null, null, null, failListener);
+    }
+
+    public void connect(DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
+    {
+        connect(null, null, stateListener, failListener);
+    }
+
+    public void connect(BleTransaction.Auth authTxn, DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
+    {
+        connect(authTxn, null, stateListener, failListener);
+    }
+
+    public void connect(BleTransaction.Init initTxn, DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
+    {
+        connect(null, initTxn, stateListener, failListener);
+    }
+
+    public void connect(BleTransaction.Auth authTxn, BleTransaction.Init initTxn, DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
+    {
         mTxnManager.setAuthTxn(authTxn);
         mTxnManager.setInitTxn(initTxn);
+        mConnectionFailListener = failListener;
+        if (stateListener != null)
+        {
+            mStateTracker.setListener(stateListener);
+        }
         connect();
     }
 
@@ -315,12 +343,6 @@ public class BleDevice extends BleNode
             stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTING_OVERALL, true);
             getManager().mTaskManager.add(new P_Task_Connect(this, null));
         }
-    }
-
-    public void connect(DeviceConnectionFailListener failListener)
-    {
-        mConnectionFailListener = failListener;
-        connect();
     }
 
     public void disconnect()
@@ -360,6 +382,20 @@ public class BleDevice extends BleNode
         {
             final P_Task_Read read = new P_Task_Read(this, null, serviceUuid, charUuid, listener);
             addTask(read);
+        }
+    }
+
+    public void write(UUID charUuid, byte[] data, ReadWriteListener listener)
+    {
+        write(null, charUuid, data, listener);
+    }
+
+    public void write(UUID serviceUuid, UUID charUuid, byte[] data, ReadWriteListener listener)
+    {
+        if (!isNull())
+        {
+            final P_Task_Write write = new P_Task_Write(this, null, serviceUuid, charUuid, data, listener);
+            addTask(write);
         }
     }
 
@@ -460,7 +496,7 @@ public class BleDevice extends BleNode
         return mStateTracker;
     }
 
-    int getStateMask()
+    public int getStateMask()
     {
         return stateTracker().getState();
     }

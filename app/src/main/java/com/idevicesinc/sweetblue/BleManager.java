@@ -254,6 +254,11 @@ public class BleManager
         }
     }
 
+    public boolean hasDevice(String macAddress)
+    {
+        return !getDevice(macAddress).isNull();
+    }
+
     public boolean isForegrounded()
     {
         return mForegrounded;
@@ -421,7 +426,7 @@ public class BleManager
         }
     }
 
-    void onDiscoveredFromNativeStack(final BluetoothDevice device_native, int rssi, byte[] scanRecord_nullable)
+    synchronized void onDiscoveredFromNativeStack(final BluetoothDevice device_native, int rssi, byte[] scanRecord_nullable)
     {
         //--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
         //---		Here the scan task will be interrupted but still potentially has enough time to

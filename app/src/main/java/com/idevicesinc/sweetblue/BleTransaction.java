@@ -47,7 +47,10 @@ public abstract class BleTransaction
         }
     }
 
-    protected abstract boolean isAtomic();
+    protected boolean isAtomic()
+    {
+        return false;
+    }
 
     interface TxnEndListener
     {

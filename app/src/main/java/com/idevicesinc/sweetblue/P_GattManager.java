@@ -85,11 +85,12 @@ class P_GattManager
         }
     }
 
-    public boolean write(UUID serviceUuid, UUID charUuid)
+    public boolean write(UUID serviceUuid, UUID charUuid, byte[] data)
     {
         BluetoothGattCharacteristic bchar = getCharacteristic(serviceUuid, charUuid);
         if (bchar != null)
         {
+            bchar.setValue(data);
             mGatt.writeCharacteristic(bchar);
             return true;
         }

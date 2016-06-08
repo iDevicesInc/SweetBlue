@@ -25,7 +25,7 @@ public class P_Task_Write extends P_Task_Transactionable
 
     @Override public void execute()
     {
-        if (!getDevice().mGattManager.write(mServiceUuid, mCharUuid))
+        if (!getDevice().mGattManager.write(mServiceUuid, mCharUuid, mValue))
         {
             failImmediately();
         }
