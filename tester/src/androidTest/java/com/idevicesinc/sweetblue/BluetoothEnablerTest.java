@@ -39,7 +39,7 @@ public class BluetoothEnablerTest extends ActivityInstrumentationTestCase2<Bluet
             }
         }.bluetoothEnablerController, manager);
 
-        BluetoothEnabler.setTestSemaphore(finishedSemaphore);
+//        BluetoothEnabler.setTestSemaphore(finishedSemaphore);
 
         manager.enableBluetoothAndMarshmallowPrerequisites(testActivity);
 

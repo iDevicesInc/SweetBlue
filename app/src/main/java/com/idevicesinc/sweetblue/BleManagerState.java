@@ -59,7 +59,12 @@ public enum BleManagerState implements State
      * This is the state that {@link BleManager} is in when there has been nothing in the queue for {@link BleManagerConfig#delayBeforeIdleMs}. The
      * {@link BleManager} will run at {@link BleManagerConfig#updateThreadIdleIntervalMs} when it is idling.
      */
-    IDLE;
+    IDLE,
+
+    /**
+     * This is the state that {@link BleManager} is in when all required permissions and services (if any) are enabled for scanning to work.
+     */
+    READY;
 
     private final int mNativeCode;
     private static BleManagerState[] sValues;

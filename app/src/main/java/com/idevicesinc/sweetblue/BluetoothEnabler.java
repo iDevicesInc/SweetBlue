@@ -201,7 +201,11 @@ public class BluetoothEnabler
     private void processPleaseResponse(Please response)
     {
         if(mStateTracker.currentState == BluetoothEnablerState.FINALIZE)
+        {
+            bleManager.setManagerReady();
             return;
+        }
+
 
         if(response.action == Please.DO_NEXT)
         {
@@ -351,18 +355,6 @@ public class BluetoothEnabler
         isEnablerPerformingASystemCall = false;
 
         didJustPerformSystemRequest = true;
-    }
-
-    /**
-     * USED IN A UNIT TEST
-     * @param semaphore
-     */
-    static void setTestSemaphore(Semaphore semaphore)
-    {
-        if(sInstance.mController instanceof DefaultBluetoothEnablerController)
-        {
-            ((DefaultBluetoothEnablerController)sInstance.mController).setSemaphore(semaphore);
-        }
     }
 
     public static class BluetoothEnablerStateEvent
