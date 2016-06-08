@@ -18,6 +18,7 @@ import android.text.TextUtils;
 import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
+import com.idevicesinc.sweetblue.listeners.EnablerDoneListener;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 import com.idevicesinc.sweetblue.listeners.NotifyListener;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
@@ -283,8 +284,16 @@ public class BleManager
 
     public void enableBluetoothAndMarshmallowPrerequisites(Activity callingActivity)
     {
+        this.enableBluetoothAndMarshmallowPrerequisites(callingActivity, null);
+    }
+
+    public void enableBluetoothAndMarshmallowPrerequisites(Activity callingActivity, EnablerDoneListener doneListener)
+    {
+        mConfig.bluetoothEnablerController.listener = doneListener;
+
         BluetoothEnabler.enableBluetoothAndPrerequisites(callingActivity, mConfig.bluetoothEnablerController, this);
     }
+
 
     public void resumeBluetoothEnablerIfPaused(BluetoothEnabler.Please resumePlease)
     {
@@ -526,7 +535,7 @@ public class BleManager
 
     void setManagerReady()
     {
-        mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, READY, true);
+        mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCAN_READY, true);
     }
 
     private void startScan_private(Interval scanTime, Interval pauseTime)
