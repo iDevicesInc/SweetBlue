@@ -1,30 +1,34 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
-import android.test.ActivityInstrumentationTestCase2;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
 
+import junit.framework.Assert;
+
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<BluetoothPowerActivity>
+@RunWith(AndroidJUnit4.class)
+@SmallTest
+public class ABluetoothPowerTest
 {
-    BluetoothPowerActivity testActivity;
+    TestActivity testActivity;
 
     BleManager bleManager;
 
     BluetoothAdapter bleAdapter;
 
-    public ABluetoothPowerTest()
+    @Rule
+    public ActivityTestRule<TestActivity> loadedActivity = new ActivityTestRule<>(TestActivity.class);
+
+    @Before
+    public void init() throws Exception
     {
-        super(BluetoothPowerActivity.class);
-    }
-
-
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
-
-        testActivity = getActivity();
+        testActivity = loadedActivity.getActivity();
 
         bleManager = BleManager.get(testActivity);
 
@@ -32,25 +36,25 @@ public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<Blueto
     }
 
     @Test
-    public void testBleOff() throws Exception
+    public void testBleOn() throws Exception
     {
-        testActivity.turnBluetoothOff();
+        bleManager.turnOn();
 
         Thread.sleep(2000); //Pause to wait for the device to update its state
 
-        assertEquals(!bleAdapter.isEnabled(), bleManager.is(BleManagerState.OFF));
+        Assert.assertTrue("Bluetooth isn't on", bleAdapter.isEnabled());
+
+        Assert.assertEquals(bleAdapter.isEnabled(), bleManager.is(BleManagerState.ON));
     }
 
     @Test
-    public void testBleOn() throws Exception
+    public void testBleOff() throws Exception
     {
-        testActivity.turnBluetoothOn();
+        bleManager.turnOff();
 
         Thread.sleep(2000); //Pause to wait for the device to update its state
 
-        assertTrue(bleAdapter.isEnabled());
-
-        assertEquals(bleAdapter.isEnabled(), bleManager.is(BleManagerState.ON));
+        Assert.assertEquals("Bluetooth is off", !bleAdapter.isEnabled(), bleManager.is(BleManagerState.OFF));
     }
 
 }

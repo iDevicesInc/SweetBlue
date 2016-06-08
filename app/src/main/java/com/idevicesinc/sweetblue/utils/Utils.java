@@ -100,27 +100,19 @@ public class Utils
 	{
 		if( Utils.isMarshmallow() )
 		{
-			if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT )
+			final int locationMode;
+
+			try
 			{
-				final int locationMode;
-
-				try
-				{
-					locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
-				}
-				catch(Settings.SettingNotFoundException e)
-				{
-					return false;
-				}
-
-				return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+				locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
 			}
-			else
+			catch(Settings.SettingNotFoundException e)
 			{
-				final String locationProviders = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-
-				return false == TextUtils.isEmpty(locationProviders);
+				return false;
 			}
+
+			return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+
 		}
 		else
 		{

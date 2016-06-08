@@ -1,116 +1,101 @@
 package com.idevicesinc.sweetblue;
 
 import android.os.Handler;
-import android.test.ActivityInstrumentationTestCase2;
-import android.util.Log;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.test.suitebuilder.annotation.SmallTest;
 
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 
+import junit.framework.Assert;
+
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskManagerIdleActivity>
+@RunWith(AndroidJUnit4.class)
+@SmallTest
+public class TaskManagerIdleTest
 {
-    TaskManagerIdleActivity testActivity;
+    TestActivity testActivity;
 
     BleManager bleManager;
 
-    Handler handler;
+    @Rule
+    public ActivityTestRule<TestActivity> startActivity = new ActivityTestRule<>(TestActivity.class);
 
-    public TaskManagerIdleTest()
+    @Before
+    public void init() throws Exception
     {
-        super(TaskManagerIdleActivity.class);
-    }
+        testActivity = startActivity.getActivity();
 
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
+        bleManager = BleManager.get(testActivity);
 
-        testActivity = getActivity();
-
-        bleManager = testActivity.getBleManager();
-
-        handler = testActivity.getHandler();
+        bleManager.turnOn();
     }
 
     @Test
-    public void testTaskManagerIdleUsingDelays() throws Exception
+    public void testTaskManagerIdleMultipleTimes() throws Exception
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        handler.postDelayed(new Runnable()
+        final AtomicInteger idleCount = new AtomicInteger(0);
+
+        final AtomicBoolean stateToggle = new AtomicBoolean(false);
+
+        final AtomicLong workingStartTime = new AtomicLong(0);
+
+        final long buffer = bleManager.mConfig.updateThreadSpeed.getMilliseconds() * 2;
+
+        bleManager.setManagerStateListener(new ManagerStateListener()
         {
             @Override
-            public void run()
+            public void onEvent(StateEvent event)
             {
-                /**
-                 * After waiting the appropriate time check to see if the current speed is the idle speed
-                 */
-                assertTrue(bleManager.getUpdateSpeed() == bleManager.mConfig.updateThreadIdleIntervalMs);
-
-                bleManager.startScan(); //Kick off scanning -> put something in the queue
-
-                handler.postDelayed(new Runnable()
+                if(event.didEnter(BleManagerState.SCANNING))
                 {
-                    @Override
-                    public void run()
-                    {
-                        /**
-                         * After waiting about 1 cycle check to see if the current speed is no longer idling
-                         */
-                        long updateSpeed = bleManager.getUpdateSpeed();
+                    if(idleCount.get() >= 4)
+                        finishedSemaphore.release();
 
-                        assertTrue(updateSpeed == bleManager.mConfig.updateThreadSpeed.getMilliseconds());
+                    Assert.assertFalse("State never changed before going to scanning", stateToggle.get());
 
-                        bleManager.stopScan(); //Stop scanning -> empty the queue
+                    stateToggle.set(true);
 
-                        handler.postDelayed(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                /**
-                                 * After waiting again check to see that the speed is idling again
-                                 */
-                                long updateSpeed = bleManager.getUpdateSpeed();
+                    bleManager.stopScan();
 
-                                assertTrue(updateSpeed == bleManager.mConfig.updateThreadIdleIntervalMs);
+                    workingStartTime.set(System.currentTimeMillis());
+                }
 
-                                bleManager.startScan(); //Kick off scanning -> put something in the queue once more
+                if(event.didEnter(BleManagerState.IDLE))
+                {
+                    long timeInState = System.currentTimeMillis() - workingStartTime.get();
 
-                                handler.postDelayed(new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        /**
-                                         * Check to see one last time that the the thread woke up
-                                         */
-                                        long updateSpeed = bleManager.getUpdateSpeed();
+                    Assert.assertTrue("BleManager took too long to enter idling", timeInState + buffer >= bleManager.mConfig.delayBeforeIdleMs);
 
-                                        assertTrue(updateSpeed == bleManager.mConfig.updateThreadSpeed.getMilliseconds());
+                    idleCount.set(idleCount.get() + 1);
 
-                                        finishedSemaphore.release();
-                                    }
+                    Assert.assertTrue("State never changed before going to idle", stateToggle.get());
 
-                                }, bleManager.mConfig.updateThreadSpeed.getMilliseconds());
-                            }
+                    stateToggle.set(false);
 
-                        }, 2 * bleManager.mConfig.delayBeforeIdleMs);/*Go a couple more ticks and wait for idle*/
-                    }
-
-                }, bleManager.mConfig.updateThreadSpeed.getMilliseconds() + 5);
+                    bleManager.startScan();
+                }
             }
+        });
 
-        }, 2 * bleManager.mConfig.delayBeforeIdleMs);
+        bleManager.startScan();
 
         finishedSemaphore.acquire();
     }
 
     @Test
-    public void testTaskManagerIdleUsingStateChange() throws Exception
+    public void testTaskManagerIdleOnce() throws Exception
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
@@ -121,13 +106,13 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
             {
                 if(event.didEnter(BleManagerState.IDLE))
                 {
-                    assertTrue(bleManager.getUpdateSpeed() == bleManager.mConfig.updateThreadIdleIntervalMs);
+                    Assert.assertTrue(bleManager.getUpdateSpeed() == bleManager.mConfig.updateThreadIdleIntervalMs);
 
                     finishedSemaphore.release();
                 }
                 else
                 {
-                    assertTrue(bleManager.getUpdateSpeed() == bleManager.mConfig.updateThreadSpeed.getMilliseconds());
+                    Assert.assertTrue(bleManager.getUpdateSpeed() == bleManager.mConfig.updateThreadSpeed.getMilliseconds());
 
                     bleManager.stopScan();
                 }

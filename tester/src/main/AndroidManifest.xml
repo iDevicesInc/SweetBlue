@@ -3,6 +3,7 @@
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED"/>
@@ -24,27 +25,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.idevicesinc.sweetblue.BluetoothPowerActivity"
-            android:screenOrientation="sensorPortrait"
-            android:configChanges="keyboardHidden|keyboard|orientation">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
-
-        <activity android:name="com.idevicesinc.sweetblue.BleScanActivity"
-            android:screenOrientation="sensorPortrait"
-            android:configChanges="keyboardHidden|keyboard|orientation">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
-
-        <activity android:name="com.idevicesinc.sweetblue.TaskManagerIdleActivity"
+        <activity android:name="com.idevicesinc.sweetblue.BluetoothEnablerActivity"
                   android:screenOrientation="sensorPortrait"
                   android:configChanges="keyboardHidden|keyboard|orientation">
             <intent-filter>
@@ -53,6 +34,17 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <activity android:name="com.idevicesinc.sweetblue.TestActivity"
+                  android:screenOrientation="sensorPortrait"
+                  android:configChanges="keyboardHidden|keyboard|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
 
     </application>
 

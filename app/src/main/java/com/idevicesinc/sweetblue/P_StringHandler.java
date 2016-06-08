@@ -46,13 +46,29 @@ public class P_StringHandler
         }
     }
 
+    public static String getString(String stringKey)
+    {
+        return getString(null, stringKey);
+    }
+
     public static String getString(Activity context, String stringKey)
     {
-        int res = context.getResources().getIdentifier(stringKey, "string", context.getPackageName());
-        if (res == 0) {
+        if(context != null)
+        {
+            int res = context.getResources().getIdentifier(stringKey, "string", context.getPackageName());
+            if (res == 0) {
+                checkMap();
+                return fallBackStrings.get(stringKey);
+            }
+            return context.getString(res);
+        }
+        else
+        {
             checkMap();
             return fallBackStrings.get(stringKey);
         }
-        return context.getString(res);
+
     }
+
+
 }

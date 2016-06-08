@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -261,6 +262,22 @@ public class BleManager
         sInstance = null;
     }
 
+    public void enableBluetoothAndMarshmallowPrerequisites(Activity callingActivity)
+    {
+        BluetoothEnabler.enableBluetoothAndPrerequisites(callingActivity, mConfig.bluetoothEnablerController, this);
+    }
+
+    public void resumeBluetoothEnablerIfPaused(BluetoothEnabler.Please resumePlease)
+    {
+        BluetoothEnabler.resumeEnabler(resumePlease);
+    }
+
+    public boolean isBleSupported()
+    {
+        PackageManager manager = mContext.getPackageManager();
+
+        return manager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+    }
 
 
     int getStateMask()
@@ -400,11 +417,31 @@ public class BleManager
     }
 
 
+    /**
+     * Used for testing in the instrumentation tests
+     * @return the current update interval
+     */
+    long getUpdateSpeed()
+    {
+        return mUpdateInterval;
+    }
+
+    void wake()
+    {
+        mUpdateInterval =  mConfig.updateThreadSpeed.getMilliseconds();
+
+        mPostManager.removeUpdateCallbacks(mUpdateRunnable);
+
+        mPostManager.postToUpdateThread(mUpdateRunnable);
+    }
+
 
     private void startScan_private(Interval scanTime, Interval pauseTime)
     {
-        if (!isAny(SCANNING, SCAN_PAUSED))
+        if (!isAny(SCANNING, SCAN_PAUSED, STARTING_SCAN))
         {
+            mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, STARTING_SCAN, true);
+
             mTaskManager.add(new P_Task_Scan(mTaskManager, null, scanTime, pauseTime));
         }
     }
@@ -434,6 +471,11 @@ public class BleManager
         }
 
         initPostManager();
+
+        if(mConfig.bluetoothEnablerController != null && mConfig.bluetoothEnablerController instanceof DefaultBluetoothEnablerController)
+        {
+            ((DefaultBluetoothEnablerController) mConfig.bluetoothEnablerController).initStrings(mContext);
+        }
 
         mUpdateInterval = mConfig.updateThreadSpeed.getMilliseconds();
         mPostManager.postToUpdateThreadDelayed(mUpdateRunnable, mUpdateInterval);
@@ -557,19 +599,5 @@ public class BleManager
             };
             return mHandler;
         }
-    }
-
-    long getUpdateSpeed()
-    {
-        return mUpdateInterval;
-    }
-
-    void wake()
-    {
-        mUpdateInterval =  mConfig.updateThreadSpeed.getMilliseconds();
-
-        mPostManager.removeUpdateCallbacks(mUpdateRunnable);
-
-        mPostManager.postToUpdateThread(mUpdateRunnable);
     }
 }

@@ -17,6 +17,7 @@ samples/ble_util/.settings/org.eclipse.jdt.core.prefs
 /.idea/libraries
 /.idea/runConfigurations.xml
 /.idea/modules.xml
+*.idea
 /tester/tester.iml
 app/build
 app/script_output/

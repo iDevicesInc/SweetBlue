@@ -36,8 +36,7 @@ public class BleManagerConfig extends BleDeviceConfig
     public ScanFilter defaultScanFilter                     = null;
     public boolean autoPauseResumeDetection                 = true;
     public int delayBeforeIdleMs                            = 250;
-
-
+    public BluetoothEnablerController bluetoothEnablerController = new DefaultBluetoothEnablerController(new BluetoothEnablerConfig());
 
     Looper updateLooper                                     = null;
 
