@@ -18,6 +18,8 @@ import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.Utils_Rssi;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+
+import java.util.Map;
 import java.util.UUID;
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
@@ -194,6 +196,11 @@ public class BleDevice extends BleNode
     public byte[] getManufacturerData()
     {
         return mScanInfo.getManufacturerData();
+    }
+
+    public Map<UUID, byte[]> getAdvertisedServiceData()
+    {
+        return mScanInfo.getServiceData();
     }
 
     public boolean is(BleDeviceState state)

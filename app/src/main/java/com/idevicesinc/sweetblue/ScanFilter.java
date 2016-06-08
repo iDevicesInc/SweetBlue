@@ -142,6 +142,15 @@ public interface ScanFilter
             }
         }
 
+        public boolean isFor(UUID uuid)
+        {
+            if (!mScanInfo.isNull())
+            {
+                return mScanInfo.getServiceUUIDS().contains(uuid);
+            }
+            return false;
+        }
+
         @Override public String toString()
         {
             return Utils_String.toString(
