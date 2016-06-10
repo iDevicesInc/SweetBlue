@@ -2,9 +2,9 @@ package com.idevicesinc.sweetblue;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -13,18 +13,15 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
+import com.idevicesinc.sweetblue.listeners.EnablerDoneListener;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
-import com.idevicesinc.sweetblue.listeners.NotifyListener;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
-import com.idevicesinc.sweetblue.utils.Interval;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-
 import com.idevicesinc.sweetblue.tester.R;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 
@@ -39,10 +36,6 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<BleDevice> mDevices;
 
 
-    private static String UUID_TEMPLATE_2 = "00000000-cc25-497d-9854-9b6c02c77054";
-    public static final UUID DRY_BULB_TEMP = Uuids.fromInt("12630001", UUID_TEMPLATE_2);
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -52,9 +45,7 @@ public class MainActivity extends AppCompatActivity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.scanApi = BleScanAPI.POST_LOLLIPOP;
-//        config.bondBeforeConnecting = true;
-        // Drop adv UUID
-        config.defaultScanFilter = new BleManagerConfig.DefaultScanFilter(Uuids.fromString("12630000-cc25-497d-9854-9b6c02c77054"));
+
         config.postCallbacksToUIThread = true;
         mgr = BleManager.get(this, config);
 
@@ -73,63 +64,42 @@ public class MainActivity extends AppCompatActivity
                     {
                         if (event.didEnter(BleDeviceState.INITIALIZED))
                         {
-                            Toast.makeText(MainActivity.this, "We are initialized!", Toast.LENGTH_LONG).show();
+                            device.read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
+                            {
+                                @Override public void onEvent(ReadWriteEvent e)
+                                {
+                                    if (e.wasSuccess())
+                                    {
+                                        Toast.makeText(MainActivity.this, Utils_String.makeString("Battery Level: ", e.data_byte()), Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                            });
                         }
                     }
                 });
-                device.connect(new BleTransaction.Init() {
 
+                device.connect(new BleTransaction.Init()
+                {
                     @Override public void start(final BleDevice device)
                     {
-                        device.setMtu(512, new ReadWriteListener()
+                        device.read(Uuids.MANUFACTURER_NAME, new ReadWriteListener()
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
-                                if (e.wasSuccess())
+                                device.read(Uuids.MODEL_NUMBER, new ReadWriteListener()
                                 {
-                                    device.enableNotify(DRY_BULB_TEMP, new ReadWriteListener()
+                                    @Override public void onEvent(ReadWriteEvent e)
                                     {
-                                        @Override public void onEvent(ReadWriteEvent e)
-                                        {
-                                            if (e.wasSuccess())
-                                            {
-
-                                            }
-                                        }
-                                    });
-                                }
+                                        succeed();
+                                    }
+                                });
                             }
                         });
                     }
-
-                    @Override protected boolean isAtomic()
-                    {
-                        return false;
-                    }
-                });
-                device.setNotifyListener(new NotifyListener()
-                {
-                    @Override public void onEvent(NotifyEvent event)
-                    {
-                        int i = 0;
-                        i++;
-                    }
                 });
             }
         });
-        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener()
-        {
-            @Override public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
-            {
-                BleDevice device = mDevices.get(position);
-                if (device.is(BleDeviceState.CONNECTED))
-                {
-                    device.disconnect();
-                    return true;
-                }
-                return false;
-            }
-        });
+        registerForContextMenu(mListView);
 
         mStartScan = (Button) findViewById(R.id.startScan);
         mStartScan.setOnClickListener(new View.OnClickListener()
@@ -185,15 +155,39 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
-        if (mgr.is(BleManagerState.OFF))
+        mStartScan.setEnabled(false);
+        mgr.enableBluetoothAndMarshmallowPrerequisites(this, new EnablerDoneListener()
         {
-            mStartScan.setEnabled(false);
-            mgr.turnOn();
-        }
-        else
+            @Override public void onFinished(boolean isScanningReady)
+            {
+                if (isScanningReady)
+                {
+                    mStartScan.setEnabled(true);
+                }
+            }
+        });
+    }
+
+    @Override public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
+    {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+        if (mDevices.get(info.position).is(BleDeviceState.CONNECTED))
         {
-            mStartScan.setEnabled(true);
+            menu.add(0, 0, 0, "Disconnect");
         }
+    }
+
+    @Override public boolean onContextItemSelected(MenuItem item)
+    {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        switch (item.getItemId())
+        {
+            case 0:
+                mDevices.get(info.position).disconnect();
+                return true;
+        }
+        return super.onContextItemSelected(item);
     }
 
     private class ScanAdaptor extends ArrayAdapter<BleDevice>

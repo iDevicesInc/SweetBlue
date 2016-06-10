@@ -443,7 +443,7 @@ public class P_TaskManager
     private void removeTask(P_Task task)
     {
         mTaskQueue.remove(task);
-        if (mTaskQueue.peekFirst().getPriority() != P_TaskPriority.ATOMIC_TRANSACTION)
+        if (mTaskQueue.isEmpty() || mTaskQueue.peekFirst().getPriority() != P_TaskPriority.ATOMIC_TRANSACTION)
         {
             atomicTxnRunning = false;
         }

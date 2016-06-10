@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import java.util.UUID;
 
@@ -28,13 +29,19 @@ public class P_Task_Read extends P_Task_Transactionable
 
     @Override P_TaskPriority defaultPriority()
     {
-        return P_TaskPriority.MEDIUM;
+        return P_TaskPriority.LOW;
     }
 
     @Override public void execute()
     {
         if (!getDevice().mGattManager.read(mServiceUuid, mCharUuid))
         {
+            ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(getDevice(), mServiceUuid, mCharUuid, ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID,
+                    ReadWriteListener.Type.READ, ReadWriteListener.Target.CHARACTERISTIC, null, ReadWriteListener.Status.NO_MATCHING_TARGET, 133, 0, 0, true);
+            if (mListener != null)
+            {
+                mListener.onEvent(event);
+            }
             failImmediately();
         }
     }
@@ -42,12 +49,18 @@ public class P_Task_Read extends P_Task_Transactionable
     /**
      * Gets called from {@link P_GattManager} when a read comes in.
      */
-    void onRead(ReadWriteListener.ReadWriteEvent event)
+    void onRead(final ReadWriteListener.ReadWriteEvent event)
     {
-        if (mListener != null)
+        getManager().mPostManager.postCallback(new Runnable()
         {
-            mListener.onEvent(event);
-        }
+            @Override public void run()
+            {
+                if (mListener != null)
+                {
+                    mListener.onEvent(event);
+                }
+            }
+        });
         succeed();
     }
 

@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
@@ -21,6 +22,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 
 import java.util.Map;
 import java.util.UUID;
+
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 
@@ -44,6 +46,7 @@ public class BleDevice extends BleNode
     private String mName_native;
     private String mName_scanRecord;
     String mName_device;
+    private String mName_debug;
     private DeviceConnectionFailListener mConnectionFailListener;
     final P_GattManager mGattManager;
     private P_ReconnectManager mReconnectManager;
@@ -59,6 +62,23 @@ public class BleDevice extends BleNode
         mOrigin = origin;
         mOrigin_last = mOrigin;
         mName_device = deviceName;
+        if (nativeDevice != null)
+        {
+            String[] address_split = nativeDevice.getAddress().split(":");
+            String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
+            if (!mName_device.contains(lastFourOfMac))
+            {
+                mName_debug = Utils_String.concatStrings(mName_device.toLowerCase(), "_", lastFourOfMac);
+            }
+            else
+            {
+                mName_debug = mName_device;
+            }
+        }
+        else
+        {
+            mName_debug = mName_device;
+        }
 
         if (!mIsNull)
         {
@@ -153,7 +173,6 @@ public class BleDevice extends BleNode
      * Returns the name of this device. This is our best guess for which name to use. First, it pulls the name from
      * {@link BluetoothDevice#getName()}. If that is null, it is then pulled from the scan record. If that is null,
      * then a name will be assigned &lt;No_Name_XX:XX&gt;, where XX:XX are the last 4 of the device's mac address.
-     *
      */
     public String getName()
     {
@@ -272,10 +291,10 @@ public class BleDevice extends BleNode
 
     public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final BleDevice device_nullable)
     {
-        if (device_nullable == null)												return false;
-        if (device_nullable == this)												return true;
-        if (device_nullable.getNative() == null || this.getNative() == null)		return false;
-        if( this.isNull() && device_nullable.isNull() )								return true;
+        if (device_nullable == null) return false;
+        if (device_nullable == this) return true;
+        if (device_nullable.getNative() == null || this.getNative() == null) return false;
+        if (this.isNull() && device_nullable.isNull()) return true;
 
         return device_nullable.getNative().equals(this.getNative());
     }
@@ -336,9 +355,24 @@ public class BleDevice extends BleNode
     {
         if (!isAny(CONNECTING, CONNECTED, CONNECTING_OVERALL) || isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM))
         {
-            if (getConfig().bondBeforeConnecting && (!mGattManager.isBonded() || mGattManager.isBonding()))
+            if (getConfig().bondOnConnectOption != null)
             {
-                getManager().mTaskManager.add(new P_Task_Bond(this, null));
+                switch (getConfig().bondOnConnectOption)
+                {
+                    case BOND:
+                        if (!mGattManager.isBonded() || mGattManager.isBonding())
+                        {
+                            getManager().mTaskManager.add(new P_Task_Bond(this, null));
+                        }
+                        break;
+                    case RE_BOND:
+                        if (mGattManager.isBonded())
+                        {
+                            getManager().mTaskManager.add(new P_Task_Unbond(this, null));
+                        }
+                        getManager().mTaskManager.add(new P_Task_Bond(this, null));
+                        break;
+                }
             }
             stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTING_OVERALL, true);
             getManager().mTaskManager.add(new P_Task_Connect(this, null));
@@ -444,6 +478,7 @@ public class BleDevice extends BleNode
             // TODO - Throw error here
             return;
         }
+        stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, PERFORMING_OTA, true);
         mTxnManager.start(otaTxn);
     }
 
@@ -455,11 +490,9 @@ public class BleDevice extends BleNode
         }
         else
         {
-            return Utils_String.concatStrings(getName(), " ", stateTracker().toString());
+            return Utils_String.concatStrings(mName_debug, " ", stateTracker().toString());
         }
     }
-
-
 
 
     void setNameFromNative(String name)
@@ -522,7 +555,8 @@ public class BleDevice extends BleNode
 
     void onConnected()
     {
-        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTED, true, DISCOVERING_SERVICES, true, CONNECTING, false, CONNECTING_OVERALL, false, DISCONNECTED, false);
+        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTED, true, DISCOVERING_SERVICES, true, CONNECTING, false,
+                CONNECTING_OVERALL, false, DISCONNECTED, false, RECONNECTING_SHORT_TERM, false, RECONNECTING_LONG_TERM, false);
         getManager().deviceConnected(this);
         getManager().mTaskManager.succeedTask(P_Task_Connect.class, this);
         getManager().mTaskManager.add(new P_Task_DiscoverServices(this, null));
@@ -548,7 +582,7 @@ public class BleDevice extends BleNode
 
     void onDisconnected()
     {
-        stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, DISCONNECTED, true, ADVERTISING, true, DISCOVERED, true);
+        resetToDisconnected();
         getManager().mTaskManager.succeedTask(P_Task_Disconnect.class, this);
     }
 
@@ -561,7 +595,7 @@ public class BleDevice extends BleNode
             return;
         }
 
-        stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, DISCONNECTED, true, ADVERTISING, true, DISCOVERED, true);
+        resetToDisconnected();
     }
 
     void onServicesDiscovered()
@@ -621,6 +655,29 @@ public class BleDevice extends BleNode
         return mConnectionFailListener;
     }
 
+
+
+    private void resetToDisconnected()
+    {
+        stateTracker().set(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, DISCONNECTED, true, ADVERTISING, true, DISCOVERED, true);
+        if (mGattManager == null)
+        {
+            stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNBONDED, true);
+        }
+        if (mGattManager.isBonding())
+        {
+            stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, true);
+        }
+        else if (mGattManager.isBonded())
+        {
+            stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDED, true);
+        }
+        else
+        {
+            stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNBONDED, true);
+        }
+    }
+
     private void postBondEvent(P_StateTracker.E_Intent intent, int failReason, BondListener.Status status)
     {
         if (mBondListener != null)
@@ -671,25 +728,14 @@ public class BleDevice extends BleNode
     {
         if (mTxnManager.isRunning())
         {
-            if (mTxnManager.isTransactionOperation())
+            // If it's an atomic transaction, and a transactionable task, then change the priority so it ends up
+            // before any other task with lower priority.
+            if (mTxnManager.isAtomic() && task instanceof P_Task_Transactionable)
             {
-                // If it's an atomic transaction, and a transactionable task, then change the priority so it ends up
-                // before any other task with lower priority.
-                if (mTxnManager.isAtomic() && task instanceof P_Task_Transactionable)
-                {
-                    ((P_Task_Transactionable)task).mPriority = P_TaskPriority.ATOMIC_TRANSACTION;
-                }
-                getManager().mTaskManager.add(task);
-            }
-            else
-            {
-                mTxnManager.queueTask(task);
+                ((P_Task_Transactionable) task).mPriority = P_TaskPriority.ATOMIC_TRANSACTION;
             }
         }
-        else
-        {
-            getManager().mTaskManager.add(task);
-        }
+        getManager().mTaskManager.add(task);
     }
 
     /**

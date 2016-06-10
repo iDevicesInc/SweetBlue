@@ -242,7 +242,7 @@ class P_GattManager
             else
             {
                 getManager().mTaskManager.failTask(P_Task_DiscoverServices.class, mDevice, false);
-                //onConnectionFail(status);
+                onConnectionFail(status);
             }
         }
 
@@ -252,12 +252,23 @@ class P_GattManager
             P_Task_Read read = getManager().mTaskManager.getCurrent(P_Task_Read.class, mDevice);
             if (read != null)
             {
+                ReadWriteListener.Status rwStatus = Utils.isSuccess(status) ? ReadWriteListener.Status.SUCCESS : ReadWriteListener.Status.REMOTE_GATT_FAILURE;
                 final byte[] val = characteristic.getValue() == null ? null : characteristic.getValue().clone();
-                ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, characteristic.getService().getUuid(), characteristic.getUuid(),
+                final ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(mDevice, characteristic.getService().getUuid(), characteristic.getUuid(),
                         ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID, ReadWriteListener.Type.READ, ReadWriteListener.Target.CHARACTERISTIC, val,
-                        ReadWriteListener.Status.SUCCESS, status, 0, 0, true);
+                        rwStatus, status, 0, 0, true);
                 read.onRead(event);
-                // TODO - Also post the read event to the "catch-all" listener stored in BleManager
+                getManager().mPostManager.postCallback(new Runnable()
+                {
+                    @Override public void run()
+                    {
+                        if (getManager().mDefaultReadWriteListener != null)
+                        {
+                            getManager().mDefaultReadWriteListener.onEvent(event);
+                        }
+
+                    }
+                });
             }
         }
 
@@ -439,6 +450,7 @@ class P_GattManager
                     else if (curTask instanceof P_Task_Unbond)
                     {
                         curTask.succeed();
+                        mDevice.onUnbond(P_StateTracker.E_Intent.UNINTENTIONAL);
                     }
                     else
                     {

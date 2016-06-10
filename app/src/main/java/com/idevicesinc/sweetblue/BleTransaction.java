@@ -38,6 +38,11 @@ public abstract class BleTransaction
         end(TxnEndListener.EndReason.FAILED);
     }
 
+    protected BleDevice getDevice()
+    {
+        return mDevice;
+    }
+
     private void end(TxnEndListener.EndReason reason)
     {
         onEnd(mDevice, reason);

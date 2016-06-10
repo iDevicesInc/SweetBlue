@@ -92,7 +92,7 @@ class P_ScanManager
         stopScan_private(false);
     }
 
-    void postScanResult(BluetoothDevice device, int rssi, byte[] scanRecord)
+    synchronized void postScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord)
     {
         if (mManager.isOnSweetBlueThread())
         {
@@ -100,14 +100,11 @@ class P_ScanManager
         }
         else
         {
-            final BluetoothDevice device_native = device;
-            final int mRssi = rssi;
-            final byte[] mScanRecord = scanRecord;
             mManager.mPostManager.postToUpdateThread(new Runnable()
             {
                 @Override public void run()
                 {
-                    mManager.onDiscoveredFromNativeStack(device_native, mRssi, mScanRecord);
+                    mManager.onDiscoveredFromNativeStack(device, rssi, scanRecord);
                 }
             });
         }

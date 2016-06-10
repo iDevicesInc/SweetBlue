@@ -1,8 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.utils.Interval;
-
 public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 {
 
@@ -39,7 +37,11 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
     public boolean useLeTransportForBonding                     = false;
 
-    public boolean bondBeforeConnecting                         = false;
+    /**
+     * This will set the bond behavior of a device when connecting. See {@link BondOnConnectOption} for possible values.
+     * Default is {@link BondOnConnectOption#NONE}.
+     */
+    public BondOnConnectOption bondOnConnectOption              = BondOnConnectOption.NONE;
 
     /**
      * Tells SweetBlue to use Android's built-in autoConnect option. It's been observed that this doesn't work very
@@ -54,5 +56,24 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
     @Override protected BleDeviceConfig clone()
     {
         return (BleDeviceConfig) super.clone();
+    }
+
+
+    public enum BondOnConnectOption
+    {
+        /**
+         * Do no automatic bond
+         */
+        NONE,
+
+        /**
+         * Perform a bond before connecting, if the device is not already bonded.
+         */
+        BOND,
+
+        /**
+         * Bond with the device before connecting. If the device is already bonded, then unbond first, then bond.
+         */
+        RE_BOND;
     }
 }

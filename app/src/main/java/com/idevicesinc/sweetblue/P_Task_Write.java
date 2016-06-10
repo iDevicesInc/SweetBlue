@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 
 import java.util.UUID;
@@ -27,16 +28,28 @@ public class P_Task_Write extends P_Task_Transactionable
     {
         if (!getDevice().mGattManager.write(mServiceUuid, mCharUuid, mValue))
         {
+            ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(getDevice(), mServiceUuid, mCharUuid, ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID,
+                    ReadWriteListener.Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC, null, ReadWriteListener.Status.NO_MATCHING_TARGET, 133, 0, 0, true);
+            if (mListener != null)
+            {
+                mListener.onEvent(event);
+            }
             failImmediately();
         }
     }
 
-    void onWrite(ReadWriteListener.ReadWriteEvent event)
+    void onWrite(final ReadWriteListener.ReadWriteEvent event)
     {
-        if (mListener != null)
+        getManager().mPostManager.postCallback(new Runnable()
         {
-            mListener.onEvent(event);
-        }
+            @Override public void run()
+            {
+                if (mListener != null)
+                {
+                    mListener.onEvent(event);
+                }
+            }
+        });
         succeed();
     }
 
@@ -47,7 +60,7 @@ public class P_Task_Write extends P_Task_Transactionable
 
     @Override P_TaskPriority defaultPriority()
     {
-        return P_TaskPriority.MEDIUM;
+        return P_TaskPriority.LOW;
     }
 
 }

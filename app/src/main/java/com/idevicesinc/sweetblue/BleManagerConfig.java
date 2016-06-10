@@ -20,25 +20,28 @@ import java.util.UUID;
 public class BleManagerConfig extends BleDeviceConfig
 {
 
-    public boolean runOnUIThread                            = false;
-    public boolean postCallbacksToUIThread                  = true;
-    public UpdateThreadSpeed updateThreadSpeed              = UpdateThreadSpeed.TWENTY_FIVE_MS;
-    public int updateThreadIdleIntervalMs                   = 500;
-    public boolean loggingEnabled                           = false;
-    public SweetLogger logger                               = new DefaultLogger();
-    public Interval taskTimeout                             = Interval.DISABLED;
-    public List<UuidNameMap> uuidNameMaps					= null;
-    public UpdateCallback updateCallback                    = null;
-    public boolean manageCpuWakeLock                        = true;
-    public Comparator<BleDevice> defaultDeviceSorter        = new DeviceNameComparator();
-    public BleScanAPI scanApi                              = BleScanAPI.AUTO;
-    public BleScanPower scanPower                          = BleScanPower.AUTO;
-    public ScanFilter defaultScanFilter                     = null;
-    public boolean autoPauseResumeDetection                 = true;
-    public int delayBeforeIdleMs                            = 250;
-    public BluetoothEnablerController bluetoothEnablerController = new DefaultBluetoothEnablerController(new BluetoothEnablerConfig());
+    public final static float DEFAULT_TASK_TIMEOUT                      = 12.5f;
 
-    Looper updateLooper                                     = null;
+
+    public boolean runOnUIThread                                        = false;
+    public boolean postCallbacksToUIThread                              = true;
+    public UpdateThreadSpeed updateThreadSpeed                          = UpdateThreadSpeed.TWENTY_FIVE_MS;
+    public int updateThreadIdleIntervalMs                               = 500;
+    public boolean loggingEnabled                                       = false;
+    public SweetLogger logger                                           = new DefaultLogger();
+    public Interval taskTimeout                                         = Interval.secs(DEFAULT_TASK_TIMEOUT);
+    public List<UuidNameMap> uuidNameMaps					            = null;
+    public UpdateCallback updateCallback                                = null;
+    public boolean manageCpuWakeLock                                    = true;
+    public Comparator<BleDevice> defaultDeviceSorter                    = new DeviceNameComparator();
+    public BleScanAPI scanApi                                           = BleScanAPI.AUTO;
+    public BleScanPower scanPower                                       = BleScanPower.AUTO;
+    public ScanFilter defaultScanFilter                                 = null;
+    public boolean autoPauseResumeDetection                             = true;
+    public int delayBeforeIdleMs                                        = 250;
+    public BluetoothEnablerController bluetoothEnablerController        = new DefaultBluetoothEnablerController(new BluetoothEnablerConfig());
+
+    Looper updateLooper                                                 = null;
 
 
     final String[] debugThreadNames =
