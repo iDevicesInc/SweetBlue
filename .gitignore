@@ -13,6 +13,8 @@ scripts/script_output/
 **/scripts/script_output
 samples/hello_ble/.settings/org.eclipse.jdt.core.prefs
 samples/ble_util/.settings/org.eclipse.jdt.core.prefs
+*.iml
+/.idea
 /.idea/workspace.xml
 /.idea/libraries
 /.idea/runConfigurations.xml

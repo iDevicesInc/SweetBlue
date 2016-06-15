@@ -26,6 +26,10 @@ class P_BleManager_Listeners
 {
 	private static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
 	private static final String BluetoothDevice_ACTION_DISAPPEARED = "android.bluetooth.device.action.DISAPPEARED";
+	private static Method m_getLeState_marshmallow;
+	private Integer m_refState;
+	private Integer m_state;
+
 	
 	final BluetoothAdapter.LeScanCallback m_scanCallback_preLollipop = new BluetoothAdapter.LeScanCallback()
 	{
@@ -646,18 +650,21 @@ class P_BleManager_Listeners
 		{
 			try
 			{
-				final Method method = BluetoothAdapter.class.getDeclaredMethod("getLeState");
-				final Integer state = (Integer) method.invoke(m_mngr.getNativeAdapter());
-				final Integer state2 = m_mngr.getNativeAdapter().getState();
+				if (m_getLeState_marshmallow == null)
+				{
+					m_getLeState_marshmallow = BluetoothAdapter.class.getDeclaredMethod("getLeState");
+				}
+				m_refState = (Integer) m_getLeState_marshmallow.invoke(m_mngr.getNativeAdapter());
+				m_state = m_mngr.getNativeAdapter().getState();
 				// This is to fix an issue on the S7 (and perhaps other phones as well), where the OFF
 				// state is never returned from the getLeState method. This is because the BLE_ states represent if LE only mode is on/off. This does NOT
 				// relate to the Bluetooth radio being on/off. So, we check if STATE_BLE_ON, and the normal getState() method returns OFF, we
 				// will return a state of OFF here.
-				if (state == BleStatuses.STATE_BLE_ON && state2 == OFF.getNativeCode())
+				if (m_refState == BleStatuses.STATE_BLE_ON && m_state == OFF.getNativeCode())
 				{
-					return state2;
+					return m_state;
 				}
-				return state;
+				return m_refState;
 			}
 			catch (Exception e)
 			{

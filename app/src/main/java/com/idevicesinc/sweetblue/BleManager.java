@@ -2,8 +2,10 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.*;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import android.Manifest;
 import android.app.Activity;
@@ -726,7 +728,14 @@ public class BleManager
 
 		@Override public void stopLeScan(BluetoothAdapter.LeScanCallback callback)
 		{
-			getNativeAdapter().stopLeScan(callback);
+			if (m_config.scanMode == BleScanMode.POST_LOLLIPOP)
+			{
+				L_Util.stopNativeScan(BleManager.this);
+			}
+			else
+			{
+				getNativeAdapter().stopLeScan(callback);
+			}
 		}
 	}
 
@@ -1009,6 +1018,7 @@ public class BleManager
 		}
 		else
 		{
+			m_config.allowCallsFromAllThreads = true;
 			m_updateLoop = m_config.updateLoopFactory.newAnonThreadLoop(m_updateLoopCallback);
 		}
 
@@ -2203,11 +2213,15 @@ public class BleManager
 	{
 		m_timeNotScanning = 0.0;
 
+		// Specifically stop the scan
+		//m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
+
 		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
 		{
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
 
+		m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_stateTracker.remove(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
@@ -2395,6 +2409,31 @@ public class BleManager
 		enforceMainThread();
 
 		return m_diskOptionsMngr.getPreviouslyConnectedDevices();
+	}
+
+
+	/**
+	 * Convenience method to return a {@link Set} of currently bonded devices. This simply calls
+	 * {@link BluetoothAdapter#getBondedDevices()}, and wraps all bonded devices into separate
+	 * {@link BleDevice} classes.
+     */
+	public Set<BleDevice> getDevices_bonded()
+	{
+		enforceMainThread();
+
+		Set<BluetoothDevice> native_bonded_devices = getNativeAdapter().getBondedDevices();
+		Set<BleDevice> bonded_devices = new HashSet<>(native_bonded_devices.size());
+		BleDevice device;
+		for (BluetoothDevice d : native_bonded_devices)
+		{
+			device = getDevice(d.getAddress());
+			if (device.isNull())
+			{
+				device = newDevice(d.getAddress());
+			}
+			bonded_devices.add(device);
+		}
+		return bonded_devices;
 	}
 
 	/**
@@ -3110,7 +3149,7 @@ public class BleManager
 		{
 			try
 			{
-				if( m_config.scanMode.isLollipopScanMode() && Utils.isLollipop() )
+				if( m_config.scanMode == BleScanMode.POST_LOLLIPOP && Utils.isLollipop() )
 				{
 					stopNativeScan_nested_postLollipop();
 				}

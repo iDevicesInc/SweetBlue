@@ -1,7 +1,10 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanSettings;
+
+import java.util.List;
 
 /**
  * Type-safe parallel of various static final int members of {@link android.bluetooth.le.ScanSettings} and a way to
@@ -28,6 +31,15 @@ public enum BleScanMode
 	 * which was deprecated in Lollipop.
 	 */
 	PRE_LOLLIPOP(-1),
+
+	/**
+	 * This will tell SweetBlue to use the newer scanning API introduced in Lollipop
+	 * ({@link android.bluetooth.le.BluetoothLeScanner#startScan(List, ScanSettings, ScanCallback)}) . We've found that this API is
+	 * not yet as good as it's predecessor. It may be better for battery life, as you have more control over the scanning power (using
+	 * {@link BleScanPower}), however, even at {@link BleScanPower#HIGH_POWER}, we've found that it doesn't discover devices
+	 * as reliably as the pre-lollipop scan API.
+	 */
+	POST_LOLLIPOP(-1),
 
 	/**
 	 * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_LOW_POWER}.

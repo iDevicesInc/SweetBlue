@@ -20,8 +20,8 @@ public class BleScanInfo
     {
         m_manufactuerId = -1;
         m_manufacturerData = new byte[32];
-        m_advFlags = new Pointer<>();
-        m_txPower = new Pointer<>();
+        m_advFlags = new Pointer<>(0);
+        m_txPower = new Pointer<>(0);
         m_serviceUuids = new ArrayList<>();
         m_serviceData = new HashMap<>();
         m_localName = "";

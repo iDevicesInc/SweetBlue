@@ -33,6 +33,7 @@ import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Returning;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -266,10 +267,10 @@ public class BleDevice extends BleNode
 	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ReadWriteListener
+	public static interface ReadWriteListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<ReadWriteListener.ReadWriteEvent>
 	{
 		/**
-		 * A value returned to {@link ReadWriteListener#onEvent(ReadWriteEvent)}
+		 * A value returned to {@link ReadWriteListener#onEvent(Event)}
 		 * by way of {@link ReadWriteEvent#status} that indicates success of the
 		 * operation or the reason for its failure. This enum is <i>not</i>
 		 * meant to match up with {@link BluetoothGatt}.GATT_* values in any way.
@@ -615,8 +616,8 @@ public class BleDevice extends BleNode
 		/**
 		 * Provides a bunch of information about a completed read, write, or notification.
 		 */
-		@Immutable
-		public static class ReadWriteEvent extends Event implements UsesCustomNull
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class ReadWriteEvent extends com.idevicesinc.sweetblue.utils.Event implements com.idevicesinc.sweetblue.utils.UsesCustomNull
 		{
 			/**
 			 * Value used in place of <code>null</code>, either indicating that {@link #descUuid} isn't used for the {@link ReadWriteEvent}
@@ -1070,7 +1071,7 @@ public class BleDevice extends BleNode
 		/**
 		 * Called when a read or write is complete or when a notification comes in or when a notification is enabled/disabled.
 		 */
-		void onEvent(final ReadWriteEvent e);
+//		void onEvent(final ReadWriteEvent e);
 	}
 
 	/**
@@ -1380,7 +1381,7 @@ public class BleDevice extends BleNode
 			/**
 			 * If {@link ConnectionFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or
 			 * {@link Status#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called somewhere in or
-			 * downstream of {@link ReadWriteListener#onEvent(ReadWriteEvent)}, then the {@link ReadWriteEvent} passed there will be returned
+			 * downstream of {@link ReadWriteListener#onEvent(Event)}, then the {@link ReadWriteEvent} passed there will be returned
 			 * here. Otherwise, this will return a {@link ReadWriteEvent} for which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
 			 */
 			public ReadWriteListener.ReadWriteEvent txnFailReason() {  return m_txnFailReason;  }
@@ -6310,17 +6311,17 @@ public class BleDevice extends BleNode
 
 		if (listener_nullable != null)
 		{
-			listener_nullable.onEvent(event);
+			postEvent(listener_nullable, event);
 		}
 
 		if (m_defaultReadWriteListener != null)
 		{
-			m_defaultReadWriteListener.onEvent(event);
+			postEvent(m_defaultReadWriteListener, event);
 		}
 
 		if (getManager() != null && getManager().m_defaultReadWriteListener != null)
 		{
-			getManager().m_defaultReadWriteListener.onEvent(event);
+			postEvent(getManager().m_defaultReadWriteListener, event);
 		}
 
 		m_txnMngr.onReadWriteResultCallbacksCalled();
@@ -6441,4 +6442,27 @@ public class BleDevice extends BleNode
 		return "NULL";
 	}
 	// static String NULL_MAC = "DE:AD:BE:EF:BA:BE";
+
+	private void postEvent(final GenericListener_Void listener, final Event event)
+	{
+		if (getManager().m_config.runOnMainThread && !Utils.isOnMainThread())
+		{
+			postEventOnMain(listener, event);
+		}
+		else
+		{
+			listener.onEvent(event);
+		}
+	}
+
+	private void postEventOnMain(final GenericListener_Void listener, final Event event)
+	{
+		getManager().m_mainThreadHandler.post(new Runnable()
+		{
+			@Override public void run()
+			{
+				listener.onEvent(event);
+			}
+		});
+	}
 }

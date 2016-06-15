@@ -177,7 +177,7 @@ public class Utils_ScanRecord extends Utils
 					}
 					catch(Exception e)
 					{
-						Log.e(TAG, "unable to parse manufactuer data");
+						Log.e(TAG, "unable to parse manufacturer data");
 					}
 
 					break;

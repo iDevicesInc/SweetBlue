@@ -52,7 +52,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
 		private void onScanResult_mainThread(final int callbackType, final L_Util.ScanResult result)
 		{
-			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 			getManager().onDiscoveredFromNativeStack(result.getDevice(), result.getRssi(), result.getRecord());
 		}
@@ -240,6 +241,17 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			{
 				execute_preLollipop();
 			}
+			else if( scanMode == BleScanMode.POST_LOLLIPOP )
+			{
+				if (Utils.isLollipop())
+				{
+					execute_postLollipop(false);
+				}
+				else
+				{
+					execute_preLollipop();
+				}
+			}
 			else if( scanMode.isLollipopScanMode() )
 			{
 				// TODO - Remove this log statement in v3
@@ -263,6 +275,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	private void execute_classic()
 	{
 		BleManagerState.SCANNING.setScanMode(BleScanMode.CLASSIC);
+		getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		tryClassicDiscovery(getIntent(), /*suppressUhOh=*/true);
 
@@ -272,6 +285,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 	private void execute_preLollipop()
 	{
 		BleManagerState.SCANNING.setScanMode(BleScanMode.PRE_LOLLIPOP);
+		getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_mode = startNativeScan_preLollipop(getIntent());
 
@@ -332,6 +346,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				scanMode = scanPower_abstracted.getNativeMode();
 			}
 		}
+		getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		if( false == Utils.isLollipop() )
 		{
@@ -433,7 +448,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 				getManager().getCrashResolver().start();
 			}
 
-			getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			getManager().m_stateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 			return Mode_BLE;
 		}
@@ -465,7 +481,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 			}
 			else
 			{
-				getManager().m_nativeStateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+				getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+				getManager().m_stateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 				if( false == suppressUhOh )
 				{
