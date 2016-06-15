@@ -4,7 +4,7 @@
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>
 <a href="https://travis-ci.org/iDevicesInc/SweetBlue">
-  <img align="right" src="https://img.shields.io/badge/version-2.51.47-blue.svg" />
+  <img align="right" src="https://img.shields.io/badge/version-2.51.48-blue.svg" />
   <img align="right" src="https://travis-ci.org/iDevicesInc/SweetBlue.svg?branch=master"/>
 </a>
 <p align="center">
