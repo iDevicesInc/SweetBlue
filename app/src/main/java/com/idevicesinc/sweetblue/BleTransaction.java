@@ -7,6 +7,7 @@ public abstract class BleTransaction
     TxnEndListener mEndListener;
     private BleDevice mDevice;
     long mTimeStarted;
+    boolean mRunning;
 
 
     void init(BleDevice device, TxnEndListener listener)
@@ -38,13 +39,24 @@ public abstract class BleTransaction
         end(TxnEndListener.EndReason.FAILED);
     }
 
+    protected final void cancel()
+    {
+        end(TxnEndListener.EndReason.CANCELED);
+    }
+
     protected BleDevice getDevice()
     {
         return mDevice;
     }
 
+    boolean isRunning()
+    {
+        return mRunning;
+    }
+
     private void end(TxnEndListener.EndReason reason)
     {
+        mRunning = false;
         onEnd(mDevice, reason);
         if (mEndListener != null)
         {

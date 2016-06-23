@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.content.Intent;
 
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.listeners.BondListener;
@@ -10,12 +11,14 @@ import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
+import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.NotifyListener;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.Utils_Rssi;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -53,6 +56,7 @@ public class BleDevice extends BleNode
     private BondListener mBondListener;
     private NotifyListener mNotifyListener;
     final P_TransactionManager mTxnManager;
+    private long mLastDiscovery;
 
 
     BleDevice(BleManager mgr, BluetoothDevice nativeDevice, BleDeviceOrigin origin, BleDeviceConfig config_nullable, String deviceName, boolean isNull)
@@ -299,6 +303,29 @@ public class BleDevice extends BleNode
         return device_nullable.getNative().equals(this.getNative());
     }
 
+    public void onUndiscovered(P_StateTracker.E_Intent intent)
+    {
+        stateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNDISCOVERED, true, DISCOVERED, false, DISCONNECTED, true, ADVERTISING, false);
+        if (mTxnManager != null)
+        {
+            mTxnManager.cancelAllTxns();
+        }
+        if (getManager().mDiscoveryListener != null)
+        {
+            final DiscoveryListener.DiscoveryEvent event = P_EventFactory.newDiscoveryEvent(this, DiscoveryListener.LifeCycle.UNDISCOVERED);
+            getManager().mPostManager.postCallback(new Runnable()
+            {
+                @Override public void run()
+                {
+                    if (getManager().mDiscoveryListener != null)
+                    {
+                        getManager().mDiscoveryListener.onEvent(event);
+                    }
+                }
+            });
+        }
+    }
+
     public void undiscover()
     {
         // TODO - Implement this
@@ -520,6 +547,11 @@ public class BleDevice extends BleNode
         stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ADVERTISING, true);
     }
 
+    long lastDiscovery()
+    {
+        return mLastDiscovery;
+    }
+
     void update(long curTimeMs)
     {
     }
@@ -664,7 +696,7 @@ public class BleDevice extends BleNode
         {
             stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, UNBONDED, true);
         }
-        if (mGattManager.isBonding())
+        else if (mGattManager.isBonding())
         {
             stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, true);
         }
@@ -706,6 +738,7 @@ public class BleDevice extends BleNode
 
     private void onDiscovered_private(int rssi, BleScanInfo scanInfo)
     {
+        mLastDiscovery = System.currentTimeMillis();
         if (!scanInfo.isNull())
         {
             if (mScanInfo == null || !mScanInfo.equals(scanInfo))

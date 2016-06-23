@@ -12,6 +12,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.List;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.SCAN_PAUSED;
+import static com.idevicesinc.sweetblue.BleManagerState.SCAN_READY;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
 
@@ -21,6 +22,7 @@ class P_ScanManager
     private final BleManager mManager;
     private PreLollipopScanCallback mPreLollipopScanCallback;
     private PostLollipopScanCallback mPostLollipopScanCallback;
+    private BleScanAPI mCurrentApi;
 
 
     public P_ScanManager(BleManager mgr)
@@ -57,28 +59,41 @@ class P_ScanManager
     }
 
 
-    public void startScan()
+    public boolean startScan()
     {
         mManager.getStateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCAN_PAUSED, false, STARTING_SCAN, false);
         switch (mManager.mConfig.scanApi)
         {
             case CLASSIC:
-                mManager.getNativeAdapter().startDiscovery();
-                break;
+                mCurrentApi = BleScanAPI.CLASSIC;
+                return mManager.getNativeAdapter().startDiscovery();
             case POST_LOLLIPOP:
-                if (Utils.isLollipop())
+                if (mManager.is(SCAN_READY))
                 {
-                    startScanPostLollipop();
+                    if (Utils.isLollipop())
+                    {
+                        mCurrentApi = BleScanAPI.POST_LOLLIPOP;
+                        return startScanPostLollipop();
+                    }
+                    else
+                    {
+                        mManager.getLogger().e("Tried to start post lollipop scan on a device not running lollipop or above! Defaulting to pre-lollipop scan instead.");
+                        mCurrentApi = BleScanAPI.PRE_LOLLIPOP;
+                        return startScanPreLollipop();
+                    }
                 }
                 else
                 {
-                    mManager.getLogger().e("Tried to start post lollipop scan on a device not running lollipop or above! Defaulting to pre-lollipop scan instead.");
-                    startScanPreLollipop();
+                    mManager.getLogger().e("Tried to start BLE scan, but scanning is not ready (most likely need to get permissions). Falling back to classic discovery.");
+                    mCurrentApi = BleScanAPI.CLASSIC;
+                    return mManager.getNativeAdapter().startDiscovery();
                 }
-                break;
             case AUTO:
             case PRE_LOLLIPOP:
-                startScanPreLollipop();
+                mCurrentApi = BleScanAPI.PRE_LOLLIPOP;
+                return startScanPreLollipop();
+            default:
+                return false;
         }
     }
 
@@ -112,7 +127,7 @@ class P_ScanManager
 
     public void stopScan_private(boolean stopping)
     {
-        switch (mManager.mConfig.scanApi)
+        switch (mCurrentApi)
         {
             case CLASSIC:
                 mManager.getNativeAdapter().cancelDiscovery();
@@ -141,12 +156,26 @@ class P_ScanManager
         }
     }
 
-    private void startScanPreLollipop()
+    private boolean startScanPreLollipop()
     {
-        mManager.getNativeAdapter().startLeScan(mPreLollipopScanCallback);
+        if (!mManager.getNativeAdapter().startLeScan(mPreLollipopScanCallback))
+        {
+            if (mManager.mConfig.revertToClassicDiscoveryIfNeeded)
+            {
+                return mManager.getNativeAdapter().startDiscovery();
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return true;
+        }
     }
 
-    private void startScanPostLollipop()
+    private boolean startScanPostLollipop()
     {
         int nativePowerMode;
         BleScanPower power = mManager.mConfig.scanPower;
@@ -181,6 +210,7 @@ class P_ScanManager
         {
             L_Util.startNativeScan(mManager, nativePowerMode, Interval.ZERO, mPostLollipopScanCallback);
         }
+        return true;
     }
 
     private void stopScanPreLollipop()

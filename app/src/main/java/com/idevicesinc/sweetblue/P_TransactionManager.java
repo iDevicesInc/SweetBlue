@@ -76,8 +76,25 @@ class P_TransactionManager
         isRunning = true;
         mCurrent = txn;
         txn.init(mDevice, mEndListener);
+        txn.mRunning = true;
         txn.start(mDevice);
         txn.mTimeStarted = System.currentTimeMillis();
+    }
+
+    public void cancelAllTxns()
+    {
+        if (mCurrent != null && mCurrent.isRunning())
+        {
+            mCurrent.cancel();
+        }
+        if (authTxn != null && authTxn.isRunning())
+        {
+            authTxn.cancel();
+        }
+        if (initTxn != null && initTxn.isRunning())
+        {
+            initTxn.cancel();
+        }
     }
 
     BleTransaction getCurrent()

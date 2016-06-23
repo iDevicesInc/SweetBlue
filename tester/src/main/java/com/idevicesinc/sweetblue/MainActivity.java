@@ -21,6 +21,7 @@ import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import java.util.ArrayList;
 import java.util.List;
 import com.idevicesinc.sweetblue.tester.R;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.scanApi = BleScanAPI.POST_LOLLIPOP;
+        config.timeToUndiscover = Interval.TEN_SECS;
 
         config.postCallbacksToUIThread = true;
         mgr = BleManager.get(this, config);
@@ -152,6 +154,11 @@ public class MainActivity extends AppCompatActivity
                 else if (e.was(LifeCycle.REDISCOVERED))
                 {
 
+                }
+                else if (e.was(LifeCycle.UNDISCOVERED))
+                {
+                    mDevices.remove(e.device());
+                    mAdaptor.notifyDataSetChanged();
                 }
             }
         });

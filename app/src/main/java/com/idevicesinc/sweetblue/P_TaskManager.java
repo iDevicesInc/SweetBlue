@@ -472,6 +472,18 @@ public class P_TaskManager
         }
     }
 
+    public <T extends P_Task> T getCurrent(Class<? extends P_Task> taskClass, BleManager manager)
+    {
+        if (mCurrent != null && mCurrent.getClass().equals(taskClass) && mCurrent.getManager() == manager)
+        {
+            return (T) mCurrent;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     void print()
     {
         if (getManager().getLogger().isEnabled())

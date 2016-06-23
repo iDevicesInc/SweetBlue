@@ -1,7 +1,11 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
+import com.idevicesinc.sweetblue.listeners.P_EventFactory;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -127,12 +131,39 @@ class P_DeviceManager
 
         mUpdating = true;
 
+
         for (int i = mList.size() - 1; i >= 0; i--)
         {
-            mList.get(i).update(curTimeMs);
+            if (!checkForStaleDevice(mList.get(i), curTimeMs))
+            {
+                mList.get(i).update(curTimeMs);
+            }
         }
 
         mUpdating = false;
+    }
+
+    boolean checkForStaleDevice(BleDevice device, long curTime)
+    {
+        P_Task_Scan scanTask = mManager.mTaskManager.getCurrent(P_Task_Scan.class, mManager);
+
+        if (scanTask != null)
+        {
+            if (Interval.isEnabled(device.getConfig().minScanTimeToUndiscover) && Interval.isEnabled(device.getConfig().timeToUndiscover))
+            {
+                if (scanTask.timeScanning() >= device.getConfig().minScanTimeToUndiscover.millis() && curTime - device.lastDiscovery() >= device.getConfig().timeToUndiscover.millis())
+                {
+                    final boolean purgeable = device.getOrigin() != BleDeviceOrigin.EXPLICIT && ((device.getStateMask() & ~BleDeviceState.PURGEABLE_MASK) == 0x0);
+                    if (purgeable)
+                    {
+                        device.onUndiscovered(P_StateTracker.E_Intent.UNINTENTIONAL);
+                        remove(device, null);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     void clearConnectedDevice(String macAddress)

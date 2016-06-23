@@ -27,6 +27,10 @@ class P_ReconnectManager
         boolean fail = mReconnectTries >= mMaxReconnecTries;
         if (fail)
         {
+            if (mReconnectTries > 0)
+            {
+                mDevice.getManager().popWakeLock();
+            }
             mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.RECONNECTING_SHORT_TERM, false);
         }
         return fail;
@@ -34,6 +38,10 @@ class P_ReconnectManager
 
     void reconnect(int gattStatus)
     {
+        if (mReconnectTries == 0)
+        {
+            mDevice.getManager().pushWakeLock();
+        }
         mReconnectTries++;
         mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, BleDeviceState.CONNECTED, false, BleDeviceState.RECONNECTING_SHORT_TERM, true);
         mDevice.connect(mDevice.getConnectionFailListener());

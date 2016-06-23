@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Interval;
+
 public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 {
 
@@ -19,6 +21,11 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
      */
     public static final int DEFAULT_MTU_SIZE					= 23;
 
+    /**
+     * Default value for {@link #minScanTimeToUndiscover}.
+     */
+    public static final double DEFAULT_MINIMUM_SCAN_TIME		= 5.0;
+
 
     public boolean cacheDeviceOnUndiscovery                     = true;
 
@@ -34,6 +41,25 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
      * The number of times SweetBlue will retry connecting to a device, if it fails. Default is <code>3</code>.
      */
     public int reconnectionTries                                = 3;
+
+    /**
+     * Default is {@link Interval#DISABLED}. If a device exceeds this amount of time since its
+     * last discovery then it is a candidate for being undiscovered.
+     * You may want to configure this number based on the phone or
+     * manufacturer. For example, based on testing, in order to make undiscovery snappier the Galaxy S5 could use lower times.
+     */
+    public Interval timeToUndiscover                            = Interval.DISABLED;
+
+    /**
+     * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME}seconds - Undiscovery of devices must be
+     * approximated by checking when the last time was that we discovered a device,
+     * and if this time is greater than {@link #timeToUndiscover} then the device is undiscovered. However a scan
+     * operation must be allowed a certain amount of time to make sure it discovers all nearby devices that are
+     * still advertising. This is that time in seconds.
+     * <br><br>
+     * Use {@link Interval#DISABLED} to disable undiscovery altogether.
+     */
+    public Interval minScanTimeToUndiscover                     = Interval.secs(DEFAULT_MINIMUM_SCAN_TIME);
 
     public boolean useLeTransportForBonding                     = false;
 

@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 
-public class P_Task_RequestMtu extends P_Task_Transactionable
+class P_Task_RequestMtu extends P_Task_Transactionable
 {
 
     private final int mMtuSize;

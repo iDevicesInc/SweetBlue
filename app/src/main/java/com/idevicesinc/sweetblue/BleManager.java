@@ -63,7 +63,7 @@ public class BleManager
     BondListener mDefaultBondListener;
     NotifyListener mDefaultNotifyListener;
     ReadWriteListener mDefaultReadWriteListener;
-    private DiscoveryListener mDiscoveryListener;
+    DiscoveryListener mDiscoveryListener;
     P_ScanManager mScanManager;
     private boolean mForegrounded = false;
     private LifecycleListener mLifecycleListener;
@@ -220,7 +220,7 @@ public class BleManager
 
     public void startScan()
     {
-        startScan_private(Interval.INFINITE, Interval.DISABLED);
+        startScan_private(Interval.DISABLED, Interval.DISABLED);
     }
 
     public void startScan(Interval scanTime)
@@ -375,6 +375,16 @@ public class BleManager
         return mDeviceManager.getList();
     }
 
+    public void pushWakeLock()
+    {
+        mWakeLockManager.push();
+    }
+
+    public void popWakeLock()
+    {
+        mWakeLockManager.pop();
+    }
+
     void deviceConnected(BleDevice device)
     {
         mDeviceManager.deviceConnected(device);
@@ -420,6 +430,8 @@ public class BleManager
             mUpdateInterval = mConfig.updateThreadSpeed.getMilliseconds();
             mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
         }
+
+        mDeviceManager.update(curTimeMs);
 
         if (mConfig.updateCallback != null)
         {

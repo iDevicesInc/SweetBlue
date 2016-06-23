@@ -13,6 +13,7 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
     private long mTimePaused;
     private long mLastScanUpdate;
     private long mTimeScanning;
+    private long mLastResetTime;
     private final boolean mPeriodicScan;
 
 
@@ -31,7 +32,22 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
 
     @Override public void execute()
     {
-        getManager().mScanManager.startScan();
+        if (getManager().is(BleManagerState.SCAN_READY) || getManager().mConfig.revertToClassicDiscoveryIfNeeded)
+        {
+            if (!getManager().mScanManager.startScan())
+            {
+                failImmediately();
+            }
+            else
+            {
+                // Successfully started the scan
+            }
+        }
+        else
+        {
+            getManager().getLogger().e("Tried to start scan, but failed because scanning is not ready (most likely due to missing permissions, or location services is not on).");
+            fail();
+        }
     }
 
     @Override public void update(long curTimeMs)
@@ -53,6 +69,11 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
         }
     }
 
+    public long timeScanning()
+    {
+        return mTimeScanning;
+    }
+
     @Override public boolean isInterruptible()
     {
         return true;
@@ -66,13 +87,13 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
 
     @Override void checkTimeOut(long curTimeMs)
     {
+        if (mLastScanUpdate != 0)
+        {
+            mTimeScanning += curTimeMs - mLastScanUpdate;
+        }
+        mLastScanUpdate = curTimeMs;
         if (Interval.isEnabled(mScanTime) && !isPaused())
         {
-            if (mLastScanUpdate != 0)
-            {
-                mTimeScanning += curTimeMs - mLastScanUpdate;
-            }
-            mLastScanUpdate = curTimeMs;
             if (mTimeScanning >= mScanTime.millis())
             {
                 if (!mPeriodicScan)
@@ -91,7 +112,16 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
         }
         else
         {
-            super.checkTimeOut(curTimeMs);
+            if (mLastResetTime == 0)
+            {
+                mLastResetTime = curTimeMs;
+            }
+            if (curTimeMs - mLastResetTime >= getManager().mConfig.scanResetInterval.millis())
+            {
+                getManager().mScanManager.stopScan();
+                getManager().mScanManager.startScan();
+                mLastResetTime = curTimeMs;
+            }
         }
     }
 }
