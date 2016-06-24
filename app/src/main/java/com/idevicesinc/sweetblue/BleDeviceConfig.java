@@ -79,11 +79,6 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
     public int rssi_max                                         = DEFAULT_RSSI_MAX;
 
-    /**
-     * This is an advanced option, default is <code>false</code>. This will allow a notification to be set on a
-     * characteristic WITHOUT writing to the client config descriptor.
-     */
-    public boolean allowSimpleNotifications                     = false;
 
     @Override protected BleDeviceConfig clone()
     {

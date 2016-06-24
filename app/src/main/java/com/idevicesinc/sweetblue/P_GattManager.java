@@ -114,7 +114,7 @@ class P_GattManager
             BluetoothGattDescriptor desc = bchar.getDescriptor(Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID);
             if (desc == null)
             {
-                return getManager().mConfig.allowSimpleNotifications;
+                return false;
             }
             byte[] writeValue;
             if (isCharNotify(bchar))
