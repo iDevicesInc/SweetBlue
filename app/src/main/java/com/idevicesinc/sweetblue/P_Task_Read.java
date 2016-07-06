@@ -3,6 +3,9 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
+import com.idevicesinc.sweetblue.utils.BleStatuses;
+import com.idevicesinc.sweetblue.utils.Uuids;
+
 import java.util.UUID;
 
 
@@ -43,6 +46,26 @@ public class P_Task_Read extends P_Task_Transactionable
                 mListener.onEvent(event);
             }
             failImmediately();
+        }
+    }
+
+    @Override void onTaskTimedOut()
+    {
+        super.onTaskTimedOut();
+        if (mListener != null)
+        {
+            getManager().mPostManager.postCallback(new Runnable()
+            {
+                @Override public void run()
+                {
+                    if (mListener != null)
+                    {
+                        ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(getDevice(), mServiceUuid, mCharUuid, Uuids.INVALID, ReadWriteListener.Type.READ,
+                                ReadWriteListener.Target.CHARACTERISTIC, new byte[0], ReadWriteListener.Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0, 0, false);
+                        mListener.onEvent(event);
+                    }
+                }
+            });
         }
     }
 
