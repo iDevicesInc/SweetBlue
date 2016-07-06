@@ -79,6 +79,10 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
     public int rssi_max                                         = DEFAULT_RSSI_MAX;
 
+    public BleTransaction.Auth defaultAuthTxn                   = null;
+
+    public BleTransaction.Init defaultInitTxn                   = null;
+
 
     @Override protected BleDeviceConfig clone()
     {

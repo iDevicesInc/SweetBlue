@@ -333,12 +333,12 @@ public class BleDevice extends BleNode
 
     public void connect(BleTransaction.Auth authTxn)
     {
-        connect(authTxn, null, null, mConnectionFailListener);
+        connect(authTxn, getConfig().defaultInitTxn, null, mConnectionFailListener);
     }
 
     public void connect(BleTransaction.Init initTxn)
     {
-        connect(null, initTxn, null, mConnectionFailListener);
+        connect(getConfig().defaultAuthTxn, initTxn, null, mConnectionFailListener);
     }
 
     public void connect(BleTransaction.Auth authTxn, BleTransaction.Init initTxn)
@@ -348,22 +348,22 @@ public class BleDevice extends BleNode
 
     public void connect(DeviceConnectionFailListener failListener)
     {
-        connect(null, null, null, failListener);
+        connect(getConfig().defaultAuthTxn, getConfig().defaultInitTxn, null, failListener);
     }
 
     public void connect(DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
     {
-        connect(null, null, stateListener, failListener);
+        connect(getConfig().defaultAuthTxn, getConfig().defaultInitTxn, stateListener, failListener);
     }
 
     public void connect(BleTransaction.Auth authTxn, DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
     {
-        connect(authTxn, null, stateListener, failListener);
+        connect(authTxn, getConfig().defaultInitTxn, stateListener, failListener);
     }
 
     public void connect(BleTransaction.Init initTxn, DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
     {
-        connect(null, initTxn, stateListener, failListener);
+        connect(getConfig().defaultAuthTxn, initTxn, stateListener, failListener);
     }
 
     public void connect(BleTransaction.Auth authTxn, BleTransaction.Init initTxn, DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
