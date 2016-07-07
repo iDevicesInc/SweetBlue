@@ -605,6 +605,7 @@ public class BleDevice extends BleNode
         {
             stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, CONNECTED, false, CONNECTING, false, CONNECTING_OVERALL, false, DISCONNECTED, true);
             getManager().mTaskManager.failTask(P_Task_Connect.class, this, false);
+            resetToDisconnected();
         }
         else
         {
