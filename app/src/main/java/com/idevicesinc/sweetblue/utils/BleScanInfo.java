@@ -30,12 +30,12 @@ public class BleScanInfo implements UsesCustomNull, Cloneable
         mIsNull = isNull;
         if (mIsNull)
         {
-            mManufacturerData = null;
-            mAdvFlags = null;
-            mTxPower = null;
-            mServiceUuids = null;
-            mServiceData = null;
-            mLocalName = null;
+            mManufacturerData = new byte[0];
+            mAdvFlags = new Pointer<>(0);
+            mTxPower = new Pointer<>(0);
+            mServiceUuids = new ArrayList<>(0);
+            mServiceData = new HashMap<>(0);
+            mLocalName = "NULL";
         }
         else
         {

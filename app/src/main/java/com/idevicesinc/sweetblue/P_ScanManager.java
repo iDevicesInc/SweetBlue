@@ -28,8 +28,8 @@ class P_ScanManager
     public P_ScanManager(BleManager mgr)
     {
         mManager = mgr;
-        BleScanAPI scanAPI = mgr.mConfig.scanApi;
-        switch (scanAPI)
+        mCurrentApi = mgr.mConfig.scanApi;
+        switch (mCurrentApi)
         {
             case CLASSIC:
                 mPreLollipopScanCallback = null;
