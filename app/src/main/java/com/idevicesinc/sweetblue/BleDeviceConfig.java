@@ -84,7 +84,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
     public BleTransaction.Init defaultInitTxn                   = null;
 
 
-    @Override protected BleDeviceConfig clone()
+    @Override public BleDeviceConfig clone()
     {
         return (BleDeviceConfig) super.clone();
     }

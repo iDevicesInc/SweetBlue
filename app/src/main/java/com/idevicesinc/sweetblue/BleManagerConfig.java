@@ -158,7 +158,7 @@ public class BleManagerConfig extends BleDeviceConfig
         }
     }
 
-    @Override protected BleManagerConfig clone()
+    @Override public BleManagerConfig clone()
     {
         return (BleManagerConfig) super.clone();
     }

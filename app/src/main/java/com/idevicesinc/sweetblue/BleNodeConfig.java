@@ -13,7 +13,7 @@ public class BleNodeConfig
     public static final int INVALID_TX_POWER							= Integer.MIN_VALUE;
 
 
-    @Override protected BleNodeConfig clone()
+    @Override public BleNodeConfig clone()
     {
         try
         {

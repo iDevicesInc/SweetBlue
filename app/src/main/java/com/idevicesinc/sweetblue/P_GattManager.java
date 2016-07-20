@@ -489,7 +489,14 @@ class P_GattManager
 
     void requestMtuChange(int mtu)
     {
-        L_Util.requestMtu(mDevice, mtu);
+        if (Utils.isLollipop())
+        {
+            L_Util.requestMtu(mDevice, mtu);
+        }
+        else
+        {
+            getManager().getLogger().e("Tried to request an MTU size change on a device running an OS lower than Lollipop! This feature is not available on this OS version");
+        }
     }
 
     boolean isBonded()
