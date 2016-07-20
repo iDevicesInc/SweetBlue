@@ -414,6 +414,14 @@ public class BleDevice extends BleNode
         }
     }
 
+    public void disconnectWhenReady()
+    {
+        if (!isAny(DISCONNECTED, DISCONNECTING))
+        {
+            getManager().mTaskManager.add(new P_Task_Disconnect(this, null, P_TaskPriority.LOW));
+        }
+    }
+
     public void disconnect_remote()
     {
         // TODO - Implement this
