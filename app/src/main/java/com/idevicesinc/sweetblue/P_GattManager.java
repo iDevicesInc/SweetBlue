@@ -391,7 +391,7 @@ class P_GattManager
     {
         if (mGatt != null)
         {
-            mGatt.disconnect();
+            //mGatt.disconnect();
             mGatt.close();
         }
     }
