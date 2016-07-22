@@ -516,6 +516,10 @@ public class P_TaskManager
 
     private boolean matches(P_Task task, Class<? extends P_Task> taskClass, BleManager mgr, BleDevice device, BleServer server)
     {
+        if (taskClass == null)
+        {
+            return false;
+        }
         if (taskClass.isAssignableFrom(task.getClass()))
         {
             if (mgr == null)
