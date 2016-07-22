@@ -26,6 +26,8 @@ public class BleStatuses
      */
     public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 
+    public static final int GATT_STATUS_DISCOVER_SERVICES_FAILED        = 7924;
+
     public static final int GATT_CONNECT_TIMEOUT                        = 8771;
 
     /**

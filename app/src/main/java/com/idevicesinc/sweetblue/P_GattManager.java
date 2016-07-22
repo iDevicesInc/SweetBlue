@@ -529,7 +529,7 @@ class P_GattManager
         }
     }
 
-    private void onConnectionFail(int gattStatus)
+    void onConnectionFail(int gattStatus)
     {
         closeGatt();
         mDevice.onConnectionFailed(gattStatus);

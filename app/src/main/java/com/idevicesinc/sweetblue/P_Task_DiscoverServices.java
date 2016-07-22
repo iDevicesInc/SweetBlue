@@ -34,12 +34,19 @@ class P_Task_DiscoverServices extends P_Task_RequiresConnection
     @Override void onFail(boolean immediate)
     {
         super.onFail(immediate);
-        getDevice().onConnectionFailed(BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+        getDevice().mGattManager.onConnectionFail(BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
+    }
+
+    @Override void onTaskTimedOut()
+    {
+        super.onTaskTimedOut();
+        getDevice().mGattManager.onConnectionFail(BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
     }
 
     void discoverServicesImmediatelyFailed()
     {
         failImmediately();
+        getDevice().mGattManager.onConnectionFail(BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
         // TODO - Throw error to errorlistener
     }
 
