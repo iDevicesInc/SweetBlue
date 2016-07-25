@@ -9,10 +9,10 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.util.Log;
-
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.listeners.BondListener;
+import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
 import com.idevicesinc.sweetblue.listeners.NotifyListener;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
@@ -20,10 +20,10 @@ import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
-
 import java.util.List;
 import java.util.UUID;
-
+import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Status;
+import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Timing;
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 
@@ -191,7 +191,7 @@ class P_GattManager
                     }
                     else
                     {
-                        onConnectionFail(status);
+                        onConnectionFail(Status.NATIVE_CONNECTION_FAILED, Timing.EVENTUALLY, status);
                     }
                     break;
                 case BluetoothProfile.STATE_CONNECTING:
@@ -201,7 +201,7 @@ class P_GattManager
                     }
                     else
                     {
-                        onConnectionFail(status);
+                        onConnectionFail(Status.NATIVE_CONNECTION_FAILED, Timing.EVENTUALLY, status);
                     }
                     break;
                 case BluetoothProfile.STATE_DISCONNECTING:
@@ -212,7 +212,7 @@ class P_GattManager
                     final P_Task_Connect connect = getManager().mTaskManager.getCurrent(P_Task_Connect.class, mDevice);
                     if (connect != null)
                     {
-                        onConnectionFail(status);
+                        onConnectionFail(Status.NATIVE_CONNECTION_FAILED, Timing.EVENTUALLY, status);
                         return;
                     }
                     final P_Task_Disconnect disconnect = getManager().mTaskManager.getCurrent(P_Task_Disconnect.class, mDevice);
@@ -222,7 +222,7 @@ class P_GattManager
                     }
                     else
                     {
-                        onConnectionFail(status);
+                        onConnectionFail(Status.ROGUE_DISCONNECT, Timing.EVENTUALLY, status);
                     }
                     break;
                 default:
@@ -242,7 +242,7 @@ class P_GattManager
             else
             {
                 getManager().mTaskManager.failTask(P_Task_DiscoverServices.class, mDevice, false);
-                onConnectionFail(status);
+                onConnectionFail(Status.DISCOVERING_SERVICES_FAILED, Timing.EVENTUALLY, status);
             }
         }
 
@@ -384,7 +384,7 @@ class P_GattManager
     void onDeviceDisconnected()
     {
         closeGatt();
-        mDevice.onDisconnected();
+        mDevice.onDisconnectedExplicitly();
     }
 
     private void closeGatt()
@@ -529,11 +529,10 @@ class P_GattManager
         }
     }
 
-    void onConnectionFail(int gattStatus)
+    void onConnectionFail(Status status, DeviceConnectionFailListener.Timing timing, int gattStatus)
     {
         closeGatt();
-        mDevice.onConnectionFailed(gattStatus);
-        // TODO - Implement connection fail listener stuff
+        mDevice.onConnectionFailed(status, timing, gattStatus);
     }
 
     private BleManager getManager()

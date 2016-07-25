@@ -179,7 +179,7 @@ public interface DeviceConnectionFailListener extends P_BaseConnectionFailListen
         EVENTUALLY,
 
         /**
-         * The operation took longer than the time dictated by {@link BleDeviceConfig#taskTimeoutRequestFilter}.
+         * The operation took longer than the time dictated by {@link com.idevicesinc.sweetblue.BleManagerConfig#taskTimeout}.
          */
         TIMED_OUT;
     }

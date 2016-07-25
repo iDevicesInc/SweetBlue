@@ -16,6 +16,7 @@ import android.os.Message;
 import android.text.TextUtils;
 
 import com.idevicesinc.sweetblue.listeners.BondListener;
+import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.EnablerDoneListener;
@@ -64,6 +65,7 @@ public class BleManager
     NotifyListener mDefaultNotifyListener;
     ReadWriteListener mDefaultReadWriteListener;
     DiscoveryListener mDiscoveryListener;
+    DeviceConnectionFailListener mDefaultConnectionFailListener;
     P_ScanManager mScanManager;
     private boolean mForegrounded = false;
     private LifecycleListener mLifecycleListener;
@@ -140,6 +142,11 @@ public class BleManager
     public void setDefaultReadWriteListener(ReadWriteListener listener)
     {
         mDefaultReadWriteListener = listener;
+    }
+
+    public void setDefaultConnectionFailListener(DeviceConnectionFailListener failListener)
+    {
+        mDefaultConnectionFailListener = failListener;
     }
 
     public void setDefaultBondListener(BondListener listener)

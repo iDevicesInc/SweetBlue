@@ -92,7 +92,7 @@ public class P_BleReceiverManager
         final BleDevice device = mManager.getDevice(native_device.getAddress());
         if (!mManager.mTaskManager.isCurrent(P_Task_Disconnect.class, device) && !device.isAny(BleDeviceState.CONNECTING_OVERALL, BleDeviceState.DISCONNECTED))
         {
-            device.onDisconnected();
+            device.onDisconnectedExplicitly();
         }
     }
 

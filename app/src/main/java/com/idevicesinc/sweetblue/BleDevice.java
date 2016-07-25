@@ -13,6 +13,7 @@ import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.NotifyListener;
+import com.idevicesinc.sweetblue.listeners.P_BaseConnectionFailListener;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener.ReadWriteEvent;
@@ -34,6 +35,8 @@ public class BleDevice extends BleNode
 
     public final static BleDevice NULL = new BleDevice(null, null, null, null, null, true);
     public final static String NULL_STRING = "NULL";
+    static DeviceConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultConnectionFailListener();
+
 
     private final boolean mIsNull;
     private int mRssi;
@@ -50,13 +53,14 @@ public class BleDevice extends BleNode
     private String mName_scanRecord;
     String mName_device;
     private String mName_debug;
-    private DeviceConnectionFailListener mConnectionFailListener;
+    //private DeviceConnectionFailListener mConnectionFailListener;
     final P_GattManager mGattManager;
     private P_ReconnectManager mReconnectManager;
     private BondListener mBondListener;
     private NotifyListener mNotifyListener;
     final P_TransactionManager mTxnManager;
     private long mLastDiscovery;
+    private P_ConnectionFailManager mConnectionFailMgr;
 
 
     BleDevice(BleManager mgr, BluetoothDevice nativeDevice, BleDeviceOrigin origin, BleDeviceConfig config_nullable, String deviceName, boolean isNull)
@@ -66,6 +70,7 @@ public class BleDevice extends BleNode
         mOrigin = origin;
         mOrigin_last = mOrigin;
         mName_device = deviceName;
+        mConnectionFailMgr = new P_ConnectionFailManager(this);
         if (nativeDevice != null)
         {
             String[] address_split = nativeDevice.getAddress().split(":");
@@ -132,7 +137,7 @@ public class BleDevice extends BleNode
 
     public void setConnectionFailListener(DeviceConnectionFailListener failListener)
     {
-        mConnectionFailListener = failListener;
+        mConnectionFailMgr.setConnectionFailListener(failListener);
     }
 
     public void setNotifyListener(NotifyListener listener)
@@ -333,17 +338,17 @@ public class BleDevice extends BleNode
 
     public void connect(BleTransaction.Auth authTxn)
     {
-        connect(authTxn, getConfig().defaultInitTxn, null, mConnectionFailListener);
+        connect(authTxn, getConfig().defaultInitTxn, null, null);
     }
 
     public void connect(BleTransaction.Init initTxn)
     {
-        connect(getConfig().defaultAuthTxn, initTxn, null, mConnectionFailListener);
+        connect(getConfig().defaultAuthTxn, initTxn, null, null);
     }
 
     public void connect(BleTransaction.Auth authTxn, BleTransaction.Init initTxn)
     {
-        connect(authTxn, initTxn, null, mConnectionFailListener);
+        connect(authTxn, initTxn, null, null);
     }
 
     public void connect(DeviceConnectionFailListener failListener)
@@ -370,7 +375,10 @@ public class BleDevice extends BleNode
     {
         mTxnManager.setAuthTxn(authTxn);
         mTxnManager.setInitTxn(initTxn);
-        mConnectionFailListener = failListener;
+        if (failListener != null)
+        {
+            mConnectionFailMgr.setConnectionFailListener(failListener);
+        }
         if (stateListener != null)
         {
             mStateTracker.setListener(stateListener);
@@ -380,8 +388,14 @@ public class BleDevice extends BleNode
 
     public void connect()
     {
+        connect_private(true);
+    }
+
+    private void connect_private(boolean explicit)
+    {
         if (!isAny(CONNECTING, CONNECTED, CONNECTING_OVERALL) || isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM))
         {
+            mConnectionFailMgr.onExplicitConnectionStarted();
             if (getConfig().bondOnConnectOption != null)
             {
                 switch (getConfig().bondOnConnectOption)
@@ -402,8 +416,13 @@ public class BleDevice extends BleNode
                 }
             }
             stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTING_OVERALL, true);
-            getManager().mTaskManager.add(new P_Task_Connect(this, null));
+            getManager().mTaskManager.add(new P_Task_Connect(this, null, explicit));
         }
+    }
+
+    void connect_implicitly()
+    {
+        connect_private(false);
     }
 
     public void disconnect()
@@ -607,10 +626,12 @@ public class BleDevice extends BleNode
         stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTING, true);
     }
 
-    void onConnectionFailed(int gattStatus)
+    void onConnectionFailed(Status status, Timing timing, int gattStatus)
     {
         if (mReconnectManager.shouldFail())
         {
+            mConnectionFailMgr.onConnectionFailed(status, timing, gattStatus, BleDeviceState.getTransitoryConnectionState(getStateMask()), P_BaseConnectionFailListener.AutoConnectUsage.UNKNOWN,
+                    BleStatuses.BOND_FAIL_REASON_NOT_AVAILABLE, null);
             resetToDisconnected();
             getManager().mTaskManager.failTask(P_Task_Connect.class, this, false);
         }
@@ -620,8 +641,9 @@ public class BleDevice extends BleNode
         }
     }
 
-    void onDisconnected()
+    void onDisconnectedExplicitly()
     {
+        mConnectionFailMgr.onExplicitDisconnect();
         resetToDisconnected();
         getManager().mTaskManager.succeedTask(P_Task_Disconnect.class, this);
     }
@@ -631,7 +653,7 @@ public class BleDevice extends BleNode
         if (getManager().mTaskManager.isCurrent(P_Task_Connect.class, this))
         {
             getManager().mTaskManager.failTask(P_Task_Connect.class, this, false);
-            onConnectionFailed(gattStatus);
+            onConnectionFailed(Status.NATIVE_CONNECTION_FAILED, Timing.EVENTUALLY, gattStatus);
             return;
         }
 
@@ -661,10 +683,15 @@ public class BleDevice extends BleNode
             }
             else
             {
-                stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, INITIALIZED, true, INITIALIZING, false);
+                onInitialized();
             }
-
         }
+    }
+
+    void onInitialized()
+    {
+        mConnectionFailMgr.onFullyInitialized();
+        stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, INITIALIZED, true, INITIALIZING, false);
     }
 
     void onBonding(P_StateTracker.E_Intent intent)
@@ -690,10 +717,6 @@ public class BleDevice extends BleNode
         postBondEvent(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BondListener.Status.SUCCESS);
     }
 
-    DeviceConnectionFailListener getConnectionFailListener()
-    {
-        return mConnectionFailListener;
-    }
 
 
 
@@ -787,6 +810,86 @@ public class BleDevice extends BleNode
     static String NULL_MAC()
     {
         return "DE:CA:FF:C0:FF:EE";
+    }
+
+    public static class DefaultConnectionFailListener implements DeviceConnectionFailListener
+    {
+
+        /**
+         * The default retry count provided to {@link DefaultConnectionFailListener}.
+         * So if you were to call {@link BleDevice#connect()} and all connections failed, in total the
+         * library would try to connect {@value #DEFAULT_CONNECTION_FAIL_RETRY_COUNT}+1 times.
+         *
+         * @see DefaultConnectionFailListener
+         */
+        public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
+
+        /**
+         * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link DeviceConnectionFailListener.Please#retryWithAutoConnectTrue()}.
+         */
+        public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
+
+        private final int m_retryCount;
+        private final int m_failCountBeforeUsingAutoConnect;
+
+        public DefaultConnectionFailListener()
+        {
+            this(DEFAULT_CONNECTION_FAIL_RETRY_COUNT, DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT);
+        }
+
+        public DefaultConnectionFailListener(int retryCount, int failCountBeforeUsingAutoConnect)
+        {
+            m_retryCount = retryCount;
+            m_failCountBeforeUsingAutoConnect = failCountBeforeUsingAutoConnect;
+        }
+
+        public int getRetryCount()
+        {
+            return m_retryCount;
+        }
+
+        @Override public Please onEvent(ConnectionFailEvent e)
+        {
+            //--- DRK > Not necessary to check this ourselves, just being explicit.
+            if (!e.status().allowsRetry() || e.device().is(RECONNECTING_LONG_TERM))
+            {
+                return Please.doNotRetry();
+            }
+
+            if (e.failureCountSoFar() <= m_retryCount)
+            {
+                if (e.failureCountSoFar() >= m_failCountBeforeUsingAutoConnect)
+                {
+                    return Please.retryWithAutoConnectTrue();
+                }
+                else
+                {
+                    if (e.status() == Status.NATIVE_CONNECTION_FAILED && e.timing() == Timing.TIMED_OUT)
+                    {
+                        if (e.autoConnectUsage() == AutoConnectUsage.USED)
+                        {
+                            return Please.retryWithAutoConnectFalse();
+                        }
+                        else if (e.autoConnectUsage() == AutoConnectUsage.NOT_USED)
+                        {
+                            return Please.retryWithAutoConnectTrue();
+                        }
+                        else
+                        {
+                            return Please.retry();
+                        }
+                    }
+                    else
+                    {
+                        return Please.retry();
+                    }
+                }
+            }
+            else
+            {
+                return Please.doNotRetry();
+            }
+        }
     }
 
 }

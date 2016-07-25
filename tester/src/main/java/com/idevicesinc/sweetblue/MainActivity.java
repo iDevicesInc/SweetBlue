@@ -13,10 +13,13 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
 import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
 import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
 import com.idevicesinc.sweetblue.listeners.EnablerDoneListener;
 import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
+import com.idevicesinc.sweetblue.listeners.P_BaseConnectionFailListener;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +100,16 @@ public class MainActivity extends AppCompatActivity
                                 });
                             }
                         });
+                    }
+                }, null, new DeviceConnectionFailListener()
+                {
+                    @Override public Please onEvent(DeviceConnectionFailListener.ConnectionFailEvent e)
+                    {
+                        if (e.isNull())
+                        {
+
+                        }
+                        return null;
                     }
                 });
             }

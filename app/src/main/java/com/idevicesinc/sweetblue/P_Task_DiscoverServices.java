@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 
 import java.lang.reflect.Method;
@@ -34,19 +35,22 @@ class P_Task_DiscoverServices extends P_Task_RequiresConnection
     @Override void onFail(boolean immediate)
     {
         super.onFail(immediate);
-        getDevice().mGattManager.onConnectionFail(BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
+        getDevice().mGattManager.onConnectionFail(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.EVENTUALLY,
+                BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
     }
 
     @Override void onTaskTimedOut()
     {
         super.onTaskTimedOut();
-        getDevice().mGattManager.onConnectionFail(BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
+        getDevice().mGattManager.onConnectionFail(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.EVENTUALLY,
+                BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
     }
 
     void discoverServicesImmediatelyFailed()
     {
         failImmediately();
-        getDevice().mGattManager.onConnectionFail(BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
+        getDevice().mGattManager.onConnectionFail(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.IMMEDIATELY,
+                BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
         // TODO - Throw error to errorlistener
     }
 

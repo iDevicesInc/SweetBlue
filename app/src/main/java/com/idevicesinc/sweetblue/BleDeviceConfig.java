@@ -26,6 +26,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
      */
     public static final double DEFAULT_MINIMUM_SCAN_TIME		= 5.0;
 
+    public static final double DEFAULT_CONNECT_TIME_OUT         = 31.0;
 
     public boolean cacheDeviceOnUndiscovery                     = true;
 
@@ -49,6 +50,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
      * manufacturer. For example, based on testing, in order to make undiscovery snappier the Galaxy S5 could use lower times.
      */
     public Interval timeToUndiscover                            = Interval.DISABLED;
+
+    public Interval connectTimeOut                              = Interval.secs(DEFAULT_CONNECT_TIME_OUT);
 
     /**
      * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME}seconds - Undiscovery of devices must be

@@ -44,7 +44,7 @@ class P_ReconnectManager
         }
         mReconnectTries++;
         mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, gattStatus, BleDeviceState.CONNECTED, false, BleDeviceState.RECONNECTING_SHORT_TERM, true);
-        mDevice.connect(mDevice.getConnectionFailListener());
+        mDevice.connect();
     }
 
 }

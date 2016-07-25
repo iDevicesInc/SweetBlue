@@ -124,12 +124,12 @@ class P_TransactionManager
                             BleDeviceState.AUTHENTICATING, false);
                     if (initTxn != null)
                     {
-                        mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.INITIALIZING, true);
+                        mDevice.onInitialized();
                         start(initTxn);
                     }
                     else
                     {
-                        mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.INITIALIZED, true);
+                        mDevice.onInitialized();
                         addQueuedTasks();
                     }
                 }
@@ -142,8 +142,7 @@ class P_TransactionManager
             {
                 if (endReason == EndReason.SUCCEEDED)
                 {
-                    mDevice.stateTracker().update(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.INITIALIZED, true,
-                            BleDeviceState.INITIALIZING, false);
+                    mDevice.onInitialized();
                     addQueuedTasks();
                 }
                 else
