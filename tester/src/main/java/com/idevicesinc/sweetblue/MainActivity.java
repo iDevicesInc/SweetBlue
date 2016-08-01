@@ -159,14 +159,10 @@ public class MainActivity extends AppCompatActivity
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
-                if (e.was(LifeCycle.DISCOVERED))
-                {
+                if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
+                {  // Discovered and rediscovered should be treated the same now.  A rediscovered event is the same thing as a discovery, except that is comes only after an undiscovery
                     mDevices.add(e.device());
                     mAdaptor.notifyDataSetChanged();
-                }
-                else if (e.was(LifeCycle.REDISCOVERED))
-                {
-
                 }
                 else if (e.was(LifeCycle.UNDISCOVERED))
                 {

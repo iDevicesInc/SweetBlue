@@ -17,6 +17,7 @@ class P_DeviceManager
 {
 
     private final HashMap<String, BleDevice> mMap = new HashMap<String, BleDevice>();
+    private final HashSet<String> mUndiscoveredSet = new HashSet<>();
     private final ArrayList<BleDevice> mList = new ArrayList<BleDevice>();
     private final Set<String> mConnectedList = new HashSet<>(0);
     private final BleManager mManager;
@@ -76,6 +77,11 @@ class P_DeviceManager
         return mMap.get(macAddress);
     }
 
+    public boolean getWasUndiscovered(String macAddres)
+    {
+        return mUndiscoveredSet.contains(macAddres);
+    }
+
     void deviceConnected(BleDevice device)
     {
         if (!mConnectedList.contains(device.getMacAddress()))
@@ -112,6 +118,7 @@ class P_DeviceManager
 
         mList.remove(device);
         mMap.remove(device.getMacAddress());
+        mUndiscoveredSet.add(device.getMacAddress());
 
         final boolean cacheDevice = device.getConfig().cacheDeviceOnUndiscovery;
 
