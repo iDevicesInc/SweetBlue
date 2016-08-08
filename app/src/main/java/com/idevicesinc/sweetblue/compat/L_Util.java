@@ -7,6 +7,8 @@ import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
+import com.idevicesinc.sweetblue.BleManagerConfig;
+import com.idevicesinc.sweetblue.ScanFilter;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 import java.util.ArrayList;
@@ -135,7 +137,20 @@ public class L_Util
 
     static void startScan(BleManager mgr, ScanSettings scanSettings, ScanCallback listener) {
         m_UserCallback = listener;
-        mgr.getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
+
+        // Build some native filters
+        List<android.bluetooth.le.ScanFilter> filters = null;
+
+        try
+        {
+            filters = mgr.getConfig().defaultScanFilter.makeNativeScanFilters();
+        }
+        catch (Exception e)
+        {
+            // Oh well.  This can happen if anything was null or if we are on an OS version that doesnt support filters
+        }
+
+        mgr.getNativeAdapter().getBluetoothLeScanner().startScan(filters, scanSettings, m_callback);
     }
 
 }

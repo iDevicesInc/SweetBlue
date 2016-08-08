@@ -225,6 +225,11 @@ public class BleManager
         initConfigDependantMembers();
     }
 
+    public BleManagerConfig getConfig()
+    {
+        return mConfig;
+    }
+
     public void startScan()
     {
         startScan_private(Interval.DISABLED, Interval.DISABLED);

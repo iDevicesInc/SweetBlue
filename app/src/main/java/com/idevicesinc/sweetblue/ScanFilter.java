@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public interface ScanFilter
 {
-
+    List<android.bluetooth.le.ScanFilter> makeNativeScanFilters();
     Please onEvent(ScanEvent e);
 
     class ScanEvent
