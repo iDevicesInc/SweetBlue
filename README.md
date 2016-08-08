@@ -2,6 +2,7 @@
 <b>|</b>&nbsp;<a href='#features'>Features</a>
 <b>|</b>&nbsp;<a href='#getting-started'>Getting Started</a>
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
+<b>|</b>&nbsp;<a href="https://github.com/iDevicesInc/SweetBlue/wiki">Wiki</a>
 <b>|</b>
 <a href="https://travis-ci.org/iDevicesInc/SweetBlue">
   <img align="right" src="https://img.shields.io/badge/version-2.51.48-blue.svg" />
