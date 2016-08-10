@@ -106,7 +106,7 @@ public final class P_ConnectionFailManager
         }
         else
         {
-            // TODO -=> RB -  Is this reconnect stuff necessary here? Most likely, but things a different in the rewrite version, so will look at this
+            // TODO -=> RB -  Is this reconnect stuff necessary here? Most likely, but things are different in the rewrite version, so will look at this
             // later, when the need arises
 //            final P_ReconnectManager reconnectMngr = mDevice.reconnectMngr();
 //            final int gattStatusOfOriginalDisconnect = reconnectMngr.gattStatusOfOriginalDisconnect();
