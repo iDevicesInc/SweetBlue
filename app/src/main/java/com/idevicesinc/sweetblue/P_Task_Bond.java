@@ -1,15 +1,14 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.bluetooth.BluetoothDevice;
-
 import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.listeners.BondListener;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 
-public class P_Task_Bond extends P_Task_RequiresBleOn
+
+public final class P_Task_Bond extends P_Task_RequiresBleOn
 {
 
     private static final String METHOD_NAME__CREATE_BOND = "createBond";
@@ -28,12 +27,12 @@ public class P_Task_Bond extends P_Task_RequiresBleOn
         this(device, listener, P_TaskPriority.MEDIUM);
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override public final P_TaskPriority getPriority()
     {
         return mPriority;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         if (getDevice().is(BleDeviceState.BONDED))
         {
@@ -54,7 +53,7 @@ public class P_Task_Bond extends P_Task_RequiresBleOn
         }
     }
 
-    @Override public void update(long curTimeMs)
+    @Override public final void update(long curTimeMs)
     {
         if (timeExecuting() > 10000) {
             getDevice().onBondFailed(P_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.BOND_FAIL_REASON_NOT_AVAILABLE, BondListener.Status.FAILED_EVENTUALLY);

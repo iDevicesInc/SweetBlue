@@ -11,7 +11,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import java.util.ArrayList;
 
 
-public class P_ConnectionFailManager
+public final class P_ConnectionFailManager
 {
 
     private final BleDevice mDevice;
@@ -40,24 +40,24 @@ public class P_ConnectionFailManager
         mHistory.clear();
     }
 
-    void onExplicitDisconnect()
+    final void onExplicitDisconnect()
     {
         resetFailCount();
     }
 
-    void onFullyInitialized()
+    final void onFullyInitialized()
     {
         resetFailCount();
     }
 
-    void onExplicitConnectionStarted()
+    final void onExplicitConnectionStarted()
     {
         resetFailCount();
 
         mTimeOfFirstConnect = System.currentTimeMillis();
     }
 
-    public DeviceConnectionFailListener.Please onConnectionFailed(DeviceConnectionFailListener.Status status, DeviceConnectionFailListener.Timing timing, int gattStatus, BleDeviceState highestStateReached,
+    public final DeviceConnectionFailListener.Please onConnectionFailed(DeviceConnectionFailListener.Status status, DeviceConnectionFailListener.Timing timing, int gattStatus, BleDeviceState highestStateReached,
                                                                   P_BaseConnectionFailListener.AutoConnectUsage autoConnectUsage, int bondReasionFail, ReadWriteListener.ReadWriteEvent txnFailReason)
     {
         if (status == null)   return P_BaseConnectionFailListener.Please.doNotRetry();
@@ -139,7 +139,7 @@ public class P_ConnectionFailManager
 
     }
 
-    Please invokeCallback(final ConnectionFailEvent moreInfo)
+    final Please invokeCallback(final ConnectionFailEvent moreInfo)
     {
         Please retryChoice__PE_Please = Please.doNotRetry();
 
@@ -163,7 +163,7 @@ public class P_ConnectionFailManager
         return retryChoice__PE_Please;
     }
 
-    public void setConnectionFailListener(DeviceConnectionFailListener failListener)
+    public final void setConnectionFailListener(DeviceConnectionFailListener failListener)
     {
         mConnectionFailListener = failListener;
     }

@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.utils.BleStatuses;
 import java.util.ArrayList;
 
 
-class P_TransactionManager
+final class P_TransactionManager
 {
 
     private final BleDevice mDevice;
@@ -23,7 +23,7 @@ class P_TransactionManager
         queueTasks = new ArrayList<>(0);
     }
 
-    public boolean isTransactionOperation()
+    public final boolean isTransactionOperation()
     {
         StackTraceElement[] elements = new Exception().getStackTrace();
         for (StackTraceElement e : elements)
@@ -36,42 +36,42 @@ class P_TransactionManager
         return false;
     }
 
-    public void setAuthTxn(BleTransaction.Auth auth)
+    public final void setAuthTxn(BleTransaction.Auth auth)
     {
         authTxn = auth;
     }
 
-    public void setInitTxn(BleTransaction.Init init)
+    public final void setInitTxn(BleTransaction.Init init)
     {
         initTxn = init;
     }
 
-    public BleTransaction.Auth getAuthTxn()
+    public final BleTransaction.Auth getAuthTxn()
     {
         return authTxn;
     }
 
-    public BleTransaction.Init getInitTxn()
+    public final BleTransaction.Init getInitTxn()
     {
         return initTxn;
     }
 
-    public boolean isRunning()
+    public final boolean isRunning()
     {
         return isRunning;
     }
 
-    public boolean isAtomic()
+    public final boolean isAtomic()
     {
         return mCurrent != null && mCurrent.isAtomic();
     }
 
-    public void queueTask(P_Task task)
+    public final void queueTask(P_Task task)
     {
         queueTasks.add(task);
     }
 
-    public void start(BleTransaction txn)
+    public final void start(BleTransaction txn)
     {
         isRunning = true;
         mCurrent = txn;
@@ -81,7 +81,7 @@ class P_TransactionManager
         txn.mTimeStarted = System.currentTimeMillis();
     }
 
-    public void cancelAllTxns()
+    public final void cancelAllTxns()
     {
         if (mCurrent != null && mCurrent.isRunning())
         {
@@ -97,7 +97,7 @@ class P_TransactionManager
         }
     }
 
-    BleTransaction getCurrent()
+    final BleTransaction getCurrent()
     {
         return mCurrent;
     }
@@ -111,10 +111,10 @@ class P_TransactionManager
         queueTasks.clear();
     }
 
-    private class EndListener implements BleTransaction.TxnEndListener
+    private final class EndListener implements BleTransaction.TxnEndListener
     {
 
-        @Override public void onTxnEnded(BleTransaction txn, EndReason endReason)
+        @Override public final void onTxnEnded(BleTransaction txn, EndReason endReason)
         {
             if (txn == authTxn)
             {

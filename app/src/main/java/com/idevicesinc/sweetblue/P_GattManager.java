@@ -27,7 +27,7 @@ import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener.Timing;
 import static com.idevicesinc.sweetblue.BleDeviceState.*;
 
 
-class P_GattManager
+final class P_GattManager
 {
 
     final static Object[] RESET_TO_UNBONDED = new Object[]{BONDED, false, BONDING, false, UNBONDED, true};
@@ -48,7 +48,7 @@ class P_GattManager
         mGattCallbacks = new GattCallbacks();
     }
 
-    public void discoverServices(final P_Task_DiscoverServices task)
+    public final void discoverServices(final P_Task_DiscoverServices task)
     {
         if (!mGatt.discoverServices())
         {
@@ -56,22 +56,22 @@ class P_GattManager
         }
     }
 
-    public BluetoothGatt getGatt()
+    public final BluetoothGatt getGatt()
     {
         return mGatt;
     }
 
-    public BluetoothDevice getNativeDevice()
+    public final BluetoothDevice getNativeDevice()
     {
         return mNativeDevice;
     }
 
-    public String getMacAddress()
+    public final String getMacAddress()
     {
         return mNativeDevice.getAddress();
     }
 
-    public boolean read(UUID serviceUuid, UUID charUuid)
+    public final boolean read(UUID serviceUuid, UUID charUuid)
     {
         BluetoothGattCharacteristic bchar = getCharacteristic(serviceUuid, charUuid);
         if (bchar != null)
@@ -85,7 +85,7 @@ class P_GattManager
         }
     }
 
-    public boolean write(UUID serviceUuid, UUID charUuid, byte[] data)
+    public final boolean write(UUID serviceUuid, UUID charUuid, byte[] data)
     {
         BluetoothGattCharacteristic bchar = getCharacteristic(serviceUuid, charUuid);
         if (bchar != null)
@@ -100,7 +100,7 @@ class P_GattManager
         }
     }
 
-    public boolean enableNotify(UUID serviceUuid, UUID charUuid, boolean enable)
+    public final boolean enableNotify(UUID serviceUuid, UUID charUuid, boolean enable)
     {
         BluetoothGattCharacteristic bchar = getCharacteristic(serviceUuid, charUuid);
         if (bchar != null)
@@ -231,7 +231,7 @@ class P_GattManager
 
         }
 
-        @Override public void onServicesDiscovered(BluetoothGatt gatt, int status)
+        @Override public final void onServicesDiscovered(BluetoothGatt gatt, int status)
         {
             updateGattInstance(gatt);
             if (Utils.isSuccess(status))
@@ -246,7 +246,7 @@ class P_GattManager
             }
         }
 
-        @Override public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
+        @Override public final void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
         {
             updateGattInstance(gatt);
             P_Task_Read read = getManager().mTaskManager.getCurrent(P_Task_Read.class, mDevice);
@@ -272,7 +272,7 @@ class P_GattManager
             }
         }
 
-        @Override public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
+        @Override public final void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
         {
             updateGattInstance(gatt);
             P_Task_Write write = getManager().mTaskManager.getCurrent(P_Task_Write.class, mDevice);
@@ -296,7 +296,7 @@ class P_GattManager
         }
 
         // Notifications/Indications
-        @Override public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
+        @Override public final void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
         {
             updateGattInstance(gatt);
             NotifyListener.Type type = isCharNotify(characteristic) ? NotifyListener.Type.NOTIFICATION : NotifyListener.Type.INDICATION;
@@ -315,7 +315,7 @@ class P_GattManager
             });
         }
 
-        @Override public void onMtuChanged(BluetoothGatt gatt, int mtu, int status)
+        @Override public final void onMtuChanged(BluetoothGatt gatt, int mtu, int status)
         {
             updateGattInstance(gatt);
             P_Task_RequestMtu task = getManager().mTaskManager.getCurrent(P_Task_RequestMtu.class, mDevice);
@@ -330,17 +330,17 @@ class P_GattManager
 
         }
 
-        @Override public void onReliableWriteCompleted(BluetoothGatt gatt, int status)
+        @Override public final void onReliableWriteCompleted(BluetoothGatt gatt, int status)
         {
             updateGattInstance(gatt);
         }
 
-        @Override public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
+        @Override public final void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
         {
             updateGattInstance(gatt);
         }
 
-        @Override public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
+        @Override public final void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
         {
             updateGattInstance(gatt);
             P_Task_ToggleNotify notify = getManager().mTaskManager.getCurrent(P_Task_ToggleNotify.class, mDevice);
@@ -365,23 +365,23 @@ class P_GattManager
             }
         }
 
-        @Override public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
+        @Override public final void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
         {
             updateGattInstance(gatt);
         }
     }
 
-    void onDeviceConnected()
+    final void onDeviceConnected()
     {
         mDevice.onConnected();
     }
 
-    void onDeviceConnecting()
+    final void onDeviceConnecting()
     {
         mDevice.onConnecting();
     }
 
-    void onDeviceDisconnected()
+    final void onDeviceDisconnected()
     {
         closeGatt();
         mDevice.onDisconnectedExplicitly();
@@ -396,13 +396,13 @@ class P_GattManager
         }
     }
 
-    void onDeviceDisconnected(int status)
+    final void onDeviceDisconnected(int status)
     {
         closeGatt();
         mDevice.onDisconnected(status);
     }
 
-    void updateGattInstance(BluetoothGatt gatt)
+    final void updateGattInstance(BluetoothGatt gatt)
     {
         if (mGatt != gatt)
         {
@@ -410,7 +410,7 @@ class P_GattManager
         }
     }
 
-    void checkCurrentBondState()
+    final void checkCurrentBondState()
     {
         int curState = mNativeDevice.getBondState();
         switch (curState)
@@ -427,7 +427,7 @@ class P_GattManager
         }
     }
 
-    void onBondStateChanged(int previousState, int newState, int failReason)
+    final void onBondStateChanged(int previousState, int newState, int failReason)
     {
         if (failReason == BluetoothDevice.ERROR)
         {
@@ -487,7 +487,7 @@ class P_GattManager
         }
     }
 
-    void requestMtuChange(int mtu)
+    final void requestMtuChange(int mtu)
     {
         if (Utils.isLollipop())
         {
@@ -499,17 +499,17 @@ class P_GattManager
         }
     }
 
-    boolean isBonded()
+    final boolean isBonded()
     {
         return mNativeDevice.getBondState() == BluetoothDevice.BOND_BONDED;
     }
 
-    boolean isBonding()
+    final boolean isBonding()
     {
         return mNativeDevice.getBondState() == BluetoothDevice.BOND_BONDING;
     }
 
-    void connect()
+    final void connect()
     {
         if (Utils.isMarshmallow())
         {
@@ -521,7 +521,7 @@ class P_GattManager
         }
     }
 
-    void disconnect()
+    final void disconnect()
     {
         if (mGatt != null)
         {
@@ -529,7 +529,7 @@ class P_GattManager
         }
     }
 
-    void onConnectionFail(Status status, DeviceConnectionFailListener.Timing timing, int gattStatus)
+    final void onConnectionFail(Status status, DeviceConnectionFailListener.Timing timing, int gattStatus)
     {
         closeGatt();
         mDevice.onConnectionFailed(status, timing, gattStatus);

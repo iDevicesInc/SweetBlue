@@ -14,7 +14,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 
 @TargetApi(Build.VERSION_CODES.M)
-public class M_Util
+public final class M_Util
 {
 
     private M_Util() {}

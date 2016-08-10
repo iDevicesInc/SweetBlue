@@ -16,7 +16,7 @@ public interface ScanFilter
 
     Please onEvent(ScanEvent e);
 
-    class ScanEvent
+    final class ScanEvent
     {
         private final BleScanInfo mScanInfo;
         private final String mName_native;
@@ -38,7 +38,7 @@ public interface ScanFilter
             return mDevice_native;
         }
 
-        public List<UUID> advertisedServices()
+        public final List<UUID> advertisedServices()
         {
             if (!mScanInfo.isNull())
             {
@@ -50,17 +50,17 @@ public interface ScanFilter
             }
         }
 
-        public String name_native()
+        public final String name_native()
         {
             return mName_native;
         }
 
-        public String name_device()
+        public final String name_device()
         {
             return mName_device;
         }
 
-        public byte[] scanRecord()
+        public final byte[] scanRecord()
         {
             if (!mScanInfo.isNull())
             {
@@ -72,12 +72,12 @@ public interface ScanFilter
             }
         }
 
-        public int rssi()
+        public final int rssi()
         {
             return mRssi;
         }
 
-        public int txPower()
+        public final int txPower()
         {
             if (!mScanInfo.isNull())
             {
@@ -89,12 +89,12 @@ public interface ScanFilter
             }
         }
 
-        public String macAddress()
+        public final String macAddress()
         {
             return mDevice_native.getAddress();
         }
 
-        public int advertisingFlags()
+        public final int advertisingFlags()
         {
             if (!mScanInfo.isNull())
             {
@@ -106,7 +106,7 @@ public interface ScanFilter
             }
         }
 
-        public int manufacturerId()
+        public final int manufacturerId()
         {
             if (!mScanInfo.isNull())
             {
@@ -118,7 +118,7 @@ public interface ScanFilter
             }
         }
 
-        public byte[] manufacturerData()
+        public final byte[] manufacturerData()
         {
             if (!mScanInfo.isNull())
             {
@@ -130,7 +130,7 @@ public interface ScanFilter
             }
         }
 
-        public Map<UUID, byte[]> serviceData()
+        public final Map<UUID, byte[]> serviceData()
         {
             if (!mScanInfo.isNull())
             {
@@ -142,7 +142,7 @@ public interface ScanFilter
             }
         }
 
-        public boolean isFor(UUID uuid)
+        public final boolean isFor(UUID uuid)
         {
             if (!mScanInfo.isNull())
             {
@@ -151,7 +151,7 @@ public interface ScanFilter
             return false;
         }
 
-        @Override public String toString()
+        @Override public final String toString()
         {
             return Utils_String.toString(
                     this.getClass(),
@@ -162,7 +162,7 @@ public interface ScanFilter
         }
     }
 
-    class Please
+    final class Please
     {
         private final boolean mAck;
         private boolean mStopScan;
@@ -174,17 +174,17 @@ public interface ScanFilter
             mConfig = config;
         }
 
-        boolean ack()
+        final boolean ack()
         {
             return mAck;
         }
 
-        BleDeviceConfig config()
+        final BleDeviceConfig config()
         {
             return mConfig;
         }
 
-        public Please thenStopScan()
+        public final Please thenStopScan()
         {
             mStopScan = true;
             return this;

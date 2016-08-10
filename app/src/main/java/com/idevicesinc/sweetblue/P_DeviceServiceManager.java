@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-class P_DeviceServiceManager extends P_ServiceManager
+final class P_DeviceServiceManager extends P_ServiceManager
 {
 
     private final BleDevice mDevice;
@@ -37,7 +37,7 @@ class P_DeviceServiceManager extends P_ServiceManager
         return P_EventFactory.newReadWriteEvent(mDevice, serviceUuid, characteristicUuid, descriptorUuid, type, target, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0, /*solicited=*/true);
     }
 
-    ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, FutureData futureData, ReadWriteListener.Type type, final Target target)
+    final ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, FutureData futureData, ReadWriteListener.Type type, final Target target)
     {
         final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 
@@ -152,7 +152,7 @@ class P_DeviceServiceManager extends P_ServiceManager
         return 0x0;
     }
 
-    @Override public BluetoothGattService getServiceDirectlyFromNativeNode(UUID serviceUuid)
+    @Override public final BluetoothGattService getServiceDirectlyFromNativeNode(UUID serviceUuid)
     {
         final BluetoothGatt gatt = mDevice.getNativeGatt();
 
@@ -168,7 +168,7 @@ class P_DeviceServiceManager extends P_ServiceManager
         }
     }
 
-    @Override protected List<BluetoothGattService> getNativeServiceList_original()
+    @Override final protected List<BluetoothGattService> getNativeServiceList_original()
     {
         final BluetoothGatt gatt = mDevice.getNativeGatt();
 

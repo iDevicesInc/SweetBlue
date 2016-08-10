@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-class P_Logger
+final class P_Logger
 {
 
     private String[] m_debugThreadNamePool;
@@ -62,7 +62,7 @@ class P_Logger
         }
     }
 
-    public synchronized String getThreadName(int threadId)
+    public final synchronized String getThreadName(int threadId)
     {
         String threadName = null;
 
@@ -84,7 +84,7 @@ class P_Logger
         return threadName == null ? "" : threadName;
     }
 
-    public void printBuildInfo()
+    public final void printBuildInfo()
     {
         if( !m_enabled )  return;
 
@@ -99,12 +99,12 @@ class P_Logger
         }
     }
 
-    public boolean isEnabled()
+    public final boolean isEnabled()
     {
         return m_enabled;
     }
 
-    public synchronized String getDebugAction(String action)
+    public final synchronized String getDebugAction(String action)
     {
         String[] action_split = action.split("\\.");
         String action_debug = action_split[action_split.length-1];
@@ -139,7 +139,7 @@ class P_Logger
         return message;
     }
 
-    public void log(int level, String message)
+    public final void log(int level, String message)
     {
         if( !m_enabled )  return;
 
@@ -150,12 +150,12 @@ class P_Logger
         log_private(level, className, message, trace);
     }
 
-    public void log_status(int gattStatus)
+    public final void log_status(int gattStatus)
     {
         log_status(gattStatus, "");
     }
 
-    public void log_status(int gattStatus, String message)
+    public final void log_status(int gattStatus, String message)
     {
         if( !m_enabled )  return;
 
@@ -165,7 +165,7 @@ class P_Logger
         log(level, message);
     }
 
-    public void log(int level, String tag, String message)
+    public final void log(int level, String tag, String message)
     {
         if( !m_enabled )  return;
 
@@ -186,53 +186,53 @@ class P_Logger
         }
     }
 
-    public void d(String tag, String message)
+    public final void d(String tag, String message)
     {
         log(Log.DEBUG, tag, message);
     }
 
-    public void i(String tag, String message)
+    public final void i(String tag, String message)
     {
         log(Log.INFO, tag, message);
     }
 
-    public void v(String tag, String message)
+    public final void v(String tag, String message)
     {
         log(Log.VERBOSE, tag, message);
     }
 
-    public void e(String tag, String message)
+    public final void e(String tag, String message)
     {
         log(Log.ERROR, tag, message);
     }
 
-    public void w(String tag, String message)
+    public final void w(String tag, String message)
     {
         log(Log.WARN, tag, message);
     }
 
 
-    public void d(String message)
+    public final void d(String message)
     {
         log(Log.DEBUG, message);
     }
 
-    public void i(String message)
+    public final void i(String message)
     {
         log(Log.INFO, message);
     }
 
-    public void v(String message)
+    public final void v(String message)
     {
         log(Log.VERBOSE, message);
     }
 
-    public void e(String message)
+    public final void e(String message)
     {
         log(Log.ERROR, message);
     }
 
-    public void w(String message)
+    public final void w(String message)
     {
         log(Log.WARN, message);
     }
@@ -240,7 +240,7 @@ class P_Logger
 
 
 
-    public String gattConn(int code)
+    public final String gattConn(int code)
     {
         String name = "NO_NAME";
 
@@ -271,7 +271,7 @@ class P_Logger
 
 
 
-    public String gattStatus(int code)
+    public final String gattStatus(int code)
     {
         String errorName = "GATT_STATUS_NOT_APPLICABLE";
 
@@ -303,7 +303,7 @@ class P_Logger
 
 
 
-    public String gattBleState(int code)
+    public final String gattBleState(int code)
     {
         String name = "NO_NAME";
 
@@ -335,7 +335,7 @@ class P_Logger
 
 
 
-    public String gattUnbondReason(int code)
+    public final String gattUnbondReason(int code)
     {
         String name = "NO_NAME";
 

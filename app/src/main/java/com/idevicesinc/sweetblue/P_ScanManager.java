@@ -16,7 +16,7 @@ import static com.idevicesinc.sweetblue.BleManagerState.SCAN_READY;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
 
-class P_ScanManager
+final class P_ScanManager
 {
 
     private final BleManager mManager;
@@ -59,7 +59,7 @@ class P_ScanManager
     }
 
 
-    public boolean startScan()
+    public final boolean startScan()
     {
         mManager.getStateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCAN_PAUSED, false, STARTING_SCAN, false);
         switch (mManager.mConfig.scanApi)
@@ -97,17 +97,17 @@ class P_ScanManager
         }
     }
 
-    public void stopScan()
+    public final void stopScan()
     {
         stopScan_private(true);
     }
 
-    void pauseScan()
+    final void pauseScan()
     {
         stopScan_private(false);
     }
 
-    synchronized void postScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord)
+    final synchronized void postScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord)
     {
         if (mManager.isOnSweetBlueThread())
         {
@@ -125,7 +125,7 @@ class P_ScanManager
         }
     }
 
-    public void stopScan_private(boolean stopping)
+    public final void stopScan_private(boolean stopping)
     {
         switch (mCurrentApi)
         {
@@ -258,17 +258,17 @@ class P_ScanManager
         }
     }
 
-    boolean isPreLollipopScan()
+    final boolean isPreLollipopScan()
     {
         return mPreLollipopScanCallback != null && mPostLollipopScanCallback == null;
     }
 
-    boolean isPostLollipopScan()
+    final boolean isPostLollipopScan()
     {
         return mPreLollipopScanCallback == null && mPostLollipopScanCallback != null;
     }
 
-    boolean isClassicScan()
+    final boolean isClassicScan()
     {
         return mPreLollipopScanCallback == null && mPostLollipopScanCallback == null;
     }

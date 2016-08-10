@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 
-public class P_Task_TurnBleOn extends P_Task
+public final class P_Task_TurnBleOn extends P_Task
 {
 
     P_Task_TurnBleOn(P_TaskManager mgr)
@@ -11,12 +11,12 @@ public class P_Task_TurnBleOn extends P_Task
         super(mgr, null, true);
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override public final P_TaskPriority getPriority()
     {
         return P_TaskPriority.CRITICAL;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         int curNativeState = getManager().getNativeAdapter().getState();
         if (curNativeState == BluetoothAdapter.STATE_ON)

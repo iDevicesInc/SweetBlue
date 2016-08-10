@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
-public class P_Task_Scan extends P_Task_RequiresBleOn
+public final class P_Task_Scan extends P_Task_RequiresBleOn
 {
 
     private final Interval mScanTime;
@@ -25,12 +25,12 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
         mPeriodicScan = Interval.isEnabled(mScanTime) && Interval.isEnabled(mPauseTime);
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override public final P_TaskPriority getPriority()
     {
         return P_TaskPriority.TRIVIAL;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         if (getManager().is(BleManagerState.SCAN_READY) || getManager().mConfig.revertToClassicDiscoveryIfNeeded)
         {
@@ -50,7 +50,7 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
         }
     }
 
-    @Override public void update(long curTimeMs)
+    @Override public final void update(long curTimeMs)
     {
         if (mPeriodicScan && isPaused())
         {
@@ -69,23 +69,23 @@ public class P_Task_Scan extends P_Task_RequiresBleOn
         }
     }
 
-    public long timeScanning()
+    public final long timeScanning()
     {
         return mTimeScanning;
     }
 
-    @Override public boolean isInterruptible()
+    @Override public final boolean isInterruptible()
     {
         return true;
     }
 
-    @Override void onInterrupted()
+    @Override final void onInterrupted()
     {
         super.onInterrupted();
         getManager().mScanManager.pauseScan();
     }
 
-    @Override void checkTimeOut(long curTimeMs)
+    @Override final void checkTimeOut(long curTimeMs)
     {
         if (mLastScanUpdate != 0)
         {

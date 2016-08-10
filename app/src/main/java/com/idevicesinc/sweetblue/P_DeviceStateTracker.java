@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.listeners.DeviceStateListener.StateEvent;
 import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 
 
-public class P_DeviceStateTracker extends P_StateTracker
+public final class P_DeviceStateTracker extends P_StateTracker
 {
 
     private DeviceStateListener mStateListener;
@@ -22,12 +22,12 @@ public class P_DeviceStateTracker extends P_StateTracker
         mShortTermReconnect = forShortTermReconnect;
     }
 
-    public void setListener(DeviceStateListener listener)
+    public final void setListener(DeviceStateListener listener)
     {
         mStateListener = listener;
     }
 
-    public void sync(P_DeviceStateTracker otherTracker)
+    public final void sync(P_DeviceStateTracker otherTracker)
     {
         mSyncing = true;
         copy(otherTracker);
@@ -35,7 +35,7 @@ public class P_DeviceStateTracker extends P_StateTracker
     }
 
 
-    @Override void onStateChange(final int oldStateBits, final int newStateBits, final int intentMask, final int gattStatus)
+    @Override final void onStateChange(final int oldStateBits, final int newStateBits, final int intentMask, final int gattStatus)
     {
         if( mDevice.isNull() )		return;
         if( mSyncing )				return;
@@ -65,7 +65,7 @@ public class P_DeviceStateTracker extends P_StateTracker
         }
     }
 
-    @Override public String toString()
+    @Override public final String toString()
     {
         return super.toString(BleDeviceState.VALUES());
     }

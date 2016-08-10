@@ -1,11 +1,13 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
+import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 
-class P_Task_RequestMtu extends P_Task_Transactionable
+final class P_Task_RequestMtu extends P_Task_Transactionable
 {
 
     private final int mMtuSize;
@@ -19,7 +21,7 @@ class P_Task_RequestMtu extends P_Task_Transactionable
         mListener = rwlistener;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         if (Utils.isLollipop())
         {
@@ -31,7 +33,18 @@ class P_Task_RequestMtu extends P_Task_Transactionable
         }
     }
 
-    void onMtuChangeResult(ReadWriteListener.ReadWriteEvent event)
+    @Override void onTaskTimedOut()
+    {
+        super.onTaskTimedOut();
+        if (mListener != null)
+        {
+            ReadWriteListener.ReadWriteEvent event = P_EventFactory.newReadWriteEvent(getDevice(), ReadWriteListener.Type.WRITE, getDevice().getRssi(),
+                    ReadWriteListener.Status.TIMED_OUT, BleStatuses.GATT_REQUEST_MTU_TIME_OUT, 0, 0, true);
+            mListener.onEvent(event);
+        }
+    }
+
+    final void onMtuChangeResult(ReadWriteListener.ReadWriteEvent event)
     {
         if (event.wasSuccess())
         {
@@ -47,7 +60,7 @@ class P_Task_RequestMtu extends P_Task_Transactionable
         }
     }
 
-    @Override P_TaskPriority defaultPriority()
+    @Override final P_TaskPriority defaultPriority()
     {
         return P_TaskPriority.MEDIUM;
     }

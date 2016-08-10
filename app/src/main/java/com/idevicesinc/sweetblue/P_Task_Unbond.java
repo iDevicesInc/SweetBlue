@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 
-class P_Task_Unbond extends P_Task_RequiresBleOn
+final class P_Task_Unbond extends P_Task_RequiresBleOn
 {
 
     private static final String REMOVE_BOND			= "removeBond";
@@ -24,12 +24,12 @@ class P_Task_Unbond extends P_Task_RequiresBleOn
         this(device, listener, P_TaskPriority.MEDIUM);
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override public final P_TaskPriority getPriority()
     {
         return mPriority;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         if (!getDevice().mGattManager.isBonded())
         {

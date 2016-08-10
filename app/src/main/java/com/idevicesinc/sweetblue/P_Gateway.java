@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
 
-public class P_Gateway
+public final class P_Gateway
 {
 
     public static String gattUnbondReason(BleManager manager, int code)

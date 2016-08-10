@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 import com.idevicesinc.sweetblue.utils.State;
 
 
-class P_BleStateTracker extends P_StateTracker
+final class P_BleStateTracker extends P_StateTracker
 {
 
     private ManagerStateListener mListener;
@@ -19,12 +19,12 @@ class P_BleStateTracker extends P_StateTracker
         mManager = mgr;
     }
 
-    public void setListener(ManagerStateListener listener)
+    public final void setListener(ManagerStateListener listener)
     {
         mListener = listener;
     }
 
-    @Override void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
+    @Override final void onStateChange(int oldStateBits, int newStateBits, int intentMask, int status)
     {
         if( mListener != null )
         {
@@ -40,7 +40,7 @@ class P_BleStateTracker extends P_StateTracker
     }
 
     @Override
-    public String toString()
+    public final String toString()
     {
         return super.toString(BleManagerState.VALUES());
     }

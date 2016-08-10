@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 
-public class P_BleReceiverManager
+public final class P_BleReceiverManager
 {
 
     private static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
@@ -29,7 +29,7 @@ public class P_BleReceiverManager
         mManager.getAppContext().registerReceiver(mReceiver, createFilter());
     }
 
-    void onDestroy()
+    final void onDestroy()
     {
         mManager.getAppContext().unregisterReceiver(mReceiver);
     }

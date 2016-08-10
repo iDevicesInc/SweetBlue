@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 import java.util.UUID;
 
 
-public class P_Task_Read extends P_Task_Transactionable
+public final class P_Task_Read extends P_Task_Transactionable
 {
 
     private ReadWriteListener mListener;
@@ -30,12 +30,12 @@ public class P_Task_Read extends P_Task_Transactionable
         mServiceUuid = serviceUuid;
     }
 
-    @Override P_TaskPriority defaultPriority()
+    @Override final P_TaskPriority defaultPriority()
     {
         return P_TaskPriority.LOW;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         if (!getDevice().mGattManager.read(mServiceUuid, mCharUuid))
         {
@@ -49,7 +49,7 @@ public class P_Task_Read extends P_Task_Transactionable
         }
     }
 
-    @Override void onTaskTimedOut()
+    @Override final void onTaskTimedOut()
     {
         super.onTaskTimedOut();
         if (mListener != null)
@@ -72,7 +72,7 @@ public class P_Task_Read extends P_Task_Transactionable
     /**
      * Gets called from {@link P_GattManager} when a read comes in.
      */
-    void onRead(final ReadWriteListener.ReadWriteEvent event)
+    final void onRead(final ReadWriteListener.ReadWriteEvent event)
     {
         getManager().mPostManager.postCallback(new Runnable()
         {

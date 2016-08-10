@@ -30,6 +30,8 @@ public class BleStatuses
 
     public static final int GATT_CONNECT_TIMEOUT                        = 8771;
 
+    public static final int GATT_REQUEST_MTU_TIME_OUT                   = 8546;
+
     /**
      * Used on {@link BleDevice.BondListener.BondEvent#failReason()} when {@link BleDevice.BondListener.BondEvent#status()}
      * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.

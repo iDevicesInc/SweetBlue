@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class P_StringHandler
+public final class P_StringHandler
 {
     private static final String BASE = "sb_%s";
 

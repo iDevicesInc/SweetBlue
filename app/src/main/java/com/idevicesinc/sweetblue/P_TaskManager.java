@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 
 
-public class P_TaskManager
+public final class P_TaskManager
 {
 
     private final LinkedList<P_Task> mTaskQueue;
@@ -26,7 +26,7 @@ public class P_TaskManager
     }
 
     // This returns true if there are tasks in the queue, or there is a task executing currently
-    public boolean update(long curTimeMs)
+    public final boolean update(long curTimeMs)
     {
 
         boolean hasTasksInQueue = mTaskQueue.size() > 0;
@@ -72,12 +72,12 @@ public class P_TaskManager
         return hasTasksInQueue || !isCurrentNull();
     }
 
-    BleManager getManager()
+    final BleManager getManager()
     {
         return mBleManager;
     }
 
-    long getUpdateCount()
+    final long getUpdateCount()
     {
         return mUpdateCount;
     }
@@ -88,7 +88,7 @@ public class P_TaskManager
     }
 
 
-    public void succeedTask(final P_Task task)
+    public final void succeedTask(final P_Task task)
     {
         if (mBleManager.isOnSweetBlueThread())
         {
@@ -119,7 +119,7 @@ public class P_TaskManager
         task.onSucceed();
     }
 
-    public void succeedTask(Class<? extends P_Task> taskClass, BleManager mgr)
+    public final void succeedTask(Class<? extends P_Task> taskClass, BleManager mgr)
     {
         P_Task task = findTask(taskClass, mgr, null, null);
         if (task != null)
@@ -128,7 +128,7 @@ public class P_TaskManager
         }
     }
 
-    public void succeedTask(Class<? extends P_Task> taskClass, BleDevice device)
+    public final void succeedTask(Class<? extends P_Task> taskClass, BleDevice device)
     {
         P_Task task = findTask(taskClass, null, device, null);
         if (task != null)
@@ -137,7 +137,7 @@ public class P_TaskManager
         }
     }
 
-    public void succeedTask(Class<? extends P_Task> taskClass, BleServer server)
+    public final void succeedTask(Class<? extends P_Task> taskClass, BleServer server)
     {
         P_Task task = findTask(taskClass, null, null, server);
         if (task != null)
@@ -146,7 +146,7 @@ public class P_TaskManager
         }
     }
 
-    public void failTask(final P_Task task, final boolean immediate)
+    public final void failTask(final P_Task task, final boolean immediate)
     {
         if (mBleManager.isOnSweetBlueThread())
         {
@@ -177,7 +177,7 @@ public class P_TaskManager
         task.onFail(immediate);
     }
 
-    public void clearTask(P_Task task)
+    public final void clearTask(P_Task task)
     {
         if (mCurrent == task)
         {
@@ -185,7 +185,7 @@ public class P_TaskManager
         }
     }
 
-    public void failTask(Class<? extends P_Task> taskClass, BleManager mgr, boolean immediate)
+    public final void failTask(Class<? extends P_Task> taskClass, BleManager mgr, boolean immediate)
     {
         P_Task task = findTask(taskClass, mgr, null, null);
         if (task != null)
@@ -194,7 +194,7 @@ public class P_TaskManager
         }
     }
 
-    public void failTask(Class<? extends P_Task> taskClass, BleDevice device, boolean immediate)
+    public final void failTask(Class<? extends P_Task> taskClass, BleDevice device, boolean immediate)
     {
         P_Task task = findTask(taskClass, null, device, null);
         if (task != null)
@@ -203,7 +203,7 @@ public class P_TaskManager
         }
     }
 
-    public void failTask(Class<? extends P_Task> taskClass, BleServer server, boolean immediate)
+    public final void failTask(Class<? extends P_Task> taskClass, BleServer server, boolean immediate)
     {
         P_Task task = findTask(taskClass, null, null, server);
         if (task != null)
@@ -212,7 +212,7 @@ public class P_TaskManager
         }
     }
 
-    public boolean isCurrent(Class<? extends P_Task> taskClass, BleManager mgr)
+    public final boolean isCurrent(Class<? extends P_Task> taskClass, BleManager mgr)
     {
         if (mCurrent == null)
         {
@@ -228,7 +228,7 @@ public class P_TaskManager
         return false;
     }
 
-    public boolean isCurrent(Class<? extends P_Task> taskClass, BleDevice device)
+    public final boolean isCurrent(Class<? extends P_Task> taskClass, BleDevice device)
     {
         if (mCurrent == null)
         {
@@ -251,7 +251,7 @@ public class P_TaskManager
         return false;
     }
 
-    public boolean isCurrent(Class<? extends P_Task> taskClass, BleServer server)
+    public final boolean isCurrent(Class<? extends P_Task> taskClass, BleServer server)
     {
         if (mCurrent == null)
         {
@@ -274,7 +274,7 @@ public class P_TaskManager
         return false;
     }
 
-    public void add(final P_Task task)
+    public final void add(final P_Task task)
     {
         if (!task.isNull())
         {
@@ -316,7 +316,7 @@ public class P_TaskManager
         task.addedToQueue();
     }
 
-    void interruptTask(Class<? extends P_Task> taskClass, BleManager mgr)
+    final void interruptTask(Class<? extends P_Task> taskClass, BleManager mgr)
     {
         if (mCurrent != null)
         {
@@ -327,7 +327,7 @@ public class P_TaskManager
         }
     }
 
-    void interruptTask(Class<? extends P_Task> taskClass, BleDevice device)
+    final void interruptTask(Class<? extends P_Task> taskClass, BleDevice device)
     {
         if (matches(mCurrent, taskClass, null, device, null))
         {
@@ -335,7 +335,7 @@ public class P_TaskManager
         }
     }
 
-    void interruptTask(Class<? extends P_Task> taskClass, BleServer server)
+    final void interruptTask(Class<? extends P_Task> taskClass, BleServer server)
     {
         if (matches(mCurrent, taskClass, null, null, server))
         {
@@ -353,7 +353,7 @@ public class P_TaskManager
         }
     }
 
-    public void addInterruptedTask(final P_Task task)
+    public final void addInterruptedTask(final P_Task task)
     {
         // Add the interrupted task to the beginning of the queue, so that it starts
         // next after the task which interrupted it is done executing.
@@ -398,7 +398,7 @@ public class P_TaskManager
         task.addedToQueue();
     }
 
-    public void timeOut(final P_Task task)
+    public final void timeOut(final P_Task task)
     {
         if (getManager().isOnSweetBlueThread())
         {
@@ -422,7 +422,7 @@ public class P_TaskManager
         task.onTaskTimedOut();
     }
 
-    public void cancel(final P_Task task)
+    public final void cancel(final P_Task task)
     {
         if (getManager().isOnSweetBlueThread())
         {
@@ -455,12 +455,12 @@ public class P_TaskManager
         task.onCanceled();
     }
 
-    public P_Task getCurrent()
+    public final P_Task getCurrent()
     {
         return mCurrent != null ? mCurrent : P_Task.NULL;
     }
 
-    public <T extends P_Task> T getCurrent(Class<? extends P_Task> taskClass, BleDevice device)
+    public final <T extends P_Task> T getCurrent(Class<? extends P_Task> taskClass, BleDevice device)
     {
         if (mCurrent != null && mCurrent.getClass().equals(taskClass) && mCurrent.getDevice().equals(device))
         {
@@ -472,7 +472,7 @@ public class P_TaskManager
         }
     }
 
-    public <T extends P_Task> T getCurrent(Class<? extends P_Task> taskClass, BleManager manager)
+    public final <T extends P_Task> T getCurrent(Class<? extends P_Task> taskClass, BleManager manager)
     {
         if (mCurrent != null && mCurrent.getClass().equals(taskClass) && mCurrent.getManager() == manager)
         {
@@ -484,7 +484,7 @@ public class P_TaskManager
         }
     }
 
-    void print()
+    final void print()
     {
         if (getManager().getLogger().isEnabled())
         {
@@ -548,7 +548,7 @@ public class P_TaskManager
         return false;
     }
 
-    @Override public String toString()
+    @Override public final String toString()
     {
         final String current = mCurrent != null ? mCurrent.toString() : "no current task";
 
@@ -557,10 +557,10 @@ public class P_TaskManager
         return Utils_String.concatStrings(current, " ", queue);
     }
 
-    private class TaskSorter implements Comparator<P_Task>
+    private final class TaskSorter implements Comparator<P_Task>
     {
 
-        @Override public int compare(P_Task lhs, P_Task rhs)
+        @Override public final int compare(P_Task lhs, P_Task rhs)
         {
             int comp = rhs.getPriority().compareTo(lhs.getPriority());
             if (comp != 0)

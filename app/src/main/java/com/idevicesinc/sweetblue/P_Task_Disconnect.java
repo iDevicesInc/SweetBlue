@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 
-public class P_Task_Disconnect extends P_Task_RequiresConnection
+public final class P_Task_Disconnect extends P_Task_RequiresConnection
 {
 
     private final P_TaskPriority mPriority;
@@ -20,12 +20,12 @@ public class P_Task_Disconnect extends P_Task_RequiresConnection
         mPriority = priority == null ? P_TaskPriority.MEDIUM : priority;
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override public final P_TaskPriority getPriority()
     {
         return mPriority;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         if (!getDevice().is(BleDeviceState.CONNECTED))
         {

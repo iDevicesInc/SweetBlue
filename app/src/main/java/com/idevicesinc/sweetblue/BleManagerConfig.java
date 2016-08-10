@@ -93,7 +93,7 @@ public class BleManagerConfig extends BleDeviceConfig
      * This sets the amount of time before the scan is "reset". By reset, I mean the scan will be stopped, then started again. This needs to happen, as android
      * seems to cache results, and you don't get very accurate scans, if you do an infinite scan using {@link BleManager#startScan()}.
      */
-    public Interval scanResetInterval                                   = Interval.secs(7.0);
+    public Interval scanResetInterval                                   = Interval.secs(12.0);
 
     public List<UuidNameMap> uuidNameMaps					            = null;
 

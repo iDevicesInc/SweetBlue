@@ -11,7 +11,7 @@ import com.idevicesinc.sweetblue.utils.State;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class P_EventFactory
+public final class P_EventFactory
 {
 
     public static NativeStateListener.NativeStateEvent newNativeStateEvent(BleManager mgr, int oldStateBits, int newStateBits, int status)

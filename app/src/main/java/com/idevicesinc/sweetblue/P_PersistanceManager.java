@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 
-class P_PersistanceManager
+final class P_PersistanceManager
 {
 
     private final static String CONNECTED_DEVICES_NAMESPACE = "sb_connected_2dj-O";
@@ -29,7 +29,7 @@ class P_PersistanceManager
         mManager = mgr;
     }
 
-    public void storePreviouslyConnectedDevices(Set<String> macAddresses)
+    public final void storePreviouslyConnectedDevices(Set<String> macAddresses)
     {
         SharedPreferences.Editor prefs = getEdit(CONNECTED_DEVICES_NAMESPACE);
         JSONArray jsonArray = new JSONArray(macAddresses);
@@ -37,7 +37,7 @@ class P_PersistanceManager
         prefs.commit();
     }
 
-    public Set<String> getPreviouslyConnectedDevices()
+    public final Set<String> getPreviouslyConnectedDevices()
     {
         HashSet<String> devices = new HashSet<>(0);
         SharedPreferences prefs = getPrefs(CONNECTED_DEVICES_NAMESPACE);

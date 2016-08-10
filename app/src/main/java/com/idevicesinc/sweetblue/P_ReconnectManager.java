@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 
-class P_ReconnectManager
+final class P_ReconnectManager
 {
 
     private final BleDevice mDevice;
@@ -17,12 +17,12 @@ class P_ReconnectManager
         mMaxReconnecTries = mDevice.getConfig().reconnectionTries;
     }
 
-    void setMaxReconnectTries(int tries)
+    final void setMaxReconnectTries(int tries)
     {
         mMaxReconnecTries = tries;
     }
 
-    boolean shouldFail()
+    final boolean shouldFail()
     {
         boolean fail = mReconnectTries >= mMaxReconnecTries;
         if (fail)
@@ -36,7 +36,7 @@ class P_ReconnectManager
         return fail;
     }
 
-    void reconnect(int gattStatus)
+    final void reconnect(int gattStatus)
     {
         if (mReconnectTries == 0)
         {

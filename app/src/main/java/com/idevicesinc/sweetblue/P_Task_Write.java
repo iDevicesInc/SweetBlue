@@ -8,7 +8,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 import java.util.UUID;
 
 
-public class P_Task_Write extends P_Task_Transactionable
+public final class P_Task_Write extends P_Task_Transactionable
 {
 
     private UUID mServiceUuid;
@@ -26,7 +26,7 @@ public class P_Task_Write extends P_Task_Transactionable
         mValue = value;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         if (!getDevice().mGattManager.write(mServiceUuid, mCharUuid, mValue))
         {
@@ -40,7 +40,7 @@ public class P_Task_Write extends P_Task_Transactionable
         }
     }
 
-    void onWrite(final ReadWriteListener.ReadWriteEvent event)
+    final void onWrite(final ReadWriteListener.ReadWriteEvent event)
     {
         getManager().mPostManager.postCallback(new Runnable()
         {
@@ -55,12 +55,12 @@ public class P_Task_Write extends P_Task_Transactionable
         succeed();
     }
 
-    byte[] getValue()
+    final byte[] getValue()
     {
         return mValue;
     }
 
-    @Override void onTaskTimedOut()
+    @Override final void onTaskTimedOut()
     {
         super.onTaskTimedOut();
         super.onTaskTimedOut();
@@ -81,7 +81,7 @@ public class P_Task_Write extends P_Task_Transactionable
         }
     }
 
-    @Override P_TaskPriority defaultPriority()
+    @Override final P_TaskPriority defaultPriority()
     {
         return P_TaskPriority.LOW;
     }

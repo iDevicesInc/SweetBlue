@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.listeners.ReadWriteListener;
 
 import java.util.UUID;
 
-public class P_Task_ToggleNotify extends P_Task_Transactionable
+public final class P_Task_ToggleNotify extends P_Task_Transactionable
 {
 
     private UUID mServiceUuid;
@@ -28,7 +28,7 @@ public class P_Task_ToggleNotify extends P_Task_Transactionable
         this(device, listener, null, charUuid, enable, successListener);
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         if (!getDevice().mGattManager.enableNotify(mServiceUuid, mCharUuid, mEnable))
         {
@@ -36,7 +36,7 @@ public class P_Task_ToggleNotify extends P_Task_Transactionable
         }
     }
 
-    void onToggleNotifyResult(ReadWriteListener.ReadWriteEvent event)
+    final void onToggleNotifyResult(ReadWriteListener.ReadWriteEvent event)
     {
         if (mListener != null)
         {
@@ -52,12 +52,12 @@ public class P_Task_ToggleNotify extends P_Task_Transactionable
         }
     }
 
-    boolean enabling()
+    final boolean enabling()
     {
         return mEnable;
     }
 
-    @Override P_TaskPriority defaultPriority()
+    @Override final P_TaskPriority defaultPriority()
     {
         return P_TaskPriority.MEDIUM;
     }

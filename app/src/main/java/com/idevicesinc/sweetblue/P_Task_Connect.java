@@ -1,10 +1,9 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.listeners.DeviceConnectionFailListener;
-import com.idevicesinc.sweetblue.utils.BleStatuses;
 
-public class P_Task_Connect extends P_Task_RequiresBleOn
+
+public final class P_Task_Connect extends P_Task_RequiresBleOn
 {
 
     private final P_TaskPriority mPriority;
@@ -29,7 +28,7 @@ public class P_Task_Connect extends P_Task_RequiresBleOn
         mExplicit = explicit;
     }
 
-    @Override void checkTimeOut(long curTimeMs)
+    @Override final void checkTimeOut(long curTimeMs)
     {
         if (timeExecuting() >= getDevice().getConfig().connectTimeOut.millis())
         {
@@ -37,18 +36,18 @@ public class P_Task_Connect extends P_Task_RequiresBleOn
         }
     }
 
-    @Override void onTaskTimedOut()
+    @Override final void onTaskTimedOut()
     {
         super.onTaskTimedOut();
 //        getDevice().onConnectionFailed(DeviceConnectionFailListener.Status.NATIVE_CONNECTION_FAILED, DeviceConnectionFailListener.Timing.EVENTUALLY, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override public final P_TaskPriority getPriority()
     {
         return mPriority;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         getDevice().doNativeConnect();
     }

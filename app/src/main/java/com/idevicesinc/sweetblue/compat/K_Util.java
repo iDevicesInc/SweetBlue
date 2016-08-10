@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.BleDevice;
 
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
-public class K_Util
+public final class K_Util
 {
 
     private K_Util() {}

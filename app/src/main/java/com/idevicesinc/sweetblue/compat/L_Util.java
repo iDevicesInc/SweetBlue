@@ -14,7 +14,7 @@ import java.util.List;
 
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class L_Util
+public final class L_Util
 {
 
     private L_Util() {}

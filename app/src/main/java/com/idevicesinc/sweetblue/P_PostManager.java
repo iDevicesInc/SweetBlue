@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import android.os.Handler;
 
-public class P_PostManager
+public final class P_PostManager
 {
 
     private final Handler mUIHandler;
@@ -18,12 +18,12 @@ public class P_PostManager
         mUpdateHandler = updateHandler;
     }
 
-    public void postToMain(Runnable action)
+    public final void postToMain(Runnable action)
     {
         mUIHandler.post(action);
     }
 
-    public void post(Runnable action)
+    public final void post(Runnable action)
     {
         if (mManager.mConfig.runOnUIThread)
         {
@@ -35,7 +35,7 @@ public class P_PostManager
         }
     }
 
-    public void postCallback(Runnable action)
+    public final void postCallback(Runnable action)
     {
         if (mManager.mConfig.postCallbacksToUIThread)
         {
@@ -54,17 +54,17 @@ public class P_PostManager
         }
     }
 
-    public void postToUpdateThread(Runnable action)
+    public final void postToUpdateThread(Runnable action)
     {
         mUpdateHandler.post(action);
     }
 
-    public void postToMainDelayed(Runnable action, long delay)
+    public final void postToMainDelayed(Runnable action, long delay)
     {
         mUIHandler.postDelayed(action, delay);
     }
 
-    public void postDelayed(Runnable action, long delay)
+    public final void postDelayed(Runnable action, long delay)
     {
         if (mManager.mConfig.runOnUIThread)
         {
@@ -76,7 +76,7 @@ public class P_PostManager
         }
     }
 
-    public void postCallbackDelayed(Runnable action, long delay)
+    public final void postCallbackDelayed(Runnable action, long delay)
     {
         if (mManager.mConfig.postCallbacksToUIThread)
         {
@@ -88,23 +88,23 @@ public class P_PostManager
         }
     }
 
-    public void postToUpdateThreadDelayed(Runnable action, long delay)
+    public final void postToUpdateThreadDelayed(Runnable action, long delay)
     {
         mUpdateHandler.postDelayed(action, delay);
     }
 
-    public void removeUICallbacks(Runnable uiRunnable)
+    public final void removeUICallbacks(Runnable uiRunnable)
     {
         mUIHandler.removeCallbacks(uiRunnable);
     }
 
-    public void removeUpdateCallbacks(Runnable updateRunnable)
+    public final void removeUpdateCallbacks(Runnable updateRunnable)
     {
         mUpdateHandler.removeCallbacks(updateRunnable);
     }
 
 
-    boolean isOnSweetBlueThread()
+    final boolean isOnSweetBlueThread()
     {
         return Thread.currentThread() == mUpdateHandler.getLooper().getThread();
     }

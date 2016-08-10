@@ -8,7 +8,7 @@ import android.util.Log;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 
-public class P_WakeLockManager
+public final class P_WakeLockManager
 {
 
     private static final String WAKE_LOCK_TAG = "SWEETBLUE_WAKE_LOCK";
@@ -43,7 +43,7 @@ public class P_WakeLockManager
         }
     }
 
-    public void clear()
+    public final void clear()
     {
         if( mCount >= 1 )
         {
@@ -53,7 +53,7 @@ public class P_WakeLockManager
         mCount = 0;
     }
 
-    public void push()
+    public final void push()
     {
         mCount++;
 
@@ -83,7 +83,7 @@ public class P_WakeLockManager
         }
     }
 
-    public void pop()
+    public final void pop()
     {
         mCount--;
 

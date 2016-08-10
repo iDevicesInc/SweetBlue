@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.utils.BleStatuses;
 
 import java.lang.reflect.Method;
 
-class P_Task_DiscoverServices extends P_Task_RequiresConnection
+final class P_Task_DiscoverServices extends P_Task_RequiresConnection
 {
 
     public P_Task_DiscoverServices(BleDevice device, IStateListener listener)
@@ -14,12 +14,12 @@ class P_Task_DiscoverServices extends P_Task_RequiresConnection
         super(device, listener);
     }
 
-    @Override public P_TaskPriority getPriority()
+    @Override public final P_TaskPriority getPriority()
     {
         return P_TaskPriority.MEDIUM;
     }
 
-    @Override public void execute()
+    @Override public final void execute()
     {
         final boolean useGattRefresh = getDevice().getConfig() == null ? getManager().mConfig.useGattRefresh : getDevice().getConfig().useGattRefresh;
 
@@ -32,21 +32,21 @@ class P_Task_DiscoverServices extends P_Task_RequiresConnection
 
     }
 
-    @Override void onFail(boolean immediate)
+    @Override final void onFail(boolean immediate)
     {
         super.onFail(immediate);
         getDevice().mGattManager.onConnectionFail(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.EVENTUALLY,
                 BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
     }
 
-    @Override void onTaskTimedOut()
+    @Override final void onTaskTimedOut()
     {
         super.onTaskTimedOut();
         getDevice().mGattManager.onConnectionFail(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.EVENTUALLY,
                 BleStatuses.GATT_STATUS_DISCOVER_SERVICES_FAILED);
     }
 
-    void discoverServicesImmediatelyFailed()
+    final void discoverServicesImmediatelyFailed()
     {
         failImmediately();
         getDevice().mGattManager.onConnectionFail(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.IMMEDIATELY,

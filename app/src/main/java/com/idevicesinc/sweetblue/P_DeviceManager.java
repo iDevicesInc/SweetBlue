@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-class P_DeviceManager
+final class P_DeviceManager
 {
 
     private final HashMap<String, BleDevice> mMap = new HashMap<String, BleDevice>();
@@ -32,12 +32,12 @@ class P_DeviceManager
         mConnectedList.addAll(mPersistanceManager.getPreviouslyConnectedDevices());
     }
 
-    public ArrayList<BleDevice> getList()
+    public final ArrayList<BleDevice> getList()
     {
         return getList_private(false);
     }
 
-    public ArrayList<BleDevice> getList_sorted()
+    public final ArrayList<BleDevice> getList_sorted()
     {
         return getList_private(true);
     }
@@ -51,7 +51,7 @@ class P_DeviceManager
         return mList;
     }
 
-    public BleDevice getDevice(final int mask_BleDeviceState)
+    public final BleDevice getDevice(final int mask_BleDeviceState)
     {
         for (int i = 0; i < getCount(); i++)
         {
@@ -66,17 +66,17 @@ class P_DeviceManager
         return BleDevice.NULL;
     }
 
-    public int getCount()
+    public final int getCount()
     {
         return mList.size();
     }
 
-    public BleDevice get(String macAddress)
+    public final BleDevice get(String macAddress)
     {
         return mMap.get(macAddress);
     }
 
-    void deviceConnected(BleDevice device)
+    final void deviceConnected(BleDevice device)
     {
         if (!mConnectedList.contains(device.getMacAddress()))
         {
@@ -85,7 +85,7 @@ class P_DeviceManager
         }
     }
 
-    void add(BleDevice device)
+    final void add(BleDevice device)
     {
         if (mMap.containsKey(device.getMacAddress()))
         {
@@ -98,7 +98,7 @@ class P_DeviceManager
         mMap.put(device.getMacAddress(), device);
     }
 
-    void remove(BleDevice device, P_DeviceManager cache)
+    final void remove(BleDevice device, P_DeviceManager cache)
     {
         if (mUpdating)
         {
@@ -121,7 +121,7 @@ class P_DeviceManager
         }
     }
 
-    void update(long curTimeMs)
+    final void update(long curTimeMs)
     {
         if (mUpdating)
         {
@@ -143,7 +143,7 @@ class P_DeviceManager
         mUpdating = false;
     }
 
-    boolean checkForStaleDevice(BleDevice device, long curTime)
+    final boolean checkForStaleDevice(BleDevice device, long curTime)
     {
         P_Task_Scan scanTask = mManager.mTaskManager.getCurrent(P_Task_Scan.class, mManager);
 
@@ -166,7 +166,7 @@ class P_DeviceManager
         return false;
     }
 
-    void clearConnectedDevice(String macAddress)
+    final void clearConnectedDevice(String macAddress)
     {
         if (mConnectedList.remove(macAddress))
         {
@@ -174,7 +174,7 @@ class P_DeviceManager
         }
     }
 
-    void clearAllConnectedDevices()
+    final void clearAllConnectedDevices()
     {
         if (mConnectedList.size() > 0)
         {
@@ -183,17 +183,17 @@ class P_DeviceManager
         }
     }
 
-    Set<String> previouslyConnectedDevices()
+    final Set<String> previouslyConnectedDevices()
     {
         return mConnectedList;
     }
 
-    public BleDevice get(int index)
+    public final BleDevice get(int index)
     {
         return mList.get(index);
     }
 
-    boolean hasDevice(String macAddress)
+    final boolean hasDevice(String macAddress)
     {
         for (int i = mList.size() - 1; i >= 0; i--)
         {
@@ -205,7 +205,7 @@ class P_DeviceManager
         return false;
     }
 
-    boolean hasDeviceInState(BleDeviceState... states)
+    final boolean hasDeviceInState(BleDeviceState... states)
     {
         if (states == null || states.length == 0)
         {
