@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.listeners.P_EventFactory;
 public final class P_DeviceStateTracker extends P_StateTracker
 {
 
-    private DeviceStateListener mStateListener;
+    DeviceStateListener mStateListener;
     private final BleDevice mDevice;
     private final boolean mShortTermReconnect;
     private boolean mSyncing;

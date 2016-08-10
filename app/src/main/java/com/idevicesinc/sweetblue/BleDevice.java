@@ -135,6 +135,11 @@ public class BleDevice extends BleNode
         mStateTracker.setListener(listener);
     }
 
+    public DeviceStateListener getStateListener()
+    {
+        return mStateTracker.mStateListener;
+    }
+
     public void setConnectionFailListener(DeviceConnectionFailListener failListener)
     {
         mConnectionFailMgr.setConnectionFailListener(failListener);
