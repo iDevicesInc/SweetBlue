@@ -225,6 +225,11 @@ public class BleManager
         initConfigDependantMembers();
     }
 
+    public BleManagerConfig getConfig()
+    {
+        return mConfig;
+    }
+
     public void startScan()
     {
         startScan_private(Interval.DISABLED, Interval.DISABLED);
@@ -494,7 +499,7 @@ public class BleManager
 
         BleDevice device = mDeviceManager.get(macAddress);
 
-        DiscoveryListener.LifeCycle cycle;
+        DiscoveryListener.LifeCycle cycle = null;
         if (device == null)
         {
             if (mConfig.defaultScanFilter != null)
@@ -505,7 +510,9 @@ public class BleManager
                     return;
                 }
             }
-            cycle = DiscoveryListener.LifeCycle.DISCOVERED;
+
+            cycle = mDeviceManager.getWasUndiscovered(macAddress) ? DiscoveryListener.LifeCycle.REDISCOVERED : DiscoveryListener.LifeCycle.DISCOVERED;
+
             device = new BleDevice(this, device_native, BleDeviceOrigin.FROM_DISCOVERY, null, device_name, false);
             device.setNameFromScanRecord(name_record);
             device.setNameFromNative(native_name);
@@ -515,13 +522,14 @@ public class BleManager
         }
         else
         {
-            cycle = DiscoveryListener.LifeCycle.REDISCOVERED;
+            // Even though we don't post the rediscovered event anymore, we have to let this information propagate
             device.onRediscovered(device_native, mScanInfo, rssi, BleDeviceOrigin.FROM_DISCOVERY);
             device.setNameFromScanRecord(name_record);
             device.setNameFromNative(native_name);
         }
 
-        postDeviceDiscovery(device, cycle);
+        if (cycle != null)
+            postDeviceDiscovery(device, cycle);
     }
 
     private void postDeviceDiscovery(BleDevice device, DiscoveryListener.LifeCycle lifecycle)

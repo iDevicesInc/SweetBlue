@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import android.os.Looper;
+import android.os.ParcelUuid;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -155,6 +156,23 @@ public class BleManagerConfig extends BleDeviceConfig
         @Override public Please onEvent(ScanEvent e)
         {
             return Please.acknowledgeIf(Utils.haveMatchingIds(e.advertisedServices(), mWhiteList));
+        }
+
+        public List<android.bluetooth.le.ScanFilter> makeNativeScanFilters()
+        {
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP)
+                return null;
+
+            ArrayList<android.bluetooth.le.ScanFilter> list = new ArrayList<>();
+
+            for (UUID uuid : mWhiteList)
+            {
+                android.bluetooth.le.ScanFilter.Builder builder = new android.bluetooth.le.ScanFilter.Builder();
+                builder.setServiceUuid(ParcelUuid.fromString(uuid.toString()));
+                list.add(builder.build());
+            }
+
+            return list;
         }
     }
 
