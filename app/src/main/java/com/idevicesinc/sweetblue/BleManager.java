@@ -267,6 +267,11 @@ public class BleManager
         }
     }
 
+    public void removeDeviceFromCache(BleDevice device)
+    {
+        mDeviceManager.remove(device, null);
+    }
+
     public boolean hasDevice(String macAddress)
     {
         return !getDevice(macAddress).isNull();
