@@ -215,6 +215,12 @@ final class P_GattManager
                         onConnectionFail(Status.NATIVE_CONNECTION_FAILED, Timing.EVENTUALLY, status);
                         return;
                     }
+                    final P_Task_DiscoverServices discover = getManager().mTaskManager.getCurrent(P_Task_DiscoverServices.class, mDevice);
+                    if (discover != null)
+                    {
+                        onConnectionFail(Status.NATIVE_CONNECTION_FAILED, Timing.EVENTUALLY, status);
+                        return;
+                    }
                     final P_Task_Disconnect disconnect = getManager().mTaskManager.getCurrent(P_Task_Disconnect.class, mDevice);
                     if (disconnect != null)
                     {
