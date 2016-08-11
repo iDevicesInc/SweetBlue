@@ -212,6 +212,33 @@ public final class P_TaskManager
         }
     }
 
+    public final void cancelTask(Class<? extends P_Task> taskClass, BleManager mgr)
+    {
+        P_Task task = findTask(taskClass, mgr, null, null);
+        if (task != null)
+        {
+            cancel(task);
+        }
+    }
+
+    public final void cancelTask(Class<? extends P_Task> taskClass, BleDevice device)
+    {
+        P_Task task = findTask(taskClass, null, device, null);
+        if (task != null)
+        {
+            cancel(task);
+        }
+    }
+
+    public final void cancelTask(Class<? extends P_Task> taskClass, BleServer server)
+    {
+        P_Task task = findTask(taskClass, null, null, server);
+        if (task != null)
+        {
+            cancel(task);
+        }
+    }
+
     public final boolean isCurrent(Class<? extends P_Task> taskClass, BleManager mgr)
     {
         if (mCurrent == null)

@@ -643,8 +643,7 @@ public class BleDevice extends BleNode
         else
         {
             disconnect();
-            // TODO - We may need another option here, other than fail task, because as far as the Sweetblue user is concerned, it hasn't failed here yet.
-            getManager().mTaskManager.failTask(P_Task_Connect.class, this, false);
+            getManager().mTaskManager.cancelTask(P_Task_Connect.class, this);
             mReconnectManager.reconnect(gattStatus);
         }
     }
