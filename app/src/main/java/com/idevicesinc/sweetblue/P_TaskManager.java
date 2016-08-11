@@ -494,6 +494,7 @@ public final class P_TaskManager
 
     private P_Task findTask(Class<? extends P_Task> clazz, BleManager mgr, BleDevice device, BleServer server)
     {
+        final P_Task current = mCurrent;
         int size = mTaskQueue.size();
         P_Task task;
         for (int i = 0; i < size; i++)
@@ -504,11 +505,11 @@ public final class P_TaskManager
                 return task;
             }
         }
-        if (mCurrent != null)
+        if (current != null)
         {
-            if (matches(mCurrent, clazz, mgr, device, server))
+            if (matches(current, clazz, mgr, device, server))
             {
-                return mCurrent;
+                return current;
             }
         }
         return null;
