@@ -469,6 +469,10 @@ public final class P_TaskManager
 
     private void removeTask(P_Task task)
     {
+        if (mCurrent == task)
+        {
+            mCurrent = null;
+        }
         mTaskQueue.remove(task);
         if (mTaskQueue.isEmpty() || mTaskQueue.peekFirst().getPriority() != P_TaskPriority.ATOMIC_TRANSACTION)
         {
