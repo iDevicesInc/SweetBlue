@@ -4,6 +4,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.content.Intent;
+import android.os.Build;
 
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.listeners.BondListener;
@@ -418,11 +419,26 @@ public class BleDevice extends BleNode
                         }
                         getManager().mTaskManager.add(new P_Task_Bond(this, null));
                         break;
+                    default:
+                        if (isDeviceWithBondingIssues())
+                        {
+                            getManager().mTaskManager.add(new P_Task_Unbond(this, null));
+                            getManager().mTaskManager.add(new P_Task_Bond(this, null));
+                        }
                 }
             }
             stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTING_OVERALL, true);
             getManager().mTaskManager.add(new P_Task_Connect(this, null, explicit));
         }
+    }
+
+    boolean isDeviceWithBondingIssues()
+    {
+        if (Build.MANUFACTURER.toLowerCase().contains("sony"))
+        {
+            return true;
+        }
+        return false;
     }
 
     void connect_implicitly()
