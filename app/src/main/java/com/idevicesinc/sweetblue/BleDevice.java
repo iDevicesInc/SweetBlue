@@ -22,6 +22,7 @@ import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.BleStatuses;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Percent;
+import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Rssi;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
@@ -420,7 +421,7 @@ public class BleDevice extends BleNode
                         getManager().mTaskManager.add(new P_Task_Bond(this, null));
                         break;
                     default:
-                        if (isDeviceWithBondingIssues())
+                        if (Utils.phoneHasBondingIssues())
                         {
                             getManager().mTaskManager.add(new P_Task_Unbond(this, null));
                             getManager().mTaskManager.add(new P_Task_Bond(this, null));
@@ -430,15 +431,6 @@ public class BleDevice extends BleNode
             stateTracker().update(P_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, CONNECTING_OVERALL, true);
             getManager().mTaskManager.add(new P_Task_Connect(this, null, explicit));
         }
-    }
-
-    boolean isDeviceWithBondingIssues()
-    {
-        if (Build.MANUFACTURER.toLowerCase().contains("sony"))
-        {
-            return true;
-        }
-        return false;
     }
 
     void connect_implicitly()
