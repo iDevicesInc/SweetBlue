@@ -575,11 +575,6 @@ public class BleManager
         mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCAN_READY_BLE, true);
     }
 
-    void setManagerClassicScanReady()
-    {
-        mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCAN_READY_CLASSIC, true);
-    }
-
     private void startScan_private(Interval scanTime, Interval pauseTime)
     {
         if (!isAny(SCANNING, SCAN_PAUSED, STARTING_SCAN))

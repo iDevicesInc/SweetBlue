@@ -213,10 +213,6 @@ public class BluetoothEnabler
                 {
                     bleManager.setManagerBLEScanReady();
                 }
-                else
-                {
-                    bleManager.setManagerClassicScanReady();
-                }
             }
         }
     }
@@ -433,7 +429,7 @@ public class BluetoothEnabler
 
         boolean isClassicScanningReady()
         {
-            return bleManager.isBleSupported() && bleManager.is(BleManagerState.ON) && bleManager.is(BleManagerState.SCAN_READY_CLASSIC);
+            return bleManager.is(BleManagerState.ON);
         }
 
         public enum Status

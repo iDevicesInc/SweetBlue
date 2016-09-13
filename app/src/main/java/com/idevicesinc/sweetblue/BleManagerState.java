@@ -63,16 +63,9 @@ public enum BleManagerState implements State
 
     /**
      * This is the state that {@link BleManager} is in when all required permissions and services (if any) are enabled for BLE scanning to work.
-     * This state also wraps the {@link BleManagerState#SCAN_READY_CLASSIC} so when the {@link BleManager} is {@link #SCAN_READY_BLE} it is also
-     * {@link #SCAN_READY_CLASSIC} even though it isn't explicitly in that state.
      */
-    SCAN_READY_BLE,
+    SCAN_READY_BLE;
 
-    /**
-     * * This is the state that {@link BleManager} is in when bluetooth is enabled but not all Marshmallow permission (when on a Marshmallow or above device)
-     * are granted so only classic scan can be used.
-     */
-    SCAN_READY_CLASSIC;
 
     private final int mNativeCode;
     private static BleManagerState[] sValues;
