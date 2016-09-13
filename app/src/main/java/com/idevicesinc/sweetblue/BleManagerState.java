@@ -62,14 +62,10 @@ public enum BleManagerState implements State
     IDLE,
 
     /**
-     * This is the state that {@link BleManager} is in when all required permissions and services (if any) are enabled for scanning to work.
+     * This is the state that {@link BleManager} is in when all required permissions and services (if any) are enabled for BLE scanning to work.
      */
-    SCAN_READY,
+    SCAN_READY_BLE;
 
-    /**
-     * This is the state that the {@link BleManager} is in when it requires some permissions or services for scanning.
-     */
-    SCAN_NOT_READY;
 
     private final int mNativeCode;
     private static BleManagerState[] sValues;

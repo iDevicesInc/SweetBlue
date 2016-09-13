@@ -570,9 +570,9 @@ public class BleManager
         mPostManager.postToUpdateThread(mUpdateRunnable);
     }
 
-    void setManagerReady()
+    void setManagerBLEScanReady()
     {
-        mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCAN_READY, true);
+        mStateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCAN_READY_BLE, true);
     }
 
     private void startScan_private(Interval scanTime, Interval pauseTime)
