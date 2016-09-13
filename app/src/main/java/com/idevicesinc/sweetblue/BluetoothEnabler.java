@@ -431,6 +431,11 @@ public class BluetoothEnabler
             return false;
         }
 
+        boolean isClassicScanningReady()
+        {
+            return bleManager.isBleSupported() && bleManager.is(BleManagerState.ON) && bleManager.is(BleManagerState.SCAN_READY_CLASSIC);
+        }
+
         public enum Status
         {
             ALREADY_ENABLED,

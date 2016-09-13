@@ -2,5 +2,12 @@ package com.idevicesinc.sweetblue.listeners;
 
 public interface EnablerDoneListener
 {
-    void onFinished(boolean isBleScanningReady);
+    enum ScanTypeAvailable
+    {
+        NONE,
+        BLE,
+        CLASSIC
+    }
+
+    void onFinished(ScanTypeAvailable scanTypeAvailable);
 }

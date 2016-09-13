@@ -3,6 +3,8 @@ package com.idevicesinc.sweetblue;
 import android.app.AlertDialog;
 import android.content.Context;
 
+import com.idevicesinc.sweetblue.listeners.EnablerDoneListener;
+
 public final class DefaultBluetoothEnablerController extends BluetoothEnablerController
 {
     protected static BluetoothEnablerConfig mConfig;
@@ -90,7 +92,16 @@ public final class DefaultBluetoothEnablerController extends BluetoothEnablerCon
         else if(event.isFor(BluetoothEnabler.BluetoothEnablerState.DONE))
         {
             if (listener != null) {
-                listener.onFinished(event.isBleScanningReady());
+                EnablerDoneListener.ScanTypeAvailable scanTypeAvailable = EnablerDoneListener.ScanTypeAvailable.NONE;
+                if(event.isBleScanningReady())
+                {
+                    scanTypeAvailable = EnablerDoneListener.ScanTypeAvailable.BLE;
+                }
+                else if(event.isClassicScanningReady())
+                {
+                    scanTypeAvailable = EnablerDoneListener.ScanTypeAvailable.CLASSIC;
+                }
+                listener.onFinished(scanTypeAvailable);
             }
         }
 
