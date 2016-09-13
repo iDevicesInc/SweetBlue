@@ -201,7 +201,17 @@ public class BluetoothEnabler
     {
         if(mStateTracker.currentState == BluetoothEnablerState.DONE)
         {
-            bleManager.setManagerReady();
+            if(isStateSystemPropertyEnabled(BluetoothEnablerState.PROMPT_BLUETOOTH_PERMISSION))
+            {
+                if(isStateSystemPropertyEnabled(BluetoothEnablerState.PROMPT_LOCATION_PERMISSIONS) && isStateSystemPropertyEnabled(BluetoothEnablerState.PROMPT_LOCATION_SERVICES))
+                {
+                    bleManager.setManagerBLEScanReady();
+                }
+                else
+                {
+                    bleManager.setManagerClassicScanReady();
+                }
+            }
             return;
         }
 

@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.List;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.SCAN_PAUSED;
-import static com.idevicesinc.sweetblue.BleManagerState.SCAN_READY;
+import static com.idevicesinc.sweetblue.BleManagerState.SCAN_READY_BLE;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
 
@@ -68,7 +68,7 @@ final class P_ScanManager
                 mCurrentApi = BleScanAPI.CLASSIC;
                 return mManager.getNativeAdapter().startDiscovery();
             case POST_LOLLIPOP:
-                if (mManager.is(SCAN_READY))
+                if (mManager.is(SCAN_READY_BLE))
                 {
                     if (Utils.isLollipop())
                     {

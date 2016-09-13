@@ -32,7 +32,7 @@ public final class P_Task_Scan extends P_Task_RequiresBleOn
 
     @Override public final void execute()
     {
-        if (getManager().is(BleManagerState.SCAN_READY) || getManager().mConfig.revertToClassicDiscoveryIfNeeded)
+        if (getManager().is(BleManagerState.SCAN_READY_BLE) || getManager().mConfig.revertToClassicDiscoveryIfNeeded)
         {
             if (!getManager().mScanManager.startScan())
             {
