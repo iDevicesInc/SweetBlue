@@ -46,6 +46,8 @@ public class BluetoothEnabler
 
     private boolean didJustPerformSystemRequest = false;
 
+    private boolean didActivityReturnFromBleDialog = false;
+
     private boolean wasLocationPermissionSystemDialogShownOnce = false;
 
     static void enableBluetoothAndPrerequisites(Activity callingActivity, BluetoothEnablerController controller, BleManager manager)
@@ -131,7 +133,11 @@ public class BluetoothEnabler
             @Override
             public void onActivityResumed(Activity activity)
             {
-                if(activity.equals(mCallingActivity) && mStateTracker.getCurrentState() == BluetoothEnablerState.PROMPT_BLUETOOTH_PERMISSION && isEnablerPerformingASystemCall == true)
+                if(activity.equals(mCallingActivity) && mStateTracker.getCurrentState() == BluetoothEnablerState.PROMPT_BLUETOOTH_PERMISSION && isEnablerPerformingASystemCall == true && didActivityReturnFromBleDialog == false)
+                {
+                    didActivityReturnFromBleDialog = true;
+                }
+                else if(activity.equals(mCallingActivity) && mStateTracker.getCurrentState() == BluetoothEnablerState.PROMPT_BLUETOOTH_PERMISSION && isEnablerPerformingASystemCall == true && didActivityReturnFromBleDialog == true)
                 {
                     recordSystemCallEnd();
 
@@ -151,7 +157,7 @@ public class BluetoothEnabler
 //                    mStateTracker.update(new BluetoothEnablerStateEvent(mStateTracker.getCurrentState().nextState(), isBluetoothEnabled ? BluetoothEnablerStateEvent.Status.SUCCEEDED : BluetoothEnablerStateEvent.Status.USER_DECLINED_SYSTEM_DIALOG));
 //                }
 
-                if(activity.equals(mCallingActivity) && mStateTracker.getCurrentState() == BluetoothEnablerState.PROMPT_LOCATION_PERMISSIONS && isEnablerPerformingASystemCall == true)
+                else if(activity.equals(mCallingActivity) && mStateTracker.getCurrentState() == BluetoothEnablerState.PROMPT_LOCATION_PERMISSIONS && isEnablerPerformingASystemCall == true)
                 {
                     recordSystemCallEnd();
 
@@ -160,7 +166,7 @@ public class BluetoothEnabler
                     mStateTracker.update(new BluetoothEnablerStateEvent(mStateTracker.getCurrentState().nextState(), isLocationEnabled ? BluetoothEnablerStateEvent.Status.SUCCEEDED : BluetoothEnablerStateEvent.Status.USER_DECLINED_SYSTEM_DIALOG));
                 }
 
-                if(activity.equals(mCallingActivity) && mStateTracker.getCurrentState() == BluetoothEnablerState.PROMPT_LOCATION_SERVICES && isEnablerPerformingASystemCall == true)
+                else if(activity.equals(mCallingActivity) && mStateTracker.getCurrentState() == BluetoothEnablerState.PROMPT_LOCATION_SERVICES && isEnablerPerformingASystemCall == true)
                 {
                     recordSystemCallEnd();
 
@@ -197,7 +203,7 @@ public class BluetoothEnabler
         });
     }
 
-    private void processPleaseResponse(Please response)
+    private void updateBleManagerScanState()
     {
         if(mStateTracker.currentState == BluetoothEnablerState.DONE)
         {
@@ -212,10 +218,11 @@ public class BluetoothEnabler
                     bleManager.setManagerClassicScanReady();
                 }
             }
-            return;
         }
+    }
 
-
+    private void processPleaseResponse(Please response)
+    {
         if(response.action == Please.DO_NEXT)
         {
             if(response.messageDialog != null && !isStateSystemPropertyEnabled(mStateTracker.currentState))
@@ -408,7 +415,7 @@ public class BluetoothEnabler
             return historyMap;
         }
 
-        boolean isScanningReady()
+        boolean isBleScanningReady()
         {
             if(Utils.isMarshmallow())
             {
@@ -461,9 +468,20 @@ public class BluetoothEnabler
 
             event.historyMap = this.historyMap;
 
-            Please response = mController.onEvent(event);
+            //PDZ- if the enabler is done then we want to update the BleManager scan state before giving to the onEvent call on last time in the BluetoothEnablerController
+            //Otherwise, we need to process the response we get back from the onEvent call.
+            if(event.isFor(BluetoothEnablerState.DONE))
+            {
+                updateBleManagerScanState();
 
-            BluetoothEnabler.this.processPleaseResponse(response);
+                mController.onEvent(event);
+            }
+            else
+            {
+                Please response = mController.onEvent(event);
+
+                BluetoothEnabler.this.processPleaseResponse(response);
+            }
         }
 
         BluetoothEnablerState getCurrentState()
