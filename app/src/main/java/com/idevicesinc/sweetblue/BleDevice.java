@@ -205,7 +205,14 @@ public class BleDevice extends BleNode
 
     public BluetoothDevice getNative()
     {
-        return mGattManager.getNativeDevice();
+        if (mGattManager != null)
+        {
+            return mGattManager.getNativeDevice();
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public BluetoothGatt getNativeGatt()
