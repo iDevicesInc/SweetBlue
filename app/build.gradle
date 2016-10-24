@@ -75,14 +75,14 @@ task sourceJar(type: Jar, dependsOn: jar) {
 }
 
 // disable the crazy super-strict doclint tool in Java 8
-if (JavaVersion.current().isJava8Compatible()) {
-    tasks.withType(Javadoc) {
-        options.addStringOption('Xdoclint:none', '-quiet')
-    }
-}
+//if (JavaVersion.current().isJava8Compatible()) {
+//    tasks.withType(Javadoc) {
+//        options.addStringOption('Xdoclint:none', '-quiet')
+//    }
+//}
 
-import org.gradle.logging.internal.OutputEvent
-import org.gradle.logging.internal.OutputEventListener
+//import org.gradle.logging.internal.OutputEvent
+//import org.gradle.logging.internal.OutputEventListener
 
 // Generate javadocs
 task gendocs(type: Javadoc) {
@@ -105,23 +105,23 @@ task gendocs(type: Javadoc) {
     // Check for warnings, and cause build to fail if there are any.
     // This is a temporary solution until a more official solution
     // makes it's way into Gradle.
-    def outputEvents = []
-    def listener = new OutputEventListener() {
-        void onOutput(OutputEvent event) {
-            outputEvents << event
-        }
-    };
-    doFirst {
-        getLogging().addOutputEventListener(listener)
-    }
-    doLast {
-        getLogging().removeOutputEventListener(listener)
-        outputEvents.each { e ->
-            if (e.toString() =~ " warning -") {
-                throw new GradleException("You have some javadoc warnings, please fix them!");
-            }
-        }
-    }
+//    def outputEvents = []
+//    def listener = new OutputEventListener() {
+//        void onOutput(OutputEvent event) {
+//            outputEvents << event
+//        }
+//    };
+//    doFirst {
+//        getLogging().addOutputEventListener(listener)
+//    }
+//    doLast {
+//        getLogging().removeOutputEventListener(listener)
+//        outputEvents.each { e ->
+//            if (e.toString() =~ " warning -") {
+//                throw new GradleException("You have some javadoc warnings, please fix them!");
+//            }
+//        }
+//    }
     group = "sweetblue"
 }
 

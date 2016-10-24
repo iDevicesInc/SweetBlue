@@ -174,9 +174,9 @@ public class MainActivity extends AppCompatActivity
         mStartScan.setEnabled(false);
         mgr.enableBluetoothAndMarshmallowPrerequisites(this, new EnablerDoneListener()
         {
-            @Override public void onFinished(boolean isScanningReady)
+            @Override public void onFinished(ScanTypeAvailable scanType)
             {
-                if (isScanningReady)
+                if (scanType != ScanTypeAvailable.NONE)
                 {
                     mStartScan.setEnabled(true);
                 }

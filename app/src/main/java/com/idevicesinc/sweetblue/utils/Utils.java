@@ -155,15 +155,20 @@ public class Utils
 
 	/**
 	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
-	 * and so this method is used in {@link com.idevicesinc.sweetblue.BleDeviceConfig.DefaultBondFilter}. 
+	 * and so this method is used in {@link com.idevicesinc.sweetblue.BleDeviceConfig.DefaultBondFilter}.
 	 */ 
 	public static boolean phoneHasBondingIssues()
 	{
 		return
-//			Utils.isManufacturer("lge")																			||
+			Utils.isManufacturer("lge") && Utils.isDevice("pplus")												||
 			Utils.isManufacturer("sony")																		||
 			Utils.isManufacturer("motorola") && (Utils.isProduct("ghost") || Utils.isProduct("victara"))		||
 			Utils.isManufacturer("samsung") && (Utils.isProduct("degaswifiue"))									 ;
+	}
+
+	public static boolean isDevice(String device)
+	{
+		return Build.DEVICE != null && Build.DEVICE.contains(device);
 	}
 	
 	public static boolean isManufacturer(String manufacturer)
