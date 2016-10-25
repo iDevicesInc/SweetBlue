@@ -160,7 +160,7 @@ public class Utils
 	public static boolean phoneHasBondingIssues()
 	{
 		return
-			Utils.isManufacturer("lge") && Utils.isDevice("pplus")												||
+//			Utils.isManufacturer("lge") && Utils.isDevice("pplus")												||
 			Utils.isManufacturer("sony")																		||
 			Utils.isManufacturer("motorola") && (Utils.isProduct("ghost") || Utils.isProduct("victara"))		||
 			Utils.isManufacturer("samsung") && (Utils.isProduct("degaswifiue"))									 ;
