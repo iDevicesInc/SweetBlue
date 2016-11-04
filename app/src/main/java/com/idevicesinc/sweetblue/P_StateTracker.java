@@ -189,15 +189,20 @@ abstract class P_StateTracker
                 i++;
             }
 
-            if( append )
+            // Guard against the state being null. This can happen if we get a weird code from the native
+            // side that we don't know what to do with
+            if (state != null)
             {
-                //append_assert(state);
+                if (append)
+                {
+                    //append_assert(state);
 
-                newStateBits |= state.bit();
-            }
-            else
-            {
-                newStateBits &= ~state.bit();
+                    newStateBits |= state.bit();
+                }
+                else
+                {
+                    newStateBits &= ~state.bit();
+                }
             }
         }
 
