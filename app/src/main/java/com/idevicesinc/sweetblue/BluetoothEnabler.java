@@ -44,8 +44,6 @@ public class BluetoothEnabler
 
     private boolean isEnablerPerformingASystemCall = false;
 
-    private boolean didJustPerformSystemRequest = false;
-
     private boolean didActivityReturnFromBleDialog = false;
 
     private boolean wasLocationPermissionSystemDialogShownOnce = false;
@@ -86,6 +84,12 @@ public class BluetoothEnabler
         bleManager = manager;
 
         wasLocationPermissionSystemDialogShownOnce = mCallingActivity.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE).getBoolean(LOCATION_PERMISSION_SYS_DIALOG_WAS_SHOWN_KEY, false);
+
+        isEnablerPerformingASystemCall = false;
+
+        didActivityReturnFromBleDialog = false;
+
+        wasLocationPermissionSystemDialogShownOnce = false;
     }
 
     private void startEnablingProcess()
