@@ -81,16 +81,21 @@ abstract class PA_StateTracker
 				append = (Boolean) statesAndValues[i+1];
 				i++;
 			}
-			
-			if( append )
+
+			// TODO - Investigate this further to attempt to find the root cause
+			// Sometimes we get a weird BLE state back from the native stack. For now, we'll just ignore it.
+			if (state != null)
 			{
-				append_assert(state);
-				
-				newStateBits |= state.bit();
-			}
-			else
-			{
-				newStateBits &= ~state.bit();
+				if (append)
+				{
+					append_assert(state);
+
+					newStateBits |= state.bit();
+				}
+				else
+				{
+					newStateBits &= ~state.bit();
+				}
 			}
 		}
 		

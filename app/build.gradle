@@ -17,6 +17,15 @@ android {
     defaultConfig {
         minSdkVersion 18
     }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
 }
 
 // Set base variables
