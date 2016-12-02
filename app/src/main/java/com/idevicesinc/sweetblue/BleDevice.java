@@ -307,6 +307,7 @@ public class BleDevice extends BleNode
 			 * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])}, etc. This most likely
 			 * means that the internal call to {@link BluetoothGatt#discoverServices()} didn't find any
 			 * {@link BluetoothGattService} that contained a {@link BluetoothGattCharacteristic} for {@link ReadWriteEvent#charUuid()}.
+			 * This can also happen if the internal call to get a BluetoothService(s) causes an exception (seen on some phones).
 			 */
 			NO_MATCHING_TARGET,
 
