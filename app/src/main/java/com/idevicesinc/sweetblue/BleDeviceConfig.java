@@ -67,6 +67,15 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * Default value for {@link #defaultTxPower}.
 	 */
 	public static final int DEFAULT_TX_POWER					= -50;
+
+	/**
+	 * Default is <code>false</code>. If the bluetooth device you are trying to connect to requires a pairing dialog to show up, you should
+	 * set this to <code>true</code>. Android will do one of two things when you try to pair to the device. It will either A) show the pairing dialog, or
+	 * B) show a notification in the notification area. When B happens, most people probably won't notice it, and think your app can't connect to the device.
+	 * This uses an ugly hack to get the dialog to always display...it starts a CLASSIC bluetooth scan for a second, then stops it, and starts the bond. As crazy
+	 * as it sounds, it works. Note that no devices will be discovered during this one second scan.
+	 */
+	public boolean forceBondDialog								= false;
 	
 	/**
 	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},

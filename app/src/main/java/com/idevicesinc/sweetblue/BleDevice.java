@@ -5495,6 +5495,10 @@ public class BleDevice extends BleNode
 
 	void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior)
 	{
+		if (conf_device().forceBondDialog)
+		{
+			queue().add(new P_Task_BondPopupHack(this, null));
+		}
 		queue().add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
 	}
 

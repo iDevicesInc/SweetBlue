@@ -213,10 +213,16 @@ class P_BleManager_Listeners
 	
 	private void onDeviceFound_classic(Context context, Intent intent)
 	{
-		final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-		final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
+		// If this was discovered via the hack to show the bond popup, then do not propogate this
+		// any further, as this scan is JUST to get the dialog to pop up (rather than show in the notification area)
+		P_Task_BondPopupHack hack = m_mngr.getTaskQueue().getCurrent(P_Task_BondPopupHack.class, m_mngr);
+		if (hack == null)
+		{
+			final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+			final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
 
-		m_mngr.onDiscoveredFromNativeStack(device_native, rssi, null);
+			m_mngr.onDiscoveredFromNativeStack(device_native, rssi, null);
+		}
 	}
 
 	private void onClassicDiscoveryFinished()
