@@ -566,6 +566,14 @@ class P_TaskQueue
 		}
 	}
 
+	public void clearQueueOfAll()
+	{
+		for (int i = m_queue.size() - 1; i >= 0; i-- )
+		{
+			clearQueueOf$removeFromQueue(i);
+		}
+	}
+
 	@Override public String toString()
 	{
 		final String current = m_current != null ? m_current.toString() : "no current task";

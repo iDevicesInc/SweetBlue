@@ -2869,6 +2869,16 @@ public class BleManager
 	}
 
 	/**
+	 * This method will clear the task queue of all tasks.
+	 * NOTE: This can really mess things up, especially if you're currently trying to connect to a device. Only use this if you absolutely have to!
+	 */
+	@Advanced
+	public void clearQueue()
+	{
+		m_taskQueue.clearQueueOfAll();
+	}
+
+	/**
 	 * Convenience forwarding of {@link #clearSharedPreferences(String)}.
 	 *
 	 * @see #clearSharedPreferences(String)

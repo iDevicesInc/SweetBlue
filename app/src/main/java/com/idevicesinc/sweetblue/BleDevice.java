@@ -4822,6 +4822,42 @@ public class BleDevice extends BleNode
 	}
 
 	/**
+	 * Read the battery level of this device. This just calls {@link #read(UUID, UUID, ReadWriteListener)} using {@link Uuids#BATTERY_SERVICE_UUID},
+	 *  and {@link Uuids#BATTERY_LEVEL}. If your battery service/characteristic uses a custom UUID, then use {@link #read(UUID, UUID, ReadWriteListener)} with
+	 *  your custom UUIDs.
+     */
+	public ReadWriteEvent readBatteryLevel(ReadWriteListener listener)
+	{
+		return read_internal(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, Type.READ, listener);
+	}
+
+	/**
+	 * This method is intended to be used when the device has 2 battery characteristics in the same service. The @param nameSpaceAndDescription tells SweetBlue which
+	 * characteristic to actually read from.
+     */
+	public ReadWriteEvent readBatteryLevel(byte[] nameSpaceAndDescription, ReadWriteListener listener)
+	{
+		enforceMainThread();
+
+		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
+
+		if (earlyOutResult != null)
+		{
+			invokeReadWriteCallback(listener, earlyOutResult);
+
+			return earlyOutResult;
+		}
+
+		final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
+
+		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
+
+		queue().add(new P_Task_BatteryLevel(this, nameSpaceAndDescription, listener, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+
+		return NULL_READWRITE_EVENT();
+	}
+
+	/**
 	 * Returns <code>true</code> if notifications are enabled for the given uuid.
 	 * NOTE: {@link #isNotifyEnabling(UUID)} may return true here even if this returns false.
 	 *
@@ -5495,6 +5531,10 @@ public class BleDevice extends BleNode
 
 	void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior)
 	{
+		if (conf_device().forceBondDialog)
+		{
+			queue().add(new P_Task_BondPopupHack(this, null));
+		}
 		queue().add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
 	}
 

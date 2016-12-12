@@ -2,9 +2,10 @@ language: android
 before_script: ./prebuild.sh
 android:
   components:
-  - android-23
   - tools
-  - build-tools-23.0.2
+  - tools
+  - android-24
+  - build-tools-24.0.3
   - doc
   - extra-android-support
   - extra-android-m2repository
@@ -14,7 +15,6 @@ cache:
   directories:
   - $HOME/.gradle/caches/
   - $HOME/.gradle/wrapper/
-  - $HOME/.gradle/2.10
 jdk:
 - oraclejdk8
 env:
