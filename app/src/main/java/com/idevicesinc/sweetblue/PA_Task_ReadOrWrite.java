@@ -34,6 +34,16 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 
 		m_readWriteListener = readWriteListener;
 	}
+
+	PA_Task_ReadOrWrite(BleDevice device, UUID serviceUuid, UUID charUuid, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+	{
+		super(device, txn_nullable, requiresBonding, priority);
+
+		m_charUuid = charUuid;
+		m_servUuid = serviceUuid;
+
+		m_readWriteListener = readWriteListener;
+	}
 	
 	protected abstract ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid);
 

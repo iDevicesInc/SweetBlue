@@ -181,7 +181,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 
 			try
 			{
-				gatt.getServices();
+				list_native = gatt.getServices();
 			}
 			catch (Exception e)
 			{
