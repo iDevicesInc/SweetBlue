@@ -2,9 +2,9 @@ language: android
 before_script: ./prebuild.sh
 android:
   components:
-  - android-23
+  - android-24
   - tools
-  - build-tools-23.0.2
+  - build-tools-24.0.3
   - doc
   - extra-android-support
   - extra-android-m2repository
