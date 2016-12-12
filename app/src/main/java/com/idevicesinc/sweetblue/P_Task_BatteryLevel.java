@@ -102,15 +102,16 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 
     public void onDescriptorRead(BluetoothGattDescriptor desc, byte[] value, int gattStatus)
     {
-        if (!isFor(desc))
+        if (!batteryChars.contains(desc.getCharacteristic()))
         {
             return;
         }
 
         if( Utils.isSuccess(gattStatus))
         {
+            final byte[] nmdesc = Arrays.copyOfRange(value, 4, 7);
 
-            if (Arrays.equals(value, mNameSpaceAndDescription))
+            if (Arrays.equals(nmdesc, mNameSpaceAndDescription))
             {
                 if (false == getDevice().getNativeGatt().readCharacteristic(desc.getCharacteristic()))
                 {
