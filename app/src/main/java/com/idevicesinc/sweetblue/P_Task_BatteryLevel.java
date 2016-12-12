@@ -37,7 +37,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 
     @Override public void update(double timeStep)
     {
-//        super.update(timeStep);
+        // We don't let the kick off bond event happen here, as it's not needed for this
     }
 
     @Override public void execute()
