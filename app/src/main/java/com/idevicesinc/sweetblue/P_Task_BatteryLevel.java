@@ -35,6 +35,11 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
         return BleTask.READ;
     }
 
+    @Override public void update(double timeStep)
+    {
+//        super.update(timeStep);
+    }
+
     @Override public void execute()
     {
         super.execute();
