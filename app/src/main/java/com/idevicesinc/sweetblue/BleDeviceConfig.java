@@ -108,6 +108,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Boolean autoGetServices								= true;
+
+	/**
+	 * Default is <code>true</code> - whether to automatically enable notifications that were enabled via a call to any of the enableNotify() methods
+	 * in {@link BleDevice} upon device reconnection. Basically, if you enable notifications in an {@link com.idevicesinc.sweetblue.BleTransaction.Init} transaction,
+	 * then set this to <code>false</code>, and use your transaction.
+	 */
+	public boolean autoEnableNotifiesOnReconnect				= true;
 	
 	/**
 	 * Default is <code>false</code> - if <code>true</code> and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}

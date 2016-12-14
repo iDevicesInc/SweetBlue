@@ -392,11 +392,14 @@ class P_PollManager
 					}
 					else
 					{
-						m_device.m_bondMngr.bondIfNeeded(characteristic.getUuid(), CharacteristicEventType.ENABLE_NOTIFY);
+						if (m_device.conf_device().autoEnableNotifiesOnReconnect)
+						{
+							m_device.m_bondMngr.bondIfNeeded(characteristic.getUuid(), CharacteristicEventType.ENABLE_NOTIFY);
 
-						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, characteristic, /*enable=*/true, null, ithEntry.m_pollingReadListener, m_device.getOverrideReadWritePriority()));
-						
-						notifyState = E_NotifyState__ENABLING;
+							m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, characteristic, /*enable=*/true, null, ithEntry.m_pollingReadListener, m_device.getOverrideReadWritePriority()));
+
+							notifyState = E_NotifyState__ENABLING;
+						}
 					}
 				}
 				
