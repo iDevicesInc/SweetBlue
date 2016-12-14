@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
 {
 
-    private long scanTime = 0;
+    private double scanTime = 0;
 
 
     public P_Task_BondPopupHack(BleDevice device, I_StateListener listener)
