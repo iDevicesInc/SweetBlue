@@ -26,7 +26,7 @@ final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
     {
         super.update(timeStep);
         scanTime += timeStep;
-        if (scanTime >= 1000)
+        if (scanTime > 1)
         {
             getManager().getNativeAdapter().cancelDiscovery();
             succeed();
