@@ -17,12 +17,14 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 
     private final byte[] mNameSpaceAndDescription;
     private List<BluetoothGattCharacteristic> batteryChars;
+    private UUID mDescriptorUuid;
 
 
-    P_Task_BatteryLevel(BleDevice device, byte[] nameSpaceAndDescription, BleDevice.ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+    P_Task_BatteryLevel(BleDevice device, byte[] nameSpaceAndDescription, UUID descriptorUuid, BleDevice.ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
     {
         super(device, Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, readWriteListener, requiresBonding, txn_nullable, priority);
         mNameSpaceAndDescription = nameSpaceAndDescription;
+        mDescriptorUuid = descriptorUuid;
     }
 
     @Override protected BleDevice.ReadWriteListener.ReadWriteEvent newReadWriteEvent(BleDevice.ReadWriteListener.Status status, int gattStatus, BleDevice.ReadWriteListener.Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
@@ -65,13 +67,13 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
             size = batteryChars.size();
             if (size == 0)
             {
-                fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID);
+                fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, mDescriptorUuid);
             }
             final BluetoothGattCharacteristic ch = batteryChars.get(0);
-            final BluetoothGattDescriptor desc = ch.getDescriptor(Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID);
+            final BluetoothGattDescriptor desc = ch.getDescriptor(mDescriptorUuid);
             if (desc == null)
             {
-                fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID);
+                fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, mDescriptorUuid);
             }
             else
             {
@@ -87,7 +89,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
         }
         else
         {
-            fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID);
+            fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, mDescriptorUuid);
         }
     }
 
@@ -132,7 +134,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
                 else
                 {
                     final BluetoothGattCharacteristic ch = batteryChars.get(0);
-                    final BluetoothGattDescriptor descr = ch.getDescriptor(Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID);
+                    final BluetoothGattDescriptor descr = ch.getDescriptor(mDescriptorUuid);
                     if (!getDevice().getNativeGatt().readDescriptor(descr))
                     {
                         fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, ch.getUuid(), descr.getUuid());
