@@ -394,7 +394,7 @@ class P_PollManager
 					{
 						m_device.m_bondMngr.bondIfNeeded(characteristic.getUuid(), CharacteristicEventType.ENABLE_NOTIFY);
 
-						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, characteristic, /*enable=*/true, ithEntry.m_pollingReadListener, m_device.getOverrideReadWritePriority()));
+						m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, characteristic, /*enable=*/true, null, ithEntry.m_pollingReadListener, m_device.getOverrideReadWritePriority()));
 						
 						notifyState = E_NotifyState__ENABLING;
 					}

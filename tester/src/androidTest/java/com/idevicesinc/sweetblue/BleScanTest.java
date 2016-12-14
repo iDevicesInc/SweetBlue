@@ -3,13 +3,10 @@ package com.idevicesinc.sweetblue;
 import android.os.Handler;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
-
-import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 import com.idevicesinc.sweetblue.utils.Utils;
-
 import org.junit.Test;
-
 import java.util.concurrent.Semaphore;
+
 
 public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivity>
 {

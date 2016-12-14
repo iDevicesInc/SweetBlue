@@ -5077,7 +5077,7 @@ public class BleDevice extends BleNode
 		{
 			m_bondMngr.bondIfNeeded(characteristicUuid, CharacteristicEventType.ENABLE_NOTIFY);
 
-			queue().add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, listener, getOverrideReadWritePriority()));
+			queue().add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority()));
 
 			m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, P_PollManager.E_NotifyState__ENABLING);
 
@@ -6309,7 +6309,7 @@ public class BleDevice extends BleNode
 
 		if (characteristic != null && is(CONNECTED))
 		{
-			queue().add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, listener, getOverrideReadWritePriority()));
+			queue().add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority()));
 		}
 
 		m_pollMngr.stopPoll(serviceUuid, characteristicUuid, forceReadTimeout, listener, /* usingNotify= */true);
