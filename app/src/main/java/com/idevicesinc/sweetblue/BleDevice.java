@@ -4837,6 +4837,11 @@ public class BleDevice extends BleNode
      */
 	public ReadWriteEvent readBatteryLevel(byte[] nameSpaceAndDescription, ReadWriteListener listener)
 	{
+		return readBatteryLevel(nameSpaceAndDescription, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID, listener);
+	}
+
+	public ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
+	{
 		enforceMainThread();
 
 		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
@@ -4852,7 +4857,7 @@ public class BleDevice extends BleNode
 
 		final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
 
-		queue().add(new P_Task_BatteryLevel(this, nameSpaceAndDescription, listener, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+		queue().add(new P_Task_BatteryLevel(this, valueToMatch, descriptorUuid, listener, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
 		return NULL_READWRITE_EVENT();
 	}
