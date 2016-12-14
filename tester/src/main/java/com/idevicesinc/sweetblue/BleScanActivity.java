@@ -4,10 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-
-import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.tester.R;
+
 
 public class BleScanActivity extends Activity
 {
@@ -19,7 +18,7 @@ public class BleScanActivity extends Activity
 
     public interface EventStateInterface
     {
-        void onEvent(ManagerStateListener.StateEvent event);
+        void onEvent(BleManager.StateListener.StateEvent event);
     }
 
     @Override
@@ -37,10 +36,10 @@ public class BleScanActivity extends Activity
 
         testHandler = new Handler();
 
-        bleManager.setManagerStateListener(new ManagerStateListener()
+        bleManager.setListener_NativeState(new BleManager.NativeStateListener()
         {
             @Override
-            public void onEvent(StateEvent event)
+            public void onEvent(NativeStateEvent event)
             {
                 eventListener.onEvent(event);
 //                if(event.didEnter(BleManagerState.SCANNING))
@@ -53,6 +52,7 @@ public class BleScanActivity extends Activity
 //                }
             }
         });
+
     }
 
     public void startFiveSecondScan()
@@ -88,7 +88,6 @@ public class BleScanActivity extends Activity
     public void checkState()
     {
         Log.e("BLE_SCANNING", bleManager.is(BleManagerState.SCANNING) + "");
-        Log.e("BLE_SCAN_PAUSED", bleManager.is(BleManagerState.SCAN_PAUSED) + "");
         Log.e("BLE_OFF", bleManager.is(BleManagerState.OFF) + "");
         Log.e("BLE_TURNING_OFF", bleManager.is(BleManagerState.TURNING_OFF) + "");
         Log.e("BLE_STARTING_SCAN", bleManager.is(BleManagerState.STARTING_SCAN) + "");

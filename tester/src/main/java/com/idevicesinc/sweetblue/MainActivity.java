@@ -10,16 +10,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import com.idevicesinc.sweetblue.listeners.DeviceStateListener;
-import com.idevicesinc.sweetblue.listeners.DiscoveryListener;
-import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import com.idevicesinc.sweetblue.tester.R;
+
 
 public class MainActivity extends AppCompatActivity
 {
@@ -47,9 +42,9 @@ public class MainActivity extends AppCompatActivity
             @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
                 BleDevice device = mDevices.get(position);
-                device.setStateListener(new DeviceStateListener()
+                device.setListener_State(new BleDevice.StateListener()
                 {
-                    @Override public void onEvent(StateEvent event)
+                    @Override public void onEvent(StateEvent e)
                     {
                         int i = 0;
                         i++;
@@ -91,10 +86,9 @@ public class MainActivity extends AppCompatActivity
 
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
-        config.scanApi = BleScanAPI.POST_LOLLIPOP;
-        config.postCallbacksToUIThread = true;
+        config.scanMode = BleScanMode.POST_LOLLIPOP;
         mgr = BleManager.get(this, config);
-        mgr.setManagerStateListener(new ManagerStateListener()
+        mgr.setListener_State(new BleManager.StateListener()
         {
             @Override public void onEvent(StateEvent event)
             {
@@ -107,28 +101,29 @@ public class MainActivity extends AppCompatActivity
                     mStartScan.setEnabled(false);
                     mStopScan.setEnabled(true);
                 }
-                else if (event.didExit(BleManagerState.SCANNING) && !event.didEnter(BleManagerState.SCAN_PAUSED))
+                else if (event.didExit(BleManagerState.SCANNING))
                 {
                     mStartScan.setEnabled(true);
                     mStopScan.setEnabled(false);
                 }
             }
         });
-        mgr.setDiscoveryListener(new DiscoveryListener()
+        mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
-            @Override public void onEvent(DiscoveryEvent e)
+            @Override public void onEvent(BleManager.DiscoveryListener.DiscoveryEvent e)
             {
-                if (e.was(LifeCycle.DISCOVERED))
+                if (e.was(BleManager.DiscoveryListener.LifeCycle.DISCOVERED))
                 {
                     mDevices.add(e.device());
                     mAdaptor.notifyDataSetChanged();
                 }
-                else if (e.was(LifeCycle.REDISCOVERED))
+                else if (e.was(BleManager.DiscoveryListener.LifeCycle.REDISCOVERED))
                 {
 
                 }
             }
         });
+
         if (mgr.is(BleManagerState.OFF))
         {
             mStartScan.setEnabled(false);

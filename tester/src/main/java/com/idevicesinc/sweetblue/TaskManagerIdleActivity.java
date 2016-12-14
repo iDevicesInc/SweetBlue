@@ -17,12 +17,6 @@ public class TaskManagerIdleActivity extends Activity
 
         BleManagerConfig config = new BleManagerConfig();
 
-        config.updateThreadSpeed = UpdateThreadSpeed.TWO_HUNDRED_FIFTY_MS;
-
-        config.delayBeforeIdleMs = 1000;
-
-        config.updateThreadIdleIntervalMs = 1000;
-
         bleManager = BleManager.get(this, config);
 
         handler = new Handler();
