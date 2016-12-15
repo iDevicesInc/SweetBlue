@@ -169,23 +169,16 @@ class P_TaskQueue
 	{
 		newTask.init();
 
-		if( m_mngr.getUpdateLoop().postNeeded() )
+		m_mngr.getPostManager().postToUpdateThread(new Runnable()
 		{
-			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					add_mainThread(newTask);
-				}
-			});
-		}
-		else
-		{
-			add_mainThread(newTask);
-		}
+				add_updateThread(newTask);
+			}
+		});
 	}
 
-	private void add_mainThread(final PA_Task newTask)
+	private void add_updateThread(final PA_Task newTask)
 	{
 		if( tryCancellingCurrentTask(newTask) )
 		{
@@ -296,7 +289,7 @@ class P_TaskQueue
 			else
 			{
 				//--- DRK > Posting to prevent potential stack overflow if queue is really big and all tasks are failing in a row.
-				m_mngr.getUpdateLoop().forcePost(new Runnable()
+				m_mngr.getPostManager().postToUpdateThread(new Runnable()
 				{
 					@Override public void run()
 					{
@@ -372,23 +365,16 @@ class P_TaskQueue
 	
 	void tryEndingTask(final PA_Task task, final PE_TaskState endingState)
 	{
-		if( m_mngr.getUpdateLoop().postNeeded() )
+		m_mngr.getPostManager().postToUpdateThread(new Runnable()
 		{
-			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					tryEndingTask_mainThread(task, endingState);
-				}
-			});
-		}
-		else
-		{
-			tryEndingTask_mainThread(task, endingState);
-		}
+				tryEndingTask_updateThread(task, endingState);
+			}
+		});
 	}
 
-	private void tryEndingTask_mainThread(final PA_Task task, final PE_TaskState endingState)
+	private void tryEndingTask_updateThread(final PA_Task task, final PE_TaskState endingState)
 	{
 		if( task != null && task == getCurrent() )
 		{

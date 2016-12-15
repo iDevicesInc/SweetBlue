@@ -83,12 +83,12 @@ public enum BleManagerState implements State
 		m_nativeCode = nativeCode;
 	}
 
-	private BleScanMode m_mode;
+	private BleScanApi m_mode;
 	private BleScanPower m_power;
 
 
 	@UnitTest
-	BleManagerState setScanMode(BleScanMode mode)
+	BleManagerState setScanApi(BleScanApi mode)
 	{
 		m_mode = mode;
 		return this;
@@ -102,7 +102,7 @@ public enum BleManagerState implements State
 	}
 
 	@UnitTest
-	BleScanMode getScanMode()
+	BleScanApi getScanApi()
 	{
 		return m_mode;
 	}

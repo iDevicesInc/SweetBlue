@@ -957,7 +957,7 @@ public abstract class BleNode implements UsesCustomNull
 				{
 					final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = queryHistoricalData(query);
 
-					getManager().getUpdateLoop().postIfNeeded(new Runnable()
+					getManager().getPostManager().postCallback(new Runnable()
 					{
 						@Override public void run()
 						{

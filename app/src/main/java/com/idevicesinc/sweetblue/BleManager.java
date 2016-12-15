@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -728,7 +729,7 @@ public class BleManager
 
 		@Override public void stopLeScan(BluetoothAdapter.LeScanCallback callback)
 		{
-			if (m_config.scanMode == BleScanMode.POST_LOLLIPOP)
+			if (m_config.scanApi == BleScanApi.POST_LOLLIPOP)
 			{
 				L_Util.stopNativeScan(BleManager.this);
 			}
@@ -817,6 +818,8 @@ public class BleManager
 
 	private final Context m_context;
 	final Handler m_mainThreadHandler;
+	private P_SweetBlueHandlerThread m_updateThread;
+	private UpdateRunnable m_updateRunnable;
 	private final BluetoothManager m_btMngr;
 	private final P_ScanFilterManager m_filterMngr;
 	private final P_BluetoothCrashResolver m_crashResolver;
@@ -827,7 +830,8 @@ public class BleManager
 	final P_BleManager_Listeners m_listeners;
 	final P_BleStateTracker m_stateTracker;
 	final P_NativeBleStateTracker m_nativeStateTracker;
-	private PI_UpdateLoop m_updateLoop;
+	//private PI_UpdateLoop m_updateLoop;
+	private P_PostManager m_postManager;
 	private final P_TaskQueue m_taskQueue;
 	private 	P_UhOhThrottler m_uhOhThrottler;
 				P_WakeLockManager m_wakeLockMngr;
@@ -982,13 +986,46 @@ public class BleManager
 		m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
 	}
 
+	P_PostManager getPostManager()
+	{
+		return m_postManager;
+	}
+
 	private void initLogger()
 	{
-		m_logger = new P_Logger(m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled, m_config.logger);
+		m_logger = new P_Logger(this, m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled, m_config.logger);
 	}
 
 	private void initConfigDependentMembers()
 	{
+		boolean startUpdate = true;
+
+		if (m_updateRunnable != null)
+		{
+			m_postManager.removeUpdateCallbacks(m_updateRunnable);
+		}
+		else
+		{
+			if (Interval.isEnabled(m_config.autoUpdateRate))
+			{
+				m_updateRunnable = new UpdateRunnable(m_config.autoUpdateRate.millis());
+			}
+			else
+			{
+				startUpdate = false;
+				m_updateRunnable = new UpdateRunnable();
+			}
+		}
+
+		if (m_config.scanMode != null)
+		{
+			m_config.scanApi = BleScanApi.fromBleScanMode(m_config.scanMode);
+			if (m_config.scanMode.isLollipopScanMode())
+			{
+				m_config.scanPower = BleScanPower.fromBleScanMode(m_config.scanMode);
+			}
+		}
+
 		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.secs(m_config.uhOhCallbackThrottle));
 
 		if( m_wakeLockMngr == null )
@@ -1006,26 +1043,31 @@ public class BleManager
 			this.setListener_Discovery(m_config.defaultDiscoveryListener);
 		}
 
-		if( m_updateLoop != null )
-		{
-			m_updateLoop.stop();
-			m_updateLoop = null;
-		}
-
-		if( m_config.runOnMainThread )
-		{
-			m_updateLoop = m_config.updateLoopFactory.newMainThreadLoop(m_updateLoopCallback);
-		}
-		else
-		{
-			m_config.allowCallsFromAllThreads = true;
-			m_updateLoop = m_config.updateLoopFactory.newAnonThreadLoop(m_updateLoopCallback);
-		}
+		initPostManager();
 
 		if( Interval.isEnabled(m_config.autoUpdateRate) )
 		{
-			startAutoUpdate(Interval.secs(m_config.autoUpdateRate));
+			m_postManager.postToUpdateThreadDelayed(m_updateRunnable, m_config.autoUpdateRate.millis());
 		}
+	}
+
+	private void initPostManager()
+	{
+		Handler update;
+		Handler ui;
+		if (m_config.runOnMainThread)
+		{
+			update = new Handler(Looper.getMainLooper());
+			ui = update;
+		}
+		else
+		{
+			ui = new Handler(Looper.getMainLooper());
+			m_updateThread = new P_SweetBlueHandlerThread();
+			m_updateThread.start();
+			update = m_updateThread.prepareHandler();
+		}
+		m_postManager = new P_PostManager(this, ui, update);
 	}
 
 	/**
@@ -2924,7 +2966,7 @@ public class BleManager
 	//--- DRK > Smooshing together a bunch of package-private accessors here.
 	P_BleStateTracker			getStateTracker(){				return m_stateTracker;				}
 	P_NativeBleStateTracker		getNativeStateTracker(){		return m_nativeStateTracker;		}
-	public PI_UpdateLoop getUpdateLoop(){				return m_updateLoop;				}
+	//public PI_UpdateLoop getUpdateLoop(){				return m_updateLoop;				}
 	P_BluetoothCrashResolver	getCrashResolver(){				return m_crashResolver;				}
 	P_TaskQueue					getTaskQueue(){					return m_taskQueue;					}
 	P_Logger					getLogger(){					return m_logger;					}
@@ -2970,22 +3012,6 @@ public class BleManager
 		});
 
 		m_taskQueue.add(task);
-	}
-
-	void startAutoUpdate(final double updateRate)
-	{
-		if( m_updateLoop != null )
-		{
-			m_updateLoop.start(updateRate);
-		}
-	}
-
-	void stopAutoUpdate()
-	{
-		if( m_updateLoop != null )
-		{
-			m_updateLoop.stop();
-		}
 	}
 
 	void onDiscoveredFromNativeStack(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
@@ -3133,8 +3159,14 @@ public class BleManager
 
     		if( m_discoveryListener != null )
     		{
-    			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
-    			m_discoveryListener.onEvent(event);
+				m_postManager.postCallback(new Runnable()
+				{
+					@Override public void run()
+					{
+						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+						m_discoveryListener.onEvent(event);
+					}
+				});
     		}
     	}
     	else
@@ -3143,8 +3175,14 @@ public class BleManager
 
     		if( m_discoveryListener != null )
     		{
-    			DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
-    			m_discoveryListener.onEvent(event);
+				m_postManager.postCallback(new Runnable()
+				{
+					@Override public void run()
+					{
+						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
+						m_discoveryListener.onEvent(event);
+					}
+				});
     		}
     	}
     }
@@ -3160,7 +3198,7 @@ public class BleManager
 		{
 			try
 			{
-				if( m_config.scanMode == BleScanMode.POST_LOLLIPOP && Utils.isLollipop() )
+				if( m_config.scanApi == BleScanApi.POST_LOLLIPOP && Utils.isLollipop() )
 				{
 					stopNativeScan_nested_postLollipop();
 				}
@@ -3428,6 +3466,44 @@ public class BleManager
 		else
 		{
 			//--- DRK > Not sure if this is practically possible but nothing we can do here I suppose.
+		}
+	}
+
+
+	private final class UpdateRunnable implements Runnable
+	{
+
+		private long m_lastAutoUpdateTime = 0;
+		private long m_autoUpdateRate = 0;
+
+
+		public UpdateRunnable(long updateRate)
+		{
+			m_autoUpdateRate = updateRate;
+		}
+
+		public UpdateRunnable()
+		{
+		}
+
+		public void setUpdateRate(long rate)
+		{
+			m_autoUpdateRate = rate;
+		}
+
+		@Override public void run()
+		{
+			long currentTime = System.currentTimeMillis();
+			double timeStep = ((double) currentTime - m_lastAutoUpdateTime)/1000.0;
+
+			timeStep = timeStep <= 0.0 ? .00001 : timeStep;
+			timeStep = timeStep > 1.0 ? 1.0 : timeStep;
+
+			update(timeStep);
+
+			m_lastAutoUpdateTime = currentTime;
+
+			m_postManager.postToUpdateThreadDelayed(this, m_autoUpdateRate);
 		}
 	}
 }

@@ -2241,17 +2241,35 @@ public class BleServer extends BleNode
 	{
 		if( listener_specific_nullable != null )
 		{
-			listener_specific_nullable.onEvent(e);
+			getManager().getPostManager().postCallback(new Runnable()
+			{
+				@Override public void run()
+				{
+					listener_specific_nullable.onEvent(e);
+				}
+			});
 		}
 
 		if( m_outgoingListener_default != null )
 		{
-			m_outgoingListener_default.onEvent(e);
+			getManager().getPostManager().postCallback(new Runnable()
+			{
+				@Override public void run()
+				{
+					m_outgoingListener_default.onEvent(e);
+				}
+			});
 		}
 
 		if( getManager().m_defaultServerOutgoingListener != null )
 		{
-			getManager().m_defaultServerOutgoingListener.onEvent(e);
+			getManager().getPostManager().postCallback(new Runnable()
+			{
+				@Override public void run()
+				{
+					getManager().m_defaultServerOutgoingListener.onEvent(e);
+				}
+			});
 		}
 	}
 

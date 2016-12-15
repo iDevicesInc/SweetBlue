@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothAdapter;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleManagerState;
+import com.idevicesinc.sweetblue.BleScanApi;
 import com.idevicesinc.sweetblue.BleScanMode;
 import com.idevicesinc.sweetblue.BleScanPower;
 import com.idevicesinc.sweetblue.PI_BleScanner;
@@ -66,14 +67,14 @@ public abstract class BaseBleTest
         semaphore.acquire();
     }
 
-    public BleScanMode getScanMode()
+    public BleScanApi getScanApi()
     {
-        BleScanMode mode = BleScanMode.AUTO;
+        BleScanApi mode = BleScanApi.AUTO;
         try
         {
-            Method getMode = BleManagerState.SCANNING.getClass().getDeclaredMethod("getScanMode", (Class[]) null);
+            Method getMode = BleManagerState.SCANNING.getClass().getDeclaredMethod("getScanApi", (Class[]) null);
             getMode.setAccessible(true);
-            mode = (BleScanMode) getMode.invoke(BleManagerState.SCANNING, (Object[]) null);
+            mode = (BleScanApi) getMode.invoke(BleManagerState.SCANNING, (Object[]) null);
         } catch (Exception e)
         {
             e.printStackTrace();

@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
-import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
@@ -35,25 +34,18 @@ class P_BleManager_Listeners
 	{
 		@Override public void onLeScan(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord)
         {
-			if( postNeeded() )
+
+			m_mngr.getPostManager().postToUpdateThread(new Runnable()
 			{
-				post(new Runnable()
+				@Override public void run()
 				{
-					@Override
-					public void run()
-					{
-						onLeScan_mainThread(device_native, rssi, scanRecord);
-					}
-				});
-			}
-			else
-			{
-				onLeScan_mainThread(device_native, rssi, scanRecord);
-			}
+					onLeScan_updateThread(device_native, rssi, scanRecord);
+				}
+			});
         }
     };
 
-	private void onLeScan_mainThread(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord)
+	private void onLeScan_updateThread(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord)
 	{
 		m_mngr.getCrashResolver().notifyScannedDevice(device_native, m_scanCallback_preLollipop);
 
@@ -79,7 +71,7 @@ class P_BleManager_Listeners
 				{
 					if( state == PE_TaskState.INTERRUPTED )
 					{
-						m_mngr.getUpdateLoop().forcePost(new Runnable()
+						m_mngr.getPostManager().postToUpdateThread(new Runnable()
 						{
 							@Override public void run()
 							{
@@ -187,18 +179,6 @@ class P_BleManager_Listeners
 		intentFilter.addAction(BluetoothDevice_ACTION_DISAPPEARED);
 
 		return intentFilter;
-	}
-
-	private void post(final Runnable runnable)
-	{
-		final PI_UpdateLoop updateLoop = m_mngr.getUpdateLoop();
-
-		updateLoop.postIfNeeded(runnable);
-	}
-
-	private boolean postNeeded()
-	{
-		return m_mngr.getUpdateLoop().postNeeded();
 	}
 
 	void onDestroy()
@@ -441,25 +421,31 @@ class P_BleManager_Listeners
 		return device;
 	}
 	
-	private void onNativeBondStateChanged(BluetoothDevice device_native, int previousState, int newState, int failReason)
+	private void onNativeBondStateChanged(final BluetoothDevice device_native, final int previousState, final int newState, final int failReason)
 	{
-		final BleDevice device = getDeviceFromNativeDevice(device_native);
-		
-		if( device != null )
+		m_mngr.getPostManager().postToUpdateThread(new Runnable()
 		{
-			//--- DRK > Got an NPE here when restarting the app through the debugger. Pretty sure it's an impossible case
-			//---		for actual app usage cause the listeners member of the device is final. So some memory corruption issue
-			//---		associated with debugging most likely...still gating it for the hell of it.
-			if( device.getListeners() != null )
+			@Override public void run()
 			{
-				device.getListeners().onNativeBondStateChanged_mainThread(previousState, newState, failReason);
-			}
-		}
-		
+				final BleDevice device = getDeviceFromNativeDevice(device_native);
+
+				if( device != null )
+				{
+					//--- DRK > Got an NPE here when restarting the app through the debugger. Pretty sure it's an impossible case
+					//---		for actual app usage cause the listeners member of the device is final. So some memory corruption issue
+					//---		associated with debugging most likely...still gating it for the hell of it.
+					if( device.getListeners() != null )
+					{
+						device.getListeners().onNativeBondStateChanged_updateThread(previousState, newState, failReason);
+					}
+				}
+
 //		if( previousState == BluetoothDevice.BOND_BONDING && newState == BluetoothDevice.BOND_NONE )
 //		{
 //			m_mngr.uhOh(UhOh.WENT_FROM_BONDING_TO_UNBONDED);
 //		}
+			}
+		});
 	}
 
 	private static boolean isBleStateFromPreM(final int state)

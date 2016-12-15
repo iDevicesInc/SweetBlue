@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity
 
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
-        config.scanMode = BleScanMode.POST_LOLLIPOP;
+        config.scanApi = BleScanApi.POST_LOLLIPOP;
         mgr = BleManager.get(this, config);
         mgr.setListener_State(new BleManager.StateListener()
         {

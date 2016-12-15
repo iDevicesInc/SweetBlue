@@ -35,18 +35,31 @@ class P_Logger
 	private SweetLogger m_logger = null;
 
 	
-	public P_Logger(String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, boolean enabled, SweetLogger logger)
+	public P_Logger(final BleManager manager, String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, boolean enabled, SweetLogger logger)
 	{
 		m_logger = logger;
 		m_debugThreadNamePool = debugThreadNamePool;
 		m_nameMap = new UuidNameMap_ListWrapper(debugUuidNameDicts);
 		m_enabled = enabled;
-		
-		//--- DRK > Most of the time this will give the first alphabetical thread name to the main thread.
-		//--- 		Just a convenience.
+
 		if( m_enabled )
 		{
-			getThreadName(Process.myTid());
+			// We want to force the first name (MAIN) to be the UI thread, then the update thread after that. Then the other names can be
+			// whatever.
+			manager.getPostManager().postToMain(new Runnable()
+			{
+				@Override public void run()
+				{
+					getThreadName(Process.myTid());
+					manager.getPostManager().postToUpdateThread(new Runnable()
+					{
+						@Override public void run()
+						{
+							getThreadName(Process.myTid());
+						}
+					});
+				}
+			});
 		}
 	}
 	

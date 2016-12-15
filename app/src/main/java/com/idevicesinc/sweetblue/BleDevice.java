@@ -6499,19 +6499,7 @@ public class BleDevice extends BleNode
 
 	private void postEvent(final GenericListener_Void listener, final Event event)
 	{
-		if (getManager().m_config.runOnMainThread && !Utils.isOnMainThread())
-		{
-			postEventOnMain(listener, event);
-		}
-		else
-		{
-			listener.onEvent(event);
-		}
-	}
-
-	private void postEventOnMain(final GenericListener_Void listener, final Event event)
-	{
-		getManager().m_mainThreadHandler.post(new Runnable()
+		getManager().getPostManager().postCallback(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -6519,4 +6507,5 @@ public class BleDevice extends BleNode
 			}
 		});
 	}
+
 }

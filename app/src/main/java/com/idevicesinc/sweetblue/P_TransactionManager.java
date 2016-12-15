@@ -141,23 +141,16 @@ class P_TransactionManager
 	
 	void clearQueueLock()
 	{
-		if( m_device.getManager().getUpdateLoop().postNeeded() )
+		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
 		{
-			m_device.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					clearQueueLock_mainThread();
-				}
-			});
-		}
-		else
-		{
-			clearQueueLock_mainThread();
-		}
+				clearQueueLock_updateThread();
+			}
+		});
 	}
 
-	private void clearQueueLock_mainThread()
+	private void clearQueueLock_updateThread()
 	{
 		if( !m_device.getManager().getTaskQueue().succeed(P_Task_TxnLock.class, m_device) )
 		{

@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue.tests;
 
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerState;
+import com.idevicesinc.sweetblue.BleScanApi;
 import com.idevicesinc.sweetblue.BleScanMode;
 import com.idevicesinc.sweetblue.PI_BleScanner;
 import com.idevicesinc.sweetblue.PI_BleStatusHelper;
@@ -19,13 +20,13 @@ import java.util.concurrent.Semaphore;
 
 @Config(manifest = Config.NONE, sdk = 21)
 @RunWith(RobolectricTestRunner.class)
-public class ScanModeTest extends BaseBleTest
+public class ScanApiTest extends BaseBleTest
 {
 
     @Test
-    public void scanModeClassicTest() throws Exception
+    public void scanApiClassicTest() throws Exception
     {
-        m_config.scanMode = BleScanMode.CLASSIC;
+        m_config.scanApi = BleScanApi.CLASSIC;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
@@ -37,7 +38,7 @@ public class ScanModeTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanMode() == BleScanMode.CLASSIC);
+                            assertTrue(getScanApi() == BleScanApi.CLASSIC);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -49,9 +50,9 @@ public class ScanModeTest extends BaseBleTest
     }
 
     @Test
-    public void scanModePreLollipop() throws Exception
+    public void scanApiPreLollipop() throws Exception
     {
-        m_config.scanMode = BleScanMode.PRE_LOLLIPOP;
+        m_config.scanApi = BleScanApi.PRE_LOLLIPOP;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
@@ -63,7 +64,7 @@ public class ScanModeTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanMode() == BleScanMode.PRE_LOLLIPOP);
+                            assertTrue(getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -75,7 +76,7 @@ public class ScanModeTest extends BaseBleTest
     }
 
     @Test
-    public void scanModeAuto() throws Exception
+    public void scanApiAuto() throws Exception
     {
         m_config.scanMode = BleScanMode.AUTO;
         m_mgr.setConfig(m_config);
@@ -92,7 +93,7 @@ public class ScanModeTest extends BaseBleTest
                             // TODO - Swap the following 2 lines once the lollipop scanning API
                             // actually works at least as well as the pre-lollipop API.
                             //assertTrue(getScanMode() == BleScanMode.AUTO);
-                            assertTrue(getScanMode() == BleScanMode.PRE_LOLLIPOP);
+                            assertTrue(getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }

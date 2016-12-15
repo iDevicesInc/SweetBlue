@@ -186,7 +186,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * scanning API, that is {@link BluetoothAdapter#startLeScan(BluetoothAdapter.LeScanCallback)}. There is no known reason you would
 	 * want this, but including it just in case.
 	 *
-	 * @deprecated Use {@link #scanMode} with {@link BleScanMode#PRE_LOLLIPOP} instead.
+	 * @deprecated Use {@link #scanApi} with {@link BleScanApi#PRE_LOLLIPOP} instead.
 	 */
 	@Deprecated
 	@com.idevicesinc.sweetblue.annotations.Advanced
@@ -306,13 +306,23 @@ public class BleManagerConfig extends BleDeviceConfig
 	public DiscoveryListener defaultDiscoveryListener		= null;
 
 	/**
-	 * Default is {@link BleScanMode#AUTO} - see {@link BleScanMode} for more details.
+	 * Default is <code>null</code>
+	 *
+	 * @deprecated This is deprecated in favor of {@link BleScanApi}. If this is not null, SweetBlue will set
+	 * {@link #scanApi} automatically from this setting.
 	 */
-	public BleScanMode scanMode								= BleScanMode.AUTO;
+	@Deprecated
+	public BleScanMode scanMode								= null;
+
+
+	/**
+	 * Default is {@link BleScanApi#AUTO} - see {@link BleScanApi} for more details.
+	 */
+	public BleScanApi scanApi								= BleScanApi.AUTO;
 
 	/**
 	 * NOTE: This is ONLY applicable on devices running Lollipop or above.
-	 * Default is {@link BleScanPower#AUTO} = see {@link BleScanPower} for more details.
+	 * Default is {@link BleScanPower#AUTO} - see {@link BleScanPower} for more details.
 	 */
 	public BleScanPower scanPower							= BleScanPower.AUTO;
 
@@ -322,12 +332,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public PI_UpdateLoop.Callback updateLoopCallback			= null;
 
-	/**
-	 * This allows the use of custom {@link PI_UpdateLoop} for the internal processing of SweetBlue. This is only exposed
-	 * for unit testing purposes, you should never change this unless you know the internals of SweetBlue intimately.
-	 */
-	@UnitTest
-	public PI_UpdateLoop.IUpdateLoopFactory updateLoopFactory	= new PI_UpdateLoop.DefaultUpdateLoopFactory();
+// TODO - Remove this once we figure out a different solution for unit tests
+//
+//	/**
+//	 * This allows the use of custom {@link PI_UpdateLoop} for the internal processing of SweetBlue. This is only exposed
+//	 * for unit testing purposes, you should never change this unless you know the internals of SweetBlue intimately.
+//	 */
+//	@UnitTest
+//	public PI_UpdateLoop.IUpdateLoopFactory updateLoopFactory	= new PI_UpdateLoop.DefaultUpdateLoopFactory();
 
 	/**
 	 * Allows overriding of Ble Status's. This is only used for unit testing, and shouldn't be
@@ -350,7 +362,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	@Nullable(Prevalence.NORMAL)
 	final String[] debugThreadNames =
 	{
-		"AMY", "BEN", "CAM", "DON", "ELI", "FAY", "GUS", "HAL", "IAN", "JAY", "LEO",
+		"MAIN", "UPDATE", "CAM", "DON", "ELI", "FAY", "GUS", "HAL", "IAN", "JAY", "LEO",
 		"MAX", "NED", "OLA", "PAT", "RON", "SAL", "TED", "VAL", "WES", "YEE", "ZED"
 	};
 	
