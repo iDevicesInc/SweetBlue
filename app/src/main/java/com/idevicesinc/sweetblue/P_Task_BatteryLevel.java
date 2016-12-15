@@ -15,7 +15,7 @@ import java.util.UUID;
 public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 {
 
-    private final byte[] mNameSpaceAndDescription;
+    private final byte[] mValueToMatch;
     private List<BluetoothGattCharacteristic> batteryChars;
     private UUID mDescriptorUuid;
 
@@ -23,7 +23,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
     P_Task_BatteryLevel(BleDevice device, byte[] nameSpaceAndDescription, UUID descriptorUuid, BleDevice.ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
     {
         super(device, Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, readWriteListener, requiresBonding, txn_nullable, priority);
-        mNameSpaceAndDescription = nameSpaceAndDescription;
+        mValueToMatch = nameSpaceAndDescription;
         mDescriptorUuid = descriptorUuid;
     }
 
@@ -111,9 +111,8 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 
         if( Utils.isSuccess(gattStatus))
         {
-            final byte[] nmdesc = Arrays.copyOfRange(value, 4, 7);
-
-            if (Arrays.equals(nmdesc, mNameSpaceAndDescription))
+            boolean bothNull = value == null && mValueToMatch == null;
+            if (bothNull || Arrays.equals(value, mValueToMatch))
             {
                 if (false == getDevice().getNativeGatt().readCharacteristic(desc.getCharacteristic()))
                 {
