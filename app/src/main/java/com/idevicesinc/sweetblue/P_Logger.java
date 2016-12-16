@@ -46,7 +46,7 @@ class P_Logger
 		{
 			// We want to force the first name (MAIN) to be the UI thread, then the update thread after that. Then the other names can be
 			// whatever.
-			manager.getPostManager().postToMain(new Runnable()
+			manager.getPostManager().postToMainDelayed(new Runnable()
 			{
 				@Override public void run()
 				{
@@ -59,7 +59,7 @@ class P_Logger
 						}
 					});
 				}
-			});
+			}, 50);
 		}
 	}
 	

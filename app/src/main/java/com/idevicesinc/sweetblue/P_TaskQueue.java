@@ -208,28 +208,34 @@ class P_TaskQueue
 		return m_time;
 	}
 	
-	public void update(double timeStep)
+	public boolean update(double timeStep)
 	{
+		boolean executingTask = false;
+
 		m_time += timeStep;
 		
 		if( m_executeHandler == null )
 		{
 			m_logger.d("Waiting for execute handler to initialize.");
 			
-			return;
+			return executingTask;
 		}
 
 		if( m_current == null )
 		{
 			dequeue();
+			executingTask = true;
 		}
 		
 		if( getCurrent() != null )
 		{			
 			getCurrent().update_internal(timeStep);
+			executingTask = true;
 		}
 		
 		m_updateCount++;
+
+		return executingTask;
 	}
 	
 	private boolean dequeue()

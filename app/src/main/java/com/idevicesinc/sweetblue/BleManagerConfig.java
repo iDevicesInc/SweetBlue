@@ -158,7 +158,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * recommended to run on the main thread in order to avoid any possible multithreading issues.
 	 * Note that if this is set to false, then allowCallsFromAllThreads will automatically be set to <code>true</code>.
 	 * Setting this to false will result in a smoother UI experience, at the cost of the possibility of multithreading
-	 * issues, as stated above. Use at your own risk.
+	 * issues, as stated above. While we have put a lot of effort to safe-guard against multithreading issues, they may
+	 * still happen, which is why this is true by default.
 	 */
 	public boolean runOnMainThread									= true;
 	

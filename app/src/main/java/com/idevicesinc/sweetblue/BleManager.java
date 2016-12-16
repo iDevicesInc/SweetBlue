@@ -839,6 +839,7 @@ public class BleManager
 	private double m_timeForegrounded = 0.0;
 	private double m_timeNotScanning = 0.0;
 	private long m_timeTurnedOn = 0;
+	private long m_lastTaskExecution;
 	private boolean m_doingInfiniteScan = false;
 	private boolean m_triedToStartScanAfterTurnedOn = false;
 	private boolean m_isForegrounded = false;
@@ -876,6 +877,7 @@ public class BleManager
 
 		m_config = config.clone();
 		checkUnitTestConfigOptions();
+		initPostManager();
 		initLogger();
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
@@ -3207,7 +3209,16 @@ public class BleManager
 		m_listeners.update();
 
 		m_uhOhThrottler.update(timeStep_seconds);
-		m_taskQueue.update(timeStep_seconds);
+
+		if (m_taskQueue.update(timeStep_seconds))
+		{
+			m_lastTaskExecution = System.currentTimeMillis();
+			if (is(IDLE))
+			{
+				m_updateRunnable.setUpdateRate(m_config.autoUpdateRate.millis());
+				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
+			}
+		}
 
 		if( m_isForegrounded )
 		{
@@ -3271,6 +3282,14 @@ public class BleManager
 			if( doAutoScan() )
 			{
 				startScan_private(m_config.autoScanActiveTime, null, null, /*isPoll=*/true);
+			}
+		}
+		else
+		{
+			if (m_lastTaskExecution + m_config.minTimeToIdle.millis() < System.currentTimeMillis())
+			{
+				m_updateRunnable.setUpdateRate(m_config.idleUpdateRate.millis());
+				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, true);
 			}
 		}
 
