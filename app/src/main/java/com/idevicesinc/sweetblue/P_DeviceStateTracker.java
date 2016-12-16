@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.utils.State;
 
 class P_DeviceStateTracker extends PA_StateTracker
 {
-	private StateListener m_stateListener;
+	private DeviceStateListener m_stateListener;
 	private final BleDevice m_device;
 	private final boolean m_forShortTermReconnect;
 	
@@ -21,7 +21,7 @@ class P_DeviceStateTracker extends PA_StateTracker
 		m_forShortTermReconnect = forShortTermReconnect;
 	}
 	
-	public void setListener(StateListener listener)
+	public void setListener(DeviceStateListener listener)
 	{
 		m_stateListener = listener;
 	}

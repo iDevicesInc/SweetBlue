@@ -289,7 +289,7 @@ class P_TaskQueue
 			else
 			{
 				//--- DRK > Posting to prevent potential stack overflow if queue is really big and all tasks are failing in a row.
-				m_mngr.getPostManager().postToUpdateThread(new Runnable()
+				m_mngr.getPostManager().forcePostToUpdate(new Runnable()
 				{
 					@Override public void run()
 					{

@@ -197,14 +197,6 @@ public class Utils
 		return Looper.getMainLooper().getThread() == Thread.currentThread();
 	}
 
-	public static void enforceMainThread(final String message)
-	{
-		if( !isOnMainThread() )
-		{
-			throw new WrongThreadError(message);
-		}
-	}
-
 	public static boolean isSuccess(int gattStatus)
 	{
 		return gattStatus == 0;// || gattStatus == 1;

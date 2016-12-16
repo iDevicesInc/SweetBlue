@@ -21,6 +21,12 @@ public enum BleScanPower
     AUTO(-1),
 
     /**
+     * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_OPPORTUNISTIC}.
+     * For phones lower than Lollipop, this will be used ignored.
+     */
+    VERY_LOW_POWER(ScanSettings.SCAN_MODE_OPPORTUNISTIC),
+
+    /**
      * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_LOW_POWER}.
      * For phones lower than Lollipop, this will be used ignored.
      */

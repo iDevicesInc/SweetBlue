@@ -452,23 +452,16 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onNotificationSent( final BluetoothDevice device, final int gattStatus )
 	{
-		if( postNeeded() )
+		m_server.getManager().getPostManager().postToUpdateThread(new Runnable()
 		{
-			post(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					onNotificationSent_mainThread(device, gattStatus);
-				}
-			});
-		}
-		else
-		{
-			onNotificationSent_mainThread(device, gattStatus);
-		}
+				onNotificationSent_updateThread(device, gattStatus);
+			}
+		});
 	}
 
-	private void onNotificationSent_mainThread(final BluetoothDevice device, final int gattStatus)
+	private void onNotificationSent_updateThread(final BluetoothDevice device, final int gattStatus)
 	{
 		final P_Task_SendNotification task = m_queue.getCurrent(P_Task_SendNotification.class, m_server);
 

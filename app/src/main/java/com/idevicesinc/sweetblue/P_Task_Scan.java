@@ -46,8 +46,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
         private void onScanResult_updateThread(final int callbackType, final L_Util.ScanResult result)
         {
-            getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-            getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+            getManager().m_stateTracker.update(getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.STARTING_SCAN, false, BleManagerState.SCANNING, true);
 
             getManager().onDiscoveredFromNativeStack(result.getDevice(), result.getRssi(), result.getRecord());
         }
@@ -242,8 +241,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
     private void execute_classic()
     {
         BleManagerState.SCANNING.setScanApi(BleScanApi.CLASSIC);
-        getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-        getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+        getManager().m_stateTracker.update(getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.STARTING_SCAN, false, BleManagerState.SCANNING, true);
         tryClassicDiscovery(getIntent(), /*suppressUhOh=*/true);
 
         m_mode = Mode_CLASSIC;
@@ -252,8 +250,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
     private void execute_preLollipop()
     {
         BleManagerState.SCANNING.setScanApi(BleScanApi.PRE_LOLLIPOP);
-        getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-        getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+        getManager().m_stateTracker.update(getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.STARTING_SCAN, false, BleManagerState.SCANNING, true);
         m_mode = startNativeScan_preLollipop(getIntent());
 
         if (m_mode == Mode_NULL)
@@ -304,8 +301,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
             BleManagerState.SCANNING.setPower(scanPower_abstracted);
             scanMode = scanPower_abstracted.getNativeMode();
         }
-        getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-        getManager().m_stateTracker.append(BleManagerState.SCANNING, getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+        getManager().m_stateTracker.update(getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.STARTING_SCAN, false, BleManagerState.SCANNING, true);
         if (false == Utils.isLollipop())
         {
             getManager().ASSERT(false, "Tried to create ScanSettings for pre-lollipop!");
@@ -406,8 +402,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
                 getManager().getCrashResolver().start();
             }
 
-            getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-            getManager().m_stateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+            getManager().m_stateTracker.update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.STARTING_SCAN, false, BleManagerState.SCANNING, true);
 
             return Mode_BLE;
         }
@@ -439,8 +434,7 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
             }
             else
             {
-                getManager().m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-                getManager().m_stateTracker.append(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+                getManager().m_stateTracker.update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.STARTING_SCAN, false, BleManagerState.SCANNING, true);
 
                 if (false == suppressUhOh)
                 {

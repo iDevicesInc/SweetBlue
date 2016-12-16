@@ -2,13 +2,9 @@ package com.idevicesinc.sweetblue;
 
 import android.os.Handler;
 import android.test.ActivityInstrumentationTestCase2;
-import android.util.Log;
-
-import com.idevicesinc.sweetblue.listeners.ManagerStateListener;
-
 import org.junit.Test;
-
 import java.util.concurrent.Semaphore;
+
 
 public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskManagerIdleActivity>
 {
@@ -48,7 +44,7 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
                 /**
                  * After waiting the appropriate time check to see if the current speed is the idle speed
                  */
-                assertTrue(bleManager.getUpdateSpeed() == bleManager.mConfig.updateThreadIdleIntervalMs);
+                assertTrue(bleManager.getUpdateRate() == bleManager.m_config.idleUpdateRate.millis());
 
                 bleManager.startScan(); //Kick off scanning -> put something in the queue
 
@@ -60,9 +56,9 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
                         /**
                          * After waiting about 1 cycle check to see if the current speed is no longer idling
                          */
-                        long updateSpeed = bleManager.getUpdateSpeed();
+                        long updateSpeed = bleManager.getUpdateRate();
 
-                        assertTrue(updateSpeed == bleManager.mConfig.updateThreadSpeed.getMilliseconds());
+                        assertTrue(updateSpeed == bleManager.m_config.autoUpdateRate.millis());
 
                         bleManager.stopScan(); //Stop scanning -> empty the queue
 
@@ -74,9 +70,9 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
                                 /**
                                  * After waiting again check to see that the speed is idling again
                                  */
-                                long updateSpeed = bleManager.getUpdateSpeed();
+                                long updateSpeed = bleManager.getUpdateRate();
 
-                                assertTrue(updateSpeed == bleManager.mConfig.updateThreadIdleIntervalMs);
+                                assertTrue(updateSpeed == bleManager.m_config.idleUpdateRate.millis());
 
                                 bleManager.startScan(); //Kick off scanning -> put something in the queue once more
 
@@ -88,23 +84,23 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
                                         /**
                                          * Check to see one last time that the the thread woke up
                                          */
-                                        long updateSpeed = bleManager.getUpdateSpeed();
+                                        long updateSpeed = bleManager.getUpdateRate();
 
-                                        assertTrue(updateSpeed == bleManager.mConfig.updateThreadSpeed.getMilliseconds());
+                                        assertTrue(updateSpeed == bleManager.m_config.autoUpdateRate.millis());
 
                                         finishedSemaphore.release();
                                     }
 
-                                }, bleManager.mConfig.updateThreadSpeed.getMilliseconds());
+                                }, bleManager.m_config.autoUpdateRate.millis());
                             }
 
-                        }, 2 * bleManager.mConfig.delayBeforeIdleMs);/*Go a couple more ticks and wait for idle*/
+                        }, 2 * bleManager.m_config.minTimeToIdle.millis());/*Go a couple more ticks and wait for idle*/
                     }
 
-                }, bleManager.mConfig.updateThreadSpeed.getMilliseconds() + 5);
+                }, bleManager.m_config.autoUpdateRate.millis() + 5);
             }
 
-        }, 2 * bleManager.mConfig.delayBeforeIdleMs);
+        }, 2 * bleManager.m_config.minTimeToIdle.millis());
 
         finishedSemaphore.acquire();
     }
@@ -114,20 +110,20 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        bleManager.setManagerStateListener(new ManagerStateListener()
+        bleManager.setListener_State(new ManagerStateListener()
         {
             @Override
-            public void onEvent(StateEvent event)
+            public void onEvent(BleManager.StateListener.StateEvent event)
             {
                 if(event.didEnter(BleManagerState.IDLE))
                 {
-                    assertTrue(bleManager.getUpdateSpeed() == bleManager.mConfig.updateThreadIdleIntervalMs);
+                    assertTrue(bleManager.getUpdateRate() == bleManager.m_config.idleUpdateRate.millis());
 
                     finishedSemaphore.release();
                 }
                 else
                 {
-                    assertTrue(bleManager.getUpdateSpeed() == bleManager.mConfig.updateThreadSpeed.getMilliseconds());
+                    assertTrue(bleManager.getUpdateRate() == bleManager.m_config.autoUpdateRate.millis());
 
                     bleManager.stopScan();
                 }

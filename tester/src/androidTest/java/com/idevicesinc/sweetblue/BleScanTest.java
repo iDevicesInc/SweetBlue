@@ -32,7 +32,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         testActivity.eventListener = new BleScanActivity.EventStateInterface()
         {
             @Override
-            public void onEvent(ManagerStateListener.StateEvent event)
+            public void onEvent(BleManager.StateListener.StateEvent event)
             {
                 if(event.didEnter(BleManagerState.SCANNING))
                 {
@@ -134,7 +134,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
             @Override
             public void run()
             {
-                assertTrue(bleManager.is(BleManagerState.SCAN_PAUSED));
+                assertTrue(!bleManager.is(BleManagerState.SCANNING));
             }
         }, 6000);
 
@@ -157,13 +157,13 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
     {
         BleManagerConfig config = new BleManagerConfig();
 
-        config.scanApi = BleScanAPI.POST_LOLLIPOP;
+        config.scanApi = BleScanApi.POST_LOLLIPOP;
 
         bleManager = BleManager.get(testActivity, config);
 
         bleManager.startScan();
 
-        P_ScanManager scanManager = bleManager.mScanManager;
+        P_ScanManager scanManager = bleManager.getScanManager();
 
         assertTrue(Utils.isLollipop());
 
@@ -175,13 +175,13 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
     {
         BleManagerConfig config = new BleManagerConfig();
 
-        config.scanApi = BleScanAPI.PRE_LOLLIPOP;
+        config.scanApi = BleScanApi.PRE_LOLLIPOP;
 
         bleManager = BleManager.get(testActivity, config);
 
         bleManager.startScan();
 
-        P_ScanManager scanManager = bleManager.mScanManager;
+        P_ScanManager scanManager = bleManager.getScanManager();
 
         assertTrue(scanManager.isPreLollipopScan());
     }
@@ -191,13 +191,13 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
     {
         BleManagerConfig config = new BleManagerConfig();
 
-        config.scanApi = BleScanAPI.CLASSIC;
+        config.scanApi = BleScanApi.CLASSIC;
 
         bleManager = BleManager.get(testActivity, config);
 
         bleManager.startScan();
 
-        P_ScanManager scanManager = bleManager.mScanManager;
+        P_ScanManager scanManager = bleManager.getScanManager();
 
         assertTrue(scanManager.isClassicScan());
     }

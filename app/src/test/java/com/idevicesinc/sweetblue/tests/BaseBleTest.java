@@ -8,11 +8,11 @@ import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.BleScanApi;
-import com.idevicesinc.sweetblue.BleScanMode;
 import com.idevicesinc.sweetblue.BleScanPower;
 import com.idevicesinc.sweetblue.PI_BleScanner;
 import com.idevicesinc.sweetblue.PI_BleStatusHelper;
 import com.idevicesinc.sweetblue.PI_UpdateLoop;
+import com.idevicesinc.sweetblue.UnitLoop;
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -42,14 +42,15 @@ public abstract class BaseBleTest
     {
         m_activity = Robolectric.setupActivity(Activity.class);
         m_config = new BleManagerConfig();
-        m_config.allowCallsFromAllThreads = true;
-        m_config.updateLoopFactory = new TestUpdateLoopFactory();
+        m_config.postCallbacksToMainThread = false;
+        m_config.autoUpdateRate = Interval.DISABLED;
         m_config.bleScanner = getScanner();
         m_config.bleStatusHelper = getStatusHelper();
         final BleManager mgr = BleManager.get(m_activity, m_config);
         assertNotNull(mgr);
         m_mgr = mgr;
         m_mgr.onResume();
+        UnitLoop looper = new UnitLoop(m_mgr);
     }
 
     void doTestOperation(final TestOp action) throws Exception
@@ -102,29 +103,6 @@ public abstract class BaseBleTest
         void run(Semaphore semaphore);
     }
 
-    private static class TestUpdateLoopFactory implements PI_UpdateLoop.IUpdateLoopFactory
-    {
-
-        @Override public PI_UpdateLoop newAnonThreadLoop()
-        {
-            return new UnitLoop(new PI_UpdateLoop.Callback()
-            {
-                @Override public void onUpdate(double timestep_seconds)
-                {
-                }
-            });
-        }
-
-        @Override public PI_UpdateLoop newMainThreadLoop(PI_UpdateLoop.Callback callback)
-        {
-            return new UnitLoop(callback);
-        }
-
-        @Override public PI_UpdateLoop newAnonThreadLoop(PI_UpdateLoop.Callback callback)
-        {
-            return new UnitLoop(callback);
-        }
-    }
 
     public static class DefaultBleScannerTest implements PI_BleScanner
     {

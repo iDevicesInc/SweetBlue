@@ -51,6 +51,11 @@ public class BleManagerConfig extends BleDeviceConfig
 	public static final double DEFAULT_AUTO_UPDATE_RATE					= 1.01/50.0;
 
 	/**
+	 * Default value for {@link #idleUpdateRate}.
+	 */
+	public static final double DEFAULT_IDLE_UPDATE_RATE					= 0.5;
+
+	/**
 	 * Default value for {@link #uhOhCallbackThrottle}.
 	 */
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
@@ -162,7 +167,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * thread. If {@link #runOnMainThread}==true then this setting is meaningless because SweetBlue's
 	 * internal thread is already the main thread to begin with.
 	 */
-	boolean postCallbacksToMainThread						= true;
+	public boolean postCallbacksToMainThread						= true;
 	
 	/**
 	 * Default is <code>true</code> - requires the {@link android.Manifest.permission#WAKE_LOCK} permission in your app's manifest file.
@@ -271,6 +276,20 @@ public class BleManagerConfig extends BleDeviceConfig
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.RARE)
 	public Interval autoUpdateRate							= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
+
+	/**
+	 * Default is {@value #DEFAULT_IDLE_UPDATE_RATE} seconds - The rate at which the library's internal update loop ticks, after
+	 * {@link #minTimeToIdle} has elapsed.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public Interval idleUpdateRate							= Interval.secs(DEFAULT_IDLE_UPDATE_RATE);
+
+	/**
+	 * Default is {@value #DEFAULT_IDLE_UPDATE_RATE} seconds - This is the amount of time the library will wait with no tasks before
+	 * lowering the update loop tick to {@link #idleUpdateRate}.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public Interval minTimeToIdle							= Interval.secs(DEFAULT_IDLE_UPDATE_RATE);
 
 	/**
 	 * Default is {@value #DEFAULT_SCAN_REPORT_DELAY} seconds - Only applicable for Lollipop and up (i.e. > 5.0), this is the value given to

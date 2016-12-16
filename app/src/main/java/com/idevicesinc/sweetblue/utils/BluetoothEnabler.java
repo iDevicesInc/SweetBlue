@@ -14,6 +14,8 @@ import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.P_StringHandler;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 
+import java.lang.reflect.Method;
+
 /**
  * This class is used to handle the new hairy logic for getting bluetooth low-energy scan results that is introduced with {@link android.os.Build.VERSION_CODES#M}.
  * With {@link android.os.Build.VERSION_CODES#M} you need to have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION}
@@ -654,6 +656,40 @@ public class BluetoothEnabler
 		}
 	}
 
+    private void updateBleManagerScanState()
+    {
+        boolean on = isEnabled(BluetoothEnablerFilter.Stage.BLUETOOTH);
+        boolean locService = isEnabled(BluetoothEnablerFilter.Stage.LOCATION_SERVICES);
+        boolean locPerms = isEnabled(BluetoothEnablerFilter.Stage.LOCATION_PERMISSION);
+        if (!Utils.isMarshmallow())
+        {
+            if (on)
+            {
+                updateBleScanState();
+            }
+        }
+        else
+        {
+            if (on && locPerms && locService)
+            {
+                updateBleScanState();
+            }
+        }
+    }
+
+    private void updateBleScanState()
+    {
+        try
+        {
+            Method scanstate = bleMngr().getClass().getMethod("setBleScanReady", (Class[]) null);
+            scanstate.invoke(bleMngr(), (Object[]) null);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
 	private void handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(final BluetoothEnablerFilter.Please please)
 	{
 		if( isEnabled(getStage()) )
@@ -685,6 +721,8 @@ public class BluetoothEnabler
 		{
 			handlePleaseResponse_STEP3a_maybeShowClosingDialog(please);
 			handlePleaseResponse_STEP8_maybeShowToast(please);
+
+            updateBleManagerScanState();
 
 			//--- DRK > Recurse back into dispatchEvent().
 			dispatchEvent(getStage(), BluetoothEnablerFilter.Stage.NULL, BluetoothEnablerFilter.Status.STOPPED);
@@ -847,6 +885,8 @@ public class BluetoothEnabler
 			}
 			else
 			{
+                updateBleManagerScanState();
+
 				dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.ENABLED);
 			}
 		}

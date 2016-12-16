@@ -8,8 +8,6 @@ import com.idevicesinc.sweetblue.BleScanMode;
 import com.idevicesinc.sweetblue.PI_BleScanner;
 import com.idevicesinc.sweetblue.PI_BleStatusHelper;
 import com.idevicesinc.sweetblue.utils.Interval;
-
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.junit.runner.RunWith;

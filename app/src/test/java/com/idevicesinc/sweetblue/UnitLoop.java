@@ -1,7 +1,9 @@
-package com.idevicesinc.sweetblue.tests;
+package com.idevicesinc.sweetblue;
 
 
 import android.os.Handler;
+
+import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.PI_UpdateLoop;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -13,10 +15,10 @@ public class UnitLoop implements PI_UpdateLoop
 
     private boolean m_running = false;
     private final ThreadPoolExecutor m_executor;
+    private final BleManager m_mgr;
     private Operator m_operator = new Operator();
     private long m_lastAutoUpdateTime = 0;
     private long m_autoUpdateRate = 0;
-    private PI_UpdateLoop.Callback m_callback;
     private final Runnable m_autoUpdateRunnable = new Runnable()
     {
         @Override public void run()
@@ -27,18 +29,22 @@ public class UnitLoop implements PI_UpdateLoop
             timeStep = timeStep <= 0.0 ? .00001 : timeStep;
             timeStep = timeStep > 1.0 ? 1.0 : timeStep;
 
-            m_callback.onUpdate(timeStep);
+            //m_callback.onUpdate(timeStep);
+            m_mgr.update(timeStep);
 
             m_lastAutoUpdateTime = currentTime;
 
         }
     };
 
-    public UnitLoop(Callback action)
+
+    public UnitLoop(BleManager mgr)
     {
-        this.m_callback = action;
         m_executor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
+        m_mgr = mgr;
+        start(0.025);
     }
+
 
     public void start()
     {

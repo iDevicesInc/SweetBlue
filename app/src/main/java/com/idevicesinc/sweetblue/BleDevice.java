@@ -14,6 +14,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
@@ -265,8 +266,11 @@ public class BleDevice extends BleNode
 	 * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
 	 * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
 	 * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
+	 *
+	 * @deprecated - Refactored to {@link com.idevicesinc.sweetblue.ReadWriteListener}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
+	@Deprecated
 	public static interface ReadWriteListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<ReadWriteListener.ReadWriteEvent>
 	{
 		/**
@@ -1081,8 +1085,11 @@ public class BleDevice extends BleNode
 	 *
 	 * @see BleDeviceState
 	 * @see BleDevice#setListener_State(StateListener)
+	 *
+	 * @deprecated - Refactored to {@link DeviceStateListener}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
+	@Deprecated
 	public static interface StateListener
 	{
 		/**
@@ -1857,7 +1864,7 @@ public class BleDevice extends BleNode
 	private final P_HistoricalDataManager m_historicalDataMngr;
 	final P_BondManager m_bondMngr;
 
-	private ReadWriteListener m_defaultReadWriteListener = null;
+	private com.idevicesinc.sweetblue.ReadWriteListener m_defaultReadWriteListener = null;
 
 	private TimeEstimator m_writeTimeEstimator;
 	private TimeEstimator m_readTimeEstimator;
@@ -1951,7 +1958,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_begin(final ReadWriteListener listener)
 	{
-		enforceMainThread();
+
 
 		return m_reliableWriteMngr.begin(listener);
 	}
@@ -1962,7 +1969,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_abort()
 	{
-		enforceMainThread();
+
 
 		return m_reliableWriteMngr.abort();
 	}
@@ -1973,7 +1980,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_execute()
 	{
-		enforceMainThread();
+
 
 		return m_reliableWriteMngr.execute();
 	}
@@ -2050,13 +2057,6 @@ public class BleDevice extends BleNode
 	 */
 	public void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
 	{
-		final boolean allowAllThreads = BleDeviceConfig.bool(config_nullable != null ? config_nullable.allowCallsFromAllThreads : null, conf_mngr().allowCallsFromAllThreads);
-
-		if( false == allowAllThreads )
-		{
-			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
-		}
-
 		if (isNull())  return;
 
 		m_config = config_nullable == null ? null : config_nullable.clone();
@@ -2115,8 +2115,6 @@ public class BleDevice extends BleNode
 	 */
 	public BleDeviceOrigin getOrigin()
 	{
-		enforceMainThread();
-
 		return m_origin;
 	}
 
@@ -2128,8 +2126,6 @@ public class BleDevice extends BleNode
 	 */
 	public EpochTime getLastDiscoveryTime()
 	{
-		enforceMainThread();
-
 		return m_lastDiscoveryTime;
 	}
 
@@ -2154,8 +2150,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public State.ChangeIntent getLastDisconnectIntent()
 	{
-		enforceMainThread();
-
 		if( isNull() )  return State.ChangeIntent.NULL;
 
 		boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
@@ -2166,11 +2160,38 @@ public class BleDevice extends BleNode
 
 	/**
 	 * Set a listener here to be notified whenever this device's state changes.
+	 *
+	 * @deprecated - This will be removed in version 3. It has been refactored to {@link DeviceStateListener}.
 	 */
-	public void setListener_State(@Nullable(Prevalence.NORMAL) StateListener listener_nullable)
+	@Deprecated
+	public void setListener_State(@Nullable(Prevalence.NORMAL) final StateListener listener_nullable)
 	{
-		enforceMainThread();
+		if( isNull() )  return;
 
+		if (listener_nullable == null)
+		{
+			stateTracker_main().setListener(null);
+		}
+		else
+		{
+			stateTracker_main().setListener(new DeviceStateListener()
+			{
+				@Override public void onEvent(StateListener.StateEvent e)
+				{
+					if (listener_nullable != null)
+					{
+						listener_nullable.onEvent(e);
+					}
+				}
+			});
+		}
+	}
+
+	/**
+	 * Set a listener here to be notified whenever this device's state changes.
+	 */
+	public void setListener_State(@Nullable(Prevalence.NORMAL) DeviceStateListener listener_nullable)
+	{
 		if( isNull() )  return;
 
 		stateTracker_main().setListener(listener_nullable);
@@ -2182,8 +2203,6 @@ public class BleDevice extends BleNode
 	 */
 	public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) ConnectionFailListener listener_nullable)
 	{
-		enforceMainThread();
-
 		if( isNull() )  return;
 
 		m_connectionFailMngr.setListener(listener_nullable);
@@ -2196,8 +2215,6 @@ public class BleDevice extends BleNode
 	 */
 	public void setListener_Bond(@Nullable(Prevalence.NORMAL) BondListener listener_nullable)
 	{
-		enforceMainThread();
-
 		if( isNull() )  return;
 
 		m_bondMngr.setListener(listener_nullable);
@@ -2208,11 +2225,42 @@ public class BleDevice extends BleNode
 	 * {@link #write(UUID, byte[], ReadWriteListener)}, {@link #enableNotify(UUID, ReadWriteListener)}, etc.
 	 * <br><br>
 	 * NOTE: This will be called after the {@link ReadWriteListener} provided directly through the method params.
+	 *
+	 * @deprecated - This will be removed in version 3. Use {@link com.idevicesinc.sweetblue.ReadWriteListener} instead (it was refactored to be in it's own class file, rather than an inner class).
 	 */
-	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) ReadWriteListener listener_nullable)
+	@Deprecated
+	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final ReadWriteListener listener_nullable)
 	{
-		enforceMainThread();
+		if( isNull() )  return;
 
+		if (listener_nullable == null)
+		{
+			m_defaultReadWriteListener = null;
+		}
+		else
+		{
+			m_defaultReadWriteListener = new com.idevicesinc.sweetblue.ReadWriteListener()
+			{
+				@Override public void onEvent(ReadWriteEvent e)
+				{
+					if (listener_nullable != null)
+					{
+						listener_nullable.onEvent(e);
+					}
+				}
+			};
+		}
+	}
+
+
+	/**
+	 * Sets a default backup {@link ReadWriteListener} that will be called for all calls to {@link #read(UUID, ReadWriteListener)},
+	 * {@link #write(UUID, byte[], ReadWriteListener)}, {@link #enableNotify(UUID, ReadWriteListener)}, etc.
+	 * <br><br>
+	 * NOTE: This will be called after the {@link ReadWriteListener} provided directly through the method params.
+	 */
+	public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) com.idevicesinc.sweetblue.ReadWriteListener listener_nullable)
+	{
 		if( isNull() )  return;
 
 		m_defaultReadWriteListener = listener_nullable;
@@ -2224,8 +2272,6 @@ public class BleDevice extends BleNode
 	 */
 	public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleNode.HistoricalDataLoadListener listener_nullable)
 	{
-		enforceMainThread();
-
 		if( isNull() )  return;
 
 		m_historicalDataMngr.setListener(listener_nullable);
@@ -2238,8 +2284,6 @@ public class BleDevice extends BleNode
 	 */
 	public int getConnectionRetryCount()
 	{
-		enforceMainThread();
-
 		if( isNull() )  return 0;
 
 		return m_connectionFailMngr.getRetryCount();
@@ -2253,8 +2297,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public int getStateMask()
 	{
-		enforceMainThread();
-
 		return stateTracker_main().getState();
 	}
 
@@ -2266,8 +2308,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public int getNativeStateMask()
 	{
-		enforceMainThread();
-
 		return stateTracker().getState();
 	}
 
@@ -2280,8 +2320,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public Interval getAverageReadTime()
 	{
-		enforceMainThread();
-
 		return m_readTimeEstimator != null ? Interval.secs(m_readTimeEstimator.getRunningAverage()) : Interval.ZERO;
 	}
 
@@ -2294,8 +2332,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public Interval getAverageWriteTime()
 	{
-		enforceMainThread();
-
 		return m_writeTimeEstimator != null ? Interval.secs(m_writeTimeEstimator.getRunningAverage()) : Interval.ZERO;
 	}
 
@@ -2307,8 +2343,6 @@ public class BleDevice extends BleNode
 	 */
 	public int getRssi()
 	{
-		enforceMainThread();
-
 		return m_rssi;
 	}
 
@@ -2317,8 +2351,6 @@ public class BleDevice extends BleNode
 	 */
 	public Percent getRssiPercent()
 	{
-		enforceMainThread();
-
 		if (isNull())
 		{
 			return Percent.ZERO;
@@ -2339,8 +2371,6 @@ public class BleDevice extends BleNode
 	 */
 	public Distance getDistance()
 	{
-		enforceMainThread();
-
 		if (isNull())
 		{
 			return Distance.INVALID;
@@ -2361,8 +2391,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public int getTxPower()
 	{
-		enforceMainThread();
-
 		if (isNull())
 		{
 			return BleNodeConfig.INVALID_TX_POWER;
@@ -2389,8 +2417,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Prevalence.NEVER) byte[] getScanRecord()
 	{
-		enforceMainThread();
-
 		return m_scanRecord;
 	}
 
@@ -2407,8 +2433,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) UUID[] getAdvertisedServices()
 	{
-		enforceMainThread();
-
 		final UUID[] toReturn = m_scanInfo.getServiceUUIDS().size() > 0 ? new UUID[m_scanInfo.getServiceUUIDS().size()] : EMPTY_UUID_ARRAY;
 		return m_scanInfo.getServiceUUIDS().toArray(toReturn);
 	}
@@ -2418,8 +2442,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) byte[] getManufacturerData()
 	{
-		enforceMainThread();
-
 		final byte[] toReturn = m_scanInfo.getManufacturerData() != null ? m_scanInfo.getManufacturerData().clone() : new byte[0];
 
 		return toReturn;
@@ -2430,8 +2452,6 @@ public class BleDevice extends BleNode
      */
 	public int getManufacturerId()
 	{
-		enforceMainThread();
-
 		final int toReturn = m_scanInfo.getManufacturerId();
 
 		return toReturn;
@@ -2442,8 +2462,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) Map<UUID, byte[]> getAdvertisedServiceData()
 	{
-		enforceMainThread();
-
 		final Map<UUID, byte[]> toReturn = new HashMap<UUID, byte[]>();
 
 		toReturn.putAll(m_scanInfo.getServiceData());
@@ -2457,8 +2475,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) String getHistoricalDataTableName(final UUID uuid)
 	{
-		enforceMainThread();
-
 		return getManager().m_historicalDatabase.getTableName(getMacAddress(), uuid);
 	}
 
@@ -2472,8 +2488,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid)
 	{
-		enforceMainThread();
-
 		return getHistoricalData_cursor(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
 	}
 
@@ -2485,8 +2499,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid, final EpochTimeRange range)
 	{
-		enforceMainThread();
-
 		return m_historicalDataMngr.getCursor(uuid, range);
 	}
 
@@ -2523,8 +2535,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void loadHistoricalData(final UUID uuid, final HistoricalDataLoadListener listener)
 	{
-		enforceMainThread();
-
 		if( isNull() )  return;
 
 		m_historicalDataMngr.load(uuid, listener);
@@ -2537,8 +2547,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public boolean isHistoricalDataLoading()
 	{
-		enforceMainThread();
-
 		return m_historicalDataMngr.isLoading(null);
 	}
 
@@ -2549,8 +2557,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public boolean isHistoricalDataLoading(final UUID uuid)
 	{
-		enforceMainThread();
-
 		return m_historicalDataMngr.isLoading(uuid);
 	}
 
@@ -2564,8 +2570,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public boolean isHistoricalDataLoaded()
 	{
-		enforceMainThread();
-
 		return m_historicalDataMngr.isLoaded(null);
 	}
 
@@ -2578,8 +2582,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public boolean isHistoricalDataLoaded(final UUID uuid)
 	{
-		enforceMainThread();
-
 		return m_historicalDataMngr.isLoaded(uuid);
 	}
 
@@ -2621,8 +2623,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid, final EpochTimeRange range)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return new EmptyIterator<HistoricalData>();
 
 		return m_historicalDataMngr.getIterator(uuid, EpochTimeRange.denull(range));
@@ -2653,8 +2653,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Void<HistoricalData> forEach)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return false;
 
 		return m_historicalDataMngr.doForEach(uuid, EpochTimeRange.denull(range), forEach);
@@ -2685,8 +2683,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Breakable<HistoricalData> forEach)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return false;
 
 		return m_historicalDataMngr.doForEach(uuid, EpochTimeRange.denull(range), forEach);
@@ -2715,8 +2711,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final EpochTimeRange range, final int offsetFromStart)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return HistoricalData.NULL;
 
 		return m_historicalDataMngr.getWithOffset(uuid, EpochTimeRange.denull(range), offsetFromStart);
@@ -2744,8 +2738,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public int getHistoricalDataCount(final UUID uuid, final EpochTimeRange range)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return 0;
 
 		return m_historicalDataMngr.getCount(uuid, EpochTimeRange.denull(range));
@@ -2772,8 +2764,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public boolean hasHistoricalData(final EpochTimeRange range)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return false;
 
 		return m_historicalDataMngr.hasHistoricalData(range);
@@ -2807,9 +2797,6 @@ public class BleDevice extends BleNode
 				return true;
 			}
 		}
-
-		enforceMainThread();
-
 		return false;
 	}
 
@@ -2822,8 +2809,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public boolean hasHistoricalData(final UUID uuid, final EpochTimeRange range)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return false;
 
 		return m_historicalDataMngr.hasHistoricalData(uuid, range);
@@ -2841,8 +2826,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void addHistoricalData(final UUID uuid, final byte[] data, final EpochTime epochTime)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.add_single(uuid, data, epochTime, BleNodeConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
@@ -2866,8 +2849,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void addHistoricalData(final UUID uuid, final byte[] data)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.add_single(uuid, data, new EpochTime(), BleNodeConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
@@ -2882,8 +2863,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void addHistoricalData(final UUID uuid, final HistoricalData historicalData)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.add_single(uuid, historicalData, BleNodeConfig.HistoricalDataLogFilter.Source.SINGLE_MANUAL_ADDITION);
@@ -2898,8 +2877,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void addHistoricalData(final UUID uuid, final Iterator<HistoricalData> historicalData)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.add_multiple(uuid, historicalData);
@@ -2926,8 +2903,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void addHistoricalData(final UUID uuid, final ForEach_Returning<HistoricalData> historicalData)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.add_multiple(uuid, historicalData);
@@ -2945,8 +2920,6 @@ public class BleDevice extends BleNode
 			if (is(states[i]))  return true;
 		}
 
-		enforceMainThread();
-
 		return false;
 	}
 
@@ -2961,9 +2934,6 @@ public class BleDevice extends BleNode
 		{
 			if( !is(states[i]) )  return false;
 		}
-
-		enforceMainThread();
-
 		return true;
 	}
 
@@ -3026,8 +2996,6 @@ public class BleDevice extends BleNode
 
 	boolean isAny_internal(BleDeviceState... states)
 	{
-		enforceMainThread();
-
 		for (int i = 0; i < states.length; i++)
 		{
 			if (is_internal(states[i]))
@@ -3056,8 +3024,6 @@ public class BleDevice extends BleNode
 	 */
 	public Interval getTimeInState(BleDeviceState state)
 	{
-		enforceMainThread();
-
 		return Interval.millis(stateTracker_main().getTimeInState(state.ordinal()));
 	}
 
@@ -3091,8 +3057,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setName(final String name, final UUID characteristicUuid, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		if( !isNull() )
 		{
 			m_nativeWrapper.setName_override(name);
@@ -3130,8 +3094,6 @@ public class BleDevice extends BleNode
 	 */
 	public void clearName()
 	{
-		enforceMainThread();
-
 		m_nativeWrapper.clearName_override();
 		getManager().m_diskOptionsMngr.clearName(getMacAddress());
 	}
@@ -3143,8 +3105,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) String getName_override()
 	{
-		enforceMainThread();
-
 		return m_nativeWrapper.getName_override();
 	}
 
@@ -3157,8 +3117,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) String getName_native()
 	{
-		enforceMainThread();
-
 		return m_nativeWrapper.getNativeName();
 	}
 
@@ -3176,8 +3134,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) String getName_normalized()
 	{
-		enforceMainThread();
-
 		return m_nativeWrapper.getNormalizedName();
 	}
 
@@ -3189,8 +3145,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) String getName_debug()
 	{
-		enforceMainThread();
-
 		return m_nativeWrapper.getDebugName();
 	}
 
@@ -3206,8 +3160,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Prevalence.RARE) BluetoothDevice getNative()
 	{
-		enforceMainThread();
-
 		return m_nativeWrapper.getDevice();
 	}
 
@@ -3221,8 +3173,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Prevalence.NORMAL) BluetoothGatt getNativeGatt()
 	{
-		enforceMainThread();
-
 		return m_nativeWrapper.getGatt();
 	}
 
@@ -3242,8 +3192,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) BondListener.BondEvent bond(BondListener listener)
 	{
-		enforceMainThread();
-
 		if (listener != null)
 		{
 			setListener_Bond(listener);
@@ -3298,8 +3246,6 @@ public class BleDevice extends BleNode
 	 */
 	public boolean unbond()
 	{
-		enforceMainThread();
-
 		final boolean alreadyUnbonded = is(UNBONDED);
 
 		unbond_internal(null, BondListener.Status.CANCELLED_FROM_UNBOND);
@@ -3484,8 +3430,6 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
 	{
-		enforceMainThread();
-
 		if (stateListener != null)
 		{
 			setListener_State(stateListener);
@@ -3555,8 +3499,6 @@ public class BleDevice extends BleNode
 
 	private boolean disconnect_private(final Status status)
 	{
-		enforceMainThread();
-
 		if (isNull())  return false;
 
 		final boolean alreadyDisconnected = is(DISCONNECTED);
@@ -3587,8 +3529,6 @@ public class BleDevice extends BleNode
 	 */
 	public boolean undiscover()
 	{
-		enforceMainThread();
-
 		if (isNull())  return false;
 
 		return getManager().undiscover(this);
@@ -3601,8 +3541,6 @@ public class BleDevice extends BleNode
 	 */
 	public void clearSharedPreferences()
 	{
-		enforceMainThread();
-
 		getManager().clearSharedPreferences(this);
 	}
 
@@ -3617,8 +3555,6 @@ public class BleDevice extends BleNode
 	 */
 	public boolean equals(@Nullable(Prevalence.NORMAL) final BleDevice device_nullable)
 	{
-		enforceMainThread();
-
 		if (device_nullable == null)												return false;
 		if (device_nullable == this)												return true;
 		if (device_nullable.getNative() == null || this.getNative() == null)		return false;
@@ -3634,8 +3570,6 @@ public class BleDevice extends BleNode
 	 */
 	@Override public boolean equals(@Nullable(Prevalence.NORMAL) final Object object_nullable)
 	{
-		enforceMainThread();
-
 		if( object_nullable == null )  return false;
 
 		if (object_nullable instanceof BleDevice)
@@ -3661,8 +3595,6 @@ public class BleDevice extends BleNode
 	 */
 	public void startPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		final UUID serviceUuid = null;
 
 		m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
@@ -3683,8 +3615,6 @@ public class BleDevice extends BleNode
 	 */
 	public void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
 	}
 
@@ -3802,8 +3732,6 @@ public class BleDevice extends BleNode
 	 */
 	public void startChangeTrackingPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		final UUID serviceUuid = null;
 
 		m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
@@ -3814,8 +3742,6 @@ public class BleDevice extends BleNode
 	 */
 	public void startChangeTrackingPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
 	}
 
@@ -4239,8 +4165,6 @@ public class BleDevice extends BleNode
 	 */
 	public ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
 
 		if (earlyOutResult != null)
@@ -4280,8 +4204,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority(final BleConnectionPriority connectionPriority, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		return setConnectionPriority_private(connectionPriority, listener, getOverrideReadWritePriority());
 	}
 
@@ -4355,8 +4277,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault(final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		if( is(CONNECTED) )
 		{
 			return setMtu(BleNodeConfig.DEFAULT_MTU_SIZE, listener);
@@ -4395,8 +4315,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		return setMtu_private(mtu, listener, getOverrideReadWritePriority());
 	}
 
@@ -4459,8 +4377,6 @@ public class BleDevice extends BleNode
 	 */
 	public void startRssiPoll(final Interval interval, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_rssiPollMngr.start(interval.secs(), listener);
@@ -4473,8 +4389,6 @@ public class BleDevice extends BleNode
 	 */
 	public void stopRssiPoll()
 	{
-		enforceMainThread();
-
 		if (isNull())  return;
 
 		m_rssiPollMngr.stop();
@@ -4498,8 +4412,6 @@ public class BleDevice extends BleNode
 	 */
 	public void clearAllData()
 	{
-		enforceMainThread();
-
 		clearName();
 		clearHistoricalData();
 		clearSharedPreferences();
@@ -4514,8 +4426,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void clearHistoricalData()
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.clearEverything();
@@ -4554,8 +4464,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void clearHistoricalData(final EpochTimeRange range, final long count)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.delete_all(range, count, /*memoryOnly=*/false);
@@ -4623,8 +4531,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void clearHistoricalData(final UUID uuid, final EpochTimeRange range, final long count)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.delete(uuid, range, count, /*memoryOnly=*/false);
@@ -4675,8 +4581,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void clearHistoricalData_memoryOnly(final EpochTimeRange range, final long count)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.delete_all(range, count, /*memoryOnly=*/true);
@@ -4731,8 +4635,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public void clearHistoricalData_memoryOnly(final UUID characteristicUuid, final EpochTimeRange range, final long count)
 	{
-		enforceMainThread();
-
 		if( isNull() ) return;
 
 		m_historicalDataMngr.delete(characteristicUuid, range, count, /*memoryOnly=*/true);
@@ -4850,8 +4752,6 @@ public class BleDevice extends BleNode
 	@Advanced
 	public ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
@@ -4878,9 +4778,7 @@ public class BleDevice extends BleNode
 	 */
 	public boolean isNotifyEnabled(final UUID uuid)
 	{
-		enforceMainThread();
-
-		if( isNull() )  return false;
+        if( isNull() )  return false;
 
 		final UUID serviceUuid = null;
 
@@ -4896,8 +4794,6 @@ public class BleDevice extends BleNode
 	 */
 	public boolean isNotifyEnabling(final UUID uuid)
 	{
-		enforceMainThread();
-
 		if( isNull() )  return false;
 
 		final UUID serviceUuid = null;
@@ -5058,8 +4954,6 @@ public class BleDevice extends BleNode
 	 */
 	public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
 	{
-		enforceMainThread();
-
 		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
 		if (earlyOutResult != null)
@@ -5300,8 +5194,6 @@ public class BleDevice extends BleNode
 	 */
 	public boolean performOta(final BleTransaction.Ota txn)
 	{
-		enforceMainThread();
-
 		if( performTransaction_earlyOut(txn) )		return false;
 
 		if ( is(PERFORMING_OTA) )
@@ -5330,8 +5222,6 @@ public class BleDevice extends BleNode
 	 */
 	public boolean performTransaction(final BleTransaction txn)
 	{
-		enforceMainThread();
-
 		if( performTransaction_earlyOut(txn) )		return false;
 
 		m_txnMngr.performAnonTransaction(txn);
@@ -6106,7 +5996,7 @@ public class BleDevice extends BleNode
 		if (isDisconnectedAfterReconnectingShortTermStateCallback)
 		{
 			m_txnMngr.cancelAllTransactions();
-			
+
 			return;
 		}
 
@@ -6231,14 +6121,14 @@ public class BleDevice extends BleNode
 
 	private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final Double interval, final ReadWriteListener listener)
 	{
-		enforceMainThread();
+
 
 		m_pollMngr.stopPoll(serviceUuid, characteristicUuid, interval, listener, /* usingNotify= */false);
 	}
 
 	ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, final ReadWriteListener listener)
 	{
-		enforceMainThread();
+
 
 		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -6270,7 +6160,7 @@ public class BleDevice extends BleNode
 
 	ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final ReadWriteListener listener)
 	{
-		enforceMainThread();
+
 
 		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, descriptorUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -6302,7 +6192,7 @@ public class BleDevice extends BleNode
 
 	private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, ReadWriteListener listener)
 	{
-		enforceMainThread();
+
 
 		final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 

@@ -1400,13 +1400,6 @@ public class BleServer extends BleNode
 	 */
 	public void setConfig(final BleNodeConfig config_nullable)
 	{
-		final boolean allowAllThreads = BleDeviceConfig.bool(config_nullable != null ? config_nullable.allowCallsFromAllThreads : null, conf_mngr().allowCallsFromAllThreads);
-
-		if( false == allowAllThreads )
-		{
-			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
-		}
-
 		m_config = config_nullable;
 	}
 
@@ -1420,8 +1413,6 @@ public class BleServer extends BleNode
 	 */
 	public void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.StateListener listener_nullable)
 	{
-		enforceMainThread();
-
 		m_stateTracker.setListener(listener_nullable);
 	}
 
@@ -1430,8 +1421,6 @@ public class BleServer extends BleNode
 	 */
 	public void setListener_Incoming(@Nullable(Nullable.Prevalence.NORMAL) final IncomingListener listener_nullable)
 	{
-		enforceMainThread();
-
 		m_incomingListener = listener_nullable;
 	}
 
@@ -1441,23 +1430,17 @@ public class BleServer extends BleNode
 	 */
 	public void setListener_ServiceAdd(@Nullable(Nullable.Prevalence.NORMAL) final ServiceAddListener listener_nullable)
 	{
-		enforceMainThread();
-
 		serviceMngr_server().setListener(listener_nullable);
 	}
 
 	public void setListener_Advertising(@Nullable(Nullable.Prevalence.NORMAL) final AdvertisingListener listener_nullable)
 	{
-		enforceMainThread();
-
 		m_advertisingListener = listener_nullable;
 	}
 
 	public @Nullable(Nullable.Prevalence.RARE)
 	AdvertisingListener getListener_Advertise()
 	{
-		enforceMainThread();
-
 		return m_advertisingListener;
 	}
 
@@ -1466,8 +1449,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.RARE) IncomingListener getListener_Incoming()
 	{
-		enforceMainThread();
-
 		return m_incomingListener;
 	}
 
@@ -1479,8 +1460,6 @@ public class BleServer extends BleNode
 	 */
 	public void setListener_Outgoing(final OutgoingListener listener)
 	{
-		enforceMainThread();
-
 		m_outgoingListener_default = listener;
 	}
 
@@ -1489,8 +1468,6 @@ public class BleServer extends BleNode
 	 */
 	public void setListener_ConnectionFail(final ConnectionFailListener listener)
 	{
-		enforceMainThread();
-
 		m_connectionFailMngr.setListener(listener);
 	}
 
@@ -1627,8 +1604,6 @@ public class BleServer extends BleNode
 
 	private OutgoingListener.OutgoingEvent sendNotification_private(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData, final OutgoingListener listener, final boolean isIndication)
 	{
-		enforceMainThread();
-
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
 		final BluetoothDevice nativeDevice = newNativeDevice(macAddress_normalized);
@@ -1699,8 +1674,6 @@ public class BleServer extends BleNode
 	 */
 	public boolean isAdvertising()
 	{
-		enforceMainThread();
-
 		return getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager());
 	}
 
@@ -1709,8 +1682,6 @@ public class BleServer extends BleNode
 	 */
 	public boolean isAdvertising(UUID serviceUuid)
 	{
-		enforceMainThread();
-
 		if (Utils.isLollipop())
 		{
 			P_Task_Advertise adtask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
@@ -1829,8 +1800,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingSettings settings, AdvertisingListener listener)
 	{
-		enforceMainThread();
-
 		if (isNull())
 		{
 			getManager().getLogger().e(BleServer.class.getSimpleName() + " is null!");
@@ -1880,8 +1849,6 @@ public class BleServer extends BleNode
 	 */
 	public void stopAdvertising()
 	{
-		enforceMainThread();
-
 		if (Utils.isLollipop())
 		{
 
@@ -1902,8 +1869,6 @@ public class BleServer extends BleNode
 	@Advanced
 	public @Nullable(Nullable.Prevalence.RARE) BluetoothGattServer getNative()
 	{
-		enforceMainThread();
-
 		return m_nativeWrapper.getNative();
 	}
 
@@ -1915,8 +1880,6 @@ public class BleServer extends BleNode
 	@Advanced
 	public int getStateMask(final String macAddress)
 	{
-		enforceMainThread();
-
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
 		return m_stateTracker.getStateMask(macAddress_normalized);
@@ -2008,8 +1971,6 @@ public class BleServer extends BleNode
 
 	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
-		enforceMainThread();
-
 		m_nativeWrapper.clearImplicitDisconnectIgnoring(nativeDevice.getAddress());
 
 		if( stateListener != null )
@@ -2068,8 +2029,6 @@ public class BleServer extends BleNode
 
 	private boolean disconnect_private(final String macAddress, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
 	{
-		enforceMainThread();
-
 		final boolean addTask = true;
 
 		m_connectionFailMngr.onExplicitDisconnect(macAddress);
@@ -2100,8 +2059,6 @@ public class BleServer extends BleNode
 
 	/*package*/ void disconnect_internal(final ServiceAddListener.Status status_serviceAdd, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
 	{
-		enforceMainThread();
-
 		stopAdvertising();
 
 		getClients(new ForEach_Void<String>()
@@ -2206,8 +2163,6 @@ public class BleServer extends BleNode
 	 */
 	public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final BleServer server_nullable)
 	{
-		enforceMainThread();
-
 		if (server_nullable == null)												return false;
 		if (server_nullable == this)												return true;
 		if (server_nullable.getNative() == null || this.getNative() == null)		return false;
@@ -2223,8 +2178,6 @@ public class BleServer extends BleNode
 	 */
 	@Override public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final Object object_nullable)
 	{
-		enforceMainThread();
-
 		if( object_nullable == null )  return false;
 
 		if (object_nullable instanceof BleServer)
@@ -2286,8 +2239,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
 	{
-		enforceMainThread();
-
 		return serviceMngr_server().addService(service, listener);
 	}
 
@@ -2298,8 +2249,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService removeService(final UUID serviceUuid)
 	{
-		enforceMainThread();
-
 		return serviceMngr_server().remove(serviceUuid);
 	}
 
@@ -2308,8 +2257,6 @@ public class BleServer extends BleNode
 	 */
 	public void removeAllServices()
 	{
-		enforceMainThread();
-
 		serviceMngr_server().removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
 	}
 
@@ -2319,8 +2266,6 @@ public class BleServer extends BleNode
 	 */
 	public void getClients(final ForEach_Void<String> forEach)
 	{
-		enforceMainThread();
-
 		m_clientMngr.getClients(forEach, 0x0);
 	}
 
@@ -2330,8 +2275,6 @@ public class BleServer extends BleNode
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
 	{
-		enforceMainThread();
-
 		m_clientMngr.getClients(forEach, state.bit());
 	}
 
@@ -2341,8 +2284,6 @@ public class BleServer extends BleNode
 	 */
 	public void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
 	{
-		enforceMainThread();
-
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
 
@@ -2352,8 +2293,6 @@ public class BleServer extends BleNode
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach)
 	{
-		enforceMainThread();
-
 		m_clientMngr.getClients(forEach, 0x0);
 	}
 
@@ -2363,8 +2302,6 @@ public class BleServer extends BleNode
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
 	{
-		enforceMainThread();
-
 		m_clientMngr.getClients(forEach, state.bit());
 	}
 
@@ -2374,8 +2311,6 @@ public class BleServer extends BleNode
 	 */
 	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)
 	{
-		enforceMainThread();
-
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
 
@@ -2384,8 +2319,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients()
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClients(0x0);
 	}
 
@@ -2394,8 +2327,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClients(state.bit());
 	}
 
@@ -2404,8 +2335,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState ... states)
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClients(BleServerState.toBits(states));
 	}
 
@@ -2414,8 +2343,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List()
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClients_List(0x0);
 	}
 
@@ -2424,8 +2351,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState state)
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClients_List(state.bit());
 	}
 
@@ -2434,8 +2359,6 @@ public class BleServer extends BleNode
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState ... states)
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClients_List(BleServerState.toBits(states));
 	}
 
@@ -2444,8 +2367,6 @@ public class BleServer extends BleNode
 	 */
 	public int getClientCount()
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClientCount();
 	}
 
@@ -2454,8 +2375,6 @@ public class BleServer extends BleNode
 	 */
 	public int getClientCount(final BleServerState state)
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClientCount(state.bit());
 	}
 
@@ -2464,8 +2383,6 @@ public class BleServer extends BleNode
 	 */
 	public int getClientCount(final BleServerState ... states)
 	{
-		enforceMainThread();
-
 		return m_clientMngr.getClientCount(BleServerState.toBits(states));
 	}
 

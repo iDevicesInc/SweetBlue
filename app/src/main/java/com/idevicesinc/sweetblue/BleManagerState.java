@@ -40,6 +40,12 @@ public enum BleManagerState implements State
 	TURNING_OFF			(BluetoothAdapter.STATE_TURNING_OFF),
 
 	/**
+	 * This is the state that {@link BleManager} is in when the update loop tick interval has been lowered, due to there being no
+	 * tasks in the queue for a time dictated by {@link BleManagerConfig#minTimeToIdle}.
+	 */
+	IDLE,
+
+	/**
 	 * This is the state that {@link BleManager} is in after calling {@link BleManager#startScan()} or related overloads. The {@link BleManager}
 	 * will only be in this state for a very short period before moving to {@link #SCANNING}.
 	 *
@@ -52,6 +58,17 @@ public enum BleManagerState implements State
 	 *
 	 */
 	SCANNING,
+
+	/**
+	 * This is the state that {@link BleManager} is in when scanning has been paused (but will resume). This is mainly used with any of the startPeriodicScan
+	 * methods in {@link BleManager}.
+	 */
+	SCANNING_PAUSED,
+
+	/**
+	 * This state dictates that all permissions (if needed) have been granted to allow BLE scanning to return results. See {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler}.
+	 */
+	BLE_SCAN_READY,
 	
 	/**
 	 * This is the state that {@link BleManager} is in after calling {@link BleManager#reset()}.

@@ -82,8 +82,12 @@ public class BleNodeConfig
 	 * with {@link WrongThreadError} thrown if not.
 	 * Versions less than v2 did not enforce this, but feedback indicated that the threading model was unclear and some people would kick
 	 * off SweetBlue operations on alternate threads, which could definitely lead to problems. This remains as an option to help older code bases transitioning to >= v2
+	 *
+	 *
+	 * @deprecated - This value is not used anymore. Just left here so we don't cause build errors.
 	 */
 	@Nullable(Nullable.Prevalence.RARE)
+	@Deprecated
 	public Boolean allowCallsFromAllThreads									= false;
 
 	/**
