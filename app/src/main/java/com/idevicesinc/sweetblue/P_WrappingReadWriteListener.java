@@ -12,7 +12,7 @@ class P_WrappingReadWriteListener extends PA_CallbackWrapper implements ReadWrit
 {
 	private final ReadWriteListener m_listener;
 	
-	P_WrappingReadWriteListener(ReadWriteListener listener, Handler handler, boolean postToMain)
+	P_WrappingReadWriteListener(ReadWriteListener listener, P_SweetHandler handler, boolean postToMain)
 	{
 		super(handler, postToMain);
 		

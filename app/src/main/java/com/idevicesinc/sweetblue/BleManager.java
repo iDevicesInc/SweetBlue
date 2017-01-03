@@ -21,8 +21,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.DeadObjectException;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -701,7 +699,7 @@ public class BleManager
 
 		@Override public boolean isBluetoothEnabled()
 		{
-			return BleManager.this.getNative().getAdapter().isEnabled();
+			return BleManager.this.is(ON);
 		}
 
 	}
@@ -712,6 +710,11 @@ public class BleManager
 		@Override public boolean startClassicDiscovery()
 		{
 			return getNativeAdapter().startDiscovery();
+		}
+
+		@Override public void stopClassicDiscovery()
+		{
+			getNativeAdapter().cancelDiscovery();
 		}
 
 		@Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
@@ -726,7 +729,7 @@ public class BleManager
 
 		@Override public boolean startLeScan(BluetoothAdapter.LeScanCallback callback)
 		{
-			return getNativeAdapter().startLeScan(m_listeners.m_scanCallback_preLollipop);
+			return getNativeAdapter().startLeScan(callback);
 		}
 
 		@Override public void stopLeScan(BluetoothAdapter.LeScanCallback callback)
@@ -806,12 +809,11 @@ public class BleManager
 	}
 
 	private final Context m_context;
-	final Handler m_mainThreadHandler;
 	private P_SweetBlueHandlerThread m_updateThread;
 	private UpdateRunnable m_updateRunnable;
 	private final BluetoothManager m_btMngr;
 	private final P_ScanFilterManager m_filterMngr;
-	private final P_BluetoothCrashResolver m_crashResolver;
+	final P_BluetoothCrashResolver m_crashResolver;
 	private			P_Logger m_logger;
 			  BleManagerConfig m_config;
 		final P_DeviceManager m_deviceMngr;
@@ -876,9 +878,9 @@ public class BleManager
 		addLifecycleCallbacks();
 
 		m_config = config.clone();
+		m_scanManager = new P_ScanManager(this);
 		checkUnitTestConfigOptions();
-		initPostManager();
-		initLogger();
+		initLogger(null);
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
 		m_filterMngr = new P_ScanFilterManager(this, m_config.defaultScanFilter);
@@ -903,7 +905,6 @@ public class BleManager
 		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
 		m_nativeStateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-		m_mainThreadHandler = new Handler(m_context.getMainLooper());
 		m_taskQueue = new P_TaskQueue(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
 		m_deviceMngr = new P_DeviceManager(this);
@@ -926,6 +927,7 @@ public class BleManager
 		{
 			m_config.bleScanner = new DefaultBleScanner();
 		}
+		m_scanManager.setBleScanner(m_config.bleScanner);
 	}
 
 	/**
@@ -936,38 +938,13 @@ public class BleManager
 	{
 		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
 		checkUnitTestConfigOptions();
-		this.initLogger();
+		this.initLogger(this);
 		this.initConfigDependentMembers();
 	}
 
 	/*package*/boolean isBluetoothEnabled()
 	{
 		return m_config.bleStatusHelper.isBluetoothEnabled();
-	}
-
-	/*package*/boolean startClassicDiscovery()
-	{
-		return m_config.bleScanner.startClassicDiscovery();
-	}
-
-	/*package*/void startLScan(int scanMode, L_Util.ScanCallback callback)
-	{
-		m_config.bleScanner.startLScan(scanMode, m_config.scanReportDelay, callback);
-	}
-
-	/*package*/void startMScan(int scanMode, L_Util.ScanCallback callback)
-	{
-		m_config.bleScanner.startMScan(scanMode, m_config.scanReportDelay, callback);
-	}
-
-	/*package*/boolean startLeScan()
-	{
-		return m_config.bleScanner.startLeScan(m_listeners.m_scanCallback_preLollipop);
-	}
-
-	/*package*/void stopLeScan()
-	{
-		m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
 	}
 
 	P_ScanManager getScanManager()
@@ -985,9 +962,9 @@ public class BleManager
 		return m_postManager;
 	}
 
-	private void initLogger()
+	private void initLogger(BleManager mgr)
 	{
-		m_logger = new P_Logger(this, m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled, m_config.logger);
+		m_logger = new P_Logger(mgr, m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled, m_config.logger);
 	}
 
 	private void initConfigDependentMembers()
@@ -1039,8 +1016,6 @@ public class BleManager
 
 		initPostManager();
 
-		m_scanManager = new P_ScanManager(this);
-
 		if( startUpdate )
 		{
 			m_postManager.postToUpdateThreadDelayed(m_updateRunnable, m_config.autoUpdateRate.millis());
@@ -1049,19 +1024,28 @@ public class BleManager
 
 	private void initPostManager()
 	{
-		Handler update;
-		Handler ui;
+		P_SweetHandler update;
+		P_SweetHandler ui;
 		if (m_config.runOnMainThread)
 		{
-			update = new Handler(Looper.getMainLooper());
+			update = new P_SweetUIHandler(this);
 			ui = update;
 		}
 		else
 		{
-			ui = new Handler(Looper.getMainLooper());
-			m_updateThread = new P_SweetBlueHandlerThread();
-			m_updateThread.start();
-			update = m_updateThread.prepareHandler();
+			ui = new P_SweetUIHandler(this);
+			update = new P_SweetBlueThread();
+//			if (m_config.updateLooper == null)
+//			{
+//				m_updateThread = new P_SweetBlueHandlerThread(this);
+//				m_updateThread.start();
+//				update = m_updateThread.prepareHandler();
+//
+//			}
+//			else
+//			{
+//				update = new Handler(m_config.updateLooper);
+//			}
 		}
 		m_postManager = new P_PostManager(this, ui, update);
 	}
@@ -1703,7 +1687,7 @@ public class BleManager
 		m_timeNotScanning = 0.0;
 		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
 
-		if( false == is(ON) )
+		if( false == isBluetoothEnabled() )
 		{
 			m_logger.e(BleManager.class.getSimpleName() + " is not " + ON + "! Please use the turnOn() method first.");
 
@@ -1878,7 +1862,7 @@ public class BleManager
 			}
 			else
 			{
-				m_resetListeners = new P_WrappingResetListener(listener, m_mainThreadHandler, m_config.postCallbacksToMainThread);
+				m_resetListeners = new P_WrappingResetListener(listener, m_postManager.getUIHandler(), m_config.postCallbacksToMainThread);
 			}
 		}
 
@@ -3114,57 +3098,6 @@ public class BleManager
     	}
     }
 
-	private void stopNativeScan_nested_postLollipop()
-	{
-		L_Util.stopNativeScan(this);
-	}
-
-	void stopNativeScan(final P_Task_Scan scanTask)
-	{
-		if( scanTask.getMode() == P_Task_Scan.Mode_BLE )
-		{
-			try
-			{
-				if( m_config.scanApi == BleScanApi.POST_LOLLIPOP && Utils.isLollipop() )
-				{
-					stopNativeScan_nested_postLollipop();
-				}
-				else
-				{
-					getNativeAdapter().stopLeScan(m_listeners.m_scanCallback_preLollipop);
-				}
-			}
-			catch(NullPointerException e)
-			{
-				//--- DRK > Catching this because of exception thrown one time...only ever seen once, so not very reproducible.
-	//			java.lang.NullPointerException
-	//			07-02 15:04:48.149: E/AndroidRuntime(24389): 	at android.bluetooth.BluetoothAdapter$GattCallbackWrapper.stopLeScan(BluetoothAdapter.java:1819)
-	//			07-02 15:04:48.149: E/AndroidRuntime(24389): 	at android.bluetooth.BluetoothAdapter.stopLeScan(BluetoothAdapter.java:1722)
-				m_logger.w(e.getStackTrace().toString());
-
-				uhOh(UhOh.RANDOM_EXCEPTION);
-			}
-		}
-		else if( scanTask.getMode() == P_Task_Scan.Mode_CLASSIC )
-		{
-			//--- DRK > This assert tripped, but not sure what I can do about it. Technically discovery can be cancelled
-			//---		by another app or something, so its usefulness as a logic checker is debatable.
-//			ASSERT(m_btMngr.getAdapter().isDiscovering(), "Trying to cancel discovery when not natively running.");
-
-			if( m_btMngr.getAdapter().isDiscovering() )
-			{
-				m_btMngr.getAdapter().cancelDiscovery();
-			}
-		}
-
-		if( m_config.enableCrashResolver )
-		{
-			m_crashResolver.stop();
-		}
-
-		m_nativeStateTracker.remove(BleManagerState.SCANNING, scanTask.getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-	}
-
 	void clearScanningRelatedMembers(final E_Intent intent)
 	{
 //		m_filterMngr.clear();
@@ -3231,7 +3164,7 @@ public class BleManager
 
 		m_deviceMngr.update(timeStep_seconds);
 
-		if( !is(SCANNING) )
+		if( !isAny(SCANNING, STARTING_SCAN) )
 		{
 			m_timeNotScanning += timeStep_seconds;
 		}

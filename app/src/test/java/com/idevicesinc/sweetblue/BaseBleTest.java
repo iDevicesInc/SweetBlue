@@ -1,59 +1,44 @@
-package com.idevicesinc.sweetblue.tests;
+package com.idevicesinc.sweetblue;
 
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-
-import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManagerConfig;
-import com.idevicesinc.sweetblue.BleManagerState;
-import com.idevicesinc.sweetblue.BleScanApi;
-import com.idevicesinc.sweetblue.BleScanPower;
-import com.idevicesinc.sweetblue.PI_BleScanner;
-import com.idevicesinc.sweetblue.PI_BleStatusHelper;
-import com.idevicesinc.sweetblue.PI_UpdateLoop;
-import com.idevicesinc.sweetblue.UnitLoop;
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
-
+import org.junit.After;
 import org.junit.Before;
 import org.robolectric.Robolectric;
-
 import java.lang.reflect.Method;
 import java.util.concurrent.Semaphore;
-
-import static org.junit.Assert.assertNotNull;
 
 
 public abstract class BaseBleTest
 {
 
-    BleManager m_mgr;
-    BleManagerConfig m_config;
+    public BleManager m_mgr;
+    public BleManagerConfig m_config;
     Activity m_activity;
 
 
-    abstract PI_BleScanner getScanner();
+    public abstract PI_BleScanner getScanner();
 
-    abstract PI_BleStatusHelper getStatusHelper();
+    public abstract PI_BleStatusHelper getStatusHelper();
+
 
     @Before
-    public void setup()
+    public void setup() throws Exception
     {
         m_activity = Robolectric.setupActivity(Activity.class);
-        m_config = new BleManagerConfig();
-        m_config.postCallbacksToMainThread = false;
-        m_config.autoUpdateRate = Interval.DISABLED;
-        m_config.bleScanner = getScanner();
-        m_config.bleStatusHelper = getStatusHelper();
-        final BleManager mgr = BleManager.get(m_activity, m_config);
-        assertNotNull(mgr);
-        m_mgr = mgr;
-        m_mgr.onResume();
-        UnitLoop looper = new UnitLoop(m_mgr);
+        m_mgr = BleManager.get(m_activity, getConfig());
     }
 
-    void doTestOperation(final TestOp action) throws Exception
+    @After
+    public void tearDown() throws Exception
+    {
+        m_mgr.shutdown();
+    }
+
+    public void doTestOperation(final TestOp action) throws Exception
     {
         final Semaphore semaphore = new Semaphore(0);
 
@@ -67,6 +52,16 @@ public abstract class BaseBleTest
 
         semaphore.acquire();
     }
+
+    public BleManagerConfig getConfig()
+    {
+        m_config = new BleManagerConfig();
+        m_config.unitTest = true;
+        m_config.bleScanner = getScanner();
+        m_config.bleStatusHelper = getStatusHelper();
+        return m_config;
+    }
+
 
     public BleScanApi getScanApi()
     {
@@ -98,7 +93,7 @@ public abstract class BaseBleTest
         return power;
     }
 
-    interface TestOp
+    public interface TestOp
     {
         void run(Semaphore semaphore);
     }
@@ -110,6 +105,10 @@ public abstract class BaseBleTest
         @Override public boolean startClassicDiscovery()
         {
             return true;
+        }
+
+        @Override public void stopClassicDiscovery()
+        {
         }
 
         @Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)

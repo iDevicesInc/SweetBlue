@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue.tests;
 
 
+import com.idevicesinc.sweetblue.BaseBleTest;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.PI_BleScanner;
@@ -21,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ScanTimeTest extends BaseBleTest
 {
 
-    private static final int LEEWAY = 250;
+    private static final int LEEWAY = 500;
 
 
     // While the scan itself is only 2 seconds, it takes a couple seconds for the test
@@ -30,12 +31,14 @@ public class ScanTimeTest extends BaseBleTest
     @Test(timeout = 4000)
     public void singleScanWithInterval() throws Exception
     {
+        m_mgr.onResume();
         doSingleScanTest(2000);
     }
 
-    @Test(timeout = 4000)
+    @Test(timeout = 6000)
     public void periodicScanTest() throws Exception
     {
+        m_mgr.onResume();
         doPeriodicScanTest(1000);
     }
 
@@ -104,12 +107,12 @@ public class ScanTimeTest extends BaseBleTest
         });
     }
 
-    @Override PI_BleScanner getScanner()
+    @Override public PI_BleScanner getScanner()
     {
         return new DefaultBleScannerTest();
     }
 
-    @Override PI_BleStatusHelper getStatusHelper()
+    @Override public PI_BleStatusHelper getStatusHelper()
     {
         return new DefaultStatusHelperTest();
     }

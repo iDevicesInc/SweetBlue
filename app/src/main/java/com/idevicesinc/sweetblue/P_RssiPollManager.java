@@ -11,7 +11,7 @@ class P_RssiPollManager
 	{
 		private final P_RssiPollManager m_pollMngr;
 		
-		CustomListener(P_RssiPollManager thisMngr, ReadWriteListener listener, Handler handler, boolean postToMain)
+		CustomListener(P_RssiPollManager thisMngr, ReadWriteListener listener, P_SweetHandler handler, boolean postToMain)
 		{
 			super(listener, handler, postToMain);
 			
@@ -54,7 +54,7 @@ class P_RssiPollManager
 		{
 			m_timeTracker = ENABLE_TIMER;
 			m_interval = interval;
-			m_listener = new CustomListener(this, listener_nullable, m_device.getManager().m_mainThreadHandler, m_device.conf_mngr().postCallbacksToMainThread);
+			m_listener = new CustomListener(this, listener_nullable, m_device.getManager().getPostManager().getUIHandler(), m_device.conf_mngr().postCallbacksToMainThread);
 		}
 	}
 	

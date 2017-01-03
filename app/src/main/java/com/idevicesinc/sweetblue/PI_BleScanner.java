@@ -10,6 +10,7 @@ public interface PI_BleScanner
 {
 
     boolean startClassicDiscovery();
+    void stopClassicDiscovery();
     void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback);
     void startMScan(int scanMode, Interval delay, L_Util.ScanCallback callback);
     boolean startLeScan(BluetoothAdapter.LeScanCallback callback);

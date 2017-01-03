@@ -238,7 +238,7 @@ class P_TaskQueue
 		return executingTask;
 	}
 	
-	private boolean dequeue()
+	private synchronized boolean dequeue()
 	{
 		if( !m_mngr.ASSERT(m_current == null) )  return false;
 		if( m_queue.size() == 0 )  return false;

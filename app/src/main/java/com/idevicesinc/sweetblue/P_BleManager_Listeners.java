@@ -29,28 +29,6 @@ class P_BleManager_Listeners
 	private Integer m_refState;
 	private Integer m_state;
 
-	
-	final BluetoothAdapter.LeScanCallback m_scanCallback_preLollipop = new BluetoothAdapter.LeScanCallback()
-	{
-		@Override public void onLeScan(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord)
-        {
-
-			m_mngr.getPostManager().postToUpdateThread(new Runnable()
-			{
-				@Override public void run()
-				{
-					onLeScan_updateThread(device_native, rssi, scanRecord);
-				}
-			});
-        }
-    };
-
-	private void onLeScan_updateThread(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord)
-	{
-		m_mngr.getCrashResolver().notifyScannedDevice(device_native, m_scanCallback_preLollipop);
-
-		m_mngr.onDiscoveredFromNativeStack(device_native, rssi, scanRecord);
-	}
 
 	private final PA_Task.I_StateListener m_scanTaskListener = new PA_Task.I_StateListener()
 	{
@@ -85,7 +63,7 @@ class P_BleManager_Listeners
 					}
 				}
 
-				m_mngr.stopNativeScan(scanTask);
+				m_mngr.getScanManager().stopNativeScan(scanTask);
 				
 				if( state == PE_TaskState.INTERRUPTED )
 				{

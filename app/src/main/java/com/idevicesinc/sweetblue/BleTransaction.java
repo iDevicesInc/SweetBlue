@@ -155,7 +155,7 @@ public abstract class BleTransaction
 
 		if( m_device.getManager().m_config.postCallbacksToMainThread && !Utils.isOnMainThread() )
 		{
-			m_device.getManager().m_mainThreadHandler.post(new Runnable()
+			m_device.getManager().getPostManager().postToMain(new Runnable()
 			{
 				@Override public void run()
 				{

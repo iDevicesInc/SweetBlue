@@ -4,13 +4,9 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import com.idevicesinc.sweetblue.compat.L_Util;
-import com.idevicesinc.sweetblue.compat.M_Util;
-import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.List;
-
-import static com.idevicesinc.sweetblue.BleManagerState.BLE_SCAN_READY;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING_PAUSED;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
@@ -20,87 +16,138 @@ import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 final class P_ScanManager
 {
 
-    private final BleManager mManager;
-    private PreLollipopScanCallback mPreLollipopScanCallback;
-    private PostLollipopScanCallback mPostLollipopScanCallback;
+    static final int Mode_NULL = -1;
+    static final int Mode_BLE = 0;
+    static final int Mode_CLASSIC = 1;
+    static final int Mode_BLE_POST_LOLLIPOP = 2;
+
+
+    private final BleManager m_manager;
+    private PreLollipopScanCallback m_preLollipopScanCallback;
+    private PostLollipopScanCallback m_postLollipopScanCallback;
     private BleScanApi mCurrentApi;
+    private volatile PI_BleScanner m_bleScanner;
+    private final int m_retryCountMax = 3;
+
+    private int m_mode;
 
 
     public P_ScanManager(BleManager mgr)
     {
-        mManager = mgr;
+        m_manager = mgr;
         mCurrentApi = mgr.m_config.scanApi;
-        switch (mCurrentApi)
+        m_preLollipopScanCallback = new PreLollipopScanCallback();
+        if(Utils.isLollipop())
         {
-            case CLASSIC:
-                mPreLollipopScanCallback = null;
-                mPostLollipopScanCallback = null;
-                break;
-            case PRE_LOLLIPOP:
-                mPreLollipopScanCallback = new PreLollipopScanCallback();
-                mPostLollipopScanCallback = null;
-                break;
-            case POST_LOLLIPOP:
-                if(Utils.isLollipop())
-                {
-                    mPreLollipopScanCallback = null;
-                    mPostLollipopScanCallback = new PostLollipopScanCallback();
-                }
-                else
-                {
-                    mPreLollipopScanCallback = new PreLollipopScanCallback();
-                    mPostLollipopScanCallback = null;
-                }
-                break;
-            default:
-                mPreLollipopScanCallback = new PreLollipopScanCallback();
-                mPostLollipopScanCallback = null;
-                break;
+            m_postLollipopScanCallback = new PostLollipopScanCallback();
         }
     }
 
-
-    public final boolean startScan()
+    public final void setBleScanner(PI_BleScanner scanner)
     {
-        mManager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
-        switch (mManager.m_config.scanApi)
+        m_bleScanner = scanner;
+    }
+
+
+    public final boolean startScan(PA_StateTracker.E_Intent intent, double scanTime, boolean m_isPoll)
+    {
+        switch (m_manager.m_config.scanApi)
         {
             case CLASSIC:
                 mCurrentApi = BleScanApi.CLASSIC;
-                return mManager.getNativeAdapter().startDiscovery();
+                return tryClassicDiscovery(intent, true);
             case POST_LOLLIPOP:
-                if (mManager.is(BLE_SCAN_READY))
+                if (isBleScanReady())
                 {
                     if (Utils.isLollipop())
                     {
                         mCurrentApi = BleScanApi.POST_LOLLIPOP;
-                        return startScanPostLollipop();
+                        return startScanPostLollipop(scanTime, m_isPoll);
                     }
                     else
                     {
-                        mManager.getLogger().e("Tried to start post lollipop scan on a device not running lollipop or above! Defaulting to pre-lollipop scan instead.");
+                        m_manager.getLogger().e("Tried to start post lollipop scan on a device not running lollipop or above! Defaulting to pre-lollipop scan instead.");
                         mCurrentApi = BleScanApi.PRE_LOLLIPOP;
-                        return startScanPreLollipop();
+                        return startScanPreLollipop(intent);
                     }
                 }
                 else
                 {
-                    mManager.getLogger().e("Tried to start BLE scan, but scanning is not ready (most likely need to get permissions). Falling back to classic discovery.");
+                    m_manager.getLogger().e("Tried to start BLE scan, but scanning is not ready (most likely need to get permissions). Falling back to classic discovery.");
                     mCurrentApi = BleScanApi.CLASSIC;
-                    return mManager.getNativeAdapter().startDiscovery();
+                    return m_manager.getNativeAdapter().startDiscovery();
                 }
             case AUTO:
             case PRE_LOLLIPOP:
                 mCurrentApi = BleScanApi.PRE_LOLLIPOP;
-                return startScanPreLollipop();
+                return startScanPreLollipop(intent);
             default:
                 return false;
         }
     }
 
+    private boolean startClassicDiscovery()
+    {
+        return m_bleScanner.startClassicDiscovery();
+    }
+
+    private boolean isBleScanReady()
+    {
+        return m_manager.isLocationEnabledForScanning() && m_manager.isLocationEnabledForScanning_byRuntimePermissions() && m_manager.isLocationEnabledForScanning_byOsServices();
+    }
+
     public final void stopScan()
     {
         stopScan_private(true);
+    }
+
+    public final void stopNativeScan(final P_Task_Scan scanTask)
+    {
+        if( m_mode == Mode_BLE )
+        {
+            try
+            {
+                stopScanPreLollipop();
+            }
+            catch(NullPointerException e)
+            {
+                //--- DRK > Catching this because of exception thrown one time...only ever seen once, so not very reproducible.
+                //			java.lang.NullPointerException
+                //			07-02 15:04:48.149: E/AndroidRuntime(24389): 	at android.bluetooth.BluetoothAdapter$GattCallbackWrapper.stopLeScan(BluetoothAdapter.java:1819)
+                //			07-02 15:04:48.149: E/AndroidRuntime(24389): 	at android.bluetooth.BluetoothAdapter.stopLeScan(BluetoothAdapter.java:1722)
+                m_manager.getLogger().w(e.getStackTrace().toString());
+
+                m_manager.uhOh(BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION);
+            }
+        }
+        else if ( m_mode == Mode_BLE_POST_LOLLIPOP)
+        {
+            try
+            {
+                stopScanPostLollipop();
+            }
+            catch (NullPointerException e)
+            {
+                m_manager.getLogger().w(e.getStackTrace().toString());
+
+                m_manager.uhOh(BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION);
+            }
+        }
+        else if( m_mode == Mode_CLASSIC )
+        {
+            //--- DRK > This assert tripped, but not sure what I can do about it. Technically discovery can be cancelled
+            //---		by another app or something, so its usefulness as a logic checker is debatable.
+//			ASSERT(m_btMngr.getAdapter().isDiscovering(), "Trying to cancel discovery when not natively running.");
+
+            stopClassicDiscovery();
+        }
+
+        if( m_manager.m_config.enableCrashResolver )
+        {
+            m_manager.m_crashResolver.stop();
+        }
+
+        m_manager.getNativeStateTracker().remove(BleManagerState.SCANNING, scanTask.getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
     }
 
     final void pauseScan()
@@ -110,11 +157,13 @@ final class P_ScanManager
 
     final synchronized void postScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord)
     {
-        mManager.getPostManager().postToUpdateThread(new Runnable()
+        m_manager.getPostManager().postToUpdateThread(new Runnable()
         {
             @Override public void run()
             {
-                mManager.onDiscoveredFromNativeStack(device, rssi, scanRecord);
+                m_manager.getCrashResolver().notifyScannedDevice(device, m_preLollipopScanCallback);
+
+                m_manager.onDiscoveredFromNativeStack(device, rssi, scanRecord);
             }
         });
     }
@@ -124,7 +173,7 @@ final class P_ScanManager
         switch (mCurrentApi)
         {
             case CLASSIC:
-                mManager.getNativeAdapter().cancelDiscovery();
+                stopClassicDiscovery();
                 break;
             case POST_LOLLIPOP:
                 if (Utils.isLollipop())
@@ -142,46 +191,118 @@ final class P_ScanManager
         }
         if (stopping)
         {
-            mManager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false);
+            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false);
         }
         else
         {
-            mManager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, SCANNING_PAUSED, true);
+            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, SCANNING_PAUSED, true);
         }
     }
 
-    private boolean startScanPreLollipop()
+    private boolean startScanPreLollipop(PA_StateTracker.E_Intent intent)
     {
-        if (!mManager.getNativeAdapter().startLeScan(mPreLollipopScanCallback))
+        //--- DRK > Not sure how useful this retry loop is. I've definitely seen startLeScan
+        //---		fail but then work again at a later time (seconds-minutes later), so
+        //---		it's possible that it can recover although I haven't observed it in this loop.
+        int retryCount = 0;
+
+        while (retryCount <= m_retryCountMax)
         {
-            if (mManager.m_config.revertToClassicDiscoveryIfNeeded)
+            final boolean success = startLeScan();
+
+            if (success)
             {
-                return mManager.getNativeAdapter().startDiscovery();
+                if (retryCount >= 1)
+                {
+                    //--- DRK > Not really an ASSERT case...rather just really want to know if this can happen
+                    //---		so if/when it does I want it to be loud.
+                    //---		UPDATE: Yes, this hits...TODO: Now have to determine if this is my fault or Android's.
+                    //---		Error message is "09-29 16:37:11.622: E/BluetoothAdapter(16286): LE Scan has already started".
+                    //---		Calling stopLeScan below "fixes" the issue.
+                    //---		UPDATE: Seems like it mostly happens on quick restarts of the app while developing, so
+                    //---		maybe the scan started in the previous app sessions is still lingering in the new session.
+//					ASSERT(false, "Started Le scan on attempt number " + retryCount);
+                }
+
+                break;
             }
-            else
+
+            retryCount++;
+
+            if (retryCount <= m_retryCountMax)
             {
-                return false;
+                if (retryCount == 1)
+                {
+                    m_manager.getLogger().w("Failed first startLeScan() attempt. Calling stopLeScan() then trying again...");
+
+                    //--- DRK > It's been observed that right on app start up startLeScan can fail with a log
+                    //---		message saying it's already started...not sure if it's my fault or not but throwing
+                    //---		this in as a last ditch effort to "fix" things.
+                    //---
+                    //---		UPDATE: It's been observed through simple test apps that when restarting an app through eclipse,
+                    //---		Android somehow, sometimes, keeps the same actual BleManager instance in memory, so it's not
+                    //---		far-fetched to assume that the scan from the previous app run can sometimes still be ongoing.
+                    //m_btMngr.getAdapter().stopLeScan(m_listeners.m_scanCallback);
+                    stopLeScan();
+                }
+                else
+                {
+                    m_manager.getLogger().w("Failed startLeScan() attempt number " + retryCount + ". Trying again...");
+                }
             }
+        }
+
+        if (retryCount > m_retryCountMax)
+        {
+            m_manager.getLogger().w("Pre-Lollipop LeScan totally failed to start!");
+
+            tryClassicDiscovery(intent, /*suppressUhOh=*/false);
+            return true;
         }
         else
         {
+            if (retryCount > 0)
+            {
+                m_manager.getLogger().w("Started native scan with " + (retryCount + 1) + " attempts.");
+            }
+
+            if (m_manager.m_config.enableCrashResolver)
+            {
+                m_manager.getCrashResolver().start();
+            }
+
+            BleManagerState.SCANNING.setScanApi(BleScanApi.PRE_LOLLIPOP);
+
+            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
+
+            m_mode = Mode_BLE;
             return true;
         }
     }
 
-    private boolean startScanPostLollipop()
+    private boolean startScanPostLollipop(double scanTime, boolean m_isPoll)
     {
         int nativePowerMode;
-        BleScanPower power = mManager.m_config.scanPower;
+        BleScanPower power = m_manager.m_config.scanPower;
         if (power == BleScanPower.AUTO)
         {
-            if (mManager.isForegrounded())
+            if (m_manager.isForegrounded())
             {
-                nativePowerMode = BleScanPower.HIGH_POWER.getNativeMode();
+                if (m_isPoll || scanTime == Double.POSITIVE_INFINITY)
+                {
+                    power = BleScanPower.MEDIUM_POWER;
+                    nativePowerMode = BleScanPower.MEDIUM_POWER.getNativeMode();
+                }
+                else
+                {
+                    power = BleScanPower.HIGH_POWER;
+                    nativePowerMode = BleScanPower.HIGH_POWER.getNativeMode();
+                }
             }
             else
             {
-                nativePowerMode = BleScanPower.MEDIUM_POWER.getNativeMode();
+                power = BleScanPower.LOW_POWER;
+                nativePowerMode = BleScanPower.LOW_POWER.getNativeMode();
             }
         }
         else
@@ -190,7 +311,7 @@ final class P_ScanManager
             {
                 if (!Utils.isMarshmallow())
                 {
-                    mManager.getLogger().e("BleScanPower set to VERY_LOW, but device is not running Marshmallow. Defaulting to LOW instead.");
+                    m_manager.getLogger().e("BleScanPower set to VERY_LOW, but device is not running Marshmallow. Defaulting to LOW instead.");
                     power = BleScanPower.LOW_POWER;
                 }
             }
@@ -198,29 +319,101 @@ final class P_ScanManager
         }
         if (Utils.isMarshmallow())
         {
-            M_Util.startNativeScan(mManager, nativePowerMode, Interval.ZERO, mPostLollipopScanCallback);
+            startMScan(nativePowerMode);
         }
         else
         {
-            L_Util.startNativeScan(mManager, nativePowerMode, Interval.ZERO, mPostLollipopScanCallback);
+            startLScan(nativePowerMode);
         }
+        BleManagerState.SCANNING.setScanApi(BleScanApi.POST_LOLLIPOP);
+        BleManagerState.SCANNING.setPower(power);
+        m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
+        m_mode = Mode_BLE_POST_LOLLIPOP;
         return true;
+    }
+
+    private boolean tryClassicDiscovery(final PA_StateTracker.E_Intent intent, final boolean suppressUhOh)
+    {
+        if (m_manager.m_config.revertToClassicDiscoveryIfNeeded)
+        {
+            if (false == startClassicDiscovery())
+            {
+                m_manager.getLogger().w("Classic discovery failed to start!");
+
+                fail();
+
+                m_manager.uhOh(BleManager.UhOhListener.UhOh.CLASSIC_DISCOVERY_FAILED);
+
+                return false;
+            }
+            else
+            {
+                if (false == suppressUhOh)
+                {
+                    m_manager.uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
+                }
+
+                BleManagerState.SCANNING.setScanApi(BleScanApi.CLASSIC);
+                m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
+                m_mode = Mode_CLASSIC;
+
+                return true;
+            }
+        }
+        else
+        {
+            fail();
+
+            m_manager.uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
+
+            return false;
+        }
+    }
+
+    private boolean startLeScan()
+    {
+        return m_bleScanner.startLeScan(m_preLollipopScanCallback);
+    }
+
+    private void startLScan(int mode)
+    {
+        m_bleScanner.startLScan(mode, m_manager.m_config.scanReportDelay, m_postLollipopScanCallback);
+    }
+
+    private void startMScan(int mode)
+    {
+        m_bleScanner.startMScan(mode, m_manager.m_config.scanReportDelay, m_postLollipopScanCallback);
+    }
+
+    private void fail()
+    {
+        m_manager.getTaskQueue().fail(P_Task_Scan.class, m_manager);
     }
 
     private void stopScanPreLollipop()
     {
         try
         {
-            mManager.getNativeAdapter().stopLeScan(mPreLollipopScanCallback);
+            stopLeScan();
         } catch (Exception e)
         {
-            mManager.getLogger().e("Got an exception (" + e.getClass().getSimpleName() + ") with a message of " + e.getMessage() + " when trying to stop a pre-lollipop scan!");
+            m_manager.getLogger().e("Got an exception (" + e.getClass().getSimpleName() + ") with a message of " + e.getMessage() + " when trying to stop a pre-lollipop scan!");
         }
+    }
+
+    private void stopLeScan()
+    {
+        m_bleScanner.stopLeScan(m_preLollipopScanCallback);
     }
 
     private void stopScanPostLollipop()
     {
-        L_Util.stopNativeScan(mManager);
+        L_Util.stopNativeScan(m_manager);
+    }
+
+    private void stopClassicDiscovery()
+    {
+        m_bleScanner.stopClassicDiscovery();
     }
 
 
@@ -238,6 +431,8 @@ final class P_ScanManager
     private class PostLollipopScanCallback implements L_Util.ScanCallback
     {
 
+        public static final int SCAN_FAILED_ALREADY_STARTED = 1;
+
         @Override public void onScanResult(int callbackType, L_Util.ScanResult result)
         {
             postScanResult(result.getDevice(), result.getRssi(), result.getRecord());
@@ -245,7 +440,7 @@ final class P_ScanManager
 
         @Override public void onBatchScanResults(List<L_Util.ScanResult> results)
         {
-            mManager.getLogger().d("Got batched scan results.");
+            m_manager.getLogger().d("Got batched scan results.");
             for (L_Util.ScanResult res : results)
             {
                 postScanResult(res.getDevice(), res.getRssi(), res.getRecord());
@@ -254,23 +449,33 @@ final class P_ScanManager
 
         @Override public void onScanFailed(int errorCode)
         {
-            mManager.getLogger().e(Utils_String.concatStrings("Post lollipop scan failed with error code ", String.valueOf(errorCode)));
+            m_manager.getLogger().e(Utils_String.concatStrings("Post lollipop scan failed with error code ", String.valueOf(errorCode)));
+            if (errorCode != SCAN_FAILED_ALREADY_STARTED)
+            {
+                fail();
+            }
+            else
+            {
+                tryClassicDiscovery(PA_StateTracker.E_Intent.INTENTIONAL, /*suppressUhOh=*/false);
+
+                m_mode = Mode_CLASSIC;
+            }
         }
     }
 
     final boolean isPreLollipopScan()
     {
-        return mPreLollipopScanCallback != null && mPostLollipopScanCallback == null;
+        return m_mode == Mode_BLE;
     }
 
     final boolean isPostLollipopScan()
     {
-        return mPreLollipopScanCallback == null && mPostLollipopScanCallback != null;
+        return m_mode == Mode_BLE_POST_LOLLIPOP;
     }
 
     final boolean isClassicScan()
     {
-        return mPreLollipopScanCallback == null && mPostLollipopScanCallback == null;
+        return m_mode == Mode_CLASSIC;
     }
 
 }

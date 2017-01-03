@@ -10,6 +10,7 @@ import java.util.UUID;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.os.Looper;
 import android.util.SparseArray;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -293,6 +294,16 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval minTimeToIdle							= Interval.secs(DEFAULT_IDLE_UPDATE_RATE);
 
 	/**
+	 * Default is <code>false</code><br></br>
+	 * <br></br>
+	 * This specifies if SweetBlue is running in a unit test or not. If set to <code>true</code>, then SweetBlue will create
+	 * a thread to act as the UI thread. If this is <code>null</code>, then SweetBlue will look for the class {@link junit.framework.Assert}. If it
+	 * is found, then this boolean will be set to <code>true</code>. If <code>false</code>, then SweetBlue runs normally.
+	 *
+	 */
+	public Boolean unitTest										= false;
+
+	/**
 	 * Default is {@value #DEFAULT_SCAN_REPORT_DELAY} seconds - Only applicable for Lollipop and up (i.e. > 5.0), this is the value given to
 	 * {@link android.bluetooth.le.ScanSettings.Builder#setReportDelay(long)} so that scan results are "batched" ¯\_(ツ)_/¯. It's not clear from source
 	 * code, API documentation, or internet search what effects this has, when you would want to use it, etc. The reason we use the default
@@ -374,7 +385,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@UnitTest
 	public PI_BleScanner bleScanner								= null;
-	
+
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
 	 */

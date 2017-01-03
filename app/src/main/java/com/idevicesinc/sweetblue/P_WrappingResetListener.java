@@ -13,7 +13,7 @@ class P_WrappingResetListener extends PA_CallbackWrapper implements BleManager.R
 {
 	private final ArrayList<BleManager.ResetListener> m_listeners = new ArrayList<BleManager.ResetListener>();
 	
-	P_WrappingResetListener(BleManager.ResetListener listener, Handler handler, boolean postToMain)
+	P_WrappingResetListener(BleManager.ResetListener listener, P_SweetHandler handler, boolean postToMain)
 	{
 		super(handler, postToMain);
 

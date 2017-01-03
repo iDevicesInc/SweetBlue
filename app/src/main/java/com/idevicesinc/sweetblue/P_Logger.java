@@ -44,6 +44,14 @@ class P_Logger
 
 		if( m_enabled )
 		{
+			getMainAndUpdateThreadNames(manager);
+		}
+	}
+
+	public void getMainAndUpdateThreadNames(final BleManager manager)
+	{
+		if (manager != null)
+		{
 			// We want to force the first name (MAIN) to be the UI thread, then the update thread after that. Then the other names can be
 			// whatever.
 			manager.getPostManager().postToMainDelayed(new Runnable()

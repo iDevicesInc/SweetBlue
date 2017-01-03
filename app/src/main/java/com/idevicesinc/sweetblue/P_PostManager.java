@@ -1,17 +1,16 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.os.Handler;
 
 final class P_PostManager
 {
 
-    private final Handler m_uiHandler;
-    private final Handler m_updateHandler;
+    private final P_SweetHandler m_uiHandler;
+    private final P_SweetHandler m_updateHandler;
     private final BleManager m_manager;
 
 
-    P_PostManager(BleManager mgr, Handler uiHandler, Handler updateHandler)
+    P_PostManager(BleManager mgr, P_SweetHandler uiHandler, P_SweetHandler updateHandler)
     {
         m_uiHandler = uiHandler;
         m_updateHandler = updateHandler;
@@ -115,10 +114,19 @@ final class P_PostManager
         m_updateHandler.removeCallbacks(updateRunnable);
     }
 
+    final P_SweetHandler getUIHandler()
+    {
+        return m_uiHandler;
+    }
+
+    final P_SweetHandler getUpdateHandler()
+    {
+        return m_updateHandler;
+    }
 
     final boolean isOnSweetBlueThread()
     {
-        return Thread.currentThread() == m_updateHandler.getLooper().getThread();
+        return Thread.currentThread() == m_updateHandler.getThread();
     }
 
 }

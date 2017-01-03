@@ -28,7 +28,7 @@ class P_PollManager
 		protected CallbackEntry m_entry;
 		private ReadWriteListener m_overrideListener;
 		
-		PollingReadListener(ReadWriteListener readWriteListener, Handler handler, boolean postToMain)
+		PollingReadListener(ReadWriteListener readWriteListener, P_SweetHandler handler, boolean postToMain)
 		{
 			super(null, handler, postToMain);
 			
@@ -62,7 +62,7 @@ class P_PollManager
 	{
 		private byte[] m_lastValue = null;
 		
-		TrackingWrappingReadListener(ReadWriteListener readWriteListener, Handler handler, boolean postToMain)
+		TrackingWrappingReadListener(ReadWriteListener readWriteListener, P_SweetHandler handler, boolean postToMain)
 		{
 			super(readWriteListener, handler, postToMain);
 		}
@@ -117,11 +117,11 @@ class P_PollManager
 			
 			if( trackChanges || m_usingNotify)
 			{
-				m_pollingReadListener = new TrackingWrappingReadListener(readWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+				m_pollingReadListener = new TrackingWrappingReadListener(readWriteListener, m_device.getManager().getPostManager().getUIHandler(), m_device.getManager().m_config.postCallbacksToMainThread);
 			}
 			else
 			{
-				m_pollingReadListener = new PollingReadListener(readWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+				m_pollingReadListener = new PollingReadListener(readWriteListener, m_device.getManager().getPostManager().getUIHandler(), m_device.getManager().m_config.postCallbacksToMainThread);
 			}
 			
 			m_pollingReadListener.init(this);
