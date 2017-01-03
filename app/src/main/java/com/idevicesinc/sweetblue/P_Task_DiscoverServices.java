@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import java.lang.reflect.Method;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Utils;
 
 class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {
@@ -21,7 +22,7 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			
 			if( useRefresh )
 			{
-				refresh();
+				Utils.refreshGatt(getDevice());
 			}
 		}
 		
@@ -32,25 +33,7 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
 		}
 	}
-	
-	private void refresh()
-	{
-		try
-		{
-	        Method method = getDevice().getNativeGatt().getClass().getMethod("refresh", (Class[]) null);
-	        Boolean result = (Boolean) method.invoke(getDevice().getNativeGatt(), (Object[]) null);
-	        
-	        if( result == null || !result )
-	        {
-//	        	failImmediately();
-	        }
-	    }
-		catch (Exception e)
-		{
-//			fail();
-	    }
-	}
-	
+
 	@Override public PE_TaskPriority getPriority()
 	{
 		return PE_TaskPriority.MEDIUM;

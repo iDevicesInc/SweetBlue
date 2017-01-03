@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -15,6 +16,7 @@ import android.os.*;
 import android.provider.Settings;
 import android.text.TextUtils;
 
+import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleStatuses;
 
 /**
@@ -99,6 +101,30 @@ public class Utils
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	/**
+	 * Utility method used to refresh the GATT database. This is here as a convenience, you shouldn't need to call it yourself. It is called automatically
+	 * by the service discovery task if you have {@link com.idevicesinc.sweetblue.BleDeviceConfig#useGattRefresh} set to <code>true</code>.
+	 * This method returns false if the method wasn't able to be invoked properly, or {@link Method#invoke(Object, Object...)} returns <code>false</code>
+     */
+	public static boolean refreshGatt(BleDevice bleDevice)
+	{
+		try
+		{
+			Method method = bleDevice.getNativeGatt().getClass().getMethod("refresh", (Class[]) null);
+			Boolean result = (Boolean) method.invoke(bleDevice.getNativeGatt(), (Object[]) null);
+
+			if( result == null || !result )
+			{
+				return false;
+			}
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	/**
