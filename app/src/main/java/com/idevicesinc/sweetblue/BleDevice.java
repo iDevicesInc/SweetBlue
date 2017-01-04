@@ -6321,7 +6321,7 @@ public class BleDevice extends BleNode
 			postEvent(getManager().m_defaultReadWriteListener, event);
 		}
 
-		if (m_defaultNotificationListener != null && event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION)
+		if (m_defaultNotificationListener != null && (event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION))
 		{
 			m_defaultNotificationListener.onEvent(fromReadWriteEvent(event));
 		}
