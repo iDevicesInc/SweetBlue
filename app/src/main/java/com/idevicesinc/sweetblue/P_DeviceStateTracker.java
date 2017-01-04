@@ -25,6 +25,11 @@ class P_DeviceStateTracker extends PA_StateTracker
 	{
 		m_stateListener = listener;
 	}
+
+	public DeviceStateListener getListener()
+	{
+		return m_stateListener;
+	}
 	
 	void sync(P_DeviceStateTracker otherTracker)
 	{

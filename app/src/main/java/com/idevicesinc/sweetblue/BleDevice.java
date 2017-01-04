@@ -1865,6 +1865,7 @@ public class BleDevice extends BleNode
 	final P_BondManager m_bondMngr;
 
 	private com.idevicesinc.sweetblue.ReadWriteListener m_defaultReadWriteListener = null;
+	private NotificationListener m_defaultNotificationListener = null;
 
 	private TimeEstimator m_writeTimeEstimator;
 	private TimeEstimator m_readTimeEstimator;
@@ -2097,6 +2098,16 @@ public class BleDevice extends BleNode
 		m_readTimeEstimator = nForAverageRunningReadTime == null ? null : new TimeEstimator(nForAverageRunningReadTime);
 	}
 
+	/**
+	 * Return the {@link BleDeviceConfig} this device is set to use. If none has been set explicitly, then the instance
+	 * of {@link BleManagerConfig} is returned.
+     */
+	@Nullable(Prevalence.NEVER)
+	public BleDeviceConfig getConfig()
+	{
+		return conf_device();
+	}
+
 	BleDeviceConfig conf_device()
 	{
 		return m_config != null ? m_config : conf_mngr();
@@ -2198,6 +2209,14 @@ public class BleDevice extends BleNode
 	}
 
 	/**
+	 * Returns the {@link DeviceStateListener} this device currently using.
+     */
+	public DeviceStateListener getStateListener()
+	{
+		return stateTracker_main().getListener();
+	}
+
+	/**
 	 * Set a listener here to be notified whenever a connection fails and to
 	 * have control over retry behavior.
 	 */
@@ -2264,6 +2283,18 @@ public class BleDevice extends BleNode
 		if( isNull() )  return;
 
 		m_defaultReadWriteListener = listener_nullable;
+	}
+
+	/**
+	 * Sets a default {@link NotificationListener} that will be called when receiving notifications, or indications. This listener will also
+	 * be called when toggling notifications. This does NOT replace {@link com.idevicesinc.sweetblue.ReadWriteListener}, just adds to it. If
+	 * a default {@link com.idevicesinc.sweetblue.ReadWriteListener} has been set, it will still fire in addition to this listener.
+     */
+	public void setListener_Notification(@Nullable(Prevalence.NORMAL) NotificationListener listener_nullable)
+	{
+		if (isNull()) return;
+
+		m_defaultNotificationListener = listener_nullable;
 	}
 
 	/**
@@ -3477,7 +3508,20 @@ public class BleDevice extends BleNode
 	 */
 	public boolean disconnect()
 	{
-		return disconnect_private(Status.EXPLICIT_DISCONNECT);
+		return disconnect_private(null, Status.EXPLICIT_DISCONNECT);
+	}
+
+	/**
+	 * Similar to {@link #disconnect()} with the difference being the disconnect task is set to a low priority. This allows all current calls to finish
+	 * executing before finally disconnecting. Note that this can cause issues if you keep executing reads/writes, as they have a higher priority.
+	 * @return <code>true</code> if this call "had an effect", such as if the device was previously {@link BleDeviceState#RECONNECTING_LONG_TERM},
+	 * {@link BleDeviceState#CONNECTING_OVERALL}, or {@link BleDeviceState#INITIALIZED}
+	 *
+	 * @see ConnectionFailListener.Status#EXPLICIT_DISCONNECT
+     */
+	public boolean disconnectWhenReady()
+	{
+		return disconnect_private(PE_TaskPriority.LOW, Status.EXPLICIT_DISCONNECT);
 	}
 
 	/**
@@ -3494,10 +3538,10 @@ public class BleDevice extends BleNode
 	 */
 	public boolean disconnect_remote()
 	{
-		return disconnect_private(Status.ROGUE_DISCONNECT);
+		return disconnect_private(null, Status.ROGUE_DISCONNECT);
 	}
 
-	private boolean disconnect_private(final Status status)
+	private boolean disconnect_private(final PE_TaskPriority priority, final Status status)
 	{
 		if (isNull())  return false;
 
@@ -3509,7 +3553,7 @@ public class BleDevice extends BleNode
 			clearForExplicitDisconnect();
 		}
 
-		disconnectWithReason(/*priority=*/null, status, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
+		disconnectWithReason(priority, status, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
 
 		return !alreadyDisconnected || reconnecting_longTerm;
 	}
@@ -6268,7 +6312,52 @@ public class BleDevice extends BleNode
 			postEvent(getManager().m_defaultReadWriteListener, event);
 		}
 
+		if (m_defaultNotificationListener != null && event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION)
+		{
+			m_defaultNotificationListener.onEvent(fromReadWriteEvent(event));
+		}
+
 		m_txnMngr.onReadWriteResultCallbacksCalled();
+	}
+
+	private NotificationListener.NotificationEvent fromReadWriteEvent(ReadWriteEvent event)
+	{
+		NotificationListener.Type type;
+		switch (event.type())
+		{
+			case INDICATION:
+				type = NotificationListener.Type.INDICATION;
+				break;
+			case PSUEDO_NOTIFICATION:
+				type = NotificationListener.Type.PSUEDO_NOTIFICATION;
+				break;
+			case DISABLING_NOTIFICATION:
+				type = NotificationListener.Type.DISABLING_NOTIFICATION;
+				break;
+			case ENABLING_NOTIFICATION:
+				type = NotificationListener.Type.ENABLING_NOTIFICATION;
+				break;
+			default:
+				type = NotificationListener.Type.NOTIFICATION;
+				break;
+		}
+		NotificationListener.Status status;
+		switch (event.status())
+		{
+			case NULL:
+				status = NotificationListener.Status.NULL;
+				break;
+			case FAILED_TO_TOGGLE_NOTIFICATION:
+				status = NotificationListener.Status.FAILED_TO_TOGGLE_NOTIFICATION;
+				break;
+			case REMOTE_GATT_FAILURE:
+				status = NotificationListener.Status.REMOTE_GATT_FAILURE;
+				break;
+			default:
+				status = NotificationListener.Status.SUCCESS;
+				break;
+		}
+		return new NotificationListener.NotificationEvent(this, event.serviceUuid(), event.charUuid(), type, event.data(), status, event.gattStatus(), event.time_total().secs(), event.time_ota().secs(), event.solicited());
 	}
 
 	ReadWriteListener.ReadWriteEvent NULL_READWRITE_EVENT()

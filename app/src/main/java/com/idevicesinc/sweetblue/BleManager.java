@@ -2664,6 +2664,16 @@ public class BleManager
 	}
 
 	/**
+	 * Removes the given {@link BleDevice} from SweetBlue's internal device cache list. You should never have to call this
+	 * yourself (and probably shouldn't), but it's here for flexibility.
+     */
+	@Advanced
+	public void removeDeviceFromCache(BleDevice device)
+	{
+		m_deviceMngr.remove(device, m_deviceMngr_cache);
+	}
+
+	/**
 	 * Returns a new {@link HistoricalData} instance using
 	 * {@link BleDeviceConfig#historicalDataFactory} if available.
 	 */
