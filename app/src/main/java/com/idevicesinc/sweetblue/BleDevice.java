@@ -2204,6 +2204,18 @@ public class BleDevice extends BleNode
 		};
 	}
 
+	private DeviceStateListener wrapListenerAllowNull(final StateListener listener)
+	{
+		if (listener == null)
+		{
+			return null;
+		}
+		else
+		{
+			return wrapListener(listener);
+		}
+	}
+
 	/**
 	 * Set a listener here to be notified whenever this device's state changes.
 	 */
@@ -3330,7 +3342,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener, ConnectionFailListener failListener)
 	{
-		return connect(null, null, wrapListener(stateListener), failListener);
+		return connect(null, null, wrapListenerAllowNull(stateListener), failListener);
 	}
 
 	/**
@@ -3378,7 +3390,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, StateListener stateListener, ConnectionFailListener failListener)
 	{
-		return connect(authenticationTxn, null, wrapListener(stateListener), failListener);
+		return connect(authenticationTxn, null, wrapListenerAllowNull(stateListener), failListener);
 	}
 
 	/**
@@ -3425,7 +3437,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
 	{
-		return connect(null, initTxn, wrapListener(stateListener), failListener);
+		return connect(null, initTxn, wrapListenerAllowNull(stateListener), failListener);
 	}
 
 	/**
@@ -3449,7 +3461,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener)
 	{
-		return connect(authenticationTxn, initTxn, wrapListener(stateListener), (ConnectionFailListener) null);
+		return connect(authenticationTxn, initTxn, wrapListenerAllowNull(stateListener), (ConnectionFailListener) null);
 	}
 
 	/**
