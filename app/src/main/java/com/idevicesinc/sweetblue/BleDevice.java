@@ -2185,17 +2185,23 @@ public class BleDevice extends BleNode
 		}
 		else
 		{
-			stateTracker_main().setListener(new DeviceStateListener()
-			{
-				@Override public void onEvent(StateListener.StateEvent e)
-				{
-					if (listener_nullable != null)
-					{
-						listener_nullable.onEvent(e);
-					}
-				}
-			});
+			stateTracker_main().setListener(wrapListener(listener_nullable));
 		}
+	}
+
+	// TODO - Remove this for version 3, as it won't be needed anymore
+	private DeviceStateListener wrapListener(final StateListener listener)
+	{
+		return new DeviceStateListener()
+		{
+			@Override public void onEvent(StateListener.StateEvent e)
+			{
+				if (listener != null)
+				{
+					listener.onEvent(e);
+				}
+			}
+		};
 	}
 
 	/**
@@ -3324,7 +3330,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener, ConnectionFailListener failListener)
 	{
-		return connect(null, null, stateListener, failListener);
+		return connect(null, null, wrapListener(stateListener), failListener);
 	}
 
 	/**
@@ -3372,7 +3378,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, StateListener stateListener, ConnectionFailListener failListener)
 	{
-		return connect(authenticationTxn, null, stateListener, failListener);
+		return connect(authenticationTxn, null, wrapListener(stateListener), failListener);
 	}
 
 	/**
@@ -3419,7 +3425,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
 	{
-		return connect(null, initTxn, stateListener, failListener);
+		return connect(null, initTxn, wrapListener(stateListener), failListener);
 	}
 
 	/**
@@ -3433,7 +3439,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn)
 	{
-		return connect(authenticationTxn, initTxn, (StateListener) null, (ConnectionFailListener) null);
+		return connect(authenticationTxn, initTxn, null, (ConnectionFailListener) null);
 	}
 
 	/**
@@ -3443,7 +3449,7 @@ public class BleDevice extends BleNode
 	 */
 	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener)
 	{
-		return connect(authenticationTxn, initTxn, stateListener, (ConnectionFailListener) null);
+		return connect(authenticationTxn, initTxn, wrapListener(stateListener), (ConnectionFailListener) null);
 	}
 
 	/**
@@ -3459,7 +3465,7 @@ public class BleDevice extends BleNode
 	 * 					callback to {@link ConnectionFailListener}. However if {@link ConnectionFailEvent#isNull()} for the return value is <code>false</code>, meaning
 	 * 					the connection attempt couldn't even start for some reason, then you don't have to throw up the spinner in the first place.
 	 */
-	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
+	public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, DeviceStateListener stateListener, ConnectionFailListener failListener)
 	{
 		if (stateListener != null)
 		{
