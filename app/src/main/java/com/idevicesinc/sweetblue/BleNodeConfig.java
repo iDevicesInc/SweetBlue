@@ -1220,7 +1220,7 @@ public class BleNodeConfig
 		return filter_device != null ? filter_device : filter_mngr;
 	}
 
-	@Override protected BleNodeConfig clone()
+	@Override public BleNodeConfig clone()
 	{
 		try
 		{

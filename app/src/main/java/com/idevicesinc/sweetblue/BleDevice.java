@@ -5561,7 +5561,10 @@ public class BleDevice extends BleNode
 			return;
 		}
 
-		m_txnMngr.onConnect(authenticationTxn, initTxn);
+		BleTransaction.Auth auth = authenticationTxn != null ? authenticationTxn : m_config.defaultAuthTransaction;
+		BleTransaction.Init init = initTxn != null ? initTxn : m_config.defaultInitTransaction;
+
+		m_txnMngr.onConnect(auth, init);
 
 		final Object[] extraBondingStates;
 
