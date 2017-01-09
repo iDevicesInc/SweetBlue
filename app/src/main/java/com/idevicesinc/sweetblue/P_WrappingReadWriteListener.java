@@ -1,6 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 

@@ -51,10 +51,16 @@ class P_ConnectionFailManager
 	
 	private void resetFailCount()
 	{
-		m_failCount = 0;
-		m_highestStateReached_total = null;
-		m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
-		m_history.clear();
+		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		{
+			@Override public void run()
+			{
+				m_failCount = 0;
+				m_highestStateReached_total = null;
+				m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
+				m_history.clear();
+			}
+		});
 	}
 	
 	int getRetryCount()

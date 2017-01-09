@@ -9,7 +9,6 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.database.Cursor;
-
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.EmptyCursor;
@@ -25,14 +24,13 @@ import com.idevicesinc.sweetblue.utils.HistoricalDataQuery;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
-import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
 
 /**
  * Abstract base class for {@link BleDevice} and {@link BleServer}, mostly just to statically tie their APIs together

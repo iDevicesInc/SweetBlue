@@ -242,7 +242,7 @@ class P_TaskQueue
 	{
 		if( !m_mngr.ASSERT(m_current == null) )  return false;
 		if( m_queue.size() == 0 )  return false;
-		
+
 		for( int i = 0; i < m_queue.size(); i++ )
 		{
 			PA_Task newPotentialCurrent = m_queue.get(i);
@@ -252,15 +252,14 @@ class P_TaskQueue
 				m_queue.remove(i);
 				m_current = newPotentialCurrent;
 				m_current.arm();
-				m_current.tryExecuting();
+				if (!m_current.tryExecuting())
+				{
+					print();
+				}
 
-				print();
-				
 				return true;
 			}
 		}
-
-		print();
 
 		return false;
 	}
