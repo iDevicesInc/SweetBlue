@@ -169,14 +169,14 @@ class P_ConnectionFailManager
 		if( m_connectionFailListener != null )
 		{
 			final Please please = m_connectionFailListener.onEvent(moreInfo);
-			retryChoice__PE_Please = please != null ? please.please() : null;
+			retryChoice__PE_Please = please != null ? please.please() : Please.PE_Please_NULL;
 			
 			m_device.getManager().getLogger().checkPlease(please, Please.class);
 		}
 		else if( m_device.getManager().m_defaultConnectionFailListener != null )
 		{
 			final Please please = m_device.getManager().m_defaultConnectionFailListener.onEvent(moreInfo);
-			retryChoice__PE_Please = please != null ? please.please() : null;
+			retryChoice__PE_Please = please != null ? please.please() : Please.PE_Please_NULL;
 			
 			m_device.getManager().getLogger().checkPlease(please, Please.class);
 		}

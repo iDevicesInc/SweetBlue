@@ -6080,7 +6080,9 @@ public class BleDevice extends BleNode
                     final Object[] overrideBondingStates = m_bondMngr.getOverrideBondStatesForDisconnect(connectionFailReasonIfConnecting);
                     final boolean forceMainStateTracker = explicit;
 
-                    setStateToDisconnected(attemptingReconnect_longTerm, intent, gattStatus, forceMainStateTracker, overrideBondingStates);
+                    // Commenting this out now. We should wait for the native callback to say if we're disconnected or not. The poll manager will
+                    // also check the native state, and update as needed, just in case.
+//                    setStateToDisconnected(attemptingReconnect_longTerm, intent, gattStatus, forceMainStateTracker, overrideBondingStates);
 
                     m_txnMngr.cancelAllTransactions();
 

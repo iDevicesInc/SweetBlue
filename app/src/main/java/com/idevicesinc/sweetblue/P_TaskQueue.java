@@ -167,12 +167,11 @@ class P_TaskQueue
 	
 	public void add(final PA_Task newTask)
 	{
-		newTask.init();
-
 		m_mngr.getPostManager().postToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
+				newTask.init();
 				add_updateThread(newTask);
 			}
 		});

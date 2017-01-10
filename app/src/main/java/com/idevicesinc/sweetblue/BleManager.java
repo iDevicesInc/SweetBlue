@@ -969,6 +969,8 @@ public class BleManager
 
 	private void initConfigDependentMembers()
 	{
+		m_filterMngr.updateFilter(m_config.defaultScanFilter);
+
 		boolean startUpdate = true;
 
 		if (m_updateRunnable != null)

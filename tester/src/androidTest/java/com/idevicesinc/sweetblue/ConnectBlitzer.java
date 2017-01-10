@@ -5,6 +5,8 @@ import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.util.Log;
 
+import com.idevicesinc.sweetblue.utils.Interval;
+
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Rule;
@@ -18,7 +20,9 @@ import java.util.concurrent.Semaphore;
 public class ConnectBlitzer
 {
 
-    private final static int MAX_COUNT = 500;
+    private final static int MAX_COUNT = 50;
+
+    final FailListener listener = new FailListener();
 
     TaskManagerIdleActivity activity;
     BleManager mgr;
@@ -51,6 +55,7 @@ public class ConnectBlitzer
             }
         };
 //        config.useGattRefresh = true;
+        config.loggingEnabled = true;
         config.runOnMainThread = false;
         mgr.setConfig(config);
         mgr.setListener_Discovery(new BleManager.DiscoveryListener()
@@ -90,18 +95,38 @@ public class ConnectBlitzer
                 }
                 else if (e.didEnter(BleDeviceState.DISCONNECTED))
                 {
-                    if (connectCount < MAX_COUNT)
+                    if (e.device() == device)
                     {
-                        doConnect();
-                    }
-                    else
-                    {
-                        Log.d("ConnectBlitzer", "Successfully connected to device " + connectCount + " times.");
-                        s.release();
+                        if (connectCount < MAX_COUNT)
+                        {
+                            doConnect();
+                        }
+                        else
+                        {
+                            Log.d("ConnectBlitzer", "Successfully connected to device " + connectCount + " times.");
+                            s.release();
+                        }
                     }
                 }
             }
-        });
+        }, listener);
+    }
+
+    private class FailListener implements BleDevice.ConnectionFailListener
+    {
+
+        @Override public Please onEvent(ConnectionFailEvent e)
+        {
+            if (e.device() == device)
+            {
+                //assertTrue("Connection failed with status " + e.status().name() + ". Connected successfully " + connectCount + " times. Retried " + e.failureCountSoFar() + " times.", false);
+                return null;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 
 }
