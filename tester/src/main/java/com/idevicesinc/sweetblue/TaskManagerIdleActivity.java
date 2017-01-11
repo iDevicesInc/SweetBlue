@@ -6,7 +6,6 @@ import android.os.Handler;
 
 public class TaskManagerIdleActivity extends Activity
 {
-    BleManager bleManager;
 
     Handler handler;
 
@@ -15,16 +14,7 @@ public class TaskManagerIdleActivity extends Activity
     {
         super.onCreate(savedInstanceState);
 
-        BleManagerConfig config = new BleManagerConfig();
-
-        bleManager = BleManager.get(this, config);
-
         handler = new Handler();
-    }
-
-    BleManager getBleManager()
-    {
-        return bleManager;
     }
 
     Handler getHandler()

@@ -111,8 +111,8 @@ class P_ConnectionFailManager
 			highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason, txnFailReason,
 			m_history
 		);
-		
-		m_history.add(moreInfo);
+
+		addToHistory(moreInfo);
 		
 		//--- DRK > Not invoking callback if we're attempting short-term reconnect.
 		int retryChoice__PE_Please = m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) ? Please.PE_Please_DO_NOT_RETRY : invokeCallback(moreInfo);
@@ -160,6 +160,16 @@ class P_ConnectionFailManager
 		}
 		
 		return retryChoice__PE_Please;
+	}
+
+	private void addToHistory(ConnectionFailEvent event)
+	{
+		int maxSize = Math.max(BleDeviceConfig.integer(m_device.conf_device().maxConnectionFailHistorySize, m_device.conf_mngr().maxConnectionFailHistorySize), 1);
+		if (m_history.size() >= maxSize)
+		{
+			m_history.remove(0);
+		}
+		m_history.add(event);
 	}
 	
 	int/*__PE_Please*/ invokeCallback(final ConnectionFailEvent moreInfo)

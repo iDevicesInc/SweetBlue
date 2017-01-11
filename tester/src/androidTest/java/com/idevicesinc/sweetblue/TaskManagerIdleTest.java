@@ -1,34 +1,21 @@
 package com.idevicesinc.sweetblue;
 
 import android.os.Handler;
-import android.test.ActivityInstrumentationTestCase2;
 import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 import java.util.concurrent.Semaphore;
 
 
-public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskManagerIdleActivity>
+public class TaskManagerIdleTest extends BaseTester<TaskManagerIdleActivity>
 {
-    TaskManagerIdleActivity testActivity;
-
-    BleManager bleManager;
 
     Handler handler;
 
-    public TaskManagerIdleTest()
-    {
-        super(TaskManagerIdleActivity.class);
-    }
 
     @Override
-    protected void setUp() throws Exception
+    public void additionalSetup()
     {
-        super.setUp();
-
-        testActivity = getActivity();
-
-        bleManager = testActivity.getBleManager();
-
-        handler = testActivity.getHandler();
+        handler = activity.getHandler();
     }
 
     @Test
@@ -44,9 +31,9 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
                 /**
                  * After waiting the appropriate time check to see if the current speed is the idle speed
                  */
-                assertTrue(bleManager.getUpdateRate() == bleManager.m_config.idleUpdateRate.millis());
+                assertTrue(mgr.getUpdateRate() == mgr.m_config.idleUpdateRate.millis());
 
-                bleManager.startScan(); //Kick off scanning -> put something in the queue
+                mgr.startScan(); //Kick off scanning -> put something in the queue
 
                 handler.postDelayed(new Runnable()
                 {
@@ -56,11 +43,11 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
                         /**
                          * After waiting about 1 cycle check to see if the current speed is no longer idling
                          */
-                        long updateSpeed = bleManager.getUpdateRate();
+                        long updateSpeed = mgr.getUpdateRate();
 
-                        assertTrue(updateSpeed == bleManager.m_config.autoUpdateRate.millis());
+                        assertTrue(updateSpeed == mgr.m_config.autoUpdateRate.millis());
 
-                        bleManager.stopScan(); //Stop scanning -> empty the queue
+                        mgr.stopScan(); //Stop scanning -> empty the queue
 
                         handler.postDelayed(new Runnable()
                         {
@@ -70,11 +57,11 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
                                 /**
                                  * After waiting again check to see that the speed is idling again
                                  */
-                                long updateSpeed = bleManager.getUpdateRate();
+                                long updateSpeed = mgr.getUpdateRate();
 
-                                assertTrue(updateSpeed == bleManager.m_config.idleUpdateRate.millis());
+                                assertTrue(updateSpeed == mgr.m_config.idleUpdateRate.millis());
 
-                                bleManager.startScan(); //Kick off scanning -> put something in the queue once more
+                                mgr.startScan(); //Kick off scanning -> put something in the queue once more
 
                                 handler.postDelayed(new Runnable()
                                 {
@@ -84,23 +71,23 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
                                         /**
                                          * Check to see one last time that the the thread woke up
                                          */
-                                        long updateSpeed = bleManager.getUpdateRate();
+                                        long updateSpeed = mgr.getUpdateRate();
 
-                                        assertTrue(updateSpeed == bleManager.m_config.autoUpdateRate.millis());
+                                        assertTrue(updateSpeed == mgr.m_config.autoUpdateRate.millis());
 
                                         finishedSemaphore.release();
                                     }
 
-                                }, bleManager.m_config.autoUpdateRate.millis());
+                                }, mgr.m_config.autoUpdateRate.millis());
                             }
 
-                        }, 2 * bleManager.m_config.minTimeToIdle.millis());/*Go a couple more ticks and wait for idle*/
+                        }, 2 * mgr.m_config.minTimeToIdle.millis());/*Go a couple more ticks and wait for idle*/
                     }
 
-                }, bleManager.m_config.autoUpdateRate.millis() + 5);
+                }, mgr.m_config.autoUpdateRate.millis() + 5);
             }
 
-        }, 2 * bleManager.m_config.minTimeToIdle.millis());
+        }, 2 * mgr.m_config.minTimeToIdle.millis());
 
         finishedSemaphore.acquire();
     }
@@ -110,29 +97,38 @@ public class TaskManagerIdleTest extends ActivityInstrumentationTestCase2<TaskMa
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        bleManager.setListener_State(new ManagerStateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override
             public void onEvent(BleManager.StateListener.StateEvent event)
             {
-                if(event.didEnter(BleManagerState.IDLE))
+                if (event.didEnter(BleManagerState.IDLE))
                 {
-                    assertTrue(bleManager.getUpdateRate() == bleManager.m_config.idleUpdateRate.millis());
+                    assertTrue(mgr.getUpdateRate() == mgr.m_config.idleUpdateRate.millis());
 
                     finishedSemaphore.release();
                 }
                 else
                 {
-                    assertTrue(bleManager.getUpdateRate() == bleManager.m_config.autoUpdateRate.millis());
+                    assertTrue(mgr.getUpdateRate() == mgr.m_config.autoUpdateRate.millis());
 
-                    bleManager.stopScan();
+                    mgr.stopScan();
                 }
             }
         });
 
-        bleManager.startScan();
+        mgr.startScan();
 
         finishedSemaphore.acquire();
     }
 
+    @Override Class<TaskManagerIdleActivity> getActivityClass()
+    {
+        return TaskManagerIdleActivity.class;
+    }
+
+    @Override BleManagerConfig getInitialConfig()
+    {
+        return new BleManagerConfig();
+    }
 }

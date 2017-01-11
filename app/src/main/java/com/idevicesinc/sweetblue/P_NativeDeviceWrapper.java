@@ -2,6 +2,8 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.os.DeadObjectException;
+
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -318,9 +320,46 @@ class P_NativeDeviceWrapper
 		{
 			m_gatt.close();
 		}
-		catch(NullPointerException e)
+		catch(Exception e)
 		{
-			//--- DRK > From Flurry crash reports...happened several times on S4 running 4.4.4 but was not able to reproduce.
+			if (e instanceof DeadObjectException)
+			{
+				//--- RB > It has been observed by some customers that a DeadObjectException can happen here. Nothing we can do about it, just
+				// checking for it, and throwing to the UhOh Listener as a DeadObjectException
+
+//				android.os.DeadObjectException
+//				at android.os.BinderProxy.transactNative(Native Method)
+//				at android.os.BinderProxy.transact(Binder.java:503)
+//				at android.bluetooth.IBluetoothGatt$Stub$Proxy.unregisterClient(IBluetoothGatt.java:1009)
+//				at android.bluetooth.BluetoothGatt.unregisterApp(BluetoothGatt.java:820)
+//				at android.bluetooth.BluetoothGatt.close(BluetoothGatt.java:759)
+//				at com.idevicesinc.sweetblue.P_NativeDeviceWrapper.closeGatt(P_NativeDeviceWrapper.java:319)
+//				at com.idevicesinc.sweetblue.P_NativeDeviceWrapper.closeGattIfNeeded(P_NativeDeviceWrapper.java:301)
+//				at com.idevicesinc.sweetblue.BleDevice.onNativeConnectFail(BleDevice.java:5782)
+//				at com.idevicesinc.sweetblue.P_BleDevice_Listeners$1.onStateChange(P_BleDevice_Listeners.java:51)
+//				at com.idevicesinc.sweetblue.PA_Task.setState(PA_Task.java:148)
+//				at com.idevicesinc.sweetblue.PA_Task.setEndingState(PA_Task.java:288)
+//				at com.idevicesinc.sweetblue.P_TaskQueue.endCurrentTask(P_TaskQueue.java:288)
+//				at com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask_mainThread(P_TaskQueue.java:395)
+//				at com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask(P_TaskQueue.java:387)
+//				at com.idevicesinc.sweetblue.PA_Task.timeout(PA_Task.java:183)
+//				at com.idevicesinc.sweetblue.PA_Task.update_internal(PA_Task.java:354)
+//				at com.idevicesinc.sweetblue.P_TaskQueue.update(P_TaskQueue.java:236)
+//				at com.idevicesinc.sweetblue.BleManager.update(BleManager.java:3245)
+//				at com.idevicesinc.sweetblue.BleManager$1.onUpdate(BleManager.java:746)
+//				at com.idevicesinc.sweetblue.utils.UpdateLoop$1.run(UpdateLoop.java:24)
+//				at android.os.Handler.handleCallback(Handler.java:739)
+//				at android.os.Handler.dispatchMessage(Handler.java:95)
+//				at android.os.Looper.loop(Looper.java:148)
+//				at android.app.ActivityThread.main(ActivityThread.java:7303)
+//				at java.lang.reflect.Method.invoke(Native Method)
+//				at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:1230)
+//				at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1120)
+				m_device.getManager().uhOh(UhOh.DEAD_OBJECT_EXCEPTION);
+			}
+			else
+			{
+				//--- DRK > From Flurry crash reports...happened several times on S4 running 4.4.4 but was not able to reproduce.
 //				This error occurred: java.lang.NullPointerException
 //				android.os.Parcel.readException(Parcel.java:1546)
 //				android.os.Parcel.readException(Parcel.java:1493)
@@ -338,7 +377,8 @@ class P_NativeDeviceWrapper
 //				com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask(P_TaskQueue.java:267)
 //				com.idevicesinc.sweetblue.P_TaskQueue.fail(P_TaskQueue.java:260)
 //				com.idevicesinc.sweetblue.P_BleDevice_Listeners.onConnectionStateChange_synchronized(P_BleDevice_Listeners.java:168)
-			m_device.getManager().uhOh(UhOh.RANDOM_EXCEPTION);
+				m_device.getManager().uhOh(UhOh.RANDOM_EXCEPTION);
+			}
 		}
 
 		m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;

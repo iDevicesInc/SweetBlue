@@ -55,6 +55,13 @@ public class BleNodeConfig
 	public static final int INVALID_TX_POWER							= Integer.MIN_VALUE;
 
 	/**
+	 * The default size of the list that keeps track of a {@link BleNode}'s connection failure history. This is to prevent
+	 * the list from growing too large, if the device is unable to connect, and you have a large long term reconnect time set
+	 * with {@link #reconnectFilter}.
+	 */
+	public static final int DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE	= 25;
+
+	/**
 	 * Default is <code>false</code> - see the <code>boolean autoConnect</code> parameters of
 	 * {@link BluetoothDevice#connectGatt(Context, boolean, android.bluetooth.BluetoothGattCallback)}
 	 * and {@link android.bluetooth.BluetoothGattServer#connect(BluetoothDevice, boolean)}.

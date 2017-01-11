@@ -1,51 +1,32 @@
 package com.idevicesinc.sweetblue;
 
-import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
-import android.test.suitebuilder.annotation.LargeTest;
+
 import android.util.Log;
-
-import com.idevicesinc.sweetblue.utils.Interval;
-
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import java.util.concurrent.Semaphore;
 
 
-@RunWith(AndroidJUnit4.class)
-@LargeTest
-public class ConnectBlitzer
+public class ConnectBlitzer extends BaseTester<TaskManagerIdleActivity>
 {
 
     private final static int MAX_COUNT = 50;
 
-    final FailListener listener = new FailListener();
+    final FailListener2 listener = new FailListener2();
 
-    TaskManagerIdleActivity activity;
-    BleManager mgr;
     BleDevice device;
     private Semaphore s;
     private int connectCount;
+    private boolean wasConnected = false;
 
-
-    @Rule
-    public ActivityTestRule<TaskManagerIdleActivity> mRule = new ActivityTestRule<>(TaskManagerIdleActivity.class);
-
-
-    @Before
-    public void setup()
+    @Override Class<TaskManagerIdleActivity> getActivityClass()
     {
-        activity = mRule.getActivity();
+        return TaskManagerIdleActivity.class;
     }
 
-    @Test
-    public void connectBlitz() throws Exception
+    @Override BleManagerConfig getInitialConfig()
     {
-        s = new Semaphore(0);
-        mgr = activity.getBleManager();
         BleManagerConfig config = new BleManagerConfig();
         config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
@@ -57,7 +38,14 @@ public class ConnectBlitzer
 //        config.useGattRefresh = true;
         config.loggingEnabled = true;
         config.runOnMainThread = false;
-        mgr.setConfig(config);
+        return config;
+    }
+
+    @Test
+    public void connectBlitz() throws Exception
+    {
+        s = new Semaphore(0);
+
         mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
@@ -90,13 +78,15 @@ public class ConnectBlitzer
             {
                 if (e.didEnter(BleDeviceState.INITIALIZED))
                 {
-                    connectCount++;
-                    device.disconnect();
+//                    wasConnected = true;
+//                    connectCount++;
+//                    device.disconnect();
                 }
                 else if (e.didEnter(BleDeviceState.DISCONNECTED))
                 {
-                    if (e.device() == device)
+                    if (e.device() == device && wasConnected)
                     {
+                        wasConnected = false;
                         if (connectCount < MAX_COUNT)
                         {
                             doConnect();
@@ -110,6 +100,21 @@ public class ConnectBlitzer
                 }
             }
         }, listener);
+    }
+
+    private class FailListener2 extends BleDevice.DefaultConnectionFailListener
+    {
+        @Override public Please onEvent(ConnectionFailEvent e)
+        {
+//            Please p = super.onEvent(e);
+//            if (!p.isRetry())
+//            {
+//                Log.e("ConnectFail", "Connection failed with status " + e.status().name() + ". Connected successfully " + connectCount + " times. Retried " + e.failureCountSoFar() + " times.");
+////                assertTrue("Connection failed with status " + e.status().name() + ". Connected successfully " + connectCount + " times. Retried " + e.failureCountSoFar() + " times.", false);
+//            }
+//            return p;
+            return Please.doNotRetry();
+        }
     }
 
     private class FailListener implements BleDevice.ConnectionFailListener

@@ -462,7 +462,7 @@ class P_BleManager_Listeners
 	{
 //		m_mngr.getLogger().e("*********************" + m_mngr.getLogger().gattBleState(getBleState()));
 
-		if( Utils.isMarshmallow() )
+		if( Utils.isMarshmallow() && m_mngr.m_config.allowManagerStatePolling)
 		{
 			final int oldState = m_nativeState;
 			final int newState = getBleState();

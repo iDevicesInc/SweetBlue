@@ -10,6 +10,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.Interval;
 import java.util.ArrayList;
 import java.util.List;
@@ -124,15 +126,19 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        if (mgr.is(BleManagerState.OFF))
+        mStartScan.setEnabled(false);
+
+        BluetoothEnabler.start(this, new BluetoothEnabler.BluetoothEnablerFilter()
         {
-            mStartScan.setEnabled(false);
-            mgr.turnOn();
-        }
-        else
-        {
-            mStartScan.setEnabled(true);
-        }
+            @Override public Please onEvent(BluetoothEnablerEvent e)
+            {
+                if (e.isDone())
+                {
+                    mStartScan.setEnabled(true);
+                }
+                return Please.doNext();
+            }
+        });
     }
 
     private class ScanAdaptor extends ArrayAdapter<BleDevice>

@@ -336,6 +336,16 @@ public class BleManagerConfig extends BleDeviceConfig
 	@Nullable(Prevalence.NORMAL)
 	public DiscoveryListener defaultDiscoveryListener		= null;
 
+
+	/**
+	 * Default is <code>true</code> - SweetBlue polls the native Bluetooth state to ensure it's always up-to-date with the current Bluetooth state (in case
+	 * we don't receive a callback from the native Bluetooth stack for any reason). However, there are rare cases where the state we get from polling isn't wrong
+	 * per se, but ahead of the native callback. So for instance, BLE was turned off, then on...polling may say it's ON, then try to connect to a device. Then
+	 * we get the native callback, but by this time, the connect has failed. In this case, you should turn this to <code>false</code>. But then you are at the
+	 * mercy of Android's Bluetooth callbacks coming in. This polling is only done on devices running Android Marshmallow (6.0+) or above.
+	 */
+	public boolean allowManagerStatePolling					= true;
+
 	/**
 	 * Default is <code>null</code>
 	 *

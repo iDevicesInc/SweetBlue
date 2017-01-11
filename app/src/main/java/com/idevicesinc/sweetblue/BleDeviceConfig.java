@@ -69,6 +69,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static final int DEFAULT_TX_POWER					= -50;
 
 	/**
+	 * The default size of the list that keeps track of a {@link BleNode}'s connection failure history. This is to prevent
+	 * the list from growing too large, if the device is unable to connect, and you have a large long term reconnect time set
+	 * with {@link #reconnectFilter}.
+	 */
+	public static final int DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE	= 25;
+
+	/**
 	 * Default is <code>false</code>. If the bluetooth device you are trying to connect to requires a pairing dialog to show up, you should
 	 * set this to <code>true</code>. Android will do one of two things when you try to pair to the device. It will either A) show the pairing dialog, or
 	 * B) show a notification in the notification area. When B happens, most people probably won't notice it, and think your app can't connect to the device.
@@ -345,6 +352,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public BleTransaction.Init defaultInitTransaction			= null;
+
+	/**
+	 * Default is {@link #DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE} - This sets the size of the list that tracks the history
+	 * of {@link com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.ConnectionFailEvent}s. Note that this will always be
+	 * at least 1. If set to anything lower, it will be ignored, and the max size will be 1.
+	 */
+	public int maxConnectionFailHistorySize									= DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE;
 
 	/**
 	 * As of now there are two main default uses for this class...
