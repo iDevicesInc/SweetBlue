@@ -484,6 +484,12 @@ public class BluetoothEnabler
         Please onEvent(final BluetoothEnablerEvent e);
     }
 
+    private static boolean hasActivity()
+    {
+        return s_instance.m_defaultActivity.get() != null;
+    }
+
+
     /**
      * A default implementation of BluetoothEnablerListener used in {@link BluetoothEnabler#start(Activity)}. It provides a
      * basic implementation for use/example and can be overridden.
@@ -492,6 +498,12 @@ public class BluetoothEnabler
     {
 		@Override public Please onEvent(BluetoothEnablerEvent e)
         {
+            // Just bail out if we have lost the activity reference.
+            if (!hasActivity())
+            {
+                Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+                return Please.stop();
+            }
 			if( e.stage().isLocationRelated() && e.status().isCancelled() )
 			{
                 final String fineButDotDotDot = P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.DENYING_LOCATION_ACCESS);
@@ -602,6 +614,11 @@ public class BluetoothEnabler
 
 	private void dispatchEvent(final BluetoothEnablerFilter.Stage currentStage, final BluetoothEnablerFilter.Stage nextStage, final BluetoothEnablerFilter.Status status_currentStage)
 	{
+        if (!hasActivity())
+        {
+            Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+            return;
+        }
 		final Object appData = m_lastPlease != null ? m_lastPlease.m_appData : null;
 
 		final BluetoothEnablerFilter.BluetoothEnablerEvent e = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_defaultActivity.get(), currentStage, nextStage, status_currentStage, this, appData);
@@ -742,6 +759,11 @@ public class BluetoothEnabler
 	{
 		if( please.shouldPopDialog(getStage()) )
 		{
+            if (!hasActivity())
+            {
+                Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+                return;
+            }
 			final AlertDialog.Builder builder = new AlertDialog.Builder(please.activityOrDefault(m_defaultActivity.get()));
 
 			builder.setMessage(m_lastPlease.m_dialogText);
@@ -780,6 +802,11 @@ public class BluetoothEnabler
     {
         if( please.shouldPopDialog(getStage()) )
         {
+            if (!hasActivity())
+            {
+                Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+                return;
+            }
            final AlertDialog.Builder builder = new AlertDialog.Builder(please.activityOrDefault(m_defaultActivity.get()));
 
 			builder.setMessage(m_lastPlease.m_dialogText);
@@ -823,6 +850,11 @@ public class BluetoothEnabler
 
     private void handlePleaseResponse_STEP7_launchIntent(final BluetoothEnablerFilter.Please please)
     {
+        if (!hasActivity())
+        {
+            Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+            return;
+        }
 		final Activity callingActivity = please.activityOrDefault(m_defaultActivity.get());
 
 		switch(getStage())
@@ -870,6 +902,11 @@ public class BluetoothEnabler
 	{
 		if( please.shouldShowToast(getStage()) )
 		{
+            if (!hasActivity())
+            {
+                Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+                return;
+            }
 			Toast.makeText(please.activityOrDefault(m_defaultActivity.get()), please.m_toastText, Toast.LENGTH_LONG).show();
 		}
 

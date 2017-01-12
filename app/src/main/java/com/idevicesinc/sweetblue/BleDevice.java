@@ -2079,7 +2079,6 @@ public class BleDevice extends BleNode
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = null;
             m_bondMngr = new P_BondManager(this);
-            stateTracker().set(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
             m_pollMngr = new P_PollManager(this);
             m_txnMngr = new P_TransactionManager(this);
             m_taskStateListener = null;
@@ -2089,6 +2088,7 @@ public class BleDevice extends BleNode
             m_dummyDisconnectTask = null;
             m_historicalDataMngr = null;
             m_reliableWriteMngr = null;
+            stateTracker().set(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, true);
         }
         else
         {
@@ -2100,7 +2100,6 @@ public class BleDevice extends BleNode
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
             m_bondMngr = new P_BondManager(this);
-            stateTracker().set(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true, m_bondMngr.getNativeBondingStateOverrides());
             m_pollMngr = new P_PollManager(this);
             m_txnMngr = new P_TransactionManager(this);
             m_taskStateListener = m_listeners.m_taskStateListener;
@@ -2110,6 +2109,7 @@ public class BleDevice extends BleNode
             m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING, /*cancellable=*/true);
             m_historicalDataMngr = new P_HistoricalDataManager(this, getMacAddress());
             m_reliableWriteMngr = new P_ReliableWriteManager(this);
+            stateTracker().set(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true, m_bondMngr.getNativeBondingStateOverrides());
         }
     }
 
