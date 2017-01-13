@@ -154,42 +154,15 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		}
 		else
 		{
-			BluetoothGattService service = null;
-			try
-			{
-				service = gatt.getService(serviceUuid);
-			}
-			catch (Exception e)
-			{
-				m_device.getManager().getLogger().e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the native service!");
-			}
+			BluetoothGattService service = m_device.gattLayer().getService(serviceUuid);
 			return service;
 		}
 	}
 
 	@Override protected final List<BluetoothGattService> getNativeServiceList_original()
 	{
-		final BluetoothGatt gatt = m_device.getNativeGatt();
-
-		if( gatt == null )
-		{
-			return EMPTY_SERVICE_LIST;
-		}
-		else
-		{
-			List<BluetoothGattService> list_native = null;
-
-			try
-			{
-				list_native = gatt.getServices();
-			}
-			catch (Exception e)
-			{
-				m_device.getManager().getLogger().e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the list of native services!");
-			}
-
-			return list_native == null ? EMPTY_SERVICE_LIST : list_native;
-		}
+		List<BluetoothGattService> list_native = m_device.gattLayer().getNativeServiceList();
+		return list_native == null ? EMPTY_SERVICE_LIST : list_native;
 	}
 }
 

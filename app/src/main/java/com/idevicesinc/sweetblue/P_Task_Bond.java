@@ -109,7 +109,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
     {
         if (Utils.isKitKat())
         {
-            return K_Util.createBond(getDevice());
+            return getDevice().gattLayer().createBond();
         }
         else
         {
@@ -122,9 +122,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
     {
         if (Utils.isKitKat())
         {
-            final Class[] paramTypes = new Class[]{int.class};
-
-            return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CREATE_BOND, paramTypes, getManager().m_config.loggingEnabled, BluetoothDevice.TRANSPORT_LE);
+            return getDevice().gattLayer().createBondSneaky(METHOD_NAME__CREATE_BOND);
         }
         else
         {

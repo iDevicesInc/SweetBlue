@@ -43,7 +43,7 @@ class P_Task_RequestConnectionPriority extends PA_Task_Transactionable implement
 	{
 		if( Utils.isLollipop() )
 		{
-			if( false == L_Util.requestConnectionPriority(getDevice(), m_connectionPriority.getNativeMode()) )
+			if( false == getDevice().gattLayer().requestConnectionPriority(m_connectionPriority) )
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}

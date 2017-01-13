@@ -463,6 +463,11 @@ final class P_ScanManager
         }
     }
 
+    private P_GattLayer gatt()
+    {
+        return m_manager.m_config.defaultGattLayer;
+    }
+
     final boolean isPreLollipopScan()
     {
         return m_mode == Mode_BLE;

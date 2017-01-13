@@ -2052,6 +2052,7 @@ public class BleDevice extends BleNode
     private boolean m_underwentPossibleImplicitBondingAttempt = false;
 
     private BleDeviceConfig m_config = null;
+    private P_DeviceBleGatt m_gattLayer;
 
     private BondListener.BondEvent m_nullBondEvent = null;
     private ReadWriteListener.ReadWriteEvent m_nullReadWriteEvent = null;
@@ -2074,7 +2075,7 @@ public class BleDevice extends BleNode
             m_rssiPollMngr = null;
             m_rssiPollMngr_auto = null;
             // setConfig(config_nullable);
-            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
+            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, conf_mngr().defaultGattLayer, name_normalized, name_native);
             m_listeners = null;
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = null;
@@ -2095,7 +2096,7 @@ public class BleDevice extends BleNode
             m_rssiPollMngr = new P_RssiPollManager(this);
             m_rssiPollMngr_auto = new P_RssiPollManager(this);
             setConfig(config_nullable);
-            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, name_normalized, name_native);
+            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, m_gattLayer.getGattLayer(), name_normalized, name_native);
             m_listeners = new P_BleDevice_Listeners(this);
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
@@ -2121,7 +2122,6 @@ public class BleDevice extends BleNode
     public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_begin(final ReadWriteListener listener)
     {
 
-
         return m_reliableWriteMngr.begin(listener);
     }
 
@@ -2132,7 +2132,6 @@ public class BleDevice extends BleNode
     public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_abort()
     {
 
-
         return m_reliableWriteMngr.abort();
     }
 
@@ -2142,7 +2141,6 @@ public class BleDevice extends BleNode
      */
     public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_execute()
     {
-
 
         return m_reliableWriteMngr.execute();
     }
@@ -2222,6 +2220,8 @@ public class BleDevice extends BleNode
         if (isNull()) return;
 
         m_config = config_nullable == null ? null : config_nullable.clone();
+
+        m_gattLayer = new P_DeviceBleGatt(this, conf_mngr().defaultGattLayer);
 
         initEstimators();
 
@@ -3215,6 +3215,11 @@ public class BleDevice extends BleNode
     boolean is_internal(BleDeviceState state)
     {
         return state.overlaps(stateTracker().getState());
+    }
+
+    P_DeviceBleGatt gattLayer()
+    {
+        return m_gattLayer;
     }
 
     /**

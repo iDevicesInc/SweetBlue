@@ -53,7 +53,7 @@ class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 		}
 		else
 		{
-			if( false == getDevice().getNativeGatt().readDescriptor(desc_native) )
+			if( false == getDevice().gattLayer().readDescriptor(desc_native) )
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), getDescUuid());
 			}

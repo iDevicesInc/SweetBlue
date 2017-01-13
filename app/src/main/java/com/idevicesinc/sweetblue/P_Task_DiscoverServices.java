@@ -22,11 +22,11 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			
 			if( useRefresh )
 			{
-				Utils.refreshGatt(getDevice());
+				getDevice().gattLayer().refreshGatt();
 			}
 		}
 		
-		if( !getDevice().getNativeGatt().discoverServices() )
+		if( !getDevice().gattLayer().discoverServices() )
 		{
 			failImmediately();
 			

@@ -373,6 +373,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public PI_UpdateLoop.Callback updateLoopCallback			= null;
 
+	P_GattLayer defaultGattLayer								= new P_BleGatt();
+
 // TODO - Remove this once we figure out a different solution for unit tests
 //
 //	/**

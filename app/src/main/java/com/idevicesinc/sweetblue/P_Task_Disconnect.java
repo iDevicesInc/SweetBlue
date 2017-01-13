@@ -82,7 +82,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 		
 		if( m_explicit )
 		{
-			getDevice().getNativeGatt().disconnect();
+			getDevice().gattLayer().disconnect();
 		}
 		else
 		{

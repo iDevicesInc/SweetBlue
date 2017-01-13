@@ -40,9 +40,9 @@ public class M_Util
         L_Util.startScan(mgr, scanSettings, listener);
     }
 
-    public static BluetoothGatt connect(BluetoothDevice device, Context context, BluetoothGattCallback callback)
+    public static BluetoothGatt connect(BluetoothDevice device, boolean autoConnect, Context context, BluetoothGattCallback callback)
     {
-        return device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE);
+        return device.connectGatt(context, autoConnect, callback, BluetoothDevice.TRANSPORT_LE);
     }
 
 }

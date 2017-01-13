@@ -46,7 +46,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 
 	@Override public void execute()
 	{
-		if( false == getDevice().getNativeGatt().readRemoteRssi() )
+		if( false == getDevice().gattLayer().readRemoteRssi() )
 		{
 			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}

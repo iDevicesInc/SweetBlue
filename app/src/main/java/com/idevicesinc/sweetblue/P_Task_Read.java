@@ -40,7 +40,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite
 		}
 		else
 		{
-			if( false == getDevice().getNativeGatt().readCharacteristic(char_native) )
+			if( false == getDevice().gattLayer().readCharacteristic(char_native) )
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 			}

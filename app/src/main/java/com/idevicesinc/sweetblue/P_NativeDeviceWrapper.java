@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 class P_NativeDeviceWrapper
 {
 	private final BleDevice m_device;
-	private BluetoothDevice m_device_native;
+	private P_BluetoothDevice m_device_native;
 	private	BluetoothGatt m_gatt;
 	private final String m_address;
 
@@ -26,11 +26,11 @@ class P_NativeDeviceWrapper
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
 	private	Integer m_nativeConnectionState = null;
 	
-	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String name_normalized, String name_native)
+	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, P_GattLayer gattLayer, String name_normalized, String name_native)
 	{
 		m_device = device;
-		m_device_native = device_native;
-		m_address = m_device_native == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
+		m_device_native = new P_BluetoothDevice(device_native, gattLayer);
+		m_address = m_device_native.getDevice() == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
 
 		updateName(name_native, name_normalized);
 
@@ -66,7 +66,7 @@ class P_NativeDeviceWrapper
 
 		updateNativeName(name_native);
 
-		m_device_native = device_native;
+		m_device_native.updateDevice(device_native);
 	}
 
 	void setName_override(final String name)
@@ -150,7 +150,7 @@ class P_NativeDeviceWrapper
 		}
 		else
 		{
-			return m_device_native;
+			return m_device_native.getDevice();
 		}
 	}
 	
@@ -239,7 +239,7 @@ class P_NativeDeviceWrapper
 	
 	public int getNativeConnectionState()
 	{
-		return m_device.getManager().getNative().getConnectionState(m_device_native, BluetoothGatt.GATT_SERVER );
+		return m_device_native.getConnectionState(m_device.getManager().getNative());
 	}
 	
 	public int getConnectionState()

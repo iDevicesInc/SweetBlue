@@ -700,6 +700,7 @@ public class BluetoothEnabler
         try
         {
             Method scanstate = bleMngr().getClass().getMethod("setBleScanReady", (Class[]) null);
+            scanstate.setAccessible(true);
             scanstate.invoke(bleMngr(), (Object[]) null);
         }
         catch (Exception e)

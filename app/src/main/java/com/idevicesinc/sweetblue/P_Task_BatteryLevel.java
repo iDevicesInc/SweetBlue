@@ -77,7 +77,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
             }
             else
             {
-                if (!getDevice().getNativeGatt().readDescriptor(desc))
+                if (false == getDevice().gattLayer().readDescriptor(desc))
                 {
                     fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, ch.getUuid(), desc.getUuid());
                 }
@@ -114,7 +114,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
             boolean bothNull = value == null && mValueToMatch == null;
             if (bothNull || Arrays.equals(value, mValueToMatch))
             {
-                if (false == getDevice().getNativeGatt().readCharacteristic(desc.getCharacteristic()))
+                if (false == getDevice().gattLayer().readCharacteristic(desc.getCharacteristic()))
                 {
                     fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, desc.getCharacteristic().getUuid(), BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID);
                 }
@@ -134,7 +134,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
                 {
                     final BluetoothGattCharacteristic ch = batteryChars.get(0);
                     final BluetoothGattDescriptor descr = ch.getDescriptor(mDescriptorUuid);
-                    if (!getDevice().getNativeGatt().readDescriptor(descr))
+                    if (false == getDevice().gattLayer().readDescriptor(descr))
                     {
                         fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, ch.getUuid(), descr.getUuid());
                     }

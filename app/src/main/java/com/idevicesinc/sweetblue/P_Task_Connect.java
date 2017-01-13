@@ -54,16 +54,9 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			
 			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
 
-			if (Utils.isMarshmallow())
-			{
-				m_gatt = M_Util.connect(getDevice().getNative(), getManager().getApplicationContext(), getDevice().getListeners());
-			}
-			else
-			{
-				m_gatt = getDevice().getNative().connectGatt(getDevice().getManager().getApplicationContext(), useAutoConnect, getDevice().getListeners());
-			}
-			
-			if( m_gatt == null )
+			m_gatt = getDevice().gattLayer().connect(useAutoConnect);
+
+			if( getDevice().gattLayer().isGattNull() )
 			{
 				failImmediately();
 			}

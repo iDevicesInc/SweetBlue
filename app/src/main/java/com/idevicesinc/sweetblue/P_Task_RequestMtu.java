@@ -43,7 +43,7 @@ class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_Sta
 	{
 		if( Utils.isLollipop() )
 		{
-			if( false == L_Util.requestMtu(getDevice(), m_mtu))
+			if( false == getDevice().gattLayer().requestMtu(m_mtu))
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}

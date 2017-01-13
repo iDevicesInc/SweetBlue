@@ -29,6 +29,8 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
 
         bleManager = testActivity.getBleManager();
 
+        bleManager.onResume();
+
         testActivity.eventListener = new BleScanActivity.EventStateInterface()
         {
             @Override
@@ -44,6 +46,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
                 }
             }
         };
+
     }
 
     @Test
@@ -98,6 +101,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
                 @Override
                 public void run()
                 {
+                    testActivity.checkState();
                     assertTrue(bleManager.is(BleManagerState.SCANNING));
 
                     if(iteration == 29)
