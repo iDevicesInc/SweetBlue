@@ -44,30 +44,30 @@ public class ConnectBlitzer extends BaseTester<TaskManagerIdleActivity>
     @Test
     public void connectBlitz() throws Exception
     {
-        s = new Semaphore(0);
-
-        mgr.setListener_Discovery(new BleManager.DiscoveryListener()
-        {
-            @Override public void onEvent(DiscoveryEvent e)
-            {
-                if (e.was(LifeCycle.DISCOVERED))
-                {
-                    mgr.stopScan();
-                    device = e.device();
-                    doConnect();
-                }
-            }
-        });
-        mgr.setListener_ConnectionFail(new BleDevice.ConnectionFailListener()
-        {
-            @Override public Please onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent e)
-            {
-                assertTrue("Connection failed with status " + e.status().name() + ". Connected successfully " + connectCount + " times.", false);
-                return Please.doNotRetry();
-            }
-        });
-        mgr.startScan();
-        s.acquire();
+//        s = new Semaphore(0);
+//
+//        mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+//        {
+//            @Override public void onEvent(DiscoveryEvent e)
+//            {
+//                if (e.was(LifeCycle.DISCOVERED))
+//                {
+//                    mgr.stopScan();
+//                    device = e.device();
+//                    doConnect();
+//                }
+//            }
+//        });
+//        mgr.setListener_ConnectionFail(new BleDevice.ConnectionFailListener()
+//        {
+//            @Override public Please onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent e)
+//            {
+//                assertTrue("Connection failed with status " + e.status().name() + ". Connected successfully " + connectCount + " times.", false);
+//                return Please.doNotRetry();
+//            }
+//        });
+//        mgr.startScan();
+//        s.acquire();
     }
 
     public void doConnect()

@@ -116,7 +116,10 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 	
 	@Override public void update(double timeStep)
 	{
-		checkIfBondingKickedOff();
+		if (getDevice().is(BleDeviceState.CONNECTED))
+		{
+			checkIfBondingKickedOff();
+		}
 	}
 	
 	private Boolean getAuthRetryValue()

@@ -7,6 +7,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
+
 public class UIUtil
 {
 
@@ -59,18 +60,20 @@ public class UIUtil
         return false;
     }
 
-    public static void acceptClickPermission(UiDevice device, String acceptText) throws UiObjectNotFoundException
+    /**
+     * Clicks a button with the given text. This will try to find the widget exactly as the text is given, and
+     * will try upper casing the text if it is not found.
+     */
+    public static void clickButton(UiDevice device, String buttonText) throws UiObjectNotFoundException
     {
-        UiObject accept = device.findObject(new UiSelector().text(acceptText));
+        UiObject accept = device.findObject(new UiSelector().text(buttonText));
         if (accept.exists())
         {
             accept.click();
+            return;
         }
-        accept = device.findObject(new UiSelector().text(acceptText.toUpperCase()));
-        if (accept.exists())
-        {
-            accept.click();
-        }
+        accept = device.findObject(new UiSelector().text(buttonText.toUpperCase()));
+        accept.click();
     }
 
     public static void denyPermission(UiDevice device) throws UiObjectNotFoundException
@@ -85,20 +88,20 @@ public class UIUtil
         {
             if (viewExistsExact(uiDevice, "ALLOW"))
             {
-                acceptClickPermission(uiDevice, "ALLOW");
+                clickButton(uiDevice, "ALLOW");
             }
             else if (viewExistsExact(uiDevice, "Yes"))
             {
-                acceptClickPermission(uiDevice, "Yes");
+                clickButton(uiDevice, "Yes");
             }
         }
         if (viewExistsExact(uiDevice, P_StringHandler.getString(activity, P_StringHandler.REQUIRES_LOCATION_PERMISSION)))
         {
-            acceptClickPermission(uiDevice, P_StringHandler.getString(activity, P_StringHandler.ACCEPT));
+            clickButton(uiDevice, P_StringHandler.getString(activity, P_StringHandler.ACCEPT));
         }
         if (viewExistsContains(uiDevice, "Allow", "access this device's location") && UIUtil.viewExistsExact(uiDevice, "ALLOW") && UIUtil.viewExistsExact(uiDevice, "DENY"))
         {
-            acceptClickPermission(uiDevice, "ALLOW");
+            clickButton(uiDevice, "ALLOW");
         }
     }
 

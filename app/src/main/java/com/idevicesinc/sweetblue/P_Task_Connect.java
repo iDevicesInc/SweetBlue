@@ -56,7 +56,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 
 			m_gatt = getDevice().gattLayer().connect(useAutoConnect);
 
-			if( getDevice().gattLayer().isGattNull() )
+			if( getDevice().gattLayer().isGattNull(m_gatt) )
 			{
 				failImmediately();
 			}

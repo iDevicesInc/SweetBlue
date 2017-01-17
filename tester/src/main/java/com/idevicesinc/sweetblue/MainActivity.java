@@ -15,7 +15,12 @@ import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.Interval;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+
 import com.idevicesinc.sweetblue.tester.R;
+import com.idevicesinc.sweetblue.utils.Utils_String;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 public class MainActivity extends AppCompatActivity
@@ -28,6 +33,8 @@ public class MainActivity extends AppCompatActivity
     private ScanAdaptor mAdaptor;
     private ArrayList<BleDevice> mDevices;
 
+//    private final static UUID tempUuid = UUID.fromString("47495078-0002-491E-B9A4-F85CD01C3698");
+    private final static UUID tempUuid = UUID.fromString("1234666b-1000-2000-8000-001199334455");
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -43,13 +50,18 @@ public class MainActivity extends AppCompatActivity
         {
             @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                BleDevice device = mDevices.get(position);
+                final BleDevice device = mDevices.get(position);
                 device.setListener_State(new BleDevice.StateListener()
                 {
                     @Override public void onEvent(StateEvent e)
                     {
-                        int i = 0;
-                        i++;
+                        if (e.didEnter(BleDeviceState.INITIALIZED))
+                        {
+                            byte[] fakeData = new byte[100];
+                            new Random().nextBytes(fakeData);
+                            device.write(tempUuid, fakeData, null);
+                        }
+                        mAdaptor.notifyDataSetChanged();
                     }
                 });
                 device.connect();
@@ -74,7 +86,8 @@ public class MainActivity extends AppCompatActivity
         {
             @Override public void onClick(View v)
             {
-                mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
+                //mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
+                mgr.startScan();
             }
         });
         mStopScan = (Button) findViewById(R.id.stopScan);
@@ -88,7 +101,17 @@ public class MainActivity extends AppCompatActivity
 
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
-        config.scanApi = BleScanApi.POST_LOLLIPOP;
+//        config.useGattRefresh = true;
+//        config.runOnMainThread = false;
+//        config.scanApi = BleScanApi.POST_LOLLIPOP;
+        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        {
+            @Override public Please onEvent(ScanEvent e)
+            {
+                return Please.acknowledgeIf(e.name_native().contains("Double"));
+            }
+        };
+
         mgr = BleManager.get(this, config);
         mgr.setListener_State(new BleManager.StateListener()
         {
@@ -168,7 +191,7 @@ public class MainActivity extends AppCompatActivity
             {
                 v = (ViewHolder) convertView.getTag();
             }
-            v.name.setText(mDevices.get(position).toString());
+            v.name.setText(Utils_String.concatStrings(mDevices.get(position).toString(), "\nNative Name: ", mDevices.get(position).getName_native()));
             //v.rssi.setText(String.valueOf(mDevices.get(position).getRssi()));
             return convertView;
         }

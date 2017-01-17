@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
+import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
@@ -29,6 +30,8 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			if (task.getClass() == P_Task_Connect.class)
 			{
 				final P_Task_Connect connectTask = (P_Task_Connect) task;
+
+				Log.e("DeviceListener", "Got Connect task end state of " + state.name());
 				
 				if (state.isEndingState())
 				{

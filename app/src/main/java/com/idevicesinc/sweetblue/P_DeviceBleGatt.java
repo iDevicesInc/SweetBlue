@@ -61,6 +61,11 @@ final class P_DeviceBleGatt
         return m_gattLayer.isGattNull(m_device.getNativeGatt());
     }
 
+    public boolean isGattNull(BluetoothGatt gatt)
+    {
+        return m_gattLayer.isGattNull(gatt);
+    }
+
     public BluetoothGatt connect(boolean useAutoConnect)
     {
         return m_gattLayer.connect(m_device.getNative(), m_device.getManager().getApplicationContext(), useAutoConnect, m_device.getListeners());

@@ -56,12 +56,6 @@ public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<Blueto
 
         Thread.sleep(2000); //Pause to wait for the device to update its state
 
-        if (UIUtil.turnOnPermissionDialogShowing(uiDevice))
-        {
-            UIUtil.allowPermission(uiDevice);
-            Thread.sleep(2000);
-        }
-
         assertTrue(bleAdapter.isEnabled());
 
         assertEquals(bleAdapter.isEnabled(), bleManager.is(BleManagerState.ON));

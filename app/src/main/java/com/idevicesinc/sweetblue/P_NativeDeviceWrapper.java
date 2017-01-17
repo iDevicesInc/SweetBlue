@@ -8,6 +8,11 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 class P_NativeDeviceWrapper
 {
@@ -24,13 +29,15 @@ class P_NativeDeviceWrapper
 	//--- DRK > We have to track connection state ourselves because using
 	//---		BluetoothManager.getConnectionState() is slightly out of date
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
-	private	Integer m_nativeConnectionState = null;
+	private AtomicInteger m_nativeConnectionState = null;
 	
 	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, P_GattLayer gattLayer, String name_normalized, String name_native)
 	{
 		m_device = device;
 		m_device_native = new P_BluetoothDevice(device_native, gattLayer);
 		m_address = m_device_native.getDevice() == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
+
+		m_nativeConnectionState = new AtomicInteger(-1);
 
 		updateName(name_native, name_normalized);
 
@@ -185,16 +192,16 @@ class P_NativeDeviceWrapper
 	{
 		if( state == null )
 		{
-			m_nativeConnectionState = getNativeConnectionState();
+			m_nativeConnectionState.set(getNativeConnectionState());
 		}
 		else
 		{
-			m_nativeConnectionState = state;
+			m_nativeConnectionState.set(state);
 		}
 
 		updateGattFromCallback(gatt);
 
-		getLogger().i(getLogger().gattConn(m_nativeConnectionState));
+		getLogger().i(getLogger().gattConn(m_nativeConnectionState.get()));
 	}
 	
 	public int getNativeBondState()
@@ -244,54 +251,131 @@ class P_NativeDeviceWrapper
 	
 	public int getConnectionState()
 	{
-		synchronized (this)
+		if (Utils.isOnMainThread())
 		{
-			final int reportedNativeConnectionState = getNativeConnectionState();
-			int connectedStateThatWeWillGoWith = reportedNativeConnectionState;
-			
-			if( m_nativeConnectionState != null )
+			return performGetNativeState(null, null);
+		}
+		else
+		{
+			final CountDownLatch latch = new CountDownLatch(1);
+			final AtomicInteger state = new AtomicInteger(-1);
+			getManager().getPostManager().postToMain(new Runnable()
 			{
-				if( m_nativeConnectionState != reportedNativeConnectionState )
+				@Override public void run()
 				{
-					getLogger().e("Tracked native state " + getLogger().gattConn(m_nativeConnectionState) + " doesn't match reported state " + getLogger().gattConn(reportedNativeConnectionState) + ".");
-				}
-				
-				connectedStateThatWeWillGoWith = m_nativeConnectionState;
-			}
-			
-			if( connectedStateThatWeWillGoWith != BluetoothGatt.STATE_DISCONNECTED )
-			{
-				if( m_gatt == null )
-				{
-					//--- DRK > Can't assert here because gatt can legitmately be null even though we have a connecting/ed native state.
-					//---		This was observed on the moto G right after app start up...getNativeConnectionState() reported connecting/ed
-					//---		but we haven't called connect yet. Really rare...only seen once after 4 months.
-					if( m_nativeConnectionState == null )
-					{
-						getLogger().e("Gatt is null with " + getLogger().gattConn(connectedStateThatWeWillGoWith));
-						
-						connectedStateThatWeWillGoWith = BluetoothGatt.STATE_DISCONNECTED;
+					final int reportedNativeConnectionState = getNativeConnectionState();
+					int connectedStateThatWeWillGoWith = reportedNativeConnectionState;
 
-						getManager().uhOh(UhOh.CONNECTED_WITHOUT_EVER_CONNECTING);
+					if (m_nativeConnectionState != null && m_nativeConnectionState.get() != -1)
+					{
+						if (m_nativeConnectionState.get() != reportedNativeConnectionState)
+						{
+							getLogger().e("Tracked native state " + getLogger().gattConn(m_nativeConnectionState.get()) + " doesn't match reported state " + getLogger().gattConn(reportedNativeConnectionState) + ".");
+						}
+
+						connectedStateThatWeWillGoWith = m_nativeConnectionState.get();
+					}
+
+					if (connectedStateThatWeWillGoWith != BluetoothGatt.STATE_DISCONNECTED)
+					{
+						if (m_gatt == null)
+						{
+							//--- DRK > Can't assert here because gatt can legitmately be null even though we have a connecting/ed native state.
+							//---		This was observed on the moto G right after app start up...getNativeConnectionState() reported connecting/ed
+							//---		but we haven't called connect yet. Really rare...only seen once after 4 months.
+							if (m_nativeConnectionState == null)
+							{
+								getLogger().e("Gatt is null with " + getLogger().gattConn(connectedStateThatWeWillGoWith));
+
+								connectedStateThatWeWillGoWith = BluetoothGatt.STATE_DISCONNECTED;
+
+								getManager().uhOh(UhOh.CONNECTED_WITHOUT_EVER_CONNECTING);
+							}
+							else
+							{
+								getManager().ASSERT(false, "Gatt is null with tracked native state: " + getLogger().gattConn(connectedStateThatWeWillGoWith));
+							}
+						}
 					}
 					else
 					{
-						getManager().ASSERT(false, "Gatt is null with tracked native state: " + getLogger().gattConn(connectedStateThatWeWillGoWith));
+						//--- DRK > Had this assert here but must have been a brain fart because we can be disconnected
+						//---		but still have gatt be not null cause we're trying to reconnect.
+						//			if( !m_mngr.ASSERT(m_gatt == null) )
+						//			{
+						//				m_logger.e(m_logger.gattConn(connectedStateThatWeWillGoWith));
+						//			}
 					}
+
+					state.set(connectedStateThatWeWillGoWith);
+					latch.countDown();
+				}
+			});
+			try
+			{
+				latch.await();
+			} catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+			return state.get();
+		}
+	}
+
+	private int performGetNativeState(AtomicInteger state, CountDownLatch latch)
+	{
+		final int reportedNativeConnectionState = getNativeConnectionState();
+		int connectedStateThatWeWillGoWith = reportedNativeConnectionState;
+
+		if( m_nativeConnectionState != null && m_nativeConnectionState.get() != -1 )
+		{
+			if( m_nativeConnectionState.get() != reportedNativeConnectionState )
+			{
+				getLogger().e("Tracked native state " + getLogger().gattConn(m_nativeConnectionState.get()) + " doesn't match reported state " + getLogger().gattConn(reportedNativeConnectionState) + ".");
+			}
+
+			connectedStateThatWeWillGoWith = m_nativeConnectionState.get();
+		}
+
+		if( connectedStateThatWeWillGoWith != BluetoothGatt.STATE_DISCONNECTED )
+		{
+			if( m_gatt == null )
+			{
+				//--- DRK > Can't assert here because gatt can legitmately be null even though we have a connecting/ed native state.
+				//---		This was observed on the moto G right after app start up...getNativeConnectionState() reported connecting/ed
+				//---		but we haven't called connect yet. Really rare...only seen once after 4 months.
+				if( m_nativeConnectionState == null )
+				{
+					getLogger().e("Gatt is null with " + getLogger().gattConn(connectedStateThatWeWillGoWith));
+
+					connectedStateThatWeWillGoWith = BluetoothGatt.STATE_DISCONNECTED;
+
+					getManager().uhOh(UhOh.CONNECTED_WITHOUT_EVER_CONNECTING);
+				}
+				else
+				{
+					getManager().ASSERT(false, "Gatt is null with tracked native state: " + getLogger().gattConn(connectedStateThatWeWillGoWith));
 				}
 			}
-			else
-			{
-				//--- DRK > Had this assert here but must have been a brain fart because we can be disconnected
-				//---		but still have gatt be not null cause we're trying to reconnect.
-	//			if( !m_mngr.ASSERT(m_gatt == null) )
-	//			{
-	//				m_logger.e(m_logger.gattConn(connectedStateThatWeWillGoWith));
-	//			}
-			}
-			
-			return connectedStateThatWeWillGoWith;
 		}
+		else
+		{
+			//--- DRK > Had this assert here but must have been a brain fart because we can be disconnected
+			//---		but still have gatt be not null cause we're trying to reconnect.
+			//			if( !m_mngr.ASSERT(m_gatt == null) )
+			//			{
+			//				m_logger.e(m_logger.gattConn(connectedStateThatWeWillGoWith));
+			//			}
+		}
+		if (state != null)
+		{
+			state.set(connectedStateThatWeWillGoWith);
+		}
+		if (latch != null)
+		{
+			latch.countDown();
+		}
+		return connectedStateThatWeWillGoWith;
 	}
 	
 	void closeGattIfNeeded(boolean disconnectAlso)
@@ -381,7 +465,7 @@ class P_NativeDeviceWrapper
 			}
 		}
 
-		m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;
+		m_nativeConnectionState.set(BluetoothGatt.STATE_DISCONNECTED);
 		m_gatt = null;
 	}
 	

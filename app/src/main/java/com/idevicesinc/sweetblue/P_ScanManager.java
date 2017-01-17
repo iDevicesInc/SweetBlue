@@ -4,6 +4,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import com.idevicesinc.sweetblue.compat.L_Util;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.List;
@@ -28,6 +29,10 @@ final class P_ScanManager
     private BleScanApi mCurrentApi;
     private volatile PI_BleScanner m_bleScanner;
     private final int m_retryCountMax = 3;
+    private boolean m_triedToStartScanAfterTurnedOn;
+    private boolean m_doingInfiniteScan;
+    private boolean m_triedToStartScanAfterResume;
+    private double m_timeNotScanning;
 
     private int m_mode;
 
@@ -168,7 +173,7 @@ final class P_ScanManager
         });
     }
 
-    public final void stopScan_private(boolean stopping)
+    private void stopScan_private(boolean stopping)
     {
         switch (mCurrentApi)
         {
@@ -271,11 +276,12 @@ final class P_ScanManager
                 m_manager.getCrashResolver().start();
             }
 
+            m_mode = Mode_BLE;
+
             BleManagerState.SCANNING.setScanApi(BleScanApi.PRE_LOLLIPOP);
 
             m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
 
-            m_mode = Mode_BLE;
             return true;
         }
     }
@@ -325,10 +331,10 @@ final class P_ScanManager
         {
             startLScan(nativePowerMode);
         }
+        m_mode = Mode_BLE_POST_LOLLIPOP;
         BleManagerState.SCANNING.setScanApi(BleScanApi.POST_LOLLIPOP);
         BleManagerState.SCANNING.setPower(power);
         m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
-        m_mode = Mode_BLE_POST_LOLLIPOP;
         return true;
     }
 
@@ -353,9 +359,9 @@ final class P_ScanManager
                     m_manager.uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
                 }
 
+                m_mode = Mode_CLASSIC;
                 BleManagerState.SCANNING.setScanApi(BleScanApi.CLASSIC);
                 m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
-                m_mode = Mode_CLASSIC;
 
                 return true;
             }
@@ -367,6 +373,103 @@ final class P_ScanManager
             m_manager.uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
 
             return false;
+        }
+    }
+
+    final void resetTimeNotScanning()
+    {
+        m_timeNotScanning = 0.0;
+    }
+
+    // Returns if the startScan boolean is true or not.
+    final boolean update(double timeStep)
+    {
+        if( !m_manager.isAny(SCANNING, STARTING_SCAN) )
+        {
+            m_timeNotScanning += timeStep;
+        }
+
+        boolean startScan = false;
+
+        if( Interval.isEnabled(m_manager.m_config.autoScanActiveTime) && m_manager.ready() )
+        {
+            if( m_manager.isForegrounded() )
+            {
+                if (Interval.isEnabled(m_manager.m_config.autoScanDelayAfterBleTurnsOn) && m_triedToStartScanAfterTurnedOn && (System.currentTimeMillis() - m_manager.timeTurnedOn()) >= m_manager.m_config.autoScanDelayAfterBleTurnsOn.millis())
+                {
+                    m_triedToStartScanAfterTurnedOn = true;
+
+                    if (!m_manager.is(SCANNING))
+                    {
+                        startScan = true;
+                    }
+                }
+                else if ( Interval.isEnabled(m_manager.m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_manager.timeForegrounded() >= Interval.secs(m_manager.m_config.autoScanDelayAfterResume) )
+                {
+                    m_triedToStartScanAfterResume = true;
+
+                    if (!m_manager.is(SCANNING))
+                    {
+                        startScan = true;
+                    }
+                }
+            }
+            if( !m_manager.is(SCANNING) )
+            {
+                double scanInterval = Interval.secs(m_manager.isForegrounded() ? m_manager.m_config.autoScanPauseInterval : m_manager.m_config.autoScanPauseTimeWhileAppIsBackgrounded);
+
+                if( Interval.isEnabled(scanInterval) && m_timeNotScanning >= scanInterval )
+                {
+                    startScan = true;
+                }
+            }
+        }
+
+        if( startScan )
+        {
+            if( m_manager.doAutoScan() )
+            {
+                m_manager.startScan_private(m_manager.m_config.autoScanActiveTime, null, null, /*isPoll=*/true);
+            }
+        }
+
+        final P_Task_Scan scanTask = m_manager.getTaskQueue().get(P_Task_Scan.class, m_manager);
+
+        if( scanTask != null )
+        {
+            //--- DRK > Not sure why this was originally also for the ARMED case...
+//			if( scanTask.getState() == PE_TaskState.ARMED || scanTask.getState() == PE_TaskState.EXECUTING )
+            if( scanTask.getState() == PE_TaskState.EXECUTING )
+            {
+                m_manager.tryPurgingStaleDevices(scanTask.getAggregatedTimeArmedAndExecuting());
+            }
+        }
+
+        return startScan;
+    }
+
+    final void onResume()
+    {
+        m_triedToStartScanAfterResume = false;
+
+        if( m_doingInfiniteScan )
+        {
+            m_triedToStartScanAfterResume = true;
+
+            m_manager.startScan();
+        }
+        else if( Interval.isDisabled(m_manager.m_config.autoScanDelayAfterResume) )
+        {
+            m_triedToStartScanAfterResume = true;
+        }
+    }
+
+    final void onPause()
+    {
+        m_triedToStartScanAfterResume = false;
+        if( m_manager.m_config.stopScanOnPause && m_manager.is(SCANNING) )
+        {
+            m_manager.stopScan_private(PA_StateTracker.E_Intent.UNINTENTIONAL);
         }
     }
 
@@ -461,11 +564,6 @@ final class P_ScanManager
                 m_mode = Mode_CLASSIC;
             }
         }
-    }
-
-    private P_GattLayer gatt()
-    {
-        return m_manager.m_config.defaultGattLayer;
     }
 
     final boolean isPreLollipopScan()

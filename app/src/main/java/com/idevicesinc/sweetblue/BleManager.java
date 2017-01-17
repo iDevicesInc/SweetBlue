@@ -839,13 +839,10 @@ public class BleManager
 	final P_DiskOptionsManager m_diskOptionsMngr;
 
 	private double m_timeForegrounded = 0.0;
-	private double m_timeNotScanning = 0.0;
 	private long m_timeTurnedOn = 0;
 	private long m_lastTaskExecution;
 	private boolean m_doingInfiniteScan = false;
-	private boolean m_triedToStartScanAfterTurnedOn = false;
 	private boolean m_isForegrounded = false;
-	private boolean m_triedToStartScanAfterResume = false;
 	private boolean m_ready = false;
 
     BleServer.StateListener m_defaultServerStateListener;
@@ -1684,9 +1681,9 @@ public class BleManager
 		}
 	}
 
-	private boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
+	boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
 	{
-		m_timeNotScanning = 0.0;
+		m_scanManager.resetTimeNotScanning();
 		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
 
 		if( false == isBluetoothEnabled() )
@@ -2138,20 +2135,10 @@ public class BleManager
 	 */
 	public void onResume()
 	{
-		m_triedToStartScanAfterResume = false;
 		m_isForegrounded = true;
 		m_timeForegrounded = 0.0;
 
-		if( m_doingInfiniteScan )
-		{
-			m_triedToStartScanAfterResume = true;
-
-			startScan();
-		}
-		else if( Interval.isDisabled(m_config.autoScanDelayAfterResume) )
-		{
-			m_triedToStartScanAfterResume = true;
-		}
+		m_scanManager.onResume();
 	}
 
 	/**
@@ -2163,14 +2150,9 @@ public class BleManager
 	 */
 	public void onPause()
 	{
-		m_triedToStartScanAfterResume = false;
 		m_isForegrounded = false;
 		m_timeForegrounded = 0.0;
-
-		if( m_config.stopScanOnPause && is(SCANNING) )
-		{
-			stopScan_private(E_Intent.UNINTENTIONAL);
-		}
+		m_scanManager.onPause();
 	}
 
 	/**
@@ -2243,9 +2225,9 @@ public class BleManager
 		stopScan();
 	}
 
-	private void stopScan_private(E_Intent intent)
+	void stopScan_private(E_Intent intent)
 	{
-		m_timeNotScanning = 0.0;
+		m_scanManager.resetTimeNotScanning();
 
 		// Specifically stop the scan
 		//m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
@@ -2937,6 +2919,16 @@ public class BleManager
 		m_taskQueue.add(task);
 	}
 
+	long timeTurnedOn()
+	{
+		return m_timeTurnedOn;
+	}
+
+	double timeForegrounded()
+	{
+		return m_timeForegrounded;
+	}
+
 	void onDiscoveredFromNativeStack(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
@@ -3114,7 +3106,7 @@ public class BleManager
 	{
 //		m_filterMngr.clear();
 
-		m_timeNotScanning = 0.0;
+		m_scanManager.resetTimeNotScanning();
 
 		m_stateTracker.remove(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
@@ -3176,77 +3168,17 @@ public class BleManager
 
 		m_deviceMngr.update(timeStep_seconds);
 
-		if( !isAny(SCANNING, STARTING_SCAN) )
-		{
-			m_timeNotScanning += timeStep_seconds;
-		}
-
 		if ( m_timeTurnedOn == 0 && is(ON) )
 		{
 			m_timeTurnedOn = System.currentTimeMillis();
 		}
 
-		boolean startScan = false;
-
-		if( Interval.isEnabled(m_config.autoScanActiveTime) && ready() )
-		{
-			if( m_isForegrounded )
-			{
-				if (Interval.isEnabled(m_config.autoScanDelayAfterBleTurnsOn) && !m_triedToStartScanAfterTurnedOn && (System.currentTimeMillis() - m_timeTurnedOn) >= m_config.autoScanDelayAfterBleTurnsOn.millis())
-				{
-					m_triedToStartScanAfterTurnedOn = true;
-
-					if (!is(SCANNING))
-					{
-						startScan = true;
-					}
-				}
-				else if ( Interval.isEnabled(m_config.autoScanDelayAfterResume) && !m_triedToStartScanAfterResume && m_timeForegrounded >= Interval.secs(m_config.autoScanDelayAfterResume) )
-				{
-					m_triedToStartScanAfterResume = true;
-
-					if (!is(SCANNING))
-					{
-						startScan = true;
-					}
-				}
-			}
-			if( !is(SCANNING) )
-			{
-				double scanInterval = Interval.secs(m_isForegrounded ? m_config.autoScanPauseInterval : m_config.autoScanPauseTimeWhileAppIsBackgrounded);
-
-				if( Interval.isEnabled(scanInterval) && m_timeNotScanning >= scanInterval )
-				{
-					startScan = true;
-				}
-			}
-		}
-
-		if( startScan )
-		{
-			if( doAutoScan() )
-			{
-				startScan_private(m_config.autoScanActiveTime, null, null, /*isPoll=*/true);
-			}
-		}
-		else
+		if( m_scanManager.update(timeStep_seconds) == false )
 		{
 			if (m_lastTaskExecution + m_config.minTimeToIdle.millis() < System.currentTimeMillis())
 			{
 				m_updateRunnable.setUpdateRate(m_config.idleUpdateRate.millis());
 				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, true);
-			}
-		}
-
-		final P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
-
-		if( scanTask != null )
-		{
-			//--- DRK > Not sure why this was originally also for the ARMED case...
-//			if( scanTask.getState() == PE_TaskState.ARMED || scanTask.getState() == PE_TaskState.EXECUTING )
-			if( scanTask.getState() == PE_TaskState.EXECUTING )
-			{
-				tryPurgingStaleDevices(scanTask.getAggregatedTimeArmedAndExecuting());
 			}
 		}
 
@@ -3265,7 +3197,7 @@ public class BleManager
 		return m_isForegrounded;
 	}
 
-	private boolean doAutoScan()
+	boolean doAutoScan()
 	{
 		return is(ON) && (m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA));
 	}

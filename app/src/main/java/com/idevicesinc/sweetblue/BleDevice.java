@@ -5931,7 +5931,7 @@ public class BleDevice extends BleNode
 
     void onServicesDiscovered()
     {
-        if (m_mtu > 0)
+        if (m_mtu > BleNodeConfig.DEFAULT_MTU_SIZE)
         {
             if (isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM))
             {
@@ -6377,8 +6377,6 @@ public class BleDevice extends BleNode
 
     ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final ReadWriteListener listener)
     {
-
-
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, descriptorUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
@@ -6394,7 +6392,7 @@ public class BleDevice extends BleNode
 
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
-            queue().add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+            addWriteTasks(characteristic, data, requiresBonding, listener);
         }
         else
         {
@@ -6405,6 +6403,53 @@ public class BleDevice extends BleNode
         }
 
         return NULL_READWRITE_EVENT();
+    }
+
+    private int getEffectiveMtuSize()
+    {
+        return getMtu() - BleManagerConfig.GATT_MTU_OVERHEAD;
+    }
+
+    private void addWriteDescriptorTasks(BluetoothGattDescriptor descriptor, FutureData data, boolean requiresBonding, ReadWriteListener listener)
+    {
+        int mtuSize = getEffectiveMtuSize();
+        if (data.getData().length < mtuSize)
+        {
+            queue().add(new P_Task_WriteDescriptor(this, descriptor, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+        }
+        else
+        {
+            byte[] allData = data.getData();
+            int chunks = (allData.length / mtuSize) + 1;
+            FutureData curData;
+            for (int i = 0; i < chunks; i++)
+            {
+                curData = new PresentData(Arrays.copyOfRange(allData, (i * mtuSize), Math.min(allData.length, (i * mtuSize) + mtuSize)));
+                queue().add(new P_Task_WriteDescriptor(this, descriptor, curData, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+            }
+        }
+    }
+
+    private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, ReadWriteListener listener)
+    {
+        int mtuSize = getEffectiveMtuSize();
+        if (data.getData().length < mtuSize)
+        {
+            queue().add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+        }
+        else
+        {
+            byte[] allData = data.getData();
+            int curIndex = 0;
+            FutureData curData;
+            while (curIndex < allData.length)
+            {
+                int end = Math.min(allData.length, curIndex + mtuSize);
+                curData = new PresentData(Arrays.copyOfRange(allData, curIndex, Math.min(allData.length, curIndex + mtuSize)));
+                queue().add(new P_Task_Write(this, characteristic, curData, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+                curIndex = end;
+            }
+        }
     }
 
     private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, ReadWriteListener listener)
