@@ -107,6 +107,12 @@ public class BleNodeConfig
 	public Boolean disconnectIsCancellable									= true;
 
 	/**
+	 * Default is <code>true</code> - this will automatically stripe writes that are larger than the MTU size into multiple WRITE requests for you.
+	 * If you are using {@link BleDevice#setMtu(int)}, this may make things unstable.
+	 */
+	public boolean autoStripeWrites											= true;
+
+	/**
 	 * Default is an instance of {@link DefaultTaskTimeoutRequestFilter} - set an implementation here to
 	 * have fine control over how long individual {@link BleTask} instances can take before they
 	 * are considered "timed out" and failed.

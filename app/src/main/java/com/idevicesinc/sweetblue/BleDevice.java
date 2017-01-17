@@ -6413,19 +6413,21 @@ public class BleDevice extends BleNode
     private void addWriteDescriptorTasks(BluetoothGattDescriptor descriptor, FutureData data, boolean requiresBonding, ReadWriteListener listener)
     {
         int mtuSize = getEffectiveMtuSize();
-        if (data.getData().length < mtuSize)
+        if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
         {
             queue().add(new P_Task_WriteDescriptor(this, descriptor, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
         }
         else
         {
             byte[] allData = data.getData();
-            int chunks = (allData.length / mtuSize) + 1;
+            int curIndex = 0;
             FutureData curData;
-            for (int i = 0; i < chunks; i++)
+            while (curIndex < allData.length)
             {
-                curData = new PresentData(Arrays.copyOfRange(allData, (i * mtuSize), Math.min(allData.length, (i * mtuSize) + mtuSize)));
+                int end = Math.min(allData.length, curIndex + mtuSize);
+                curData = new PresentData(Arrays.copyOfRange(allData, curIndex, Math.min(allData.length, curIndex + mtuSize)));
                 queue().add(new P_Task_WriteDescriptor(this, descriptor, curData, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+                curIndex = end;
             }
         }
     }
@@ -6433,7 +6435,7 @@ public class BleDevice extends BleNode
     private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, ReadWriteListener listener)
     {
         int mtuSize = getEffectiveMtuSize();
-        if (data.getData().length < mtuSize)
+        if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
         {
             queue().add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
         }
