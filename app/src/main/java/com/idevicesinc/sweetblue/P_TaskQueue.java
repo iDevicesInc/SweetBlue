@@ -239,7 +239,9 @@ class P_TaskQueue
 
 		return executingTask;
 	}
-	
+
+	// Changed the boolean to represent if this method has called print() or not. (The boolean wasn't being checked
+	// anymore).
 	private synchronized boolean dequeue()
 	{
 		if( !m_mngr.ASSERT(m_current.get() == null) )  return false;
@@ -257,12 +259,10 @@ class P_TaskQueue
 				if (!m_current.get().tryExecuting())
 				{
 					print();
+					return true;
 				}
-
-				return true;
 			}
 		}
-
 		return false;
 	}
 	
@@ -287,11 +287,13 @@ class P_TaskQueue
 		m_current.set(null);
 		current_saved.setEndingState(endingState);
 
+		boolean printed = false;
+
 		if( m_queue.size() > 0 && getCurrent() == null )
 		{
 			if( endingState.canGoToNextTaskImmediately() )
 			{
-				dequeue();
+				printed = dequeue();
 			}
 			else
 			{
@@ -308,8 +310,11 @@ class P_TaskQueue
 				});
 			}
 		}
-		
-		print();
+
+		if (!printed)
+		{
+			print();
+		}
 		
 //		m_pendingEndingStateForCurrentTask = endingState;
 		
