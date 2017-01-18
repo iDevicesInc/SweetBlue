@@ -240,8 +240,6 @@ class P_TaskQueue
 		return executingTask;
 	}
 
-	// Changed the boolean to represent if this method has called print() or not. (The boolean wasn't being checked
-	// anymore).
 	private synchronized boolean dequeue()
 	{
 		if( !m_mngr.ASSERT(m_current.get() == null) )  return false;
@@ -259,8 +257,8 @@ class P_TaskQueue
 				if (!m_current.get().tryExecuting())
 				{
 					print();
-					return true;
 				}
+				return true;
 			}
 		}
 		return false;
@@ -574,7 +572,7 @@ class P_TaskQueue
 
 	@Override public String toString()
 	{
-		final String current = m_current != null ? m_current.toString() : "no current task";
+		final String current = m_current.get() != null ? m_current.toString() : "no current task";
 //		if( m_pendingEndingStateForCurrentTask != null)
 //		{
 //			current += "(" + m_pendingEndingStateForCurrentTask.name() +")";
