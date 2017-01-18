@@ -1710,7 +1710,7 @@ public class BleDevice extends BleNode
             return m_retryCount;
         }
 
-        @Override public final Please onEvent(ConnectionFailEvent e)
+        @Override public Please onEvent(ConnectionFailEvent e)
         {
             //--- DRK > Not necessary to check this ourselves, just being explicit.
             if (!e.status().allowsRetry() || e.device().is(RECONNECTING_LONG_TERM))

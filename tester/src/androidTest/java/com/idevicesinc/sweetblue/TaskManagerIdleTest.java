@@ -78,13 +78,13 @@ public class TaskManagerIdleTest extends BaseTester<TaskManagerIdleActivity>
                                         finishedSemaphore.release();
                                     }
 
-                                }, mgr.m_config.autoUpdateRate.millis());
+                                }, mgr.m_config.autoUpdateRate.millis() + 50);
                             }
 
                         }, 2 * mgr.m_config.minTimeToIdle.millis());/*Go a couple more ticks and wait for idle*/
                     }
 
-                }, mgr.m_config.autoUpdateRate.millis() + 5);
+                }, mgr.m_config.autoUpdateRate.millis() + 50);
             }
 
         }, 2 * mgr.m_config.minTimeToIdle.millis());

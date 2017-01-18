@@ -3122,11 +3122,11 @@ public final class BleManager
 			{
 				// To ensure we get back up to speed as soon as possible, we'll remove the callbacks, set the new update rate
 				// then post the runnable again. This avoids waiting for the idle time before the speed bumps back up.
+				getLogger().i("Update loop is no longer in the IDLE state.");
 				getPostManager().removeUpdateCallbacks(m_updateRunnable);
 				m_updateRunnable.setUpdateRate(m_config.autoUpdateRate.millis());
-				getPostManager().postToUpdateThread(m_updateRunnable);
 				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
-				getLogger().i("Update loop is no longer in the IDLE state.");
+				getPostManager().postToUpdateThread(m_updateRunnable);
 			}
 		}
 
