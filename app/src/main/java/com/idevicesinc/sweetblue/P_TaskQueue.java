@@ -225,8 +225,7 @@ class P_TaskQueue
 
 		if( m_current.get() == null )
 		{
-			dequeue();
-			executingTask = true;
+			executingTask = dequeue();
 		}
 		
 		if( getCurrent() != null )
