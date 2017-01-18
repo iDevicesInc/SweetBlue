@@ -3109,7 +3109,7 @@ public final class BleManager
 	 * alone and let the library handle the calling of this method.
 	 */
 	@Advanced
-	public final void update(final double timeStep_seconds)
+	public final void update(final double timeStep_seconds, final long currentTime)
 	{
 		m_listeners.update();
 
@@ -3117,10 +3117,14 @@ public final class BleManager
 
 		if (m_taskQueue.update(timeStep_seconds))
 		{
-			m_lastTaskExecution = System.currentTimeMillis();
+			m_lastTaskExecution = currentTime;
 			if (is(IDLE))
 			{
+				// To ensure we get back up to speed as soon as possible, we'll remove the callbacks, set the new update rate
+				// then post the runnable again. This avoids waiting for the idle time before the speed bumps back up.
+				getPostManager().removeUpdateCallbacks(m_updateRunnable);
 				m_updateRunnable.setUpdateRate(m_config.autoUpdateRate.millis());
+				getPostManager().postToUpdateThread(m_updateRunnable);
 				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
 				getLogger().i("Update loop is no longer in the IDLE state.");
 			}
@@ -3139,16 +3143,19 @@ public final class BleManager
 
 		if ( m_timeTurnedOn == 0 && is(ON) )
 		{
-			m_timeTurnedOn = System.currentTimeMillis();
+			m_timeTurnedOn = currentTime;
 		}
 
 		if( m_scanManager.update(timeStep_seconds) == false )
 		{
-			if (!is(IDLE) && m_lastTaskExecution + m_config.minTimeToIdle.millis() < System.currentTimeMillis())
+			if (Interval.isEnabled(m_config.minTimeToIdle))
 			{
-				m_updateRunnable.setUpdateRate(m_config.idleUpdateRate.millis());
-				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, true);
-				getLogger().i("Update loop has entered IDLE state.");
+				if (!is(IDLE) && m_lastTaskExecution + m_config.minTimeToIdle.millis() < currentTime)
+				{
+					m_updateRunnable.setUpdateRate(m_config.idleUpdateRate.millis());
+					m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, true);
+					getLogger().i("Update loop has entered IDLE state.");
+				}
 			}
 		}
 
@@ -3290,7 +3297,7 @@ public final class BleManager
 			timeStep = timeStep <= 0.0 ? .00001 : timeStep;
 			timeStep = timeStep > 1.0 ? 1.0 : timeStep;
 
-			update(timeStep);
+			update(timeStep, currentTime);
 
 			m_lastAutoUpdateTime = currentTime;
 
