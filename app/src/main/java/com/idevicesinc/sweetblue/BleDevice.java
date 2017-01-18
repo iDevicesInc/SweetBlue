@@ -182,7 +182,7 @@ public class BleDevice extends BleNode
         /**
          * Set the service UUID for this write. This is only needed when you have characteristics with identical uuids under different services.
          */
-        public WriteBuilder setServiceUUID(UUID uuid)
+        public final WriteBuilder setServiceUUID(UUID uuid)
         {
             serviceUUID = uuid;
             return this;
@@ -191,7 +191,7 @@ public class BleDevice extends BleNode
         /**
          * Set the characteristic UUID to write to.
          */
-        public WriteBuilder setCharacteristicUUID(UUID uuid)
+        public final WriteBuilder setCharacteristicUUID(UUID uuid)
         {
             charUUID = uuid;
             return this;
@@ -200,7 +200,7 @@ public class BleDevice extends BleNode
         /**
          * Set the raw bytes to write.
          */
-        public WriteBuilder setBytes(byte[] data)
+        public final WriteBuilder setBytes(byte[] data)
         {
             this.data = new PresentData(data);
             return this;
@@ -209,7 +209,7 @@ public class BleDevice extends BleNode
         /**
          * Set the boolean to write.
          */
-        public WriteBuilder setBoolean(boolean value)
+        public final WriteBuilder setBoolean(boolean value)
         {
             data = new PresentData(value ? new byte[]{0x1} : new byte[]{0x0});
             return this;
@@ -218,7 +218,7 @@ public class BleDevice extends BleNode
         /**
          * Set an int to be written.
          */
-        public WriteBuilder setInt(int val)
+        public final WriteBuilder setInt(int val)
         {
             final byte[] d = Utils_Byte.intToBytes(val);
             if (bigEndian)
@@ -232,7 +232,7 @@ public class BleDevice extends BleNode
         /**
          * Set a short to be written.
          */
-        public WriteBuilder setShort(short val)
+        public final WriteBuilder setShort(short val)
         {
             final byte[] d = Utils_Byte.shortToBytes(val);
             if (bigEndian)
@@ -246,7 +246,7 @@ public class BleDevice extends BleNode
         /**
          * Set a long to be written.
          */
-        public WriteBuilder setLong(long val)
+        public final WriteBuilder setLong(long val)
         {
             final byte[] d = Utils_Byte.longToBytes(val);
             if (bigEndian)
@@ -261,7 +261,7 @@ public class BleDevice extends BleNode
          * Set a string to be written. This method also allows you to specify the string encoding. If the encoding
          * fails, then {@link String#getBytes()} is used instead, which uses "UTF-8" by default.
          */
-        public WriteBuilder setString(String value, String stringEncoding)
+        public final WriteBuilder setString(String value, String stringEncoding)
         {
             byte[] bytes;
             try
@@ -278,7 +278,7 @@ public class BleDevice extends BleNode
         /**
          * Set a string to be written. This defaults to "UTF-8" encoding.
          */
-        public WriteBuilder setString(String value)
+        public final WriteBuilder setString(String value)
         {
             return setString(value, "UTF-8");
         }
@@ -450,12 +450,12 @@ public class BleDevice extends BleNode
             /**
              * Returns <code>true</code> for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
              */
-            public boolean wasCancelled()
+            public final boolean wasCancelled()
             {
                 return this == CANCELLED_FROM_DISCONNECT || this == Status.CANCELLED_FROM_BLE_TURNING_OFF;
             }
 
-            @Override public boolean isNull()
+            @Override public final boolean isNull()
             {
                 return this == NULL;
             }
@@ -539,7 +539,7 @@ public class BleDevice extends BleNode
              * {@link #DISABLING_NOTIFICATION}. Overall this convenience method is meant to tell you when we've <i>received</i> something from
              * the device as opposed to writing something to it.
              */
-            public boolean isRead()
+            public final boolean isRead()
             {
                 return !isWrite() && this != ENABLING_NOTIFICATION && this != DISABLING_NOTIFICATION;
             }
@@ -547,7 +547,7 @@ public class BleDevice extends BleNode
             /**
              * Returns <code>true</code> if <code>this</code> is {@link #WRITE} or {@link #WRITE_NO_RESPONSE} or {@link #WRITE_SIGNED}.
              */
-            public boolean isWrite()
+            public final boolean isWrite()
             {
                 return this == WRITE || this == WRITE_NO_RESPONSE || this == WRITE_SIGNED;
             }
@@ -555,7 +555,7 @@ public class BleDevice extends BleNode
             /**
              * Returns true if <code>this</code> is {@link #NOTIFICATION}, {@link #PSUEDO_NOTIFICATION}, or {@link #INDICATION}.
              */
-            public boolean isNotification()
+            public final boolean isNotification()
             {
                 return this.isNativeNotification() || this == PSUEDO_NOTIFICATION;
             }
@@ -564,7 +564,7 @@ public class BleDevice extends BleNode
              * Subset of {@link #isNotification()}, returns <code>true</code> only for {@link #NOTIFICATION} and {@link #INDICATION}, i.e. only
              * notifications who origin is an *actual* notification (or indication) sent from the remote BLE device.
              */
-            public boolean isNativeNotification()
+            public final boolean isNativeNotification()
             {
                 return this == NOTIFICATION || this == INDICATION;
             }
@@ -573,7 +573,7 @@ public class BleDevice extends BleNode
              * Returns the {@link BleNodeConfig.HistoricalDataLogFilter.Source} equivalent
              * for this {@link BleDevice.ReadWriteListener.Type}, or {@link BleNodeConfig.HistoricalDataLogFilter.Source#NULL}.
              */
-            public BleNodeConfig.HistoricalDataLogFilter.Source toHistoricalDataSource()
+            public final BleNodeConfig.HistoricalDataLogFilter.Source toHistoricalDataSource()
             {
                 switch (this)
                 {
@@ -592,7 +592,7 @@ public class BleDevice extends BleNode
                 return BleNodeConfig.HistoricalDataLogFilter.Source.NULL;
             }
 
-            @Override public boolean isNull()
+            @Override public final boolean isNull()
             {
                 return this == NULL;
             }
@@ -640,7 +640,7 @@ public class BleDevice extends BleNode
              */
             CONNECTION_PRIORITY;
 
-            @Override public boolean isNull()
+            @Override public final boolean isNull()
             {
                 return this == NULL;
             }
@@ -662,7 +662,7 @@ public class BleDevice extends BleNode
             /**
              * The {@link BleDevice} this {@link ReadWriteEvent} is for.
              */
-            public BleDevice device()
+            public final BleDevice device()
             {
                 return m_device;
             }
@@ -672,7 +672,7 @@ public class BleDevice extends BleNode
             /**
              * Convience to return the mac address of {@link #device()}.
              */
-            public String macAddress()
+            public final String macAddress()
             {
                 return m_device.getMacAddress();
             }
@@ -680,7 +680,7 @@ public class BleDevice extends BleNode
             /**
              * The type of operation, read, write, etc.
              */
-            public Type type()
+            public final Type type()
             {
                 return m_type;
             }
@@ -690,7 +690,7 @@ public class BleDevice extends BleNode
             /**
              * The type of GATT object this {@link ReadWriteEvent} is for, currently characteristic, descriptor, or rssi.
              */
-            public Target target()
+            public final Target target()
             {
                 return m_target;
             }
@@ -702,7 +702,7 @@ public class BleDevice extends BleNode
              * even if {@link #target} is {@link Target#DESCRIPTOR}. If {@link #target} is {@link Target#RSSI} then this will be referentially equal
              * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
              */
-            public UUID serviceUuid()
+            public final UUID serviceUuid()
             {
                 return m_serviceUuid;
             }
@@ -714,7 +714,7 @@ public class BleDevice extends BleNode
              * even if {@link #target} is {@link Target#DESCRIPTOR}. If {@link #target} is {@link Target#RSSI} then this will be referentially equal
              * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
              */
-            public UUID charUuid()
+            public final UUID charUuid()
             {
                 return m_charUuid;
             }
@@ -726,7 +726,7 @@ public class BleDevice extends BleNode
              * {@link Target#CHARACTERISTIC} or {@link Target#RSSI} then this will be referentially equal
              * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
              */
-            public UUID descUuid()
+            public final UUID descUuid()
             {
                 return m_descUuid;
             }
@@ -738,7 +738,7 @@ public class BleDevice extends BleNode
              * peripheral if {@link ReadWriteEvent#type} {@link Type#isRead()}. This will never be <code>null</code>. For error cases it will be a
              * zero-length array.
              */
-            public @Nullable(Nullable.Prevalence.NEVER) byte[] data()
+            public final @Nullable(Nullable.Prevalence.NEVER) byte[] data()
             {
                 return m_data;
             }
@@ -753,7 +753,7 @@ public class BleDevice extends BleNode
              * @see BleDevice#getRssiPercent()
              * @see BleDevice#getDistance()
              */
-            public int rssi()
+            public final int rssi()
             {
                 return m_rssi;
             }
@@ -767,7 +767,7 @@ public class BleDevice extends BleNode
              *
              * @see BleDevice#getMtu()
              */
-            public int mtu()
+            public final int mtu()
             {
                 return m_mtu;
             }
@@ -778,7 +778,7 @@ public class BleDevice extends BleNode
              * Indicates either success or the type of failure. Some values of {@link Status} are not used for certain values of {@link Type}.
              * For example a {@link Type#NOTIFICATION} cannot fail with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}.
              */
-            public Status status()
+            public final Status status()
             {
                 return m_status;
             }
@@ -790,7 +790,7 @@ public class BleDevice extends BleNode
              * the peripheral's embedded software, what have you. This will
              * always be slightly less than {@link #time_total()}.
              */
-            public Interval time_ota()
+            public final Interval time_ota()
             {
                 return m_transitTime;
             }
@@ -803,7 +803,7 @@ public class BleDevice extends BleNode
              * queue plus {@link ReadWriteEvent#time_ota()}. This will always be
              * longer than {@link #time_ota()}, though usually only slightly so.
              */
-            public Interval time_total()
+            public final Interval time_total()
             {
                 return m_totalTime;
             }
@@ -826,7 +826,7 @@ public class BleDevice extends BleNode
              * {@link BleStatuses} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be
              * totally accurate or up-to-date, nor may it match GATT_ values used by the bluetooth stack on your phone.
              */
-            public int gattStatus()
+            public final int gattStatus()
             {
                 return m_gattStatus;
             }
@@ -840,7 +840,7 @@ public class BleDevice extends BleNode
              * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status#TIMED_OUT},
              * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
              */
-            public boolean solicited()
+            public final boolean solicited()
             {
                 return m_solicited;
             }
@@ -854,7 +854,7 @@ public class BleDevice extends BleNode
              *
              * @see BleDevice#getConnectionPriority()
              */
-            public BleConnectionPriority connectionPriority()
+            public final BleConnectionPriority connectionPriority()
             {
                 return m_connectionPriority;
             }
@@ -946,7 +946,7 @@ public class BleDevice extends BleNode
              * Forwards {@link BleDevice#getNativeService(UUID)}, which will be nonnull
              * if {@link #target()} is {@link Target#CHARACTERISTIC} or {@link Target#DESCRIPTOR}.
              */
-            public @Nullable(Prevalence.NORMAL) BluetoothGattService service()
+            public final @Nullable(Prevalence.NORMAL) BluetoothGattService service()
             {
                 return device().getNativeService(serviceUuid());
             }
@@ -955,7 +955,7 @@ public class BleDevice extends BleNode
              * Forwards {@link BleDevice#getNativeCharacteristic(UUID, UUID)}, which will be nonnull
              * if {@link #target()} is {@link Target#CHARACTERISTIC} or {@link Target#DESCRIPTOR}.
              */
-            public @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
+            public final @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
             {
                 return device().getNativeCharacteristic(serviceUuid(), charUuid());
             }
@@ -964,7 +964,7 @@ public class BleDevice extends BleNode
              * Forwards {@link BleDevice#getNativeDescriptor_inChar(UUID, UUID)}, which will be nonnull
              * if {@link #target()} is {@link Target#DESCRIPTOR}.
              */
-            public @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor descriptor()
+            public final @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor descriptor()
             {
                 return device().getNativeDescriptor_inChar(charUuid(), descUuid());
             }
@@ -972,7 +972,7 @@ public class BleDevice extends BleNode
             /**
              * Convenience method for checking if {@link ReadWriteEvent#status} equals {@link BleDevice.ReadWriteListener.Status#SUCCESS}.
              */
-            public boolean wasSuccess()
+            public final boolean wasSuccess()
             {
                 return status() == Status.SUCCESS;
             }
@@ -980,7 +980,7 @@ public class BleDevice extends BleNode
             /**
              * Forwards {@link Status#wasCancelled()}.
              */
-            public boolean wasCancelled()
+            public final boolean wasCancelled()
             {
                 return status().wasCancelled();
             }
@@ -988,7 +988,7 @@ public class BleDevice extends BleNode
             /**
              * Forwards {@link Type#isNotification()}.
              */
-            public boolean isNotification()
+            public final boolean isNotification()
             {
                 return type().isNotification();
             }
@@ -996,7 +996,7 @@ public class BleDevice extends BleNode
             /**
              * Forwards {@link Type#isRead()}.
              */
-            public boolean isRead()
+            public final boolean isRead()
             {
                 return type().isRead();
             }
@@ -1004,7 +1004,7 @@ public class BleDevice extends BleNode
             /**
              * Forwards {@link Type#isWrite()}.
              */
-            public boolean isWrite()
+            public final boolean isWrite()
             {
                 return type().isWrite();
             }
@@ -1012,7 +1012,7 @@ public class BleDevice extends BleNode
             /**
              * Returns the first byte from {@link #data()}, or 0x0 if not available.
              */
-            public byte data_byte()
+            public final byte data_byte()
             {
                 return data().length > 0 ? data()[0] : 0x0;
             }
@@ -1020,7 +1020,7 @@ public class BleDevice extends BleNode
             /**
              * Convenience method that attempts to parse the data as a UTF-8 string.
              */
-            public @Nullable(Prevalence.NEVER) String data_utf8()
+            public final @Nullable(Prevalence.NEVER) String data_utf8()
             {
                 return data_string("UTF-8");
             }
@@ -1029,7 +1029,7 @@ public class BleDevice extends BleNode
              * Best effort parsing of {@link #data()} as a {@link String}. For now simply forwards {@link #data_utf8()}.
              * In the future may try to autodetect encoding first.
              */
-            public @Nullable(Prevalence.NEVER) String data_string()
+            public final @Nullable(Prevalence.NEVER) String data_string()
             {
                 return data_utf8();
             }
@@ -1037,7 +1037,7 @@ public class BleDevice extends BleNode
             /**
              * Convenience method that attempts to parse {@link #data()} as a {@link String} with the given charset, for example <code>"UTF-8"</code>.
              */
-            public @Nullable(Prevalence.NEVER) String data_string(final String charset)
+            public final @Nullable(Prevalence.NEVER) String data_string(final String charset)
             {
                 return Utils_String.getStringValue(data(), charset);
             }
@@ -1047,7 +1047,7 @@ public class BleDevice extends BleNode
              *
              * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
              */
-            public @Nullable(Prevalence.NEVER) int data_int(boolean reverse)
+            public final @Nullable(Prevalence.NEVER) int data_int(boolean reverse)
             {
                 if (reverse)
                 {
@@ -1066,7 +1066,7 @@ public class BleDevice extends BleNode
              *
              * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
              */
-            public @Nullable(Prevalence.NEVER) short data_short(boolean reverse)
+            public final @Nullable(Prevalence.NEVER) short data_short(boolean reverse)
             {
                 if (reverse)
                 {
@@ -1085,7 +1085,7 @@ public class BleDevice extends BleNode
              *
              * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
              */
-            public @Nullable(Prevalence.NEVER) long data_long(boolean reverse)
+            public final @Nullable(Prevalence.NEVER) long data_long(boolean reverse)
             {
                 if (reverse)
                 {
@@ -1102,12 +1102,12 @@ public class BleDevice extends BleNode
             /**
              * Forwards {@link Type#isNull()}.
              */
-            @Override public boolean isNull()
+            @Override public final boolean isNull()
             {
                 return type().isNull();
             }
 
-            @Override public String toString()
+            @Override public final String toString()
             {
                 if (isNull())
                 {
@@ -1194,7 +1194,7 @@ public class BleDevice extends BleNode
             /**
              * The device undergoing the state change.
              */
-            public BleDevice device()
+            public final BleDevice device()
             {
                 return m_device;
             }
@@ -1204,7 +1204,7 @@ public class BleDevice extends BleNode
             /**
              * Convience to return the mac address of {@link #device()}.
              */
-            public String macAddress()
+            public final String macAddress()
             {
                 return m_device.getMacAddress();
             }
@@ -1217,7 +1217,7 @@ public class BleDevice extends BleNode
              * <br><br>
              * See {@link ConnectionFailListener.ConnectionFailEvent#gattStatus()} for more information.
              */
-            public int gattStatus()
+            public final int gattStatus()
             {
                 return m_gattStatus;
             }
@@ -1232,7 +1232,7 @@ public class BleDevice extends BleNode
                 this.m_gattStatus = gattStatus;
             }
 
-            @Override public String toString()
+            @Override public final String toString()
             {
                 if (device().is(RECONNECTING_SHORT_TERM))
                 {
@@ -1364,7 +1364,7 @@ public class BleDevice extends BleNode
             /**
              * Returns true for {@link #EXPLICIT_DISCONNECT} or {@link #BLE_TURNING_OFF}.
              */
-            public boolean wasCancelled()
+            public final boolean wasCancelled()
             {
                 return this == EXPLICIT_DISCONNECT || this == BLE_TURNING_OFF;
             }
@@ -1372,7 +1372,7 @@ public class BleDevice extends BleNode
             /**
              * Same as {@link #wasCancelled()}, at least for now, but just being more "explicit", no pun intended.
              */
-            boolean wasExplicit()
+            final boolean wasExplicit()
             {
                 return wasCancelled();
             }
@@ -1381,12 +1381,12 @@ public class BleDevice extends BleNode
              * Whether this status honors a {@link BleNode.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
              * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
              */
-            public boolean allowsRetry()
+            public final boolean allowsRetry()
             {
                 return !this.wasCancelled() && this != ALREADY_CONNECTING_OR_CONNECTED;
             }
 
-            @Override public boolean isNull()
+            @Override public final boolean isNull()
             {
                 return this == NULL;
             }
@@ -1395,7 +1395,7 @@ public class BleDevice extends BleNode
              * Convenience method that returns whether this status is something that your app user would usually care about.
              * If this returns <code>true</code> then perhaps you should pop up a {@link android.widget.Toast} or something of that nature.
              */
-            public boolean shouldBeReportedToUser()
+            public final boolean shouldBeReportedToUser()
             {
                 return this == NATIVE_CONNECTION_FAILED ||
                         this == DISCOVERING_SERVICES_FAILED ||
@@ -1447,7 +1447,7 @@ public class BleDevice extends BleNode
             /**
              * The {@link BleDevice} this {@link ConnectionFailEvent} is for.
              */
-            public BleDevice device()
+            public final BleDevice device()
             {
                 return m_device;
             }
@@ -1457,7 +1457,7 @@ public class BleDevice extends BleNode
             /**
              * Convience to return the mac address of {@link #device()}.
              */
-            public String macAddress()
+            public final String macAddress()
             {
                 return m_device.getMacAddress();
             }
@@ -1465,7 +1465,7 @@ public class BleDevice extends BleNode
             /**
              * General reason why the connection failed.
              */
-            public Status status()
+            public final Status status()
             {
                 return m_status;
             }
@@ -1475,7 +1475,7 @@ public class BleDevice extends BleNode
             /**
              * See {@link BondEvent#failReason()}.
              */
-            public int bondFailReason()
+            public final int bondFailReason()
             {
                 return m_bondFailReason;
             }
@@ -1485,7 +1485,7 @@ public class BleDevice extends BleNode
             /**
              * The highest state reached by the latest connection attempt.
              */
-            public BleDeviceState highestStateReached_latest()
+            public final BleDeviceState highestStateReached_latest()
             {
                 return m_highestStateReached_latest;
             }
@@ -1498,7 +1498,7 @@ public class BleDevice extends BleNode
              * TIP: You can use this to keep the visual feedback in your connection progress UI "bookmarked" while the connection retries
              * and goes through previous states again.
              */
-            public BleDeviceState highestStateReached_total()
+            public final BleDeviceState highestStateReached_total()
             {
                 return m_highestStateReached_total;
             }
@@ -1508,7 +1508,7 @@ public class BleDevice extends BleNode
             /**
              * Further timing information for {@link Status#NATIVE_CONNECTION_FAILED}, {@link Status#BONDING_FAILED}, and {@link Status#DISCOVERING_SERVICES_FAILED}.
              */
-            public Timing timing()
+            public final Timing timing()
             {
                 return m_timing;
             }
@@ -1521,7 +1521,7 @@ public class BleDevice extends BleNode
              * downstream of {@link ReadWriteListener#onEvent(Event)}, then the {@link ReadWriteEvent} passed there will be returned
              * here. Otherwise, this will return a {@link ReadWriteEvent} for which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
              */
-            public ReadWriteListener.ReadWriteEvent txnFailReason()
+            public final ReadWriteListener.ReadWriteEvent txnFailReason()
             {
                 return m_txnFailReason;
             }
@@ -1535,7 +1535,7 @@ public class BleDevice extends BleNode
              * The list length is "reset" back to one whenever a {@link BleDeviceState#CONNECTING_OVERALL} operation completes, either
              * through becoming {@link BleDeviceState#INITIALIZED}, or {@link BleDeviceState#DISCONNECTED} for good.
              */
-            public ConnectionFailEvent[] history()
+            public final ConnectionFailEvent[] history()
             {
                 return m_history;
             }
@@ -1596,7 +1596,7 @@ public class BleDevice extends BleNode
              * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
              * {@link BleNodeConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
              */
-            @Override public boolean isNull()
+            @Override public final boolean isNull()
             {
                 return status().isNull();
             }
@@ -1604,12 +1604,12 @@ public class BleDevice extends BleNode
             /**
              * Forwards {@link BleDevice.ConnectionFailListener.Status#shouldBeReportedToUser()} using {@link #status()}.
              */
-            public boolean shouldBeReportedToUser()
+            public final boolean shouldBeReportedToUser()
             {
                 return status().shouldBeReportedToUser();
             }
 
-            @Override public String toString()
+            @Override public final String toString()
             {
                 if (isNull())
                 {
@@ -1705,12 +1705,12 @@ public class BleDevice extends BleNode
             m_failCountBeforeUsingAutoConnect = failCountBeforeUsingAutoConnect;
         }
 
-        public int getRetryCount()
+        public final int getRetryCount()
         {
             return m_retryCount;
         }
 
-        @Override public Please onEvent(ConnectionFailEvent e)
+        @Override public final Please onEvent(ConnectionFailEvent e)
         {
             //--- DRK > Not necessary to check this ourselves, just being explicit.
             if (!e.status().allowsRetry() || e.device().is(RECONNECTING_LONG_TERM))
@@ -1848,17 +1848,17 @@ public class BleDevice extends BleNode
             /**
              * @return <code>true</code> for {@link #CANCELLED_FROM_BLE_TURNING_OFF} or {@link #CANCELLED_FROM_UNBOND}.
              */
-            public boolean wasCancelled()
+            public final boolean wasCancelled()
             {
                 return this == CANCELLED_FROM_BLE_TURNING_OFF || this == CANCELLED_FROM_UNBOND;
             }
 
-            boolean canFailConnection()
+            final boolean canFailConnection()
             {
                 return this == FAILED_IMMEDIATELY || this == FAILED_EVENTUALLY || this == TIMED_OUT;
             }
 
-            ConnectionFailListener.Timing timing()
+            final ConnectionFailListener.Timing timing()
             {
                 switch (this)
                 {
@@ -1876,7 +1876,7 @@ public class BleDevice extends BleNode
             /**
              * @return <code>true</code> if <code>this</code> == {@link #NULL}.
              */
-            @Override public boolean isNull()
+            @Override public final boolean isNull()
             {
                 return this == NULL;
             }
@@ -1891,7 +1891,7 @@ public class BleDevice extends BleNode
             /**
              * The {@link BleDevice} that attempted to {@link BleDevice#bond()}.
              */
-            public BleDevice device()
+            public final BleDevice device()
             {
                 return m_device;
             }
@@ -1901,7 +1901,7 @@ public class BleDevice extends BleNode
             /**
              * Convience to return the mac address of {@link #device()}.
              */
-            public String macAddress()
+            public final String macAddress()
             {
                 return m_device.getMacAddress();
             }
@@ -1909,7 +1909,7 @@ public class BleDevice extends BleNode
             /**
              * The {@link Status} associated with this event.
              */
-            public Status status()
+            public final Status status()
             {
                 return m_status;
             }
@@ -1922,7 +1922,7 @@ public class BleDevice extends BleNode
              * {@link BleStatuses#UNBOND_REASON_AUTH_FAILED}. Otherwise it will be equal to {@link BleStatuses#BOND_FAIL_REASON_NOT_APPLICABLE}.
              * See also a publically accessible list in {@link BleStatuses}.
              */
-            public int failReason()
+            public final int failReason()
             {
                 return m_failReason;
             }
@@ -1935,7 +1935,7 @@ public class BleDevice extends BleNode
              * then the bond was created "spontaneously" as far as SweetBlue is concerned, whether through another app, the OS Bluetooth
              * settings, or maybe from a request by the remote BLE device itself.
              */
-            public State.ChangeIntent intent()
+            public final State.ChangeIntent intent()
             {
                 return m_intent;
             }
@@ -1958,7 +1958,7 @@ public class BleDevice extends BleNode
             /**
              * Shortcut for checking if {@link #status()} == {@link BondListener.Status#SUCCESS}.
              */
-            public boolean wasSuccess()
+            public final boolean wasSuccess()
             {
                 return status() == Status.SUCCESS;
             }
@@ -1966,12 +1966,12 @@ public class BleDevice extends BleNode
             /**
              * Forwards {@link Status#wasCancelled()}.
              */
-            public boolean wasCancelled()
+            public final boolean wasCancelled()
             {
                 return status().wasCancelled();
             }
 
-            @Override public String toString()
+            @Override public final String toString()
             {
                 if (isNull())
                 {
@@ -1990,7 +1990,7 @@ public class BleDevice extends BleNode
                 }
             }
 
-            @Override public boolean isNull()
+            @Override public final boolean isNull()
             {
                 return status().isNull();
             }
@@ -2119,7 +2119,7 @@ public class BleDevice extends BleNode
      * return <code>false</code> if there are no problems. After calling this you should do a few {@link BleDevice#write(UUID, byte[])}
      * calls then call {@link #reliableWrite_execute()}.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_begin(final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_begin(final ReadWriteListener listener)
     {
 
         return m_reliableWriteMngr.begin(listener);
@@ -2129,7 +2129,7 @@ public class BleDevice extends BleNode
      * Wrapper for {@link BluetoothGatt#abortReliableWrite()} - will return an event such that {@link ReadWriteEvent#isNull()} will
      * return <code>false</code> if there are no problems. This call requires a previous call to {@link #reliableWrite_begin(ReadWriteListener)}.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_abort()
+    public final @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_abort()
     {
 
         return m_reliableWriteMngr.abort();
@@ -2139,34 +2139,34 @@ public class BleDevice extends BleNode
      * Wrapper for {@link BluetoothGatt#abortReliableWrite()} - will return an event such that {@link ReadWriteEvent#isNull()} will
      * return <code>false</code> if there are no problems. This call requires a previous call to {@link #reliableWrite_begin(ReadWriteListener)}.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_execute()
+    public final @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_execute()
     {
 
         return m_reliableWriteMngr.execute();
     }
 
-    @Override protected PA_ServiceManager newServiceManager()
+    @Override protected final PA_ServiceManager newServiceManager()
     {
         return new P_DeviceServiceManager(this);
     }
 
-    void notifyOfPossibleImplicitBondingAttempt()
+    final void notifyOfPossibleImplicitBondingAttempt()
     {
         m_underwentPossibleImplicitBondingAttempt = true;
     }
 
-    P_DeviceStateTracker stateTracker_main()
+    final P_DeviceStateTracker stateTracker_main()
     {
         return m_stateTracker;
     }
 
-    void stateTracker_updateBoth(E_Intent intent, int status, Object... statesAndValues)
+    final void stateTracker_updateBoth(E_Intent intent, int status, Object... statesAndValues)
     {
         m_stateTracker_shortTermReconnect.update(intent, status, statesAndValues);
         stateTracker_main().update(intent, status, statesAndValues);
     }
 
-    P_DeviceStateTracker stateTracker()
+    final P_DeviceStateTracker stateTracker()
     {
         if (stateTracker_main().checkBitMatch(BleDeviceState.RECONNECTING_SHORT_TERM, true))
         {
@@ -2178,7 +2178,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    P_ReconnectManager reconnectMngr()
+    final P_ReconnectManager reconnectMngr()
     {
         if (stateTracker_main().checkBitMatch(BleDeviceState.RECONNECTING_SHORT_TERM, true))
         {
@@ -2215,7 +2215,7 @@ public class BleDevice extends BleNode
      * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
      * for this individual device.
      */
-    public void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
+    public final void setConfig(@Nullable(Prevalence.RARE) BleDeviceConfig config_nullable)
     {
         if (isNull()) return;
 
@@ -2264,17 +2264,17 @@ public class BleDevice extends BleNode
      * of {@link BleManagerConfig} is returned.
      */
     @Nullable(Prevalence.NEVER)
-    public BleDeviceConfig getConfig()
+    public final BleDeviceConfig getConfig()
     {
         return conf_device();
     }
 
-    BleDeviceConfig conf_device()
+    final BleDeviceConfig conf_device()
     {
         return m_config != null ? m_config : conf_mngr();
     }
 
-    @Override BleNodeConfig conf_node()
+    @Override final BleNodeConfig conf_node()
     {
         return conf_device();
     }
@@ -2285,7 +2285,7 @@ public class BleDevice extends BleNode
      * NOTE: That devices for which this returns {@link BleDeviceOrigin#EXPLICIT} may still be
      * {@link BleManager.DiscoveryListener.LifeCycle#REDISCOVERED} through {@link BleManager#startScan()}.
      */
-    public BleDeviceOrigin getOrigin()
+    public final BleDeviceOrigin getOrigin()
     {
         return m_origin;
     }
@@ -2296,7 +2296,7 @@ public class BleDevice extends BleNode
      * {@link BleDeviceOrigin#EXPLICIT} then this will return {@link EpochTime#NULL} unless or until
      * the device is {@link BleManager.DiscoveryListener.LifeCycle#REDISCOVERED}.
      */
-    public EpochTime getLastDiscoveryTime()
+    public final EpochTime getLastDiscoveryTime()
     {
         return m_lastDiscoveryTime;
     }
@@ -2320,7 +2320,7 @@ public class BleDevice extends BleNode
      * See further explanation at {@link BleDeviceConfig#manageLastDisconnectOnDisk}.
      */
     @Advanced
-    public State.ChangeIntent getLastDisconnectIntent()
+    public final State.ChangeIntent getLastDisconnectIntent()
     {
         if (isNull()) return State.ChangeIntent.NULL;
 
@@ -2336,7 +2336,7 @@ public class BleDevice extends BleNode
      * @deprecated - This will be removed in version 3. It has been refactored to {@link DeviceStateListener}.
      */
     @Deprecated
-    public void setListener_State(@Nullable(Prevalence.NORMAL) final StateListener listener_nullable)
+    public final void setListener_State(@Nullable(Prevalence.NORMAL) final StateListener listener_nullable)
     {
         if (isNull()) return;
 
@@ -2380,7 +2380,7 @@ public class BleDevice extends BleNode
     /**
      * Set a listener here to be notified whenever this device's state changes.
      */
-    public void setListener_State(@Nullable(Prevalence.NORMAL) DeviceStateListener listener_nullable)
+    public final void setListener_State(@Nullable(Prevalence.NORMAL) DeviceStateListener listener_nullable)
     {
         if (isNull()) return;
 
@@ -2390,7 +2390,7 @@ public class BleDevice extends BleNode
     /**
      * Returns the {@link DeviceStateListener} this device currently using.
      */
-    public DeviceStateListener getStateListener()
+    public final DeviceStateListener getStateListener()
     {
         return stateTracker_main().getListener();
     }
@@ -2399,7 +2399,7 @@ public class BleDevice extends BleNode
      * Set a listener here to be notified whenever a connection fails and to
      * have control over retry behavior.
      */
-    public void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) ConnectionFailListener listener_nullable)
+    public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) ConnectionFailListener listener_nullable)
     {
         if (isNull()) return;
 
@@ -2411,7 +2411,7 @@ public class BleDevice extends BleNode
      * will catch attempts to bond both through {@link #bond()} and when bonding
      * through the operating system settings or from other apps.
      */
-    public void setListener_Bond(@Nullable(Prevalence.NORMAL) BondListener listener_nullable)
+    public final void setListener_Bond(@Nullable(Prevalence.NORMAL) BondListener listener_nullable)
     {
         if (isNull()) return;
 
@@ -2427,7 +2427,7 @@ public class BleDevice extends BleNode
      * @deprecated - This will be removed in version 3. Use {@link com.idevicesinc.sweetblue.ReadWriteListener} instead (it was refactored to be in it's own class file, rather than an inner class).
      */
     @Deprecated
-    public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final ReadWriteListener listener_nullable)
+    public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final ReadWriteListener listener_nullable)
     {
         if (isNull()) return;
 
@@ -2457,7 +2457,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * NOTE: This will be called after the {@link ReadWriteListener} provided directly through the method params.
      */
-    public void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) com.idevicesinc.sweetblue.ReadWriteListener listener_nullable)
+    public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) com.idevicesinc.sweetblue.ReadWriteListener listener_nullable)
     {
         if (isNull()) return;
 
@@ -2469,7 +2469,7 @@ public class BleDevice extends BleNode
      * be called when toggling notifications. This does NOT replace {@link com.idevicesinc.sweetblue.ReadWriteListener}, just adds to it. If
      * a default {@link com.idevicesinc.sweetblue.ReadWriteListener} has been set, it will still fire in addition to this listener.
      */
-    public void setListener_Notification(@Nullable(Prevalence.NORMAL) NotificationListener listener_nullable)
+    public final void setListener_Notification(@Nullable(Prevalence.NORMAL) NotificationListener listener_nullable)
     {
         if (isNull()) return;
 
@@ -2480,7 +2480,7 @@ public class BleDevice extends BleNode
      * Sets a default backup {@link BleNode.HistoricalDataLoadListener} that will be invoked
      * for all historical data loads to memory for all uuids.
      */
-    public void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleNode.HistoricalDataLoadListener listener_nullable)
+    public final void setListener_HistoricalDataLoad(@Nullable(Prevalence.NORMAL) final BleNode.HistoricalDataLoadListener listener_nullable)
     {
         if (isNull()) return;
 
@@ -2492,7 +2492,7 @@ public class BleDevice extends BleNode
      * {@link #setListener_ConnectionFail(ConnectionFailListener)} and update your application's UI with this method's return value downstream of your
      * {@link ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} override.
      */
-    public int getConnectionRetryCount()
+    public final int getConnectionRetryCount()
     {
         if (isNull()) return 0;
 
@@ -2505,7 +2505,7 @@ public class BleDevice extends BleNode
      * @see BleDeviceState
      */
     @Advanced
-    public int getStateMask()
+    public final int getStateMask()
     {
         return stateTracker_main().getState();
     }
@@ -2516,7 +2516,7 @@ public class BleDevice extends BleNode
      * with {@link BleDeviceState#RECONNECTING_SHORT_TERM} is <code>true</code>.
      */
     @Advanced
-    public int getNativeStateMask()
+    public final int getNativeStateMask()
     {
         return stateTracker().getState();
     }
@@ -2528,7 +2528,7 @@ public class BleDevice extends BleNode
      * @see BleManagerConfig#nForAverageRunningReadTime
      */
     @Advanced
-    public Interval getAverageReadTime()
+    public final Interval getAverageReadTime()
     {
         return m_readTimeEstimator != null ? Interval.secs(m_readTimeEstimator.getRunningAverage()) : Interval.ZERO;
     }
@@ -2540,7 +2540,7 @@ public class BleDevice extends BleNode
      * reads and/or writes will take. For example for displaying the estimated time remaining for a firmware update.
      */
     @Advanced
-    public Interval getAverageWriteTime()
+    public final Interval getAverageWriteTime()
     {
         return m_writeTimeEstimator != null ? Interval.secs(m_writeTimeEstimator.getRunningAverage()) : Interval.ZERO;
     }
@@ -2551,7 +2551,7 @@ public class BleDevice extends BleNode
      *
      * @see #getDistance()
      */
-    public int getRssi()
+    public final int getRssi()
     {
         return m_rssi;
     }
@@ -2559,7 +2559,7 @@ public class BleDevice extends BleNode
     /**
      * Raw RSSI from {@link #getRssi()} is a little cryptic, so this gives you a friendly 0%-100% value for signal strength.
      */
-    public Percent getRssiPercent()
+    public final Percent getRssiPercent()
     {
         if (isNull())
         {
@@ -2579,7 +2579,7 @@ public class BleDevice extends BleNode
      * Returns the approximate distance in meters based on {@link #getRssi()} and
      * {@link #getTxPower()}. NOTE: the higher the distance, the less the accuracy.
      */
-    public Distance getDistance()
+    public final Distance getDistance()
     {
         if (isNull())
         {
@@ -2599,7 +2599,7 @@ public class BleDevice extends BleNode
      * @see BleDeviceConfig#defaultTxPower
      */
     @Advanced
-    public int getTxPower()
+    public final int getTxPower()
     {
         if (isNull())
         {
@@ -2625,7 +2625,7 @@ public class BleDevice extends BleNode
      * Returns the scan record from when we discovered the device. May be empty but never <code>null</code>.
      */
     @Advanced
-    public @Nullable(Prevalence.NEVER) byte[] getScanRecord()
+    public final @Nullable(Prevalence.NEVER) byte[] getScanRecord()
     {
         return m_scanRecord;
     }
@@ -2633,7 +2633,7 @@ public class BleDevice extends BleNode
     /**
      * Returns the advertising flags, if any, parse from {@link #getScanRecord()}.
      */
-    public int getAdvertisingFlags()
+    public final int getAdvertisingFlags()
     {
         return m_advertisingFlags;
     }
@@ -2641,7 +2641,7 @@ public class BleDevice extends BleNode
     /**
      * Returns the advertised services, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
      */
-    public @Nullable(Prevalence.NEVER) UUID[] getAdvertisedServices()
+    public final @Nullable(Prevalence.NEVER) UUID[] getAdvertisedServices()
     {
         final UUID[] toReturn = m_scanInfo.getServiceUUIDS().size() > 0 ? new UUID[m_scanInfo.getServiceUUIDS().size()] : EMPTY_UUID_ARRAY;
         return m_scanInfo.getServiceUUIDS().toArray(toReturn);
@@ -2650,7 +2650,7 @@ public class BleDevice extends BleNode
     /**
      * Returns the manufacturer data, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
      */
-    public @Nullable(Prevalence.NEVER) byte[] getManufacturerData()
+    public final @Nullable(Prevalence.NEVER) byte[] getManufacturerData()
     {
         final byte[] toReturn = m_scanInfo.getManufacturerData() != null ? m_scanInfo.getManufacturerData().clone() : new byte[0];
 
@@ -2660,7 +2660,7 @@ public class BleDevice extends BleNode
     /**
      * Returns the manufacturer id, if any, parsed from {@link #getScanRecord()} }. May be -1 if not set
      */
-    public int getManufacturerId()
+    public final int getManufacturerId()
     {
         final int toReturn = m_scanInfo.getManufacturerId();
 
@@ -2670,7 +2670,7 @@ public class BleDevice extends BleNode
     /**
      * Returns the manufacturer data, if any, parsed from {@link #getScanRecord()}. May be empty but never <code>null</code>.
      */
-    public @Nullable(Prevalence.NEVER) Map<UUID, byte[]> getAdvertisedServiceData()
+    public final @Nullable(Prevalence.NEVER) Map<UUID, byte[]> getAdvertisedServiceData()
     {
         final Map<UUID, byte[]> toReturn = new HashMap<UUID, byte[]>();
 
@@ -2683,7 +2683,7 @@ public class BleDevice extends BleNode
      * Returns the database table name for the underlying store of historical data for the given {@link UUID}.
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.NEVER) String getHistoricalDataTableName(final UUID uuid)
+    public final @Nullable(Nullable.Prevalence.NEVER) String getHistoricalDataTableName(final UUID uuid)
     {
         return getManager().m_historicalDatabase.getTableName(getMacAddress(), uuid);
     }
@@ -2696,7 +2696,7 @@ public class BleDevice extends BleNode
      * NOTE: You must call {@link HistoricalDataCursor#close()} when you are done with the data.
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid)
+    public final @Nullable(Nullable.Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid)
     {
         return getHistoricalData_cursor(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
     }
@@ -2707,7 +2707,7 @@ public class BleDevice extends BleNode
      * NOTE: You must call {@link HistoricalDataCursor#close()} when you are done with the data.
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid, final EpochTimeRange range)
+    public final @Nullable(Nullable.Prevalence.NEVER) HistoricalDataCursor getHistoricalData_cursor(final UUID uuid, final EpochTimeRange range)
     {
         return m_historicalDataMngr.getCursor(uuid, range);
     }
@@ -2716,7 +2716,7 @@ public class BleDevice extends BleNode
      * Loads all historical data to memory for this device.
      */
     @Advanced
-    public void loadHistoricalData()
+    public final void loadHistoricalData()
     {
         loadHistoricalData(null, null);
     }
@@ -2725,7 +2725,7 @@ public class BleDevice extends BleNode
      * Loads all historical data to memory for this device for the given {@link UUID}.
      */
     @Advanced
-    public void loadHistoricalData(final UUID uuid)
+    public final void loadHistoricalData(final UUID uuid)
     {
         loadHistoricalData(uuid, null);
     }
@@ -2734,7 +2734,7 @@ public class BleDevice extends BleNode
      * Loads all historical data to memory for this device with a callback for when it's complete.
      */
     @Advanced
-    public void loadHistoricalData(final HistoricalDataLoadListener listener)
+    public final void loadHistoricalData(final HistoricalDataLoadListener listener)
     {
         loadHistoricalData(null, listener);
     }
@@ -2743,7 +2743,7 @@ public class BleDevice extends BleNode
      * Loads all historical data to memory for this device for the given {@link UUID}.
      */
     @Advanced
-    public void loadHistoricalData(final UUID uuid, final HistoricalDataLoadListener listener)
+    public final void loadHistoricalData(final UUID uuid, final HistoricalDataLoadListener listener)
     {
         if (isNull()) return;
 
@@ -2755,7 +2755,7 @@ public class BleDevice extends BleNode
      * {@link #loadHistoricalData()} (or overloads) or {@link #getHistoricalData_iterator(UUID)} (or overloads).
      */
     @Advanced
-    public boolean isHistoricalDataLoading()
+    public final boolean isHistoricalDataLoading()
     {
         return m_historicalDataMngr.isLoading(null);
     }
@@ -2765,7 +2765,7 @@ public class BleDevice extends BleNode
      * {@link #loadHistoricalData()} (or overloads) or {@link #getHistoricalData_iterator(UUID)} (or overloads).
      */
     @Advanced
-    public boolean isHistoricalDataLoading(final UUID uuid)
+    public final boolean isHistoricalDataLoading(final UUID uuid)
     {
         return m_historicalDataMngr.isLoading(uuid);
     }
@@ -2778,7 +2778,7 @@ public class BleDevice extends BleNode
      * returns <code>false</code> then this will also always return <code>false</code>.
      */
     @Advanced
-    public boolean isHistoricalDataLoaded()
+    public final boolean isHistoricalDataLoaded()
     {
         return m_historicalDataMngr.isLoaded(null);
     }
@@ -2790,7 +2790,7 @@ public class BleDevice extends BleNode
      * returns <code>false</code> then this will also always return <code>false</code>.
      */
     @Advanced
-    public boolean isHistoricalDataLoaded(final UUID uuid)
+    public final boolean isHistoricalDataLoaded(final UUID uuid)
     {
         return m_historicalDataMngr.isLoaded(uuid);
     }
@@ -2806,7 +2806,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_latest(final UUID uuid)
+    public final @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_latest(final UUID uuid)
     {
         return getHistoricalData_atOffset(uuid, getHistoricalDataCount(uuid) - 1);
     }
@@ -2818,7 +2818,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid)
+    public final @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid)
     {
         return getHistoricalData_iterator(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
     }
@@ -2830,7 +2830,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid, final EpochTimeRange range)
+    public final @Nullable(Nullable.Prevalence.NEVER) Iterator<HistoricalData> getHistoricalData_iterator(final UUID uuid, final EpochTimeRange range)
     {
         if (isNull()) return new EmptyIterator<HistoricalData>();
 
@@ -2845,7 +2845,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean getHistoricalData_forEach(final UUID uuid, final ForEach_Void<HistoricalData> forEach)
+    public final boolean getHistoricalData_forEach(final UUID uuid, final ForEach_Void<HistoricalData> forEach)
     {
         return getHistoricalData_forEach(uuid, EpochTimeRange.FROM_MIN_TO_MAX, forEach);
     }
@@ -2858,7 +2858,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Void<HistoricalData> forEach)
+    public final boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Void<HistoricalData> forEach)
     {
         if (isNull()) return false;
 
@@ -2873,7 +2873,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean getHistoricalData_forEach(final UUID uuid, final ForEach_Breakable<HistoricalData> forEach)
+    public final boolean getHistoricalData_forEach(final UUID uuid, final ForEach_Breakable<HistoricalData> forEach)
     {
         return getHistoricalData_forEach(uuid, EpochTimeRange.FROM_MIN_TO_MAX, forEach);
     }
@@ -2886,7 +2886,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Breakable<HistoricalData> forEach)
+    public final boolean getHistoricalData_forEach(final UUID uuid, final EpochTimeRange range, final ForEach_Breakable<HistoricalData> forEach)
     {
         if (isNull()) return false;
 
@@ -2902,7 +2902,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final int offsetFromStart)
+    public final @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final int offsetFromStart)
     {
         return getHistoricalData_atOffset(uuid, EpochTimeRange.FROM_MIN_TO_MAX, offsetFromStart);
     }
@@ -2914,7 +2914,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final EpochTimeRange range, final int offsetFromStart)
+    public final @Nullable(Nullable.Prevalence.NEVER) HistoricalData getHistoricalData_atOffset(final UUID uuid, final EpochTimeRange range, final int offsetFromStart)
     {
         if (isNull()) return HistoricalData.NULL;
 
@@ -2928,7 +2928,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public int getHistoricalDataCount(final UUID uuid)
+    public final int getHistoricalDataCount(final UUID uuid)
     {
         return getHistoricalDataCount(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
     }
@@ -2941,7 +2941,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public int getHistoricalDataCount(final UUID uuid, final EpochTimeRange range)
+    public final int getHistoricalDataCount(final UUID uuid, final EpochTimeRange range)
     {
         if (isNull()) return 0;
 
@@ -2955,7 +2955,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean hasHistoricalData()
+    public final boolean hasHistoricalData()
     {
         return hasHistoricalData(EpochTimeRange.FROM_MIN_TO_MAX);
     }
@@ -2967,7 +2967,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean hasHistoricalData(final EpochTimeRange range)
+    public final boolean hasHistoricalData(final EpochTimeRange range)
     {
         if (isNull()) return false;
 
@@ -2981,7 +2981,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean hasHistoricalData(final UUID uuid)
+    public final boolean hasHistoricalData(final UUID uuid)
     {
         return hasHistoricalData(uuid, EpochTimeRange.FROM_MIN_TO_MAX);
     }
@@ -2993,7 +2993,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean hasHistoricalData(final UUID[] uuids)
+    public final boolean hasHistoricalData(final UUID[] uuids)
     {
         for (int i = 0; i < uuids.length; i++)
         {
@@ -3012,7 +3012,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public boolean hasHistoricalData(final UUID uuid, final EpochTimeRange range)
+    public final boolean hasHistoricalData(final UUID uuid, final EpochTimeRange range)
     {
         if (isNull()) return false;
 
@@ -3029,7 +3029,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void addHistoricalData(final UUID uuid, final byte[] data, final EpochTime epochTime)
+    public final void addHistoricalData(final UUID uuid, final byte[] data, final EpochTime epochTime)
     {
         if (isNull()) return;
 
@@ -3040,7 +3040,7 @@ public class BleDevice extends BleNode
      * Just an overload of {@link #addHistoricalData(UUID, byte[], EpochTime)} with the data and epochTime parameters switched around.
      */
     @Advanced
-    public void addHistoricalData(final UUID uuid, final EpochTime epochTime, final byte[] data)
+    public final void addHistoricalData(final UUID uuid, final EpochTime epochTime, final byte[] data)
     {
         this.addHistoricalData(uuid, data, epochTime);
     }
@@ -3052,7 +3052,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void addHistoricalData(final UUID uuid, final byte[] data)
+    public final void addHistoricalData(final UUID uuid, final byte[] data)
     {
         if (isNull()) return;
 
@@ -3066,7 +3066,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void addHistoricalData(final UUID uuid, final HistoricalData historicalData)
+    public final void addHistoricalData(final UUID uuid, final HistoricalData historicalData)
     {
         if (isNull()) return;
 
@@ -3080,7 +3080,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void addHistoricalData(final UUID uuid, final Iterator<HistoricalData> historicalData)
+    public final void addHistoricalData(final UUID uuid, final Iterator<HistoricalData> historicalData)
     {
         if (isNull()) return;
 
@@ -3094,7 +3094,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void addHistoricalData(final UUID uuid, final List<HistoricalData> historicalData)
+    public final void addHistoricalData(final UUID uuid, final List<HistoricalData> historicalData)
     {
         addHistoricalData(uuid, historicalData.iterator());
     }
@@ -3106,7 +3106,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void addHistoricalData(final UUID uuid, final ForEach_Returning<HistoricalData> historicalData)
+    public final void addHistoricalData(final UUID uuid, final ForEach_Returning<HistoricalData> historicalData)
     {
         if (isNull()) return;
 
@@ -3118,7 +3118,7 @@ public class BleDevice extends BleNode
      *
      * @see #is(BleDeviceState)
      */
-    public boolean isAny(BleDeviceState... states)
+    public final boolean isAny(BleDeviceState... states)
     {
         for (int i = 0; i < states.length; i++)
         {
@@ -3133,7 +3133,7 @@ public class BleDevice extends BleNode
      *
      * @see #isAny(BleDeviceState...)
      */
-    public boolean isAll(BleDeviceState... states)
+    public final boolean isAll(BleDeviceState... states)
     {
         for (int i = 0; i < states.length; i++)
         {
@@ -3147,7 +3147,7 @@ public class BleDevice extends BleNode
      * For example if the device is {@link BleDeviceState#CONNECTING_OVERALL} or {@link BleDeviceState#INITIALIZED}
      * then this will return <code>false</code>.
      */
-    public boolean isConnectable()
+    public final boolean isConnectable()
     {
         if (isAny(BleDeviceState.INITIALIZED, BleDeviceState.CONNECTING_OVERALL))
         {
@@ -3164,7 +3164,7 @@ public class BleDevice extends BleNode
      *
      * @see #isAny(BleDeviceState...)
      */
-    public boolean is(final BleDeviceState state)
+    public final boolean is(final BleDeviceState state)
     {
         return state.overlaps(getStateMask());
     }
@@ -3174,7 +3174,7 @@ public class BleDevice extends BleNode
      *
      * @see #isAll(int)
      */
-    public boolean isAny(final int mask_BleDeviceState)
+    public final boolean isAny(final int mask_BleDeviceState)
     {
         return (getStateMask() & mask_BleDeviceState) != 0x0;
     }
@@ -3184,7 +3184,7 @@ public class BleDevice extends BleNode
      *
      * @see #isAny(int)
      */
-    public boolean isAll(final int mask_BleDeviceState)
+    public final boolean isAll(final int mask_BleDeviceState)
     {
         return (getStateMask() & mask_BleDeviceState) == mask_BleDeviceState;
     }
@@ -3194,12 +3194,12 @@ public class BleDevice extends BleNode
      * made up of {@link BleDeviceState} and {@link Boolean} pairs. So an example would be
      * <code>myDevice.is({@link BleDeviceState#CONNECTING}, true, {@link BleDeviceState#RECONNECTING_LONG_TERM}, false)</code>.
      */
-    public boolean is(Object... query)
+    public final boolean is(Object... query)
     {
         return Utils_State.query(getStateMask(), query);
     }
 
-    boolean isAny_internal(BleDeviceState... states)
+    final boolean isAny_internal(BleDeviceState... states)
     {
         for (int i = 0; i < states.length; i++)
         {
@@ -3212,12 +3212,12 @@ public class BleDevice extends BleNode
         return false;
     }
 
-    boolean is_internal(BleDeviceState state)
+    final boolean is_internal(BleDeviceState state)
     {
         return state.overlaps(stateTracker().getState());
     }
 
-    P_DeviceBleGatt gattLayer()
+    final P_DeviceBleGatt gattLayer()
     {
         return m_gattLayer;
     }
@@ -3232,7 +3232,7 @@ public class BleDevice extends BleNode
      * how long you <i>were</i> connected for after becoming
      * {@link BleDeviceState#DISCONNECTED}, for analytics purposes or whatever.
      */
-    public Interval getTimeInState(BleDeviceState state)
+    public final Interval getTimeInState(BleDeviceState state)
     {
         return Interval.millis(stateTracker_main().getTimeInState(state.ordinal()));
     }
@@ -3241,7 +3241,7 @@ public class BleDevice extends BleNode
      * Same as {@link #setName(String, UUID, BleDevice.ReadWriteListener)} but will not attempt to propagate the
      * name change to the remote device. Only {@link #getName_override()} will be affected by this.
      */
-    public void setName(final String name)
+    public final void setName(final String name)
     {
         setName(name, null, null);
     }
@@ -3251,7 +3251,7 @@ public class BleDevice extends BleNode
      * if you don't care much whether the device name change actually successfully reaches
      * the remote device. The write will be attempted regardless.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setName(final String name, final UUID characteristicUuid)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setName(final String name, final UUID characteristicUuid)
     {
         return setName(name, characteristicUuid, null);
     }
@@ -3265,7 +3265,7 @@ public class BleDevice extends BleNode
      * If {@link BleDeviceConfig#saveNameChangesToDisk} is <code>true</code> then this name
      * will always be returned for {@link #getName_override()}, even if you kill/restart the app.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setName(final String name, final UUID characteristicUuid, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setName(final String name, final UUID characteristicUuid, final ReadWriteListener listener)
     {
         if (!isNull())
         {
@@ -3302,7 +3302,7 @@ public class BleDevice extends BleNode
     /**
      * Clears any name previously provided through {@link #setName(String)} or overloads.
      */
-    public void clearName()
+    public final void clearName()
     {
         m_nativeWrapper.clearName_override();
         getManager().m_diskOptionsMngr.clearName(getMacAddress());
@@ -3313,7 +3313,7 @@ public class BleDevice extends BleNode
      * If you call {@link #setName(String)} (or overloads)
      * then calling this will return the same string provided in that setter.
      */
-    public @Nullable(Prevalence.NEVER) String getName_override()
+    public final @Nullable(Prevalence.NEVER) String getName_override()
     {
         return m_nativeWrapper.getName_override();
     }
@@ -3325,7 +3325,7 @@ public class BleDevice extends BleNode
      * against something, e.g. an entry in a config file or for advertising
      * filtering.
      */
-    public @Nullable(Prevalence.NEVER) String getName_native()
+    public final @Nullable(Prevalence.NEVER) String getName_native()
     {
         return m_nativeWrapper.getNativeName();
     }
@@ -3342,7 +3342,7 @@ public class BleDevice extends BleNode
      * same name regardless of the underlying stack's whimsy. The target format
      * is all lowercase and underscore-delimited with no trailing MAC address.
      */
-    public @Nullable(Prevalence.NEVER) String getName_normalized()
+    public final @Nullable(Prevalence.NEVER) String getName_normalized()
     {
         return m_nativeWrapper.getNormalizedName();
     }
@@ -3353,7 +3353,7 @@ public class BleDevice extends BleNode
      * MAC address from {@link #getMacAddress()}. {@link BleDevice#toString()}
      * uses this.
      */
-    public @Nullable(Prevalence.NEVER) String getName_debug()
+    public final @Nullable(Prevalence.NEVER) String getName_debug()
     {
         return m_nativeWrapper.getDebugName();
     }
@@ -3368,7 +3368,7 @@ public class BleDevice extends BleNode
      * discuss possible feature addition or report bugs.
      */
     @Advanced
-    public @Nullable(Prevalence.RARE) BluetoothDevice getNative()
+    public final @Nullable(Prevalence.RARE) BluetoothDevice getNative()
     {
         return m_nativeWrapper.getDevice();
     }
@@ -3381,7 +3381,7 @@ public class BleDevice extends BleNode
      * discuss possible feature addition or report bugs.
      */
     @Advanced
-    public @Nullable(Prevalence.NORMAL) BluetoothGatt getNativeGatt()
+    public final @Nullable(Prevalence.NORMAL) BluetoothGatt getNativeGatt()
     {
         return m_nativeWrapper.getGatt();
     }
@@ -3390,7 +3390,7 @@ public class BleDevice extends BleNode
      * Returns the MAC address of this device, as retrieved from the native stack or provided through {@link BleManager#newDevice(String)} (or overloads thereof).
      * You may treat this as the unique ID of the device, suitable as a key in a {@link java.util.HashMap}, {@link android.content.SharedPreferences}, etc.
      */
-    @Override public @Nullable(Prevalence.NEVER) String getMacAddress()
+    @Override public final @Nullable(Prevalence.NEVER) String getMacAddress()
     {
         return m_nativeWrapper.getAddress();
     }
@@ -3400,7 +3400,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #bond()}).
      */
-    public @Nullable(Prevalence.NEVER) BondListener.BondEvent bond(BondListener listener)
+    public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond(BondListener listener)
     {
         if (listener != null)
         {
@@ -3441,7 +3441,7 @@ public class BleDevice extends BleNode
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      * @see #unbond()
      */
-    public @Nullable(Prevalence.NEVER) BondListener.BondEvent bond()
+    public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond()
     {
         return this.bond(null);
     }
@@ -3452,7 +3452,7 @@ public class BleDevice extends BleNode
      * @return <code>true</code> if successfully {@link BleDeviceState#UNBONDED}, <code>false</code> if already {@link BleDeviceState#UNBONDED}.
      * @see #bond()
      */
-    public boolean unbond()
+    public final boolean unbond()
     {
         final boolean alreadyUnbonded = is(UNBONDED);
 
@@ -3468,7 +3468,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect()
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect()
     {
         return connect((StateListener) null);
     }
@@ -3478,7 +3478,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener)
     {
         return connect(stateListener, null);
     }
@@ -3488,7 +3488,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(ConnectionFailListener failListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(ConnectionFailListener failListener)
     {
         return connect((StateListener) null, failListener);
     }
@@ -3499,7 +3499,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener, ConnectionFailListener failListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener, ConnectionFailListener failListener)
     {
         return connect(null, null, wrapListenerAllowNull(stateListener), failListener);
     }
@@ -3508,7 +3508,7 @@ public class BleDevice extends BleNode
      * Same as {@link #connect(BleDevice.StateListener, BleDevice.ConnectionFailListener)}
      * with reversed arguments.
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(ConnectionFailListener failListener, StateListener stateListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(ConnectionFailListener failListener, StateListener stateListener)
     {
         return connect(stateListener, failListener);
     }
@@ -3524,7 +3524,7 @@ public class BleDevice extends BleNode
      * @see BleDeviceState#AUTHENTICATING
      * @see BleDeviceState#AUTHENTICATED
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn)
     {
         return connect(authenticationTxn, (StateListener) null);
     }
@@ -3534,7 +3534,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, StateListener stateListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, StateListener stateListener)
     {
         return connect(authenticationTxn, stateListener, (ConnectionFailListener) null);
     }
@@ -3546,7 +3546,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, StateListener stateListener, ConnectionFailListener failListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, StateListener stateListener, ConnectionFailListener failListener)
     {
         return connect(authenticationTxn, null, wrapListenerAllowNull(stateListener), failListener);
     }
@@ -3561,7 +3561,7 @@ public class BleDevice extends BleNode
      * @see BleDeviceState#INITIALIZING
      * @see BleDeviceState#INITIALIZED
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn)
     {
         return connect(initTxn, (StateListener) null);
     }
@@ -3571,7 +3571,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener)
     {
         return connect(initTxn, stateListener, (ConnectionFailListener) null);
     }
@@ -3581,7 +3581,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authTxn, ConnectionFailListener connectionFailListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authTxn, ConnectionFailListener connectionFailListener)
     {
         return connect(authTxn, (StateListener) null, connectionFailListener);
     }
@@ -3592,7 +3592,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
     {
         return connect(null, initTxn, wrapListenerAllowNull(stateListener), failListener);
     }
@@ -3605,7 +3605,7 @@ public class BleDevice extends BleNode
      * @see #connect(BleTransaction.Auth)
      * @see #connect(BleTransaction.Init)
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn)
     {
         return connect(authenticationTxn, initTxn, null, (ConnectionFailListener) null);
     }
@@ -3615,7 +3615,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener)
     {
         return connect(authenticationTxn, initTxn, wrapListenerAllowNull(stateListener), (ConnectionFailListener) null);
     }
@@ -3633,7 +3633,7 @@ public class BleDevice extends BleNode
      * callback to {@link ConnectionFailListener}. However if {@link ConnectionFailEvent#isNull()} for the return value is <code>false</code>, meaning
      * the connection attempt couldn't even start for some reason, then you don't have to throw up the spinner in the first place.
      */
-    public @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, DeviceStateListener stateListener, ConnectionFailListener failListener)
+    public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, DeviceStateListener stateListener, ConnectionFailListener failListener)
     {
         if (stateListener != null)
         {
@@ -3679,7 +3679,7 @@ public class BleDevice extends BleNode
      * {@link BleDeviceState#CONNECTING_OVERALL}, or {@link BleDeviceState#INITIALIZED}
      * @see ConnectionFailListener.Status#EXPLICIT_DISCONNECT
      */
-    public boolean disconnect()
+    public final boolean disconnect()
     {
         return disconnect_private(null, Status.EXPLICIT_DISCONNECT);
     }
@@ -3692,7 +3692,7 @@ public class BleDevice extends BleNode
      * {@link BleDeviceState#CONNECTING_OVERALL}, or {@link BleDeviceState#INITIALIZED}
      * @see ConnectionFailListener.Status#EXPLICIT_DISCONNECT
      */
-    public boolean disconnectWhenReady()
+    public final boolean disconnectWhenReady()
     {
         return disconnect_private(PE_TaskPriority.LOW, Status.EXPLICIT_DISCONNECT);
     }
@@ -3709,7 +3709,7 @@ public class BleDevice extends BleNode
      * NOTE: One major difference between this and an actual remote disconnect is that this will not cause the device to enter
      * {@link BleDeviceState#RECONNECTING_SHORT_TERM} or {@link BleDeviceState#RECONNECTING_LONG_TERM}.
      */
-    public boolean disconnect_remote()
+    public final boolean disconnect_remote()
     {
         return disconnect_private(null, Status.ROGUE_DISCONNECT);
     }
@@ -3743,7 +3743,7 @@ public class BleDevice extends BleNode
      * @return <code>true</code> if the device was successfully {@link BleDeviceState#UNDISCOVERED}, <code>false</code> if BleDevice isn't known to the {@link BleManager}.
      * @see BleManager#undiscover(BleDevice)
      */
-    public boolean undiscover()
+    public final boolean undiscover()
     {
         if (isNull()) return false;
 
@@ -3755,7 +3755,7 @@ public class BleDevice extends BleNode
      *
      * @see BleManager#clearSharedPreferences(BleDevice)
      */
-    public void clearSharedPreferences()
+    public final void clearSharedPreferences()
     {
         getManager().clearSharedPreferences(this);
     }
@@ -3769,7 +3769,7 @@ public class BleDevice extends BleNode
      * bad design decision in your code. This library will (well, should) never
      * hold references to two devices such that this method returns true for them.
      */
-    public boolean equals(@Nullable(Prevalence.NORMAL) final BleDevice device_nullable)
+    public final boolean equals(@Nullable(Prevalence.NORMAL) final BleDevice device_nullable)
     {
         if (device_nullable == null) return false;
         if (device_nullable == this) return true;
@@ -3784,7 +3784,7 @@ public class BleDevice extends BleNode
      *
      * @see BleDevice#equals(BleDevice)
      */
-    @Override public boolean equals(@Nullable(Prevalence.NORMAL) final Object object_nullable)
+    @Override public final boolean equals(@Nullable(Prevalence.NORMAL) final Object object_nullable)
     {
         if (object_nullable == null) return false;
 
@@ -3809,7 +3809,7 @@ public class BleDevice extends BleNode
      * @see #enableNotify(UUID, ReadWriteListener)
      * @see #stopPoll(UUID, ReadWriteListener)
      */
-    public void startPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+    public final void startPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -3821,7 +3821,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
-    public void startPoll(final UUID characteristicUuid, final Interval interval)
+    public final void startPoll(final UUID characteristicUuid, final Interval interval)
     {
         startPoll(characteristicUuid, interval, null);
     }
@@ -3829,7 +3829,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #startPoll(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+    public final void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
         m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
     }
@@ -3837,7 +3837,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #startPoll(UUID, Interval)} for when you have characteristics with identical uuids under different services.
      */
-    public void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval)
+    public final void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval)
     {
         startPoll(serviceUuid, characteristicUuid, interval, null);
     }
@@ -3846,7 +3846,7 @@ public class BleDevice extends BleNode
      * Convenience to call {@link #startPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
      * characteristic uuids all at once.
      */
-    public void startPoll(final UUID[] charUuids, final Interval interval, final ReadWriteListener listener)
+    public final void startPoll(final UUID[] charUuids, final Interval interval, final ReadWriteListener listener)
     {
         for (int i = 0; i < charUuids.length; i++)
         {
@@ -3859,7 +3859,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
-    public void startPoll(final UUID[] charUuids, final Interval interval)
+    public final void startPoll(final UUID[] charUuids, final Interval interval)
     {
         startPoll(charUuids, interval, null);
     }
@@ -3868,7 +3868,7 @@ public class BleDevice extends BleNode
      * Convenience to call {@link #startPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
      * characteristic uuids all at once.
      */
-    public void startPoll(final Iterable<UUID> charUuids, final Interval interval, final ReadWriteListener listener)
+    public final void startPoll(final Iterable<UUID> charUuids, final Interval interval, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = charUuids.iterator();
 
@@ -3885,7 +3885,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
-    public void startPoll(final Iterable<UUID> charUuids, final Interval interval)
+    public final void startPoll(final Iterable<UUID> charUuids, final Interval interval)
     {
         startPoll(charUuids, interval, null);
     }
@@ -3894,7 +3894,7 @@ public class BleDevice extends BleNode
      * Convenience to call {@link #startChangeTrackingPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
      * characteristic uuids all at once.
      */
-    public void startChangeTrackingPoll(final UUID[] charUuids, final Interval interval, final ReadWriteListener listener)
+    public final void startChangeTrackingPoll(final UUID[] charUuids, final Interval interval, final ReadWriteListener listener)
     {
         for (int i = 0; i < charUuids.length; i++)
         {
@@ -3907,7 +3907,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
-    public void startChangeTrackingPoll(final UUID[] charUuids, final Interval interval)
+    public final void startChangeTrackingPoll(final UUID[] charUuids, final Interval interval)
     {
         startChangeTrackingPoll(charUuids, interval, null);
     }
@@ -3916,7 +3916,7 @@ public class BleDevice extends BleNode
      * Convenience to call {@link #startChangeTrackingPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
      * characteristic uuids all at once.
      */
-    public void startChangeTrackingPoll(final Iterable<UUID> charUuids, final Interval interval, final ReadWriteListener listener)
+    public final void startChangeTrackingPoll(final Iterable<UUID> charUuids, final Interval interval, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = charUuids.iterator();
 
@@ -3933,7 +3933,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
-    public void startChangeTrackingPoll(final Iterable<UUID> charUuids, final Interval interval)
+    public final void startChangeTrackingPoll(final Iterable<UUID> charUuids, final Interval interval)
     {
         startChangeTrackingPoll(charUuids, interval, null);
     }
@@ -3946,7 +3946,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}.
      */
-    public void startChangeTrackingPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+    public final void startChangeTrackingPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -3956,7 +3956,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #startChangeTrackingPoll(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public void startChangeTrackingPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+    public final void startChangeTrackingPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
         m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
     }
@@ -3968,7 +3968,7 @@ public class BleDevice extends BleNode
      * @see #startPoll(UUID, Interval, ReadWriteListener)
      * @see #startChangeTrackingPoll(UUID, Interval, ReadWriteListener)
      */
-    public void stopPoll(final UUID characteristicUuid, final ReadWriteListener listener)
+    public final void stopPoll(final UUID characteristicUuid, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -3978,7 +3978,7 @@ public class BleDevice extends BleNode
     /**
      * Same as {@link #stopPoll(java.util.UUID, BleDevice.ReadWriteListener)} but without the listener.
      */
-    public void stopPoll(final UUID characteristicUuid)
+    public final void stopPoll(final UUID characteristicUuid)
     {
         stopPoll(characteristicUuid, (ReadWriteListener) null);
     }
@@ -3986,7 +3986,7 @@ public class BleDevice extends BleNode
     /**
      * Same as {@link #stopPoll(UUID, ReadWriteListener)} but with added filtering for the poll {@link Interval}.
      */
-    public void stopPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+    public final void stopPoll(final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -3996,7 +3996,7 @@ public class BleDevice extends BleNode
     /**
      * Same as {@link #stopPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} but without the listener.
      */
-    public void stopPoll(final UUID characteristicUuid, final Interval interval)
+    public final void stopPoll(final UUID characteristicUuid, final Interval interval)
     {
         final UUID serviceUuid = null;
 
@@ -4006,7 +4006,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #stopPoll(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
+    public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
         stopPoll_private(serviceUuid, characteristicUuid, null, listener);
     }
@@ -4014,7 +4014,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #stopPoll(UUID)} for when you have characteristics with identical uuids under different services.
      */
-    public void stopPoll(final UUID serviceUuid, final UUID characteristicUuid)
+    public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid)
     {
         stopPoll(serviceUuid, characteristicUuid, (ReadWriteListener) null);
     }
@@ -4022,7 +4022,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #stopPoll(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
+    public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
         stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, listener);
     }
@@ -4030,7 +4030,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #stopPoll(UUID, Interval)} for when you have characteristics with identical uuids under different services.
      */
-    public void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval)
+    public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval)
     {
         stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, null);
     }
@@ -4038,7 +4038,7 @@ public class BleDevice extends BleNode
     /**
      * Calls {@link #stopPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} multiple times for you.
      */
-    public void stopPoll(final UUID[] uuids, final Interval interval, final ReadWriteListener listener)
+    public final void stopPoll(final UUID[] uuids, final Interval interval, final ReadWriteListener listener)
     {
         for (int i = 0; i < uuids.length; i++)
         {
@@ -4049,7 +4049,7 @@ public class BleDevice extends BleNode
     /**
      * Calls {@link #stopPoll(java.util.UUID, Interval)} multiple times for you.
      */
-    public void stopPoll(final UUID[] uuids, final Interval interval)
+    public final void stopPoll(final UUID[] uuids, final Interval interval)
     {
         stopPoll(uuids, interval, null);
     }
@@ -4057,7 +4057,7 @@ public class BleDevice extends BleNode
     /**
      * Calls {@link #stopPoll(java.util.UUID)} multiple times for you.
      */
-    public void stopPoll(final UUID[] uuids)
+    public final void stopPoll(final UUID[] uuids)
     {
         stopPoll(uuids, null, null);
     }
@@ -4065,7 +4065,7 @@ public class BleDevice extends BleNode
     /**
      * Calls {@link #stopPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} multiple times for you.
      */
-    public void stopPoll(final Iterable<UUID> uuids, final Interval interval, final ReadWriteListener listener)
+    public final void stopPoll(final Iterable<UUID> uuids, final Interval interval, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = uuids.iterator();
 
@@ -4080,7 +4080,7 @@ public class BleDevice extends BleNode
     /**
      * Calls {@link #stopPoll(java.util.UUID, Interval)} multiple times for you.
      */
-    public void stopPoll(final Iterable<UUID> uuids, final Interval interval)
+    public final void stopPoll(final Iterable<UUID> uuids, final Interval interval)
     {
         stopPoll(uuids, interval, null);
     }
@@ -4088,7 +4088,7 @@ public class BleDevice extends BleNode
     /**
      * Calls {@link #stopPoll(java.util.UUID)} multiple times for you.
      */
-    public void stopPoll(final Iterable<UUID> uuids)
+    public final void stopPoll(final Iterable<UUID> uuids)
     {
         stopPoll(uuids, null, null);
     }
@@ -4100,7 +4100,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #write(UUID, UUID, byte[])}).
      * @see #write(UUID, UUID, byte[])
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder)
     {
         return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data);
     }
@@ -4111,7 +4111,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #write(UUID, UUID, byte[], ReadWriteListener)}).
      * @see #write(UUID, UUID, byte[], ReadWriteListener)
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder, ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder, ReadWriteListener listener)
     {
         return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data, listener);
     }
@@ -4122,7 +4122,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #write(UUID, byte[], ReadWriteListener)}).
      * @see #write(UUID, byte[], ReadWriteListener)
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data)
     {
         return this.write(characteristicUuid, new PresentData(data), (ReadWriteListener) null);
     }
@@ -4133,7 +4133,7 @@ public class BleDevice extends BleNode
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      * @see #write(UUID, byte[])
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -4143,7 +4143,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #write(UUID, byte[])} for when you have characteristics with identical uuids under different services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data)
     {
         return this.write(serviceUuid, characteristicUuid, new PresentData(data), (ReadWriteListener) null);
     }
@@ -4151,7 +4151,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #write(UUID, byte[], ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
     {
         return write(serviceUuid, characteristicUuid, new PresentData(data), listener);
     }
@@ -4162,7 +4162,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #write(UUID, FutureData, ReadWriteListener)}).
      * @see #write(UUID, FutureData, ReadWriteListener)
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData)
     {
         return this.write(characteristicUuid, futureData, (ReadWriteListener) null);
     }
@@ -4173,7 +4173,7 @@ public class BleDevice extends BleNode
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      * @see #write(UUID, FutureData)
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -4183,7 +4183,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #write(UUID, FutureData)} for when you have characteristics with identical uuids under different services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData)
     {
         return this.write(serviceUuid, characteristicUuid, futureData, (ReadWriteListener) null);
     }
@@ -4191,7 +4191,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #write(UUID, FutureData, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
     {
         return write_internal(serviceUuid, characteristicUuid, Uuids.INVALID, futureData, listener);
     }
@@ -4202,7 +4202,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}).
      * @see #writeDescriptor(UUID, byte[], ReadWriteListener)
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data)
     {
         return writeDescriptor(descriptorUuid, data, (ReadWriteListener) null);
     }
@@ -4213,7 +4213,7 @@ public class BleDevice extends BleNode
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      * @see #writeDescriptor(UUID, byte[])
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
     {
         final UUID characteristicUuid = null;
 
@@ -4223,7 +4223,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[])} for when you have descriptors with identical uuids under different services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data)
     {
         return writeDescriptor(characteristicUuid, descriptorUuid, data, (ReadWriteListener) null);
     }
@@ -4231,7 +4231,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -4241,7 +4241,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
     {
         return writeDescriptor(serviceUuid, characteristicUuid, descriptorUuid, new PresentData(data), listener);
     }
@@ -4252,7 +4252,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}).
      * @see #writeDescriptor(UUID, byte[], ReadWriteListener)
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData)
     {
         return writeDescriptor(descriptorUuid, futureData, (ReadWriteListener) null);
     }
@@ -4263,7 +4263,7 @@ public class BleDevice extends BleNode
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      * @see #writeDescriptor(UUID, byte[])
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
         final UUID characteristicUuid = null;
 
@@ -4273,7 +4273,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[])} for when you have descriptors with identical uuids under different services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData)
     {
         return writeDescriptor(characteristicUuid, descriptorUuid, futureData, (ReadWriteListener) null);
     }
@@ -4281,7 +4281,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
         return writeDescriptor(characteristicUuid, descriptorUuid, futureData, listener);
     }
@@ -4289,7 +4289,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
         return write_internal(serviceUuid, characteristicUuid, descriptorUuid, futureData, listener);
     }
@@ -4301,7 +4301,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #readDescriptor(UUID, BleDevice.ReadWriteListener)}).
      * @see #readDescriptor(UUID, ReadWriteListener)
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid)
     {
         return readDescriptor(descriptorUuid, (ReadWriteListener) null);
     }
@@ -4312,7 +4312,7 @@ public class BleDevice extends BleNode
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      * @see #readDescriptor(UUID)
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid, final ReadWriteListener listener)
     {
         final UUID characteristicUuid = null;
 
@@ -4322,7 +4322,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #readDescriptor(UUID)} for when you have descriptors with identical uuids under different services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid)
     {
         return readDescriptor(characteristicUuid, descriptorUuid, (ReadWriteListener) null);
     }
@@ -4330,7 +4330,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
     {
         return readDescriptor(characteristicUuid, descriptorUuid, listener);
     }
@@ -4338,7 +4338,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid)
     {
         return readDescriptor(serviceUuid, characteristicUuid, descriptorUuid, null);
     }
@@ -4346,7 +4346,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
      */
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
     {
         return read_internal(serviceUuid, characteristicUuid, descriptorUuid, Type.READ, listener);
     }
@@ -4356,7 +4356,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #readRssi(ReadWriteListener)}).
      */
-    public ReadWriteListener.ReadWriteEvent readRssi()
+    public final ReadWriteListener.ReadWriteEvent readRssi()
     {
         return readRssi(null);
     }
@@ -4369,7 +4369,7 @@ public class BleDevice extends BleNode
      *
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
     {
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
 
@@ -4391,7 +4391,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #setConnectionPriority(BleConnectionPriority, ReadWriteListener)}).
      */
     @Advanced
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority(final BleConnectionPriority connectionPriority)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority(final BleConnectionPriority connectionPriority)
     {
         return setConnectionPriority(connectionPriority, null);
     }
@@ -4407,7 +4407,7 @@ public class BleDevice extends BleNode
      * @see #getConnectionPriority()
      */
     @Advanced
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority(final BleConnectionPriority connectionPriority, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority(final BleConnectionPriority connectionPriority, final ReadWriteListener listener)
     {
         return setConnectionPriority_private(connectionPriority, listener, getOverrideReadWritePriority());
     }
@@ -4446,7 +4446,7 @@ public class BleDevice extends BleNode
      * it was never set explicitly.
      */
     @Advanced
-    public BleConnectionPriority getConnectionPriority()
+    public final BleConnectionPriority getConnectionPriority()
     {
         return m_connectionPriority;
     }
@@ -4456,7 +4456,7 @@ public class BleDevice extends BleNode
      * it was never set explicitly.
      */
     @Advanced
-    public int getMtu()
+    public final int getMtu()
     {
         return m_mtu == 0 ? BleDeviceConfig.DEFAULT_MTU_SIZE : m_mtu;
     }
@@ -4467,7 +4467,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #setMtu(int, ReadWriteListener)}).
      */
     @Advanced
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault()
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault()
     {
         return setMtuToDefault(null);
     }
@@ -4480,7 +4480,7 @@ public class BleDevice extends BleNode
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
     @Advanced
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault(final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault(final ReadWriteListener listener)
     {
         if (is(CONNECTED))
         {
@@ -4504,7 +4504,7 @@ public class BleDevice extends BleNode
      * @return (same as {@link #setMtu(int, ReadWriteListener)}).
      */
     @Advanced
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu)
     {
         return setMtu(mtu, null);
     }
@@ -4518,7 +4518,7 @@ public class BleDevice extends BleNode
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
     @Advanced
-    public @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
     {
         return setMtu_private(mtu, listener, getOverrideReadWritePriority());
     }
@@ -4568,7 +4568,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}.
      */
-    public void startRssiPoll(final Interval interval)
+    public final void startRssiPoll(final Interval interval)
     {
         startRssiPoll(interval, null);
     }
@@ -4580,7 +4580,7 @@ public class BleDevice extends BleNode
      * <br><br>
      * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}.
      */
-    public void startRssiPoll(final Interval interval, final ReadWriteListener listener)
+    public final void startRssiPoll(final Interval interval, final ReadWriteListener listener)
     {
         if (isNull()) return;
 
@@ -4592,7 +4592,7 @@ public class BleDevice extends BleNode
     /**
      * Stops an RSSI poll previously started either by {@link #startRssiPoll(Interval)} or {@link #startRssiPoll(Interval, ReadWriteListener)}.
      */
-    public void stopRssiPoll()
+    public final void stopRssiPoll()
     {
         if (isNull()) return;
 
@@ -4606,7 +4606,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    void readRssi_internal(Type type, ReadWriteListener listener)
+    final void readRssi_internal(Type type, ReadWriteListener listener)
     {
         queue().add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
     }
@@ -4615,7 +4615,7 @@ public class BleDevice extends BleNode
      * One method to remove absolutely all "metadata" related to this device that is stored on disk and/or cached in memory in any way.
      * This method is useful if for example you have a "forget device" feature in your app.
      */
-    public void clearAllData()
+    public final void clearAllData()
     {
         clearName();
         clearHistoricalData();
@@ -4629,7 +4629,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData()
+    public final void clearHistoricalData()
     {
         if (isNull()) return;
 
@@ -4643,7 +4643,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData(final long count)
+    public final void clearHistoricalData(final long count)
     {
         clearHistoricalData(EpochTimeRange.FROM_MIN_TO_MAX, count);
     }
@@ -4655,7 +4655,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData(final EpochTimeRange range)
+    public final void clearHistoricalData(final EpochTimeRange range)
     {
         clearHistoricalData(range, Long.MAX_VALUE);
     }
@@ -4667,7 +4667,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData(final EpochTimeRange range, final long count)
+    public final void clearHistoricalData(final EpochTimeRange range, final long count)
     {
         if (isNull()) return;
 
@@ -4682,7 +4682,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData(final UUID uuid)
+    public final void clearHistoricalData(final UUID uuid)
     {
         clearHistoricalData(uuid, EpochTimeRange.FROM_MIN_TO_MAX, Long.MAX_VALUE);
     }
@@ -4690,7 +4690,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #clearHistoricalData(UUID)} that just calls that method multiple times.
      */
-    public void clearHistoricalData(final UUID... uuids)
+    public final void clearHistoricalData(final UUID... uuids)
     {
         for (int i = 0; i < uuids.length; i++)
         {
@@ -4708,7 +4708,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData(final UUID uuid, final long count)
+    public final void clearHistoricalData(final UUID uuid, final long count)
     {
         clearHistoricalData(uuid, EpochTimeRange.FROM_MIN_TO_MAX, count);
     }
@@ -4721,7 +4721,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData(final UUID uuid, final EpochTimeRange range)
+    public final void clearHistoricalData(final UUID uuid, final EpochTimeRange range)
     {
         clearHistoricalData(uuid, range, Long.MAX_VALUE);
     }
@@ -4734,7 +4734,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData(final UUID uuid, final EpochTimeRange range, final long count)
+    public final void clearHistoricalData(final UUID uuid, final EpochTimeRange range, final long count)
     {
         if (isNull()) return;
 
@@ -4748,7 +4748,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData_memoryOnly()
+    public final void clearHistoricalData_memoryOnly()
     {
         clearHistoricalData_memoryOnly(EpochTimeRange.FROM_MIN_TO_MAX, Long.MAX_VALUE);
     }
@@ -4760,7 +4760,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData_memoryOnly(final long count)
+    public final void clearHistoricalData_memoryOnly(final long count)
     {
         clearHistoricalData_memoryOnly(EpochTimeRange.FROM_MIN_TO_MAX, count);
     }
@@ -4772,7 +4772,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData_memoryOnly(final EpochTimeRange range)
+    public final void clearHistoricalData_memoryOnly(final EpochTimeRange range)
     {
         clearHistoricalData_memoryOnly(range, Long.MAX_VALUE);
     }
@@ -4784,7 +4784,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData_memoryOnly(final EpochTimeRange range, final long count)
+    public final void clearHistoricalData_memoryOnly(final EpochTimeRange range, final long count)
     {
         if (isNull()) return;
 
@@ -4799,7 +4799,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData_memoryOnly(final UUID uuid)
+    public final void clearHistoricalData_memoryOnly(final UUID uuid)
     {
         clearHistoricalData_memoryOnly(uuid, EpochTimeRange.FROM_MIN_TO_MAX, Long.MAX_VALUE);
     }
@@ -4812,7 +4812,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData_memoryOnly(final UUID uuid, final long count)
+    public final void clearHistoricalData_memoryOnly(final UUID uuid, final long count)
     {
         clearHistoricalData_memoryOnly(uuid, EpochTimeRange.FROM_MIN_TO_MAX, count);
     }
@@ -4825,7 +4825,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData_memoryOnly(final UUID characteristicUuid, final EpochTimeRange range)
+    public final void clearHistoricalData_memoryOnly(final UUID characteristicUuid, final EpochTimeRange range)
     {
         clearHistoricalData_memoryOnly(characteristicUuid, range, Long.MAX_VALUE);
     }
@@ -4838,7 +4838,7 @@ public class BleDevice extends BleNode
      * @see BleNodeConfig.DefaultHistoricalDataLogFilter
      */
     @Advanced
-    public void clearHistoricalData_memoryOnly(final UUID characteristicUuid, final EpochTimeRange range, final long count)
+    public final void clearHistoricalData_memoryOnly(final UUID characteristicUuid, final EpochTimeRange range, final long count)
     {
         if (isNull()) return;
 
@@ -4848,7 +4848,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #read(UUID)}.
      */
-    public void read(final UUID[] charUuids)
+    public final void read(final UUID[] charUuids)
     {
         read(charUuids, null);
     }
@@ -4856,7 +4856,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #read(UUID, ReadWriteListener)}.
      */
-    public void read(final UUID[] charUuids, final ReadWriteListener listener)
+    public final void read(final UUID[] charUuids, final ReadWriteListener listener)
     {
         for (int i = 0; i < charUuids.length; i++)
         {
@@ -4867,7 +4867,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #read(UUID)}.
      */
-    public void read(final Iterable<UUID> charUuids)
+    public final void read(final Iterable<UUID> charUuids)
     {
         read(charUuids, null);
     }
@@ -4875,7 +4875,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #read(UUID, ReadWriteListener)}.
      */
-    public void read(final Iterable<UUID> charUuids, final ReadWriteListener listener)
+    public final void read(final Iterable<UUID> charUuids, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = charUuids.iterator();
 
@@ -4893,7 +4893,7 @@ public class BleDevice extends BleNode
      * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
      * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
      */
-    public ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid)
+    public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid)
     {
         final UUID serviceUuid = null;
 
@@ -4905,7 +4905,7 @@ public class BleDevice extends BleNode
      *
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -4915,7 +4915,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #read(UUID)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid)
+    public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid)
     {
         return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null);
     }
@@ -4923,7 +4923,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #read(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
         return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, listener);
     }
@@ -4933,7 +4933,7 @@ public class BleDevice extends BleNode
      * and {@link Uuids#BATTERY_LEVEL}. If your battery service/characteristic uses a custom UUID, then use {@link #read(UUID, UUID, ReadWriteListener)} with
      * your custom UUIDs.
      */
-    public ReadWriteEvent readBatteryLevel(ReadWriteListener listener)
+    public final ReadWriteEvent readBatteryLevel(ReadWriteListener listener)
     {
         return read_internal(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, Type.READ, listener);
     }
@@ -4944,7 +4944,7 @@ public class BleDevice extends BleNode
      * <a href="https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.characteristic_presentation_format.xml"</a>
      * says that it should be 7 bytes. SweetBlue will NOT enforce the 7 byte length, in the odd case that someone implements this descriptor out-of-spec.
      */
-    public ReadWriteEvent readBatteryLevel(byte[] valueToMatch, ReadWriteListener listener)
+    public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, ReadWriteListener listener)
     {
         return readBatteryLevel(valueToMatch, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID, listener);
     }
@@ -4955,7 +4955,7 @@ public class BleDevice extends BleNode
      * This method is needed if you do not implement dual battery level exactly to the Bluetooth spec.
      */
     @Advanced
-    public ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
+    public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
     {
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -4981,7 +4981,7 @@ public class BleDevice extends BleNode
      *
      * @see #isNotifyEnabling(UUID)
      */
-    public boolean isNotifyEnabled(final UUID uuid)
+    public final boolean isNotifyEnabled(final UUID uuid)
     {
         if (isNull()) return false;
 
@@ -4997,7 +4997,7 @@ public class BleDevice extends BleNode
      *
      * @see #isNotifyEnabled(UUID)
      */
-    public boolean isNotifyEnabling(final UUID uuid)
+    public final boolean isNotifyEnabling(final UUID uuid)
     {
         if (isNull()) return false;
 
@@ -5011,7 +5011,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #enableNotify(UUID)}.
      */
-    public void enableNotify(final UUID[] charUuids)
+    public final void enableNotify(final UUID[] charUuids)
     {
         this.enableNotify(charUuids, Interval.INFINITE, null);
     }
@@ -5019,7 +5019,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #enableNotify(UUID, ReadWriteListener)}.
      */
-    public void enableNotify(final UUID[] charUuids, ReadWriteListener listener)
+    public final void enableNotify(final UUID[] charUuids, ReadWriteListener listener)
     {
         this.enableNotify(charUuids, Interval.INFINITE, listener);
     }
@@ -5027,7 +5027,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #enableNotify(UUID, Interval)}.
      */
-    public void enableNotify(final UUID[] charUuids, final Interval forceReadTimeout)
+    public final void enableNotify(final UUID[] charUuids, final Interval forceReadTimeout)
     {
         this.enableNotify(charUuids, forceReadTimeout, null);
     }
@@ -5035,7 +5035,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #enableNotify(UUID, Interval, ReadWriteListener)}.
      */
-    public void enableNotify(final UUID[] charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final void enableNotify(final UUID[] charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         for (int i = 0; i < charUuids.length; i++)
         {
@@ -5048,7 +5048,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #enableNotify(UUID)}.
      */
-    public void enableNotify(final Iterable<UUID> charUuids)
+    public final void enableNotify(final Iterable<UUID> charUuids)
     {
         this.enableNotify(charUuids, Interval.INFINITE, null);
     }
@@ -5056,7 +5056,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #enableNotify(UUID, ReadWriteListener)}.
      */
-    public void enableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
+    public final void enableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
     {
         this.enableNotify(charUuids, Interval.INFINITE, listener);
     }
@@ -5064,7 +5064,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #enableNotify(UUID, Interval)}.
      */
-    public void enableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
+    public final void enableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
     {
         this.enableNotify(charUuids, forceReadTimeout, null);
     }
@@ -5072,7 +5072,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #enableNotify(UUID, Interval, ReadWriteListener)}.
      */
-    public void enableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final void enableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = charUuids.iterator();
 
@@ -5090,7 +5090,7 @@ public class BleDevice extends BleNode
      * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
      * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
      */
-    public ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid)
     {
         return this.enableNotify(null, characteristicUuid, Interval.INFINITE, null);
     }
@@ -5102,7 +5102,7 @@ public class BleDevice extends BleNode
      *
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, ReadWriteListener listener)
     {
         return this.enableNotify(null, characteristicUuid, Interval.INFINITE, listener);
     }
@@ -5113,7 +5113,7 @@ public class BleDevice extends BleNode
      * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
      * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
      */
-    public ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
     {
         return this.enableNotify(null, characteristicUuid, forceReadTimeout, null);
     }
@@ -5125,7 +5125,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #enableNotify(UUID, ReadWriteListener)}).
      */
-    public ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         return this.enableNotify(null, characteristicUuid, forceReadTimeout, listener);
     }
@@ -5133,7 +5133,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #enableNotify(UUID)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid)
     {
         return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null);
     }
@@ -5141,7 +5141,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #enableNotify(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, ReadWriteListener listener)
     {
         return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, listener);
     }
@@ -5149,7 +5149,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #enableNotify(UUID, Interval)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
     {
         return this.enableNotify(serviceUuid, characteristicUuid, forceReadTimeout, null);
     }
@@ -5157,7 +5157,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #enableNotify(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -5226,7 +5226,7 @@ public class BleDevice extends BleNode
      *
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
      */
-    public ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -5238,7 +5238,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #disableNotify(UUID, ReadWriteListener)}).
      */
-    public ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
@@ -5251,7 +5251,7 @@ public class BleDevice extends BleNode
      * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
      * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
      */
-    public ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid)
     {
         final UUID serviceUuid = null;
 
@@ -5263,7 +5263,7 @@ public class BleDevice extends BleNode
      *
      * @return (same as {@link #disableNotify(UUID, ReadWriteListener)}).
      */
-    public ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
     {
         final UUID serviceUuid = null;
 
@@ -5273,7 +5273,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #disableNotify(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
         return this.disableNotify_private(serviceUuid, characteristicUuid, null, listener);
     }
@@ -5281,7 +5281,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #disableNotify(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), listener);
     }
@@ -5289,7 +5289,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #disableNotify(UUID)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid)
     {
         return this.disableNotify_private(serviceUuid, characteristicUuid, null, null);
     }
@@ -5297,7 +5297,7 @@ public class BleDevice extends BleNode
     /**
      * Overload of {@link #disableNotify(UUID, Interval)} for when you have characteristics with identical uuids under different services.
      */
-    public ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
     {
         return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null);
     }
@@ -5305,7 +5305,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #disableNotify(UUID, ReadWriteListener)}.
      */
-    public void disableNotify(final UUID[] uuids, final ReadWriteListener listener)
+    public final void disableNotify(final UUID[] uuids, final ReadWriteListener listener)
     {
         this.disableNotify(uuids, null, listener);
     }
@@ -5313,7 +5313,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #disableNotify(UUID)}.
      */
-    public void disableNotify(final UUID[] uuids)
+    public final void disableNotify(final UUID[] uuids)
     {
         this.disableNotify(uuids, null, null);
     }
@@ -5321,7 +5321,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #disableNotify(UUID, Interval)}.
      */
-    public void disableNotify(final UUID[] uuids, final Interval forceReadTimeout)
+    public final void disableNotify(final UUID[] uuids, final Interval forceReadTimeout)
     {
         this.disableNotify(uuids, forceReadTimeout, null);
     }
@@ -5329,7 +5329,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #disableNotify(UUID, Interval, BleDevice.ReadWriteListener)}.
      */
-    public void disableNotify(final UUID[] uuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final void disableNotify(final UUID[] uuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         for (int i = 0; i < uuids.length; i++)
         {
@@ -5342,7 +5342,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #disableNotify(UUID)}.
      */
-    public void disableNotify(final Iterable<UUID> charUuids)
+    public final void disableNotify(final Iterable<UUID> charUuids)
     {
         this.disableNotify(charUuids, Interval.INFINITE, null);
     }
@@ -5350,7 +5350,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #disableNotify(UUID, ReadWriteListener)}.
      */
-    public void disableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
+    public final void disableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
     {
         this.disableNotify(charUuids, Interval.INFINITE, listener);
     }
@@ -5358,7 +5358,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #disableNotify(UUID, Interval)}.
      */
-    public void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
+    public final void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
     {
         this.disableNotify(charUuids, forceReadTimeout, null);
     }
@@ -5366,7 +5366,7 @@ public class BleDevice extends BleNode
     /**
      * Overload for {@link #disableNotify(UUID, Interval, ReadWriteListener)}.
      */
-    public void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = charUuids.iterator();
 
@@ -5396,7 +5396,7 @@ public class BleDevice extends BleNode
      * @see BleManagerConfig#autoScanDuringOta
      * @see #performTransaction(BleTransaction)
      */
-    public boolean performOta(final BleTransaction.Ota txn)
+    public final boolean performOta(final BleTransaction.Ota txn)
     {
         if (performTransaction_earlyOut(txn)) return false;
 
@@ -5424,7 +5424,7 @@ public class BleDevice extends BleNode
      *
      * @return <code>true</code> if the transaction successfully started, <code>false</code> otherwise if device is not {@link BleDeviceState#INITIALIZED}.
      */
-    public boolean performTransaction(final BleTransaction txn)
+    public final boolean performTransaction(final BleTransaction txn)
     {
         if (performTransaction_earlyOut(txn)) return false;
 
@@ -5446,7 +5446,7 @@ public class BleDevice extends BleNode
     /**
      * Returns the device's name and current state for logging and debugging purposes.
      */
-    @Override public String toString()
+    @Override public final String toString()
     {
         if (isNull())
         {
@@ -5465,7 +5465,7 @@ public class BleDevice extends BleNode
         return includeFirmwareUpdateReadWriteTimesInAverage || !is(PERFORMING_OTA);
     }
 
-    void addReadTime(double timeStep)
+    final void addReadTime(double timeStep)
     {
         if (!shouldAddOperationTime())
             return;
@@ -5476,7 +5476,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    void addWriteTime(double timeStep)
+    final void addWriteTime(double timeStep)
     {
         if (!shouldAddOperationTime()) return;
 
@@ -5486,38 +5486,38 @@ public class BleDevice extends BleNode
         }
     }
 
-    void setToAlwaysUseAutoConnectIfItWorked()
+    final void setToAlwaysUseAutoConnectIfItWorked()
     {
         m_alwaysUseAutoConnect = m_useAutoConnect;
     }
 
-    boolean shouldUseAutoConnect()
+    final boolean shouldUseAutoConnect()
     {
         return m_useAutoConnect;
     }
 
-    P_BleDevice_Listeners getListeners()
+    final P_BleDevice_Listeners getListeners()
     {
         return m_listeners;
     }
 
-    P_TaskQueue getTaskQueue()
+    final P_TaskQueue getTaskQueue()
     {
         return queue();
     }
 
     // PA_StateTracker getStateTracker(){ return m_stateTracker; }
-    BleTransaction getOtaTxn()
+    final BleTransaction getOtaTxn()
     {
         return m_txnMngr.m_otaTxn;
     }
 
-    P_PollManager getPollManager()
+    final P_PollManager getPollManager()
     {
         return m_pollMngr;
     }
 
-    void onNewlyDiscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+    final void onNewlyDiscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
 
@@ -5530,7 +5530,7 @@ public class BleDevice extends BleNode
         stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
     }
 
-    void onRediscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+    final void onRediscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
 
@@ -5541,7 +5541,7 @@ public class BleDevice extends BleNode
         stateTracker_main().update(PA_StateTracker.E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), ADVERTISING, true);
     }
 
-    void onUndiscovered(E_Intent intent)
+    final void onUndiscovered(E_Intent intent)
     {
         clear_undiscovery();
 
@@ -5559,7 +5559,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    double getTimeSinceLastDiscovery()
+    final double getTimeSinceLastDiscovery()
     {
         return m_timeSinceLastDiscovery;
     }
@@ -5605,17 +5605,17 @@ public class BleDevice extends BleNode
         }
     }
 
-    void updateRssi(final int rssi)
+    final void updateRssi(final int rssi)
     {
         m_rssi = rssi;
     }
 
-    void updateMtu(final int mtu)
+    final void updateMtu(final int mtu)
     {
         m_mtu = mtu;
     }
 
-    void updateConnectionPriority(final BleConnectionPriority connectionPriority)
+    final void updateConnectionPriority(final BleConnectionPriority connectionPriority)
     {
         m_connectionPriority = connectionPriority;
     }
@@ -5625,7 +5625,7 @@ public class BleDevice extends BleNode
         updateMtu(0);
     }
 
-    void update(double timeStep)
+    final void update(double timeStep)
     {
         m_timeSinceLastDiscovery += timeStep;
 
@@ -5636,7 +5636,7 @@ public class BleDevice extends BleNode
         m_rssiPollMngr.update(timeStep);
     }
 
-    void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior)
+    final void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior)
     {
         if (conf_device().forceBondDialog)
         {
@@ -5645,17 +5645,17 @@ public class BleDevice extends BleNode
         queue().add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
     }
 
-    void unbond_justAddTheTask()
+    final void unbond_justAddTheTask()
     {
         unbond_justAddTheTask(null);
     }
 
-    void unbond_justAddTheTask(final PE_TaskPriority priority_nullable)
+    final void unbond_justAddTheTask(final PE_TaskPriority priority_nullable)
     {
         queue().add(new P_Task_Unbond(this, m_taskStateListener, priority_nullable));
     }
 
-    void unbond_internal(final PE_TaskPriority priority_nullable, final BondListener.Status status)
+    final void unbond_internal(final PE_TaskPriority priority_nullable, final BondListener.Status status)
     {
         unbond_justAddTheTask(priority_nullable);
 
@@ -5669,7 +5669,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    P_DeviceServiceManager serviceMngr_device()
+    final P_DeviceServiceManager serviceMngr_device()
     {
         return getServiceManager();
     }
@@ -5688,7 +5688,7 @@ public class BleDevice extends BleNode
         return null;
     }
 
-    void attemptReconnect()
+    final void attemptReconnect()
     {
         if (connect_earlyOut() != null) return;
 
@@ -5757,7 +5757,7 @@ public class BleDevice extends BleNode
         onConnecting(/* definitelyExplicit= */true, isReconnect, extraBondingStates, /*bleConnect=*/true);
     }
 
-    void onConnecting(boolean definitelyExplicit, boolean isReconnect, final Object[] extraBondingStates, final boolean bleConnect)
+    final void onConnecting(boolean definitelyExplicit, boolean isReconnect, final Object[] extraBondingStates, final boolean bleConnect)
     {
         m_lastConnectOrDisconnectWasUserExplicit = definitelyExplicit;
 
@@ -5797,7 +5797,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    void onNativeConnect(boolean explicit)
+    final void onNativeConnect(boolean explicit)
     {
         m_lastDisconnectWasBecauseOfBleTurnOff = false; // DRK > Just being anal.
 
@@ -5874,7 +5874,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    void onNativeConnectFail(PE_TaskState state, int gattStatus, ConnectionFailListener.AutoConnectUsage autoConnectUsage)
+    final void onNativeConnectFail(PE_TaskState state, int gattStatus, ConnectionFailListener.AutoConnectUsage autoConnectUsage)
     {
         m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */true);
 
@@ -5929,7 +5929,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    void onServicesDiscovered()
+    final void onServicesDiscovered()
     {
         if (m_mtu > BleNodeConfig.DEFAULT_MTU_SIZE)
         {
@@ -5950,7 +5950,7 @@ public class BleDevice extends BleNode
         m_txnMngr.runAuthOrInitTxnIfNeeded(BluetoothGatt.GATT_SUCCESS, DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true);
     }
 
-    void onFullyInitialized(final int gattStatus, Object... extraFlags)
+    final void onFullyInitialized(final int gattStatus, Object... extraFlags)
     {
         m_reconnectMngr_longTerm.stop();
         m_reconnectMngr_shortTerm.stop();
@@ -6005,12 +6005,12 @@ public class BleDevice extends BleNode
         }
     }
 
-    void disconnectWithReason(ConnectionFailListener.Status connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
+    final void disconnectWithReason(ConnectionFailListener.Status connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
     {
         disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus, bondFailReason, txnFailReason);
     }
 
-    void disconnectWithReason(final PE_TaskPriority disconnectPriority_nullable, final ConnectionFailListener.Status connectionFailReasonIfConnecting, final Timing timing, final int gattStatus, final int bondFailReason, final ReadWriteListener.ReadWriteEvent txnFailReason)
+    final void disconnectWithReason(final PE_TaskPriority disconnectPriority_nullable, final ConnectionFailListener.Status connectionFailReasonIfConnecting, final Timing timing, final int gattStatus, final int bondFailReason, final ReadWriteListener.ReadWriteEvent txnFailReason)
     {
         getManager().getPostManager().postToUpdateThread(new Runnable()
         {
@@ -6122,7 +6122,7 @@ public class BleDevice extends BleNode
         });
     }
 
-    boolean lastDisconnectWasBecauseOfBleTurnOff()
+    final boolean lastDisconnectWasBecauseOfBleTurnOff()
     {
         return m_lastDisconnectWasBecauseOfBleTurnOff;
     }
@@ -6143,7 +6143,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    void onNativeDisconnect(final boolean wasExplicit, final int gattStatus, final boolean attemptShortTermReconnect, final boolean saveLastDisconnect)
+    final void onNativeDisconnect(final boolean wasExplicit, final int gattStatus, final boolean attemptShortTermReconnect, final boolean saveLastDisconnect)
     {
         if (!wasExplicit && !attemptShortTermReconnect)
         {
@@ -6343,7 +6343,7 @@ public class BleDevice extends BleNode
         m_pollMngr.stopPoll(serviceUuid, characteristicUuid, interval, listener, /* usingNotify= */false);
     }
 
-    ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, final ReadWriteListener listener)
+    final ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, final ReadWriteListener listener)
     {
 
 
@@ -6375,7 +6375,7 @@ public class BleDevice extends BleNode
         return NULL_READWRITE_EVENT();
     }
 
-    ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final ReadWriteListener listener)
+    final ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final ReadWriteListener listener)
     {
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, descriptorUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -6479,7 +6479,7 @@ public class BleDevice extends BleNode
         return NULL_READWRITE_EVENT();
     }
 
-    E_Intent lastConnectDisconnectIntent()
+    final E_Intent lastConnectDisconnectIntent()
     {
         if (m_lastConnectOrDisconnectWasUserExplicit == null)
         {
@@ -6491,7 +6491,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    PE_TaskPriority getOverrideReadWritePriority()
+    final PE_TaskPriority getOverrideReadWritePriority()
     {
         if (isAny(AUTHENTICATING, INITIALIZING))
         {
@@ -6505,7 +6505,7 @@ public class BleDevice extends BleNode
         }
     }
 
-    void invokeReadWriteCallback(final ReadWriteListener listener_nullable, final ReadWriteListener.ReadWriteEvent event)
+    final void invokeReadWriteCallback(final ReadWriteListener listener_nullable, final ReadWriteListener.ReadWriteEvent event)
     {
         if (event.wasSuccess() && event.isRead() && event.target() == ReadWriteListener.Target.CHARACTERISTIC)
         {
@@ -6580,7 +6580,7 @@ public class BleDevice extends BleNode
         return new NotificationListener.NotificationEvent(this, event.serviceUuid(), event.charUuid(), type, event.data(), status, event.gattStatus(), event.time_total().secs(), event.time_ota().secs(), event.solicited());
     }
 
-    ReadWriteListener.ReadWriteEvent NULL_READWRITE_EVENT()
+    final ReadWriteListener.ReadWriteEvent NULL_READWRITE_EVENT()
     {
         if (m_nullReadWriteEvent != null)
         {
@@ -6592,7 +6592,7 @@ public class BleDevice extends BleNode
         return m_nullReadWriteEvent;
     }
 
-    ConnectionFailListener.ConnectionFailEvent NULL_CONNECTIONFAIL_INFO()
+    final ConnectionFailListener.ConnectionFailEvent NULL_CONNECTIONFAIL_INFO()
     {
         if (m_nullConnectionFailEvent != null)
         {
@@ -6604,7 +6604,7 @@ public class BleDevice extends BleNode
         return m_nullConnectionFailEvent;
     }
 
-    BondListener.BondEvent NULL_BOND_EVENT()
+    final BondListener.BondEvent NULL_BOND_EVENT()
     {
         if (m_nullBondEvent != null)
         {
@@ -6619,7 +6619,7 @@ public class BleDevice extends BleNode
     /**
      * Returns <code>true</code> if <code>this</code> is referentially equal to {@link #NULL}.
      */
-    @Override public boolean isNull()
+    @Override public final boolean isNull()
     {
         return m_isNull;
     }
@@ -6627,7 +6627,7 @@ public class BleDevice extends BleNode
     /**
      * Convenience forwarding of {@link BleManager#getDevice_next(BleDevice)}.
      */
-    public @Nullable(Prevalence.NEVER) BleDevice getNext()
+    public final @Nullable(Prevalence.NEVER) BleDevice getNext()
     {
         return getManager().getDevice_next(this);
     }
@@ -6635,7 +6635,7 @@ public class BleDevice extends BleNode
     /**
      * Convenience forwarding of {@link BleManager#getDevice_next(BleDevice, BleDeviceState)}.
      */
-    public @Nullable(Prevalence.NEVER) BleDevice getNext(final BleDeviceState state)
+    public final @Nullable(Prevalence.NEVER) BleDevice getNext(final BleDeviceState state)
     {
         return getManager().getDevice_next(this, state);
     }
@@ -6643,7 +6643,7 @@ public class BleDevice extends BleNode
     /**
      * Convenience forwarding of {@link BleManager#getDevice_next(BleDevice, Object...)}.
      */
-    public @Nullable(Prevalence.NEVER) BleDevice getNext(final Object... query)
+    public final @Nullable(Prevalence.NEVER) BleDevice getNext(final Object... query)
     {
         return getManager().getDevice_next(this, query);
     }
@@ -6651,7 +6651,7 @@ public class BleDevice extends BleNode
     /**
      * Convenience forwarding of {@link BleManager#getDevice_previous(BleDevice)}.
      */
-    public @Nullable(Prevalence.NEVER) BleDevice getPrevious()
+    public final @Nullable(Prevalence.NEVER) BleDevice getPrevious()
     {
         return getManager().getDevice_previous(this);
     }
@@ -6659,7 +6659,7 @@ public class BleDevice extends BleNode
     /**
      * Convenience forwarding of {@link BleManager#getDevice_previous(BleDevice, BleDeviceState)}.
      */
-    public @Nullable(Prevalence.NEVER) BleDevice getPrevious(final BleDeviceState state)
+    public final @Nullable(Prevalence.NEVER) BleDevice getPrevious(final BleDeviceState state)
     {
         return getManager().getDevice_previous(this, state);
     }
@@ -6667,7 +6667,7 @@ public class BleDevice extends BleNode
     /**
      * Convenience forwarding of {@link BleManager#getDevice_previous(BleDevice, Object...)}.
      */
-    public @Nullable(Prevalence.NEVER) BleDevice getPrevious(final Object... query)
+    public final @Nullable(Prevalence.NEVER) BleDevice getPrevious(final Object... query)
     {
         return getManager().getDevice_previous(this, query);
     }
@@ -6675,7 +6675,7 @@ public class BleDevice extends BleNode
     /**
      * Convenience forwarding of {@link BleManager#getDeviceIndex(BleDevice)}.
      */
-    public int getIndex()
+    public final int getIndex()
     {
         return getManager().getDeviceIndex(this);
     }
