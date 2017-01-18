@@ -6017,90 +6017,96 @@ public class BleDevice extends BleNode
             @Override public void run()
             {
 
+                // If there is already a disconnect task in the queue, then simply ignore this (in the case an explicit disconnect comes in while
+                // a transaction is processing...the transaction will call this method as well)
+                boolean inQueue = getTaskQueue().isInQueue(P_Task_Disconnect.class, BleDevice.this);
 
-                if (isNull()) return;
-
-                final boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
-                final boolean explicit = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasExplicit();
-                final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
-
-                if (explicit)
+                if (!inQueue)
                 {
-                    m_reconnectMngr_shortTerm.stop();
-                }
 
-                if (cancelled)
-                {
-                    m_useAutoConnect = m_alwaysUseAutoConnect;
+                    if (isNull()) return;
 
-                    m_connectionFailMngr.onExplicitDisconnect();
-                }
+                    final boolean cancelled = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasCancelled();
+                    final boolean explicit = connectionFailReasonIfConnecting != null && connectionFailReasonIfConnecting.wasExplicit();
+                    final BleDeviceState highestState = BleDeviceState.getTransitoryConnectionState(getStateMask());
 
-                final boolean wasConnecting = is_internal(CONNECTING_OVERALL);
-                final boolean attemptingReconnect_longTerm = cancelled ? false : is(RECONNECTING_LONG_TERM);
+                    if (explicit)
+                    {
+                        m_reconnectMngr_shortTerm.stop();
+                    }
 
-                E_Intent intent = cancelled ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
-                m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
+                    if (cancelled)
+                    {
+                        m_useAutoConnect = m_alwaysUseAutoConnect;
 
-                final boolean cancellableFromConnect = BleDeviceConfig.bool(conf_device().disconnectIsCancellable, conf_mngr().disconnectIsCancellable);
-                final boolean tryBondingWhileDisconnected = connectionFailReasonIfConnecting == Status.BONDING_FAILED && BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
-                final boolean underwentPossibleImplicitBondingAttempt = m_nativeWrapper.isNativelyUnbonded() && m_underwentPossibleImplicitBondingAttempt == true;
-                final boolean taskIsCancellable = cancellableFromConnect == true && tryBondingWhileDisconnected == false && underwentPossibleImplicitBondingAttempt == false;
+                        m_connectionFailMngr.onExplicitDisconnect();
+                    }
 
-                //--- DRK > Had this here but for a final connection failure it would add one more bond attempt after disconnected, which didn't make sense.
-                //---		Now all handled before connection.
+                    final boolean wasConnecting = is_internal(CONNECTING_OVERALL);
+                    final boolean attemptingReconnect_longTerm = cancelled ? false : is(RECONNECTING_LONG_TERM);
+
+                    E_Intent intent = cancelled ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
+                    m_lastConnectOrDisconnectWasUserExplicit = intent == E_Intent.INTENTIONAL;
+
+                    final boolean cancellableFromConnect = BleDeviceConfig.bool(conf_device().disconnectIsCancellable, conf_mngr().disconnectIsCancellable);
+                    final boolean tryBondingWhileDisconnected = connectionFailReasonIfConnecting == Status.BONDING_FAILED && BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
+                    final boolean underwentPossibleImplicitBondingAttempt = m_nativeWrapper.isNativelyUnbonded() && m_underwentPossibleImplicitBondingAttempt == true;
+                    final boolean taskIsCancellable = cancellableFromConnect == true && tryBondingWhileDisconnected == false && underwentPossibleImplicitBondingAttempt == false;
+
+                    //--- DRK > Had this here but for a final connection failure it would add one more bond attempt after disconnected, which didn't make sense.
+                    //---		Now all handled before connection.
 //		if( tryBondingWhileDisconnected )
 //		{
 //			bond_justAddTheTask(E_TransactionLockBehavior.DOES_NOT_PASS);
 //		}
 
 //		if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
-                {
-                    saveLastDisconnect(explicit);
-
-                    final boolean saveLastDisconnectAfterTaskCompletes = connectionFailReasonIfConnecting != Status.ROGUE_DISCONNECT;
-
-                    final int taskOrdinal;
-                    final boolean clearQueue;
-
-                    if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
                     {
-                        final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
-                        queue().add(disconnectTask);
+                        saveLastDisconnect(explicit);
 
-                        taskOrdinal = disconnectTask.getOrdinal();
-                        clearQueue = true;
+                        final boolean saveLastDisconnectAfterTaskCompletes = connectionFailReasonIfConnecting != Status.ROGUE_DISCONNECT;
 
-                        //--- DRK > Taking this out because the problem is this invokes
-                        //---		callbacks to appland for e.g. a read failing because of EXPLICIT_DISCONNECT before the BleDeviceState change below.
-                        //---		This is now moved to the clearQueue if block below so that callbacks to appland get sent *after* disconnect state change.
+                        final int taskOrdinal;
+                        final boolean clearQueue;
+
+                        if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
+                        {
+                            final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
+                            queue().add(disconnectTask);
+
+                            taskOrdinal = disconnectTask.getOrdinal();
+                            clearQueue = true;
+
+                            //--- DRK > Taking this out because the problem is this invokes
+                            //---		callbacks to appland for e.g. a read failing because of EXPLICIT_DISCONNECT before the BleDeviceState change below.
+                            //---		This is now moved to the clearQueue if block below so that callbacks to appland get sent *after* disconnect state change.
 //				m_queue.clearQueueOf(PA_Task_RequiresConnection.class, this);
-                    }
-                    else
-                    {
-                        taskOrdinal = -1;
-                        clearQueue = false;
-                    }
+                        }
+                        else
+                        {
+                            taskOrdinal = -1;
+                            clearQueue = false;
+                        }
 
-                    final Object[] overrideBondingStates = m_bondMngr.getOverrideBondStatesForDisconnect(connectionFailReasonIfConnecting);
-                    final boolean forceMainStateTracker = explicit;
+                        final Object[] overrideBondingStates = m_bondMngr.getOverrideBondStatesForDisconnect(connectionFailReasonIfConnecting);
+                        final boolean forceMainStateTracker = explicit;
 
-                    // Commenting this out now. We should wait for the native callback to say if we're disconnected or not. The poll manager will
-                    // also check the native state, and update as needed, just in case.
+                        // Commenting this out now. We should wait for the native callback to say if we're disconnected or not. The poll manager will
+                        // also check the native state, and update as needed, just in case.
 //                    setStateToDisconnected(attemptingReconnect_longTerm, intent, gattStatus, forceMainStateTracker, overrideBondingStates);
 
-                    m_txnMngr.cancelAllTransactions();
+                        m_txnMngr.cancelAllTransactions();
 
-                    if (clearQueue)
-                    {
-                        queue().clearQueueOf(PA_Task_RequiresConnection.class, BleDevice.this, taskOrdinal);
-                    }
+                        if (clearQueue)
+                        {
+                            queue().clearQueueOf(PA_Task_RequiresConnection.class, BleDevice.this, taskOrdinal);
+                        }
 
-                    if (!attemptingReconnect_longTerm)
-                    {
-                        m_reconnectMngr_longTerm.stop();
+                        if (!attemptingReconnect_longTerm)
+                        {
+                            m_reconnectMngr_longTerm.stop();
+                        }
                     }
-                }
 //		else
 //		{
 //			if (!attemptingReconnect_longTerm)
@@ -6111,11 +6117,12 @@ public class BleDevice extends BleNode
 //			}
 //		}
 
-                if (wasConnecting)
-                {
-                    if (getManager().ASSERT(connectionFailReasonIfConnecting != null))
+                    if (wasConnecting)
                     {
-                        m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect_longTerm, gattStatus, bondFailReason, highestState, ConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
+                        if (getManager().ASSERT(connectionFailReasonIfConnecting != null))
+                        {
+                            m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect_longTerm, gattStatus, bondFailReason, highestState, ConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
+                        }
                     }
                 }
             }

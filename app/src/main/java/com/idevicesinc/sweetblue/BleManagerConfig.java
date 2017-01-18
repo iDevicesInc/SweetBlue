@@ -277,7 +277,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	
 	/**
 	 * Default is {@value #DEFAULT_AUTO_UPDATE_RATE} seconds - The rate at which the library's internal update loop ticks.
-	 * Generally shouldn't need to be changed. You can set this to {@link Interval#DISABLED} and call {@link BleManager#update(double)} yourself
+	 * Generally shouldn't need to be changed. You can set this to {@link Interval#DISABLED} and call {@link BleManager#update(double, long)} yourself
 	 * if you want to tie the library in to an existing update loop used in your application.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
