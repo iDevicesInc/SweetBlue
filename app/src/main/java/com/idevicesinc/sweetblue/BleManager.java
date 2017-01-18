@@ -3122,6 +3122,7 @@ public final class BleManager
 			{
 				m_updateRunnable.setUpdateRate(m_config.autoUpdateRate.millis());
 				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
+				getLogger().i("Update loop is no longer in the IDLE state.");
 			}
 		}
 
@@ -3147,6 +3148,7 @@ public final class BleManager
 			{
 				m_updateRunnable.setUpdateRate(m_config.idleUpdateRate.millis());
 				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, true);
+				getLogger().i("Update loop has entered IDLE state.");
 			}
 		}
 
