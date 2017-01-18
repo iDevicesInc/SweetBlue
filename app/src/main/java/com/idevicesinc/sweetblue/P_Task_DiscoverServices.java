@@ -1,28 +1,34 @@
 package com.idevicesinc.sweetblue;
 
-import java.lang.reflect.Method;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
-import com.idevicesinc.sweetblue.utils.Utils;
 
-class P_Task_DiscoverServices extends PA_Task_RequiresConnection
+
+final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {
+
 	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
+	private boolean m_gattRefresh;
+	private double m_curGattDelay;
+	private double m_gattDelayTarget;
+
 	
 	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener)
 	{
 		super(bleDevice, listener);
+		m_gattRefresh = BleDeviceConfig.bool(getDevice().conf_device().useGattRefresh, getDevice().conf_mngr().useGattRefresh);
+		m_gattDelayTarget = BleDeviceConfig.interval(getDevice().conf_device().gattRefreshDelay, getDevice().conf_mngr().gattRefreshDelay).secs();
 	}
 
 	@Override public void execute()
 	{
 //		if( !getDevice().getNativeGatt().getServices().isEmpty() )
 		{
-			final boolean useRefresh = BleDeviceConfig.bool(getDevice().conf_device().useGattRefresh, getDevice().conf_mngr().useGattRefresh);
-			
-			if( useRefresh )
+
+			if( m_gattRefresh )
 			{
 				getDevice().gattLayer().refreshGatt();
+				return;
 			}
 		}
 		
@@ -31,6 +37,23 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			failImmediately();
 			
 			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
+		}
+	}
+
+	@Override protected void update(double timeStep)
+	{
+		if (m_gattRefresh)
+		{
+			m_curGattDelay += timeStep;
+			if (m_curGattDelay >= m_gattDelayTarget)
+			{
+				if( !getDevice().gattLayer().discoverServices() )
+				{
+					failImmediately();
+
+					getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
+				}
+			}
 		}
 	}
 

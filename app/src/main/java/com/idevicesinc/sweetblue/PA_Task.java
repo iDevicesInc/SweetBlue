@@ -483,7 +483,7 @@ abstract class PA_Task
 		
 		String deviceEntry = getDevice() != null ? " " + getDevice().getName_debug(): "";
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
-		return name + "(" + m_state.name() + deviceEntry + addition + ")";
+		return name + "(" + m_state.name() + deviceEntry + addition + " " + hashCode() + " )";
 	}
 	
 	public boolean isExplicit()

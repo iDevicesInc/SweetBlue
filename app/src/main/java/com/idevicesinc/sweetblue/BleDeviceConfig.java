@@ -76,6 +76,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static final int DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE	= 25;
 
 	/**
+	 * This only applies when {@link #useGattRefresh} is <code>true</code>. This is the default amount of time to delay after
+	 * refreshing the gatt database before actually performing the discover services operation. It has been observed that this delay
+	 * alleviates some instability when {@link #useGattRefresh} is <code>true</code>.
+	 */
+	public static final Interval DEFAULT_GATT_REFRESH_DELAY		= Interval.millis(350);
+
+	/**
 	 * Default is <code>false</code>. If the bluetooth device you are trying to connect to requires a pairing dialog to show up, you should
 	 * set this to <code>true</code>. Android will do one of two things when you try to pair to the device. It will either A) show the pairing dialog, or
 	 * B) show a notification in the notification area. When B happens, most people probably won't notice it, and think your app can't connect to the device.
@@ -83,6 +90,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * as it sounds, it works. Note that no devices will be discovered during this one second scan.
 	 */
 	public boolean forceBondDialog								= false;
+
+	/**
+	 * Default is {@link #DEFAULT_GATT_REFRESH_DELAY}. This only applies when {@link #useGattRefresh} is <code>true</code>. This is the amount of time to delay after
+	 * refreshing the gatt database before actually performing the discover services operation. It has been observed that this delay
+	 * alleviates some instability when {@link #useGattRefresh} is <code>true</code>.
+	 */
+	public Interval gattRefreshDelay							= DEFAULT_GATT_REFRESH_DELAY;
 	
 	/**
 	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},
