@@ -6289,7 +6289,7 @@ public class BleDevice extends BleNode
 
         if (!isConnectingOverall_1 && !m_reconnectMngr_shortTerm.isRunning())
         {
-            if (connectionFailReason_nullable != null)
+            if (connectionFailReason_nullable != null && !m_connectionFailMngr.sentDisconnectFail())
             {
                 retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
             }

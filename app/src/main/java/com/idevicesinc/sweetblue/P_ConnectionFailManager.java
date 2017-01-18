@@ -22,6 +22,8 @@ class P_ConnectionFailManager
 	
 	private Long m_timeOfFirstConnect = null;
 	private Long m_timeOfLastConnectFail = null;
+
+	private boolean m_sentDisconnect = false;
 	
 	private final ArrayList<ConnectionFailEvent> m_history = new ArrayList<ConnectionFailEvent>();
 	
@@ -45,6 +47,8 @@ class P_ConnectionFailManager
 	void onExplicitConnectionStarted()
 	{
 		resetFailCount();
+
+		m_sentDisconnect = false;
 		
 		m_timeOfFirstConnect = System.currentTimeMillis();
 	}
@@ -68,6 +72,11 @@ class P_ConnectionFailManager
 		int retryCount = m_failCount;
 		
 		return retryCount;
+	}
+
+	boolean sentDisconnectFail()
+	{
+		return m_sentDisconnect;
 	}
 
 	int/*__PE_Please*/ onConnectionFailed(ConnectionFailListener.Status reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect_longTerm, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, ConnectionFailListener.AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
@@ -158,6 +167,8 @@ class P_ConnectionFailManager
 		{
 			m_failCount = 0;
 		}
+
+		m_sentDisconnect = true;
 		
 		return retryChoice__PE_Please;
 	}
