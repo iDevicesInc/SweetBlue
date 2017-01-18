@@ -11,6 +11,7 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 	private boolean m_gattRefresh;
 	private double m_curGattDelay;
 	private double m_gattDelayTarget;
+	private boolean m_discoverAttempted;
 
 	
 	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener)
@@ -38,15 +39,17 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			
 			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
 		}
+		m_discoverAttempted = true;
 	}
 
 	@Override protected void update(double timeStep)
 	{
-		if (m_gattRefresh)
+		if (m_gattRefresh && !m_discoverAttempted)
 		{
 			m_curGattDelay += timeStep;
 			if (m_curGattDelay >= m_gattDelayTarget)
 			{
+				m_discoverAttempted = true;
 				if( !getDevice().gattLayer().discoverServices() )
 				{
 					failImmediately();
