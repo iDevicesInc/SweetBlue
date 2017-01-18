@@ -182,6 +182,9 @@ class P_TaskQueue
 
 	private void add_updateThread(final PA_Task newTask)
 	{
+		// Check the idle status to ensure the new task gets executed as soon as possible (rather than
+		// waiting until the idle interval's next tick)
+		m_mngr.checkIdleStatus();
 		if( tryCancellingCurrentTask(newTask) )
 		{
 			if( getCurrent() == null )

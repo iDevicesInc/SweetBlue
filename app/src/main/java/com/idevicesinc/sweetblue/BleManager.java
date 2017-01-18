@@ -3103,6 +3103,20 @@ public final class BleManager
 		return m_ready;
 	}
 
+	void checkIdleStatus()
+	{
+		if (is(IDLE))
+		{
+			// To ensure we get back up to speed as soon as possible, we'll remove the callbacks, set the new update rate
+			// then post the runnable again. This avoids waiting for the idle time before the speed bumps back up.
+			getLogger().i("Update loop is no longer in the IDLE state.");
+			getPostManager().removeUpdateCallbacks(m_updateRunnable);
+			m_updateRunnable.setUpdateRate(m_config.autoUpdateRate.millis());
+			m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
+			getPostManager().postToUpdateThread(m_updateRunnable);
+		}
+	}
+
 	/**
 	 * This method is made public in case you want to tie the library in to an update loop
 	 * from another codebase. Generally you should leave {@link BleManagerConfig#autoUpdateRate}
@@ -3118,16 +3132,7 @@ public final class BleManager
 		if (m_taskQueue.update(timeStep_seconds))
 		{
 			m_lastTaskExecution = currentTime;
-			if (is(IDLE))
-			{
-				// To ensure we get back up to speed as soon as possible, we'll remove the callbacks, set the new update rate
-				// then post the runnable again. This avoids waiting for the idle time before the speed bumps back up.
-				getLogger().i("Update loop is no longer in the IDLE state.");
-				getPostManager().removeUpdateCallbacks(m_updateRunnable);
-				m_updateRunnable.setUpdateRate(m_config.autoUpdateRate.millis());
-				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
-				getPostManager().postToUpdateThread(m_updateRunnable);
-			}
+			checkIdleStatus();
 		}
 
 		if( m_isForegrounded )
