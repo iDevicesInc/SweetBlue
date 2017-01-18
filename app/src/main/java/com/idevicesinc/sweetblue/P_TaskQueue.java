@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -9,7 +10,7 @@ import android.os.Looper;
 class P_TaskQueue
 {
 	private final ArrayList<PA_Task> m_queue = new ArrayList<PA_Task>();
-	private PA_Task m_current;
+	private AtomicReference<PA_Task> m_current;
 	private long m_updateCount;
 	private final P_Logger m_logger;
 	private final BleManager m_mngr;
@@ -23,6 +24,8 @@ class P_TaskQueue
 	{
 		m_mngr = mngr;
 		m_logger = mngr.getLogger();
+
+		m_current = new AtomicReference<>(null);
 		
 		initHandler(); 
 	}
@@ -220,7 +223,7 @@ class P_TaskQueue
 			return executingTask;
 		}
 
-		if( m_current == null )
+		if( m_current.get() == null )
 		{
 			dequeue();
 			executingTask = true;
@@ -239,7 +242,7 @@ class P_TaskQueue
 	
 	private synchronized boolean dequeue()
 	{
-		if( !m_mngr.ASSERT(m_current == null) )  return false;
+		if( !m_mngr.ASSERT(m_current.get() == null) )  return false;
 		if( m_queue.size() == 0 )  return false;
 
 		for( int i = 0; i < m_queue.size(); i++ )
@@ -249,9 +252,9 @@ class P_TaskQueue
 			if( newPotentialCurrent.isArmable() )
 			{
 				m_queue.remove(i);
-				m_current = newPotentialCurrent;
-				m_current.arm();
-				if (!m_current.tryExecuting())
+				m_current.set(newPotentialCurrent);
+				m_current.get().arm();
+				if (!m_current.get().tryExecuting())
 				{
 					print();
 				}
@@ -271,7 +274,7 @@ class P_TaskQueue
 	public PA_Task getCurrent()
 	{
 //		return m_pendingEndingStateForCurrentTask != null ? null : m_current;
-		return m_current;
+		return m_current.get();
 	}
 	
 	private boolean endCurrentTask(PE_TaskState endingState)
@@ -280,8 +283,8 @@ class P_TaskQueue
 		if( getCurrent() == null ) 							return false;
 //		if( m_pendingEndingStateForCurrentTask != null )	return false;
 		
-		PA_Task current_saved = m_current;
-		m_current = null;
+		PA_Task current_saved = m_current.get();
+		m_current.set(null);
 		current_saved.setEndingState(endingState);
 
 		if( m_queue.size() > 0 && getCurrent() == null )
