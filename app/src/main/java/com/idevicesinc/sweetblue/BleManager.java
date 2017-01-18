@@ -3144,7 +3144,7 @@ public final class BleManager
 
 		if( m_scanManager.update(timeStep_seconds) == false )
 		{
-			if (m_lastTaskExecution + m_config.minTimeToIdle.millis() < System.currentTimeMillis())
+			if (!is(IDLE) && m_lastTaskExecution + m_config.minTimeToIdle.millis() < System.currentTimeMillis())
 			{
 				m_updateRunnable.setUpdateRate(m_config.idleUpdateRate.millis());
 				m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, true);

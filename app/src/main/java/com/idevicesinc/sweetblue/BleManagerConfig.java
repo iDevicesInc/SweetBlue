@@ -57,6 +57,11 @@ public class BleManagerConfig extends BleDeviceConfig
 	public static final double DEFAULT_IDLE_UPDATE_RATE					= 0.5;
 
 	/**
+	 * Default value for {@link #minTimeToIdle}.
+	 */
+	public static final double DEFAULT_DELAY_BEFORE_IDLE				= 5.0;
+
+	/**
 	 * Default value for {@link #uhOhCallbackThrottle}.
 	 */
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
@@ -287,11 +292,11 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval idleUpdateRate							= Interval.secs(DEFAULT_IDLE_UPDATE_RATE);
 
 	/**
-	 * Default is {@value #DEFAULT_IDLE_UPDATE_RATE} seconds - This is the amount of time the library will wait with no tasks before
+	 * Default is {@value #DEFAULT_DELAY_BEFORE_IDLE} seconds - This is the amount of time the library will wait with no tasks before
 	 * lowering the update loop tick to {@link #idleUpdateRate}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public Interval minTimeToIdle							= Interval.secs(DEFAULT_IDLE_UPDATE_RATE);
+	public Interval minTimeToIdle							= Interval.secs(DEFAULT_DELAY_BEFORE_IDLE);
 
 	/**
 	 * Default is <code>false</code><br></br>
