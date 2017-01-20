@@ -5983,13 +5983,14 @@ public class BleDevice extends BleNode
                         DISCOVERED, true,
                         DISCONNECTED, true,
                         // Commenting these out because of un-thought-of case where you unbond then immediately disconnect...native bond state is still BONDED but abstracted state is UNBONDED so a state transition occurs where it shouldn't.
-//			BONDING, m_nativeWrapper.isNativelyBonding(),
-//			BONDED, m_nativeWrapper.isNativelyBonded(),
-//			UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+                        // Uncommenting these out to reflect actual bond state when the device gets disconnected
+			            BONDING, m_nativeWrapper.isNativelyBonding(),
+			            BONDED, m_nativeWrapper.isNativelyBonded(),
+			            UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
                         RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
-                        ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY,
+                        ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY
 
-                        overrideBondingStates
+//                        overrideBondingStates
                 );
 
         if (tracker != stateTracker_main())
@@ -6012,7 +6013,7 @@ public class BleDevice extends BleNode
 
     final void disconnectWithReason(final PE_TaskPriority disconnectPriority_nullable, final ConnectionFailListener.Status connectionFailReasonIfConnecting, final Timing timing, final int gattStatus, final int bondFailReason, final ReadWriteListener.ReadWriteEvent txnFailReason)
     {
-        getManager().getPostManager().postToUpdateThread(new Runnable()
+        getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
         {
             @Override public void run()
             {
@@ -6091,8 +6092,7 @@ public class BleDevice extends BleNode
                         final Object[] overrideBondingStates = m_bondMngr.getOverrideBondStatesForDisconnect(connectionFailReasonIfConnecting);
                         final boolean forceMainStateTracker = explicit;
 
-                        // Commenting this out now. We should wait for the native callback to say if we're disconnected or not. The poll manager will
-                        // also check the native state, and update as needed, just in case.
+                        // Commenting this out now. We should wait for the native callback to say if we're disconnected or not.
 //                    setStateToDisconnected(attemptingReconnect_longTerm, intent, gattStatus, forceMainStateTracker, overrideBondingStates);
 
                         m_txnMngr.cancelAllTransactions();
@@ -6289,7 +6289,7 @@ public class BleDevice extends BleNode
 
         if (!isConnectingOverall_1 && !m_reconnectMngr_shortTerm.isRunning())
         {
-            if (connectionFailReason_nullable != null && !m_connectionFailMngr.sentDisconnectFail())
+            if (connectionFailReason_nullable != null/* && !m_connectionFailMngr.sentDisconnectFail()*/)
             {
                 retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
             }

@@ -251,75 +251,35 @@ class P_NativeDeviceWrapper
 	
 	public int getConnectionState()
 	{
-		if (Utils.isOnMainThread())
-		{
-			return performGetNativeState(null, null);
-		}
-		else
-		{
-			final CountDownLatch latch = new CountDownLatch(1);
-			final AtomicInteger state = new AtomicInteger(-1);
-			getManager().getPostManager().postToMain(new Runnable()
-			{
-				@Override public void run()
-				{
-					final int reportedNativeConnectionState = getNativeConnectionState();
-					int connectedStateThatWeWillGoWith = reportedNativeConnectionState;
-
-					if (m_nativeConnectionState != null && m_nativeConnectionState.get() != -1)
-					{
-						if (m_nativeConnectionState.get() != reportedNativeConnectionState)
-						{
-							getLogger().e("Tracked native state " + getLogger().gattConn(m_nativeConnectionState.get()) + " doesn't match reported state " + getLogger().gattConn(reportedNativeConnectionState) + ".");
-						}
-
-						connectedStateThatWeWillGoWith = m_nativeConnectionState.get();
-					}
-
-					if (connectedStateThatWeWillGoWith != BluetoothGatt.STATE_DISCONNECTED)
-					{
-						if (m_gatt == null)
-						{
-							//--- DRK > Can't assert here because gatt can legitmately be null even though we have a connecting/ed native state.
-							//---		This was observed on the moto G right after app start up...getNativeConnectionState() reported connecting/ed
-							//---		but we haven't called connect yet. Really rare...only seen once after 4 months.
-							if (m_nativeConnectionState == null)
-							{
-								getLogger().e("Gatt is null with " + getLogger().gattConn(connectedStateThatWeWillGoWith));
-
-								connectedStateThatWeWillGoWith = BluetoothGatt.STATE_DISCONNECTED;
-
-								getManager().uhOh(UhOh.CONNECTED_WITHOUT_EVER_CONNECTING);
-							}
-							else
-							{
-								getManager().ASSERT(false, "Gatt is null with tracked native state: " + getLogger().gattConn(connectedStateThatWeWillGoWith));
-							}
-						}
-					}
-					else
-					{
-						//--- DRK > Had this assert here but must have been a brain fart because we can be disconnected
-						//---		but still have gatt be not null cause we're trying to reconnect.
-						//			if( !m_mngr.ASSERT(m_gatt == null) )
-						//			{
-						//				m_logger.e(m_logger.gattConn(connectedStateThatWeWillGoWith));
-						//			}
-					}
-
-					state.set(connectedStateThatWeWillGoWith);
-					latch.countDown();
-				}
-			});
-			try
-			{
-				latch.await();
-			} catch (Exception e)
-			{
-				e.printStackTrace();
-			}
-			return state.get();
-		}
+		return performGetNativeState(null, null);
+		// It was thought that getting the state from the UI thread would alleviate some issues. It wasn't found to be the case
+		// I'm leaving it here just in case we need to switch back.
+//		if (Utils.isOnMainThread())
+//		{
+//			return performGetNativeState(null, null);
+//		}
+//		else
+//		{
+//			// > RB - This may not be necessary anymore. It was thought that the check of the native state had to be made on the UI thread,
+//			// so this is here to block the current thread until it gets the result back.
+//			final CountDownLatch latch = new CountDownLatch(1);
+//			final AtomicInteger state = new AtomicInteger(-1);
+//			getManager().getPostManager().postToMain(new Runnable()
+//			{
+//				@Override public void run()
+//				{
+//					performGetNativeState(state, latch);
+//				}
+//			});
+//			try
+//			{
+//				latch.await();
+//			} catch (Exception e)
+//			{
+//				e.printStackTrace();
+//			}
+//			return state.get();
+//		}
 	}
 
 	private int performGetNativeState(AtomicInteger state, CountDownLatch latch)

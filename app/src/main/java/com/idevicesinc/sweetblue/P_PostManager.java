@@ -55,14 +55,19 @@ final class P_PostManager
 
     public final void postToUpdateThread(Runnable action)
     {
-//        if (isOnSweetBlueThread())
-//        {
-//            action.run();
-//        }
-//        else
-//        {
+        m_updateHandler.post(action);
+    }
+
+    public final void runOrPostToUpdateThread(Runnable action)
+    {
+        if (isOnSweetBlueThread())
+        {
+            action.run();
+        }
+        else
+        {
             m_updateHandler.post(action);
-//        }
+        }
     }
 
     public final void forcePostToUpdate(Runnable action)

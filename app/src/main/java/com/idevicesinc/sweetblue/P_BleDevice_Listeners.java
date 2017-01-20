@@ -31,8 +31,6 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 			{
 				final P_Task_Connect connectTask = (P_Task_Connect) task;
 
-				Log.e("DeviceListener", "Got Connect task end state of " + state.name());
-				
 				if (state.isEndingState())
 				{
 					if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )

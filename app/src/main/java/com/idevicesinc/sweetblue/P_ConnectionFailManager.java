@@ -130,7 +130,9 @@ class P_ConnectionFailManager
 		retryChoice__PE_Please = !isAttemptingReconnect_longTerm ? retryChoice__PE_Please : Please.PE_Please_DO_NOT_RETRY;
 		
 		//--- DRK > Disabling retry if app-land decided to call connect() themselves in fail callback...hopefully fringe but must check for now.
-		retryChoice__PE_Please = m_device.is_internal(BleDeviceState.CONNECTING_OVERALL) ? Please.PE_Please_DO_NOT_RETRY : retryChoice__PE_Please;
+		//--- RB > Commenting this out for now. If the user calls connect in the fail callback, it gets posted to the update thread, so this shouldn't
+		// be an issue anymore. Right now with the new changes to threading, this is causing issues (so a reconnect attempt doesn't happen when it should)
+//		retryChoice__PE_Please = m_device.is_internal(BleDeviceState.CONNECTING_OVERALL) ? Please.PE_Please_DO_NOT_RETRY : retryChoice__PE_Please;
 		
 		if( reason_nullable != null && reason_nullable.wasCancelled() )
 		{

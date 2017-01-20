@@ -180,6 +180,16 @@ class P_TaskQueue
 		});
 	}
 
+	void addNow(final PA_Task newTask)
+	{
+		if (!m_mngr.getPostManager().isOnSweetBlueThread())
+		{
+			throw new Error("Tried to add a task when not on the SweetBlue update thread!");
+		}
+		newTask.init();
+		add_updateThread(newTask);
+	}
+
 	private void add_updateThread(final PA_Task newTask)
 	{
 		// Check the idle status to ensure the new task gets executed as soon as possible (rather than
