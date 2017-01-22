@@ -10,6 +10,8 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
+
+import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -38,6 +40,13 @@ public class M_Util
         final ScanSettings scanSettings = builder.build();
 
         L_Util.startScan(mgr, scanSettings, listener);
+    }
+
+    // TODO - Remove this in version 3.0
+    @Deprecated
+    public static BluetoothGatt connect(BleDevice device, boolean autoConnect, Context context, BluetoothGattCallback callback)
+    {
+        return connect(device.getNative(), autoConnect, context, callback);
     }
 
     public static BluetoothGatt connect(BluetoothDevice device, boolean autoConnect, Context context, BluetoothGattCallback callback)

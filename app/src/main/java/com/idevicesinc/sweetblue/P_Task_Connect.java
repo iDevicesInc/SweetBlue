@@ -1,8 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.compat.M_Util;
-import com.idevicesinc.sweetblue.utils.Utils;
 
 import android.bluetooth.BluetoothGatt;
 
@@ -11,7 +9,6 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
 	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
-	private BluetoothGatt m_gatt = null;
 	
 	private AutoConnectUsage m_autoConnectUsage = AutoConnectUsage.UNKNOWN;
 	
@@ -54,9 +51,9 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			
 			m_autoConnectUsage = useAutoConnect ? AutoConnectUsage.USED : AutoConnectUsage.NOT_USED;
 
-			m_gatt = getDevice().gattLayer().connect(useAutoConnect);
+			getDevice().layerManager().connect(useAutoConnect);
 
-			if( getDevice().gattLayer().isGattNull(m_gatt) )
+			if( getDevice().layerManager().isGattNull() )
 			{
 				failImmediately();
 			}
@@ -64,7 +61,9 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 			{
 				//--- DRK > TODO: Don't really like this here...better would be if task listener handled this but I always
 				//---				want this gatt instance registered as soon as possible.
-				getDevice().m_nativeWrapper.updateGattInstance(getGatt());
+				//--- RB > With the layer implementation, this isn't necessary anymore, as it updates when calling
+				// connect()
+//				getDevice().m_nativeWrapper.updateGattInstance(gatt);
 			}
 		}
 		else
@@ -84,12 +83,7 @@ class P_Task_Connect extends PA_Task_RequiresBleOn
 	{
 		return m_autoConnectUsage;
 	}
-	
-	public BluetoothGatt getGatt()
-	{
-		return m_gatt;
-	}
-	
+
 	@Override public boolean isExplicit()
 	{
 		return m_explicit;

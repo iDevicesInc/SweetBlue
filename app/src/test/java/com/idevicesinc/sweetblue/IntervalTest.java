@@ -1,4 +1,4 @@
-package com.idevicesinc.sweetblue.tests;
+package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 import org.junit.Test;

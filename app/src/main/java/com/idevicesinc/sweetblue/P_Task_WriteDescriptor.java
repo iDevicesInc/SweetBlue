@@ -60,13 +60,13 @@ class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 			}
 			else
 			{
-				if( false == getDevice().gattLayer().setDescValue(desc_native, m_data) )
+				if( false == getDevice().layerManager().setDescValue(desc_native, m_data) )
 				{
 					fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), getDescUuid());
 				}
 				else
 				{
-					if( false == getDevice().gattLayer().writeDescriptor(desc_native) )
+					if( false == getDevice().layerManager().writeDescriptor(desc_native) )
 					{
 						fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), getDescUuid());
 					}

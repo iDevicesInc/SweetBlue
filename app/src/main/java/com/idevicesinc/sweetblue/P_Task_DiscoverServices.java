@@ -28,12 +28,12 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 
 			if( m_gattRefresh )
 			{
-				getDevice().gattLayer().refreshGatt();
+				getDevice().layerManager().refreshGatt();
 				return;
 			}
 		}
 		
-		if( !getDevice().gattLayer().discoverServices() )
+		if( !getDevice().layerManager().discoverServices() )
 		{
 			failImmediately();
 			
@@ -50,7 +50,7 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			if (m_curGattDelay >= m_gattDelayTarget)
 			{
 				m_discoverAttempted = true;
-				if( !getDevice().gattLayer().discoverServices() )
+				if( !getDevice().layerManager().discoverServices() )
 				{
 					failImmediately();
 

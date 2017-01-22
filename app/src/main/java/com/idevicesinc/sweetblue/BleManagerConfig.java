@@ -10,7 +10,6 @@ import java.util.UUID;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.os.Looper;
 import android.util.SparseArray;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -378,7 +377,37 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public PI_UpdateLoop.Callback updateLoopCallback			= null;
 
-	P_GattLayer defaultGattLayer								= new P_BleGatt();
+	Class<? extends  P_GattLayer> gattLayerClass				= P_AndroidGatt.class;
+
+	P_GattLayer newGattLayer()
+	{
+		try
+		{
+			return gattLayerClass.newInstance();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	Class<? extends P_NativeDeviceLayer> nativeDeviceLayerClass	= P_AndroidBleDevice.class;
+
+	P_NativeDeviceLayer newDeviceLayer()
+	{
+		try
+		{
+			return nativeDeviceLayerClass.newInstance();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	P_NativeManagerLayer nativeManagerLayer						= new P_AndroidBluetoothManager();
 
 // TODO - Remove this once we figure out a different solution for unit tests
 //

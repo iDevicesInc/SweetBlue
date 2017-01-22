@@ -1,4 +1,4 @@
-package com.idevicesinc.sweetblue.tests;
+package com.idevicesinc.sweetblue;
 
 
 import android.app.Activity;

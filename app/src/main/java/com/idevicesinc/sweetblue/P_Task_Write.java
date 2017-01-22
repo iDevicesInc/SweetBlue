@@ -52,13 +52,13 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 			}
 			else
 			{
-				if( false == getDevice().gattLayer().setCharValue(char_native, m_data) )
+				if( false == getDevice().layerManager().setCharValue(char_native, m_data) )
 				{
 					fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 				}
 				else
 				{
-					if( false == getDevice().gattLayer().writeCharacteristic(char_native) )
+					if( false == getDevice().layerManager().writeCharacteristic(char_native) )
 					{
 						fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 					}

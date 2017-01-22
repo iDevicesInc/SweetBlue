@@ -3,7 +3,6 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothGatt;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 
@@ -43,7 +42,7 @@ class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_Sta
 	{
 		if( Utils.isLollipop() )
 		{
-			if( false == getDevice().gattLayer().requestMtu(m_mtu))
+			if( false == getDevice().layerManager().requestMtu(m_mtu))
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}

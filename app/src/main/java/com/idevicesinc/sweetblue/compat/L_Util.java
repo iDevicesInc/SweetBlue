@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue.compat;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import com.idevicesinc.sweetblue.BleDevice;
@@ -94,8 +95,14 @@ public class L_Util
     }
 
 
+    // TODO - Remove this in version 3.0
+    @Deprecated
     public static boolean requestMtu(BleDevice device, int mtu) {
         return device.getNativeGatt().requestMtu(mtu);
+    }
+
+    public static boolean requestMtu(BluetoothGatt gatt, int mtu) {
+        return gatt.requestMtu(mtu);
     }
 
     public static boolean isAdvertisingSupportedByChipset(BleManager mgr) {
@@ -106,8 +113,15 @@ public class L_Util
         mgr.getNativeAdapter().getBluetoothLeScanner().stopScan(m_callback);
     }
 
-    public static boolean requestConnectionPriority(BleDevice device, int mode) {
-        return device.getNativeGatt().requestConnectionPriority(mode);
+    // TODO - Remove this for version 3.0
+    @Deprecated
+    public static boolean requestConnectionPriority(BleDevice device, int mode)
+    {
+        return requestConnectionPriority(device.getNativeGatt(), mode);
+    }
+
+    public static boolean requestConnectionPriority(BluetoothGatt gatt, int mode) {
+        return gatt.requestConnectionPriority(mode);
     }
 
     public static void startNativeScan(BleManager mgr, int scanMode, Interval scanReportDelay, ScanCallback listener) {

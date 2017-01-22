@@ -154,14 +154,14 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		}
 		else
 		{
-			BluetoothGattService service = m_device.gattLayer().getService(serviceUuid);
+			BluetoothGattService service = m_device.layerManager().getService(serviceUuid);
 			return service;
 		}
 	}
 
 	@Override protected final List<BluetoothGattService> getNativeServiceList_original()
 	{
-		List<BluetoothGattService> list_native = m_device.gattLayer().getNativeServiceList();
+		List<BluetoothGattService> list_native = m_device.layerManager().getNativeServiceList();
 		return list_native == null ? EMPTY_SERVICE_LIST : list_native;
 	}
 }
