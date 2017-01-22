@@ -99,7 +99,7 @@ class P_ReliableWriteManager
 			}
 			else
 			{
-				if( false == m_device.getNativeGatt().beginReliableWrite() )
+				if( false == m_device.layerManager().getGattLayer().beginReliableWrite() )
 				{
 					final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut_specific = newEvent(BleDevice.ReadWriteListener.Status.RELIABLE_WRITE_FAILED_TO_BEGIN, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 
@@ -144,14 +144,7 @@ class P_ReliableWriteManager
 
 	private void abortReliableWrite()
 	{
-		if( Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2 )
-		{
-			m_device.getNativeGatt().abortReliableWrite(m_device.getNative());
-		}
-		else
-		{
-			K_Util.abortReliableWrite(m_device);
-		}
+		m_device.layerManager().getGattLayer().abortReliableWrite(m_device.getNative());
 	}
 
 	public BleDevice.ReadWriteListener.ReadWriteEvent execute()

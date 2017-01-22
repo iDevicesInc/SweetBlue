@@ -834,6 +834,7 @@ public final class BleManager
 	private double m_timeForegrounded = 0.0;
 	private long m_timeTurnedOn = 0;
 	private long m_lastTaskExecution;
+	private long m_currentTick;
 	private boolean m_doingInfiniteScan = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
@@ -939,6 +940,8 @@ public final class BleManager
 
 	private void initConfigDependentMembers()
 	{
+		m_listeners.updatePollRate(m_config.defaultStatePollRate);
+
 		m_filterMngr.updateFilter(m_config.defaultScanFilter);
 
 		boolean startUpdate = true;
@@ -2946,7 +2949,7 @@ public final class BleManager
     	}
     	else
     	{
-    		if( device_sweetblue.getNative().equals(device_native) )
+    		if( device_sweetblue.layerManager().getDeviceLayer().equals(device_native) )
     		{
 //    			m_logger.i("Discovered device " + loggedDeviceName + " " + macAddress + " already in list.");
     		}
@@ -3125,15 +3128,38 @@ public final class BleManager
 	@Advanced
 	public final void update(final double timeStep_seconds, final long currentTime)
 	{
-		m_listeners.update();
+
+		long diff;
+
+		m_currentTick = currentTime;
+
+		getLogger().e(String.format("Start of update trace at: %d", m_currentTick));
+
+		diff = System.currentTimeMillis() - m_currentTick;
+
+		getLogger().e(String.format("System.currentTimeMillis check done: %dms", diff));
+
+		m_listeners.update(timeStep_seconds);
+
+		diff = System.currentTimeMillis() - m_currentTick;
+
+		getLogger().e(String.format("m_listeners update call done: %dms", diff));
 
 		m_uhOhThrottler.update(timeStep_seconds);
+
+		diff = System.currentTimeMillis() - m_currentTick;
+
+		getLogger().e(String.format("uhOh Throttler update done: %dms", diff));
 
 		if (m_taskQueue.update(timeStep_seconds))
 		{
 			m_lastTaskExecution = currentTime;
 			checkIdleStatus();
 		}
+
+		diff = System.currentTimeMillis() - m_currentTick;
+
+		getLogger().e(String.format("task queue update done: %dms", diff));
 
 		if( m_isForegrounded )
 		{
@@ -3146,12 +3172,16 @@ public final class BleManager
 
 		m_deviceMngr.update(timeStep_seconds);
 
+		diff = System.currentTimeMillis() - m_currentTick;
+
+		getLogger().e(String.format("Device mgr update done: %dms", diff));
+
 		if ( m_timeTurnedOn == 0 && is(ON) )
 		{
 			m_timeTurnedOn = currentTime;
 		}
 
-		if( m_scanManager.update(timeStep_seconds) == false )
+		if( m_scanManager.update(timeStep_seconds, currentTime) == false )
 		{
 			if (Interval.isEnabled(m_config.minTimeToIdle))
 			{
@@ -3164,9 +3194,22 @@ public final class BleManager
 			}
 		}
 
+		diff = System.currentTimeMillis() - m_currentTick;
+
+		getLogger().e(String.format("Scan mgr update done: %dms", diff));
+
 		if( m_config.updateLoopCallback != null )
 		{
 			m_config.updateLoopCallback.onUpdate(timeStep_seconds);
+		}
+
+		diff = System.currentTimeMillis() - m_currentTick;
+
+		getLogger().e(String.format("Updateloop callback update done: %dms", diff));
+
+		if (m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick))
+		{
+			getLogger().e("BleManager", String.format("WARNING! Update loop is taking longer to run than the current interval of %dms", m_config.autoUpdateRate.millis()));
 		}
 	}
 
@@ -3177,6 +3220,11 @@ public final class BleManager
 	public final boolean isForegrounded()
 	{
 		return m_isForegrounded;
+	}
+
+	final long currentTime()
+	{
+		return m_currentTick;
 	}
 
 	final boolean doAutoScan()

@@ -381,10 +381,20 @@ abstract class PA_Task
 	{
 		return (System.currentTimeMillis() - m_timeExecuted)/1000.0;
 	}
+
+	public double getTotalTimeExecuting(long currentTime)
+	{
+		return (currentTime - m_timeExecuted)/1000.0;
+	}
 	
 	public double getTotalTime()
 	{
 		return (System.currentTimeMillis() - m_timeCreated)/1000.0;
+	}
+
+	public double getTotalTime(long currentTime)
+	{
+		return (currentTime - m_timeCreated)/1000.0;
 	}
 
 	public double getAggregatedTimeArmedAndExecuting()

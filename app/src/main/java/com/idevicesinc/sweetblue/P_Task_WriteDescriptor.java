@@ -81,7 +81,7 @@ class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 	
 	public void onDescriptorWrite(BluetoothGatt gatt, UUID uuid, int gattStatus)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 
 //		if( !this.isForCharacteristic(uuid) )  return;
 

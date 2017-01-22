@@ -26,10 +26,10 @@ class P_NativeDeviceWrapper
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
 	private AtomicInteger m_nativeConnectionState = null;
 	
-	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, Class<? extends P_NativeDeviceLayer> nativeLayerClass, String name_normalized, String name_native)
+	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, P_NativeDeviceLayer nativeLayer, String name_normalized, String name_native)
 	{
 		m_device = device;
-		m_device_native = createLayer(nativeLayerClass);
+		m_device_native = nativeLayer;
 		m_device_native.setNativeDevice(device_native);
 		m_address = m_device_native.getNativeDevice() == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
 

@@ -2051,7 +2051,7 @@ public class BleDevice extends BleNode
     private boolean m_underwentPossibleImplicitBondingAttempt = false;
 
     private BleDeviceConfig m_config = null;
-    private P_BluetoothLayerManager m_gattLayer;
+    private P_BluetoothLayerManager m_layerManager;
 
     private BondListener.BondEvent m_nullBondEvent = null;
     private ReadWriteListener.ReadWriteEvent m_nullReadWriteEvent = null;
@@ -2074,7 +2074,7 @@ public class BleDevice extends BleNode
             m_rssiPollMngr = null;
             m_rssiPollMngr_auto = null;
             // setConfig(config_nullable);
-            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, conf_mngr().nativeDeviceLayerClass, name_normalized, name_native);
+            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, conf_mngr().newDeviceLayer(), name_normalized, name_native);
             m_listeners = null;
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = null;
@@ -2095,7 +2095,7 @@ public class BleDevice extends BleNode
             m_rssiPollMngr = new P_RssiPollManager(this);
             m_rssiPollMngr_auto = new P_RssiPollManager(this);
             setConfig(config_nullable);
-            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, conf_mngr().nativeDeviceLayerClass, name_normalized, name_native);
+            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, layerManager().getDeviceLayer(), name_normalized, name_native);
             m_listeners = new P_BleDevice_Listeners(this);
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
@@ -2220,9 +2220,9 @@ public class BleDevice extends BleNode
 
         m_config = config_nullable == null ? null : config_nullable.clone();
 
-        if (m_gattLayer == null)
+        if (m_layerManager == null)
         {
-            m_gattLayer = new P_BluetoothLayerManager(this, conf_mngr().newGattLayer(), conf_mngr().newDeviceLayer(), conf_mngr().nativeManagerLayer);
+            m_layerManager = new P_BluetoothLayerManager(this, conf_mngr().newGattLayer(), conf_mngr().newDeviceLayer(), conf_mngr().nativeManagerLayer);
         }
 
         initEstimators();
@@ -3221,7 +3221,7 @@ public class BleDevice extends BleNode
 
     final P_BluetoothLayerManager layerManager()
     {
-        return m_gattLayer;
+        return m_layerManager;
     }
 
     /**
@@ -3775,10 +3775,10 @@ public class BleDevice extends BleNode
     {
         if (device_nullable == null) return false;
         if (device_nullable == this) return true;
-        if (device_nullable.getNative() == null || this.getNative() == null) return false;
+        if (device_nullable.layerManager().getDeviceLayer().isDeviceNull() || this.layerManager().getDeviceLayer().isDeviceNull()) return false;
         if (this.isNull() && device_nullable.isNull()) return true;
 
-        return device_nullable.getNative().equals(this.getNative());
+        return device_nullable.layerManager().getDeviceLayer().equals(getNative());
     }
 
     /**
@@ -5820,7 +5820,7 @@ public class BleDevice extends BleNode
             return;
         }
 
-        getManager().ASSERT(m_nativeWrapper.getGatt() != null);
+        getManager().ASSERT(!layerManager().getGattLayer().isGattNull());
 
         //--- DRK > There exists a fringe case like this: You try to connect with autoConnect==true in the gatt object.
         //--- The connection fails, so you stop trying. Then you turn off the remote device. Device gets "undiscovered".

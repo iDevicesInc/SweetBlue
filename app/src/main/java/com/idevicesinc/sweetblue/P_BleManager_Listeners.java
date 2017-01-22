@@ -15,6 +15,7 @@ import android.content.IntentFilter;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -26,8 +27,11 @@ class P_BleManager_Listeners
 	private static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
 	private static final String BluetoothDevice_ACTION_DISAPPEARED = "android.bluetooth.device.action.DISAPPEARED";
 	private static Method m_getLeState_marshmallow;
-	private Integer m_refState;
-	private Integer m_state;
+	private static Integer m_refState;
+	private static Integer m_state;
+
+	private Interval m_pollRate;
+	private double m_timeSinceLastPoll;
 
 
 	private final PA_Task.I_StateListener m_scanTaskListener = new PA_Task.I_StateListener()
@@ -138,6 +142,13 @@ class P_BleManager_Listeners
 		m_mngr = bleMngr;
 
 		m_mngr.getApplicationContext().registerReceiver(m_receiver, newIntentFilter());
+
+		m_pollRate = m_mngr.m_config.defaultStatePollRate;
+	}
+
+	public void updatePollRate(Interval rate)
+	{
+		m_pollRate = rate;
 	}
 
 	private static IntentFilter newIntentFilter()
@@ -458,12 +469,14 @@ class P_BleManager_Listeners
 	 * See the copy/pasted log statements in {@link BleStatuses} for an example of how the state changes
 	 * occur over the course of a few seconds in Android M.
 	 */
-	public void update()
+	public void update(double time_Step)
 	{
 //		m_mngr.getLogger().e("*********************" + m_mngr.getLogger().gattBleState(getBleState()));
 
-		if( Utils.isMarshmallow() && m_mngr.m_config.allowManagerStatePolling)
+		if( Utils.isMarshmallow() && m_mngr.m_config.allowManagerStatePolling && m_timeSinceLastPoll >= m_pollRate.secs())
 		{
+			m_timeSinceLastPoll = 0.0;
+
 			final int oldState = m_nativeState;
 			final int newState = getBleState();
 
@@ -612,35 +625,43 @@ class P_BleManager_Listeners
 				}
 			}
 		}
+		else if (m_timeSinceLastPoll < m_pollRate.secs())
+		{
+			m_timeSinceLastPoll += time_Step;
+		}
+	}
+
+	private static int getBleStateReflect(BluetoothAdapter adapter)
+	{
+		try
+		{
+			if (m_getLeState_marshmallow == null)
+			{
+				m_getLeState_marshmallow = BluetoothAdapter.class.getDeclaredMethod("getLeState");
+			}
+			m_refState = (Integer) m_getLeState_marshmallow.invoke(adapter);
+			m_state = adapter.getState();
+			// This is to fix an issue on the S7 (and perhaps other phones as well), where the OFF
+			// state is never returned from the getLeState method. This is because the BLE_ states represent if LE only mode is on/off. This does NOT
+			// relate to the Bluetooth radio being on/off. So, we check if STATE_BLE_ON, and the normal getState() method returns OFF, we
+			// will return a state of OFF here.
+			if (m_refState == BleStatuses.STATE_BLE_ON && m_state == OFF.getNativeCode())
+			{
+				return m_state;
+			}
+			return m_refState;
+		}
+		catch (Exception e)
+		{
+			return adapter.getState();
+		}
 	}
 
 	private int getBleState()
 	{
 		if( Utils.isMarshmallow() )
 		{
-			try
-			{
-				if (m_getLeState_marshmallow == null)
-				{
-					m_getLeState_marshmallow = BluetoothAdapter.class.getDeclaredMethod("getLeState");
-				}
-				m_refState = (Integer) m_getLeState_marshmallow.invoke(m_mngr.getNativeAdapter());
-				m_state = m_mngr.getNativeAdapter().getState();
-				// This is to fix an issue on the S7 (and perhaps other phones as well), where the OFF
-				// state is never returned from the getLeState method. This is because the BLE_ states represent if LE only mode is on/off. This does NOT
-				// relate to the Bluetooth radio being on/off. So, we check if STATE_BLE_ON, and the normal getState() method returns OFF, we
-				// will return a state of OFF here.
-				if (m_refState == BleStatuses.STATE_BLE_ON && m_state == OFF.getNativeCode())
-				{
-					return m_state;
-				}
-				return m_refState;
-			}
-			catch (Exception e)
-			{
-
-				return m_mngr.getNativeAdapter().getState();
-			}
+			return getBleStateReflect(m_mngr.getNativeAdapter());
 		}
 		else
 		{

@@ -15,6 +15,11 @@ import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 
 final class P_AndroidBleDevice implements P_NativeDeviceLayer {
 
+
+    private static final String METHOD_NAME__REMOVE_BOND			= "removeBond";
+    private static final String METHOD_NAME__CANCEL_BOND_PROCESS	= "cancelBondProcess";
+
+
     private BluetoothDevice m_device;
 
 
@@ -46,6 +51,33 @@ final class P_AndroidBleDevice implements P_NativeDeviceLayer {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean removeBond() {
+        return Utils_Reflection.callBooleanReturnMethod(m_device, METHOD_NAME__REMOVE_BOND, getManager().m_config.loggingEnabled);
+    }
+
+    @Override
+    public boolean cancelBond() {
+        return Utils_Reflection.callBooleanReturnMethod(m_device, METHOD_NAME__CANCEL_BOND_PROCESS, getManager().m_config.loggingEnabled);
+    }
+
+    private BleManager getManager()
+    {
+        return BleManager.s_instance;
+    }
+
+    @Override
+    public boolean isDeviceNull() {
+        return m_device == null;
+    }
+
+    @Override
+    public boolean equals(BluetoothDevice device) {
+        if (device == null) return false;
+        if (device == m_device) return true;
+        return m_device.equals(device);
     }
 
     @Override

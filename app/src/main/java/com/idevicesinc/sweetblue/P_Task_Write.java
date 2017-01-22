@@ -73,7 +73,7 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 
 	public void onCharacteristicWrite(final BluetoothGatt gatt, final UUID uuid, final int gattStatus)
 	{
-		 getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		 getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 		 
 		 if( false == this.isForCharacteristic(uuid) )  return;
 		 

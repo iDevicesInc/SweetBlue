@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.os.Handler;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import org.junit.Test;
 import java.util.concurrent.Semaphore;
@@ -31,22 +32,6 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
 
         bleManager.onResume();
 
-        testActivity.eventListener = new BleScanActivity.EventStateInterface()
-        {
-            @Override
-            public void onEvent(BleManager.StateListener.StateEvent event)
-            {
-                if(event.didEnter(BleManagerState.SCANNING))
-                {
-                    Log.e("YAY", "NOW WE ARE SCANNING");
-                }
-                else if(event.didExit(BleManagerState.SCANNING))
-                {
-                    Log.e("BOO", "WE HAVE LEFT SCANNING");
-                }
-            }
-        };
-
     }
 
     @Test
@@ -57,29 +42,27 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         bleManager.m_config.runOnMainThread = true;
         bleManager.setConfig(bleManager.m_config);
 
-        testActivity.startFiveSecondScan();
+        bleManager.setListener_State(new ManagerStateListener() {
 
-        Handler handler = testActivity.getHandler();
+            long timeStarted;
 
-        handler.postDelayed(new Runnable()
-        {
             @Override
-            public void run()
-            {
-                assertTrue(bleManager.is(BleManagerState.SCANNING));
+            public void onEvent(BleManager.StateListener.StateEvent e) {
+                if (e.didEnter(BleManagerState.SCANNING))
+                {
+                    timeStarted = e.manager().currentTime();
+                }
+                else if (e.didExit(BleManagerState.SCANNING))
+                {
+                    long now = e.manager().currentTime();
+                    long diff = now - timeStarted;
+                    assertTrue("Diff: " + diff, diff <= 5250 && diff > 4999);
+                    shutdown(finishedSemaphore);
+                }
             }
-        }, 1000);
+        });
 
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                assertFalse(bleManager.is(BleManagerState.SCANNING));
-
-                shutdown(finishedSemaphore);
-            }
-        }, 6000);
+        bleManager.startScan(Interval.FIVE_SECS);
 
         finishedSemaphore.acquire();
     }
@@ -92,29 +75,52 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         bleManager.m_config.runOnMainThread = false;
         bleManager.setConfig(bleManager.m_config);
 
-        testActivity.startFiveSecondScan();
+        bleManager.setListener_State(new ManagerStateListener() {
+            boolean hasStartedScan = false;
+            long timeStarted;
 
-        Handler handler = testActivity.getHandler();
-
-        handler.postDelayed(new Runnable()
-        {
             @Override
-            public void run()
-            {
-                assertTrue(bleManager.is(BleManagerState.SCANNING));
+            public void onEvent(BleManager.StateListener.StateEvent e) {
+                if (e.didEnter(BleManagerState.SCANNING))
+                {
+                    hasStartedScan = true;
+                    timeStarted = e.manager().currentTime();
+                }
+                else if (e.didExit(BleManagerState.SCANNING))
+                {
+                    Interval time = e.manager().getTimeInState(BleManagerState.SCANNING);
+                    long now = e.manager().currentTime();
+                    long diff = now - timeStarted;
+                    assertTrue("Diff: " + diff, diff <= 5250 && diff > 4999);
+                    shutdown(finishedSemaphore);
+                }
             }
-        }, 1000);
+        });
 
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                assertFalse(bleManager.is(BleManagerState.SCANNING));
+        bleManager.startScan(Interval.FIVE_SECS);
 
-                shutdown(finishedSemaphore);
-            }
-        }, 6000);
+
+//        Handler handler = testActivity.getHandler();
+
+//        handler.postDelayed(new Runnable()
+//        {
+//            @Override
+//            public void run()
+//            {
+//                assertTrue(bleManager.is(BleManagerState.SCANNING));
+//            }
+//        }, 1000);
+//
+//        handler.postDelayed(new Runnable()
+//        {
+//            @Override
+//            public void run()
+//            {
+//                assertFalse(bleManager.is(BleManagerState.SCANNING));
+//
+//                shutdown(finishedSemaphore);
+//            }
+//        }, 6000);
 
         finishedSemaphore.acquire();
     }
@@ -127,12 +133,12 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         bleManager.m_config.runOnMainThread = true;
         bleManager.setConfig(bleManager.m_config);
 
-        testActivity.startInfiniteScan();
+        bleManager.stopScan();
 
 
         Handler handler = testActivity.getHandler();
 
-        testActivity.checkState();
+        checkState();
 
         for(int i = 1; i < 30; i++)
         {
@@ -142,7 +148,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
                 @Override
                 public void run()
                 {
-                    testActivity.checkState();
+                    checkState();
                     assertTrue(bleManager.is(BleManagerState.SCANNING));
 
                     if(iteration == 29)
@@ -164,12 +170,12 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         bleManager.m_config.runOnMainThread = false;
         bleManager.setConfig(bleManager.m_config);
 
-        testActivity.startInfiniteScan();
+        bleManager.startScan();
 
 
         Handler handler = testActivity.getHandler();
 
-        testActivity.checkState();
+        checkState();
 
         for(int i = 1; i < 30; i++)
         {
@@ -179,7 +185,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
                 @Override
                 public void run()
                 {
-                    testActivity.checkState();
+                    checkState();
                     assertTrue(bleManager.is(BleManagerState.SCANNING));
 
                     if(iteration == 29)
@@ -201,7 +207,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         bleManager.m_config.runOnMainThread = true;
         bleManager.setConfig(bleManager.m_config);
 
-        testActivity.startPeriodicScan();
+        bleManager.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
 
         Handler handler = testActivity.getHandler();
 
@@ -245,7 +251,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         bleManager.m_config.runOnMainThread = false;
         bleManager.setConfig(bleManager.m_config);
 
-        testActivity.startPeriodicScan();
+        bleManager.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
 
         Handler handler = testActivity.getHandler();
 
@@ -501,5 +507,18 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
             semaphore.release();
         }
     }
+
+
+    public void checkState()
+    {
+        Log.e("BLE_SCANNING", bleManager.is(BleManagerState.SCANNING) + "");
+        Log.e("BLE_OFF", bleManager.is(BleManagerState.OFF) + "");
+        Log.e("BLE_TURNING_OFF", bleManager.is(BleManagerState.TURNING_OFF) + "");
+        Log.e("BLE_STARTING_SCAN", bleManager.is(BleManagerState.STARTING_SCAN) + "");
+        Log.e("BLE_RESETTING", bleManager.is(BleManagerState.RESETTING) + "");
+        Log.e("BLE_ON", bleManager.is(BleManagerState.ON) + "");
+        Log.e("BLE_TURNING_ON", bleManager.is(BleManagerState.TURNING_ON) + "");
+    }
+
 
 }

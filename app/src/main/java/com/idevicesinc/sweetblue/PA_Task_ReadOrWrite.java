@@ -124,32 +124,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 	
 	private Boolean getAuthRetryValue()
 	{
-		final BluetoothGatt gatt = getDevice().getNativeGatt();
-		
-		if( gatt != null )
-		{
-			try
-			{
-				final Field[] fields = gatt.getClass().getDeclaredFields();
-		        Field field = gatt.getClass().getDeclaredField(FIELD_NAME_AUTH_RETRY);
-		        final boolean isAccessible_saved = field.isAccessible();
-		        field.setAccessible(true);
-		        Boolean result = field.getBoolean(gatt);
-		        field.setAccessible(isAccessible_saved);
-		        
-		        return result;
-		    }
-			catch (Exception e)
-			{
-				getManager().ASSERT(false, "Problem getting value of " + gatt.getClass().getSimpleName() + "." + FIELD_NAME_AUTH_RETRY);
-		    }
-		}
-		else
-		{
-			getManager().ASSERT(false, "Expected gatt object to be not null");
-		}
-		
-		return null;
+		return getDevice().layerManager().getGattLayer().getAuthRetryValue();
 	}
 	
 	@Override protected UUID getCharUuid()
@@ -203,7 +178,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 
 	protected void onCharacteristicOrDescriptorRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus, ReadWriteListener.Type type)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().getGattLayer().equals(gatt));
 
 //		if( false == this.isForCharacteristic(uuid) )  return;
 

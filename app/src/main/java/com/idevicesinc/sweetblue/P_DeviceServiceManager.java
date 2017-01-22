@@ -146,17 +146,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 
 	@Override public final BluetoothGattService getServiceDirectlyFromNativeNode(UUID serviceUuid)
 	{
-		final BluetoothGatt gatt = m_device.getNativeGatt();
-
-		if( gatt == null )
-		{
-			return null;
-		}
-		else
-		{
-			BluetoothGattService service = m_device.layerManager().getService(serviceUuid);
-			return service;
-		}
+		return m_device.layerManager().getService(serviceUuid);
 	}
 
 	@Override protected final List<BluetoothGattService> getNativeServiceList_original()

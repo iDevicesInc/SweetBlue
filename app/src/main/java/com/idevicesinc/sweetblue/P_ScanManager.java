@@ -382,7 +382,7 @@ final class P_ScanManager
     }
 
     // Returns if the startScan boolean is true or not.
-    final boolean update(double timeStep)
+    final boolean update(double timeStep, long currentTime)
     {
         if( !m_manager.isAny(SCANNING, STARTING_SCAN) )
         {
@@ -395,7 +395,7 @@ final class P_ScanManager
         {
             if( m_manager.isForegrounded() )
             {
-                if (Interval.isEnabled(m_manager.m_config.autoScanDelayAfterBleTurnsOn) && m_triedToStartScanAfterTurnedOn && (System.currentTimeMillis() - m_manager.timeTurnedOn()) >= m_manager.m_config.autoScanDelayAfterBleTurnsOn.millis())
+                if (Interval.isEnabled(m_manager.m_config.autoScanDelayAfterBleTurnsOn) && m_triedToStartScanAfterTurnedOn && (currentTime - m_manager.timeTurnedOn()) >= m_manager.m_config.autoScanDelayAfterBleTurnsOn.millis())
                 {
                     m_triedToStartScanAfterTurnedOn = true;
 

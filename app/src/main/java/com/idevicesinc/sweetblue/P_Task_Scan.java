@@ -70,11 +70,11 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
     {
         if (this.getState() == PE_TaskState.EXECUTING)
         {
-            if (getTotalTimeExecuting() >= getMinimumScanTime() && (getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek())))
+            if (getTotalTimeExecuting(getManager().currentTime()) >= getMinimumScanTime() && (getQueue().getSize() > 0 && isSelfInterruptableBy(getQueue().peek())))
             {
                 selfInterrupt();
             }
-            else if (getManager().getScanManager().isClassicScan() && getTotalTimeExecuting() >= BleManagerConfig.MAX_CLASSIC_SCAN_TIME)
+            else if (getManager().getScanManager().isClassicScan() && getTotalTimeExecuting(getManager().currentTime()) >= BleManagerConfig.MAX_CLASSIC_SCAN_TIME)
             {
                 selfInterrupt();
             }

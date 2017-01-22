@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import android.annotation.TargetApi;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -11,9 +12,12 @@ import android.content.Context;
 import android.os.Build;
 import android.os.DeadObjectException;
 
+import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
+
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,6 +25,8 @@ import java.util.UUID;
 @TargetApi(Build.VERSION_CODES.KITKAT)
 class P_AndroidGatt implements P_GattLayer
 {
+
+    private static final String FIELD_NAME_AUTH_RETRY = "mAuthRetry";
 
     private BluetoothGatt m_gatt;
 
@@ -33,6 +39,43 @@ class P_AndroidGatt implements P_GattLayer
     @Override
     public BluetoothGatt getGatt() {
         return m_gatt;
+    }
+
+    @Override
+    public Boolean getAuthRetryValue() {
+        if( m_gatt != null )
+        {
+            try
+            {
+//                final Field[] fields = m_gatt.getClass().getDeclaredFields();
+                Field field = m_gatt.getClass().getDeclaredField(FIELD_NAME_AUTH_RETRY);
+                final boolean isAccessible_saved = field.isAccessible();
+                field.setAccessible(true);
+                Boolean result = field.getBoolean(m_gatt);
+                field.setAccessible(isAccessible_saved);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                getManager().ASSERT(false, "Problem getting value of " + m_gatt.getClass().getSimpleName() + "." + FIELD_NAME_AUTH_RETRY);
+            }
+        }
+        else
+        {
+            getManager().ASSERT(false, "Expected gatt object to be not null");
+        }
+        return null;
+    }
+
+    @Override
+    public boolean equals(BluetoothGatt gatt) {
+        return gatt == m_gatt;
+    }
+
+    private BleManager getManager()
+    {
+        return BleManager.s_instance;
     }
 
     @Override
@@ -224,6 +267,15 @@ class P_AndroidGatt implements P_GattLayer
         return false;
     }
 
+    @Override
+    public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) {
+        if (m_gatt != null && characteristic != null)
+        {
+            return m_gatt.setCharacteristicNotification(characteristic, enable);
+        }
+        return false;
+    }
+
     @Override public boolean readDescriptor(BluetoothGattDescriptor descriptor)
     {
         if (m_gatt != null && descriptor != null)
@@ -259,6 +311,24 @@ class P_AndroidGatt implements P_GattLayer
     @Override public boolean executeReliableWrite()
     {
         return m_gatt.executeReliableWrite();
+    }
+
+    @Override
+    public boolean beginReliableWrite() {
+        return m_gatt.beginReliableWrite();
+    }
+
+    @Override
+    public void abortReliableWrite(BluetoothDevice device)
+    {
+        if( Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2 )
+        {
+            m_gatt.abortReliableWrite(device);
+        }
+        else
+        {
+            K_Util.abortReliableWrite(m_gatt);
+        }
     }
 
     @Override public boolean readRemoteRssi()

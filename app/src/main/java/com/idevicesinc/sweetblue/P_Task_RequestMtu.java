@@ -69,7 +69,7 @@ class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_Sta
 	
 	public void onMtuChanged(BluetoothGatt gatt, int mtu, int gattStatus)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 		
 		if( Utils.isSuccess(gattStatus) )
 		{

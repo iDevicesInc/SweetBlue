@@ -67,7 +67,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 		
 		if( Utils.isSuccess(status) )
 		{

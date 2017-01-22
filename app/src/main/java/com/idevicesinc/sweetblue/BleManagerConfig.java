@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.SparseArray;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
@@ -69,6 +70,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Default value for {@link #scanReportDelay}.
 	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
+
+	public static final double DEFAULT_MANAGER_STATE_POLL_RATE			= .1;
 	
 	static final BleManagerConfig NULL = new BleManagerConfigNull();
 
@@ -282,6 +285,16 @@ public class BleManagerConfig extends BleDeviceConfig
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.RARE)
 	public Interval autoUpdateRate							= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
+
+	/**
+	 * Default is {@link #DEFAULT_MANAGER_STATE_POLL_RATE} seconds - The rate at which the library will poll the native manager's
+	 * state. This only applies to devices running Marshmallow or higher. This call can drain the battery if it's left at the same
+	 * rate as {@link #autoUpdateRate}, as it uses reflection to poll the native state. This is needed on some phones where SweetBlue
+	 * doesn't receive a state change when it should.
+	 */
+	@Advanced
+	@Nullable(Prevalence.RARE)
+	public Interval defaultStatePollRate					= Interval.secs(DEFAULT_MANAGER_STATE_POLL_RATE);
 
 	/**
 	 * Default is {@value #DEFAULT_IDLE_UPDATE_RATE} seconds - The rate at which the library's internal update loop ticks, after

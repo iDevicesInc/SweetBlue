@@ -5,6 +5,10 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.os.Build;
+
+import com.idevicesinc.sweetblue.compat.K_Util;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -145,6 +149,11 @@ final class P_BluetoothLayerManager
     public final boolean setDescValue(BluetoothGattDescriptor descriptor, byte[] data)
     {
         return m_gattLayer.setDescValue(descriptor, data);
+    }
+
+    public final boolean gattEquals(BluetoothGatt gatt)
+    {
+        return m_gattLayer.equals(gatt);
     }
 
     public final P_GattLayer getGattLayer()

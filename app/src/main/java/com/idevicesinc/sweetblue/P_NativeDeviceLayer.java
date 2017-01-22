@@ -13,6 +13,10 @@ interface P_NativeDeviceLayer {
     int getBondState();
     String getAddress();
     boolean createBond();
+    boolean isDeviceNull();
+    boolean removeBond();
+    boolean cancelBond();
+    boolean equals(BluetoothDevice device);
     boolean createBondSneaky(String methodName, boolean loggingEnabled);
     BluetoothDevice getNativeDevice();
     BluetoothGatt connect(Context context, boolean useAutoConnect, BluetoothGattCallback callback);

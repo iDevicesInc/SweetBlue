@@ -95,7 +95,7 @@ final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 
     public void onCharacteristicRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus)
     {
-        getManager().ASSERT(gatt == getDevice().getNativeGatt());
+        getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 
         if( false == this.isForCharacteristic(uuid) )  return;
 
