@@ -1,15 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.BaseBleTest;
-import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManagerState;
-import com.idevicesinc.sweetblue.BleScanApi;
-import com.idevicesinc.sweetblue.BleScanMode;
-import com.idevicesinc.sweetblue.BleScanPower;
-import com.idevicesinc.sweetblue.ManagerStateListener;
-import com.idevicesinc.sweetblue.PI_BleScanner;
-import com.idevicesinc.sweetblue.PI_BleStatusHelper;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 import org.junit.Test;
@@ -20,9 +11,9 @@ import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 21)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
-public class ScanPowerTest extends BaseBleTest
+public class ScanPowerTest extends BaseBleUnitTest
 {
 
     @Test
@@ -41,8 +32,7 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // TODO - Since we're going off api 21, this will return LOW_POWER instead.
-                            assertTrue(getScanPower() == BleScanPower.LOW_POWER);
+                            assertTrue(getScanPower() == BleScanPower.VERY_LOW_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -70,9 +60,7 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
-                            assertTrue(getScanPower() == BleScanPower.LOW_POWER);
+                            assertTrue(getScanPower() == BleScanPower.VERY_LOW_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -99,8 +87,6 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -128,8 +114,6 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -157,8 +141,6 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -186,8 +168,6 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -215,8 +195,6 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -244,8 +222,6 @@ public class ScanPowerTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -275,8 +251,6 @@ public class ScanPowerTest extends BaseBleTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the foreground, and NOT running an infinite scan, so this should be High power here
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -307,8 +281,6 @@ public class ScanPowerTest extends BaseBleTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the foreground, and NOT running an infinite scan, so this should be High power here
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -338,8 +310,6 @@ public class ScanPowerTest extends BaseBleTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the foreground, and running an infinite scan, so this should be Medium power here
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -370,8 +340,6 @@ public class ScanPowerTest extends BaseBleTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the foreground, and running an infinite scan, so this should be Medium power here
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
@@ -401,8 +369,6 @@ public class ScanPowerTest extends BaseBleTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the background, so this should be low power here
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             m_mgr.onResume();
@@ -434,8 +400,6 @@ public class ScanPowerTest extends BaseBleTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the background, so this should be low power here
-                            // TODO - Uncomment the following line once the lollipop scanning API
-                            // actually works at least as well as the pre-lollipop API.
                             assertTrue(getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             m_mgr.onResume();
@@ -448,13 +412,8 @@ public class ScanPowerTest extends BaseBleTest
         });
     }
 
-    @Override public PI_BleScanner getScanner()
+    @Override public P_NativeManagerLayer getManagerLayer()
     {
-        return new DefaultBleScannerTest();
-    }
-
-    @Override public PI_BleStatusHelper getStatusHelper()
-    {
-        return new DefaultStatusHelperTest();
+        return new P_UnitTestManagerLayer();
     }
 }

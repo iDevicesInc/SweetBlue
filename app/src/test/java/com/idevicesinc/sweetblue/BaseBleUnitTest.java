@@ -3,6 +3,8 @@ package com.idevicesinc.sweetblue;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import org.junit.After;
@@ -12,7 +14,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.Semaphore;
 
 
-public abstract class BaseBleTest
+public abstract class BaseBleUnitTest
 {
 
     public BleManager m_mgr;
@@ -20,9 +22,7 @@ public abstract class BaseBleTest
     Activity m_activity;
 
 
-    public abstract PI_BleScanner getScanner();
-
-    public abstract PI_BleStatusHelper getStatusHelper();
+    public abstract P_NativeManagerLayer getManagerLayer();
 
 
     @Before
@@ -30,12 +30,15 @@ public abstract class BaseBleTest
     {
         m_activity = Robolectric.setupActivity(Activity.class);
         m_mgr = BleManager.get(m_activity, getConfig());
+        m_mgr.forceOn();
+        m_mgr.onResume();
     }
 
     @After
     public void tearDown() throws Exception
     {
         m_mgr.shutdown();
+        m_activity.finish();
     }
 
     public void doTestOperation(final TestOp action) throws Exception
@@ -57,8 +60,7 @@ public abstract class BaseBleTest
     {
         m_config = new BleManagerConfig();
         m_config.unitTest = true;
-        m_config.bleScanner = getScanner();
-        m_config.bleStatusHelper = getStatusHelper();
+        m_config.nativeManagerLayer = getManagerLayer();
         return m_config;
     }
 
@@ -96,64 +98,6 @@ public abstract class BaseBleTest
     public interface TestOp
     {
         void run(Semaphore semaphore);
-    }
-
-
-    public static class DefaultBleScannerTest implements PI_BleScanner
-    {
-
-        @Override public boolean startClassicDiscovery()
-        {
-            return true;
-        }
-
-        @Override public void stopClassicDiscovery()
-        {
-        }
-
-        @Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
-        {
-
-        }
-
-        @Override public void startMScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
-        {
-
-        }
-
-        @Override public boolean startLeScan(BluetoothAdapter.LeScanCallback callback)
-        {
-            return true;
-        }
-
-        @Override public void stopLeScan(BluetoothAdapter.LeScanCallback callback)
-        {
-
-        }
-    }
-
-    public static class DefaultStatusHelperTest implements PI_BleStatusHelper
-    {
-
-        @Override public boolean isLocationEnabledForScanning_byOsServices()
-        {
-            return true;
-        }
-
-        @Override public boolean isLocationEnabledForScanning_byRuntimePermissions()
-        {
-            return true;
-        }
-
-        @Override public boolean isLocationEnabledForScanning()
-        {
-            return true;
-        }
-
-        @Override public boolean isBluetoothEnabled()
-        {
-            return true;
-        }
     }
 
 }

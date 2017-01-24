@@ -10,11 +10,11 @@ import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertFalse;
 
 
-public class NotifyTest extends BaseTester<TaskManagerIdleActivity>
+public class NotifyTest extends BaseTester<MainActivity>
 {
-    @Override Class<TaskManagerIdleActivity> getActivityClass()
+    @Override Class<MainActivity> getActivityClass()
     {
-        return TaskManagerIdleActivity.class;
+        return MainActivity.class;
     }
 
     @Override BleManagerConfig getInitialConfig()

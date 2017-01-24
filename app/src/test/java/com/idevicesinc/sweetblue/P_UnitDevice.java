@@ -5,13 +5,19 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.content.Context;
+import android.text.TextUtils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
+import java.util.Random;
 
-public final class P_UnitDevice implements P_NativeDeviceLayer {
+
+public class P_UnitDevice implements P_NativeDeviceLayer {
+
+
+    private String m_address;
 
 
     @Override
     public void setNativeDevice(BluetoothDevice device) {
-
     }
 
     @Override
@@ -21,7 +27,13 @@ public final class P_UnitDevice implements P_NativeDeviceLayer {
 
     @Override
     public String getAddress() {
-        return null;
+        if (TextUtils.isEmpty(m_address))
+        {
+            byte[] add = new byte[6];
+            new Random().nextBytes(add);
+            m_address = Utils_String.bytesToMacAddress(add);
+        }
+        return m_address;
     }
 
     @Override
@@ -29,9 +41,30 @@ public final class P_UnitDevice implements P_NativeDeviceLayer {
         return false;
     }
 
+
+    @Override public boolean isDeviceNull()
+    {
+        return false;
+    }
+
+    @Override public boolean removeBond()
+    {
+        return true;
+    }
+
+    @Override public boolean cancelBond()
+    {
+        return true;
+    }
+
+    @Override public boolean equals(BluetoothDevice device)
+    {
+        return false;
+    }
+
     @Override
     public boolean createBondSneaky(String methodName, boolean loggingEnabled) {
-        return false;
+        return true;
     }
 
     @Override

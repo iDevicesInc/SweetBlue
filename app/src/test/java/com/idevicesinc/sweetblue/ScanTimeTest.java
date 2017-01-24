@@ -1,11 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.BaseBleTest;
-import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManagerState;
-import com.idevicesinc.sweetblue.PI_BleScanner;
-import com.idevicesinc.sweetblue.PI_BleStatusHelper;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import org.junit.Test;
@@ -15,11 +10,12 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 
-@Config(manifest = Config.NONE)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
-public class ScanTimeTest extends BaseBleTest
+public class ScanTimeTest extends BaseBleUnitTest
 {
 
     private static final int LEEWAY = 500;
@@ -31,14 +27,12 @@ public class ScanTimeTest extends BaseBleTest
     @Test(timeout = 4000)
     public void singleScanWithInterval() throws Exception
     {
-        m_mgr.onResume();
         doSingleScanTest(2000);
     }
 
-    @Test(timeout = 6000)
+    @Test(timeout = 700000)
     public void periodicScanTest() throws Exception
     {
-        m_mgr.onResume();
         doPeriodicScanTest(1000);
     }
 
@@ -50,22 +44,22 @@ public class ScanTimeTest extends BaseBleTest
         {
             @Override public void run(final Semaphore semaphore)
             {
-                final Pointer<Long> time = new Pointer<Long>();
-                m_mgr.setListener_State(new BleManager.StateListener()
+                final AtomicLong time = new AtomicLong();
+                m_mgr.setListener_State(new ManagerStateListener()
                 {
-                    @Override public void onEvent(StateEvent e)
+                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
                     {
                         if (e.didExit(BleManagerState.SCANNING))
                         {
                             if (didStop.get())
                             {
-                                long diff = System.currentTimeMillis() - time.value;
+                                long diff = m_mgr.currentTime() - time.get();
                                 // Make sure that our scan time is correct, this checks against
                                 // 3x the scan amount (2 scans, 1 pause). We may need to add a bit
                                 // to LEEWAY here, as it's going through 3 iterations, but for now
                                 // it seems to be ok for the test
                                 long targetTime = scanTime * 3;
-                                assertTrue((diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
+                                assertTrue("Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
                                 semaphore.release();
                             }
                             else
@@ -75,7 +69,7 @@ public class ScanTimeTest extends BaseBleTest
                         }
                     }
                 });
-                time.value = System.currentTimeMillis();
+                time.set(m_mgr.currentTime());
                 m_mgr.startPeriodicScan(Interval.millis(scanTime), Interval.millis(scanTime));
             }
         });
@@ -107,13 +101,9 @@ public class ScanTimeTest extends BaseBleTest
         });
     }
 
-    @Override public PI_BleScanner getScanner()
+    @Override public P_NativeManagerLayer getManagerLayer()
     {
-        return new DefaultBleScannerTest();
+        return new P_UnitTestManagerLayer();
     }
 
-    @Override public PI_BleStatusHelper getStatusHelper()
-    {
-        return new DefaultStatusHelperTest();
-    }
 }

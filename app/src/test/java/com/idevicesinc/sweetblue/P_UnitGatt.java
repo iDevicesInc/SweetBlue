@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-public final class P_UnitGatt implements P_GattLayer {
+public class P_UnitGatt implements P_GattLayer {
 
 
     private boolean m_gattIsNull = true;
@@ -30,6 +31,16 @@ public final class P_UnitGatt implements P_GattLayer {
     @Override
     public BluetoothGatt getGatt() {
         return null;
+    }
+
+    @Override public Boolean getAuthRetryValue()
+    {
+        return true;
+    }
+
+    @Override public boolean equals(BluetoothGatt gatt)
+    {
+        return false;
     }
 
     @Override
@@ -60,61 +71,76 @@ public final class P_UnitGatt implements P_GattLayer {
 
     @Override
     public boolean requestMtu(int mtu) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean refreshGatt() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean readCharacteristic(BluetoothGattCharacteristic characteristic) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean setCharValue(BluetoothGattCharacteristic characteristic, byte[] data) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
-        return false;
+        return true;
+    }
+
+    @Override public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)
+    {
+        return true;
     }
 
     @Override
     public boolean readDescriptor(BluetoothGattDescriptor descriptor) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean setDescValue(BluetoothGattDescriptor descriptor, byte[] data) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean writeDescriptor(BluetoothGattDescriptor descriptor) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean requestConnectionPriority(BleConnectionPriority priority) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean discoverServices() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean executeReliableWrite() {
-        return false;
+        return true;
+    }
+
+    @Override public boolean beginReliableWrite()
+    {
+        return true;
+    }
+
+    @Override public void abortReliableWrite(BluetoothDevice device)
+    {
+
     }
 
     @Override
     public boolean readRemoteRssi() {
-        return false;
+        return true;
     }
 }

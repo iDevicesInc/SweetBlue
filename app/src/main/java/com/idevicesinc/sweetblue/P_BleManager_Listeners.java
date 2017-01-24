@@ -172,7 +172,14 @@ class P_BleManager_Listeners
 
 	void onDestroy()
 	{
-		m_mngr.getApplicationContext().unregisterReceiver(m_receiver);
+		try
+		{
+			m_mngr.getApplicationContext().unregisterReceiver(m_receiver);
+		}
+		catch (Exception e)
+		{
+			m_mngr.getLogger().e("Tried to unregister ble listeners failed with message: " + e.getMessage());
+		}
 	}
 	
 	PA_Task.I_StateListener getScanTaskListener()
@@ -473,7 +480,7 @@ class P_BleManager_Listeners
 	{
 //		m_mngr.getLogger().e("*********************" + m_mngr.getLogger().gattBleState(getBleState()));
 
-		if( Utils.isMarshmallow() && m_mngr.m_config.allowManagerStatePolling && m_timeSinceLastPoll >= m_pollRate.secs())
+		if( Utils.isMarshmallow() && m_mngr.m_config.allowManagerStatePolling && Interval.isEnabled(m_pollRate) && m_timeSinceLastPoll >= m_pollRate.secs())
 		{
 			m_timeSinceLastPoll = 0.0;
 
@@ -625,7 +632,7 @@ class P_BleManager_Listeners
 				}
 			}
 		}
-		else if (m_timeSinceLastPoll < m_pollRate.secs())
+		else if (Interval.isEnabled(m_pollRate) && m_timeSinceLastPoll < m_pollRate.secs())
 		{
 			m_timeSinceLastPoll += time_Step;
 		}

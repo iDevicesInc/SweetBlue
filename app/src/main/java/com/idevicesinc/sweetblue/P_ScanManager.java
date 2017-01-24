@@ -27,7 +27,6 @@ final class P_ScanManager
     private PreLollipopScanCallback m_preLollipopScanCallback;
     private PostLollipopScanCallback m_postLollipopScanCallback;
     private BleScanApi mCurrentApi;
-    private volatile PI_BleScanner m_bleScanner;
     private final int m_retryCountMax = 3;
     private boolean m_triedToStartScanAfterTurnedOn;
     private boolean m_doingInfiniteScan;
@@ -47,12 +46,6 @@ final class P_ScanManager
             m_postLollipopScanCallback = new PostLollipopScanCallback();
         }
     }
-
-    public final void setBleScanner(PI_BleScanner scanner)
-    {
-        m_bleScanner = scanner;
-    }
-
 
     public final boolean startScan(PA_StateTracker.E_Intent intent, double scanTime, boolean m_isPoll)
     {
@@ -93,7 +86,7 @@ final class P_ScanManager
 
     private boolean startClassicDiscovery()
     {
-        return m_bleScanner.startClassicDiscovery();
+        return m_manager.managerLayer().startDiscovery();
     }
 
     private boolean isBleScanReady()
@@ -475,17 +468,17 @@ final class P_ScanManager
 
     private boolean startLeScan()
     {
-        return m_bleScanner.startLeScan(m_preLollipopScanCallback);
+        return m_manager.managerLayer().startLeScan(m_preLollipopScanCallback);
     }
 
     private void startLScan(int mode)
     {
-        m_bleScanner.startLScan(mode, m_manager.m_config.scanReportDelay, m_postLollipopScanCallback);
+        m_manager.managerLayer().startLScan(mode, m_manager.m_config.scanReportDelay, m_postLollipopScanCallback);
     }
 
     private void startMScan(int mode)
     {
-        m_bleScanner.startMScan(mode, m_manager.m_config.scanReportDelay, m_postLollipopScanCallback);
+        m_manager.managerLayer().startMScan(mode, m_manager.m_config.scanReportDelay, m_postLollipopScanCallback);
     }
 
     private void fail()
@@ -506,17 +499,17 @@ final class P_ScanManager
 
     private void stopLeScan()
     {
-        m_bleScanner.stopLeScan(m_preLollipopScanCallback);
+        m_manager.managerLayer().stopLeScan(m_preLollipopScanCallback);
     }
 
     private void stopScanPostLollipop()
     {
-        L_Util.stopNativeScan(m_manager);
+        m_manager.managerLayer().stopLeScan(m_preLollipopScanCallback);
     }
 
     private void stopClassicDiscovery()
     {
-        m_bleScanner.stopClassicDiscovery();
+        m_manager.managerLayer().stopClassicDiscovery();
     }
 
 

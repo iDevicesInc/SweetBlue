@@ -134,4 +134,13 @@ final class P_PostManager
         return Thread.currentThread() == m_updateHandler.getThread();
     }
 
+    final void quit()
+    {
+        if (m_updateHandler instanceof P_SweetBlueThread)
+        {
+            ((P_SweetBlueThread) m_updateHandler).quit();
+        }
+
+    }
+
 }

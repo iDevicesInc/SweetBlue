@@ -10,9 +10,9 @@ import org.robolectric.annotation.Config;
 import java.util.concurrent.Semaphore;
 
 
-@Config(manifest = Config.NONE, sdk = 21)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
-public class ScanApiTest extends BaseBleTest
+public class ScanApiTest extends BaseBleUnitTest
 {
 
     @Test
@@ -227,13 +227,9 @@ public class ScanApiTest extends BaseBleTest
         });
     }
 
-    @Override public PI_BleScanner getScanner()
+    @Override public P_NativeManagerLayer getManagerLayer()
     {
-        return new DefaultBleScannerTest();
+        return new P_UnitTestManagerLayer();
     }
 
-    @Override public PI_BleStatusHelper getStatusHelper()
-    {
-        return new DefaultStatusHelperTest();
-    }
 }

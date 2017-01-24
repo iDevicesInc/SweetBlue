@@ -44,7 +44,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.idevicesinc.sweetblue.TaskManagerIdleActivity"
+        <activity android:name="com.idevicesinc.sweetblue.TestActivity"
                   android:screenOrientation="sensorPortrait"
                   android:configChanges="keyboardHidden|keyboard|orientation">
             <intent-filter>

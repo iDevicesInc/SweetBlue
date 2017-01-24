@@ -6,6 +6,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
+import com.idevicesinc.sweetblue.utils.Interval;
 
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
@@ -13,7 +14,7 @@ import org.junit.Test;
 import java.util.concurrent.Semaphore;
 
 
-public class ConnectBlitzer extends BaseTester<TaskManagerIdleActivity>
+public class ConnectBlitzer extends BaseTester<MainActivity>
 {
 
     private final static int MAX_COUNT = 50;
@@ -25,9 +26,9 @@ public class ConnectBlitzer extends BaseTester<TaskManagerIdleActivity>
     private boolean wasConnected = false;
 
 
-    @Override Class<TaskManagerIdleActivity> getActivityClass()
+    @Override Class<MainActivity> getActivityClass()
     {
-        return TaskManagerIdleActivity.class;
+        return MainActivity.class;
     }
 
     @Override BleManagerConfig getInitialConfig()
@@ -40,7 +41,7 @@ public class ConnectBlitzer extends BaseTester<TaskManagerIdleActivity>
                 return Please.acknowledgeIf(e.name_native().equalsIgnoreCase("switch-000000"));
             }
         };
-        config.useGattRefresh = true;
+        config.useGattRefresh = false;
         config.loggingEnabled = true;
         config.runOnMainThread = false;
         return config;

@@ -291,6 +291,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * state. This only applies to devices running Marshmallow or higher. This call can drain the battery if it's left at the same
 	 * rate as {@link #autoUpdateRate}, as it uses reflection to poll the native state. This is needed on some phones where SweetBlue
 	 * doesn't receive a state change when it should.
+	 * If this is <code>null</code>, then state polling will be disabled.
 	 */
 	@Advanced
 	@Nullable(Prevalence.RARE)
@@ -360,7 +361,10 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * per se, but ahead of the native callback. So for instance, BLE was turned off, then on...polling may say it's ON, then try to connect to a device. Then
 	 * we get the native callback, but by this time, the connect has failed. In this case, you should turn this to <code>false</code>. But then you are at the
 	 * mercy of Android's Bluetooth callbacks coming in. This polling is only done on devices running Android Marshmallow (6.0+) or above.
+	 *
+	 * @deprecated - Use {@link #defaultStatePollRate} instead. If you want it disabled, set that option to {@link Interval#DISABLED}.
 	 */
+	@Deprecated
 	public boolean allowManagerStatePolling					= true;
 
 	/**
@@ -431,19 +435,6 @@ public class BleManagerConfig extends BleDeviceConfig
 //	@UnitTest
 //	public PI_UpdateLoop.IUpdateLoopFactory updateLoopFactory	= new PI_UpdateLoop.DefaultUpdateLoopFactory();
 
-	/**
-	 * Allows overriding of Ble Status's. This is only used for unit testing, and shouldn't be
-	 * used at all.
-	 */
-	@UnitTest
-	public PI_BleStatusHelper bleStatusHelper 					= null;
-
-	/**
-	 * Allows overriding of Ble scanning behaviour in SweetBlue. This is only used for unit
-	 * testing, and should not be used at all.
-	 */
-	@UnitTest
-	public PI_BleScanner bleScanner								= null;
 
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.

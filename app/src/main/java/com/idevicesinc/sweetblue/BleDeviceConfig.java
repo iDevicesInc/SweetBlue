@@ -80,7 +80,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * refreshing the gatt database before actually performing the discover services operation. It has been observed that this delay
 	 * alleviates some instability when {@link #useGattRefresh} is <code>true</code>.
 	 */
-	public static final Interval DEFAULT_GATT_REFRESH_DELAY		= Interval.millis(350);
+	public static final int DEFAULT_GATT_REFRESH_DELAY		= 500;
 
 	/**
 	 * Default is <code>false</code>. If the bluetooth device you are trying to connect to requires a pairing dialog to show up, you should
@@ -96,7 +96,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * refreshing the gatt database before actually performing the discover services operation. It has been observed that this delay
 	 * alleviates some instability when {@link #useGattRefresh} is <code>true</code>.
 	 */
-	public Interval gattRefreshDelay							= DEFAULT_GATT_REFRESH_DELAY;
+	public Interval gattRefreshDelay							= Interval.millis(DEFAULT_GATT_REFRESH_DELAY);
 	
 	/**
 	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},

@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue.compat;
 
 
 import android.annotation.TargetApi;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.le.ScanSettings;
@@ -109,9 +110,16 @@ public class L_Util
         return mgr.getNativeAdapter().isMultipleAdvertisementSupported();
     }
 
+    // TODO - Remove this for version 3.0
+    @Deprecated
     public static void stopNativeScan(BleManager mgr) {
         mgr.getNativeAdapter().getBluetoothLeScanner().stopScan(m_callback);
     }
+
+    public static void stopNativeScan(BluetoothAdapter adapter) {
+        adapter.getBluetoothLeScanner().stopScan(m_callback);
+    }
+
 
     // TODO - Remove this for version 3.0
     @Deprecated
@@ -124,6 +132,8 @@ public class L_Util
         return gatt.requestConnectionPriority(mode);
     }
 
+    // TODO - Remove this in version 3.0
+    @Deprecated
     public static void startNativeScan(BleManager mgr, int scanMode, Interval scanReportDelay, ScanCallback listener) {
 
         final ScanSettings settings = buildSettings(mgr, scanMode, scanReportDelay).build();
@@ -131,6 +141,8 @@ public class L_Util
         startScan(mgr, settings, listener);
     }
 
+    // TODO - Remove this in version 3.0
+    @Deprecated
     static ScanSettings.Builder buildSettings(BleManager mgr, int scanMode, Interval scanReportDelay) {
         final ScanSettings.Builder builder = new ScanSettings.Builder();
         builder.setScanMode(scanMode);
@@ -147,9 +159,40 @@ public class L_Util
         return builder;
     }
 
+    // TODO - Remove this in version 3.0
+    @Deprecated
     static void startScan(BleManager mgr, ScanSettings scanSettings, ScanCallback listener) {
         m_UserCallback = listener;
         mgr.getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
+    }
+
+
+    public static void startNativeScan(BluetoothAdapter adapter, int scanMode, Interval scanReportDelay, ScanCallback listener) {
+
+        final ScanSettings settings = buildSettings(adapter, scanMode, scanReportDelay).build();
+
+        startScan(adapter, settings, listener);
+    }
+
+    static ScanSettings.Builder buildSettings(BluetoothAdapter adapter, int scanMode, Interval scanReportDelay) {
+        final ScanSettings.Builder builder = new ScanSettings.Builder();
+        builder.setScanMode(scanMode);
+
+        if( adapter.isOffloadedScanBatchingSupported() )
+        {
+            final long scanReportDelay_millis = false == Interval.isDisabled(scanReportDelay) ? scanReportDelay.millis() : 0;
+            builder.setReportDelay(scanReportDelay_millis);
+        }
+        else
+        {
+            builder.setReportDelay(0);
+        }
+        return builder;
+    }
+
+    static void startScan(BluetoothAdapter adapter, ScanSettings scanSettings, ScanCallback listener) {
+        m_UserCallback = listener;
+        adapter.getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
     }
 
 }
