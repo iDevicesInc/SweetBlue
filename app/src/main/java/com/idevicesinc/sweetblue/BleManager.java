@@ -2053,7 +2053,8 @@ public class BleManager
 	}
 
 	/**
-	 * Returns <code>true</code> if you're either pre-Android-M, or app has runtime permissions enabled by checking {@link android.support.v4.content.ContextCompat#checkSelfPermission(Context, String)}.
+	 * Returns <code>true</code> if you're either pre-Android-M, or app has runtime permissions enabled by checking
+	 * <a href="https://developer.android.com/reference/android/support/v4/content/ContextCompat.html#checkSelfPermission(android.content.Context, java.lang.String)"</a>	 *
 	 * See more information at https://developer.android.com/training/permissions/index.html.
 	 *
 	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)

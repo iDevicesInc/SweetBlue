@@ -4832,14 +4832,22 @@ public class BleDevice extends BleNode
 	}
 
 	/**
-	 * This method is intended to be used when the device has 2 battery characteristics in the same service. The @param nameSpaceAndDescription tells SweetBlue which
-	 * characteristic to actually read from.
+	 * This method is intended to be used when the device has 2 battery characteristics in the same service. The @param valueToMatch tells SweetBlue which
+	 * characteristic to actually read from. NOTE: This expects the FULL byte array for comparison, which by the Bluetooth spec found here
+	 * <a href="https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.characteristic_presentation_format.xml"</a>
+	 * says that it should be 7 bytes. SweetBlue will NOT enforce the 7 byte length, in the odd case that someone implements this descriptor out-of-spec.
      */
-	public ReadWriteEvent readBatteryLevel(byte[] nameSpaceAndDescription, ReadWriteListener listener)
+	public ReadWriteEvent readBatteryLevel(byte[] valueToMatch, ReadWriteListener listener)
 	{
-		return readBatteryLevel(nameSpaceAndDescription, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID, listener);
+		return readBatteryLevel(valueToMatch, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID, listener);
 	}
 
+	/**
+	 * Read the battery level of this device. This method is intended to be used if the device being read has two battery characteristics in the battery service.
+	 * This method allows you to state which descriptor to match the @param valueToMatch to, to pick the correct characteristic to read the battery level from.
+	 * This method is needed if you do not implement dual battery level exactly to the Bluetooth spec.
+     */
+	@Advanced
 	public ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
 	{
 		enforceMainThread();
