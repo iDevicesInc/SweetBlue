@@ -1,8 +1,13 @@
 package com.idevicesinc.sweetblue;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -13,6 +18,7 @@ import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.Interval;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -81,13 +87,14 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        registerForContextMenu(mListView);
+
         mStartScan = (Button) findViewById(R.id.startScan);
         mStartScan.setOnClickListener(new View.OnClickListener()
         {
             @Override public void onClick(View v)
             {
-                //mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
-                mgr.startScan();
+                mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.ONE_SEC);
             }
         });
         mStopScan = (Button) findViewById(R.id.stopScan);
@@ -101,14 +108,13 @@ public class MainActivity extends AppCompatActivity
 
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
-//        config.useGattRefresh = true;
-//        config.runOnMainThread = false;
-//        config.scanApi = BleScanApi.POST_LOLLIPOP;
+        config.scanApi = BleScanApi.POST_LOLLIPOP;
+        config.forceBondDialog = true;
         config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
-                return Please.acknowledgeIf(e.name_native().contains("Double"));
+                return Please.acknowledgeIf(e.name_native().contains("Tag"));
             }
         };
 
@@ -129,7 +135,7 @@ public class MainActivity extends AppCompatActivity
                 else if (event.didExit(BleManagerState.SCANNING))
                 {
                     mStartScan.setEnabled(true);
-                    mStopScan.setEnabled(false);
+//                    mStopScan.setEnabled(false);
                 }
             }
         });
@@ -151,17 +157,61 @@ public class MainActivity extends AppCompatActivity
 
         mStartScan.setEnabled(false);
 
-        BluetoothEnabler.start(this, new BluetoothEnabler.BluetoothEnablerFilter()
-        {
-            @Override public Please onEvent(BluetoothEnablerEvent e)
-            {
-                if (e.isDone())
+        BluetoothEnabler.start(this, new BluetoothEnabler.DefaultBluetoothEnablerFilter()
                 {
-                    mStartScan.setEnabled(true);
+                    @Override public Please onEvent(BluetoothEnablerEvent e)
+                    {
+                        if (e.isDone())
+                        {
+                            mStartScan.setEnabled(true);
+                        }
+                        return super.onEvent(e);
+                    }
                 }
-                return Please.doNext();
+        );
+    }
+
+    @Override public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
+    {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        if (v.getId() == R.id.listView)
+        {
+            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            boolean isBonded = mDevices.get(info.position).is(BleDeviceState.BONDED);
+            boolean connected = mDevices.get(info.position).is(BleDeviceState.CONNECTED);
+
+            menu.add(0, 0, 0, "Remove Bond");
+
+            if (!isBonded)
+            {
+                menu.add(1, 1, 0, "Bond");
             }
-        });
+            if (connected)
+            {
+                menu.add(2, 2, 0, "Disconnect");
+            }
+        }
+    }
+
+    @Override public boolean onContextItemSelected(MenuItem item)
+    {
+        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        if (item.getItemId() == 0)
+        {
+            mDevices.get(info.position).unbond();
+            return true;
+        }
+        else if (item.getItemId() == 1)
+        {
+            mDevices.get(info.position).bond();
+            return true;
+        }
+        else if (item.getItemId() == 2)
+        {
+            mDevices.get(info.position).disconnect();
+            return true;
+        }
+        return super.onContextItemSelected(item);
     }
 
     private class ScanAdaptor extends ArrayAdapter<BleDevice>
