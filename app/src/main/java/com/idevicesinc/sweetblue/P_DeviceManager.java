@@ -468,6 +468,11 @@ class P_DeviceManager
         {
             final BleDevice device_ith = m_list.get(i);
 
+            if (device_ith.is(BleDeviceState.CONNECTED))
+            {
+                device_ith.m_nativeWrapper.updateNativeConnectionState(device_ith.getNativeGatt());
+            }
+
             final boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);
 
             if (false == retainDeviceWhenBleTurnsOff)

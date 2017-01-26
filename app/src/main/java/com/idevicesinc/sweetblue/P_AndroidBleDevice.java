@@ -83,10 +83,10 @@ final class P_AndroidBleDevice implements P_NativeDeviceLayer {
     }
 
     @Override
-    public boolean equals(BluetoothDevice device) {
+    public boolean equals(P_NativeDeviceLayer device) {
         if (device == null) return false;
-        if (device == m_device) return true;
-        return m_device.equals(device);
+        if (device == this) return true;
+        return m_device.equals(device.getNativeDevice());
     }
 
     @Override

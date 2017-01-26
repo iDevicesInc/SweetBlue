@@ -170,6 +170,24 @@ final class P_ScanManager
         });
     }
 
+    final synchronized void postBatchScanResult(final List<L_Util.ScanResult> devices)
+    {
+        m_manager.getPostManager().postToUpdateThread(new Runnable()
+        {
+            @Override public void run()
+            {
+                for (L_Util.ScanResult res : devices)
+                {
+                    P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer();
+                    layer.setNativeDevice(res.getDevice());
+                    m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
+
+                    m_manager.onDiscoveredFromNativeStack(layer, res.getRssi(), res.getRecord());
+                }
+            }
+        });
+    }
+
     private void stopScan_private(boolean stopping)
     {
         switch (mCurrentApi)
@@ -540,11 +558,7 @@ final class P_ScanManager
 
         @Override public void onBatchScanResults(List<L_Util.ScanResult> results)
         {
-            m_manager.getLogger().d("Got batched scan results.");
-            for (L_Util.ScanResult res : results)
-            {
-                postScanResult(res.getDevice(), res.getRssi(), res.getRecord());
-            }
+            postBatchScanResult(results);
         }
 
         @Override public void onScanFailed(int errorCode)

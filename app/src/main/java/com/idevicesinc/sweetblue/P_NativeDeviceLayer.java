@@ -17,7 +17,7 @@ interface P_NativeDeviceLayer {
     boolean isDeviceNull();
     boolean removeBond();
     boolean cancelBond();
-    boolean equals(BluetoothDevice device);
+    boolean equals(P_NativeDeviceLayer device);
     boolean createBondSneaky(String methodName, boolean loggingEnabled);
     BluetoothDevice getNativeDevice();
     BluetoothGatt connect(Context context, boolean useAutoConnect, BluetoothGattCallback callback);
@@ -63,9 +63,9 @@ interface P_NativeDeviceLayer {
             return false;
         }
 
-        @Override public boolean equals(BluetoothDevice device)
+        @Override public boolean equals(P_NativeDeviceLayer device)
         {
-            return false;
+            return device == this;
         }
 
         @Override public boolean createBondSneaky(String methodName, boolean loggingEnabled)
