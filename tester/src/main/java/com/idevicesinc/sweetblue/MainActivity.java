@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity
         {
             @Override public void onClick(View v)
             {
-                mgr.stopScan();
+                mgr.stopPeriodicScan();
             }
         });
 
@@ -110,11 +110,12 @@ public class MainActivity extends AppCompatActivity
         config.loggingEnabled = true;
         config.scanApi = BleScanApi.POST_LOLLIPOP;
         config.forceBondDialog = true;
+        config.runOnMainThread = false;
         config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
-                return Please.acknowledgeIf(e.name_native().contains("Tag"));
+                return Please.acknowledgeIf(e.name_native().contains("Tag") || e.name_native().contains("Pavlok"));
             }
         };
 
@@ -145,8 +146,11 @@ public class MainActivity extends AppCompatActivity
             {
                 if (e.was(BleManager.DiscoveryListener.LifeCycle.DISCOVERED))
                 {
-                    mDevices.add(e.device());
-                    mAdaptor.notifyDataSetChanged();
+                    if (!mDevices.contains(e.device()))
+                    {
+                        mDevices.add(e.device());
+                        mAdaptor.notifyDataSetChanged();
+                    }
                 }
                 else if (e.was(BleManager.DiscoveryListener.LifeCycle.REDISCOVERED))
                 {

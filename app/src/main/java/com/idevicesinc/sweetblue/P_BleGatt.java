@@ -98,6 +98,7 @@ class P_BleGatt implements P_GattLayer
     {
         if (gatt != null)
         {
+
             gatt.disconnect();
         }
     }
