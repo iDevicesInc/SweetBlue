@@ -99,7 +99,7 @@ public class BleDevice extends BleNode
      * Special value that is used in place of Java's built-in <code>null</code>.
      */
     @Immutable
-    public static final BleDevice NULL = new BleDevice(null, null, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
+    public static final BleDevice NULL = new BleDevice(null, P_NativeDeviceLayer.NULL, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
 
     /**
      * Builder class for sending a write over BLE. Use this class to set the service and/or characteristic
@@ -2051,7 +2051,8 @@ public class BleDevice extends BleNode
     private boolean m_underwentPossibleImplicitBondingAttempt = false;
 
     private BleDeviceConfig m_config = null;
-    private P_BluetoothLayerManager m_layerManager;
+    private P_BleDeviceLayerManager m_layerManager;
+    private P_NativeDeviceLayer m_deviceLayer;
 
     private BondListener.BondEvent m_nullBondEvent = null;
     private ReadWriteListener.ReadWriteEvent m_nullReadWriteEvent = null;
@@ -2061,7 +2062,7 @@ public class BleDevice extends BleNode
 
     final P_ReliableWriteManager m_reliableWriteMngr;
 
-    BleDevice(BleManager mngr, BluetoothDevice device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
+    BleDevice(BleManager mngr, P_NativeDeviceLayer device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
     {
         super(mngr);
 
@@ -2069,12 +2070,14 @@ public class BleDevice extends BleNode
         m_origin_latest = m_origin;
         m_isNull = isNull;
 
+        m_deviceLayer = device_native;
+
         if (isNull)
         {
             m_rssiPollMngr = null;
             m_rssiPollMngr_auto = null;
             // setConfig(config_nullable);
-            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, conf_mngr().newDeviceLayer(), name_normalized, name_native);
+            m_nativeWrapper = new P_NativeDeviceWrapper(this, m_deviceLayer, name_normalized, name_native);
             m_listeners = null;
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = null;
@@ -2095,7 +2098,7 @@ public class BleDevice extends BleNode
             m_rssiPollMngr = new P_RssiPollManager(this);
             m_rssiPollMngr_auto = new P_RssiPollManager(this);
             setConfig(config_nullable);
-            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, layerManager().getDeviceLayer(), name_normalized, name_native);
+            m_nativeWrapper = new P_NativeDeviceWrapper(this, m_deviceLayer, name_normalized, name_native);
             m_listeners = new P_BleDevice_Listeners(this);
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
@@ -2222,7 +2225,7 @@ public class BleDevice extends BleNode
 
         if (m_layerManager == null)
         {
-            m_layerManager = new P_BluetoothLayerManager(this, conf_mngr().newGattLayer(), conf_mngr().newDeviceLayer(), conf_mngr().nativeManagerLayer);
+            m_layerManager = new P_BleDeviceLayerManager(this, conf_mngr().newGattLayer(), m_deviceLayer, conf_mngr().nativeManagerLayer);
         }
 
         initEstimators();
@@ -3219,7 +3222,7 @@ public class BleDevice extends BleNode
         return state.overlaps(stateTracker().getState());
     }
 
-    final P_BluetoothLayerManager layerManager()
+    final P_BleDeviceLayerManager layerManager()
     {
         return m_layerManager;
     }
@@ -5519,7 +5522,7 @@ public class BleDevice extends BleNode
         return m_pollMngr;
     }
 
-    final void onNewlyDiscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+    final void onNewlyDiscovered(final P_NativeDeviceLayer device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
 
@@ -5532,7 +5535,7 @@ public class BleDevice extends BleNode
         stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
     }
 
-    final void onRediscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+    final void onRediscovered(final P_NativeDeviceLayer device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
 
@@ -5842,7 +5845,7 @@ public class BleDevice extends BleNode
             //--- DRK > Trying to catch fringe condition here of stack lying to
             // us about bonded state.
             //--- This is not about finding a logic error in my code.
-            getManager().ASSERT(getManager().getNative().getAdapter().getBondedDevices().contains(m_nativeWrapper.getDevice()));
+            getManager().ASSERT(getManager().managerLayer().getBondedDevices().contains(m_nativeWrapper.getDevice()));
         }
 
         logger().d(logger().gattBondState(m_nativeWrapper.getNativeBondState()));

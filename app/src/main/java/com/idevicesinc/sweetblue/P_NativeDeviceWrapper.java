@@ -26,11 +26,10 @@ class P_NativeDeviceWrapper
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
 	private AtomicInteger m_nativeConnectionState = null;
 	
-	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, P_NativeDeviceLayer nativeLayer, String name_normalized, String name_native)
+	public P_NativeDeviceWrapper(BleDevice device, P_NativeDeviceLayer nativeLayer, String name_normalized, String name_native)
 	{
 		m_device = device;
 		m_device_native = nativeLayer;
-		m_device_native.setNativeDevice(device_native);
 		m_address = m_device_native.getNativeDevice() == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
 
 		m_nativeConnectionState = new AtomicInteger(-1);
@@ -77,13 +76,13 @@ class P_NativeDeviceWrapper
 		return m_device.getManager().getLogger();
 	}
 
-	void updateNativeDevice(final BluetoothDevice device_native)
+	void updateNativeDevice(final P_NativeDeviceLayer device_native)
 	{
 		final String name_native = device_native.getName();
 
 		updateNativeName(name_native);
 
-		m_device_native.setNativeDevice(device_native);
+		m_device_native.setNativeDevice(device_native.getNativeDevice());
 	}
 
 	void setName_override(final String name)
@@ -158,12 +157,17 @@ class P_NativeDeviceWrapper
 	{
 		return m_name_debug;
 	}
-	
+
+	public P_NativeDeviceLayer getDeviceLayer()
+	{
+		return m_device_native;
+	}
+
 	public BluetoothDevice getDevice()
 	{
 		if( m_device.isNull() )
 		{
-			return m_device.getManager().newNativeDevice(BleDevice.NULL_MAC());
+			return m_device.getManager().newNativeDevice(BleDevice.NULL_MAC()).getNativeDevice();
 		}
 		else
 		{
@@ -256,7 +260,7 @@ class P_NativeDeviceWrapper
 	
 	public int getNativeConnectionState()
 	{
-		return m_device.layerManager().getManagerLayer().getConnectionState(m_device_native);
+		return m_device.layerManager().getManagerLayer().getConnectionState(m_device_native, BluetoothGatt.GATT_SERVER);
 	}
 	
 	public int getConnectionState()
@@ -309,7 +313,7 @@ class P_NativeDeviceWrapper
 
 		if( connectedStateThatWeWillGoWith != BluetoothGatt.STATE_DISCONNECTED )
 		{
-			if( gatt() == null )
+			if( gattLayer().isGattNull() )
 			{
 				//--- DRK > Can't assert here because gatt can legitmately be null even though we have a connecting/ed native state.
 				//---		This was observed on the moto G right after app start up...getNativeConnectionState() reported connecting/ed

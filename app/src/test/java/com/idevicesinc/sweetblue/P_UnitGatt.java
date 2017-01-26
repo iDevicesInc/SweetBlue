@@ -61,7 +61,7 @@ public class P_UnitGatt implements P_GattLayer {
     @Override
     public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback) {
         m_gattIsNull = false;
-        return null;
+        return device.connect(context, useAutoConnect, callback);
     }
 
     @Override

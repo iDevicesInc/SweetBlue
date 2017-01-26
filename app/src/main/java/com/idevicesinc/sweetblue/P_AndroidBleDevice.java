@@ -41,6 +41,15 @@ final class P_AndroidBleDevice implements P_NativeDeviceLayer {
         return "";
     }
 
+    @Override public String getName()
+    {
+        if (m_device != null)
+        {
+            return m_device.getName();
+        }
+        return "";
+    }
+
     @Override
     public boolean createBond() {
         if (m_device != null)

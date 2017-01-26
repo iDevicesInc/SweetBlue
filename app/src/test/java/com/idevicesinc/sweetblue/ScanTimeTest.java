@@ -6,15 +6,13 @@ import com.idevicesinc.sweetblue.utils.Pointer;
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 
-@Config(manifest = Config.NONE, sdk = 25)
-@RunWith(RobolectricTestRunner.class)
+//@Config(manifest = Config.NONE, sdk = 24)
+//@RunWith(RobolectricTestRunner.class)
 public class ScanTimeTest extends BaseBleUnitTest
 {
 

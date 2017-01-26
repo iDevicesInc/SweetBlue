@@ -174,7 +174,7 @@ class P_BluetoothCrashResolver {
      * @param device
      */
     @TargetApi(18)
-    public void notifyScannedDevice(BluetoothDevice device, BluetoothAdapter.LeScanCallback scanner) {
+    public void notifyScannedDevice(P_NativeDeviceLayer device, BluetoothAdapter.LeScanCallback scanner) {
         int oldSize = 0, newSize = 0;
 
         if (isDebugEnabled()) oldSize = distinctBluetoothAddresses.size();

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-final class P_BluetoothLayerManager
+final class P_BleDeviceLayerManager
 {
 
     private final BleDevice m_device;
@@ -22,7 +22,7 @@ final class P_BluetoothLayerManager
     private final P_NativeManagerLayer m_managerLayer;
 
 
-    P_BluetoothLayerManager(BleDevice device, P_GattLayer gattLayer, P_NativeDeviceLayer deviceLayer, P_NativeManagerLayer managerLayer)
+    P_BleDeviceLayerManager(BleDevice device, P_GattLayer gattLayer, P_NativeDeviceLayer deviceLayer, P_NativeManagerLayer managerLayer)
     {
         m_device = device;
         m_gattLayer = gattLayer;
@@ -43,7 +43,7 @@ final class P_BluetoothLayerManager
 
     public final int getNativeConnectionState()
     {
-        return m_managerLayer.getConnectionState(m_deviceLayer);
+        return m_managerLayer.getConnectionState(m_deviceLayer, BluetoothGatt.GATT_SERVER);
     }
 
     public final List<BluetoothGattService> getNativeServiceList()

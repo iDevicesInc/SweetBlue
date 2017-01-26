@@ -5,14 +5,12 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 25)
-@RunWith(RobolectricTestRunner.class)
+//@Config(manifest = Config.NONE, sdk = 24)
+//@RunWith(RobolectricTestRunner.class)
 public class ScanPowerTest extends BaseBleUnitTest
 {
 

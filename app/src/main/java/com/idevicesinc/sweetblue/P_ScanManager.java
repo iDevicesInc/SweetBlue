@@ -73,7 +73,7 @@ final class P_ScanManager
                 {
                     m_manager.getLogger().e("Tried to start BLE scan, but scanning is not ready (most likely need to get permissions). Falling back to classic discovery.");
                     mCurrentApi = BleScanApi.CLASSIC;
-                    return m_manager.getNativeAdapter().startDiscovery();
+                    return m_manager.managerLayer().startDiscovery();
                 }
             case AUTO:
             case PRE_LOLLIPOP:
@@ -159,9 +159,13 @@ final class P_ScanManager
         {
             @Override public void run()
             {
-                m_manager.getCrashResolver().notifyScannedDevice(device, m_preLollipopScanCallback);
 
-                m_manager.onDiscoveredFromNativeStack(device, rssi, scanRecord);
+                final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer();
+                layer.setNativeDevice(device);
+
+                m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
+
+                m_manager.onDiscoveredFromNativeStack(layer, rssi, scanRecord);
             }
         });
     }
@@ -509,7 +513,7 @@ final class P_ScanManager
 
     private void stopClassicDiscovery()
     {
-        m_manager.managerLayer().stopClassicDiscovery();
+        m_manager.managerLayer().cancelDiscovery();
     }
 
 

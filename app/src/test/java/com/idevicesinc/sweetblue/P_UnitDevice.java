@@ -36,6 +36,11 @@ public class P_UnitDevice implements P_NativeDeviceLayer {
         return m_address;
     }
 
+    @Override public String getName()
+    {
+        return "";
+    }
+
     @Override
     public boolean createBond() {
         return false;

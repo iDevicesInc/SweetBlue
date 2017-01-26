@@ -149,6 +149,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+
         mStartScan.setEnabled(false);
 
         BluetoothEnabler.start(this, new BluetoothEnabler.BluetoothEnablerFilter()

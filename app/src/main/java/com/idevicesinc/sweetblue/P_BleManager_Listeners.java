@@ -197,7 +197,10 @@ class P_BleManager_Listeners
 			final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 			final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
 
-			m_mngr.onDiscoveredFromNativeStack(device_native, rssi, null);
+			final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer();
+			layer.setNativeDevice(device_native);
+
+			m_mngr.onDiscoveredFromNativeStack(layer, rssi, null);
 		}
 	}
 
@@ -243,8 +246,8 @@ class P_BleManager_Listeners
 		//---		may not work because maybe this bug relied on a race condition.
 		//---		UPDATE: Not checking for inconsistent state anymore cause it can be legitimate due to native 
 		//---		state changing while call to this method is sitting on the main thread queue.
-		BluetoothAdapter bluetoothAdapter = m_mngr.getNative().getAdapter();
-		final int adapterState = bluetoothAdapter.getState();
+		final int adapterState = m_mngr.managerLayer().getState();
+
 //		boolean inconsistentState = adapterState != newNativeState;
 		PA_StateTracker.E_Intent intent = E_Intent.INTENTIONAL;
 		final boolean hitErrorState = newNativeState == BluetoothAdapter.ERROR;
@@ -666,13 +669,13 @@ class P_BleManager_Listeners
 
 	private int getBleState()
 	{
-		if( Utils.isMarshmallow() )
+		if( Utils.isMarshmallow() && m_mngr.getNativeAdapter() != null)
 		{
 			return getBleStateReflect(m_mngr.getNativeAdapter());
 		}
 		else
 		{
-			return m_mngr.getNativeAdapter().getState();
+			return m_mngr.managerLayer().getState();
 		}
 	}
 }

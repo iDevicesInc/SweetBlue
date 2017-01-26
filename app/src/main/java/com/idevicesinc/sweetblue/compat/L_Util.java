@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import com.idevicesinc.sweetblue.BleDevice;
@@ -106,8 +107,19 @@ public class L_Util
         return gatt.requestMtu(mtu);
     }
 
+    // TODO - Remove this for version 3.0
+    @Deprecated
     public static boolean isAdvertisingSupportedByChipset(BleManager mgr) {
         return mgr.getNativeAdapter().isMultipleAdvertisementSupported();
+    }
+
+    public static boolean isAdvertisingSupportedByChipset(BluetoothAdapter adapter) {
+        return adapter.isMultipleAdvertisementSupported();
+    }
+
+    public static BluetoothLeAdvertiser getBluetoothLeAdvertiser(BluetoothAdapter adapter)
+    {
+        return adapter.getBluetoothLeAdvertiser();
     }
 
     // TODO - Remove this for version 3.0

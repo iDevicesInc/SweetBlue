@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -16,7 +17,6 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
-import com.idevicesinc.sweetblue.annotations.UnitTest;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -389,18 +389,20 @@ public class BleManagerConfig extends BleDeviceConfig
 	public BleScanPower scanPower							= BleScanPower.AUTO;
 
 	/**
-	 * Default is <code>null</code> - provide an instance here that will be called at the end of {@link BleManager#update(double)}.
+	 * Default is <code>null</code> - provide an instance here that will be called at the end of {@link BleManager#update(double, long)}.
 	 * This might be useful for extension/wrapper libraries or apps that want to tie into the {@link BleManager} instance's existing update loop.
 	 */
 	public PI_UpdateLoop.Callback updateLoopCallback			= null;
 
-	Class<? extends  P_GattLayer> gattLayerClass				= P_AndroidGatt.class;
-
 	P_GattLayer newGattLayer()
 	{
+		if (gattLayerFactory == null)
+		{
+			gattLayerFactory = new P_AndroidGattLayerFactory();
+		}
 		try
 		{
-			return gattLayerClass.newInstance();
+			return gattLayerFactory.newInstance();
 		}
 		catch (Exception e)
 		{
@@ -409,13 +411,19 @@ public class BleManagerConfig extends BleDeviceConfig
 		return null;
 	}
 
-	Class<? extends P_NativeDeviceLayer> nativeDeviceLayerClass	= P_AndroidBleDevice.class;
+	P_NativeDeviceLayerFactory nativeDeviceFactory 				= new P_AndroidDeviceLayerFactory();
+
+	P_GattLayerFactory gattLayerFactory					= new P_AndroidGattLayerFactory();
 
 	P_NativeDeviceLayer newDeviceLayer()
 	{
+		if (nativeDeviceFactory == null)
+		{
+			nativeDeviceFactory = new P_AndroidDeviceLayerFactory();
+		}
 		try
 		{
-			return nativeDeviceLayerClass.newInstance();
+			return nativeDeviceFactory.newInstance();
 		}
 		catch (Exception e)
 		{
@@ -462,6 +470,23 @@ public class BleManagerConfig extends BleDeviceConfig
 	
 	//--- DRK > Not sure if this is useful so keeping it package private for now.
 	int	connectionFailUhOhCount								= 0;
+
+
+	public static final class P_AndroidDeviceLayerFactory implements P_NativeDeviceLayerFactory<P_AndroidBleDevice>
+	{
+		@Override public P_AndroidBleDevice newInstance()
+		{
+			return new P_AndroidBleDevice();
+		}
+	}
+
+	public static final class P_AndroidGattLayerFactory implements P_GattLayerFactory<P_AndroidGatt>
+	{
+		@Override public P_AndroidGatt newInstance()
+		{
+			return new P_AndroidGatt();
+		}
+	}
 
 	/**
 	 * An optional whitelisting mechanism for scanning. Provide an implementation at

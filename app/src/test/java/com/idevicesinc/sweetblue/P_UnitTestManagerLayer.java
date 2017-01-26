@@ -1,16 +1,30 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.content.Context;
+import android.text.TextUtils;
 
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Utils_String;
+
+import java.util.Random;
+import java.util.Set;
 
 
 public class P_UnitTestManagerLayer implements P_NativeManagerLayer
 {
 
-    @Override public int getConnectionState(P_NativeDeviceLayer device)
+    private int m_nativeState = BleStatuses.STATE_ON;
+    private String m_address;
+
+
+    @Override public int getConnectionState(P_NativeDeviceLayer device, int profile)
     {
         return 0;
     }
@@ -25,14 +39,51 @@ public class P_UnitTestManagerLayer implements P_NativeManagerLayer
         return true;
     }
 
-    @Override public void setNativeManager(BluetoothManager manager)
+    @Override public boolean isManagerNull()
     {
-
+        return false;
     }
 
-    @Override public void setNativeAdaptor(BluetoothAdapter adaptor)
+    @Override public boolean disable()
     {
+        m_nativeState = BleStatuses.STATE_OFF;
+        return true;
+    }
 
+    @Override public boolean enable()
+    {
+        m_nativeState = BleStatuses.STATE_ON;
+        return true;
+    }
+
+    @Override public boolean isMultipleAdvertisementSupported()
+    {
+        return true;
+    }
+
+    @Override public void resetManager(Context context)
+    {
+    }
+
+    @Override public int getState()
+    {
+        return m_nativeState;
+    }
+
+    @Override public String getAddress()
+    {
+        if (TextUtils.isEmpty(m_address))
+        {
+            byte[] add = new byte[6];
+            new Random().nextBytes(add);
+            m_address = Utils_String.bytesToMacAddress(add);
+        }
+        return m_address;
+    }
+
+    @Override public Set<BluetoothDevice> getBondedDevices()
+    {
+        return null;
     }
 
     @Override public BluetoothAdapter getNativeAdaptor()
@@ -41,6 +92,16 @@ public class P_UnitTestManagerLayer implements P_NativeManagerLayer
     }
 
     @Override public BluetoothManager getNativeManager()
+    {
+        return null;
+    }
+
+    @Override public BluetoothGattServer openGattServer(Context context, P_BleServer_Listeners listeners)
+    {
+        return null;
+    }
+
+    @Override public BluetoothLeAdvertiser getBluetoothLeAdvertiser()
     {
         return null;
     }
@@ -65,23 +126,12 @@ public class P_UnitTestManagerLayer implements P_NativeManagerLayer
         return true;
     }
 
-    @Override public boolean startClassicDiscovery()
-    {
-        return true;
-    }
-
-    @Override public void stopClassicDiscovery()
-    {
-    }
-
     @Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
     {
-
     }
 
     @Override public void startMScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
     {
-
     }
 
     @Override public boolean startLeScan(BluetoothAdapter.LeScanCallback callback)
@@ -91,6 +141,10 @@ public class P_UnitTestManagerLayer implements P_NativeManagerLayer
 
     @Override public void stopLeScan(BluetoothAdapter.LeScanCallback callback)
     {
+    }
 
+    @Override public BluetoothDevice getRemoteDevice(String macAddress)
+    {
+        return null;
     }
 }

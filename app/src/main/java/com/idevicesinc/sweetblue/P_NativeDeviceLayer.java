@@ -12,6 +12,7 @@ interface P_NativeDeviceLayer {
     void setNativeDevice(BluetoothDevice device);
     int getBondState();
     String getAddress();
+    String getName();
     boolean createBond();
     boolean isDeviceNull();
     boolean removeBond();
@@ -20,5 +21,67 @@ interface P_NativeDeviceLayer {
     boolean createBondSneaky(String methodName, boolean loggingEnabled);
     BluetoothDevice getNativeDevice();
     BluetoothGatt connect(Context context, boolean useAutoConnect, BluetoothGattCallback callback);
+
+    P_NativeDeviceLayer NULL = new P_NativeDeviceLayer()
+    {
+        @Override public void setNativeDevice(BluetoothDevice device)
+        {
+        }
+
+        @Override public int getBondState()
+        {
+            return 0;
+        }
+
+        @Override public String getAddress()
+        {
+            return "";
+        }
+
+        @Override public String getName()
+        {
+            return "";
+        }
+
+        @Override public boolean createBond()
+        {
+            return false;
+        }
+
+        @Override public boolean isDeviceNull()
+        {
+            return false;
+        }
+
+        @Override public boolean removeBond()
+        {
+            return false;
+        }
+
+        @Override public boolean cancelBond()
+        {
+            return false;
+        }
+
+        @Override public boolean equals(BluetoothDevice device)
+        {
+            return false;
+        }
+
+        @Override public boolean createBondSneaky(String methodName, boolean loggingEnabled)
+        {
+            return false;
+        }
+
+        @Override public BluetoothDevice getNativeDevice()
+        {
+            return null;
+        }
+
+        @Override public BluetoothGatt connect(Context context, boolean useAutoConnect, BluetoothGattCallback callback)
+        {
+            return null;
+        }
+    };
 
 }

@@ -738,7 +738,6 @@ public final class BleManager
 
 	private final Context m_context;
 	private UpdateRunnable m_updateRunnable;
-	private final BluetoothManager m_btMngr;
 	private final P_ScanFilterManager m_filterMngr;
 	final P_BluetoothCrashResolver m_crashResolver;
 	private			P_Logger m_logger;
@@ -810,18 +809,13 @@ public final class BleManager
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
 		m_filterMngr = new P_ScanFilterManager(this, m_config.defaultScanFilter);
-		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
-        // Account for unit testing. When using robolectric, the bluetooth manager comes back null. However, it includes
-        // shadow classes to simulate Bluetooth devices, so we shouldn't need the manager to run tests.
-        BleManagerState nativeState;
-		if( m_btMngr == null )
+		if (m_config.nativeManagerLayer.isManagerNull())
 		{
-			nativeState = BleManagerState.get(BluetoothAdapter.STATE_ON);
+			m_config.nativeManagerLayer.resetManager(m_context);
 		}
-		else
-		{
-			nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
-		}
+		BleManagerState nativeState;
+
+		nativeState = BleManagerState.get(m_config.nativeManagerLayer.getState());
 
 		if (m_timeTurnedOn == 0 && nativeState.overlaps(BluetoothAdapter.STATE_ON)) {
 			m_timeTurnedOn = System.currentTimeMillis();
@@ -869,8 +863,10 @@ public final class BleManager
 		{
 			((P_AndroidBluetoothManager) m_config.nativeManagerLayer).setBleManager(this);
 		}
-		m_config.nativeManagerLayer.setNativeManager(m_btMngr);
-		m_config.nativeManagerLayer.setNativeAdaptor(m_btMngr != null ? m_btMngr.getAdapter() : null);
+		if (m_config.nativeManagerLayer.isManagerNull())
+		{
+			m_config.nativeManagerLayer.resetManager(m_context);
+		}
 
 		boolean startUpdate = true;
 
@@ -1058,7 +1054,7 @@ public final class BleManager
 	{
 		if( isAdvertisingSupportedByAndroidVersion() )
 		{
-			return L_Util.isAdvertisingSupportedByChipset(this);
+			return managerLayer().isMultipleAdvertisementSupported();
 		}
 		else
 		{
@@ -1089,7 +1085,7 @@ public final class BleManager
 	@Advanced
 	public final BluetoothManager getNative()
 	{
-		return m_btMngr;
+		return managerLayer().getNativeManager();
 	}
 
 	/**
@@ -1098,7 +1094,7 @@ public final class BleManager
 	@Advanced
 	public final BluetoothAdapter getNativeAdapter()
 	{
-		return getNative().getAdapter();
+		return managerLayer().getNativeAdaptor();
 	}
 
 	final P_NativeManagerLayer managerLayer()
@@ -2327,7 +2323,7 @@ public final class BleManager
      */
 	public final Set<BleDevice> getDevices_bonded()
 	{
-		Set<BluetoothDevice> native_bonded_devices = getNativeAdapter().getBondedDevices();
+		Set<BluetoothDevice> native_bonded_devices = managerLayer().getBondedDevices();
 		Set<BleDevice> bonded_devices = new HashSet<>(native_bonded_devices.size());
 		BleDevice device;
 		for (BluetoothDevice d : native_bonded_devices)
@@ -2687,7 +2683,7 @@ public final class BleManager
 			return existingDevice;
 		}
 
-		final BluetoothDevice device_native = newNativeDevice(macAddress_normalized);
+		final P_NativeDeviceLayer device_native = newNativeDevice(macAddress_normalized);
 
 		if( device_native == null ) //--- DRK > API says this should never happen...not trusting it!
 		{
@@ -2708,9 +2704,12 @@ public final class BleManager
 		return newDevice;
 	}
 
-	final BluetoothDevice newNativeDevice(final String macAddress)
+	final P_NativeDeviceLayer newNativeDevice(final String macAddress)
 	{
-		return getNative().getAdapter().getRemoteDevice(macAddress);
+		BluetoothDevice nativeDevice = managerLayer().getRemoteDevice(macAddress);
+		P_NativeDeviceLayer layer = m_config.newDeviceLayer();
+		layer.setNativeDevice(nativeDevice);
+		return layer;
 	}
 
 	/**
@@ -2840,7 +2839,7 @@ public final class BleManager
 		m_taskQueue.add(task);
 	}
 
-	final void onDiscoveredFromNativeStack(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
+	final void onDiscoveredFromNativeStack(final P_NativeDeviceLayer device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
@@ -2908,7 +2907,7 @@ public final class BleManager
 		{
 			final boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 			final State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
-			scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(device_native, rawDeviceName, normalizedDeviceName, rssi, lastDisconnectIntent, scanRecord_nullable) : null;
+			scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(device_native.getNativeDevice(), rawDeviceName, normalizedDeviceName, rssi, lastDisconnectIntent, scanRecord_nullable) : null;
 	    	final String deviceName = rawDeviceName != null ? rawDeviceName : "";
 	    	please = m_filterMngr.allow(m_logger, scanEvent_nullable);
 
@@ -2938,7 +2937,7 @@ public final class BleManager
     	onDiscovered_wrapItUp(device_sweetblue, device_native, newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, scanEvent_nullable);
 	}
 
-	private BleDevice newDevice_private(final BluetoothDevice device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
+	private BleDevice newDevice_private(final P_NativeDeviceLayer device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
 	{
 		// TODO: for now always true...should these be behind a config option?
 		final boolean hitCache = true;
@@ -2974,10 +2973,10 @@ public final class BleManager
 			m_deviceMngr.add(device);
 		}
 
-		onDiscovered_wrapItUp(device, device.getNative(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
+		onDiscovered_wrapItUp(device, device.layerManager().getDeviceLayer(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
 	}
 
-    private void onDiscovered_wrapItUp(final BleDevice device, final BluetoothDevice device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
+    private void onDiscovered_wrapItUp(final BleDevice device, final P_NativeDeviceLayer device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
     {
     	if( newlyDiscovered )
     	{
