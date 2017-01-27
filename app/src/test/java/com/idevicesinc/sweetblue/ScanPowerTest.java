@@ -5,12 +5,15 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
 import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
-//@Config(manifest = Config.NONE, sdk = 24)
-//@RunWith(RobolectricTestRunner.class)
+@Config(manifest = Config.NONE, sdk = 24)
+@RunWith(RobolectricTestRunner.class)
 public class ScanPowerTest extends BaseBleUnitTest
 {
 
@@ -30,7 +33,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanPower() == BleScanPower.VERY_LOW_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.VERY_LOW_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -58,7 +61,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanPower() == BleScanPower.VERY_LOW_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.VERY_LOW_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -85,7 +88,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanPower() == BleScanPower.LOW_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -112,7 +115,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanPower() == BleScanPower.LOW_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -139,7 +142,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -166,7 +169,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -193,7 +196,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanPower() == BleScanPower.HIGH_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -220,7 +223,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanPower() == BleScanPower.HIGH_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -249,7 +252,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the foreground, and NOT running an infinite scan, so this should be High power here
-                            assertTrue(getScanPower() == BleScanPower.HIGH_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -279,7 +282,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the foreground, and NOT running an infinite scan, so this should be High power here
-                            assertTrue(getScanPower() == BleScanPower.HIGH_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -308,7 +311,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the foreground, and running an infinite scan, so this should be Medium power here
-                            assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -338,7 +341,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the foreground, and running an infinite scan, so this should be Medium power here
-                            assertTrue(getScanPower() == BleScanPower.MEDIUM_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -367,7 +370,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the background, so this should be low power here
-                            assertTrue(getScanPower() == BleScanPower.LOW_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             m_mgr.onResume();
                             semaphore.release();
@@ -398,7 +401,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
                             // We're in the background, so this should be low power here
-                            assertTrue(getScanPower() == BleScanPower.LOW_POWER);
+                            assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             m_mgr.onResume();
                             semaphore.release();

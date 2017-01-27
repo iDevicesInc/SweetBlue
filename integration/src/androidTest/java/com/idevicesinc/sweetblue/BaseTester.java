@@ -17,6 +17,7 @@ public abstract class BaseTester<T extends Activity>
 
     T activity;
     BleManager mgr;
+    BleManagerConfig mConfig;
 
 
     @Rule
@@ -29,7 +30,8 @@ public abstract class BaseTester<T extends Activity>
     public void setup()
     {
         activity = mRule.getActivity();
-        mgr = BleManager.get(activity, getConfig());
+        mConfig = getConfig();
+        mgr = BleManager.get(activity, mConfig);
         mgr.onResume();
         additionalSetup();
     }

@@ -103,7 +103,7 @@ class P_BluetoothCrashResolver {
      * @param context the Activity or Service that is doing the Bluetooth scanning
      */
     public P_BluetoothCrashResolver(Context context) {
-        this.context = context.getApplicationContext();
+        this.context = context/*.getApplicationContext()*/;
         if (isDebugEnabled()) Log.d(TAG, "constructed");
         loadState();
     }

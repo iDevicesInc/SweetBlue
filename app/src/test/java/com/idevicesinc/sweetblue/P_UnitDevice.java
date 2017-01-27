@@ -62,9 +62,9 @@ public class P_UnitDevice implements P_NativeDeviceLayer {
         return true;
     }
 
-    @Override public boolean equals(BluetoothDevice device)
+    @Override public boolean equals(P_NativeDeviceLayer device)
     {
-        return false;
+        return device == this;
     }
 
     @Override

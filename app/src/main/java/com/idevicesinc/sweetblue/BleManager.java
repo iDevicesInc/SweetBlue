@@ -813,9 +813,7 @@ public final class BleManager
 		{
 			m_config.nativeManagerLayer.resetManager(m_context);
 		}
-		BleManagerState nativeState;
-
-		nativeState = BleManagerState.get(m_config.nativeManagerLayer.getState());
+		BleManagerState nativeState = BleManagerState.get(m_config.nativeManagerLayer.getState());
 
 		if (m_timeTurnedOn == 0 && nativeState.overlaps(BluetoothAdapter.STATE_ON)) {
 			m_timeTurnedOn = System.currentTimeMillis();
@@ -894,6 +892,7 @@ public final class BleManager
 			{
 				m_config.scanPower = BleScanPower.fromBleScanMode(m_config.scanMode);
 			}
+			m_config.scanMode = null;
 		}
 
 		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.secs(m_config.uhOhCallbackThrottle));

@@ -43,16 +43,45 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
         }
         else
         {
-            if (!getManager().getScanManager().startScan(getIntent(), m_scanTime, m_isPoll))
+            boolean isClassicScan = getManager().m_config.scanApi == BleScanApi.CLASSIC || getManager().m_config.scanMode == BleScanMode.CLASSIC;
+            if (Interval.isEnabled(getManager().m_config.scanClassicBoostLength) && !isClassicScan)
             {
-                fail();
+                if (!getManager().getScanManager().classicBoost(getManager().m_config.scanClassicBoostLength.secs()))
+                {
+                    fail();
 
-                getManager().uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
+                    getManager().uhOh(BleManager.UhOhListener.UhOh.CLASSIC_DISCOVERY_FAILED);
+                }
             }
             else
             {
-                // Success for now
+                if (!getManager().getScanManager().startScan(getIntent(), m_scanTime, m_isPoll))
+                {
+                    fail();
+
+                    getManager().uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
+                }
+                else
+                {
+                    // Success for now
+                }
             }
+        }
+    }
+
+    boolean isClassicBoosted()
+    {
+        boolean isClassicScan = getManager().m_config.scanApi == BleScanApi.CLASSIC || getManager().m_config.scanMode == BleScanMode.CLASSIC;
+        return !isClassicScan && Interval.isEnabled(getManager().m_config.scanClassicBoostLength);
+    }
+
+    void onClassicBoostFinished()
+    {
+        if (!getManager().getScanManager().startScan(getIntent(), m_scanTime, m_isPoll))
+        {
+            fail();
+
+            getManager().uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
         }
     }
 

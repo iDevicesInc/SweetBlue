@@ -67,6 +67,11 @@ public class BleManagerConfig extends BleDeviceConfig
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
 
 	/**
+	 * Default value for {@link #scanClassicBoostLength}.
+	 */
+	public static final double DEFAULT_CLASSIC_SCAN_BOOST_TIME			= 0.5;
+
+	/**
 	 * Default value for {@link #scanReportDelay}.
 	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
@@ -136,6 +141,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * @see BleManager#onPause()
 	 */
 	public boolean stopScanOnPause							= true;
+
+
+	/**
+	 * Default is {@link #DEFAULT_CLASSIC_SCAN_BOOST_TIME} - This will run a short classic scan before a regular BLE scan. It has been observed that scans tend
+	 * to return more reliable results of multiple devices when a classic scan is performed first. Set this to <code>null</code>, or {@link Interval#DISABLED} to
+	 * disable this feature.
+	 */
+	public Interval scanClassicBoostLength						= Interval.secs(DEFAULT_CLASSIC_SCAN_BOOST_TIME);
 	
 	/**
 	 * Default is <code>false</code> - set this to allow or disallow autoscanning while any

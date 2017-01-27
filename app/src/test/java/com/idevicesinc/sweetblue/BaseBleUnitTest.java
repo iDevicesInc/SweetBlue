@@ -2,43 +2,19 @@ package com.idevicesinc.sweetblue;
 
 
 import android.app.Activity;
-import android.app.Application;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
-import android.content.ComponentCallbacks;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.res.Configuration;
-
-import com.idevicesinc.sweetblue.compat.L_Util;
-import com.idevicesinc.sweetblue.utils.Interval;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.mockito.Mockito.*;
-import java.lang.reflect.Method;
+import org.robolectric.Robolectric;
 import java.util.concurrent.Semaphore;
 
 
-@RunWith(MockitoJUnitRunner.class)
 public abstract class BaseBleUnitTest
 {
 
     public BleManager m_mgr;
     public BleManagerConfig m_config;
 
-
-    @Mock
-    ContextWrapper m_app;
-
-    @Mock
-    private Context mContext;
-
-
+    public Activity m_activity;
 
     public abstract P_NativeManagerLayer getManagerLayer();
 
@@ -46,9 +22,8 @@ public abstract class BaseBleUnitTest
     @Before
     public void setup() throws Exception
     {
-        m_app = new Application();
-        when(mContext.getApplicationContext()).thenReturn(m_app);
-        m_mgr = BleManager.get(mContext, getConfig());
+        m_activity = Robolectric.setupActivity(Activity.class);
+        m_mgr = BleManager.get(m_activity, getConfig());
         m_mgr.forceOn();
         m_mgr.onResume();
     }
@@ -57,7 +32,8 @@ public abstract class BaseBleUnitTest
     public void tearDown() throws Exception
     {
         m_mgr.shutdown();
-//        m_activity.finish();
+        m_activity.finish();
+        m_activity = null;
     }
 
     public void doTestOperation(final TestOp action) throws Exception
@@ -86,32 +62,12 @@ public abstract class BaseBleUnitTest
 
     public BleScanApi getScanApi()
     {
-        BleScanApi mode = BleScanApi.AUTO;
-        try
-        {
-            Method getMode = BleManagerState.SCANNING.getClass().getDeclaredMethod("getScanApi", (Class[]) null);
-            getMode.setAccessible(true);
-            mode = (BleScanApi) getMode.invoke(BleManagerState.SCANNING, (Object[]) null);
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return mode;
+        return m_mgr.getScanManager().getCurrentApi();
     }
 
     public BleScanPower getScanPower()
     {
-        BleScanPower power = BleScanPower.AUTO;
-        try
-        {
-            Method getPower = BleManagerState.SCANNING.getClass().getDeclaredMethod("getScanPower", (Class[]) null);
-            getPower.setAccessible(true);
-            power = (BleScanPower) getPower.invoke(BleManagerState.SCANNING, (Object[]) null);
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return power;
+        return m_mgr.getScanManager().getCurrentPower();
     }
 
     public interface TestOp

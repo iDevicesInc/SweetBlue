@@ -206,6 +206,14 @@ class P_BleManager_Listeners
 
 	private void onClassicDiscoveryFinished()
 	{
+		P_Task_Scan scanTask = m_mngr.getTaskQueue().getCurrent(P_Task_Scan.class, m_mngr);
+		if (scanTask != null)
+		{
+			if (scanTask.isClassicBoosted())
+			{
+				return;
+			}
+		}
 		m_mngr.getTaskQueue().interrupt(P_Task_Scan.class, m_mngr);
 	}
 	

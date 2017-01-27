@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity
     private Button mStopScan;
     private ScanAdaptor mAdaptor;
     private ArrayList<BleDevice> mDevices;
+
 
 //    private final static UUID tempUuid = UUID.fromString("47495078-0002-491E-B9A4-F85CD01C3698");
     private final static UUID tempUuid = UUID.fromString("1234666b-1000-2000-8000-001199334455");
@@ -108,16 +110,8 @@ public class MainActivity extends AppCompatActivity
 
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
-        config.scanApi = BleScanApi.POST_LOLLIPOP;
-        config.forceBondDialog = true;
+        config.scanApi = BleScanApi.PRE_LOLLIPOP;
         config.runOnMainThread = false;
-        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
-        {
-            @Override public Please onEvent(ScanEvent e)
-            {
-                return Please.acknowledgeIf(e.name_native().contains("Tag") || e.name_native().contains("Pavlok"));
-            }
-        };
 
         mgr = BleManager.get(this, config);
         mgr.setListener_State(new BleManager.StateListener()
@@ -150,6 +144,7 @@ public class MainActivity extends AppCompatActivity
                     {
                         mDevices.add(e.device());
                         mAdaptor.notifyDataSetChanged();
+
                     }
                 }
                 else if (e.was(BleManager.DiscoveryListener.LifeCycle.REDISCOVERED))
