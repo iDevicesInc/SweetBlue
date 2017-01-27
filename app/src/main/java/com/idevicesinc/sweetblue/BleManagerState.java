@@ -52,6 +52,14 @@ public enum BleManagerState implements State
 	 * @see BleManager#startScan()
 	 */
 	STARTING_SCAN,
+
+	/**
+	 * This is the state that {@link BleManager} is in when {@link BleManagerConfig#scanClassicBoostLength} is not <code>null</code>, or
+	 * {@link Interval#DISABLED}. No devices will be discovered when in this state, it's simply here to make the BLE scan give more
+	 * reliable results, especially when looking for many devices. If you explicitly start a Bluetooth Classic scan, the manager will
+	 * <b>not</b> enter this state.
+	 */
+	BOOST_SCANNING,
 	
 	/**
 	 * This is the state that {@link BleManager} is in when scanning actually starts.

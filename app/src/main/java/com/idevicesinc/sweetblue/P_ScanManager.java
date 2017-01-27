@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
+import static com.idevicesinc.sweetblue.BleManagerState.BOOST_SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING_PAUSED;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
@@ -36,7 +37,6 @@ final class P_ScanManager
     private boolean m_triedToStartScanAfterResume;
     private double m_timeNotScanning;
 
-    private boolean m_classicBoost = false;
     private double m_classicLength;
     private double m_timeClassicBoosting;
 
@@ -57,9 +57,9 @@ final class P_ScanManager
 
     public final boolean classicBoost(double scanTime)
     {
-        m_classicBoost = true;
         m_classicLength = scanTime;
-        return tryClassicDiscovery(PA_StateTracker.E_Intent.INTENTIONAL, true);
+//        return tryClassicDiscovery(PA_StateTracker.E_Intent.INTENTIONAL, true);
+        return startClassicBoost();
     }
 
     public final boolean startScan(PA_StateTracker.E_Intent intent, double scanTime, boolean m_isPoll)
@@ -88,7 +88,7 @@ final class P_ScanManager
                 {
                     m_manager.getLogger().e("Tried to start BLE scan, but scanning is not ready (most likely need to get permissions). Falling back to classic discovery.");
                     mCurrentApi.set(BleScanApi.CLASSIC);
-                    return startClassicDiscovery();
+                    return tryClassicDiscovery(intent, true);
                 }
             case AUTO:
             case PRE_LOLLIPOP:
@@ -102,6 +102,16 @@ final class P_ScanManager
     private boolean startClassicDiscovery()
     {
         return m_manager.managerLayer().startDiscovery();
+    }
+
+    private boolean startClassicBoost()
+    {
+        boolean success = startClassicDiscovery();
+        if (success)
+        {
+            m_manager.m_stateTracker.update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, STARTING_SCAN, false, BOOST_SCANNING, true);
+        }
+        return success;
     }
 
     private boolean isBleScanReady()
@@ -231,11 +241,11 @@ final class P_ScanManager
         }
         if (stopping)
         {
-            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false);
+            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, BOOST_SCANNING, false);
         }
         else
         {
-            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, SCANNING_PAUSED, true);
+            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, SCANNING_PAUSED, true, BOOST_SCANNING, false);
         }
     }
 
@@ -313,10 +323,15 @@ final class P_ScanManager
 
             m_mode = Mode_BLE;
 
-            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
+            setStateToScanning();
 
             return true;
         }
+    }
+
+    private void setStateToScanning()
+    {
+        m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false, BOOST_SCANNING, false);
     }
 
     private boolean startScanPostLollipop(double scanTime, boolean m_isPoll)
@@ -366,7 +381,7 @@ final class P_ScanManager
         }
         m_mode = Mode_BLE_POST_LOLLIPOP;
         mCurrentPower.set(power);
-        m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
+        setStateToScanning();
         return true;
     }
 
@@ -392,7 +407,7 @@ final class P_ScanManager
                 }
 
                 m_mode = Mode_CLASSIC;
-                m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleManagerState.SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false);
+                setStateToScanning();
 
                 return true;
             }
@@ -422,7 +437,7 @@ final class P_ScanManager
 
         boolean stopClassicBoost = false;
 
-        if (m_classicBoost && m_manager.is(SCANNING))
+        if (m_manager.is(BOOST_SCANNING))
         {
             m_timeClassicBoosting += timeStep;
             if (m_timeClassicBoosting >= m_classicLength)
@@ -433,7 +448,7 @@ final class P_ScanManager
 
         boolean startScan = false;
 
-        if( Interval.isEnabled(m_manager.m_config.autoScanActiveTime) && m_manager.ready() && !m_classicBoost)
+        if( Interval.isEnabled(m_manager.m_config.autoScanActiveTime) && m_manager.ready() && !m_manager.is(BOOST_SCANNING))
         {
             if( m_manager.isForegrounded() )
             {
@@ -482,7 +497,6 @@ final class P_ScanManager
 
             if (stopClassicBoost)
             {
-                m_classicBoost = false;
                 m_timeClassicBoosting = 0;
                 stopClassicDiscovery();
                 scanTask.onClassicBoostFinished();

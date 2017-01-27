@@ -830,6 +830,8 @@ public final class BleManager
 		m_deviceMngr_cache = new P_DeviceManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
 
+		m_lastTaskExecution = System.currentTimeMillis();
+
 		initConfigDependentMembers();
 
 		m_logger.printBuildInfo();
@@ -2087,6 +2089,7 @@ public final class BleManager
 	 */
 	public final void shutdown()
 	{
+		m_updateRunnable.m_shutdown = true;
 		m_postManager.removeUpdateCallbacks(m_updateRunnable);
 		m_postManager.quit();
 		m_wakeLockMngr.clear();
@@ -3226,6 +3229,7 @@ public final class BleManager
 
 		private long m_lastAutoUpdateTime = 0;
 		private long m_autoUpdateRate = -1;
+		private boolean m_shutdown = false;
 
 
 		public UpdateRunnable(long updateRate)
@@ -3259,7 +3263,10 @@ public final class BleManager
 
 			m_lastAutoUpdateTime = currentTime;
 
-			m_postManager.postToUpdateThreadDelayed(this, m_autoUpdateRate);
+			if (!m_shutdown)
+			{
+				m_postManager.postToUpdateThreadDelayed(this, m_autoUpdateRate);
+			}
 		}
 	}
 }
