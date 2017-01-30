@@ -407,7 +407,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public PI_UpdateLoop.Callback updateLoopCallback			= null;
 
-	P_GattLayer newGattLayer()
+	P_GattLayer newGattLayer(BleDevice device)
 	{
 		if (gattLayerFactory == null)
 		{
@@ -415,7 +415,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		try
 		{
-			return gattLayerFactory.newInstance();
+			return gattLayerFactory.newInstance(device);
 		}
 		catch (Exception e)
 		{
@@ -428,7 +428,7 @@ public class BleManagerConfig extends BleDeviceConfig
 
 	P_GattLayerFactory gattLayerFactory					= new P_AndroidGattLayerFactory();
 
-	P_NativeDeviceLayer newDeviceLayer()
+	P_NativeDeviceLayer newDeviceLayer(BleDevice device)
 	{
 		if (nativeDeviceFactory == null)
 		{
@@ -436,7 +436,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 		try
 		{
-			return nativeDeviceFactory.newInstance();
+			return nativeDeviceFactory.newInstance(device);
 		}
 		catch (Exception e)
 		{
@@ -487,17 +487,17 @@ public class BleManagerConfig extends BleDeviceConfig
 
 	public static final class P_AndroidDeviceLayerFactory implements P_NativeDeviceLayerFactory<P_AndroidBleDevice>
 	{
-		@Override public P_AndroidBleDevice newInstance()
+		@Override public P_AndroidBleDevice newInstance(BleDevice device)
 		{
-			return new P_AndroidBleDevice();
+			return new P_AndroidBleDevice(device);
 		}
 	}
 
 	public static final class P_AndroidGattLayerFactory implements P_GattLayerFactory<P_AndroidGatt>
 	{
-		@Override public P_AndroidGatt newInstance()
+		@Override public P_AndroidGatt newInstance(BleDevice device)
 		{
-			return new P_AndroidGatt();
+			return new P_AndroidGatt(device);
 		}
 	}
 

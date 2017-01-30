@@ -197,7 +197,7 @@ class P_BleManager_Listeners
 			final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 			final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
 
-			final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer();
+			final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer(BleDevice.NULL);
 			layer.setNativeDevice(device_native);
 
 			m_mngr.onDiscoveredFromNativeStack(layer, rssi, null);

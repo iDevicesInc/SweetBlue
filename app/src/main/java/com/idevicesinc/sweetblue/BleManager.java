@@ -2709,7 +2709,7 @@ public final class BleManager
 	final P_NativeDeviceLayer newNativeDevice(final String macAddress)
 	{
 		BluetoothDevice nativeDevice = managerLayer().getRemoteDevice(macAddress);
-		P_NativeDeviceLayer layer = m_config.newDeviceLayer();
+		P_NativeDeviceLayer layer = m_config.newDeviceLayer(BleDevice.NULL);
 		layer.setNativeDevice(nativeDevice);
 		return layer;
 	}

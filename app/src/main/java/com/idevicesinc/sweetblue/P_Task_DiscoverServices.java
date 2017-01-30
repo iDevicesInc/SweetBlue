@@ -66,6 +66,11 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 	public void onNativeFail(int gattStatus)
 	{
 		m_gattStatus = gattStatus;
+
+//		if (getDevice().is(BleDeviceState.CONNECTED))
+//		{
+//			getDevice().disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, BleDevice.ReadWriteListener.ReadWriteEvent.NULL(getDevice()));
+//		}
 		
 		this.fail();
 	}

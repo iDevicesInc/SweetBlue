@@ -26,14 +26,6 @@ android {
             minifyEnabled false
         }
     }
-
-    testOptions {
-        unitTests {
-            all {
-                jvmArgs '-noverify'
-            }
-        }
-    }
 }
 
 // Set base variables

@@ -10,10 +10,18 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.Random;
 
 
-public class P_UnitDevice implements P_NativeDeviceLayer {
+public class P_UnitDevice implements P_NativeDeviceLayer
+{
 
 
     private String m_address;
+    private BleDevice m_device;
+
+
+    public P_UnitDevice(BleDevice device)
+    {
+        m_device = device;
+    }
 
 
     @Override
@@ -22,7 +30,7 @@ public class P_UnitDevice implements P_NativeDeviceLayer {
 
     @Override
     public int getBondState() {
-        return 0;
+        return BluetoothDevice.BOND_NONE;
     }
 
     @Override
@@ -80,5 +88,15 @@ public class P_UnitDevice implements P_NativeDeviceLayer {
     @Override
     public BluetoothGatt connect(Context context, boolean useAutoConnect, BluetoothGattCallback callback) {
         return null;
+    }
+
+    @Override public void updateBleDevice(BleDevice device)
+    {
+        m_device = device;
+    }
+
+    @Override public BleDevice getBleDevice()
+    {
+        return m_device;
     }
 }

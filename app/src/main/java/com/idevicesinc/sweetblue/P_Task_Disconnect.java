@@ -80,15 +80,15 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 			return;
 		}
 		
-		if( m_explicit )
-		{
+//		if( m_explicit )
+//		{
 			getDevice().layerManager().disconnect();
-		}
-		else
-		{
-			// DRK > nothing to do...wait for implicit disconnect task to complete...note we're probably
-			// never going to get here cause I've never observed STATE_DISCONNECTING.
-		}
+//		}
+//		else
+//		{
+//			// DRK > nothing to do...wait for implicit disconnect task to complete...note we're probably
+//			// never going to get here cause I've never observed STATE_DISCONNECTING.
+//		}
 	}
 	
 	public int getGattStatus()

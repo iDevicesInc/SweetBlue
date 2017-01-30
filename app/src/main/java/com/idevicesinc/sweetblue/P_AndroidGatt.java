@@ -30,6 +30,19 @@ class P_AndroidGatt implements P_GattLayer
 
     private BluetoothGatt m_gatt;
 
+    private final BleDevice m_device;
+
+
+    P_AndroidGatt(BleDevice device)
+    {
+        m_device = device;
+    }
+
+
+    @Override public BleDevice getBleDevice()
+    {
+        return m_device;
+    }
 
     @Override
     public void setGatt(BluetoothGatt gatt) {

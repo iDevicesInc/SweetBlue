@@ -192,7 +192,7 @@ class P_NativeServerWrapper
 		{
 //			final int nativeState = m_native.getConnectionState(device);
 
-			final P_NativeDeviceLayer layer = m_server.getManager().m_config.newDeviceLayer();
+			final P_NativeDeviceLayer layer = m_server.getManager().m_config.newDeviceLayer(BleDevice.NULL);
 			layer.setNativeDevice(device);
 			final int nativeState = m_server.getManager().managerLayer().getConnectionState( layer, BluetoothGatt.GATT );
 

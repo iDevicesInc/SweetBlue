@@ -13,6 +13,8 @@ import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -22,11 +24,13 @@ public class P_UnitTestManagerLayer implements P_NativeManagerLayer
 
     private int m_nativeState = BleStatuses.STATE_ON;
     private String m_address;
+    private Map<String, Integer> deviceStates = new HashMap<>();
 
 
     @Override public int getConnectionState(P_NativeDeviceLayer device, int profile)
     {
-        return 0;
+        Integer state = deviceStates.get(device.getAddress());
+        return state == null ? 0 : state;
     }
 
     @Override public boolean startDiscovery()
@@ -42,6 +46,11 @@ public class P_UnitTestManagerLayer implements P_NativeManagerLayer
     @Override public boolean isManagerNull()
     {
         return false;
+    }
+
+    public void updateDeviceState(BleDevice device, int state)
+    {
+        deviceStates.put(device.getMacAddress(), state);
     }
 
     @Override public boolean disable()
@@ -74,9 +83,7 @@ public class P_UnitTestManagerLayer implements P_NativeManagerLayer
     {
         if (TextUtils.isEmpty(m_address))
         {
-            byte[] add = new byte[6];
-            new Random().nextBytes(add);
-            m_address = Utils_String.bytesToMacAddress(add);
+            m_address = P_UnitUtils.randomMacAddress();
         }
         return m_address;
     }

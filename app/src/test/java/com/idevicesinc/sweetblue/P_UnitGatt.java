@@ -8,6 +8,9 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+
+import org.bouncycastle.jce.provider.JCEMac;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +19,13 @@ public class P_UnitGatt implements P_GattLayer {
 
 
     private boolean m_gattIsNull = true;
+    private final BleDevice m_device;
+
+
+    public P_UnitGatt(BleDevice device)
+    {
+        m_device = device;
+    }
 
 
     @Override
@@ -61,12 +71,51 @@ public class P_UnitGatt implements P_GattLayer {
     @Override
     public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback) {
         m_gattIsNull = false;
+        ((P_UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTING);
+        m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override public void run()
+            {
+                setToConnecting();
+            }
+        }, 50);
+        m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override public void run()
+            {
+                setToConnected();
+            }
+        }, 150);
         return device.connect(context, useAutoConnect, callback);
+    }
+
+    public void setToConnecting()
+    {
+        m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_CONNECTING);
+    }
+
+    public void setToConnected()
+    {
+        ((P_UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTED);
+        m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_CONNECTED);
     }
 
     @Override
     public void disconnect() {
         m_gattIsNull = true;
+        preDisconnect();
+    }
+
+    private void preDisconnect()
+    {
+        m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override public void run()
+            {
+                ((P_UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_DISCONNECTED);
+                m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
+            }
+        }, 50);
     }
 
     @Override
@@ -121,7 +170,19 @@ public class P_UnitGatt implements P_GattLayer {
 
     @Override
     public boolean discoverServices() {
+        m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override public void run()
+            {
+                setServicesDiscovered();
+            }
+        }, 250);
         return true;
+    }
+
+    public void setServicesDiscovered()
+    {
+        m_device.m_listeners.onServicesDiscovered(null, BleStatuses.GATT_SUCCESS);
     }
 
     @Override
@@ -142,5 +203,10 @@ public class P_UnitGatt implements P_GattLayer {
     @Override
     public boolean readRemoteRssi() {
         return true;
+    }
+
+    @Override public BleDevice getBleDevice()
+    {
+        return m_device;
     }
 }

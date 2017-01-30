@@ -2095,6 +2095,7 @@ public class BleDevice extends BleNode
         }
         else
         {
+            m_deviceLayer.updateBleDevice(this);
             m_rssiPollMngr = new P_RssiPollManager(this);
             m_rssiPollMngr_auto = new P_RssiPollManager(this);
             setConfig(config_nullable);
@@ -2225,7 +2226,7 @@ public class BleDevice extends BleNode
 
         if (m_layerManager == null)
         {
-            m_layerManager = new P_BleDeviceLayerManager(this, conf_mngr().newGattLayer(), m_deviceLayer, conf_mngr().nativeManagerLayer);
+            m_layerManager = new P_BleDeviceLayerManager(this, conf_mngr().newGattLayer(this), m_deviceLayer, conf_mngr().nativeManagerLayer);
         }
 
         initEstimators();
@@ -6077,7 +6078,7 @@ public class BleDevice extends BleNode
 
                         if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
                         {
-                            final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
+                            final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/explicit, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
                             queue().add(disconnectTask);
 
                             taskOrdinal = disconnectTask.getOrdinal();
@@ -6294,13 +6295,21 @@ public class BleDevice extends BleNode
 
         if (!isConnectingOverall_1 && !m_reconnectMngr_shortTerm.isRunning())
         {
-            if (connectionFailReason_nullable != null/* && !m_connectionFailMngr.sentDisconnectFail()*/)
+            if (connectionFailReason_nullable != null && wasExplicit)
             {
                 retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
             }
             else
             {
-                retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+                if (m_connectionFailMngr.hasPendingConnectionFailEvent())
+                {
+                    retrying__PE_Please = m_connectionFailMngr.getPendingConnectionFailRetry();
+                    m_connectionFailMngr.clearPendingRetry();
+                }
+                else
+                {
+                    retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+                }
             }
         }
         else
@@ -6338,6 +6347,11 @@ public class BleDevice extends BleNode
         if (!isConnectingOverall_2 && retrying__PE_Please == ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
         {
             queue().clearQueueOf(P_Task_Connect.class, this, -1);
+        }
+
+        if (!wasExplicit && !wasInitialized && retrying__PE_Please != ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
+        {
+            attemptReconnect();
         }
     }
 

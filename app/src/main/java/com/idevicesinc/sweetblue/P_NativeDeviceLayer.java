@@ -21,6 +21,8 @@ interface P_NativeDeviceLayer {
     boolean createBondSneaky(String methodName, boolean loggingEnabled);
     BluetoothDevice getNativeDevice();
     BluetoothGatt connect(Context context, boolean useAutoConnect, BluetoothGattCallback callback);
+    void updateBleDevice(BleDevice device);
+    BleDevice getBleDevice();
 
     P_NativeDeviceLayer NULL = new P_NativeDeviceLayer()
     {
@@ -81,6 +83,15 @@ interface P_NativeDeviceLayer {
         @Override public BluetoothGatt connect(Context context, boolean useAutoConnect, BluetoothGattCallback callback)
         {
             return null;
+        }
+
+        @Override public void updateBleDevice(BleDevice device)
+        {
+        }
+
+        @Override public BleDevice getBleDevice()
+        {
+            return BleDevice.NULL;
         }
     };
 

@@ -185,7 +185,7 @@ final class P_ScanManager
             @Override public void run()
             {
 
-                final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer();
+                final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
                 layer.setNativeDevice(device);
 
                 m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
@@ -203,7 +203,7 @@ final class P_ScanManager
             {
                 for (L_Util.ScanResult res : devices)
                 {
-                    P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer();
+                    P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
                     layer.setNativeDevice(res.getDevice());
                     m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
 

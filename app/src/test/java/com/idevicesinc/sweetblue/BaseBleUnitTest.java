@@ -56,6 +56,7 @@ public abstract class BaseBleUnitTest
         m_config = new BleManagerConfig();
         m_config.unitTest = true;
         m_config.nativeManagerLayer = getManagerLayer();
+        m_config.logger = new P_UnitLogger();
         return m_config;
     }
 

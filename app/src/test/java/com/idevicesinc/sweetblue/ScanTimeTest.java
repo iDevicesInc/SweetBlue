@@ -31,7 +31,7 @@ public class ScanTimeTest extends BaseBleUnitTest
         doSingleScanTest(2000);
     }
 
-    @Test(timeout = 700000)
+    @Test(timeout = 7000)
     public void periodicScanTest() throws Exception
     {
         doPeriodicScanTest(1000);

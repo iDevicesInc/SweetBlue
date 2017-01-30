@@ -40,5 +40,6 @@ interface P_GattLayer
     boolean beginReliableWrite();
     void abortReliableWrite(BluetoothDevice device);
     boolean readRemoteRssi();
+    BleDevice getBleDevice();
 
 }

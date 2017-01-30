@@ -30,7 +30,7 @@ class P_NativeDeviceWrapper
 	{
 		m_device = device;
 		m_device_native = nativeLayer;
-		m_address = m_device_native.getNativeDevice() == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
+		m_address = m_device_native.getAddress() == null || m_device.isNull() ? BleDevice.NULL_MAC() : m_device_native.getAddress();
 
 		m_nativeConnectionState = new AtomicInteger(-1);
 
