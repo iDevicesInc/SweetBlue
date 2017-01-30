@@ -7,12 +7,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
 import java.util.concurrent.Semaphore;
 
 
-@Config(manifest = Config.NONE, sdk = 21)
+@Config(manifest = Config.NONE, sdk = 24)
 @RunWith(RobolectricTestRunner.class)
-public class ScanApiTest extends BaseBleTest
+public class ScanApiTest extends BaseBleUnitTest
 {
 
     @Test
@@ -30,7 +31,7 @@ public class ScanApiTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanApi() == BleScanApi.CLASSIC);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.CLASSIC);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -57,7 +58,7 @@ public class ScanApiTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanApi() == BleScanApi.CLASSIC);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.CLASSIC);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -83,7 +84,7 @@ public class ScanApiTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanApi() == BleScanApi.PRE_LOLLIPOP);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -110,7 +111,7 @@ public class ScanApiTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanApi() == BleScanApi.PRE_LOLLIPOP);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -136,7 +137,7 @@ public class ScanApiTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanApi() == BleScanApi.POST_LOLLIPOP);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.POST_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -163,7 +164,7 @@ public class ScanApiTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanApi() == BleScanApi.POST_LOLLIPOP);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.POST_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -189,7 +190,7 @@ public class ScanApiTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanApi() == BleScanApi.PRE_LOLLIPOP);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -216,7 +217,7 @@ public class ScanApiTest extends BaseBleTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue(getScanApi() == BleScanApi.PRE_LOLLIPOP);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
                             semaphore.release();
                         }
@@ -227,13 +228,9 @@ public class ScanApiTest extends BaseBleTest
         });
     }
 
-    @Override public PI_BleScanner getScanner()
+    @Override public P_NativeManagerLayer getManagerLayer()
     {
-        return new DefaultBleScannerTest();
+        return new P_UnitTestManagerLayer();
     }
 
-    @Override public PI_BleStatusHelper getStatusHelper()
-    {
-        return new DefaultStatusHelperTest();
-    }
 }

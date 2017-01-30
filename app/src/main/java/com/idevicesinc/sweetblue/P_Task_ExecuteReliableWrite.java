@@ -43,7 +43,7 @@ class P_Task_ExecuteReliableWrite extends PA_Task_RequiresConnection implements 
 
 	@Override void execute()
 	{
-		if( false == getDevice().gattLayer().executeReliableWrite() )
+		if( false == getDevice().layerManager().executeReliableWrite() )
 		{
 			fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}

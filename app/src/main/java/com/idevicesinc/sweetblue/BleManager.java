@@ -680,71 +680,6 @@ public final class BleManager
 		void onEvent(final AssertEvent e);
 	}
 
-	private class DefaultBleStatusHelper implements PI_BleStatusHelper {
-
-		@Override public boolean isLocationEnabledForScanning_byOsServices()
-		{
-			return Utils.isLocationEnabledForScanning_byOsServices(getApplicationContext());
-		}
-
-		@Override public boolean isLocationEnabledForScanning_byRuntimePermissions()
-		{
-			return Utils.isLocationEnabledForScanning_byRuntimePermissions(getApplicationContext());
-		}
-
-		@Override public boolean isLocationEnabledForScanning()
-		{
-			return Utils.isLocationEnabledForScanning(getApplicationContext());
-		}
-
-		@Override public boolean isBluetoothEnabled()
-		{
-			return BleManager.this.is(ON);
-		}
-
-	}
-
-	private class DefaultBleScanner implements PI_BleScanner
-	{
-
-		@Override public boolean startClassicDiscovery()
-		{
-			return getNativeAdapter().startDiscovery();
-		}
-
-		@Override public void stopClassicDiscovery()
-		{
-			getNativeAdapter().cancelDiscovery();
-		}
-
-		@Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
-		{
-			L_Util.startNativeScan(BleManager.this, scanMode, delay, callback);
-		}
-
-		@Override public void startMScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
-		{
-			M_Util.startNativeScan(BleManager.this, scanMode, delay, callback);
-		}
-
-		@Override public boolean startLeScan(BluetoothAdapter.LeScanCallback callback)
-		{
-			return getNativeAdapter().startLeScan(callback);
-		}
-
-		@Override public void stopLeScan(BluetoothAdapter.LeScanCallback callback)
-		{
-			if (m_config.scanApi == BleScanApi.POST_LOLLIPOP)
-			{
-				L_Util.stopNativeScan(BleManager.this);
-			}
-			else
-			{
-				getNativeAdapter().stopLeScan(callback);
-			}
-		}
-	}
-
 
 	/**
 	 * Create the singleton instance or retrieve the already-created singleton instance with default configuration options set.
@@ -802,9 +737,7 @@ public final class BleManager
 	}
 
 	private final Context m_context;
-	private P_SweetBlueHandlerThread m_updateThread;
 	private UpdateRunnable m_updateRunnable;
-	private final BluetoothManager m_btMngr;
 	private final P_ScanFilterManager m_filterMngr;
 	final P_BluetoothCrashResolver m_crashResolver;
 	private			P_Logger m_logger;
@@ -834,6 +767,7 @@ public final class BleManager
 	private double m_timeForegrounded = 0.0;
 	private long m_timeTurnedOn = 0;
 	private long m_lastTaskExecution;
+	private long m_currentTick;
 	private boolean m_doingInfiniteScan = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
@@ -865,27 +799,21 @@ public final class BleManager
 	{
 		m_context = context.getApplicationContext();
 
+		m_currentTick = System.currentTimeMillis();
+
 		addLifecycleCallbacks();
 
 		m_config = config.clone();
 		m_scanManager = new P_ScanManager(this);
-		checkUnitTestConfigOptions();
 		initLogger(null);
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
 		m_filterMngr = new P_ScanFilterManager(this, m_config.defaultScanFilter);
-		m_btMngr = (BluetoothManager) m_context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
-        // Account for unit testing. When using robolectric, the bluetooth manager comes back null. However, it includes
-        // shadow classes to simulate Bluetooth devices, so we shouldn't need the manager to run tests.
-        BleManagerState nativeState;
-		if( m_btMngr == null )
+		if (m_config.nativeManagerLayer.isManagerNull())
 		{
-			nativeState = BleManagerState.get(BluetoothAdapter.STATE_ON);
+			m_config.nativeManagerLayer.resetManager(m_context);
 		}
-		else
-		{
-			nativeState = BleManagerState.get(m_btMngr.getAdapter().getState());
-		}
+		BleManagerState nativeState = BleManagerState.get(m_config.nativeManagerLayer.getState());
 
 		if (m_timeTurnedOn == 0 && nativeState.overlaps(BluetoothAdapter.STATE_ON)) {
 			m_timeTurnedOn = System.currentTimeMillis();
@@ -902,22 +830,11 @@ public final class BleManager
 		m_deviceMngr_cache = new P_DeviceManager(this);
 		m_listeners = new P_BleManager_Listeners(this);
 
+		m_lastTaskExecution = System.currentTimeMillis();
+
 		initConfigDependentMembers();
 
 		m_logger.printBuildInfo();
-	}
-
-	private void checkUnitTestConfigOptions()
-	{
-		if (m_config.bleStatusHelper == null)
-		{
-			m_config.bleStatusHelper = new DefaultBleStatusHelper();
-		}
-		if (m_config.bleScanner == null)
-		{
-			m_config.bleScanner = new DefaultBleScanner();
-		}
-		m_scanManager.setBleScanner(m_config.bleScanner);
 	}
 
 	/**
@@ -927,7 +844,6 @@ public final class BleManager
 	public final void setConfig(@Nullable(Prevalence.RARE) BleManagerConfig config_nullable)
 	{
 		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
-		checkUnitTestConfigOptions();
 		this.initLogger(this);
 		this.initConfigDependentMembers();
 	}
@@ -939,7 +855,18 @@ public final class BleManager
 
 	private void initConfigDependentMembers()
 	{
+		m_listeners.updatePollRate(m_config.defaultStatePollRate);
+
 		m_filterMngr.updateFilter(m_config.defaultScanFilter);
+
+		if (m_config.nativeManagerLayer instanceof P_AndroidBluetoothManager)
+		{
+			((P_AndroidBluetoothManager) m_config.nativeManagerLayer).setBleManager(this);
+		}
+		if (m_config.nativeManagerLayer.isManagerNull())
+		{
+			m_config.nativeManagerLayer.resetManager(m_context);
+		}
 
 		boolean startUpdate = true;
 
@@ -967,6 +894,7 @@ public final class BleManager
 			{
 				m_config.scanPower = BleScanPower.fromBleScanMode(m_config.scanMode);
 			}
+			m_config.scanMode = null;
 		}
 
 		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.secs(m_config.uhOhCallbackThrottle));
@@ -1127,7 +1055,7 @@ public final class BleManager
 	{
 		if( isAdvertisingSupportedByAndroidVersion() )
 		{
-			return L_Util.isAdvertisingSupportedByChipset(this);
+			return managerLayer().isMultipleAdvertisementSupported();
 		}
 		else
 		{
@@ -1158,7 +1086,7 @@ public final class BleManager
 	@Advanced
 	public final BluetoothManager getNative()
 	{
-		return m_btMngr;
+		return managerLayer().getNativeManager();
 	}
 
 	/**
@@ -1167,7 +1095,12 @@ public final class BleManager
 	@Advanced
 	public final BluetoothAdapter getNativeAdapter()
 	{
-		return getNative().getAdapter();
+		return managerLayer().getNativeAdaptor();
+	}
+
+	final P_NativeManagerLayer managerLayer()
+	{
+		return m_config.nativeManagerLayer;
 	}
 
 	/**
@@ -1800,6 +1733,16 @@ public final class BleManager
 		}
 	}
 
+	final void forceOn()
+	{
+		m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ON, true, OFF, false);
+	}
+
+	final void forceOff()
+	{
+		m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ON, false, OFF, true);
+	}
+
 	/**
 	 * This is essentially a big red reset button for the Bluetooth stack. Use it ruthlessly
 	 * when the stack seems to be acting up, like when you can't connect to a device that you should be
@@ -2034,7 +1977,7 @@ public final class BleManager
 	 */
 	public final boolean isLocationEnabledForScanning()
 	{
-		return m_config.bleStatusHelper.isLocationEnabledForScanning();
+		return managerLayer().isLocationEnabledForScanning();
 	}
 
 	/**
@@ -2063,7 +2006,7 @@ public final class BleManager
 	 */
 	public final boolean isLocationEnabledForScanning_byRuntimePermissions()
 	{
-		return m_config.bleStatusHelper.isLocationEnabledForScanning_byRuntimePermissions();
+		return managerLayer().isLocationEnabledForScanning_byRuntimePermissions();
 	}
 
 	/**
@@ -2082,7 +2025,7 @@ public final class BleManager
 	 */
 	public final boolean isLocationEnabledForScanning_byOsServices()
 	{
-		return m_config.bleStatusHelper.isLocationEnabledForScanning_byOsServices();
+		return managerLayer().isLocationEnabledForScanning_byOsServices();
 	}
 
 	/**
@@ -2146,11 +2089,9 @@ public final class BleManager
 	 */
 	public final void shutdown()
 	{
+		m_updateRunnable.m_shutdown = true;
 		m_postManager.removeUpdateCallbacks(m_updateRunnable);
-		if (m_updateThread != null && m_updateThread.isAlive())
-		{
-			m_updateThread.quit();
-		}
+		m_postManager.quit();
 		m_wakeLockMngr.clear();
 		m_listeners.onDestroy();
 		s_instance = null;
@@ -2384,7 +2325,7 @@ public final class BleManager
      */
 	public final Set<BleDevice> getDevices_bonded()
 	{
-		Set<BluetoothDevice> native_bonded_devices = getNativeAdapter().getBondedDevices();
+		Set<BluetoothDevice> native_bonded_devices = managerLayer().getBondedDevices();
 		Set<BleDevice> bonded_devices = new HashSet<>(native_bonded_devices.size());
 		BleDevice device;
 		for (BluetoothDevice d : native_bonded_devices)
@@ -2744,7 +2685,7 @@ public final class BleManager
 			return existingDevice;
 		}
 
-		final BluetoothDevice device_native = newNativeDevice(macAddress_normalized);
+		final P_NativeDeviceLayer device_native = newNativeDevice(macAddress_normalized);
 
 		if( device_native == null ) //--- DRK > API says this should never happen...not trusting it!
 		{
@@ -2765,9 +2706,12 @@ public final class BleManager
 		return newDevice;
 	}
 
-	final BluetoothDevice newNativeDevice(final String macAddress)
+	final P_NativeDeviceLayer newNativeDevice(final String macAddress)
 	{
-		return getNative().getAdapter().getRemoteDevice(macAddress);
+		BluetoothDevice nativeDevice = managerLayer().getRemoteDevice(macAddress);
+		P_NativeDeviceLayer layer = m_config.newDeviceLayer(BleDevice.NULL);
+		layer.setNativeDevice(nativeDevice);
+		return layer;
 	}
 
 	/**
@@ -2851,7 +2795,7 @@ public final class BleManager
 	final P_Logger					getLogger(){					return m_logger;										}
 	final long 						timeTurnedOn(){					return m_timeTurnedOn;									}
 	final double 					timeForegrounded(){				return m_timeForegrounded;								}
-	final boolean 					isBluetoothEnabled(){			return m_config.bleStatusHelper.isBluetoothEnabled();	}
+	final boolean 					isBluetoothEnabled(){			return managerLayer().isBluetoothEnabled();				}
 	final P_ScanManager 			getScanManager(){				return m_scanManager;									}
 	final long 						getUpdateRate(){				return m_updateRunnable.getUpdateRate();				}
 	final P_PostManager 			getPostManager(){				return m_postManager;									}
@@ -2897,7 +2841,7 @@ public final class BleManager
 		m_taskQueue.add(task);
 	}
 
-	final void onDiscoveredFromNativeStack(final BluetoothDevice device_native, final int rssi, final byte[] scanRecord_nullable)
+	final void onDiscoveredFromNativeStack(final P_NativeDeviceLayer device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
@@ -2946,7 +2890,7 @@ public final class BleManager
     	}
     	else
     	{
-    		if( device_sweetblue.getNative().equals(device_native) )
+    		if( device_sweetblue.layerManager().getDeviceLayer().equals(device_native) )
     		{
 //    			m_logger.i("Discovered device " + loggedDeviceName + " " + macAddress + " already in list.");
     		}
@@ -2965,7 +2909,7 @@ public final class BleManager
 		{
 			final boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 			final State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
-			scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(device_native, rawDeviceName, normalizedDeviceName, rssi, lastDisconnectIntent, scanRecord_nullable) : null;
+			scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(device_native.getNativeDevice(), rawDeviceName, normalizedDeviceName, rssi, lastDisconnectIntent, scanRecord_nullable) : null;
 	    	final String deviceName = rawDeviceName != null ? rawDeviceName : "";
 	    	please = m_filterMngr.allow(m_logger, scanEvent_nullable);
 
@@ -2995,7 +2939,7 @@ public final class BleManager
     	onDiscovered_wrapItUp(device_sweetblue, device_native, newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, scanEvent_nullable);
 	}
 
-	private BleDevice newDevice_private(final BluetoothDevice device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
+	private BleDevice newDevice_private(final P_NativeDeviceLayer device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
 	{
 		// TODO: for now always true...should these be behind a config option?
 		final boolean hitCache = true;
@@ -3031,10 +2975,10 @@ public final class BleManager
 			m_deviceMngr.add(device);
 		}
 
-		onDiscovered_wrapItUp(device, device.getNative(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
+		onDiscovered_wrapItUp(device, device.layerManager().getDeviceLayer(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
 	}
 
-    private void onDiscovered_wrapItUp(final BleDevice device, final BluetoothDevice device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
+    private void onDiscovered_wrapItUp(final BleDevice device, final P_NativeDeviceLayer device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
     {
     	if( newlyDiscovered )
     	{
@@ -3125,7 +3069,9 @@ public final class BleManager
 	@Advanced
 	public final void update(final double timeStep_seconds, final long currentTime)
 	{
-		m_listeners.update();
+		m_currentTick = currentTime;
+
+		m_listeners.update(timeStep_seconds);
 
 		m_uhOhThrottler.update(timeStep_seconds);
 
@@ -3151,7 +3097,7 @@ public final class BleManager
 			m_timeTurnedOn = currentTime;
 		}
 
-		if( m_scanManager.update(timeStep_seconds) == false )
+		if( m_scanManager.update(timeStep_seconds, currentTime) == false )
 		{
 			if (Interval.isEnabled(m_config.minTimeToIdle))
 			{
@@ -3168,6 +3114,11 @@ public final class BleManager
 		{
 			m_config.updateLoopCallback.onUpdate(timeStep_seconds);
 		}
+
+		if (m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick))
+		{
+			getLogger().w("BleManager", String.format("Update loop took longer to run than the current interval of %dms", m_config.autoUpdateRate.millis()));
+		}
 	}
 
 	/**
@@ -3177,6 +3128,11 @@ public final class BleManager
 	public final boolean isForegrounded()
 	{
 		return m_isForegrounded;
+	}
+
+	final long currentTime()
+	{
+		return m_currentTick;
 	}
 
 	final boolean doAutoScan()
@@ -3273,6 +3229,7 @@ public final class BleManager
 
 		private long m_lastAutoUpdateTime = 0;
 		private long m_autoUpdateRate = -1;
+		private boolean m_shutdown = false;
 
 
 		public UpdateRunnable(long updateRate)
@@ -3306,7 +3263,10 @@ public final class BleManager
 
 			m_lastAutoUpdateTime = currentTime;
 
-			m_postManager.postToUpdateThreadDelayed(this, m_autoUpdateRate);
+			if (!m_shutdown)
+			{
+				m_postManager.postToUpdateThreadDelayed(this, m_autoUpdateRate);
+			}
 		}
 	}
 }

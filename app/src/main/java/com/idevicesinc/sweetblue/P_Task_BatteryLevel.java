@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
+final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 {
 
     private final byte[] mValueToMatch;
@@ -77,7 +77,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
             }
             else
             {
-                if (false == getDevice().gattLayer().readDescriptor(desc))
+                if (false == getDevice().layerManager().readDescriptor(desc))
                 {
                     fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, ch.getUuid(), desc.getUuid());
                 }
@@ -95,7 +95,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 
     public void onCharacteristicRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus)
     {
-        getManager().ASSERT(gatt == getDevice().getNativeGatt());
+        getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 
         if( false == this.isForCharacteristic(uuid) )  return;
 
@@ -114,7 +114,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
             boolean bothNull = value == null && mValueToMatch == null;
             if (bothNull || Arrays.equals(value, mValueToMatch))
             {
-                if (false == getDevice().gattLayer().readCharacteristic(desc.getCharacteristic()))
+                if (false == getDevice().layerManager().readCharacteristic(desc.getCharacteristic()))
                 {
                     fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, desc.getCharacteristic().getUuid(), BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID);
                 }
@@ -134,7 +134,7 @@ public final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
                 {
                     final BluetoothGattCharacteristic ch = batteryChars.get(0);
                     final BluetoothGattDescriptor descr = ch.getDescriptor(mDescriptorUuid);
-                    if (false == getDevice().gattLayer().readDescriptor(descr))
+                    if (false == getDevice().layerManager().readDescriptor(descr))
                     {
                         fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, ch.getUuid(), descr.getUuid());
                     }

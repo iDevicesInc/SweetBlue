@@ -14,7 +14,6 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
@@ -100,7 +99,7 @@ public class BleDevice extends BleNode
      * Special value that is used in place of Java's built-in <code>null</code>.
      */
     @Immutable
-    public static final BleDevice NULL = new BleDevice(null, null, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
+    public static final BleDevice NULL = new BleDevice(null, P_NativeDeviceLayer.NULL, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
 
     /**
      * Builder class for sending a write over BLE. Use this class to set the service and/or characteristic
@@ -2052,7 +2051,8 @@ public class BleDevice extends BleNode
     private boolean m_underwentPossibleImplicitBondingAttempt = false;
 
     private BleDeviceConfig m_config = null;
-    private P_DeviceBleGatt m_gattLayer;
+    private P_BleDeviceLayerManager m_layerManager;
+    private P_NativeDeviceLayer m_deviceLayer;
 
     private BondListener.BondEvent m_nullBondEvent = null;
     private ReadWriteListener.ReadWriteEvent m_nullReadWriteEvent = null;
@@ -2062,7 +2062,7 @@ public class BleDevice extends BleNode
 
     final P_ReliableWriteManager m_reliableWriteMngr;
 
-    BleDevice(BleManager mngr, BluetoothDevice device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
+    BleDevice(BleManager mngr, P_NativeDeviceLayer device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
     {
         super(mngr);
 
@@ -2070,12 +2070,14 @@ public class BleDevice extends BleNode
         m_origin_latest = m_origin;
         m_isNull = isNull;
 
+        m_deviceLayer = device_native;
+
         if (isNull)
         {
             m_rssiPollMngr = null;
             m_rssiPollMngr_auto = null;
             // setConfig(config_nullable);
-            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, conf_mngr().defaultGattLayer, name_normalized, name_native);
+            m_nativeWrapper = new P_NativeDeviceWrapper(this, m_deviceLayer, name_normalized, name_native);
             m_listeners = null;
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = null;
@@ -2093,10 +2095,11 @@ public class BleDevice extends BleNode
         }
         else
         {
+            m_deviceLayer.updateBleDevice(this);
             m_rssiPollMngr = new P_RssiPollManager(this);
             m_rssiPollMngr_auto = new P_RssiPollManager(this);
             setConfig(config_nullable);
-            m_nativeWrapper = new P_NativeDeviceWrapper(this, device_native, m_gattLayer.getGattLayer(), name_normalized, name_native);
+            m_nativeWrapper = new P_NativeDeviceWrapper(this, m_deviceLayer, name_normalized, name_native);
             m_listeners = new P_BleDevice_Listeners(this);
             m_stateTracker = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/false);
             m_stateTracker_shortTermReconnect = new P_DeviceStateTracker(this, /*forShortTermReconnect=*/true);
@@ -2221,7 +2224,10 @@ public class BleDevice extends BleNode
 
         m_config = config_nullable == null ? null : config_nullable.clone();
 
-        m_gattLayer = new P_DeviceBleGatt(this, conf_mngr().defaultGattLayer);
+        if (m_layerManager == null)
+        {
+            m_layerManager = new P_BleDeviceLayerManager(this, conf_mngr().newGattLayer(this), m_deviceLayer, conf_mngr().nativeManagerLayer);
+        }
 
         initEstimators();
 
@@ -3217,9 +3223,9 @@ public class BleDevice extends BleNode
         return state.overlaps(stateTracker().getState());
     }
 
-    final P_DeviceBleGatt gattLayer()
+    final P_BleDeviceLayerManager layerManager()
     {
-        return m_gattLayer;
+        return m_layerManager;
     }
 
     /**
@@ -3773,10 +3779,10 @@ public class BleDevice extends BleNode
     {
         if (device_nullable == null) return false;
         if (device_nullable == this) return true;
-        if (device_nullable.getNative() == null || this.getNative() == null) return false;
+        if (device_nullable.layerManager().getDeviceLayer().isDeviceNull() || this.layerManager().getDeviceLayer().isDeviceNull()) return false;
         if (this.isNull() && device_nullable.isNull()) return true;
 
-        return device_nullable.getNative().equals(this.getNative());
+        return device_nullable.layerManager().getDeviceLayer().equals(getNative());
     }
 
     /**
@@ -5517,7 +5523,7 @@ public class BleDevice extends BleNode
         return m_pollMngr;
     }
 
-    final void onNewlyDiscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+    final void onNewlyDiscovered(final P_NativeDeviceLayer device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
 
@@ -5530,7 +5536,7 @@ public class BleDevice extends BleNode
         stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
     }
 
-    final void onRediscovered(final BluetoothDevice device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+    final void onRediscovered(final P_NativeDeviceLayer device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
 
@@ -5818,7 +5824,7 @@ public class BleDevice extends BleNode
             return;
         }
 
-        getManager().ASSERT(m_nativeWrapper.getGatt() != null);
+        getManager().ASSERT(!layerManager().getGattLayer().isGattNull());
 
         //--- DRK > There exists a fringe case like this: You try to connect with autoConnect==true in the gatt object.
         //--- The connection fails, so you stop trying. Then you turn off the remote device. Device gets "undiscovered".
@@ -5840,7 +5846,7 @@ public class BleDevice extends BleNode
             //--- DRK > Trying to catch fringe condition here of stack lying to
             // us about bonded state.
             //--- This is not about finding a logic error in my code.
-            getManager().ASSERT(getManager().getNative().getAdapter().getBondedDevices().contains(m_nativeWrapper.getDevice()));
+            getManager().ASSERT(getManager().managerLayer().getBondedDevices().contains(m_nativeWrapper.getDevice()));
         }
 
         logger().d(logger().gattBondState(m_nativeWrapper.getNativeBondState()));
@@ -6072,7 +6078,7 @@ public class BleDevice extends BleNode
 
                         if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
                         {
-                            final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/true, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
+                            final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/explicit, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
                             queue().add(disconnectTask);
 
                             taskOrdinal = disconnectTask.getOrdinal();
@@ -6289,13 +6295,21 @@ public class BleDevice extends BleNode
 
         if (!isConnectingOverall_1 && !m_reconnectMngr_shortTerm.isRunning())
         {
-            if (connectionFailReason_nullable != null/* && !m_connectionFailMngr.sentDisconnectFail()*/)
+            if (connectionFailReason_nullable != null && wasExplicit)
             {
                 retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
             }
             else
             {
-                retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+                if (m_connectionFailMngr.hasPendingConnectionFailEvent())
+                {
+                    retrying__PE_Please = m_connectionFailMngr.getPendingConnectionFailRetry();
+                    m_connectionFailMngr.clearPendingRetry();
+                }
+                else
+                {
+                    retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+                }
             }
         }
         else
@@ -6333,6 +6347,11 @@ public class BleDevice extends BleNode
         if (!isConnectingOverall_2 && retrying__PE_Please == ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
         {
             queue().clearQueueOf(P_Task_Connect.class, this, -1);
+        }
+
+        if (!wasExplicit && !wasInitialized && retrying__PE_Please != ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
+        {
+            attemptReconnect();
         }
     }
 

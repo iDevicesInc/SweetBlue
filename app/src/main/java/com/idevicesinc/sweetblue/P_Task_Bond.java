@@ -1,13 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothDevice;
 
-import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Utils_Reflection;
-
-import java.lang.reflect.Method;
 
 class P_Task_Bond extends PA_Task_RequiresBleOn
 {
@@ -109,7 +104,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
     {
         if (Utils.isKitKat())
         {
-            return getDevice().gattLayer().createBond();
+            return getDevice().layerManager().createBond();
         }
         else
         {
@@ -122,7 +117,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
     {
         if (Utils.isKitKat())
         {
-            return getDevice().gattLayer().createBondSneaky(METHOD_NAME__CREATE_BOND);
+            return getDevice().layerManager().createBondSneaky(METHOD_NAME__CREATE_BOND);
         }
         else
         {

@@ -69,7 +69,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		{
 			this.fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 		}
-		else if( false == getDevice().getNativeGatt().setCharacteristicNotification(char_native, m_enable) )
+		else if( false == getDevice().layerManager().getGattLayer().setCharacteristicNotification(char_native, m_enable) )
 		{
 			this.fail(Status.FAILED_TO_TOGGLE_NOTIFICATION, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 		}
@@ -93,7 +93,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 				{
 					this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
 				}
-				else if( false == getDevice().getNativeGatt().writeDescriptor(descriptor) )
+				else if( false == getDevice().layerManager().getGattLayer().writeDescriptor(descriptor) )
 				{
 					this.fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
 				}
@@ -136,7 +136,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 
 	public void onDescriptorWrite(BluetoothGatt gatt, UUID descUuid, int status)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 
 		if( !descUuid.equals(m_descUuid) ) return;
 

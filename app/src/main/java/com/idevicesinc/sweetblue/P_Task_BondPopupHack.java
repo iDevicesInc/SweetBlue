@@ -19,7 +19,7 @@ final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
 
     @Override void execute()
     {
-        getDevice().gattLayer().startDiscovery();
+        getDevice().layerManager().startDiscovery();
     }
 
     @Override protected void update(double timeStep)
@@ -28,7 +28,7 @@ final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
         scanTime += timeStep;
         if (scanTime > 1)
         {
-            getDevice().gattLayer().cancelDiscovery();
+            getDevice().layerManager().cancelDiscovery();
             succeed();
         }
     }

@@ -1,85 +1,50 @@
 package com.idevicesinc.sweetblue;
 
-import android.os.Handler;
-import android.test.ActivityInstrumentationTestCase2;
+
 import android.util.Log;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import org.junit.Test;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 
-public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivity>
+
+public class BleScanTest extends BaseTester<BleScanActivity>
 {
-    BleScanActivity testActivity;
 
-    BleManager bleManager;
-
-    public BleScanTest()
-    {
-        super(BleScanActivity.class);
-    }
-
-
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
-
-        testActivity = getActivity();
-
-        bleManager = testActivity.getBleManager();
-
-        bleManager.onResume();
-
-        testActivity.eventListener = new BleScanActivity.EventStateInterface()
-        {
-            @Override
-            public void onEvent(BleManager.StateListener.StateEvent event)
-            {
-                if(event.didEnter(BleManagerState.SCANNING))
-                {
-                    Log.e("YAY", "NOW WE ARE SCANNING");
-                }
-                else if(event.didExit(BleManagerState.SCANNING))
-                {
-                    Log.e("BOO", "WE HAVE LEFT SCANNING");
-                }
-            }
-        };
-
-    }
 
     @Test
     public void testFiveSecondScanMain() throws Exception
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        bleManager.m_config.runOnMainThread = true;
-        bleManager.setConfig(bleManager.m_config);
+        mgr.m_config.runOnMainThread = true;
+        mgr.setConfig(mgr.m_config);
 
-        testActivity.startFiveSecondScan();
+        mgr.setListener_State(new ManagerStateListener() {
 
-        Handler handler = testActivity.getHandler();
+            long timeStarted;
 
-        handler.postDelayed(new Runnable()
-        {
             @Override
-            public void run()
-            {
-                assertTrue(bleManager.is(BleManagerState.SCANNING));
+            public void onEvent(BleManager.StateListener.StateEvent e) {
+                if (e.didEnter(BleManagerState.SCANNING))
+                {
+                    timeStarted = e.manager().currentTime();
+                }
+                else if (e.didExit(BleManagerState.SCANNING))
+                {
+                    long now = e.manager().currentTime();
+                    long diff = now - timeStarted;
+                    assertTrue("Diff: " + diff, diff <= 5250 && diff > 4999);
+                    shutdown(finishedSemaphore);
+                }
             }
-        }, 1000);
+        });
 
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                assertFalse(bleManager.is(BleManagerState.SCANNING));
-
-                shutdown(finishedSemaphore);
-            }
-        }, 6000);
+        mgr.startScan(Interval.FIVE_SECS);
 
         finishedSemaphore.acquire();
     }
@@ -89,194 +54,201 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        bleManager.m_config.runOnMainThread = false;
-        bleManager.setConfig(bleManager.m_config);
+        mgr.m_config.runOnMainThread = false;
+        mgr.setConfig(mgr.m_config);
 
-        testActivity.startFiveSecondScan();
+        mgr.setListener_State(new ManagerStateListener() {
+            boolean hasStartedScan = false;
+            long timeStarted;
 
-        Handler handler = testActivity.getHandler();
-
-        handler.postDelayed(new Runnable()
-        {
             @Override
-            public void run()
-            {
-                assertTrue(bleManager.is(BleManagerState.SCANNING));
+            public void onEvent(BleManager.StateListener.StateEvent e) {
+                if (e.didEnter(BleManagerState.SCANNING))
+                {
+                    hasStartedScan = true;
+                    timeStarted = e.manager().currentTime();
+                }
+                else if (e.didExit(BleManagerState.SCANNING))
+                {
+                    Interval time = e.manager().getTimeInState(BleManagerState.SCANNING);
+                    long now = e.manager().currentTime();
+                    long diff = now - timeStarted;
+                    assertTrue("Diff: " + diff, diff <= 5250 && diff > 4999);
+                    shutdown(finishedSemaphore);
+                }
             }
-        }, 1000);
+        });
 
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                assertFalse(bleManager.is(BleManagerState.SCANNING));
-
-                shutdown(finishedSemaphore);
-            }
-        }, 6000);
+        mgr.startScan(Interval.FIVE_SECS);
 
         finishedSemaphore.acquire();
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testInfiniteScanMain() throws Exception
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        bleManager.m_config.runOnMainThread = true;
-        bleManager.setConfig(bleManager.m_config);
+        final AtomicBoolean started = new AtomicBoolean(false);
 
-        testActivity.startInfiniteScan();
-
-
-        Handler handler = testActivity.getHandler();
-
-        testActivity.checkState();
-
-        for(int i = 1; i < 30; i++)
+        mgr.m_config.runOnMainThread = true;
+        mgr.m_config.updateLoopCallback = new PI_UpdateLoop.Callback()
         {
-            final int iteration = i;
-            handler.postDelayed(new Runnable()
+            @Override public void onUpdate(double timestep_seconds)
             {
-                @Override
-                public void run()
+                if (started.get())
                 {
-                    testActivity.checkState();
-                    assertTrue(bleManager.is(BleManagerState.SCANNING));
-
-                    if(iteration == 29)
+                    assertTrue("BleManager is not SCANNING!", mgr.is(BleManagerState.SCANNING));
+                    if (mgr.getTimeInState(BleManagerState.SCANNING).secs() >= 20.0)
                     {
                         shutdown(finishedSemaphore);
                     }
                 }
-            }, i * 1000);
-        }
+            }
+        };
+        mgr.setConfig(mgr.m_config);
+
+        mgr.setListener_State(new ManagerStateListener()
+        {
+            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            {
+                if (e.didEnter(BleManagerState.SCANNING))
+                {
+                    started.set(true);
+                }
+            }
+        });
+
+        checkState();
+
+        mgr.startScan();
 
         finishedSemaphore.acquire();
     }
 
-    @Test
+    @Test(timeout = 30000)
     public void testInfiniteScan() throws Exception
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        bleManager.m_config.runOnMainThread = false;
-        bleManager.setConfig(bleManager.m_config);
+        final AtomicBoolean started = new AtomicBoolean(false);
 
-        testActivity.startInfiniteScan();
-
-
-        Handler handler = testActivity.getHandler();
-
-        testActivity.checkState();
-
-        for(int i = 1; i < 30; i++)
+        mgr.m_config.runOnMainThread = false;
+        mgr.m_config.updateLoopCallback = new PI_UpdateLoop.Callback()
         {
-            final int iteration = i;
-            handler.postDelayed(new Runnable()
+            @Override public void onUpdate(double timestep_seconds)
             {
-                @Override
-                public void run()
+                if (started.get())
                 {
-                    testActivity.checkState();
-                    assertTrue(bleManager.is(BleManagerState.SCANNING));
-
-                    if(iteration == 29)
+                    assertTrue("BleManager is not SCANNING!", mgr.is(BleManagerState.SCANNING));
+                    if (mgr.getTimeInState(BleManagerState.SCANNING).secs() >= 20.0)
                     {
                         shutdown(finishedSemaphore);
                     }
                 }
-            }, i * 1000);
-        }
+            }
+        };
+        mgr.setConfig(mgr.m_config);
+
+        mgr.setListener_State(new ManagerStateListener()
+        {
+            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            {
+                started.set(true);
+            }
+        });
+
+        checkState();
+
+        mgr.startScan();
 
         finishedSemaphore.acquire();
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testPeriodicScanMain() throws Exception
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        bleManager.m_config.runOnMainThread = true;
-        bleManager.setConfig(bleManager.m_config);
+        mgr.m_config.runOnMainThread = true;
+        mgr.setConfig(mgr.m_config);
 
-        testActivity.startPeriodicScan();
-
-        Handler handler = testActivity.getHandler();
-
-        handler.postDelayed(new Runnable()
+        mgr.setListener_State(new ManagerStateListener()
         {
-            @Override
-            public void run()
-            {
-                assertTrue(bleManager.is(BleManagerState.SCANNING));
-            }
-        }, 1000);
+            boolean checkedScan = false;
+            long timeStopped;
 
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
+            @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
-                assertTrue(!bleManager.is(BleManagerState.SCANNING));
+                if (!checkedScan)
+                {
+                    if (e.didExit(BleManagerState.SCANNING))
+                    {
+                        checkedScan = true;
+                        long diff = mgr.getTimeInState(BleManagerState.SCANNING).millis();
+                        assertTrue("Diff: " + diff, (diff - 500) < 5000 && (diff + 500) > 5000);
+                        timeStopped = mgr.currentTime();
+                    }
+                }
+                else
+                {
+                    if (e.didExit(BleManagerState.SCANNING))
+                    {
+                        long diff = mgr.getTimeInState(BleManagerState.SCANNING).millis();
+                        long diff2 = mgr.currentTime() - timeStopped - diff;
+                        assertTrue("Time not scanning: " + diff2, (diff2 - 250) < 5000 && (diff2 + 250) > 5000);
+                        assertTrue("Time Scanning: " + diff, (diff - 250) < 5000 && (diff + 250) > 5000);
+                        shutdown(finishedSemaphore);
+                    }
+                }
             }
-        }, 6000);
+        });
 
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                assertTrue(bleManager.is(BleManagerState.SCANNING));
-
-                shutdown(finishedSemaphore);
-            }
-        }, 11000);
+        mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
 
         finishedSemaphore.acquire();
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testPeriodicScan() throws Exception
     {
         final Semaphore finishedSemaphore = new Semaphore(0);
 
-        bleManager.m_config.runOnMainThread = false;
-        bleManager.setConfig(bleManager.m_config);
+        mgr.m_config.runOnMainThread = false;
+        mgr.setConfig(mgr.m_config);
 
-        testActivity.startPeriodicScan();
-
-        Handler handler = testActivity.getHandler();
-
-        handler.postDelayed(new Runnable()
+        mgr.setListener_State(new ManagerStateListener()
         {
-            @Override
-            public void run()
-            {
-                assertTrue(bleManager.is(BleManagerState.SCANNING));
-            }
-        }, 1000);
+            boolean checkedScan = false;
+            long timeStopped;
 
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
+            @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
-                assertTrue(!bleManager.is(BleManagerState.SCANNING));
+                if (!checkedScan)
+                {
+                    if (e.didExit(BleManagerState.SCANNING))
+                    {
+                        checkedScan = true;
+                        long diff = mgr.getTimeInState(BleManagerState.SCANNING).millis();
+                        assertTrue("Diff: " + diff, (diff - 500) < 5000 && (diff + 500) > 5000);
+                        timeStopped = mgr.currentTime();
+                    }
+                }
+                else
+                {
+                    if (e.didExit(BleManagerState.SCANNING))
+                    {
+                        long diff = mgr.getTimeInState(BleManagerState.SCANNING).millis();
+                        long diff2 = mgr.currentTime() - timeStopped - diff;
+                        assertTrue("Time not scanning: " + diff2, (diff2 - 250) < 5000 && (diff2 + 250) > 5000);
+                        assertTrue("Time Scanning: " + diff, (diff - 250) < 5000 && (diff + 250) > 5000);
+                        shutdown(finishedSemaphore);
+                    }
+                }
             }
-        }, 6000);
+        });
 
-        handler.postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                assertTrue(bleManager.is(BleManagerState.SCANNING));
-
-                shutdown(finishedSemaphore);
-            }
-        }, 11000);
+        mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
 
         finishedSemaphore.acquire();
     }
@@ -291,15 +263,15 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         config.runOnMainThread = true;
         config.scanApi = BleScanApi.POST_LOLLIPOP;
 
-        bleManager = BleManager.get(testActivity, config);
+        mgr.setConfig(config);
 
-        bleManager.setListener_State(new ManagerStateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    P_ScanManager scanManager = bleManager.getScanManager();
+                    P_ScanManager scanManager = mgr.getScanManager();
 
                     assertTrue(Utils.isLollipop());
 
@@ -310,7 +282,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
             }
         });
 
-        bleManager.startScan();
+        mgr.startScan();
 
         semaphore.acquire();
     }
@@ -325,15 +297,15 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         config.runOnMainThread = false;
         config.scanApi = BleScanApi.POST_LOLLIPOP;
 
-        bleManager = BleManager.get(testActivity, config);
+        mgr.setConfig(config);
 
-        bleManager.setListener_State(new ManagerStateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    P_ScanManager scanManager = bleManager.getScanManager();
+                    P_ScanManager scanManager = mgr.getScanManager();
 
                     assertTrue(Utils.isLollipop());
 
@@ -344,7 +316,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
             }
         });
 
-        bleManager.startScan();
+        mgr.startScan();
 
         semaphore.acquire();
     }
@@ -359,15 +331,15 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         config.runOnMainThread = true;
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
 
-        bleManager = BleManager.get(testActivity, config);
+        mgr.setConfig(config);
 
-        bleManager.setListener_State(new ManagerStateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    P_ScanManager scanManager = bleManager.getScanManager();
+                    P_ScanManager scanManager = mgr.getScanManager();
 
                     assertTrue(scanManager.isPreLollipopScan());
 
@@ -376,7 +348,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
             }
         });
 
-        bleManager.startScan();
+        mgr.startScan();
 
         semaphore.acquire();
     }
@@ -391,15 +363,15 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         config.runOnMainThread = false;
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
 
-        bleManager = BleManager.get(testActivity, config);
+        mgr.setConfig(config);
 
-        bleManager.setListener_State(new ManagerStateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    P_ScanManager scanManager = bleManager.getScanManager();
+                    P_ScanManager scanManager = mgr.getScanManager();
 
                     assertTrue(scanManager.isPreLollipopScan());
 
@@ -408,7 +380,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
             }
         });
 
-        bleManager.startScan();
+        mgr.startScan();
 
         semaphore.acquire();
     }
@@ -423,15 +395,15 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         config.runOnMainThread = true;
         config.scanApi = BleScanApi.CLASSIC;
 
-        bleManager = BleManager.get(testActivity, config);
+        mgr.setConfig(config);
 
-        bleManager.setListener_State(new ManagerStateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    P_ScanManager scanManager = bleManager.getScanManager();
+                    P_ScanManager scanManager = mgr.getScanManager();
 
                     assertTrue(scanManager.isClassicScan());
 
@@ -440,7 +412,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
             }
         });
 
-        bleManager.startScan();
+        mgr.startScan();
 
         semaphore.acquire();
     }
@@ -455,15 +427,15 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
         config.runOnMainThread = false;
         config.scanApi = BleScanApi.CLASSIC;
 
-        bleManager = BleManager.get(testActivity, config);
+        mgr.setConfig(config);
 
-        bleManager.setListener_State(new ManagerStateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    P_ScanManager scanManager = bleManager.getScanManager();
+                    P_ScanManager scanManager = mgr.getScanManager();
 
                     assertTrue(scanManager.isClassicScan());
 
@@ -472,7 +444,7 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
             }
         });
 
-        bleManager.startScan();
+        mgr.startScan();
 
         semaphore.acquire();
     }
@@ -480,26 +452,46 @@ public class BleScanTest extends ActivityInstrumentationTestCase2<BleScanActivit
     @Test
     public void testStopScan() throws Exception
     {
-        bleManager = BleManager.get(testActivity);
 
-        bleManager.startScan();
+        mgr.startScan();
 
-        bleManager.stopScan();
+        mgr.stopScan();
 
-        assertFalse(bleManager.is(BleManagerState.SCANNING));
+        assertFalse(mgr.is(BleManagerState.SCANNING));
 
         shutdown(null);
     }
 
     private void shutdown(Semaphore semaphore)
     {
-        bleManager.stopScan();
-        bleManager.shutdown();
-
         if (semaphore != null)
         {
             semaphore.release();
         }
     }
 
+
+    public void checkState()
+    {
+        Log.e("BLE_SCANNING", mgr.is(BleManagerState.SCANNING) + "");
+        Log.e("BLE_OFF", mgr.is(BleManagerState.OFF) + "");
+        Log.e("BLE_TURNING_OFF", mgr.is(BleManagerState.TURNING_OFF) + "");
+        Log.e("BLE_STARTING_SCAN", mgr.is(BleManagerState.STARTING_SCAN) + "");
+        Log.e("BLE_RESETTING", mgr.is(BleManagerState.RESETTING) + "");
+        Log.e("BLE_ON", mgr.is(BleManagerState.ON) + "");
+        Log.e("BLE_TURNING_ON", mgr.is(BleManagerState.TURNING_ON) + "");
+    }
+
+
+    @Override Class<BleScanActivity> getActivityClass()
+    {
+        return BleScanActivity.class;
+    }
+
+    @Override BleManagerConfig getInitialConfig()
+    {
+        BleManagerConfig config = new BleManagerConfig();
+        config.loggingEnabled = true;
+        return config;
+    }
 }

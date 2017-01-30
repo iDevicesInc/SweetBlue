@@ -52,6 +52,14 @@ public enum BleManagerState implements State
 	 * @see BleManager#startScan()
 	 */
 	STARTING_SCAN,
+
+	/**
+	 * This is the state that {@link BleManager} is in when {@link BleManagerConfig#scanClassicBoostLength} is not <code>null</code>, or
+	 * {@link Interval#DISABLED}. No devices will be discovered when in this state, it's simply here to make the BLE scan give more
+	 * reliable results, especially when looking for many devices. If you explicitly start a Bluetooth Classic scan, the manager will
+	 * <b>not</b> enter this state.
+	 */
+	BOOST_SCANNING,
 	
 	/**
 	 * This is the state that {@link BleManager} is in when scanning actually starts.
@@ -100,36 +108,7 @@ public enum BleManagerState implements State
 		m_nativeCode = nativeCode;
 	}
 
-	private BleScanApi m_mode;
-	private BleScanPower m_power;
 
-
-	@UnitTest
-	BleManagerState setScanApi(BleScanApi mode)
-	{
-		m_mode = mode;
-		return this;
-	}
-
-	@UnitTest
-	BleManagerState setPower(BleScanPower power)
-	{
-		m_power = power;
-		return this;
-	}
-
-	@UnitTest
-	BleScanApi getScanApi()
-	{
-		return m_mode;
-	}
-
-	@UnitTest
-	BleScanPower getScanPower()
-	{
-		return m_power;
-	}
-	
 	/**
 	 * Returns the analogous native code, if applicable. For example {@link BluetoothAdapter#STATE_OFF},
 	 * {@link BluetoothAdapter#STATE_ON}, etc. {@link #RESETTING} and {@link #SCANNING} do not have a native

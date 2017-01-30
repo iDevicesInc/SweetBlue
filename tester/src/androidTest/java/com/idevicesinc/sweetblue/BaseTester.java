@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
@@ -29,7 +30,14 @@ public abstract class BaseTester<T extends Activity>
     {
         activity = mRule.getActivity();
         mgr = BleManager.get(activity, getConfig());
+        mgr.onResume();
         additionalSetup();
+    }
+
+    @After
+    public void shutdown()
+    {
+        mgr.shutdown();
     }
 
     private BleManagerConfig getConfig()

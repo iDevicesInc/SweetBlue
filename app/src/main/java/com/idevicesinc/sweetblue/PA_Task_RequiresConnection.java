@@ -13,7 +13,7 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 		
 		if( shouldBeExecutable )
 		{
-			if( getDevice().getNativeGatt() == null )
+			if( getDevice().layerManager().isGattNull() )
 			{
 				getLogger().e("Device says we're natively connected but gatt==null");
 				getManager().ASSERT(false);

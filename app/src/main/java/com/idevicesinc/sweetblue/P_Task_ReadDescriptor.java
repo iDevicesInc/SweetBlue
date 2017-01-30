@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
@@ -53,7 +52,7 @@ class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 		}
 		else
 		{
-			if( false == getDevice().gattLayer().readDescriptor(desc_native) )
+			if( false == getDevice().layerManager().readDescriptor(desc_native) )
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), getDescUuid());
 			}
@@ -66,7 +65,7 @@ class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 	
 	public void onDescriptorRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 
 		onCharacteristicOrDescriptorRead(gatt, uuid, value, gattStatus, m_type);
 	}

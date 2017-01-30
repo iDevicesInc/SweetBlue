@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Interval;
 
 
 final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
@@ -18,22 +19,19 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 	{
 		super(bleDevice, listener);
 		m_gattRefresh = BleDeviceConfig.bool(getDevice().conf_device().useGattRefresh, getDevice().conf_mngr().useGattRefresh);
-		m_gattDelayTarget = BleDeviceConfig.interval(getDevice().conf_device().gattRefreshDelay, getDevice().conf_mngr().gattRefreshDelay).secs();
+		Interval delay = BleDeviceConfig.interval(getDevice().conf_device().gattRefreshDelay, getDevice().conf_mngr().gattRefreshDelay);
+		m_gattDelayTarget = Interval.isDisabled(delay) || delay == Interval.INFINITE ? 0.0 : delay.secs();
 	}
 
 	@Override public void execute()
 	{
-//		if( !getDevice().getNativeGatt().getServices().isEmpty() )
+		if( m_gattRefresh )
 		{
-
-			if( m_gattRefresh )
-			{
-				getDevice().gattLayer().refreshGatt();
-				return;
-			}
+			getDevice().layerManager().refreshGatt();
+			return;
 		}
-		
-		if( !getDevice().gattLayer().discoverServices() )
+
+		if( !getDevice().layerManager().discoverServices() )
 		{
 			failImmediately();
 			
@@ -50,7 +48,7 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			if (m_curGattDelay >= m_gattDelayTarget)
 			{
 				m_discoverAttempted = true;
-				if( !getDevice().gattLayer().discoverServices() )
+				if( !getDevice().layerManager().discoverServices() )
 				{
 					failImmediately();
 
@@ -68,6 +66,11 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 	public void onNativeFail(int gattStatus)
 	{
 		m_gattStatus = gattStatus;
+
+//		if (getDevice().is(BleDeviceState.CONNECTED))
+//		{
+//			getDevice().disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, BleDevice.ReadWriteListener.ReadWriteEvent.NULL(getDevice()));
+//		}
 		
 		this.fail();
 	}

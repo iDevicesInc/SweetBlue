@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTED;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 
 import java.util.ArrayList;
@@ -22,9 +23,8 @@ class P_ConnectionFailManager
 	
 	private Long m_timeOfFirstConnect = null;
 	private Long m_timeOfLastConnectFail = null;
+	private Integer m_pendingConnectionRetry = null;
 
-	private boolean m_sentDisconnect = false;
-	
 	private final ArrayList<ConnectionFailEvent> m_history = new ArrayList<ConnectionFailEvent>();
 	
 	P_ConnectionFailManager(BleDevice device)
@@ -38,6 +38,21 @@ class P_ConnectionFailManager
 	{
 		resetFailCount();
 	}
+
+	boolean hasPendingConnectionFailEvent()
+	{
+		return m_pendingConnectionRetry != null;
+	}
+
+	int getPendingConnectionFailRetry()
+	{
+		return m_pendingConnectionRetry;
+	}
+
+	void clearPendingRetry()
+	{
+		m_pendingConnectionRetry = null;
+	}
 	
 	void onFullyInitialized()
 	{
@@ -48,14 +63,12 @@ class P_ConnectionFailManager
 	{
 		resetFailCount();
 
-		m_sentDisconnect = false;
-		
 		m_timeOfFirstConnect = System.currentTimeMillis();
 	}
 	
 	private void resetFailCount()
 	{
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -72,11 +85,6 @@ class P_ConnectionFailManager
 		int retryCount = m_failCount;
 		
 		return retryCount;
-	}
-
-	boolean sentDisconnectFail()
-	{
-		return m_sentDisconnect;
 	}
 
 	int/*__PE_Please*/ onConnectionFailed(ConnectionFailListener.Status reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect_longTerm, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, ConnectionFailListener.AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
@@ -161,17 +169,22 @@ class P_ConnectionFailManager
 			}
 		}
 		
-		if( retryChoice__PE_Please != Please.PE_Please_NULL && Please.isRetry(retryChoice__PE_Please) )
+		if( retryChoice__PE_Please != Please.PE_Please_NULL && Please.isRetry(retryChoice__PE_Please) && !m_device.is(CONNECTED))
 		{
 			m_device.attemptReconnect();
 		}
 		else
 		{
-			m_failCount = 0;
+			if (!m_device.is(CONNECTED))
+			{
+				m_failCount = 0;
+			}
+			else
+			{
+				m_pendingConnectionRetry = retryChoice__PE_Please;
+			}
 		}
 
-		m_sentDisconnect = true;
-		
 		return retryChoice__PE_Please;
 	}
 

@@ -3,7 +3,6 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 
@@ -43,7 +42,7 @@ class P_Task_RequestConnectionPriority extends PA_Task_Transactionable implement
 	{
 		if( Utils.isLollipop() )
 		{
-			if( false == getDevice().gattLayer().requestConnectionPriority(m_connectionPriority) )
+			if( false == getDevice().layerManager().requestConnectionPriority(m_connectionPriority) )
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}

@@ -434,7 +434,7 @@ class P_DeviceManager
 
             if (!device.is(BleDeviceState.DISCOVERED))
             {
-                device.onNewlyDiscovered(device.getNative(), null, device.getRssi(), null, device.getOrigin());
+                device.onNewlyDiscovered(device.layerManager().getDeviceLayer(), null, device.getRssi(), null, device.getOrigin());
 
                 if (m_mngr.m_discoveryListener != null)
                 {
@@ -467,6 +467,11 @@ class P_DeviceManager
         for (int i = m_list.size() - 1; i >= 0; i--)
         {
             final BleDevice device_ith = m_list.get(i);
+
+            if (device_ith.is(BleDeviceState.CONNECTED))
+            {
+                device_ith.m_nativeWrapper.updateNativeConnectionState(device_ith.getNativeGatt());
+            }
 
             final boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);
 

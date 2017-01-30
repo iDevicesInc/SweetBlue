@@ -108,12 +108,12 @@ public class Utils
 	 * by the service discovery task if you have {@link com.idevicesinc.sweetblue.BleDeviceConfig#useGattRefresh} set to <code>true</code>.
 	 * This method returns false if the method wasn't able to be invoked properly, or {@link Method#invoke(Object, Object...)} returns <code>false</code>
      */
-	public static boolean refreshGatt(BleDevice bleDevice)
+	public static boolean refreshGatt(BluetoothGatt gatt)
 	{
 		try
 		{
-			Method method = bleDevice.getNativeGatt().getClass().getMethod("refresh", (Class[]) null);
-			Boolean result = (Boolean) method.invoke(bleDevice.getNativeGatt(), (Object[]) null);
+			Method method = gatt.getClass().getMethod("refresh", (Class[]) null);
+			Boolean result = (Boolean) method.invoke(gatt, (Object[]) null);
 
 			if( result == null || !result )
 			{

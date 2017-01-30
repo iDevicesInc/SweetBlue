@@ -1606,7 +1606,7 @@ public class BleServer extends BleNode
 	{
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
-		final BluetoothDevice nativeDevice = newNativeDevice(macAddress_normalized);
+		final BluetoothDevice nativeDevice = newNativeDevice(macAddress_normalized).getNativeDevice();
 
 		if( isNull() )
 		{
@@ -1961,7 +1961,7 @@ public class BleServer extends BleNode
 	{
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
-		return connect_internal(newNativeDevice(macAddress_normalized), stateListener, connectionFailListener);
+		return connect_internal(newNativeDevice(macAddress_normalized).getNativeDevice(), stateListener, connectionFailListener);
 	}
 
 	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice)
@@ -2013,7 +2013,7 @@ public class BleServer extends BleNode
 		return ConnectionFailListener.ConnectionFailEvent.NULL(this, nativeDevice);
 	}
 
-	private BluetoothDevice newNativeDevice(final String macAddress)
+	private P_NativeDeviceLayer newNativeDevice(final String macAddress)
 	{
 		final BleManager mngr = getManager();
 
@@ -2037,13 +2037,13 @@ public class BleServer extends BleNode
 
 		final BleServerState oldConnectionState = m_stateTracker.getOldConnectionState(macAddress);
 
-		final BluetoothDevice nativeDevice = newNativeDevice(macAddress);
+		final P_NativeDeviceLayer nativeDevice = newNativeDevice(macAddress);
 
 		if( addTask )
 		{
 			//--- DRK > Purposely doing explicit=true here without regarding the intent.
 			final boolean explicit = true;
-			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
+			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice.getNativeDevice(), m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 			queue().add(task);
 		}
 
@@ -2051,7 +2051,7 @@ public class BleServer extends BleNode
 
 		if( oldConnectionState == CONNECTING )
 		{
-			m_connectionFailMngr.onNativeConnectFail(nativeDevice, status_connectionFail, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			m_connectionFailMngr.onNativeConnectFail(nativeDevice.getNativeDevice(), status_connectionFail, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 
 		return true;
@@ -2428,6 +2428,6 @@ public class BleServer extends BleNode
 	 */
 	@Override public @Nullable(Nullable.Prevalence.NEVER) String getMacAddress()
 	{
-		return getManager().getNativeAdapter().getAddress();
+		return getManager().managerLayer().getAddress();
 	}
 }

@@ -40,7 +40,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite
 		}
 		else
 		{
-			if( false == getDevice().gattLayer().readCharacteristic(char_native) )
+			if( false == getDevice().layerManager().readCharacteristic(char_native) )
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
 			}
@@ -53,7 +53,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite
 	
 	public void onCharacteristicRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 		 
 		if( false == this.isForCharacteristic(uuid) )  return;
 

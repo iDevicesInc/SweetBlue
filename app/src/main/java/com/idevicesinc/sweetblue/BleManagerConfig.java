@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -10,13 +11,12 @@ import java.util.UUID;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.os.Looper;
 import android.util.SparseArray;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
-import com.idevicesinc.sweetblue.annotations.UnitTest;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -67,9 +67,16 @@ public class BleManagerConfig extends BleDeviceConfig
 	public static final double DEFAULT_UH_OH_CALLBACK_THROTTLE			= 30.0;
 
 	/**
+	 * Default value for {@link #scanClassicBoostLength}.
+	 */
+	public static final double DEFAULT_CLASSIC_SCAN_BOOST_TIME			= 0.5;
+
+	/**
 	 * Default value for {@link #scanReportDelay}.
 	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
+
+	public static final double DEFAULT_MANAGER_STATE_POLL_RATE			= .1;
 	
 	static final BleManagerConfig NULL = new BleManagerConfigNull();
 
@@ -134,6 +141,14 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * @see BleManager#onPause()
 	 */
 	public boolean stopScanOnPause							= true;
+
+
+	/**
+	 * Default is {@link #DEFAULT_CLASSIC_SCAN_BOOST_TIME} - This will run a short classic scan before a regular BLE scan. It has been observed that scans tend
+	 * to return more reliable results of multiple devices when a classic scan is performed first. Set this to <code>null</code>, or {@link Interval#DISABLED} to
+	 * disable this feature.
+	 */
+	public Interval scanClassicBoostLength						= Interval.secs(DEFAULT_CLASSIC_SCAN_BOOST_TIME);
 	
 	/**
 	 * Default is <code>false</code> - set this to allow or disallow autoscanning while any
@@ -285,6 +300,17 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval autoUpdateRate							= Interval.secs(DEFAULT_AUTO_UPDATE_RATE);
 
 	/**
+	 * Default is {@link #DEFAULT_MANAGER_STATE_POLL_RATE} seconds - The rate at which the library will poll the native manager's
+	 * state. This only applies to devices running Marshmallow or higher. This call can drain the battery if it's left at the same
+	 * rate as {@link #autoUpdateRate}, as it uses reflection to poll the native state. This is needed on some phones where SweetBlue
+	 * doesn't receive a state change when it should.
+	 * If this is <code>null</code>, then state polling will be disabled.
+	 */
+	@Advanced
+	@Nullable(Prevalence.RARE)
+	public Interval defaultStatePollRate					= Interval.secs(DEFAULT_MANAGER_STATE_POLL_RATE);
+
+	/**
 	 * Default is {@value #DEFAULT_IDLE_UPDATE_RATE} seconds - The rate at which the library's internal update loop ticks, after
 	 * {@link #minTimeToIdle} has elapsed.
 	 */
@@ -348,7 +374,10 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * per se, but ahead of the native callback. So for instance, BLE was turned off, then on...polling may say it's ON, then try to connect to a device. Then
 	 * we get the native callback, but by this time, the connect has failed. In this case, you should turn this to <code>false</code>. But then you are at the
 	 * mercy of Android's Bluetooth callbacks coming in. This polling is only done on devices running Android Marshmallow (6.0+) or above.
+	 *
+	 * @deprecated - Use {@link #defaultStatePollRate} instead. If you want it disabled, set that option to {@link Interval#DISABLED}.
 	 */
+	@Deprecated
 	public boolean allowManagerStatePolling					= true;
 
 	/**
@@ -373,12 +402,50 @@ public class BleManagerConfig extends BleDeviceConfig
 	public BleScanPower scanPower							= BleScanPower.AUTO;
 
 	/**
-	 * Default is <code>null</code> - provide an instance here that will be called at the end of {@link BleManager#update(double)}.
+	 * Default is <code>null</code> - provide an instance here that will be called at the end of {@link BleManager#update(double, long)}.
 	 * This might be useful for extension/wrapper libraries or apps that want to tie into the {@link BleManager} instance's existing update loop.
 	 */
 	public PI_UpdateLoop.Callback updateLoopCallback			= null;
 
-	P_GattLayer defaultGattLayer								= new P_BleGatt();
+	P_GattLayer newGattLayer(BleDevice device)
+	{
+		if (gattLayerFactory == null)
+		{
+			gattLayerFactory = new P_AndroidGattLayerFactory();
+		}
+		try
+		{
+			return gattLayerFactory.newInstance(device);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	P_NativeDeviceLayerFactory nativeDeviceFactory 				= new P_AndroidDeviceLayerFactory();
+
+	P_GattLayerFactory gattLayerFactory					= new P_AndroidGattLayerFactory();
+
+	P_NativeDeviceLayer newDeviceLayer(BleDevice device)
+	{
+		if (nativeDeviceFactory == null)
+		{
+			nativeDeviceFactory = new P_AndroidDeviceLayerFactory();
+		}
+		try
+		{
+			return nativeDeviceFactory.newInstance(device);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	P_NativeManagerLayer nativeManagerLayer						= new P_AndroidBluetoothManager();
 
 // TODO - Remove this once we figure out a different solution for unit tests
 //
@@ -389,19 +456,6 @@ public class BleManagerConfig extends BleDeviceConfig
 //	@UnitTest
 //	public PI_UpdateLoop.IUpdateLoopFactory updateLoopFactory	= new PI_UpdateLoop.DefaultUpdateLoopFactory();
 
-	/**
-	 * Allows overriding of Ble Status's. This is only used for unit testing, and shouldn't be
-	 * used at all.
-	 */
-	@UnitTest
-	public PI_BleStatusHelper bleStatusHelper 					= null;
-
-	/**
-	 * Allows overriding of Ble scanning behaviour in SweetBlue. This is only used for unit
-	 * testing, and should not be used at all.
-	 */
-	@UnitTest
-	public PI_BleScanner bleScanner								= null;
 
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
@@ -429,6 +483,23 @@ public class BleManagerConfig extends BleDeviceConfig
 	
 	//--- DRK > Not sure if this is useful so keeping it package private for now.
 	int	connectionFailUhOhCount								= 0;
+
+
+	public static final class P_AndroidDeviceLayerFactory implements P_NativeDeviceLayerFactory<P_AndroidBleDevice>
+	{
+		@Override public P_AndroidBleDevice newInstance(BleDevice device)
+		{
+			return new P_AndroidBleDevice(device);
+		}
+	}
+
+	public static final class P_AndroidGattLayerFactory implements P_GattLayerFactory<P_AndroidGatt>
+	{
+		@Override public P_AndroidGatt newInstance(BleDevice device)
+		{
+			return new P_AndroidGatt(device);
+		}
+	}
 
 	/**
 	 * An optional whitelisting mechanism for scanning. Provide an implementation at
