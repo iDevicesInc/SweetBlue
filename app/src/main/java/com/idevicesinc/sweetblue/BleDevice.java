@@ -6349,7 +6349,9 @@ public class BleDevice extends BleNode
             queue().clearQueueOf(P_Task_Connect.class, this, -1);
         }
 
-        if (!wasExplicit && !wasInitialized && retrying__PE_Please != ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
+        boolean doReconnectForConnectingOverall = BleDeviceConfig.bool(conf_device().connectFailRetryConnectingOverall, conf_mngr().connectFailRetryConnectingOverall);
+
+        if (doReconnectForConnectingOverall && !wasExplicit && !wasInitialized && retrying__PE_Please != ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
         {
             attemptReconnect();
         }
