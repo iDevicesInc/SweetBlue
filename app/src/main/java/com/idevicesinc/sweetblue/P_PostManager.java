@@ -140,6 +140,10 @@ final class P_PostManager
         {
             ((P_SweetBlueThread) m_updateHandler).quit();
         }
+        if (m_uiHandler instanceof P_SweetBlueThread)
+        {
+            ((P_SweetBlueThread) m_uiHandler).quit();
+        }
 
     }
 

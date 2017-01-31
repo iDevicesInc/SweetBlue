@@ -6366,8 +6366,6 @@ public class BleDevice extends BleNode
 
     private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final Double interval, final ReadWriteListener listener)
     {
-
-
         m_pollMngr.stopPoll(serviceUuid, characteristicUuid, interval, listener, /* usingNotify= */false);
     }
 

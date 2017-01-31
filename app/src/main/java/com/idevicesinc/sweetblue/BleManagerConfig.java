@@ -59,7 +59,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	/**
 	 * Default value for {@link #minTimeToIdle}.
 	 */
-	public static final double DEFAULT_DELAY_BEFORE_IDLE				= 5.0;
+	public static final double DEFAULT_DELAY_BEFORE_IDLE				= 20.0;
 
 	/**
 	 * Default value for {@link #uhOhCallbackThrottle}.

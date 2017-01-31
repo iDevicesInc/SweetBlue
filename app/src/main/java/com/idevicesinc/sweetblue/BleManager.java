@@ -3047,7 +3047,7 @@ public final class BleManager
 		return m_ready;
 	}
 
-	void checkIdleStatus()
+	final void checkIdleStatus()
 	{
 		if (is(IDLE))
 		{
