@@ -149,7 +149,7 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 			// lock up the queue. If the task is P_Task_RequestMtu, let it be armable.
 			if( getDevice().is_internal(BleDeviceState.SERVICES_DISCOVERED) )
 			{
-				return getTxn() != null || (this instanceof P_Task_RequestMtu);
+				return getTxn() != null || (this instanceof P_Task_RequestMtu) || (this instanceof P_Task_ToggleNotify);
 			}
 			else
 			{
