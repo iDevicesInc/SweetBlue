@@ -120,18 +120,29 @@ final class P_SweetBlueThread implements P_SweetHandler
         {
             while (m_running)
             {
+                boolean ranSomething = false;
                 if (!m_runnables.isEmpty())
                 {
                     long curTime = System.currentTimeMillis();
-                    final int size = m_runnables.size();
-                    for (int i = 0; i < size; i++)
+                    Iterator<SweetRunnable> it = m_runnables.iterator();
+                    while (it.hasNext())
                     {
-                        SweetRunnable run = m_runnables.peek();
+                        SweetRunnable run = it.next();
                         if (run.ready(curTime))
                         {
-                            m_runnables.remove(run);
+                            it.remove();
                             run.run();
+                            ranSomething = true;
                         }
+                    }
+                }
+                if (!ranSomething)
+                {
+                    try
+                    {
+                        Thread.sleep(5);
+                    } catch (Exception e)
+                    {
                     }
                 }
             }
