@@ -123,13 +123,13 @@ final class P_SweetBlueThread implements P_SweetHandler
                 if (!m_runnables.isEmpty())
                 {
                     long curTime = System.currentTimeMillis();
-                    Iterator<SweetRunnable> it = m_runnables.iterator();
-                    while (it.hasNext())
+                    final int size = m_runnables.size();
+                    for (int i = 0; i < size; i++)
                     {
-                        SweetRunnable run = it.next();
+                        SweetRunnable run = m_runnables.peek();
                         if (run.ready(curTime))
                         {
-                            it.remove();
+                            m_runnables.remove(run);
                             run.run();
                         }
                     }
