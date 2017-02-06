@@ -120,7 +120,6 @@ final class P_SweetBlueThread implements P_SweetHandler
         {
             while (m_running)
             {
-                boolean ranSomething = false;
                 if (!m_runnables.isEmpty())
                 {
                     long curTime = System.currentTimeMillis();
@@ -132,18 +131,15 @@ final class P_SweetBlueThread implements P_SweetHandler
                         {
                             it.remove();
                             run.run();
-                            ranSomething = true;
                         }
                     }
                 }
-                if (!ranSomething)
+                // Sleep for a short period, so we don't hog the cpu
+                try
                 {
-                    try
-                    {
-                        Thread.sleep(5);
-                    } catch (Exception e)
-                    {
-                    }
+                    Thread.sleep(5);
+                } catch (Exception e)
+                {
                 }
             }
         }

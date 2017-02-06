@@ -136,6 +136,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * then set this to <code>false</code>, and use your transaction.
 	 */
 	public boolean autoEnableNotifiesOnReconnect				= true;
+
+	/**
+	 * Default is <code>true</code> - whether to automatically renegotiate the MTU size that was set via {@link BleDevice#setMtu(int, ReadWriteListener)}, or
+	 * {@link BleDevice#setMtu(int)}. If you use either of those methods in a {@link com.idevicesinc.sweetblue.BleTransaction.Init} transaction, you should set
+	 * this to <code>false</code>, as the transaction will run on reconnection.
+	 */
+	public boolean autoNegotiateMtuOnReconnect					= true;
 	
 	/**
 	 * Default is <code>false</code> - if <code>true</code> and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}

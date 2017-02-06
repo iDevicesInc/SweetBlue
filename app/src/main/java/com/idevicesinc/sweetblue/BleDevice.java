@@ -5937,7 +5937,8 @@ public class BleDevice extends BleNode
 
     final void onServicesDiscovered()
     {
-        if (m_mtu > BleNodeConfig.DEFAULT_MTU_SIZE)
+        boolean autoNegotiateMtu = BleDeviceConfig.bool(conf_device().autoNegotiateMtuOnReconnect, conf_mngr().autoNegotiateMtuOnReconnect);
+        if (autoNegotiateMtu && m_mtu > BleNodeConfig.DEFAULT_MTU_SIZE)
         {
             if (isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM))
             {
