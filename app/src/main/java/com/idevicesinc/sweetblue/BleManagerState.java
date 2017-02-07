@@ -11,7 +11,8 @@ import com.idevicesinc.sweetblue.utils.Utils_Byte;
 /**
  * An enumeration of the various states that a {@link BleManager} can be in.
  * The manager can be in multiple states simultaneously.
- * 
+ *
+ * @see ManagerStateListener
  * @see BleManager.StateListener
  * @see BleManager.NativeStateListener
  * @see BleManager#is(BleManagerState)
