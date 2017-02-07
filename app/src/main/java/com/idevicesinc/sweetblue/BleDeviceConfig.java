@@ -69,8 +69,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static final int DEFAULT_TX_POWER					= -50;
 
 	/**
-	 * The default size of the list that keeps track of a {@link BleNode}'s connection failure history. This is to prevent
-	 * the list from growing too large, if the device is unable to connect, and you have a large long term reconnect time set
+	 * The default value of {@link #maxConnectionFailHistorySize}, the size of the list that keeps track of a {@link BleNode}'s connection failure history.
+	 * This is to prevent the list from growing too large, if the device is unable to connect, and you have a large long term reconnect time set
 	 * with {@link #reconnectFilter}.
 	 */
 	public static final int DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE	= 25;
@@ -133,7 +133,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	/**
 	 * Default is <code>true</code> - whether to automatically enable notifications that were enabled via a call to any of the enableNotify() methods
 	 * in {@link BleDevice} upon device reconnection. Basically, if you enable notifications in an {@link com.idevicesinc.sweetblue.BleTransaction.Init} transaction,
-	 * then set this to <code>false</code>, and use your transaction.
+	 * then set this to <code>false</code>, as the transaction will run on reconnection.
 	 */
 	public boolean autoEnableNotifiesOnReconnect				= true;
 
@@ -369,14 +369,16 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 	/**
 	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Auth} which will be used when
-	 * auto connecting.
+	 * connecting to a {@link BleDevice}. This transaction will also be called if the {@link BleDevice} has
+	 * to reconnect for any reason.
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public BleTransaction.Auth defaultAuthTransaction			= null;
 
 	/**
 	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Init} which will be used when
-	 * auto connecting.
+	 * connecting to a {@link BleDevice}. This transaction will also be called if the {@link BleDevice} has
+	 * to reconnect for any reason.
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public BleTransaction.Init defaultInitTransaction			= null;
