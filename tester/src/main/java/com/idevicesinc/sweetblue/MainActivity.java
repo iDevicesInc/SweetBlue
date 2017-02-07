@@ -41,8 +41,8 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<BleDevice> mDevices;
 
 
-//    private final static UUID tempUuid = UUID.fromString("47495078-0002-491E-B9A4-F85CD01C3698");
-    private final static UUID tempUuid = UUID.fromString("1234666b-1000-2000-8000-001199334455");
+    private final static UUID tempUuid = UUID.fromString("47495078-0002-491E-B9A4-F85CD01C3698");
+//    private final static UUID tempUuid = UUID.fromString("1234666b-1000-2000-8000-001199334455");
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
+        config.useGattRefresh = true;
         config.runOnMainThread = false;
 
         mgr = BleManager.get(this, config);
