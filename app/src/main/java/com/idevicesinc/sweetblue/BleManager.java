@@ -3115,7 +3115,7 @@ public final class BleManager
 			m_config.updateLoopCallback.onUpdate(timeStep_seconds);
 		}
 
-		if (m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick))
+		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick))
 		{
 			getLogger().w("BleManager", String.format("Update loop took longer to run than the current interval of %dms", m_config.autoUpdateRate.millis()));
 		}
