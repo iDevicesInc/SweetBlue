@@ -25,12 +25,6 @@ public class ConnectTest extends BaseBleUnitTest
     private BleDevice m_device;
 
 
-    @Override public P_NativeManagerLayer getManagerLayer()
-    {
-        return new P_UnitTestManagerLayer();
-    }
-
-
     @Test(timeout = 6000)
     public void connectCreatedDeviceTest() throws Exception
     {

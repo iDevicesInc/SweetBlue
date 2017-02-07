@@ -16,7 +16,21 @@ public abstract class BaseBleUnitTest
 
     public Activity m_activity;
 
-    public abstract P_NativeManagerLayer getManagerLayer();
+
+    public P_NativeManagerLayer getManagerLayer()
+    {
+        return new P_UnitTestManagerLayer();
+    }
+
+    public P_NativeDeviceLayer getDeviceLayer(BleDevice device)
+    {
+        return new P_UnitDevice(device);
+    }
+
+    public P_GattLayer getGattLayer(BleDevice device)
+    {
+        return new P_UnitGatt(device);
+    }
 
 
     @Before
@@ -56,6 +70,20 @@ public abstract class BaseBleUnitTest
         m_config = new BleManagerConfig();
         m_config.unitTest = true;
         m_config.nativeManagerLayer = getManagerLayer();
+        m_config.gattLayerFactory = new P_GattLayerFactory()
+        {
+            @Override public P_GattLayer newInstance(BleDevice device)
+            {
+                return getGattLayer(device);
+            }
+        };
+        m_config.nativeDeviceFactory = new P_NativeDeviceLayerFactory()
+        {
+            @Override public P_NativeDeviceLayer newInstance(BleDevice device)
+            {
+                return getDeviceLayer(device);
+            }
+        };
         m_config.logger = new P_UnitLogger();
         return m_config;
     }
