@@ -19,13 +19,18 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	
 	private byte[] m_data = null;
 
+	private final UUID m_charUuid;
+	private final DescriptorFilter m_filter;
 	private final FutureData m_futureData;
-	
-	public P_Task_Write(BleDevice device, BluetoothGattCharacteristic characteristic, final FutureData futureData, boolean requiresBonding, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
+
+
+	public P_Task_Write(BleDevice device, BluetoothGattCharacteristic characteristic, DescriptorFilter filter, final FutureData futureData, boolean requiresBonding, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
 	{
 		super(device, characteristic, writeListener, requiresBonding, txn, priority);
 
 		m_futureData = futureData;
+		m_filter = filter;
+		m_charUuid = characteristic.getUuid();
 	}
 	
 	@Override protected ReadWriteEvent newReadWriteEvent(final Status status, final int gattStatus, final Target target, final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
