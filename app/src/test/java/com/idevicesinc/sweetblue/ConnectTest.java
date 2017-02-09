@@ -2,8 +2,11 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
+import android.content.Context;
+
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -173,6 +176,56 @@ public class ConnectTest extends BaseBleUnitTest
         s.acquire();
     }
 
+    @Test
+    public void connectThenDisconnectBeforeServiceDiscoveryTest() throws Exception
+    {
+        m_device = null;
+
+        m_config.loggingEnabled = true;
+        m_config.gattLayerFactory = new P_GattLayerFactory()
+        {
+            @Override public P_GattLayer newInstance(BleDevice device)
+            {
+                return new DisconnectBeforeServiceDiscoveryGattLayer(device);
+            }
+        };
+
+        m_mgr.setConfig(m_config);
+
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        {
+            @Override public void onEvent(DiscoveryEvent e)
+            {
+                if (e.was(LifeCycle.DISCOVERED))
+                {
+                    m_device = e.device();
+                    m_device.connect(new BleDevice.StateListener()
+                    {
+                        @Override public void onEvent(StateEvent e)
+                        {
+                        }
+                    }, new BleDevice.DefaultConnectionFailListener() {
+                        @Override public Please onEvent(ConnectionFailEvent e)
+                        {
+                            System.out.println("Connection fail event: " + e.toString());
+                            if (e.failureCountSoFar() == 3)
+                            {
+                                s.release();
+                            }
+                            return super.onEvent(e);
+                        }
+                    });
+                }
+            }
+        });
+
+        m_mgr.newDevice(P_UnitUtils.randomMacAddress(), "Test Device");
+
+        s.acquire();
+    }
+
     @Test(timeout = 6000)
     public void connectThenFailDiscoverServicesTest() throws Exception
     {
@@ -186,6 +239,8 @@ public class ConnectTest extends BaseBleUnitTest
                 return new DiscoverServicesFailGattLayer(device);
             }
         };
+
+        m_config.connectFailRetryConnectingOverall = true;
         m_mgr.setConfig(m_config);
 
         final Semaphore s = new Semaphore(0);
@@ -235,6 +290,7 @@ public class ConnectTest extends BaseBleUnitTest
                 return new ReadFailGattLayer(device);
             }
         };
+        m_config.connectFailRetryConnectingOverall = true;
         m_mgr.setConfig(m_config);
 
         final Semaphore s = new Semaphore(0);
@@ -376,6 +432,27 @@ public class ConnectTest extends BaseBleUnitTest
 
         @Override public void setToConnected()
         {
+        }
+    }
+
+    private class DisconnectBeforeServiceDiscoveryGattLayer extends P_UnitGatt
+    {
+
+        public DisconnectBeforeServiceDiscoveryGattLayer(BleDevice device)
+        {
+            super(device);
+        }
+
+        @Override public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
+        {
+            getBleDevice().getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+            {
+                @Override public void run()
+                {
+                    getBleDevice().m_listeners.onConnectionStateChange(null, BleStatuses.GATT_ERROR, BluetoothGatt.STATE_DISCONNECTED);
+                }
+            }, 175);
+            return super.connect(device, context, useAutoConnect, callback);
         }
     }
 

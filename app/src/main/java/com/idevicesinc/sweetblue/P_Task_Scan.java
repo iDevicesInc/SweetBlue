@@ -11,11 +11,14 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
     private final boolean m_explicit = true;
     private final boolean m_isPoll;
     private final double m_scanTime;
+    private final PE_TaskPriority m_priority;
 
 
-    public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, boolean isPoll)
+    public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, boolean isPoll, PE_TaskPriority priority)
     {
         super(manager, listener);
+
+        m_priority = priority == null ? PE_TaskPriority.TRIVIAL : priority;
 
         m_scanTime = scanTime;
         m_isPoll = isPoll;
@@ -112,16 +115,18 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
     @Override public PE_TaskPriority getPriority()
     {
-        return PE_TaskPriority.TRIVIAL;
+        return m_priority;
     }
 
     private boolean isSelfInterruptableBy(final PA_Task otherTask)
     {
-        if (otherTask.getPriority().ordinal() > PE_TaskPriority.TRIVIAL.ordinal())
+//        if (otherTask.getPriority().ordinal() > PE_TaskPriority.TRIVIAL.ordinal())
+        if (otherTask.getPriority().ordinal() > m_priority.ordinal())
         {
             return true;
         }
-        else if (otherTask.getPriority().ordinal() >= this.getPriority().ordinal())
+//        else if (otherTask.getPriority().ordinal() >= this.getPriority().ordinal())
+        else if (otherTask.getPriority().ordinal() == m_priority.ordinal())
         {
             //--- DRK > Not sure infinite timeout check really matters here.
             return this.getTotalTimeExecuting() >= getMinimumScanTime();
@@ -135,7 +140,8 @@ class P_Task_Scan extends PA_Task_RequiresBleOn
 
     @Override public boolean isInterruptableBy(PA_Task otherTask)
     {
-        return otherTask.getPriority().ordinal() >= PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING.ordinal();
+        return otherTask.getPriority().ordinal() > m_priority.ordinal();
+//        return otherTask.getPriority().ordinal() >= PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING.ordinal();
     }
 
     @Override public boolean isExplicit()

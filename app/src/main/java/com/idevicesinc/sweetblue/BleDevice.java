@@ -6155,7 +6155,8 @@ public class BleDevice extends BleNode
                 }
                 else
                 {
-                    retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+                    retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
+//                    retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;PE_Please_DO_NOT_RETRY
                 }
             }
         }
