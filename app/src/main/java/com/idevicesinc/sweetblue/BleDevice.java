@@ -3291,7 +3291,7 @@ public class BleDevice extends BleNode
      * Use {@link #setListener_ConnectionFail(ConnectionFailListener)} and {@link #setListener_State(StateListener)} to receive callbacks for
      * progress and errors.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect()
     {
@@ -3301,7 +3301,7 @@ public class BleDevice extends BleNode
     /**
      * Same as {@link #connect()} but calls {@link #setListener_State(StateListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener)
     {
@@ -3311,7 +3311,7 @@ public class BleDevice extends BleNode
     /**
      * Same as {@link #connect()} but calls {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(ConnectionFailListener failListener)
     {
@@ -3322,7 +3322,7 @@ public class BleDevice extends BleNode
      * Same as {@link #connect()} but calls {@link #setListener_State(StateListener)} and
      * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(StateListener stateListener, ConnectionFailListener failListener)
     {
@@ -3344,7 +3344,7 @@ public class BleDevice extends BleNode
      * for your device than you ;-). Usually the characteristics read/written inside this transaction are encrypted and so one way or another will require
      * the device to become {@link BleDeviceState#BONDED}. This should happen automatically for you, i.e you shouldn't need to call {@link #bond()} yourself.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      * @see #connect()
      * @see BleDeviceState#AUTHENTICATING
      * @see BleDeviceState#AUTHENTICATED
@@ -3357,7 +3357,7 @@ public class BleDevice extends BleNode
     /**
      * Same as {@link #connect(BleTransaction.Auth)} but calls {@link #setListener_State(StateListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, StateListener stateListener)
     {
@@ -3369,7 +3369,7 @@ public class BleDevice extends BleNode
      * {@link #setListener_State(StateListener)} and
      * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, StateListener stateListener, ConnectionFailListener failListener)
     {
@@ -3381,7 +3381,7 @@ public class BleDevice extends BleNode
      * {@link BleDeviceState#INITIALIZED}. For example if you had a BLE-enabled thermometer you could use this transaction to attempt an initial
      * temperature read before updating your UI to indicate "full" connection success, even though BLE connection itself already succeeded.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      * @see #connect()
      * @see BleDeviceState#INITIALIZING
      * @see BleDeviceState#INITIALIZED
@@ -3394,7 +3394,7 @@ public class BleDevice extends BleNode
     /**
      * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener)
     {
@@ -3404,7 +3404,7 @@ public class BleDevice extends BleNode
     /**
      * Yet another overload.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authTxn, ConnectionFailListener connectionFailListener)
     {
@@ -3415,7 +3415,7 @@ public class BleDevice extends BleNode
      * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} and
      * {@link #setListener_ConnectionFail(ConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, StateListener stateListener, ConnectionFailListener failListener)
     {
@@ -3425,7 +3425,7 @@ public class BleDevice extends BleNode
     /**
      * Combination of {@link #connect(BleTransaction.Auth)} and {@link #connect(BleTransaction.Init)}. See those two methods for explanation.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      * @see #connect()
      * @see #connect(BleTransaction.Auth)
      * @see #connect(BleTransaction.Init)
@@ -3438,7 +3438,7 @@ public class BleDevice extends BleNode
     /**
      * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls {@link #setListener_State(StateListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     public final @Nullable(Prevalence.NEVER) ConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, StateListener stateListener)
     {
