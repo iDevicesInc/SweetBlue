@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
+import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.ArrayList;
@@ -73,6 +74,40 @@ abstract class PA_ServiceManager
 		}
 	}
 
+	public BluetoothGattCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid, final DescriptorFilter filter)
+	{
+		if( serviceUuid_nullable == null )
+		{
+			final List<BluetoothGattService> serviceList_native = getNativeServiceList_original();
+
+			for( int i = 0; i < serviceList_native.size(); i++ )
+			{
+				final BluetoothGattService service_ith = serviceList_native.get(i);
+				final BluetoothGattCharacteristic characteristic = getCharacteristic(service_ith, charUuid, filter);
+
+				if( characteristic != null)
+				{
+					return characteristic;
+				}
+			}
+
+			return null;
+		}
+		else
+		{
+			final BluetoothGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+
+			if( service_nullable != null )
+			{
+				return getCharacteristic(service_nullable, charUuid, filter);
+			}
+			else
+			{
+				return null;
+			}
+		}
+	}
+
 	private BluetoothGattCharacteristic getCharacteristic(final BluetoothGattService service, final UUID charUuid)
 	{
 		final List<BluetoothGattCharacteristic> charList_native = getNativeCharacteristicList_original(service);
@@ -84,6 +119,32 @@ abstract class PA_ServiceManager
 			if( char_jth.getUuid().equals(charUuid) )
 			{
 				return char_jth;
+			}
+		}
+
+		return null;
+	}
+
+	private BluetoothGattCharacteristic getCharacteristic(final BluetoothGattService service, final UUID charUuid, DescriptorFilter filter)
+	{
+		final List<BluetoothGattCharacteristic> charList_native = getNativeCharacteristicList_original(service);
+
+		for( int j = 0; j < charList_native.size(); j++ )
+		{
+			final BluetoothGattCharacteristic char_jth = charList_native.get(j);
+
+			if( char_jth.getUuid().equals(charUuid) )
+			{
+				final BluetoothGattDescriptor desc = char_jth.getDescriptor(filter.descriptorUuid());
+				if (desc != null)
+				{
+					final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(service, char_jth, desc, new PresentData(desc.getValue()));
+					final DescriptorFilter.Please please = filter.onEvent(event);
+					if (please.isAccepted())
+					{
+						return char_jth;
+					}
+				}
 			}
 		}
 

@@ -499,24 +499,35 @@ class P_BleDevice_Listeners extends BluetoothGattCallback
 
 	private void onDescriptorRead_updateThread(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final byte[] data, final int gattStatus)
 	{
-		final P_Task_ReadDescriptor task_read = m_queue.getCurrent(P_Task_ReadDescriptor.class, m_device);
+		final PA_Task_ReadOrWrite task_readOrWrite = m_queue.getCurrent(PA_Task_ReadOrWrite.class, m_device);
 
-		if( task_read != null && task_read.isFor(descriptor) )
+		if (task_readOrWrite != null && task_readOrWrite.descriptorMatches(descriptor))
 		{
-			task_read.onDescriptorRead(gatt, descriptor.getUuid(), data, gattStatus);
+			task_readOrWrite.onDescriptorReadCallback(gatt, descriptor, data, gattStatus);
 		}
 		else
 		{
-			final P_Task_BatteryLevel battery = m_queue.getCurrent(P_Task_BatteryLevel.class, m_device);
-			if (battery != null)
-			{
-				battery.onDescriptorRead(descriptor, data, gattStatus);
-			}
-			else
-			{
-				fireUnsolicitedEvent(descriptor.getCharacteristic(), descriptor, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
-			}
+			fireUnsolicitedEvent(descriptor.getCharacteristic(), descriptor, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
 		}
+
+//		final P_Task_ReadDescriptor task_read = m_queue.getCurrent(P_Task_ReadDescriptor.class, m_device);
+//
+//		if( task_read != null && task_read.isFor(descriptor) )
+//		{
+//			task_read.onDescriptorRead(gatt, descriptor.getUuid(), data, gattStatus);
+//		}
+//		else
+//		{
+//			final P_Task_BatteryLevel battery = m_queue.getCurrent(P_Task_BatteryLevel.class, m_device);
+//			if (battery != null)
+//			{
+//				battery.onDescriptorRead(descriptor, data, gattStatus);
+//			}
+//			else
+//			{
+//				fireUnsolicitedEvent(descriptor.getCharacteristic(), descriptor, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
+//			}
+//		}
 	}
 	
 	@Override public void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)

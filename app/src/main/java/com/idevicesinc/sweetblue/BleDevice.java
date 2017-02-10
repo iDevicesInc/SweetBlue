@@ -108,7 +108,8 @@ public class BleDevice extends BleNode
      * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
      * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
      *
-     * @deprecated - Refactored to {@link com.idevicesinc.sweetblue.ReadWriteListener}.
+     * @deprecated - Refactored to {@link com.idevicesinc.sweetblue.ReadWriteListener}. This class will stay until version 3.0, when it will
+     * be removed.
      */
     @com.idevicesinc.sweetblue.annotations.Lambda
     @Deprecated
@@ -3954,7 +3955,7 @@ public class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(com.idevicesinc.sweetblue.WriteBuilder writeBuilder)
     {
-        return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data);
+        return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data, writeBuilder.descriptorFilter);
     }
 
     /**
@@ -3980,6 +3981,17 @@ public class BleDevice extends BleNode
     }
 
     /**
+     * Writes to the device without a callback.
+     *
+     * @return (same as {@link #write(UUID, byte[], ReadWriteListener)}).
+     * @see #write(UUID, byte[], ReadWriteListener)
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final byte[] data)
+    {
+        return this.write(characteristicUuid, new PresentData(data), descriptorFilter, (ReadWriteListener) null);
+    }
+
+    /**
      * Writes to the device with a callback.
      *
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
@@ -3993,6 +4005,19 @@ public class BleDevice extends BleNode
     }
 
     /**
+     * Writes to the device with a callback.
+     *
+     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @see #write(UUID, byte[])
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
+    {
+        final UUID serviceUuid = null;
+
+        return write(serviceUuid, characteristicUuid, new PresentData(data), descriptorFilter, listener);
+    }
+
+    /**
      * Overload of {@link #write(UUID, byte[])} for when you have characteristics with identical uuids under different services.
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data)
@@ -4001,11 +4026,27 @@ public class BleDevice extends BleNode
     }
 
     /**
+     * Overload of {@link #write(UUID, DescriptorFilter, byte[])} for when you have characteristics with identical uuids under different services.
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter filter, final byte[] data)
+    {
+        return this.write(serviceUuid, characteristicUuid, new PresentData(data), filter, (ReadWriteListener) null);
+    }
+
+    /**
      * Overload of {@link #write(UUID, byte[], ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
     {
         return write(serviceUuid, characteristicUuid, new PresentData(data), listener);
+    }
+
+    /**
+     * Overload of {@link #write(UUID, byte[], ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
+    {
+        return write(serviceUuid, characteristicUuid, new PresentData(data), descriptorFilter, listener);
     }
 
     /**
@@ -4033,6 +4074,19 @@ public class BleDevice extends BleNode
     }
 
     /**
+     * Writes to the device with a callback.
+     *
+     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     * @see #write(UUID, FutureData)
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
+    {
+        final UUID serviceUuid = null;
+
+        return write(serviceUuid, characteristicUuid, futureData, descriptorFilter, listener);
+    }
+
+    /**
      * Overload of {@link #write(UUID, FutureData)} for when you have characteristics with identical uuids under different services.
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData)
@@ -4040,12 +4094,29 @@ public class BleDevice extends BleNode
         return this.write(serviceUuid, characteristicUuid, futureData, (ReadWriteListener) null);
     }
 
+
+    /**
+     * Overload of {@link #write(UUID, FutureData)} for when you have characteristics with identical uuids under different services.
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final DescriptorFilter descriptorFilter)
+    {
+        return this.write(serviceUuid, characteristicUuid, futureData, descriptorFilter, (ReadWriteListener) null);
+    }
+
     /**
      * Overload of {@link #write(UUID, FutureData, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
     {
-        return write_internal(serviceUuid, characteristicUuid, Uuids.INVALID, futureData, listener);
+        return write_internal(serviceUuid, characteristicUuid, Uuids.INVALID, futureData, null, listener);
+    }
+
+    /**
+     * Overload of {@link #write(UUID, FutureData, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
+    {
+        return write_internal(serviceUuid, characteristicUuid, Uuids.INVALID, futureData, descriptorFilter, listener);
     }
 
     /**
@@ -4135,7 +4206,7 @@ public class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
-        return writeDescriptor(characteristicUuid, descriptorUuid, futureData, listener);
+        return writeDescriptor(null, characteristicUuid, descriptorUuid, futureData, listener);
     }
 
     /**
@@ -4143,7 +4214,7 @@ public class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
-        return write_internal(serviceUuid, characteristicUuid, descriptorUuid, futureData, listener);
+        return write_internal(serviceUuid, characteristicUuid, descriptorUuid, futureData, null, listener);
     }
 
     /**
@@ -4184,7 +4255,7 @@ public class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
     {
-        return readDescriptor(characteristicUuid, descriptorUuid, listener);
+        return readDescriptor(null, characteristicUuid, descriptorUuid, listener);
     }
 
     /**
@@ -4200,7 +4271,7 @@ public class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
     {
-        return read_internal(serviceUuid, characteristicUuid, descriptorUuid, Type.READ, listener);
+        return read_internal(serviceUuid, characteristicUuid, descriptorUuid, Type.READ, null, listener);
     }
 
     /**
@@ -4749,7 +4820,20 @@ public class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null);
+        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null, null);
+    }
+
+    /**
+     * Same as {@link #read(java.util.UUID, DescriptorFilter, BleDevice.ReadWriteListener)} but you can use this
+     * if you don't immediately care about the result. The callback will still be posted to {@link BleDevice.ReadWriteListener}
+     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
+     * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
+     */
+    public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final DescriptorFilter descriptorFilter)
+    {
+        final UUID serviceUuid = null;
+
+        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, descriptorFilter, null);
     }
 
     /**
@@ -4761,7 +4845,20 @@ public class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, listener);
+        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null, listener);
+    }
+
+    /**
+     * Reads a characteristic from the device. The provided {@link DescriptorFilter} will grab the correct {@link BluetoothGattCharacteristic} in the case there are
+     * more than one with the same {@link UUID} in the same {@link BluetoothGattService}.
+     *
+     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, StateListener, ConnectionFailListener)}).
+     */
+    public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
+    {
+        final UUID serviceUuid = null;
+
+        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, descriptorFilter, listener);
     }
 
     /**
@@ -4769,7 +4866,15 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid)
     {
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null);
+        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null, null);
+    }
+
+    /**
+     * Overload of {@link #read(UUID, DescriptorFilter)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, DescriptorFilter descriptorFilter)
+    {
+        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, descriptorFilter, null);
     }
 
     /**
@@ -4777,7 +4882,15 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, listener);
+        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null, listener);
+    }
+
+    /**
+     * Overload of {@link #read(UUID, DescriptorFilter, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
+    {
+        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, descriptorFilter, listener);
     }
 
     /**
@@ -4787,7 +4900,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteEvent readBatteryLevel(ReadWriteListener listener)
     {
-        return read_internal(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, Type.READ, listener);
+        return read_internal(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, Type.READ, null, listener);
     }
 
     /**
@@ -4795,7 +4908,10 @@ public class BleDevice extends BleNode
      * characteristic to actually read from. NOTE: This expects the FULL byte array for comparison, which by the Bluetooth spec found here
      * <a href="https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.characteristic_presentation_format.xml"</a>
      * says that it should be 7 bytes. SweetBlue will NOT enforce the 7 byte length, in the odd case that someone implements this descriptor out-of-spec.
+     *
+     * @deprecated - Use any of the read() methods which accept a {@link DescriptorFilter} instead. This way, you're not limited to just the battery service/char
      */
+    @Deprecated
     public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, ReadWriteListener listener)
     {
         return readBatteryLevel(valueToMatch, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID, listener);
@@ -4805,7 +4921,10 @@ public class BleDevice extends BleNode
      * Read the battery level of this device. This method is intended to be used if the device being read has two battery characteristics in the battery service.
      * This method allows you to state which descriptor to match the @param valueToMatch to, to pick the correct characteristic to read the battery level from.
      * This method is needed if you do not implement dual battery level exactly to the Bluetooth spec.
+     *
+     * @deprecated - Use any of the read() methods which accept a {@link DescriptorFilter} instead, so you're not locked into the default service/char for battery.
      */
+    @Deprecated
     @Advanced
     public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
     {
@@ -4944,7 +5063,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid)
     {
-        return this.enableNotify(null, characteristicUuid, Interval.INFINITE, null);
+        return this.enableNotify(null, characteristicUuid, Interval.INFINITE, null, null);
     }
 
     /**
@@ -4956,7 +5075,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, ReadWriteListener listener)
     {
-        return this.enableNotify(null, characteristicUuid, Interval.INFINITE, listener);
+        return this.enableNotify(null, characteristicUuid, Interval.INFINITE, null, listener);
     }
 
     /**
@@ -4967,7 +5086,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
     {
-        return this.enableNotify(null, characteristicUuid, forceReadTimeout, null);
+        return this.enableNotify(null, characteristicUuid, forceReadTimeout, null, null);
     }
 
     /**
@@ -4979,7 +5098,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
-        return this.enableNotify(null, characteristicUuid, forceReadTimeout, listener);
+        return this.enableNotify(null, characteristicUuid, forceReadTimeout, null, listener);
     }
 
     /**
@@ -4987,7 +5106,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid)
     {
-        return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null);
+        return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null, null);
     }
 
     /**
@@ -4995,7 +5114,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, ReadWriteListener listener)
     {
-        return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, listener);
+        return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null, listener);
     }
 
     /**
@@ -5003,13 +5122,13 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
     {
-        return this.enableNotify(serviceUuid, characteristicUuid, forceReadTimeout, null);
+        return this.enableNotify(serviceUuid, characteristicUuid, forceReadTimeout, null, null);
     }
 
     /**
      * Overload of {@link #enableNotify(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
      */
-    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -5036,7 +5155,17 @@ public class BleDevice extends BleNode
         {
             m_bondMngr.bondIfNeeded(characteristicUuid, CharacteristicEventType.ENABLE_NOTIFY);
 
-            queue().add(new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority()));
+            final P_Task_ToggleNotify task;
+
+            if (descriptorFilter == null)
+            {
+                task = new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+            }
+            else
+            {
+                task = new P_Task_ToggleNotify(this, serviceUuid, characteristicUuid, descriptorFilter, true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+            }
+            queue().add(task);
 
             m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, P_PollManager.E_NotifyState__ENABLING);
 
@@ -5082,7 +5211,7 @@ public class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        return this.disableNotify_private(serviceUuid, characteristicUuid, null, listener);
+        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null, listener);
     }
 
     /**
@@ -5094,7 +5223,7 @@ public class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), listener);
+        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null, listener);
     }
 
     /**
@@ -5107,7 +5236,7 @@ public class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null);
+        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null, null);
     }
 
     /**
@@ -5119,7 +5248,7 @@ public class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null);
+        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null, null);
     }
 
     /**
@@ -5127,7 +5256,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
-        return this.disableNotify_private(serviceUuid, characteristicUuid, null, listener);
+        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null, listener);
     }
 
     /**
@@ -5135,7 +5264,7 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
-        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), listener);
+        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null, listener);
     }
 
     /**
@@ -5143,15 +5272,23 @@ public class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid)
     {
-        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null);
+        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null, null);
+    }
+
+    /**
+     * Overload of {@link #disableNotify(UUID, UUID, DescriptorFilter, Interval)} for when you have characteristics with identical uuids under different services.
+     */
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
+    {
+        return this.disableNotify(serviceUuid, characteristicUuid, null, forceReadTimeout);
     }
 
     /**
      * Overload of {@link #disableNotify(UUID, Interval)} for when you have characteristics with identical uuids under different services.
      */
-    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
+    public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Interval forceReadTimeout)
     {
-        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null);
+        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), descriptorFilter, null);
     }
 
     /**
@@ -6217,9 +6354,8 @@ public class BleDevice extends BleNode
         m_pollMngr.stopPoll(serviceUuid, characteristicUuid, interval, listener, /* usingNotify= */false);
     }
 
-    final ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, final ReadWriteListener listener)
+    final ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
-
 
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -6233,10 +6369,21 @@ public class BleDevice extends BleNode
         if (descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID))
         {
             final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristicUuid, BondFilter.CharacteristicEventType.READ);
 
-            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
+            final P_Task_Read task;
 
-            queue().add(new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+            if (descriptorFilter == null)
+            {
+
+                task = new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+            }
+            else
+            {
+                task = new P_Task_Read(this, characteristic.getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+            }
+
+            queue().add(task);
         }
         else
         {
@@ -6249,7 +6396,7 @@ public class BleDevice extends BleNode
         return NULL_READWRITE_EVENT();
     }
 
-    final ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final ReadWriteListener listener)
+    final ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final DescriptorFilter descriptorFilterer, final ReadWriteListener listener)
     {
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, descriptorUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -6266,7 +6413,7 @@ public class BleDevice extends BleNode
 
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
-            addWriteTasks(characteristic, data, requiresBonding, listener);
+            addWriteTasks(characteristic, data, requiresBonding, descriptorFilterer, listener);
         }
         else
         {
@@ -6298,23 +6445,31 @@ public class BleDevice extends BleNode
         }
     }
 
-    private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, ReadWriteListener listener)
+    private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, DescriptorFilter filter, ReadWriteListener listener)
     {
         int mtuSize = getEffectiveMtuSize();
         if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
         {
-            queue().add(new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+            final P_Task_Write task_write;
+            if (filter == null)
+            {
+                task_write = new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+            }
+            else
+            {
+                task_write = new P_Task_Write(this, characteristic.getService().getUuid(), characteristic.getUuid(), filter, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+            }
+            queue().add(task_write);
         }
         else
         {
-            P_StripedWriteTransaction stripedTxn = new P_StripedWriteTransaction(data, characteristic, requiresBonding, listener);
+            P_StripedWriteTransaction stripedTxn = new P_StripedWriteTransaction(data, characteristic, requiresBonding, filter, listener);
             performTransaction(stripedTxn);
         }
     }
 
-    private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, ReadWriteListener listener)
+    private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, DescriptorFilter descriptorFilter, ReadWriteListener listener)
     {
-
 
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
@@ -6329,7 +6484,16 @@ public class BleDevice extends BleNode
 
         if (characteristic != null && is(CONNECTED))
         {
-            queue().add(new P_Task_ToggleNotify(this, characteristic, /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority()));
+            final P_Task_ToggleNotify task;
+            if (descriptorFilter == null)
+            {
+                task = new P_Task_ToggleNotify(this, characteristic, /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+            }
+            else
+            {
+                task = new P_Task_ToggleNotify(this, serviceUuid, characteristicUuid, descriptorFilter, false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+            }
+            queue().add(task);
         }
 
         m_pollMngr.stopPoll(serviceUuid, characteristicUuid, forceReadTimeout, listener, /* usingNotify= */true);
@@ -6583,6 +6747,7 @@ public class BleDevice extends BleNode
         UUID serviceUUID = null;
         UUID charUUID = null;
         FutureData data = null;
+        DescriptorFilter descriptorFilter;
         boolean bigEndian = true;
 
 
@@ -6635,16 +6800,25 @@ public class BleDevice extends BleNode
         }
 
         /**
+         * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}.
+         */
+        public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID)
+        {
+            this(isBigEndian, serviceUUID, characteristicUUID, null);
+        }
+
+        /**
          * Main constructor to use. All other constructors overload this one.
          *
          * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
          *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
          */
-        public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID)
+        public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID, DescriptorFilter descriptorFilter)
         {
             bigEndian = isBigEndian;
             this.serviceUUID = serviceUUID;
             charUUID = characteristicUUID;
+            this.descriptorFilter = descriptorFilter;
         }
 
 

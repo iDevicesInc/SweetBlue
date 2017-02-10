@@ -18,6 +18,7 @@ public class WriteBuilder
     UUID serviceUUID = null;
     UUID charUUID = null;
     FutureData data = null;
+    DescriptorFilter descriptorFilter = null;
     boolean bigEndian = true;
 
 
@@ -28,45 +29,45 @@ public class WriteBuilder
      */
     public WriteBuilder()
     {
-        this(/*bigEndian*/true, null, null);
+        this(/*bigEndian*/true, null, null, null);
     }
 
     /**
-     * Overload of {@link WriteBuilder#WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
+     * Overload of {@link WriteBuilder#WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}. If @param isBigEndian is true,
      *
      * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
      *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
      */
     public WriteBuilder(boolean isBigEndian)
     {
-        this(isBigEndian, null, null);
+        this(isBigEndian, null, null, null);
     }
 
     /**
-     * Overload of {@link  WriteBuilder#WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
+     * Overload of {@link  WriteBuilder#WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}. If @param isBigEndian is true,
      *
      * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
      *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
      */
     public WriteBuilder(boolean isBigEndian, UUID characteristicUUID)
     {
-        this(isBigEndian, null, characteristicUUID);
+        this(isBigEndian, null, characteristicUUID, null);
     }
 
     /**
-     * Overload of {@link WriteBuilder#WriteBuilder(boolean, UUID, UUID)}.
+     * Overload of {@link WriteBuilder#WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}.
      */
     public WriteBuilder(UUID characteristicUUID)
     {
-        this(/*bigendian*/true, null, characteristicUUID);
+        this(/*bigendian*/true, null, characteristicUUID, null);
     }
 
     /**
-     * Overload of {@link WriteBuilder#WriteBuilder(boolean, UUID, UUID)}.
+     * Overload of {@link WriteBuilder#WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}.
      */
     public WriteBuilder(UUID serviceUUID, UUID characteristicUUID)
     {
-        this(/*bigendian*/true, serviceUUID, characteristicUUID);
+        this(/*bigendian*/true, serviceUUID, characteristicUUID, null);
     }
 
     /**
@@ -75,11 +76,12 @@ public class WriteBuilder
      * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
      *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
      */
-    public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID)
+    public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID, DescriptorFilter descriptorFilter)
     {
         bigEndian = isBigEndian;
         this.serviceUUID = serviceUUID;
         charUUID = characteristicUUID;
+        this.descriptorFilter = descriptorFilter;
     }
 
 
@@ -98,6 +100,16 @@ public class WriteBuilder
     public final WriteBuilder setCharacteristicUUID(UUID uuid)
     {
         charUUID = uuid;
+        return this;
+    }
+
+    /**
+     * Set the {@link DescriptorFilter} to determine which characteristic to write to, if there are multiple with the same {@link UUID} in the same
+     * {@link android.bluetooth.BluetoothGattService}.
+     */
+    public final WriteBuilder setDescriptorFilter(DescriptorFilter filter)
+    {
+        descriptorFilter = filter;
         return this;
     }
 

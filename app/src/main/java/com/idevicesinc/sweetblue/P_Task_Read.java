@@ -1,16 +1,15 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
-
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+
 
 class P_Task_Read extends PA_Task_ReadOrWrite
 {
@@ -22,18 +21,22 @@ class P_Task_Read extends PA_Task_ReadOrWrite
 		
 		m_type = type;
 	}
+
+	public P_Task_Read(BleDevice device, UUID serviceUuid, UUID charUuid, Type type, boolean requiresBonding, DescriptorFilter filter, ReadWriteListener readListener, BleTransaction txn, PE_TaskPriority priority)
+	{
+		super(device, serviceUuid, charUuid, requiresBonding, txn, priority, filter, readListener);
+		m_type = type;
+	}
 	
 	@Override protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
 	{
 		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, m_type, target, null, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
-	@Override public void execute()
+	@Override protected void executeReadOrWrite()
 	{
-		super.execute();
-		
 		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
-		
+
 		if( char_native == null )
 		{
 			fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
@@ -50,7 +53,7 @@ class P_Task_Read extends PA_Task_ReadOrWrite
 			}
 		}
 	}
-	
+
 	public void onCharacteristicRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus)
 	{
 		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));

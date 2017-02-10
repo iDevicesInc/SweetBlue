@@ -220,7 +220,7 @@ class P_PollManager
 					{
 						m_waitingForResponse = true;
 						Type type = trackingChanges() ? Type.PSUEDO_NOTIFICATION : Type.POLL;
-						m_device.read_internal(m_serviceUuid, m_charUuid, Uuids.INVALID, type, m_pollingReadListener);
+						m_device.read_internal(m_serviceUuid, m_charUuid, Uuids.INVALID, type, null, m_pollingReadListener);
 					}
 				}
 			}
