@@ -30,6 +30,14 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
 		m_enable = enable;
 	}
+
+	public P_Task_ToggleNotify(BleDevice device, UUID serviceUuid, UUID charUuid, DescriptorFilter filter, boolean enable, BleTransaction txn, final BleDevice.ReadWriteListener writeListener, PE_TaskPriority priority)
+	{
+		super(device, serviceUuid, charUuid, false, txn, priority, filter, writeListener);
+
+		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
+		m_enable = enable;
+	}
 	
 	private byte[] getWriteValue()
 	{
@@ -59,12 +67,10 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 		return enable ? enableValue : disableValue;
 	}
 
-	@Override public void execute()
+	@Override protected void executeReadOrWrite()
 	{
-		super.execute();
-		
 		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
-		
+
 		if( char_native == null )
 		{
 			this.fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.CHARACTERISTIC, getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
@@ -104,7 +110,7 @@ class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_State
 			}
 		}
 	}
-	
+
 	@Override protected void fail(Status status, int gattStatus, Target target, UUID charUuid, UUID descUuid)
 	{
 		super.fail(status, gattStatus, target, charUuid, descUuid);

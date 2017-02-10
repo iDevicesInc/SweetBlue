@@ -19,32 +19,34 @@ class P_Task_Write extends PA_Task_ReadOrWrite
 	
 	private byte[] m_data = null;
 
-	private final UUID m_charUuid;
-	private final DescriptorFilter m_filter;
 	private final FutureData m_futureData;
 
 
-	public P_Task_Write(BleDevice device, BluetoothGattCharacteristic characteristic, DescriptorFilter filter, final FutureData futureData, boolean requiresBonding, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
+	public P_Task_Write(BleDevice device, BluetoothGattCharacteristic characteristic, final FutureData futureData, boolean requiresBonding, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
 	{
 		super(device, characteristic, writeListener, requiresBonding, txn, priority);
 
 		m_futureData = futureData;
-		m_filter = filter;
-		m_charUuid = characteristic.getUuid();
+	}
+
+	public P_Task_Write(BleDevice device, UUID serviceUuid, UUID charUuid, DescriptorFilter filter, final FutureData futureData, boolean requiresBonding, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
+	{
+		super(device, serviceUuid, charUuid, requiresBonding, txn, priority, filter, writeListener);
+
+		m_futureData = futureData;
 	}
 	
 	@Override protected ReadWriteEvent newReadWriteEvent(final Status status, final int gattStatus, final Target target, final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
 	{
 		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(serviceUuid, charUuid);
 		final Type type = P_DeviceServiceManager.modifyResultType(char_native, Type.WRITE);
+		final UUID actualDescUuid = getActualDescUuid(descUuid);
 		
-		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, type, target, m_data, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
+		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, actualDescUuid, type, target, m_data, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
-	@Override public void execute()
+	@Override protected void executeReadOrWrite()
 	{
-		super.execute();
-
 		m_data = m_futureData.getData();
 
 		if( false == write_earlyOut(m_data) )

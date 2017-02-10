@@ -40,12 +40,10 @@ class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 		return Target.DESCRIPTOR;
 	}
 
-	@Override public void execute()
+	@Override protected void executeReadOrWrite()
 	{
-		super.execute();
-		
 		final BluetoothGattDescriptor desc_native = getDevice().getNativeDescriptor(getServiceUuid(), getCharUuid(), getDescUuid());
-		
+
 		if( desc_native == null )
 		{
 			fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), getDescUuid());
@@ -62,7 +60,8 @@ class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 			}
 		}
 	}
-	
+
+	@Override
 	public void onDescriptorRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus)
 	{
 		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));

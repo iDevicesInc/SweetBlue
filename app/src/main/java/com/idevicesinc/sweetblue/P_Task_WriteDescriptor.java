@@ -44,10 +44,8 @@ class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 		return Target.DESCRIPTOR;
 	}
 
-	@Override public void execute()
+	@Override protected void executeReadOrWrite()
 	{
-		super.execute();
-
 		m_data = m_futureData.getData();
 
 		if( false == write_earlyOut(m_data) )

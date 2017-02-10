@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGattService;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.FutureData;
-
 import java.util.UUID;
 
 
@@ -44,21 +43,34 @@ public interface DescriptorFilter
             m_value = value;
         }
 
+        /**
+         * Convenience method to return the value stored in the {@link BluetoothGattDescriptor}. This is what you will check to determine if the
+         * current {@link BluetoothGattCharacteristic} is the one you want to operate on.
+         */
         public final byte[] value()
         {
             return m_value.getData();
         }
 
+        /**
+         * Convenience method which returns the {@link BluetoothGattService}.
+         */
         public final BluetoothGattService service()
         {
             return m_service;
         }
 
+        /**
+         * Convenience method which returns the current {@link BluetoothGattCharacteristic}.
+         */
         public final BluetoothGattCharacteristic characteristc()
         {
             return m_char;
         }
 
+        /**
+         * Convenience method which returns the {@link BluetoothGattDescriptor}
+         */
         public final BluetoothGattDescriptor descriptor()
         {
             return m_desc;
@@ -126,6 +138,10 @@ public interface DescriptorFilter
      */
     Please onEvent(DescriptorEvent event);
 
+    /**
+     * Return the {@link UUID} of the descriptor you want to read to distinguish which {@link BluetoothGattCharacteristic} you would
+     * like to perform an op on.
+     */
     UUID descriptorUuid();
 
 }

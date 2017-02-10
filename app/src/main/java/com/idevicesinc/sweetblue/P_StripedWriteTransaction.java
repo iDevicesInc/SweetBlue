@@ -20,14 +20,16 @@ final class P_StripedWriteTransaction extends BleTransaction
     private final BleDevice.ReadWriteListener m_listener;
     private final List<P_Task_Write> m_writeList;
     private final WriteListener m_internalListener;
+    private final DescriptorFilter m_descriptorFilter;
 
 
-    P_StripedWriteTransaction(FutureData data, BluetoothGattCharacteristic characteristic, boolean requiresBonding, BleDevice.ReadWriteListener listener)
+    P_StripedWriteTransaction(FutureData data, BluetoothGattCharacteristic characteristic, boolean requiresBonding, DescriptorFilter filter, BleDevice.ReadWriteListener listener)
     {
         m_data = data;
         m_characteristic = characteristic;
         m_requiresBonding = requiresBonding;
         m_listener = listener;
+        m_descriptorFilter = filter;
         m_writeList = new ArrayList<>();
         m_internalListener = new WriteListener();
     }
@@ -42,7 +44,17 @@ final class P_StripedWriteTransaction extends BleTransaction
         {
             int end = Math.min(allData.length, curIndex + device.getMtu());
             curData = new PresentData(Arrays.copyOfRange(allData, curIndex, Math.min(allData.length, curIndex + device.getMtu())));
-            m_writeList.add(new P_Task_Write(device, m_characteristic, curData, m_requiresBonding, m_internalListener, device.m_txnMngr.getCurrent(), device.getOverrideReadWritePriority()));
+            final P_Task_Write task;
+            if (m_descriptorFilter == null)
+            {
+                task = new P_Task_Write(device, m_characteristic, curData, m_requiresBonding, m_internalListener, device.m_txnMngr.getCurrent(), device.getOverrideReadWritePriority());
+            }
+            else
+            {
+                task = new P_Task_Write(device, m_characteristic.getService().getUuid(), m_characteristic.getUuid(), m_descriptorFilter, curData, m_requiresBonding, m_internalListener, device.m_txnMngr.getCurrent(), device.getOverrideReadWritePriority());
+            }
+            m_writeList.add(task);
+
             curIndex = end;
         }
         device.queue().add(m_writeList.remove(0));
