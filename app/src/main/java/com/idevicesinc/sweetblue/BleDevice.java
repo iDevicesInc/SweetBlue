@@ -3546,15 +3546,19 @@ public class BleDevice extends BleNode
 
         final boolean alreadyDisconnected = is(DISCONNECTED);
         final boolean reconnecting_longTerm = is(RECONNECTING_LONG_TERM);
+        final boolean alreadyQueuedToDisconnect = queue().isInQueue(P_Task_Disconnect.class, this);
 
-        if (status == Status.EXPLICIT_DISCONNECT)
+        if (!alreadyQueuedToDisconnect)
         {
-            clearForExplicitDisconnect();
+            if (status == Status.EXPLICIT_DISCONNECT)
+            {
+                clearForExplicitDisconnect();
+            }
+
+            disconnectWithReason(priority, status, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
         }
 
-        disconnectWithReason(priority, status, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
-
-        return !alreadyDisconnected || reconnecting_longTerm;
+        return !alreadyDisconnected || reconnecting_longTerm || !alreadyQueuedToDisconnect;
     }
 
     private void clearForExplicitDisconnect()

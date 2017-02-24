@@ -46,11 +46,6 @@ repositories {
 }
 
 dependencies {
-    testCompile 'junit:junit:4.10'
-    testCompile 'org.robolectric:robolectric:3.2.2'
-    // This is a hack to get robolectric to work on higher API levels
-    testCompile 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
-//    testCompile 'org.mockito:mockito-core:1.10.19'
 }
 
 // Task definitions
