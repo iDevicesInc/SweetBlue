@@ -202,6 +202,21 @@ public class Utils_Byte extends Utils
 	}
 
 	/**
+	 * Set a value to size indexes in the given byte array starting at the given offset
+	 */
+	public static void memset(byte[] data, byte value, int offset, int size)
+	{
+		if (offset < 0 || data.length - offset < size)
+		{
+			return;
+		}
+		for(int i = offset; i < size; i++)
+		{
+			data[i] = value;
+		}
+	}
+
+	/**
 	 * Compare two byte arrays. Returns <code>true</code> if each value matches for the given size
      */
 	public static boolean memcmp(byte[] buffer1, byte[] buffer2, int size)
