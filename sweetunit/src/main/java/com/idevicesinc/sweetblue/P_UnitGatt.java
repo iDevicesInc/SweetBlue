@@ -8,9 +8,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
-
-import org.bouncycastle.jce.provider.JCEMac;
-
 import java.util.List;
 import java.util.UUID;
 

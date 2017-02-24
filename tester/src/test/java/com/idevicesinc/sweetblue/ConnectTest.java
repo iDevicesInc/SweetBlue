@@ -276,6 +276,83 @@ public class ConnectTest extends BaseBleUnitTest
         s.acquire();
     }
 
+    @Test
+    public void connectThenTimeoutThenFailTest() throws Exception
+    {
+        m_device = null;
+
+        m_config.loggingEnabled = true;
+        m_config.gattLayerFactory = new P_GattLayerFactory()
+        {
+            @Override public P_GattLayer newInstance(BleDevice device)
+            {
+                return new TimeOutGattLayer(device);
+            }
+        };
+
+        m_config.connectFailRetryConnectingOverall = false;
+
+        m_mgr.setConfig(m_config);
+
+        final Semaphore s = new Semaphore(0);
+
+        final BleTransaction.Init init = new BleTransaction.Init()
+        {
+            @Override protected void start(BleDevice device)
+            {
+                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+                {
+                    @Override public void onEvent(ReadWriteEvent e)
+                    {
+                        assertFalse("Read was successful! How did this happen?", e.wasSuccess());
+                        if (!e.wasSuccess())
+                        {
+//                            fail();
+                        }
+                    }
+                });
+                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+                {
+                    @Override public void onEvent(ReadWriteEvent e)
+                    {
+                        assertFalse("Read was successful! How did this happen?", e.wasSuccess());
+                        if (!e.wasSuccess())
+                        {
+                            fail();
+                        }
+                    }
+                });
+            }
+        };
+
+        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        {
+            @Override public void onEvent(DiscoveryEvent e)
+            {
+                if (e.was(LifeCycle.DISCOVERED))
+                {
+                    m_device = e.device();
+                    m_device.connect(init, null, new BleDevice.DefaultConnectionFailListener() {
+                        @Override public Please onEvent(ConnectionFailEvent e)
+                        {
+                            System.out.println("Connection fail event: " + e.toString());
+                            if (e.failureCountSoFar() == 3)
+                            {
+                                s.release();
+                            }
+                            return super.onEvent(e);
+                        }
+                    });
+                }
+            }
+        });
+
+        m_mgr.newDevice(P_UnitUtils.randomMacAddress(), "Test Device");
+
+        s.acquire();
+
+    }
+
     @Test(timeout = 7000)
     public void connectThenFailInitTxnTest() throws Exception
     {
@@ -361,6 +438,52 @@ public class ConnectTest extends BaseBleUnitTest
         m_config.logger = new P_UnitLogger();
         m_config.runOnMainThread = false;
         return m_config;
+    }
+
+    private class TimeOutGattLayer extends P_UnitGatt
+    {
+
+        public TimeOutGattLayer(BleDevice device)
+        {
+            super(device);
+        }
+
+        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
+        {
+            List<BluetoothGattService> list = new ArrayList<>();
+            BluetoothGattService service = new BluetoothGattService(Uuids.BATTERY_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+            BluetoothGattCharacteristic ch = new BluetoothGattCharacteristic(Uuids.BATTERY_LEVEL, BleCharacteristicProperty.READ.bit(), BleCharacteristicPermission.READ.bit());
+            service.addCharacteristic(ch);
+            return list;
+        }
+
+        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
+        {
+            if (serviceUuid.equals(Uuids.BATTERY_SERVICE_UUID))
+            {
+                BluetoothGattService service = new BluetoothGattService(Uuids.BATTERY_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+                BluetoothGattCharacteristic ch = new BluetoothGattCharacteristic(Uuids.BATTERY_LEVEL, BleCharacteristicProperty.READ.bit(), BleCharacteristicPermission.READ.bit());
+                service.addCharacteristic(ch);
+                return service;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        @Override public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic)
+        {
+            getBleDevice().getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+            {
+                @Override public void run()
+                {
+                    ((P_UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_DISCONNECTED);
+                    getBleDevice().m_listeners.onConnectionStateChange(null, BleStatuses.GATT_ERROR, BluetoothGatt.STATE_DISCONNECTED);
+                }
+            }, 14500);
+            return true;
+        }
     }
 
     private class ReadFailGattLayer extends P_UnitGatt
