@@ -286,7 +286,7 @@ public class Utils_Byte extends Utils
 	}
 
 	/**
-	 * Outputs a {@link Pointer<Short>} from the given byte array, starting at the offset provided. If there is not enough space to
+	 * Outputs a {@link Pointer} from the given byte array, starting at the offset provided. If there is not enough space to
 	 * create the short, the {@link Pointer} value will be <code>null</code>.
      */
 	public static Pointer<Short> bytesToShort(byte[] b, int offset)
