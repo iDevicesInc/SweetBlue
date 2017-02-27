@@ -83,8 +83,8 @@ if (JavaVersion.current().isJava8Compatible()) {
     }
 }
 
-import org.gradle.logging.internal.OutputEvent
-import org.gradle.logging.internal.OutputEventListener
+import org.gradle.internal.logging.events.OutputEvent
+import org.gradle.internal.logging.events.OutputEventListener
 
 // Generate javadocs
 task gendocs(type: Javadoc) {
