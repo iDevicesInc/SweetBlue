@@ -83,8 +83,6 @@ if (JavaVersion.current().isJava8Compatible()) {
     }
 }
 
-import org.gradle.internal.logging.events.OutputEvent
-import org.gradle.internal.logging.events.OutputEventListener
 import org.gradle.api.logging.StandardOutputListener
 
 // Generate javadocs
@@ -109,11 +107,6 @@ task gendocs(type: Javadoc) {
     // This is a temporary solution until a more official solution
     // makes it's way into Gradle.
     def outputEvents = []
-//    def listener = new OutputEventListener() {
-//        void onOutput(OutputEvent event) {
-//            outputEvents << event
-//        }
-//    };
     def listener = new StandardOutputListener() {
         void onOutput(CharSequence output) {
             outputEvents << output
