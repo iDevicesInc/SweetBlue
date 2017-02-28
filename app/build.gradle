@@ -448,11 +448,6 @@ remotes {
     }
 }
 
-task uploadZips(dependsOn: uploadWebServerZips, uploadCommerceZip) {
-    group = "upload"
-    description = "Upload zip files to iDevices public web and big commerce servers."
-}
-
 task uploadWebServerZips(dependsOn: zipJar) {
     group = "upload"
     description = "Upload zip files to iDevices public web server."
@@ -480,6 +475,11 @@ task uploadCommerceZip(dependsOn: zipJar) {
             throw new RuntimeException("Failed to upload zip file to Big Commerce! Error: " + curl.errorStream.text)
         }
     }
+}
+
+task uploadZips(dependsOn: uploadWebServerZips, uploadCommerceZip) {
+    group = "upload"
+    description = "Upload zip files to iDevices public web and big commerce servers."
 }
 
 task uploadDocs(dependsOn: gendocs) {
