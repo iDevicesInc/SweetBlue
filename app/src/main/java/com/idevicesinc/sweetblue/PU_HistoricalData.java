@@ -14,7 +14,7 @@ import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
 
-class PU_HistoricalData
+final class PU_HistoricalData
 {
 	private static final BleDeviceConfig.HistoricalDataLogFilter.Please DO_NOT_LOG = BleDeviceConfig.HistoricalDataLogFilter.Please.doNotLog();
 

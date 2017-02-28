@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
 
-class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection implements I_StateListener
+final class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection implements I_StateListener
 {
 	private final BleServer.IncomingListener.IncomingEvent m_requestEvent;
 	private final BleServer.IncomingListener.Please m_please;

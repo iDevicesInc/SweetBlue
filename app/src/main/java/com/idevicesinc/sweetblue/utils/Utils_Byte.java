@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Utility methods for byte and bit twiddling.
  */
-public class Utils_Byte extends Utils
+public final class Utils_Byte extends Utils
 {
 
 	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();

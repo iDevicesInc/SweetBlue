@@ -4,6 +4,7 @@ import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleNode;
 import com.idevicesinc.sweetblue.BleServer;
+import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
  * Class used to construct queries for {@link BleDevice#select()}.
  */
 @com.idevicesinc.sweetblue.annotations.Alpha
+@Extendable
 public class HistoricalDataQuery
 {
 	public static class Part_Select extends Part_AllowsFrom

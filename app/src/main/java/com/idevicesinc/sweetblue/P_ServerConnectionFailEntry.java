@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 import java.util.ArrayList;
 
-class P_ServerConnectionFailEntry
+final class P_ServerConnectionFailEntry
 {
 	private int m_failCount = 0;
 

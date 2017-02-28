@@ -19,7 +19,7 @@ import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.UuidNameMap_ListWrapper;
 
-class P_Logger
+final class P_Logger
 {
 
 	private String[] m_debugThreadNamePool;

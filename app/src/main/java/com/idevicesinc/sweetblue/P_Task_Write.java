@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-class P_Task_Write extends PA_Task_ReadOrWrite
+final class P_Task_Write extends PA_Task_ReadOrWrite
 {
 	public static final int MTU_LIMIT = 20;
 	

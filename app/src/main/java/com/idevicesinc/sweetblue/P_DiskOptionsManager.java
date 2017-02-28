@@ -13,7 +13,7 @@ import android.content.SharedPreferences;
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
 import com.idevicesinc.sweetblue.utils.State;
 
-class P_DiskOptionsManager
+final class P_DiskOptionsManager
 {
 	private static final int ACCESS_MODE = Context.MODE_PRIVATE;
 

@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
  * 
  *
  */
-class P_Task_TurnBleOn extends PA_Task
+final class P_Task_TurnBleOn extends PA_Task
 {
 	private final boolean m_implicit;
 	

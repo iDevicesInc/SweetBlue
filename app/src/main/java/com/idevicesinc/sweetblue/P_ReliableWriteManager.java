@@ -1,14 +1,11 @@
 package com.idevicesinc.sweetblue;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothGatt;
-import android.os.Build;
-
-import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-class P_ReliableWriteManager
+
+final class P_ReliableWriteManager
 {
 	private final BleDevice m_device;
 

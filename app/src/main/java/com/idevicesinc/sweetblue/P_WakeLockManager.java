@@ -8,7 +8,7 @@ import android.util.Log;
 
 import com.idevicesinc.sweetblue.utils.Utils;
 
-class P_WakeLockManager
+final class P_WakeLockManager
 {
 	private static final String WAKE_LOCK_TAG = "SWEETBLUE_WAKE_LOCK";
 	

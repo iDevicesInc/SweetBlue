@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent;
 
 
-class P_BleStateTracker extends PA_StateTracker
+final class P_BleStateTracker extends PA_StateTracker
 {
 	private ManagerStateListener m_stateListener;
 	private final BleManager m_mngr;

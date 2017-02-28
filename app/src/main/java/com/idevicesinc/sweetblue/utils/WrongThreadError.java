@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.*;
  *
  * @see BleManagerConfig#allowCallsFromAllThreads
  */
-public class WrongThreadError extends Error
+public final class WrongThreadError extends Error
 {
 	public WrongThreadError(final String message)
 	{

@@ -15,7 +15,7 @@ import android.bluetooth.BluetoothGatt;
  * NOTE: Most <code>GATT_</code> members here are copy/pasted from
  * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.3_r1.1/stack/include/gatt_api.h
  */
-public class BleStatuses
+public final class BleStatuses
 {
 	/**
 	 * Status code used for {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()} when the operation failed at a point where a

@@ -17,7 +17,7 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventT
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-class P_PollManager
+final class P_PollManager
 {
 	static final int E_NotifyState__NOT_ENABLED		= 0;
 	static final int E_NotifyState__ENABLING 		= 1;

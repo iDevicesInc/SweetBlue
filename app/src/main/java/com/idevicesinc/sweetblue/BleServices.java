@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 /**
  * Static-only class with some common BLE services for {@link BleServer#addService(BleService)}.
  */
-public class BleServices
+public final class BleServices
 {
 	private BleServices(){}
 

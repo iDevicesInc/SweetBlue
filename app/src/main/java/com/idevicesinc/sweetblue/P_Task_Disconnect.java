@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-class P_Task_Disconnect extends PA_Task_RequiresBleOn
+final class P_Task_Disconnect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;

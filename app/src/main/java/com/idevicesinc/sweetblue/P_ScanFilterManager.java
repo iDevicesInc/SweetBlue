@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.ScanEvent;
 
 
-class P_ScanFilterManager
+final class P_ScanFilterManager
 {
 	private final ArrayList<BleManagerConfig.ScanFilter> m_filters = new ArrayList<BleManagerConfig.ScanFilter>();
 	private ScanFilter m_default;

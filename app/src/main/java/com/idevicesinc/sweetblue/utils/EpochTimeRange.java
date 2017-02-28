@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
  * periods of time.
  */
 @Immutable
-public class EpochTimeRange implements UsesCustomNull
+public final class EpochTimeRange implements UsesCustomNull
 {
 	/**
 	 * Fulfills the soft contract of {@link com.idevicesinc.sweetblue.utils.UsesCustomNull} - used for {@link #isNull()}.

@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattServer;
 
-class P_Task_DisconnectServer extends PA_Task_ConnectOrDisconnectServer
+final class P_Task_DisconnectServer extends PA_Task_ConnectOrDisconnectServer
 {
 	public P_Task_DisconnectServer(final BleServer server, final BluetoothDevice nativeDevice, final I_StateListener listener, final boolean explicit, PE_TaskPriority priority)
 	{

@@ -1,6 +1,5 @@
 package com.idevicesinc.sweetblue.utils;
 
-import java.text.DecimalFormat;
 
 import com.idevicesinc.sweetblue.annotations.*;
 
@@ -8,7 +7,7 @@ import com.idevicesinc.sweetblue.annotations.*;
  * Wrapper for a positive-only physical distance supporting various units of measurement.
  */
 @Immutable
-public class Distance extends Unit<Distance>
+public final class Distance extends Unit<Distance>
 {
 	public static final double FEET_PER_METER = 3.28084;
 	

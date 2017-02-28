@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import android.util.Log;
 
-public class DefaultLogger implements SweetLogger
+public final class DefaultLogger implements SweetLogger
 {
     @Override public void onLogEntry(int level, String tag, String msg)
     {

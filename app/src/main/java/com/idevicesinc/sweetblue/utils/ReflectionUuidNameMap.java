@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import com.idevicesinc.sweetblue.BleManagerConfig;
+import com.idevicesinc.sweetblue.annotations.Extendable;
 
 /**
  * Convenience implementation of {@link UuidNameMap} that takes a {@link Class} object
@@ -16,6 +17,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig;
  * @see BleManagerConfig#uuidNameMaps
  * @see BasicUuidNameMap
  */
+@Extendable
 public class ReflectionUuidNameMap implements UuidNameMap
 {
 	private final HashMap<String, String> m_dict = new HashMap<String, String>();

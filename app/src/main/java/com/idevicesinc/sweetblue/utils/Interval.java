@@ -10,7 +10,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
  * self-documenting and "type-comfortable" way of representing time instead of using naked numeric primitives.
  */
 @Immutable
-public class Interval extends Unit<Interval>
+public final class Interval extends Unit<Interval>
 {
 	private static final double DISABLED_VALUE = -1.0;
 

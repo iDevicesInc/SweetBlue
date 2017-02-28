@@ -13,7 +13,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
-class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
+final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {
 	private static int Type_NOTIFY = 0;
 	private static int Type_INDICATE = 1;

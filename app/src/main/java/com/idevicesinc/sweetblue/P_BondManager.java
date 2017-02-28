@@ -16,7 +16,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.UUID;
 
-class P_BondManager
+final class P_BondManager
 {
 	static final Object[] OVERRIDE_UNBONDED_STATES = {UNBONDED, true, BONDING, false, BONDED, false};
 	static final Object[] OVERRIDE_BONDING_STATES = {UNBONDED, false, BONDING, true, BONDED, false};

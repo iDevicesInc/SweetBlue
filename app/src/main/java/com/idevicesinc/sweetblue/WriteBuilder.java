@@ -12,7 +12,7 @@ import java.util.UUID;
  * booleans, ints, shorts, longs, and Strings. Use with {@link BleDevice#write(WriteBuilder)},
  * or {@link BleDevice#write(WriteBuilder, BleDevice.ReadWriteListener)}.
  */
-public class WriteBuilder
+public final class WriteBuilder
 {
 
     UUID serviceUUID = null;

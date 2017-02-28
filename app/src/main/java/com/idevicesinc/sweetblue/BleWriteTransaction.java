@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 
-public class BleWriteTransaction extends BleTransaction.Ota
+public final class BleWriteTransaction extends BleTransaction.Ota
 {
 
     /**

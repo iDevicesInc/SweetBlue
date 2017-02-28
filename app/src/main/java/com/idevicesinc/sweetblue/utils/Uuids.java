@@ -6,7 +6,7 @@ import java.util.UUID;
  * A collection of standard {@link UUID}s for services, characteristics, and descriptors.
  * Some convenience methods for creating {@link UUID}s also.
  */
-public class Uuids
+public final class Uuids
 {
 	/**
 	 * A {@link UUID} instance composed of all zeros and used instead of <code>null</code> in various places.

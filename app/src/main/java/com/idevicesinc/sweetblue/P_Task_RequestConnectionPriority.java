@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 
-class P_Task_RequestConnectionPriority extends PA_Task_Transactionable implements PA_Task.I_StateListener
+final class P_Task_RequestConnectionPriority extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {
 	protected final BleDevice.ReadWriteListener m_readWriteListener;
 	private final BleConnectionPriority m_connectionPriority;

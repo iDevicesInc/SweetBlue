@@ -26,7 +26,7 @@ package com.idevicesinc.sweetblue.utils;
 /**
  * Some static utility methods for RSSI-related calculations.
  */
-public class Utils_Rssi extends Utils
+public final class Utils_Rssi extends Utils
 {
 	private Utils_Rssi(){super();}
 

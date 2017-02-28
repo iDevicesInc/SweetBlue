@@ -1,10 +1,13 @@
 package com.idevicesinc.sweetblue.utils;
 
+import com.idevicesinc.sweetblue.annotations.Extendable;
+
 import java.util.Iterator;
 
 /**
  * Convenience class for implementing an {@link java.util.Iterator} with a single element.
  */
+@Extendable
 public class SingleElementIterator<T> implements Iterator<T>
 {
 	private T m_element;

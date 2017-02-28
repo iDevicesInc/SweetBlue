@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue.utils;
 
+
 /**
  * Contract to force <code>enum</code> implementors to comply to common bitwise operations.
  */

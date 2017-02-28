@@ -94,7 +94,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.UNDISCOVERED;
  * {@link BleManager#startScan()}) and sent to you through
  * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
  */
-public class BleDevice extends BleNode
+public final class BleDevice extends BleNode
 {
     /**
      * Special value that is used in place of Java's built-in <code>null</code>.
