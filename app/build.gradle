@@ -88,6 +88,7 @@ if (JavaVersion.current().isJava8Compatible()) {
 import org.gradle.logging.internal.OutputEvent
 import org.gradle.logging.internal.OutputEventListener
 
+
 // Generate javadocs
 task gendocs(type: Javadoc) {
     String path = rootDir.absolutePath + "/scripts/assets/doc_style.css"
