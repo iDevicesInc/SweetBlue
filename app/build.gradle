@@ -368,6 +368,7 @@ gradle.startParameter.taskNames = expandedTaskList.flatten()
 ext.ARCHIVA_URL = System.getenv("ARCHIVA_URL")
 ext.a_user = System.getenv("ARCHIVA_USER")
 ext.a_pw = System.getenv("ARCHIVA_PW")
+ext.COMMERCE_PW = System.getenv("SWEETBLUE_BIG_COMMERCE_PASSWORD")
 
 import org.gradle.plugins.signing.Sign
 
@@ -447,7 +448,12 @@ remotes {
     }
 }
 
-task uploadZips(dependsOn: zipJar) {
+task uploadZips(dependsOn: uploadWebServerZips, uploadCommerceZip) {
+    group = "upload"
+    description = "Upload zip files to iDevices public web and big commerce servers."
+}
+
+task uploadWebServerZips(dependsOn: zipJar) {
     group = "upload"
     description = "Upload zip files to iDevices public web server."
 
@@ -457,6 +463,21 @@ task uploadZips(dependsOn: zipJar) {
                 put from: projectDir.absolutePath + "/${STAGE}/${JAR_BASE_NAME}.zip", into: '/var/www/html/sweetblue/downloads'
                 put from: projectDir.absolutePath + "/${STAGE}/sweetblue.zip", into: '/var/www/html/sweetblue/downloads'
             }
+        }
+    }
+}
+
+task uploadCommerceZip(dependsOn: zipJar) {
+    group = "upload"
+    description = "Upload zip file to iDevices big commerce server."
+
+    doLast {
+        // Upload zip file to the big commerce site
+        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@store-lec5paa.mybigcommerce.com/dav/product_downloads/s/"]
+        def curl = curlS.execute()
+        curl.waitFor()
+        if (curl.exitValue() != 0) {
+            throw new RuntimeException("Failed to upload zip file to Big Commerce! Error: " + curl.errorStream.text)
         }
     }
 }
