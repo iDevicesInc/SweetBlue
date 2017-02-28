@@ -444,7 +444,7 @@ remotes {
     }
 }
 
-task uploadZips(dependsOn: zipJar) {
+task uploadWebServerZips(dependsOn: zipJar) {
     group = "upload"
     description = "Upload zip files to iDevices public web server."
 
@@ -456,6 +456,26 @@ task uploadZips(dependsOn: zipJar) {
             }
         }
     }
+}
+
+task uploadCommerceZip(dependsOn: zipJar) {
+    group = "upload"
+    description = "Upload zip file to iDevices big commerce server."
+
+    doLast {
+        // Upload zip file to the big commerce site
+        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@store-lec5paa.mybigcommerce.com/dav/product_downloads/s/"]
+        def curl = curlS.execute()
+        curl.waitFor()
+        if (curl.exitValue() != 0) {
+            throw new RuntimeException("Failed to upload zip file to Big Commerce! Error: " + curl.errorStream.text)
+        }
+    }
+}
+
+task uploadZips(dependsOn: uploadWebServerZips, uploadCommerceZip) {
+    group = "upload"
+    description = "Upload zip files to iDevices public web and big commerce servers."
 }
 
 task uploadDocs(dependsOn: gendocs) {
