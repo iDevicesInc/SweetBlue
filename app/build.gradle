@@ -477,7 +477,7 @@ task uploadCommerceZip(dependsOn: zipJar) {
     }
 }
 
-task uploadZips(dependsOn: uploadWebServerZips, uploadCommerceZip) {
+task uploadZips(dependsOn: [uploadWebServerZips, uploadCommerceZip]) {
     group = "upload"
     description = "Upload zip files to iDevices public web and big commerce servers."
 }
