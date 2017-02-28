@@ -1,11 +1,11 @@
 package com.idevicesinc.sweetblue;
 
-import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 
-class P_RssiPollManager
+
+final class P_RssiPollManager
 {
 	private static class CustomListener extends P_WrappingReadWriteListener
 	{

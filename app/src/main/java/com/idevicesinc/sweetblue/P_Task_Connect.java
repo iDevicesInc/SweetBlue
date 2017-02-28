@@ -4,7 +4,7 @@ import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage
 
 import android.bluetooth.BluetoothGatt;
 
-class P_Task_Connect extends PA_Task_RequiresBleOn
+final class P_Task_Connect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;

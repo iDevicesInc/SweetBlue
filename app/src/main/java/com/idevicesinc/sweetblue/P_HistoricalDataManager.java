@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 
-class P_HistoricalDataManager
+final class P_HistoricalDataManager
 {
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	private static final EmptyIterator<HistoricalData> EMPTY_ITERATOR = new EmptyIterator<HistoricalData>();

@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
+import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.EpochTime;
@@ -32,6 +33,7 @@ import java.util.UUID;
  * <br><br>
  * TIP: You can use {@link #newNulled()} (or {@link #nullOut()}) then only set the few options you want for {@link BleServer#setConfig(BleNodeConfig)}.
  */
+@Extendable
 public class BleNodeConfig
 {
 	/**

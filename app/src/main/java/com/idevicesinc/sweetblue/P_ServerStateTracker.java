@@ -8,7 +8,7 @@ import java.util.List;
 import static com.idevicesinc.sweetblue.BleServerState.CONNECTED;
 import static com.idevicesinc.sweetblue.BleServerState.CONNECTING;
 
-class P_ServerStateTracker
+final class P_ServerStateTracker
 {
 	private BleServer.StateListener m_stateListener;
 	private final BleServer m_server;

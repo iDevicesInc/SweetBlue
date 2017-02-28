@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothDevice;
 
 import java.util.HashMap;
 
-class P_ServerConnectionFailManager
+final class P_ServerConnectionFailManager
 {
 	private static BleServer.ConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new BleServer.DefaultConnectionFailListener();
 

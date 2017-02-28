@@ -10,7 +10,7 @@ import java.util.Date;
  * which makes certain APIs in SweetBlue harder to design.
  */
 @Immutable
-public class EpochTime implements Comparable<EpochTime>, UsesCustomNull
+public final class EpochTime implements Comparable<EpochTime>, UsesCustomNull
 {
 	/**
 	 * Fulfills the soft contract of {@link com.idevicesinc.sweetblue.utils.UsesCustomNull} - used for {@link #isNull()}.

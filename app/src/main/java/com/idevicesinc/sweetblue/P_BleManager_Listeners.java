@@ -22,7 +22,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 import java.lang.reflect.Method;
 
 
-class P_BleManager_Listeners
+final class P_BleManager_Listeners
 {
 	private static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
 	private static final String BluetoothDevice_ACTION_DISAPPEARED = "android.bluetooth.device.action.DISAPPEARED";

@@ -8,7 +8,7 @@ import java.util.List;
  * 
  *
  */
-class PU_TaskQueue
+final class PU_TaskQueue
 {
 	static int findSoonestSpot(List<PA_Task> taskList, PA_Task taskToAdd)
 	{

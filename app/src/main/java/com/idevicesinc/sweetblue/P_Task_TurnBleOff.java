@@ -7,7 +7,7 @@ import android.bluetooth.BluetoothAdapter;
  * 
  *
  */
-class P_Task_TurnBleOff extends PA_Task
+final class P_Task_TurnBleOff extends PA_Task
 {
 	private final boolean m_implicit;
 	

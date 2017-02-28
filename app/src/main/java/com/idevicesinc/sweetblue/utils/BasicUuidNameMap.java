@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import com.idevicesinc.sweetblue.BleManagerConfig;
+import com.idevicesinc.sweetblue.annotations.Extendable;
 
 /**
  * Manual convenience implementation of {@link UuidNameMap} that's basically just a {@link HashMap}.
@@ -13,6 +14,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig;
  * @see ReflectionUuidNameMap
  * @see BleManagerConfig#uuidNameMaps
  */
+@Extendable
 public class BasicUuidNameMap implements UuidNameMap
 {
 	private final HashMap<String, String> m_dict = new HashMap<String, String>();

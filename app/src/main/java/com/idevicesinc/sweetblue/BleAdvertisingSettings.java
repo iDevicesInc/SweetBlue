@@ -2,11 +2,14 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.le.AdvertiseSettings;
+
+import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
  * Class used specify Ble Advertising settings.
  */
+@Extendable
 public class BleAdvertisingSettings {
 
     /**

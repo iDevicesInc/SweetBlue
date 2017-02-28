@@ -14,7 +14,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.UUID;
 
-class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
+final class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 {
 	private final UUID m_descriptorUuid;
 

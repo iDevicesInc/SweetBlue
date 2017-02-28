@@ -40,7 +40,7 @@ import android.util.Log;
  * Created by dyoung on 3/24/14.
  */
 @TargetApi(5)
-class P_BluetoothCrashResolver {
+final class P_BluetoothCrashResolver {
     private static final String TAG = "BluetoothCrashResolver";
     private static final boolean PREEMPTIVE_ACTION_ENABLED = true;
     private boolean debugEnabled = false;

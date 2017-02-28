@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
-class P_ConnectionFailManager
+final class P_ConnectionFailManager
 {
 	private final BleDevice m_device;
 	

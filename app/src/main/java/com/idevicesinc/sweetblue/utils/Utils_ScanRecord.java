@@ -46,7 +46,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
  *
  * Why not use these classes directly? So that the same code can be used if you're targeting < 21.
  */
-public class Utils_ScanRecord extends Utils
+public final class Utils_ScanRecord extends Utils
 {
 	private Utils_ScanRecord(){super();}
 

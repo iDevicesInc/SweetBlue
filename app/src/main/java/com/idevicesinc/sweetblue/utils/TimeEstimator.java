@@ -1,11 +1,14 @@
 package com.idevicesinc.sweetblue.utils;
 
 
+import com.idevicesinc.sweetblue.annotations.Extendable;
+
 /**
  * A zero-dependency utility class to track running average time of operations
  * and estimate the completion time of long running operations like firmware updates.
  * Basically takes times as doubles representing seconds, and spits back the same.
  */
+@Extendable
 public class TimeEstimator
 {
 	private final int m_totalSteps;

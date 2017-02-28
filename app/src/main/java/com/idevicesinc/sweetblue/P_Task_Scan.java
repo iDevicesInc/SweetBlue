@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
-class P_Task_Scan extends PA_Task_RequiresBleOn
+final class P_Task_Scan extends PA_Task_RequiresBleOn
 {
 
     private final boolean m_explicit = true;

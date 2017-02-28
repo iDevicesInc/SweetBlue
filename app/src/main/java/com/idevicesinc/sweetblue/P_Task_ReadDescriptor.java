@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 import java.util.UUID;
 
-class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
+final class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 {
 	private final Type m_type;
 	private final UUID m_descriptorUuid;

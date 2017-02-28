@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue.utils;
 /**
  * Simple dummy implementation of {@link FutureData} that just returns whatever is passed into the constructor.
  */
-public class PresentData implements FutureData
+public final class PresentData implements FutureData
 {
 	private final byte[] m_data;
 

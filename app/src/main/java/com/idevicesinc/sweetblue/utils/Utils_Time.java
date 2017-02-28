@@ -9,7 +9,7 @@ import java.util.TimeZone;
 /**
  * Utilities for dealing with time with an emphasis on BLE.
  */
-public class Utils_Time extends Utils
+public final class Utils_Time extends Utils
 {
 	private Utils_Time(){super();}
 
