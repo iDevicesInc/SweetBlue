@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 import android.util.Log;
 
 
-public class P_UnitLogger implements SweetLogger
+public class UnitTestLogger implements SweetLogger
 {
     @Override public void onLogEntry(int level, String tag, String msg)
     {

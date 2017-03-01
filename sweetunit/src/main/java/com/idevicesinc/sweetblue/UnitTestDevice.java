@@ -10,7 +10,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.Random;
 
 
-public class P_UnitDevice implements P_NativeDeviceLayer
+public class UnitTestDevice implements P_NativeDeviceLayer
 {
 
 
@@ -18,7 +18,7 @@ public class P_UnitDevice implements P_NativeDeviceLayer
     private BleDevice m_device;
 
 
-    public P_UnitDevice(BleDevice device)
+    public UnitTestDevice(BleDevice device)
     {
         m_device = device;
     }

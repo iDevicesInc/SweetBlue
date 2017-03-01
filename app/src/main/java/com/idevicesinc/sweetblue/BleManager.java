@@ -41,7 +41,6 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
-import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
@@ -51,7 +50,6 @@ import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.State;
-import com.idevicesinc.sweetblue.utils.UpdateLoop;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -270,7 +268,6 @@ public final class BleManager
 	 * @deprecated - Refactored to {@link ManagerStateListener}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	@Deprecated
 	public static interface StateListener
 	{
 		/**
@@ -771,6 +768,7 @@ public final class BleManager
 	private boolean m_doingInfiniteScan = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
+	private boolean m_unitTestCheckDone = false;
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
@@ -855,6 +853,18 @@ public final class BleManager
 
 	private void initConfigDependentMembers()
 	{
+		// Check if one of the classes from the unit test module can be loaded. If so, we're running in a
+		// unit test. Otherwise, we aren't
+		try
+		{
+			Class.forName("com.idevicesinc.sweetblue.UnitTestLogger");
+			m_config.unitTest = true;
+		}
+		catch (ClassNotFoundException e)
+		{
+			m_config.unitTest = false;
+		}
+
 		m_listeners.updatePollRate(m_config.defaultStatePollRate);
 
 		m_filterMngr.updateFilter(m_config.defaultScanFilter);
@@ -1151,7 +1161,6 @@ public final class BleManager
 	 *
 	 * @deprecated - This will be removed in version 3. This class has been refactored to {@link ManagerStateListener}.
 	 */
-	@Deprecated
 	public final void setListener_State(@Nullable(Prevalence.NORMAL) final StateListener listener_nullable)
 	{
 		if (listener_nullable == null)
@@ -1190,7 +1199,6 @@ public final class BleManager
 	 *
 	 * @deprecated - This will be removed in version 3. It has been refactored to {@link DeviceStateListener}.
 	 */
-	@Deprecated
 	public final void setListener_DeviceState(@Nullable(Prevalence.NORMAL) final BleDevice.StateListener listener_nullable)
 	{
 		if (listener_nullable == null)
@@ -1317,7 +1325,6 @@ public final class BleManager
 	 *
 	 * @deprecated - This will be removed in version 3. Use {@link ReadWriteListener} instead (it was refactored to be in it's own class file, rather than an inner class).
 	 */
-	@Deprecated
 	public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final com.idevicesinc.sweetblue.BleDevice.ReadWriteListener listener_nullable)
 	{
 		if (listener_nullable != null)

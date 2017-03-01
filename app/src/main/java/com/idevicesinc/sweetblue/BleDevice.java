@@ -112,7 +112,6 @@ public final class BleDevice extends BleNode
      * be removed.
      */
     @com.idevicesinc.sweetblue.annotations.Lambda
-    @Deprecated
     public static interface ReadWriteListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<ReadWriteListener.ReadWriteEvent>
     {
         /**
@@ -1001,7 +1000,6 @@ public final class BleDevice extends BleNode
      * @deprecated - Refactored to {@link DeviceStateListener}.
      */
     @com.idevicesinc.sweetblue.annotations.Lambda
-    @Deprecated
     public static interface StateListener
     {
         /**
@@ -2161,7 +2159,6 @@ public final class BleDevice extends BleNode
      *
      * @deprecated - This will be removed in version 3. It has been refactored to {@link DeviceStateListener}.
      */
-    @Deprecated
     public final void setListener_State(@Nullable(Prevalence.NORMAL) final StateListener listener_nullable)
     {
         if (isNull()) return;
@@ -2252,7 +2249,6 @@ public final class BleDevice extends BleNode
      *
      * @deprecated - This will be removed in version 3. Use {@link com.idevicesinc.sweetblue.ReadWriteListener} instead (it was refactored to be in it's own class file, rather than an inner class).
      */
-    @Deprecated
     public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final ReadWriteListener listener_nullable)
     {
         if (isNull()) return;

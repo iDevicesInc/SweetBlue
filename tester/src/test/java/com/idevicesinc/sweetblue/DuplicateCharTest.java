@@ -88,7 +88,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(P_UnitUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -152,13 +152,13 @@ public class DuplicateCharTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(P_UnitUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
 
         s.acquire();
 
     }
 
-    private class MultipleCharGatt extends P_UnitGatt
+    private class MultipleCharGatt extends UnitTestGatt
     {
 
         private final List<BluetoothGattService> mServices;

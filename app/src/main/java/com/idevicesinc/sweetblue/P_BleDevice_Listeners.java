@@ -548,6 +548,8 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		final UUID characteristicUuid = characteristic.getUuid();
 		final UUID serviceUuid = characteristic.getService().getUuid();
 
+		m_logger.d("characteristic=" + characteristicUuid.toString());
+
 		m_device.getPollManager().onCharacteristicChangedFromNativeNotify(serviceUuid, characteristicUuid, value);
 	}
 

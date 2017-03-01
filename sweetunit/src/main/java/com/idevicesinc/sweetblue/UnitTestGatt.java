@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.UUID;
 
 
-public class P_UnitGatt implements P_GattLayer {
+public class UnitTestGatt implements P_GattLayer {
 
 
     private boolean m_gattIsNull = true;
     private final BleDevice m_device;
 
 
-    public P_UnitGatt(BleDevice device)
+    public UnitTestGatt(BleDevice device)
     {
         m_device = device;
     }
@@ -68,7 +68,7 @@ public class P_UnitGatt implements P_GattLayer {
     @Override
     public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback) {
         m_gattIsNull = false;
-        ((P_UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTING);
+        ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTING);
         m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
             @Override public void run()
@@ -93,7 +93,7 @@ public class P_UnitGatt implements P_GattLayer {
 
     public void setToConnected()
     {
-        ((P_UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTED);
+        ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTED);
         m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_CONNECTED);
     }
 
@@ -109,7 +109,7 @@ public class P_UnitGatt implements P_GattLayer {
         {
             @Override public void run()
             {
-                ((P_UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_DISCONNECTED);
+                ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_DISCONNECTED);
                 m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
             }
         }, 50);
