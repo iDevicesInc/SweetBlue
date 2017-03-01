@@ -67,7 +67,7 @@ public class WriteStripeTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(P_UnitUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -110,7 +110,7 @@ public class WriteStripeTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(P_UnitUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -122,7 +122,7 @@ public class WriteStripeTest extends BaseBleUnitTest
         return new StripedWriteGattLayer(device);
     }
 
-    private class StripedWriteGattLayer extends P_UnitGatt
+    private class StripedWriteGattLayer extends UnitTestGatt
     {
 
         private BluetoothGattService mService;

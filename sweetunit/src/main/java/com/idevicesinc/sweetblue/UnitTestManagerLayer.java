@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeAdvertiser;
@@ -11,15 +10,13 @@ import android.text.TextUtils;
 
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Utils_String;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 
-public class P_UnitTestManagerLayer implements P_NativeManagerLayer
+public class UnitTestManagerLayer implements P_NativeManagerLayer
 {
 
     private int m_nativeState = BleStatuses.STATE_ON;
@@ -83,7 +80,7 @@ public class P_UnitTestManagerLayer implements P_NativeManagerLayer
     {
         if (TextUtils.isEmpty(m_address))
         {
-            m_address = P_UnitUtils.randomMacAddress();
+            m_address = UnitTestUtils.randomMacAddress();
         }
         return m_address;
     }

@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
 
+version = "${SEMVER}".replace("_", ".")
+
 android {
     compileSdkVersion 24
     buildToolsVersion "24.0.3"
@@ -22,6 +24,9 @@ android {
 }
 
 dependencies {
+    // TODO - Create script to turn the below on/off for releasing. Release needs to point to SB's maven repo
+//    debugCompile project(':app')
+//    releaseCompile "com.idevicesinc:sweetblue:${version}"
     compile project(':app')
     testCompile 'junit:junit:4.12'
 }

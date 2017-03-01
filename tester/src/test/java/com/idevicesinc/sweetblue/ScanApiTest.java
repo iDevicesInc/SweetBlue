@@ -228,9 +228,4 @@ public class ScanApiTest extends BaseBleUnitTest
         });
     }
 
-    @Override public P_NativeManagerLayer getManagerLayer()
-    {
-        return new P_UnitTestManagerLayer();
-    }
-
 }

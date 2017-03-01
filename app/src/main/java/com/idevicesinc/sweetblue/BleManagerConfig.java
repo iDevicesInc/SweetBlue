@@ -334,7 +334,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * is found, then this boolean will be set to <code>true</code>. If <code>false</code>, then SweetBlue runs normally.
 	 *
 	 */
-	public Boolean unitTest										= false;
+	Boolean unitTest										= false;
 
 	/**
 	 * Default is {@value #DEFAULT_SCAN_REPORT_DELAY} seconds - Only applicable for Lollipop and up (i.e. > 5.0), this is the value given to
