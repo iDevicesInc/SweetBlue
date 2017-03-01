@@ -54,7 +54,6 @@ public class P_UnitDevice implements P_NativeDeviceLayer
         return false;
     }
 
-
     @Override public boolean isDeviceNull()
     {
         return false;

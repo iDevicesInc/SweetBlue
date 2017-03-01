@@ -1,12 +1,9 @@
 package com.idevicesinc.sweetblue;
 
-import java.lang.reflect.Method;
-
 import android.annotation.SuppressLint;
 
-import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 
-class P_Task_Unbond extends PA_Task_RequiresBleOn
+final class P_Task_Unbond extends PA_Task_RequiresBleOn
 {
 
 	private final PE_TaskPriority m_priority;

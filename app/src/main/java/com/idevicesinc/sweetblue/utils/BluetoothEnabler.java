@@ -38,7 +38,7 @@ import java.lang.reflect.Method;
  * @see BleManager#willLocationPermissionSystemDialogBeShown(Activity)
  * @see <a target="_blank" href="https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues">https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues</a>
  */
-public class BluetoothEnabler
+public final class BluetoothEnabler
 {
     /**
      * Overload of {@link #start(Activity)} but given {@link Context} must be an {@link Activity}.

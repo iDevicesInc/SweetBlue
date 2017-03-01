@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import android.os.Handler;
 import android.os.Looper;
 
-class P_TaskQueue
+final class P_TaskQueue
 {
 	private final ArrayList<PA_Task> m_queue = new ArrayList<PA_Task>();
 	private AtomicReference<PA_Task> m_current;

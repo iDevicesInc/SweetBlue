@@ -19,7 +19,7 @@ import java.util.UUID;
 /**
  * Class to used for advertising Bluetooth services, used with {@link com.idevicesinc.sweetblue.BleServer#startAdvertising(BleAdvertisingPacket)}
  */
-public class BleAdvertisingPacket {
+public final class BleAdvertisingPacket {
 
 
     private final UUID[] serviceUuids;

@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.BleNodeConfig.*;
 
-class P_ReconnectManager
+final class P_ReconnectManager
 {
 	private static final double NOT_RUNNING = -1.0;
 	private final BleDevice m_device;

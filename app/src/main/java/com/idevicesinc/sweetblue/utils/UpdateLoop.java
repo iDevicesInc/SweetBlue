@@ -8,6 +8,7 @@ import com.idevicesinc.sweetblue.PI_UpdateLoop;
 /**
  * Zero-dependency (besides Android) utility class for creating an update loop.
  */
+@Deprecated
 public class UpdateLoop implements PI_UpdateLoop
 {
 	

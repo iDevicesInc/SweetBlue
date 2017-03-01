@@ -45,7 +45,7 @@ import static com.idevicesinc.sweetblue.BleServerState.*;
  * is only useful by piggybacking on an existing {@link BleDevice} that is currently {@link BleDeviceState#CONNECTED}.
  * For OS levels 5.0 and up a {@link BleServer} is capable of acting as an independent peripheral.
  */
-public class BleServer extends BleNode
+public final class BleServer extends BleNode
 {
 	/**
 	 * Special value that is used in place of Java's built-in <code>null</code>.

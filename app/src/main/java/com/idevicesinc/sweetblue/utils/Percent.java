@@ -6,7 +6,7 @@ import com.idevicesinc.sweetblue.annotations.*;
  * Wrapper for a percentage value, generally from 0-100%;
  */
 @Immutable
-public class Percent extends Unit<Percent>
+public final class Percent extends Unit<Percent>
 {
 	/**
 	 * Convenience value representing 0%.

@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-class P_ClientManager
+final class P_ClientManager
 {
 	private static final int[] CONNECTING_OR_CONNECTED = {BluetoothGattServer.STATE_CONNECTING, BluetoothGattServer.STATE_CONNECTED};
 

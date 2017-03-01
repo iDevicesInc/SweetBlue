@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 
 import com.idevicesinc.sweetblue.utils.Utils;
 
-class P_Task_Bond extends PA_Task_RequiresBleOn
+final class P_Task_Bond extends PA_Task_RequiresBleOn
 {
     private static final String METHOD_NAME__CREATE_BOND = "createBond";
 

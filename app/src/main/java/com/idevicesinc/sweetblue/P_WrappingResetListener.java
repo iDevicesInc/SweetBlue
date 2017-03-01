@@ -9,7 +9,7 @@ import android.os.Handler;
  * 
  *
  */
-class P_WrappingResetListener extends PA_CallbackWrapper implements BleManager.ResetListener
+final class P_WrappingResetListener extends PA_CallbackWrapper implements BleManager.ResetListener
 {
 	private final ArrayList<BleManager.ResetListener> m_listeners = new ArrayList<BleManager.ResetListener>();
 	

@@ -12,7 +12,7 @@ import java.util.UUID;
  *
  * @see BleServices
  */
-public class BleService
+public final class BleService
 {
 	final BluetoothGattService m_native;
 

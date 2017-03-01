@@ -17,7 +17,7 @@ import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 
-class P_BleDevice_Listeners extends BluetoothGattCallback
+final class P_BleDevice_Listeners extends BluetoothGattCallback
 {
 	private final BleDevice m_device;
 	private final P_Logger m_logger;

@@ -1,19 +1,13 @@
 package com.idevicesinc.sweetblue;
 
-import android.annotation.TargetApi;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattServer;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
-import android.os.Build;
-
 import java.util.HashMap;
 import java.util.HashSet;
 
-class P_NativeServerWrapper
+
+final class P_NativeServerWrapper
 {
 	private final BleServer m_server;
 	private final BleManager m_mngr;

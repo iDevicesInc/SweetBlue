@@ -14,7 +14,7 @@ import android.util.Log;
 /**
  * Some utilities for dealing with raw byte array scan records.
  */
-public class Utils_Reflection extends Utils
+public final class Utils_Reflection extends Utils
 {
 	private Utils_Reflection(){super();}
 

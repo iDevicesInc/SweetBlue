@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothGattService;
 
 import com.idevicesinc.sweetblue.utils.Utils;
 
-class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_StateListener
+final class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_StateListener
 {
 	private final BluetoothGattService m_service;
 	private final BleServer.ServiceAddListener m_addListener;

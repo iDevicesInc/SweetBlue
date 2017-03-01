@@ -11,7 +11,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 
-class P_Task_Read extends PA_Task_ReadOrWrite
+final class P_Task_Read extends PA_Task_ReadOrWrite
 {
 	private final Type m_type;
 	

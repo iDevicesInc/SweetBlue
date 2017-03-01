@@ -23,7 +23,7 @@ import java.util.UUID;
 
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
-class P_AndroidGatt implements P_GattLayer
+final class P_AndroidGatt implements P_GattLayer
 {
 
     private static final String FIELD_NAME_AUTH_RETRY = "mAuthRetry";

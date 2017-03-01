@@ -10,7 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-class P_NativeDeviceWrapper
+final class P_NativeDeviceWrapper
 {
 	private final BleDevice m_device;
 	private P_NativeDeviceLayer m_device_native;

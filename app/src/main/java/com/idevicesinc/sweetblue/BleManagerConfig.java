@@ -14,6 +14,7 @@ import android.content.Context;
 import android.util.SparseArray;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
@@ -34,6 +35,7 @@ import com.idevicesinc.sweetblue.utils.Uuids;
  * singleton getter or {@link BleManager#setConfig(BleManagerConfig)}.
  * Use {@link Interval#DISABLED} or <code>null</code> to disable any time-based options.
  */
+@Extendable
 public class BleManagerConfig extends BleDeviceConfig
 {
 	/**

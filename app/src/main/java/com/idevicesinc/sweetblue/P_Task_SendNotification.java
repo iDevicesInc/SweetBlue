@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.UUID;
 
-class P_Task_SendNotification extends PA_Task_RequiresServerConnection implements I_StateListener
+final class P_Task_SendNotification extends PA_Task_RequiresServerConnection implements I_StateListener
 {
 	private final BleServer m_server;
 	private final BluetoothDevice m_nativeDevice;

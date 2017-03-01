@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+
+import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.Assert.assertFalse;
 
 
@@ -119,6 +122,73 @@ public class ConnectTest extends BaseBleUnitTest
         s.acquire();
     }
 
+    @Test(timeout = 8000)
+    public void connectDiscoveredMultipleDeviceTest() throws Exception
+    {
+        m_device = null;
+
+        final Semaphore s = new Semaphore(0);
+
+        m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        {
+            @Override public Please onEvent(ScanEvent e)
+            {
+                return Please.acknowledgeIf(e.name_native().contains("Test Device"));
+            }
+        };
+
+        m_config.loggingEnabled = true;
+        m_mgr.setConfig(m_config);
+
+        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        {
+            final Pointer<Integer> connected = new Pointer(0);
+
+            @Override public void onEvent(DiscoveryEvent e)
+            {
+                if (e.was(LifeCycle.DISCOVERED))
+                {
+                    m_device = e.device();
+                    m_device.connect(new BleDevice.StateListener()
+                    {
+                        @Override public void onEvent(StateEvent e)
+                        {
+                            if (e.didEnter(BleDeviceState.INITIALIZED))
+                            {
+                                connected.value++;
+                                System.out.println(e.device().getName_override() + " connected.");
+                                if (connected.value == 3)
+                                {
+                                    s.release();
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        final byte[] scanRecord = P_UnitUtils.newScanRecord("Test Device #1");
+        final byte[] scanRecord2 = P_UnitUtils.newScanRecord("Test Device #2");
+        final byte[] scanRecord3 = P_UnitUtils.newScanRecord("Test Device #3");
+
+        m_mgr.setListener_State(new ManagerStateListener()
+        {
+            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            {
+                if (e.didEnter(BleManagerState.SCANNING))
+                {
+                    m_mgr.getScanManager().postScanResult(null, -45, scanRecord);
+                    m_mgr.getScanManager().postScanResult(null, -35, scanRecord2);
+                    m_mgr.getScanManager().postScanResult(null, -60, scanRecord3);
+                }
+            }
+        });
+
+        m_mgr.startScan();
+        s.acquire();
+    }
+
     @Test(timeout = 6000)
     public void connectFailTest() throws Exception
     {
@@ -175,7 +245,7 @@ public class ConnectTest extends BaseBleUnitTest
         s.acquire();
     }
 
-    @Test
+    @Test(timeout = 15000)
     public void connectThenDisconnectBeforeServiceDiscoveryTest() throws Exception
     {
         m_device = null;
@@ -276,7 +346,7 @@ public class ConnectTest extends BaseBleUnitTest
         s.acquire();
     }
 
-    @Test
+    @Test(timeout = 45000)
     public void connectThenTimeoutThenFailTest() throws Exception
     {
         m_device = null;

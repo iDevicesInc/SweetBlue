@@ -11,7 +11,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
-class P_TransactionManager
+final class P_TransactionManager
 {
 	final PI_EndListener m_txnEndListener = new PI_EndListener()
 	{

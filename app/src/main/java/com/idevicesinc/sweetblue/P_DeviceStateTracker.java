@@ -1,11 +1,11 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.utils.State;
 
-class P_DeviceStateTracker extends PA_StateTracker
+
+final class P_DeviceStateTracker extends PA_StateTracker
 {
 	private DeviceStateListener m_stateListener;
 	private final BleDevice m_device;

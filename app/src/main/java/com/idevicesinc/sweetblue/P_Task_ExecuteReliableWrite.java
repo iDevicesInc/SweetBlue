@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothGatt;
 
 import com.idevicesinc.sweetblue.utils.Utils;
 
-class P_Task_ExecuteReliableWrite extends PA_Task_RequiresConnection implements PA_Task.I_StateListener
+final class P_Task_ExecuteReliableWrite extends PA_Task_RequiresConnection implements PA_Task.I_StateListener
 {
 	private final PE_TaskPriority m_priority;
 	private final BleDevice.ReadWriteListener m_listener;

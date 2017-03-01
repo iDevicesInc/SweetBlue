@@ -14,7 +14,7 @@ import java.util.Date;
  * marking when the blob was originally created/collected.
  */
 @Immutable
-public class HistoricalData implements UsesCustomNull
+public final class HistoricalData implements UsesCustomNull
 {
 	/**
 	 * Special value that replaces Java's built-int <code>null</code> and
