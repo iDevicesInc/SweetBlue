@@ -85,6 +85,7 @@ if (JavaVersion.current().isJava8Compatible()) {
 
 import org.gradle.api.logging.StandardOutputListener
 
+
 // Generate javadocs
 task gendocs(type: Javadoc) {
     String path = rootDir.absolutePath + "/scripts/assets/doc_style.css"
@@ -365,6 +366,7 @@ gradle.startParameter.taskNames = expandedTaskList.flatten()
 ext.ARCHIVA_URL = System.getenv("ARCHIVA_URL")
 ext.a_user = System.getenv("ARCHIVA_USER")
 ext.a_pw = System.getenv("ARCHIVA_PW")
+ext.COMMERCE_PW = System.getenv("SWEETBLUE_BIG_COMMERCE_PASSWORD")
 
 import org.gradle.plugins.signing.Sign
 
