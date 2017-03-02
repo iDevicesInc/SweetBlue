@@ -1,11 +1,8 @@
 package com.idevicesinc.sweetblue;
 
-import android.bluetooth.BluetoothAdapter;
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.support.v7.app.AppCompatActivity;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,22 +12,17 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-
 import com.idevicesinc.sweetblue.tester.R;
 import com.idevicesinc.sweetblue.utils.Utils_String;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends Activity
 {
 
     BleManager mgr;
