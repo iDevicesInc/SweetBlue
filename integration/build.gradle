@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         applicationId "com.idevicesinc.sweetblue"
         minSdkVersion 18
-        targetSdkVersion 24
+        targetSdkVersion 25
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -25,8 +25,6 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
     androidTestCompile 'com.android.support.test:rules:0.5'
-    compile 'com.android.support:support-annotations:23.1.1'
-    compile 'com.android.support:appcompat-v7:23.1.1'
     compile project(':app')
     testCompile 'junit:junit:4.12'
 }
