@@ -17,6 +17,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     private boolean m_gattIsNull = true;
     private final BleDevice m_device;
+    private boolean m_explicitDisconnect = false;
 
 
     public UnitTestGatt(BleDevice device)
@@ -68,22 +69,34 @@ public class UnitTestGatt implements P_GattLayer {
     @Override
     public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback) {
         m_gattIsNull = false;
+        m_explicitDisconnect = false;
         ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTING);
         m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
             @Override public void run()
             {
-                setToConnecting();
+                if (!m_explicitDisconnect)
+                {
+                    setToConnecting();
+                }
             }
         }, 50);
         m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
             @Override public void run()
             {
-                setToConnected();
+                if (!m_explicitDisconnect)
+                {
+                    setToConnected();
+                }
             }
         }, 150);
         return device.connect(context, useAutoConnect, callback);
+    }
+
+    public void setGattNull(boolean isNull)
+    {
+        m_gattIsNull = isNull;
     }
 
     public void setToConnecting()
@@ -100,6 +113,7 @@ public class UnitTestGatt implements P_GattLayer {
     @Override
     public void disconnect() {
         m_gattIsNull = true;
+        m_explicitDisconnect = true;
         preDisconnect();
     }
 
@@ -171,7 +185,10 @@ public class UnitTestGatt implements P_GattLayer {
         {
             @Override public void run()
             {
-                setServicesDiscovered();
+                if (!m_explicitDisconnect)
+                {
+                    setServicesDiscovered();
+                }
             }
         }, 250);
         return true;

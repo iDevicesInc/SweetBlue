@@ -170,7 +170,7 @@ final class P_TaskQueue
 	
 	public void add(final PA_Task newTask)
 	{
-		m_mngr.getPostManager().postToUpdateThread(new Runnable()
+		m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{

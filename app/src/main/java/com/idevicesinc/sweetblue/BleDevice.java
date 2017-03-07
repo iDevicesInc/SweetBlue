@@ -6227,6 +6227,10 @@ public final class BleDevice extends BleNode
 
             m_txnMngr.cancelAllTransactions();
 
+            // We want to make sure that we update the state here. If you call disconnect() when currently connecting, the state won't get update, unless this is here
+            final E_Intent intent = wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
+            setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
+
             return;
         }
 
@@ -6239,7 +6243,7 @@ public final class BleDevice extends BleNode
         final boolean isConnectingOverall_1 = is_internal(CONNECTING_OVERALL);
         final boolean isStillAttemptingReconnect_longTerm = is_internal(RECONNECTING_LONG_TERM);
         final ConnectionFailListener.Status connectionFailReason_nullable;
-        if (!m_reconnectMngr_shortTerm.isRunning() && wasConnectingOverall)
+        if (!m_reconnectMngr_shortTerm.isRunning() && wasConnectingOverall && !wasExplicit)
         {
             if (getManager().isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF))
             {
@@ -6281,7 +6285,16 @@ public final class BleDevice extends BleNode
         {
             if (connectionFailReason_nullable != null && wasExplicit)
             {
-                retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
+                // If we're already disconnected, then this is the native callback coming back, and we've already sent the connectionfail event back to the user
+                // So we don't need to post the event again here.
+                if (!isDisconnectedAfterReconnectingShortTermStateCallback)
+                {
+                    retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
+                }
+                else
+                {
+                    retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+                }
             }
             else
             {

@@ -182,7 +182,7 @@ final class P_NativeDeviceWrapper
 	
 	private void updateGattFromCallback(BluetoothGatt gatt)
 	{
-		if (gatt == null)
+		if (gatt == null && !getManager().m_config.unitTest)
 		{
 			getLogger().w("Gatt object from callback is null.");
 		}

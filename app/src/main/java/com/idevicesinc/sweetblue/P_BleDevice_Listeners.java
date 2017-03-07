@@ -99,7 +99,11 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 					}
 					else
 					{
-						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
+						// If an explicit disconnect() was called while discovering services, we do NOT want to throw another disconnectWithReason (the task will do it when it executes)
+						if (!m_device.queue().isInQueue(P_Task_Disconnect.class, m_device))
+						{
+							m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
+						}
 					}
 				}
 			}
@@ -119,7 +123,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 	@Override public void onConnectionStateChange(final BluetoothGatt gatt, final int gattStatus, final int newState)
 	{
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -245,7 +249,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 	@Override public void onServicesDiscovered(final BluetoothGatt gatt, final int gattStatus)
 	{
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -277,7 +281,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
 
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -316,7 +320,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		final byte[] data = characteristic.getValue();
 
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -389,7 +393,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	
 	@Override public void onReliableWriteCompleted(final BluetoothGatt gatt, final int gattStatus)
 	{
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -416,7 +420,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	
 	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
 	{
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -448,7 +452,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		final byte[] data = descriptor.getValue();
 
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -488,7 +492,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		final byte[] data = descriptor.getValue();
 
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -534,7 +538,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
 
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{
@@ -610,7 +614,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 	@Override public void onMtuChanged(final BluetoothGatt gatt, final int mtu, final int gattStatus)
 	{
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{

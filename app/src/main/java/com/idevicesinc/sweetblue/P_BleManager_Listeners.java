@@ -178,7 +178,7 @@ final class P_BleManager_Listeners
 		}
 		catch (Exception e)
 		{
-			m_mngr.getLogger().e("Tried to unregister ble listeners failed with message: " + e.getMessage());
+			m_mngr.getLogger().w("Tried to unregister ble listeners failed with message: " + e.getMessage());
 		}
 	}
 	
