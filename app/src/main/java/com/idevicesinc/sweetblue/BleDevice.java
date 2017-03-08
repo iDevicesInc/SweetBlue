@@ -3060,6 +3060,43 @@ public final class BleDevice extends BleNode
     }
 
     /**
+     * Overload of {@link #refreshGattDatabase(Interval)} which uses the gatt refresh delay set in {@link BleDeviceConfig}.
+     */
+    public final void refreshGattDatabase()
+    {
+        refreshGattDatabase(BleDeviceConfig.interval(conf_device().gattRefreshDelay, conf_mngr().gattRefreshDelay));
+    }
+
+    /**
+     * This only applies to a device which is {@link BleDeviceState#CONNECTED}. This is meant to be used mainly after performing a
+     * firmware update, and the Gatt database has changed. This will clear the device's gatt cache, and perform discover services again.
+     * The device will drop out of {@link BleDeviceState#SERVICES_DISCOVERED}, and enter {@link BleDeviceState#DISCOVERING_SERVICES}. So,
+     * you can listen in your device's {@link DeviceStateListener} for when it enters {@link BleDeviceState#SERVICES_DISCOVERED} to know
+     * when the operation is complete.
+     */
+    public final void refreshGattDatabase(Interval gattPause)
+    {
+        if (is(CONNECTED))
+        {
+            stateTracker().update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SERVICES_DISCOVERED, false, DISCOVERING_SERVICES, true);
+            P_Task_DiscoverServices discTask = new P_Task_DiscoverServices(this, new PA_Task.I_StateListener()
+            {
+                @Override public void onStateChange(PA_Task task, PE_TaskState state)
+                {
+                    if (task.getClass() == P_Task_DiscoverServices.class)
+                    {
+                        if (state == PE_TaskState.SUCCEEDED)
+                        {
+                            stateTracker().update(E_Intent.INTENTIONAL, BleStatuses.GATT_SUCCESS, DISCOVERING_SERVICES, false, SERVICES_DISCOVERED, true);
+                        }
+                    }
+                }
+            }, true, gattPause);
+            queue().add(discTask);
+        }
+    }
+
+    /**
      * Same as {@link #setName(String, UUID, BleDevice.ReadWriteListener)} but will not attempt to propagate the
      * name change to the remote device. Only {@link #getName_override()} will be affected by this.
      */
@@ -5852,7 +5889,9 @@ public final class BleDevice extends BleNode
             return;
         }
 
-        queue().add(new P_Task_DiscoverServices(this, m_taskStateListener));
+        boolean gattRefresh = BleDeviceConfig.bool(conf_device().useGattRefresh, conf_mngr().useGattRefresh);
+        Interval refreshDelay = BleDeviceConfig.interval(conf_device().gattRefreshDelay, conf_mngr().gattRefreshDelay);
+        queue().add(new P_Task_DiscoverServices(this, m_taskStateListener, gattRefresh, refreshDelay));
 
         //--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
         //--- Even without this check the library should still be in a goodish state. Might send some weird state

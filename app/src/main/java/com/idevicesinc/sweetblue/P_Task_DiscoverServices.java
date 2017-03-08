@@ -15,12 +15,11 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 	private boolean m_discoverAttempted;
 
 	
-	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener)
+	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener, boolean gattRefresh, Interval gattDelay)
 	{
 		super(bleDevice, listener);
-		m_gattRefresh = BleDeviceConfig.bool(getDevice().conf_device().useGattRefresh, getDevice().conf_mngr().useGattRefresh);
-		Interval delay = BleDeviceConfig.interval(getDevice().conf_device().gattRefreshDelay, getDevice().conf_mngr().gattRefreshDelay);
-		m_gattDelayTarget = Interval.isDisabled(delay) || delay == Interval.INFINITE ? 0.0 : delay.secs();
+		m_gattRefresh = gattRefresh;
+		m_gattDelayTarget = Interval.isDisabled(gattDelay) || gattDelay == Interval.INFINITE ? 0.0 : gattDelay.secs();
 	}
 
 	@Override public void execute()
