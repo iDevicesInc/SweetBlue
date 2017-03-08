@@ -112,9 +112,18 @@ public final class ByteBuffer
 
     /**
      * Returns a byte array from this buffer from the given start index, and length
+     * If length is less than 1, an empty byte array will be returned. An empty array
+     * will be returned also if the start index is out of range.
+     *
+     * If the length is larger than the available bytes, then a byte array will be returned
+     * with whatever bytes are available after the start index.
      */
     public final byte[] subData(int start, int length)
     {
+        if (length < 1 || start >= this.length)
+        {
+            return new byte[0];
+        }
         length = Math.min(length, this.length - start);
         byte[] subdata = newArray(length);
         System.arraycopy(buffer, start, subdata, 0, length);

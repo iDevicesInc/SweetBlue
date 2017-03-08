@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothProfile;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Process;
 import android.util.Log;
@@ -33,10 +34,12 @@ final class P_Logger
 	private boolean m_enabled;
 	private final UuidNameMap_ListWrapper m_nameMap;
 	private SweetLogger m_logger = null;
+	private final BleManager m_mgr;
 
 	
 	public P_Logger(final BleManager manager, String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, boolean enabled, SweetLogger logger)
 	{
+		m_mgr = manager;
 		m_logger = logger;
 		m_debugThreadNamePool = debugThreadNamePool;
 		m_nameMap = new UuidNameMap_ListWrapper(debugUuidNameDicts);
@@ -44,7 +47,7 @@ final class P_Logger
 
 		if( m_enabled )
 		{
-			getMainAndUpdateThreadNames(manager);
+			getMainAndUpdateThreadNames(m_mgr);
 		}
 	}
 
@@ -73,7 +76,7 @@ final class P_Logger
 	
 	public void printBuildInfo()
 	{
-		if( !m_enabled )  return;
+		if( !m_enabled)  return;
 		
 		int level = Log.DEBUG;
 

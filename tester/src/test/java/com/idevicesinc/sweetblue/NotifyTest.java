@@ -264,7 +264,7 @@ public class NotifyTest extends BaseBleUnitTest
     }
 
     @Test
-    public void enableAndReceiveNotifyTest() throws Exception
+    public void enableAndReceiveNotifyUsingReadWriteListenerTest() throws Exception
     {
         m_device = null;
 
@@ -313,6 +313,68 @@ public class NotifyTest extends BaseBleUnitTest
                                     }
                                 }
                             });
+                        }
+                    });
+                }
+            }
+        });
+
+        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+
+        s.acquire();
+    }
+
+    @Test
+    public void enableAndReceiveNotifyUsingNotificationListenerTest() throws Exception
+    {
+        m_device = null;
+
+        m_config.gattLayerFactory = new P_GattLayerFactory()
+        {
+            @Override public P_GattLayer newInstance(BleDevice device)
+            {
+                return new NotifyGattWithDescLayer(device);
+            }
+        };
+
+        m_config.loggingEnabled = true;
+
+        m_mgr.setConfig(m_config);
+
+        final Semaphore s = new Semaphore(0);
+
+        final byte[] notifyData = new byte[20];
+        new Random().nextBytes(notifyData);
+
+        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        {
+            @Override public void onEvent(DiscoveryEvent e)
+            {
+                if (e.was(LifeCycle.DISCOVERED))
+                {
+                    m_device = e.device();
+                    m_device.setListener_Notification(new NotificationListener()
+                    {
+                        @Override public void onEvent(NotificationEvent e)
+                        {
+                            if (e.type() == Type.ENABLING_NOTIFICATION)
+                            {
+                                assertTrue(e.wasSuccess());
+                                assertTrue(m_device.isNotifyEnabled(mTestChar));
+                                UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, 250);
+                            }
+                            else if (e.type() == Type.NOTIFICATION)
+                            {
+                                assertArrayEquals(notifyData, e.data());
+                                s.release();
+                            }
+                        }
+                    });
+                    m_device.connect(new BleTransaction.Init()
+                    {
+                        @Override protected void start(BleDevice device)
+                        {
+                            m_device.enableNotify(mTestChar);
                         }
                     });
                 }

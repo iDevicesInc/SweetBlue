@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,17 +36,6 @@ public class DuplicateCharTest extends BaseBleUnitTest
     public void writeCharWhenMultipleExistTest() throws Exception
     {
         m_device = null;
-
-        m_config.loggingEnabled = true;
-        m_config.gattLayerFactory = new P_GattLayerFactory()
-        {
-            @Override public P_GattLayer newInstance(BleDevice device)
-            {
-                return new MultipleCharGatt(device);
-            }
-        };
-
-        m_mgr.setConfig(m_config);
 
         final Semaphore s = new Semaphore(0);
 
@@ -98,17 +89,6 @@ public class DuplicateCharTest extends BaseBleUnitTest
     {
         m_device = null;
 
-        m_config.loggingEnabled = true;
-        m_config.gattLayerFactory = new P_GattLayerFactory()
-        {
-            @Override public P_GattLayer newInstance(BleDevice device)
-            {
-                return new MultipleCharGatt(device);
-            }
-        };
-
-        m_mgr.setConfig(m_config);
-
         final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
@@ -158,6 +138,74 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
     }
 
+    @Test
+    public void enableNotifyMultipleExistTest() throws Exception
+    {
+        m_device = null;
+
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        {
+            @Override public void onEvent(DiscoveryEvent e)
+            {
+                if (e.was(LifeCycle.DISCOVERED))
+                {
+                    m_device = e.device();
+                    m_device.connect(new BleDevice.StateListener()
+                    {
+                        @Override public void onEvent(StateEvent e)
+                        {
+                            if (e.didEnter(BleDeviceState.INITIALIZED))
+                            {
+                                m_device.enableNotify(mTestService, mTestChar, Interval.DISABLED, new DescriptorFilter()
+                                {
+                                    @Override public Please onEvent(DescriptorEvent event)
+                                    {
+                                        return Please.acceptIf(event.value()[0] == 0x2);
+                                    }
+
+                                    @Override public UUID descriptorUuid()
+                                    {
+                                        return mTestDesc;
+                                    }
+                                }, new BleDevice.ReadWriteListener()
+                                {
+                                    @Override public void onEvent(ReadWriteEvent e)
+                                    {
+                                        if (e.type() == Type.ENABLING_NOTIFICATION)
+                                        {
+                                            assertTrue(e.wasSuccess());
+                                            s.release();
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+
+        s.acquire();
+    }
+
+    @Override public BleManagerConfig getConfig()
+    {
+        BleManagerConfig config = super.getConfig();
+        config.gattLayerFactory = new P_GattLayerFactory()
+        {
+            @Override public P_GattLayer newInstance(BleDevice device)
+            {
+                return new MultipleCharGatt(device);
+            }
+        };
+        config.loggingEnabled = true;
+        return config;
+    }
+
     private class MultipleCharGatt extends UnitTestGatt
     {
 
@@ -168,8 +216,8 @@ public class DuplicateCharTest extends BaseBleUnitTest
             super(device);
             mServices = new ArrayList<>();
             BluetoothGattService service = new BluetoothGattService(mTestService, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic char1 = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_WRITE | BluetoothGattCharacteristic.PERMISSION_READ);
-            BluetoothGattCharacteristic char2 = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_WRITE | BluetoothGattCharacteristic.PERMISSION_READ);
+            BluetoothGattCharacteristic char1 = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_WRITE | BluetoothGattCharacteristic.PERMISSION_READ);
+            BluetoothGattCharacteristic char2 = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_WRITE | BluetoothGattCharacteristic.PERMISSION_READ);
             BluetoothGattDescriptor desc1 = new BluetoothGattDescriptor(mTestDesc, BluetoothGattDescriptor.PERMISSION_READ);
             desc1.setValue(new byte[] { 0x1 });
             BluetoothGattDescriptor desc2 = new BluetoothGattDescriptor(mTestDesc, BluetoothGattDescriptor.PERMISSION_READ);

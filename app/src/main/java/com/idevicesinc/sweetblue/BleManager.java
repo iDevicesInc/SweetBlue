@@ -833,7 +833,16 @@ public final class BleManager
 
 		initConfigDependentMembers();
 
-		m_logger.printBuildInfo();
+		m_postManager.postToUpdateThread(new Runnable()
+		{
+			@Override public void run()
+			{
+				if (!m_config.unitTest)
+				{
+					m_logger.printBuildInfo();
+				}
+			}
+		});
 	}
 
 	/**
@@ -2101,12 +2110,13 @@ public final class BleManager
 	}
 
 	/**
-	 * Shuts down the BleManager, and it's backing thread, and unregisters any receivers that may be in use.
+	 * Disconnects all devices, shuts down the BleManager, and it's backing thread, and unregisters any receivers that may be in use.
 	 * This also clears out it's static instance. This is meant to be called upon application exit. However, to use it again,
 	 * just call {@link BleManager#get(Context)}, or {@link BleManager#get(Context, BleManagerConfig)} again.
 	 */
 	public final void shutdown()
 	{
+		disconnectAll();
 		m_updateRunnable.m_shutdown = true;
 		m_postManager.removeUpdateCallbacks(m_updateRunnable);
 		m_postManager.quit();
