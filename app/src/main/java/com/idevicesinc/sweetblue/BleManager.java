@@ -759,6 +759,7 @@ public final class BleManager
 			BleServer.ConnectionFailListener m_defaultConnectionFailListener_server;
 			BleDevice.BondListener m_defaultBondListener;
 			ReadWriteListener m_defaultReadWriteListener;
+			NotificationListener m_defaultNotificationListener;
 	final P_DiskOptionsManager m_diskOptionsMngr;
 
 	private double m_timeForegrounded = 0.0;
@@ -1346,9 +1347,19 @@ public final class BleManager
 		}
 	}
 
+	/**
+	 * Sets a default backup {@link ReadWriteListener} that will be called for all {@link BleDevice} instances.
+	 * <br><br>
+	 * TIP: Place some analytics code in the listener here.
+	 */
 	public final void setListener_Read_Write(@Nullable(Prevalence.NORMAL) ReadWriteListener listener_nullable)
 	{
 		m_defaultReadWriteListener = listener_nullable;
+	}
+
+	public final void setListener_Notification(@Nullable(Prevalence.NORMAL) NotificationListener listener_nullable)
+	{
+		m_defaultNotificationListener = listener_nullable;
 	}
 
 	/**

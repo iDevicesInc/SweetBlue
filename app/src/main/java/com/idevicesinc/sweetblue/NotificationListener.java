@@ -43,6 +43,75 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         SUCCESS,
 
         /**
+         * {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])},
+         * {@link BleDevice#enableNotify(UUID, BleDevice.ReadWriteListener)}, etc. was called on {@link BleDevice#NULL}.
+         */
+        NULL_DEVICE,
+
+        /**
+         * Device is not {@link BleDeviceState#CONNECTED}.
+         */
+        NOT_CONNECTED,
+
+        /**
+         * Couldn't find a matching {@link BleDevice.ReadWriteListener.ReadWriteEvent#target} for the {@link BleDevice.ReadWriteListener.ReadWriteEvent#charUuid} (or
+         * {@link BleDevice.ReadWriteListener.ReadWriteEvent#descUuid} if {@link BleDevice.ReadWriteListener.ReadWriteEvent#target} is {@link BleDevice.ReadWriteListener.Target#DESCRIPTOR}) which was given to
+         * {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])}, etc. This most likely
+         * means that the internal call to {@link BluetoothGatt#discoverServices()} didn't find any
+         * {@link BluetoothGattService} that contained a {@link BluetoothGattCharacteristic} for {@link BleDevice.ReadWriteListener.ReadWriteEvent#charUuid()}.
+         * This can also happen if the internal call to get a BluetoothService(s) causes an exception (seen on some phones).
+         */
+        NO_MATCHING_TARGET,
+
+        /**
+         * You tried to do a read on a characteristic that is write-only, or
+         * vice-versa, or tried to read a notify-only characteristic, or etc., etc.
+         */
+        OPERATION_NOT_SUPPORTED,
+
+        /**
+         * The android api level doesn't support the lower level API call in the native stack. For example if you try to use
+         * {@link BleDevice#setMtu(int, BleDevice.ReadWriteListener)}, which requires API level 21, and you are at level 18.
+         */
+        ANDROID_VERSION_NOT_SUPPORTED,
+
+        /**
+         * The operation was cancelled by the device becoming {@link BleDeviceState#DISCONNECTED}.
+         */
+        CANCELLED_FROM_DISCONNECT,
+
+        /**
+         * The operation was cancelled because {@link BleManager} went {@link BleManagerState#TURNING_OFF} and/or
+         * {@link BleManagerState#OFF}. Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then
+         * {@link BleDevice.ReadWriteListener.ReadWriteEvent#status} could potentially be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
+         * the disconnect callback before the turning off callback. Basic testing has revealed that this is *not* the case, but you never know.
+         * <br><br>
+         * Either way, the device was or will be disconnected.
+         */
+        CANCELLED_FROM_BLE_TURNING_OFF,
+
+        /**
+         * Used either when {@link BleDevice.ReadWriteListener.ReadWriteEvent#type()} {@link BleDevice.ReadWriteListener.Type#isRead()} and the stack returned a <code>null</code>
+         * value for {@link BluetoothGattCharacteristic#getValue()} despite the operation being otherwise "successful", <i>or</i>
+         * {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter. For the read case, the library
+         * will throw an {@link BleManager.UhOhListener.UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch. If the problem persists try {@link BleManager#reset()}.
+         */
+        NULL_DATA,
+
+        /**
+         * Used either when {@link BleDevice.ReadWriteListener.ReadWriteEvent#type} {@link BleDevice.ReadWriteListener.Type#isRead()} and the operation was "successful" but
+         * returned a zero-length array for {@link BleDevice.ReadWriteListener.ReadWriteEvent#data}, <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) )
+         * was called with a non-null but zero-length data parameter. Note that {@link BleDevice.ReadWriteListener.ReadWriteEvent#data} will be a zero-length array for
+         * all other error statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc. In other words it's never null.
+         */
+        EMPTY_DATA,
+
+        /**
+         * For now only used when giving a negative or zero value to {@link BleDevice#setMtu(int, BleDevice.ReadWriteListener)}.
+         */
+        INVALID_DATA,
+
+        /**
          * {@link BluetoothGatt#setCharacteristicNotification(BluetoothGattCharacteristic, boolean)}
          * returned <code>false</code> for an unknown reason.
          */
@@ -57,7 +126,13 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
          *
          * @see BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()
          */
-        REMOTE_GATT_FAILURE;
+        REMOTE_GATT_FAILURE,
+
+        /**
+         * This is a generic error state which means something went wrong, and we're not sure why. In theory, this should never be the status of a Notification/Indication.
+         * If you DO see this status, please let us know at SweetBlue@idevicesinc.com know how you produce it.
+         */
+        UNKNOWN_ERROR;
 
         @Override public boolean isNull()
         {

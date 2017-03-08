@@ -6611,6 +6611,11 @@ public final class BleDevice extends BleNode
             postEvent(m_defaultNotificationListener, fromReadWriteEvent(event));
         }
 
+        if (getManager() != null && getManager().m_defaultNotificationListener != null)
+        {
+            postEvent(getManager().m_defaultNotificationListener, fromReadWriteEvent(event));
+        }
+
         m_txnMngr.onReadWriteResultCallbacksCalled();
     }
 
@@ -6638,8 +6643,35 @@ public final class BleDevice extends BleNode
         NotificationListener.Status status;
         switch (event.status())
         {
+            case SUCCESS:
+                status = NotificationListener.Status.SUCCESS;
+                break;
             case NULL:
                 status = NotificationListener.Status.NULL;
+                break;
+            case ANDROID_VERSION_NOT_SUPPORTED:
+                status = NotificationListener.Status.ANDROID_VERSION_NOT_SUPPORTED;
+                break;
+            case CANCELLED_FROM_BLE_TURNING_OFF:
+                status = NotificationListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
+                break;
+            case CANCELLED_FROM_DISCONNECT:
+                status = NotificationListener.Status.CANCELLED_FROM_DISCONNECT;
+                break;
+            case EMPTY_DATA:
+                status = NotificationListener.Status.EMPTY_DATA;
+                break;
+            case INVALID_DATA:
+                status = NotificationListener.Status.INVALID_DATA;
+                break;
+            case NULL_DATA:
+                status = NotificationListener.Status.NULL_DATA;
+                break;
+            case NO_MATCHING_TARGET:
+                status = NotificationListener.Status.NO_MATCHING_TARGET;
+                break;
+            case NOT_CONNECTED:
+                status = NotificationListener.Status.NOT_CONNECTED;
                 break;
             case FAILED_TO_TOGGLE_NOTIFICATION:
                 status = NotificationListener.Status.FAILED_TO_TOGGLE_NOTIFICATION;
@@ -6648,7 +6680,7 @@ public final class BleDevice extends BleNode
                 status = NotificationListener.Status.REMOTE_GATT_FAILURE;
                 break;
             default:
-                status = NotificationListener.Status.SUCCESS;
+                status = NotificationListener.Status.UNKNOWN_ERROR;
                 break;
         }
         return new NotificationListener.NotificationEvent(this, event.serviceUuid(), event.charUuid(), type, event.data(), status, event.gattStatus(), event.time_total().secs(), event.time_ota().secs(), event.solicited());
