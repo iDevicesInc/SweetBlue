@@ -3,11 +3,10 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothGatt;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 
-class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_StateListener
+final class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {
 	protected final BleDevice.ReadWriteListener m_readWriteListener;
 	private final int m_mtu;
@@ -43,7 +42,7 @@ class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_Sta
 	{
 		if( Utils.isLollipop() )
 		{
-			if( false == L_Util.requestMtu(getDevice(), m_mtu))
+			if( false == getDevice().layerManager().requestMtu(m_mtu))
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}
@@ -70,7 +69,7 @@ class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_Sta
 	
 	public void onMtuChanged(BluetoothGatt gatt, int mtu, int gattStatus)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 		
 		if( Utils.isSuccess(gattStatus) )
 		{

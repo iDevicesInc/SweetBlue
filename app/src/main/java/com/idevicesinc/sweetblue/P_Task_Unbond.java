@@ -1,17 +1,11 @@
 package com.idevicesinc.sweetblue;
 
-import java.lang.reflect.Method;
-
 import android.annotation.SuppressLint;
 
-import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 
-class P_Task_Unbond extends PA_Task_RequiresBleOn
+final class P_Task_Unbond extends PA_Task_RequiresBleOn
 {
-	private static final String METHOD_NAME__REMOVE_BOND			= "removeBond";
-	private static final String METHOD_NAME__CANCEL_BOND_PROCESS	= "cancelBondProcess";
 
-	
 	private final PE_TaskPriority m_priority;
 	
 	public P_Task_Unbond(BleDevice device, I_StateListener listener, PE_TaskPriority priority)
@@ -71,12 +65,12 @@ class P_Task_Unbond extends PA_Task_RequiresBleOn
 	
 	private boolean removeBond()
 	{
-		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__REMOVE_BOND, getManager().m_config.loggingEnabled);
+		return getDevice().layerManager().getDeviceLayer().removeBond();
 	}
 	
 	private boolean cancelBondProcess()
 	{
-		return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CANCEL_BOND_PROCESS, getManager().m_config.loggingEnabled);
+		return getDevice().layerManager().getDeviceLayer().cancelBond();
 	}
 	
 	@Override public boolean isExplicit()

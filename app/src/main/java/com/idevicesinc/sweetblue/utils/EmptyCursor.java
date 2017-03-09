@@ -8,9 +8,12 @@ import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 
+import com.idevicesinc.sweetblue.annotations.Extendable;
+
 /**
  * An implementation of {@link Cursor} used for error conditions and things like that where we don't want to return null.
  */
+@Extendable
 public class EmptyCursor implements Cursor
 {
 	/**

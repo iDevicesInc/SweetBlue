@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower;
 
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-class P_Task_Advertise extends PA_Task_RequiresBleOn {
+final class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
     private final BleAdvertisingPacket m_packet;
     private final BleServer.AdvertisingListener m_listener;
@@ -87,7 +87,7 @@ class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
     /*package*/ void stopAdvertising()
     {
-        BluetoothLeAdvertiser ad = getManager().getNativeAdapter().getBluetoothLeAdvertiser();
+        BluetoothLeAdvertiser ad = getManager().managerLayer().getBluetoothLeAdvertiser();
         if (ad != null)
         {
             ad.stopAdvertising(adCallback);
@@ -102,7 +102,7 @@ class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
     private void invokeStartAdvertising()
     {
-        BluetoothLeAdvertiser advert = getManager().getNativeAdapter().getBluetoothLeAdvertiser();
+        BluetoothLeAdvertiser advert = getManager().managerLayer().getBluetoothLeAdvertiser();
         if (advert != null)
         {
             BleAdvertisingMode mode = determineMode(m_mode, m_timeOut, getManager().isForegrounded());

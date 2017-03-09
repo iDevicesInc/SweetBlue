@@ -9,7 +9,10 @@ import java.util.List;
 /**
  * Type-safe parallel of various static final int members of {@link android.bluetooth.le.ScanSettings} and a way to
  * force pre-Lollipop scanning mode. Provide an option to {@link BleManagerConfig#scanMode}.
+ *
+ * @deprecated This is deprecated in favor of {@link BleScanApi}.
  */
+@Deprecated
 public enum BleScanMode
 {
 	/**

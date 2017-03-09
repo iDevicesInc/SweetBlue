@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
+import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.EpochTime;
@@ -32,6 +33,7 @@ import java.util.UUID;
  * <br><br>
  * TIP: You can use {@link #newNulled()} (or {@link #nullOut()}) then only set the few options you want for {@link BleServer#setConfig(BleNodeConfig)}.
  */
+@Extendable
 public class BleNodeConfig
 {
 	/**
@@ -53,6 +55,13 @@ public class BleNodeConfig
 	 * @see BleDeviceConfig#defaultTxPower
 	 */
 	public static final int INVALID_TX_POWER							= Integer.MIN_VALUE;
+
+	/**
+	 * The default size of the list that keeps track of a {@link BleNode}'s connection failure history. This is to prevent
+	 * the list from growing too large, if the device is unable to connect, and you have a large long term reconnect time set
+	 * with {@link #reconnectFilter}.
+	 */
+	public static final int DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE	= 25;
 
 	/**
 	 * Default is <code>false</code> - see the <code>boolean autoConnect</code> parameters of
@@ -82,8 +91,12 @@ public class BleNodeConfig
 	 * with {@link WrongThreadError} thrown if not.
 	 * Versions less than v2 did not enforce this, but feedback indicated that the threading model was unclear and some people would kick
 	 * off SweetBlue operations on alternate threads, which could definitely lead to problems. This remains as an option to help older code bases transitioning to >= v2
+	 *
+	 *
+	 * @deprecated - This value is not used anymore. Just left here so we don't cause build errors.
 	 */
 	@Nullable(Nullable.Prevalence.RARE)
+	@Deprecated
 	public Boolean allowCallsFromAllThreads									= false;
 
 	/**
@@ -94,6 +107,12 @@ public class BleNodeConfig
 	 */
 	@Nullable(Nullable.Prevalence.NORMAL)
 	public Boolean disconnectIsCancellable									= true;
+
+	/**
+	 * Default is <code>true</code> - this will automatically stripe writes that are larger than the MTU size into multiple WRITE requests for you.
+	 * If you are using {@link BleDevice#setMtu(int)}, this may make things unstable.
+	 */
+	public boolean autoStripeWrites											= true;
 
 	/**
 	 * Default is an instance of {@link DefaultTaskTimeoutRequestFilter} - set an implementation here to
@@ -1216,7 +1235,7 @@ public class BleNodeConfig
 		return filter_device != null ? filter_device : filter_mngr;
 	}
 
-	@Override protected BleNodeConfig clone()
+	@Override public BleNodeConfig clone()
 	{
 		try
 		{

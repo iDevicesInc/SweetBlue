@@ -7,7 +7,7 @@ import android.bluetooth.BluetoothAdapter;
  * 
  *
  */
-class P_Task_TurnBleOff extends PA_Task
+final class P_Task_TurnBleOff extends PA_Task
 {
 	private final boolean m_implicit;
 	
@@ -30,11 +30,11 @@ class P_Task_TurnBleOff extends PA_Task
 	
 	@Override public void execute()
 	{
-		if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_OFF )
+		if( getManager().managerLayer().getState() == BluetoothAdapter.STATE_OFF )
 		{
 			redundant();
 		}
-		else if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_TURNING_OFF )
+		else if( getManager().managerLayer().getState() == BluetoothAdapter.STATE_TURNING_OFF )
 		{
 			// DRK > Nothing to do, already turning off.
 		}
@@ -44,7 +44,7 @@ class P_Task_TurnBleOff extends PA_Task
 			{
 				this.fail();
 			}
-			else if( false == getManager().getNative().getAdapter().disable() )
+			else if( false == getManager().managerLayer().disable() )
 			{
 				this.fail();
 			}

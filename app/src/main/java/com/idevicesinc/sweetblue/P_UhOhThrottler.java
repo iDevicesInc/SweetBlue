@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
  * 
  *
  */
-class P_UhOhThrottler
+final class P_UhOhThrottler
 {
 	private final HashMap<UhOh, Double> m_lastTimesCalled = new HashMap<UhOh, Double>();
 	private UhOhListener m_uhOhListener;

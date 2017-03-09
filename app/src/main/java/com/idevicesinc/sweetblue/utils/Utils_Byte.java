@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue.utils;
 
 import android.content.Context;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,10 +14,18 @@ import java.util.List;
 /**
  * Utility methods for byte and bit twiddling.
  */
-public class Utils_Byte extends Utils
+public final class Utils_Byte extends Utils
 {
+
+	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
+
 	private Utils_Byte(){super();}
 
+
+	/**
+	 * Converts a var-args of {@link BitwiseEnum}s to an int of their bit values
+     */
 	public static int toBits(final BitwiseEnum ... enums)
 	{
 		int bits = 0x0;
@@ -31,6 +38,9 @@ public class Utils_Byte extends Utils
 		return bits;
 	}
 
+	/**
+	 * Convert a hex string into a byte array
+     */
 	public static byte[] hexStringToBytes(String string)
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -45,6 +55,24 @@ public class Utils_Byte extends Utils
 		return baos.toByteArray();
 	}
 
+	/**
+	 * Convert a byte array to a hex string
+     */
+	public static String bytesToHexString(final byte[] bytes)
+	{
+		char[] hexChars = new char[bytes.length * 2];
+		for ( int j = 0; j < bytes.length; j++ ) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		return new String(hexChars);
+	}
+
+
+	// Not sure what this was added for. It seems like it's for a pretty specific case. Marking as deprecated for now,
+	// and will remove in 3.0, unless we get complaints
+	@Deprecated
 	public static List<byte[]> fileToBinaryDataList(Context context, String file, int offset)
 	{
 		List<byte[]> binaryData = new ArrayList<byte[]>();
@@ -125,6 +153,9 @@ public class Utils_Byte extends Utils
 		return binaryData;
 	}
 
+	/**
+	 * Create a new byte array from the given source, with the given ranges
+     */
 	public static byte[] subBytes(byte[] source, int sourceBegin_index_inclusive, int sourceEnd_index_exclusive)
 	{
 		byte[] destination = new byte[sourceEnd_index_exclusive - sourceBegin_index_inclusive];
@@ -132,11 +163,17 @@ public class Utils_Byte extends Utils
 		return destination;
 	}
 
+	/**
+	 * Create a new byte array from the given source, starting at the given begin index
+     */
 	public static byte[] subBytes(final byte[] source, final int sourceBegin)
 	{
 		return subBytes(source, sourceBegin, source.length-1);
 	}
 
+	/**
+	 * Copy from one byte array to another, with the given size, and offsets
+     */
 	public static void memcpy(byte[] dest, byte[] source, int size, int destOffset, int sourceOffset)
 	{
 		for(int i = 0; i < size; i++)
@@ -145,11 +182,17 @@ public class Utils_Byte extends Utils
 		}
 	}
 
+	/**
+	 * Copy from one byte array to another with the given size
+     */
 	public static void memcpy(byte[] dest, byte[] source, int size)
 	{
 		memcpy(dest, source, size, /*destOffset=*/0, /*destOffset=*/0);
 	}
 
+	/**
+	 * Set a value to size indexes in the given byte array
+     */
 	public static void memset(byte[] data, byte value, int size)
 	{
 		for(int i = 0; i < size; i++)
@@ -158,6 +201,24 @@ public class Utils_Byte extends Utils
 		}
 	}
 
+	/**
+	 * Set a value to size indexes in the given byte array starting at the given offset
+	 */
+	public static void memset(byte[] data, byte value, int offset, int size)
+	{
+		if (offset < 0 || data.length - offset < size)
+		{
+			return;
+		}
+		for(int i = offset; i < size; i++)
+		{
+			data[i] = value;
+		}
+	}
+
+	/**
+	 * Compare two byte arrays. Returns <code>true</code> if each value matches for the given size
+     */
 	public static boolean memcmp(byte[] buffer1, byte[] buffer2, int size)
 	{
 		for(int i = 0; i < size; i++)
@@ -171,6 +232,11 @@ public class Utils_Byte extends Utils
 		return true;
 	}
 
+	/**
+	 * Old method, not meant to be used any more. Please use {@link #bytesToInt(byte[])}, and {@link #reverseBytes(byte[])}, if needed.
+	 * @deprecated
+     */
+	@Deprecated
 	public static int getIntValue(byte[] data)
 	{
 		//--- DRK > Have to pad it out from 3 to 4 bytes then flip byte endianness...not required in iOS version.
@@ -182,6 +248,9 @@ public class Utils_Byte extends Utils
 		return value;
 	}
 
+	/**
+	 * Reverses the byte array order. This is useful when dealing with bluetooth hardware that is in a different endianness than android.
+     */
 	public static void reverseBytes(byte[] data)
 	{
 		for( int i = 0; i < data.length/2; i++ )
@@ -194,11 +263,17 @@ public class Utils_Byte extends Utils
 		}
 	}
 
+	/**
+	 * Returns a short, from the given byte, ensuring that it is unsigned.
+     */
 	public static short unsignedByte(byte value)
 	{
 		return (short) (value & 0xff);
 	}
 
+	/**
+	 * Convert a short to a byte array
+     */
 	public static byte[] shortToBytes(short l)
 	{
 		byte[] result = new byte[2];
@@ -210,6 +285,9 @@ public class Utils_Byte extends Utils
 		return result;
 	}
 
+	/**
+	 * Convert a byte array to a short
+     */
 	public static short bytesToShort(byte[] b)
 	{
 		short result = 0;
@@ -222,11 +300,58 @@ public class Utils_Byte extends Utils
 		return result;
 	}
 
+	/**
+	 * Outputs a {@link Pointer} from the given byte array, starting at the offset provided. If there is not enough space to
+	 * create the short, the {@link Pointer} value will be <code>null</code>.
+     */
+	public static Pointer<Short> bytesToShort(byte[] b, int offset)
+	{
+		if (offset < 0 || b.length - offset < (Short.SIZE / 8))
+		{
+			return new Pointer<>(null);
+		}
+		else
+		{
+			byte[] bytes = subBytes(b, offset, offset + (Short.SIZE / 8));
+			return new Pointer<>(bytesToShort(bytes));
+		}
+	}
+
+	/**
+	 * Convert a boolean to a byte (<code>true</code> is 0x1, <code>false</code> is 0x0).
+     */
 	public static byte boolToByte(final boolean value)
 	{
 		return (byte) (value ? 0x1 : 0x0);
 	}
 
+	/**
+	 * Convert a byte to a boolean
+     */
+	public static boolean byteToBool(byte val)
+	{
+		return val == 0x1;
+	}
+
+	/**
+	 * Convert a byte to a boolean from the given byte array, at the given offset. If the offset is out of range, the {@link Pointer} value
+	 * will be <code>null</code>.
+     */
+	public static Pointer<Boolean> byteToBool(byte[] b, int offset)
+	{
+		if (offset < 0 || offset >= b.length)
+		{
+			return new Pointer<>(null);
+		}
+		else
+		{
+			return new Pointer<>(b[offset] == 1);
+		}
+	}
+
+	/**
+	 * Convert an int to a byte array
+     */
 	public static byte[] intToBytes(int l)
 	{
 		byte[] result = new byte[4];
@@ -238,6 +363,9 @@ public class Utils_Byte extends Utils
 		return result;
 	}
 
+	/**
+	 * Convert a byte array to an int
+     */
 	public static int bytesToInt(byte[] b)
 	{
 		int result = 0;
@@ -254,6 +382,26 @@ public class Utils_Byte extends Utils
 		return result;
 	}
 
+	/**
+	 * Convert bytes to an int from the given byte array, starting at the given offset. If the offset is an invalid index (less than 0, or doesn't leave enough
+	 * room in the array to create an int) the {@link Pointer} value will be <code>null</code>.
+     */
+	public static Pointer<Integer> bytesToInt(byte[] b, int offset)
+	{
+		if (offset < 0 || b.length - offset < (Integer.SIZE / 8))
+		{
+			return new Pointer<>(null);
+		}
+		else
+		{
+			byte[] bytes = subBytes(b, offset, offset + (Integer.SIZE / 8));
+			return new Pointer<>(bytesToInt(bytes));
+		}
+	}
+
+	/**
+	 * Convert a long to a byte array
+     */
 	public static byte[] longToBytes(long l)
 	{
 		byte[] result = new byte[8];
@@ -265,6 +413,9 @@ public class Utils_Byte extends Utils
 		return result;
 	}
 
+	/**
+	 * Convert a byte array to a long
+     */
 	public static long bytesToLong(byte[] b)
 	{
 		long result = 0;
@@ -275,4 +426,92 @@ public class Utils_Byte extends Utils
 		}
 		return result;
 	}
+
+	/**
+	 * Convert bytes to a long from the given byte array, starting at the given offset. If the offset is an invalid index (less than 0, or doesn't leave enough
+	 * room in the array to create a long) the {@link Pointer} value will be <code>null</code>.
+	 */
+	public static Pointer<Long> bytesToLong(byte[] b, int offset)
+	{
+		if (offset < 0 || b.length - offset < (Long.SIZE / 8))
+		{
+			return new Pointer<>(null);
+		}
+		else
+		{
+			byte[] bytes = subBytes(b, offset, offset + (Long.SIZE / 8));
+			return new Pointer<>(bytesToLong(bytes));
+		}
+	}
+
+	/**
+	 * Convert a float to a byte array
+	 */
+	public static byte[] floatToBytes(float f)
+	{
+		int intBits = Float.floatToIntBits(f);
+		return intToBytes(intBits);
+	}
+
+	/**
+	 * Convert a byte array to a float
+     */
+	public static float bytesToFloat(byte[] b)
+	{
+		int intBits = bytesToInt(b);
+		return Float.intBitsToFloat(intBits);
+	}
+
+	/**
+	 * Convert bytes to a float from the given byte array, starting at the given offset. If the offset is an invalid index (less than 0, or doesn't leave enough
+	 * room in the array to create a float) the {@link Pointer} value will be <code>null</code>.
+	 */
+	public static Pointer<Float> bytesToFloat(byte[] b, int offset)
+	{
+		if (offset < 0 || b.length - offset < (Float.SIZE / 8))
+		{
+			return new Pointer<>(null);
+		}
+		else
+		{
+			byte[] bytes = subBytes(b, offset, offset + (Float.SIZE / 8));
+			return new Pointer<>(bytesToFloat(bytes));
+		}
+	}
+
+	/**
+	 * Convert a double to a byte array
+	 */
+	public static byte[] doubleToBytes(double d)
+	{
+		long longBits = Double.doubleToLongBits(d);
+		return longToBytes(longBits);
+	}
+
+	/**
+	 * Convert a byte array to a double
+     */
+	public static double bytesToDouble(byte[] b)
+	{
+		long longBits = bytesToLong(b);
+		return Double.longBitsToDouble(longBits);
+	}
+
+	/**
+	 * Convert bytes to a double from the given byte array, starting at the given offset. If the offset is an invalid index (less than 0, or doesn't leave enough
+	 * room in the array to create a double) the {@link Pointer} value will be <code>null</code>.
+	 */
+	public static Pointer<Double> bytesToDouble(byte[] b, int offset)
+	{
+		if (offset < 0 || b.length - offset < (Double.SIZE / 8))
+		{
+			return new Pointer<>(null);
+		}
+		else
+		{
+			byte[] bytes = subBytes(b, offset, offset + (Double.SIZE / 8));
+			return new Pointer<>(bytesToDouble(bytes));
+		}
+	}
+
 }

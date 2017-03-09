@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
@@ -13,7 +12,7 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 import java.util.UUID;
 
-class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
+final class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 {
 	private final Type m_type;
 	private final UUID m_descriptorUuid;
@@ -41,19 +40,17 @@ class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 		return Target.DESCRIPTOR;
 	}
 
-	@Override public void execute()
+	@Override protected void executeReadOrWrite()
 	{
-		super.execute();
-		
 		final BluetoothGattDescriptor desc_native = getDevice().getNativeDescriptor(getServiceUuid(), getCharUuid(), getDescUuid());
-		
+
 		if( desc_native == null )
 		{
 			fail(Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), getDescUuid());
 		}
 		else
 		{
-			if( false == getDevice().getNativeGatt().readDescriptor(desc_native) )
+			if( false == getDevice().layerManager().readDescriptor(desc_native) )
 			{
 				fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), getDescUuid());
 			}
@@ -63,10 +60,11 @@ class P_Task_ReadDescriptor extends PA_Task_ReadOrWrite
 			}
 		}
 	}
-	
+
+	@Override
 	public void onDescriptorRead(BluetoothGatt gatt, UUID uuid, byte[] value, int gattStatus)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 
 		onCharacteristicOrDescriptorRead(gatt, uuid, value, gattStatus, m_type);
 	}

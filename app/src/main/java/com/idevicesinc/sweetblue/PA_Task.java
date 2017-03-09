@@ -120,10 +120,13 @@ abstract class PA_Task
 	{
 		return getManager().getLogger();
 	}
-	
-	private void setState(PE_TaskState newState)
+
+	/**
+	 * Returns <code>true</code> if {@link P_TaskQueue#print()} was called.
+     */
+	private boolean setState(PE_TaskState newState)
 	{
-		if( !m_manager.ASSERT(newState != m_state) )  return;
+		if( !m_manager.ASSERT(newState != m_state) )  return false;
 		
 		m_state = newState;
 		
@@ -142,10 +145,12 @@ abstract class PA_Task
 			else if (m_state == PE_TaskState.EXECUTING )
 			{
 				getQueue().print();
+				return true;
 			}
 		}
 		
 		if( m_stateListener != null )  m_stateListener.onStateChange(this, m_state);
+		return false;
 	}
 	
 	PE_TaskState getState()
@@ -288,7 +293,11 @@ abstract class PA_Task
 		setState(endingState);
 	}
 
-	public void tryExecuting()
+
+	/**
+	 * Returns <code>true</code> if {@link P_TaskQueue#print()} ends up getting called.
+ 	 */
+	public boolean tryExecuting()
 	{
 		if( m_state == PE_TaskState.ARMED )
 		{
@@ -311,25 +320,24 @@ abstract class PA_Task
 				{
 					softlyCancel();
 
-					return;
+					return false;
 				}
 
 				if( isExecutable() )
 				{
-					setState(PE_TaskState.EXECUTING);
+					boolean printCalled = setState(PE_TaskState.EXECUTING);
 
 					execute_wrapper();
 
-					return;
+					return printCalled;
 				}
 				else
 				{
 					onNotExecutable();
-
-					return;
 				}
 			}
 		}
+		return false;
 	}
 	
 	void update_internal(double timeStep)
@@ -373,10 +381,20 @@ abstract class PA_Task
 	{
 		return (System.currentTimeMillis() - m_timeExecuted)/1000.0;
 	}
+
+	public double getTotalTimeExecuting(long currentTime)
+	{
+		return (currentTime - m_timeExecuted)/1000.0;
+	}
 	
 	public double getTotalTime()
 	{
 		return (System.currentTimeMillis() - m_timeCreated)/1000.0;
+	}
+
+	public double getTotalTime(long currentTime)
+	{
+		return (currentTime - m_timeCreated)/1000.0;
 	}
 
 	public double getAggregatedTimeArmedAndExecuting()
@@ -475,7 +493,7 @@ abstract class PA_Task
 		
 		String deviceEntry = getDevice() != null ? " " + getDevice().getName_debug(): "";
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
-		return name + "(" + m_state.name() + deviceEntry + addition + ")";
+		return name + "(" + m_state.name() + deviceEntry + addition + " " + hashCode() + " )";
 	}
 	
 	public boolean isExplicit()

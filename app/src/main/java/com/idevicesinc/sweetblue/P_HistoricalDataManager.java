@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 
-class P_HistoricalDataManager
+final class P_HistoricalDataManager
 {
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	private static final EmptyIterator<HistoricalData> EMPTY_ITERATOR = new EmptyIterator<HistoricalData>();
@@ -410,7 +410,8 @@ class P_HistoricalDataManager
 					{
 						@Override public void onDone()
 						{
-							m_endPoint.getManager().getUpdateLoop().postIfNeeded(new Runnable()
+
+							m_endPoint.getManager().getPostManager().postToUpdateThread(new Runnable()
 							{
 								@Override public void run()
 								{
@@ -530,16 +531,22 @@ class P_HistoricalDataManager
 	}
 
 	//GOOD
-	private BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent invokeListener(final UUID uuid, final EpochTimeRange range, final BleDevice.HistoricalDataLoadListener listener_nullable, BleDevice.HistoricalDataLoadListener.Status status, BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent event_nullable)
+	private BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent invokeListener(final UUID uuid, final EpochTimeRange range, final BleDevice.HistoricalDataLoadListener listener_nullable, final BleDevice.HistoricalDataLoadListener.Status status, final BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent event_nullable)
 	{
+		final BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent event = event_nullable != null ? event_nullable : new BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent(m_endPoint, m_macAddress, uuid, range, status);
 		if( listener_nullable != null )
 		{
-			event_nullable = event_nullable != null ? event_nullable : new BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent(m_endPoint, m_macAddress, uuid, range, status);
+			m_endPoint.getManager().getPostManager().postCallback(new Runnable()
+			{
+				@Override public void run()
+				{
 
-			listener_nullable.onEvent(event_nullable);
+					listener_nullable.onEvent(event);
+				}
+			});
 		}
 
-		return event_nullable;
+		return event;
 	}
 
 	//GOOD

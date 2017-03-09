@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.uiautomator.UiDevice;
 import android.test.ActivityInstrumentationTestCase2;
 
 import org.junit.Test;
@@ -12,6 +14,8 @@ public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<Blueto
     BleManager bleManager;
 
     BluetoothAdapter bleAdapter;
+    UiDevice uiDevice;
+
 
     public ABluetoothPowerTest()
     {
@@ -26,9 +30,11 @@ public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<Blueto
 
         testActivity = getActivity();
 
-        bleManager = BleManager.get(testActivity);
+        bleManager = testActivity.getManager();
 
         bleAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     }
 
     @Test
@@ -44,6 +50,8 @@ public class ABluetoothPowerTest extends ActivityInstrumentationTestCase2<Blueto
     @Test
     public void testBleOn() throws Exception
     {
+        UIUtil.handleBluetoothEnablerDialogs(uiDevice, testActivity);
+
         testActivity.turnBluetoothOn();
 
         Thread.sleep(2000); //Pause to wait for the device to update its state

@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue.utils;
 /**
  * Provides a way to be able to change a value declared in the outer scope of an anonymous inline class.
  */
-public class Pointer<T>
+public final class Pointer<T>
 {
 	public T value = null;
 

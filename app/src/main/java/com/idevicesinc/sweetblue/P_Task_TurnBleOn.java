@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
  * 
  *
  */
-class P_Task_TurnBleOn extends PA_Task
+final class P_Task_TurnBleOn extends PA_Task
 {
 	private final boolean m_implicit;
 	
@@ -40,11 +40,11 @@ class P_Task_TurnBleOn extends PA_Task
 
 	@Override public void execute()
 	{
-		if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_ON )
+		if( getManager().managerLayer().getState() == BluetoothAdapter.STATE_ON )
 		{
 			redundant();
 		}
-		else if( getManager().getNative().getAdapter().getState() == BluetoothAdapter.STATE_TURNING_ON )
+		else if( getManager().managerLayer().getState() == BluetoothAdapter.STATE_TURNING_ON )
 		{
 			// DRK > Nothing to do, already turning on.
 		}
@@ -54,7 +54,7 @@ class P_Task_TurnBleOn extends PA_Task
 			{
 				fail();
 			}
-			else if( false == getManager().getNative().getAdapter().enable() )
+			else if( false == getManager().managerLayer().enable() )
 			{
 				fail();
 			}

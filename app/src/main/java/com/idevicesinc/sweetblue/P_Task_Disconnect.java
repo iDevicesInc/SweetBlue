@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-class P_Task_Disconnect extends PA_Task_RequiresBleOn
+final class P_Task_Disconnect extends PA_Task_RequiresBleOn
 {
 	private final PE_TaskPriority m_priority;
 	private final boolean m_explicit;
@@ -55,7 +55,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		if( !getDevice().m_nativeWrapper.isNativelyConnected() )
+		if( !getDevice().m_nativeWrapper.isNativelyConnected() && !getDevice().m_nativeWrapper.isNativelyConnecting())
 		{
 			getLogger().w("Already disconnected!");
 			
@@ -64,7 +64,7 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 			return;
 		}
 		
-		if( getDevice().getNativeGatt() == null )
+		if( getDevice().layerManager().isGattNull() )
 		{
 			getLogger().w("Already disconnected and gatt==null!");
 			
@@ -80,15 +80,15 @@ class P_Task_Disconnect extends PA_Task_RequiresBleOn
 			return;
 		}
 		
-		if( m_explicit )
-		{
-			getDevice().getNativeGatt().disconnect();
-		}
-		else
-		{
-			// DRK > nothing to do...wait for implicit disconnect task to complete...note we're probably
-			// never going to get here cause I've never observed STATE_DISCONNECTING.
-		}
+//		if( m_explicit )
+//		{
+			getDevice().layerManager().disconnect();
+//		}
+//		else
+//		{
+//			// DRK > nothing to do...wait for implicit disconnect task to complete...note we're probably
+//			// never going to get here cause I've never observed STATE_DISCONNECTING.
+//		}
 	}
 	
 	public int getGattStatus()

@@ -40,7 +40,7 @@ import android.util.Log;
  * Created by dyoung on 3/24/14.
  */
 @TargetApi(5)
-class P_BluetoothCrashResolver {
+final class P_BluetoothCrashResolver {
     private static final String TAG = "BluetoothCrashResolver";
     private static final boolean PREEMPTIVE_ACTION_ENABLED = true;
     private boolean debugEnabled = false;
@@ -103,7 +103,7 @@ class P_BluetoothCrashResolver {
      * @param context the Activity or Service that is doing the Bluetooth scanning
      */
     public P_BluetoothCrashResolver(Context context) {
-        this.context = context.getApplicationContext();
+        this.context = context/*.getApplicationContext()*/;
         if (isDebugEnabled()) Log.d(TAG, "constructed");
         loadState();
     }
@@ -174,7 +174,7 @@ class P_BluetoothCrashResolver {
      * @param device
      */
     @TargetApi(18)
-    public void notifyScannedDevice(BluetoothDevice device, BluetoothAdapter.LeScanCallback scanner) {
+    public void notifyScannedDevice(P_NativeDeviceLayer device, BluetoothAdapter.LeScanCallback scanner) {
         int oldSize = 0, newSize = 0;
 
         if (isDebugEnabled()) oldSize = distinctBluetoothAddresses.size();

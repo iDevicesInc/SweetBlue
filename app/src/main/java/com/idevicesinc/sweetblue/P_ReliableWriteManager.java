@@ -1,14 +1,11 @@
 package com.idevicesinc.sweetblue;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothGatt;
-import android.os.Build;
-
-import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-class P_ReliableWriteManager
+
+final class P_ReliableWriteManager
 {
 	private final BleDevice m_device;
 
@@ -99,7 +96,7 @@ class P_ReliableWriteManager
 			}
 			else
 			{
-				if( false == m_device.getNativeGatt().beginReliableWrite() )
+				if( false == m_device.layerManager().getGattLayer().beginReliableWrite() )
 				{
 					final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut_specific = newEvent(BleDevice.ReadWriteListener.Status.RELIABLE_WRITE_FAILED_TO_BEGIN, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 
@@ -144,14 +141,7 @@ class P_ReliableWriteManager
 
 	private void abortReliableWrite()
 	{
-		if( Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2 )
-		{
-			m_device.getNativeGatt().abortReliableWrite(m_device.getNative());
-		}
-		else
-		{
-			K_Util.abortReliableWrite(m_device);
-		}
+		m_device.layerManager().getGattLayer().abortReliableWrite(m_device.getNative());
 	}
 
 	public BleDevice.ReadWriteListener.ReadWriteEvent execute()

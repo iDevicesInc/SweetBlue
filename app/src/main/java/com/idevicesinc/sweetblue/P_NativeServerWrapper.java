@@ -1,19 +1,13 @@
 package com.idevicesinc.sweetblue;
 
-import android.annotation.TargetApi;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattServer;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
-import android.os.Build;
-
 import java.util.HashMap;
 import java.util.HashSet;
 
-class P_NativeServerWrapper
+
+final class P_NativeServerWrapper
 {
 	private final BleServer m_server;
 	private final BleManager m_mngr;
@@ -91,7 +85,7 @@ class P_NativeServerWrapper
 
 			clearAllConnectionStates();
 
-			m_native = m_mngr.getNative().openGattServer(m_mngr.getApplicationContext(), m_server.m_listeners);
+			m_native = m_mngr.managerLayer().openGattServer(m_mngr.getApplicationContext(), m_server.m_listeners);
 
 			if( m_native == null )
 			{
@@ -192,7 +186,9 @@ class P_NativeServerWrapper
 		{
 //			final int nativeState = m_native.getConnectionState(device);
 
-			final int nativeState = m_server.getManager().getNative().getConnectionState( device, BluetoothGatt.GATT );
+			final P_NativeDeviceLayer layer = m_server.getManager().m_config.newDeviceLayer(BleDevice.NULL);
+			layer.setNativeDevice(device);
+			final int nativeState = m_server.getManager().managerLayer().getConnectionState( layer, BluetoothGatt.GATT );
 
 			updateNativeConnectionState(device.getAddress(), nativeState);
 		}

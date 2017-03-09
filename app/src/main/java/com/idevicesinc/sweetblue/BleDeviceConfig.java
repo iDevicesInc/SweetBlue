@@ -12,6 +12,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
@@ -31,6 +32,7 @@ import com.idevicesinc.sweetblue.utils.*;
  * <br><br>
  * TIP: You can use {@link #newNulled()} (or {@link #nullOut()}) then only set the few options you want for {@link BleDevice#setConfig(BleDeviceConfig)}.
  */
+@Extendable
 public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 {
 	/**
@@ -69,6 +71,20 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static final int DEFAULT_TX_POWER					= -50;
 
 	/**
+	 * The default value of {@link #maxConnectionFailHistorySize}, the size of the list that keeps track of a {@link BleNode}'s connection failure history.
+	 * This is to prevent the list from growing too large, if the device is unable to connect, and you have a large long term reconnect time set
+	 * with {@link #reconnectFilter}.
+	 */
+	public static final int DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE	= 25;
+
+	/**
+	 * This only applies when {@link #useGattRefresh} is <code>true</code>. This is the default amount of time to delay after
+	 * refreshing the gatt database before actually performing the discover services operation. It has been observed that this delay
+	 * alleviates some instability when {@link #useGattRefresh} is <code>true</code>.
+	 */
+	public static final int DEFAULT_GATT_REFRESH_DELAY		= 500;
+
+	/**
 	 * Default is <code>false</code>. If the bluetooth device you are trying to connect to requires a pairing dialog to show up, you should
 	 * set this to <code>true</code>. Android will do one of two things when you try to pair to the device. It will either A) show the pairing dialog, or
 	 * B) show a notification in the notification area. When B happens, most people probably won't notice it, and think your app can't connect to the device.
@@ -76,6 +92,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * as it sounds, it works. Note that no devices will be discovered during this one second scan.
 	 */
 	public boolean forceBondDialog								= false;
+
+	/**
+	 * Default is {@link #DEFAULT_GATT_REFRESH_DELAY}. This only applies when {@link #useGattRefresh} is <code>true</code>. This is the amount of time to delay after
+	 * refreshing the gatt database before actually performing the discover services operation. It has been observed that this delay
+	 * alleviates some instability when {@link #useGattRefresh} is <code>true</code>.
+	 */
+	public Interval gattRefreshDelay							= Interval.millis(DEFAULT_GATT_REFRESH_DELAY);
 	
 	/**
 	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},
@@ -112,9 +135,16 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	/**
 	 * Default is <code>true</code> - whether to automatically enable notifications that were enabled via a call to any of the enableNotify() methods
 	 * in {@link BleDevice} upon device reconnection. Basically, if you enable notifications in an {@link com.idevicesinc.sweetblue.BleTransaction.Init} transaction,
-	 * then set this to <code>false</code>, and use your transaction.
+	 * then set this to <code>false</code>, as the transaction will run on reconnection.
 	 */
 	public boolean autoEnableNotifiesOnReconnect				= true;
+
+	/**
+	 * Default is <code>true</code> - whether to automatically renegotiate the MTU size that was set via {@link BleDevice#setMtu(int, ReadWriteListener)}, or
+	 * {@link BleDevice#setMtu(int)}. If you use either of those methods in a {@link com.idevicesinc.sweetblue.BleTransaction.Init} transaction, you should set
+	 * this to <code>false</code>, as the transaction will run on reconnection.
+	 */
+	public boolean autoNegotiateMtuOnReconnect					= true;
 	
 	/**
 	 * Default is <code>false</code> - if <code>true</code> and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
@@ -222,6 +252,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
 	public Boolean useGattRefresh								= false;
+
+	/**
+	 * Default is <code>false</code> - whether SweetBlue should retry a connect <i>after</i> successfully connecting via
+	 * BLE. This means that if discovering services, or {@link com.idevicesinc.sweetblue.BleTransaction.Init}, or {@link com.idevicesinc.sweetblue.BleTransaction.Auth}
+	 * fail for any reason, SweetBlue will disconnect, then retry the connection.
+	 */
+	public boolean connectFailRetryConnectingOverall			= false;
 
 
 	/**
@@ -334,17 +371,26 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 	/**
 	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Auth} which will be used when
-	 * auto connecting.
+	 * connecting to a {@link BleDevice}. This transaction will also be called if the {@link BleDevice} has
+	 * to reconnect for any reason.
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public BleTransaction.Auth defaultAuthTransaction			= null;
 
 	/**
 	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Init} which will be used when
-	 * auto connecting.
+	 * connecting to a {@link BleDevice}. This transaction will also be called if the {@link BleDevice} has
+	 * to reconnect for any reason.
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public BleTransaction.Init defaultInitTransaction			= null;
+
+	/**
+	 * Default is {@link #DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE} - This sets the size of the list that tracks the history
+	 * of {@link com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.ConnectionFailEvent}s. Note that this will always be
+	 * at least 1. If set to anything lower, it will be ignored, and the max size will be 1.
+	 */
+	public int maxConnectionFailHistorySize									= DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE;
 
 	/**
 	 * As of now there are two main default uses for this class...
@@ -600,7 +646,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 		return config;
 	}
 
-	@Override protected BleDeviceConfig clone()
+	@Override public BleDeviceConfig clone()
 	{
 		return (BleDeviceConfig) super.clone();
 	}

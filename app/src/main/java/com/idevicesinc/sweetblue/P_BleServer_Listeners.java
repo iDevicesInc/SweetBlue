@@ -97,18 +97,6 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		m_queue = m_server.getManager().getTaskQueue();
 	}
 
-	private void post(final Runnable runnable)
-	{
-		final PI_UpdateLoop updateLoop = m_server.getManager().getUpdateLoop();
-
-		updateLoop.postIfNeeded(runnable);
-	}
-
-	private boolean postNeeded()
-	{
-		return m_server.getManager().getUpdateLoop().postNeeded();
-	}
-
 	private boolean hasCurrentDisconnectTaskFor(final BluetoothDevice device)
 	{
 		final P_Task_DisconnectServer disconnectTask = m_queue.getCurrent(P_Task_DisconnectServer.class, m_server);
@@ -170,23 +158,16 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onConnectionStateChange(final BluetoothDevice device, final int gattStatus, final int newState)
 	{
-		if( postNeeded() )
+		m_server.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			post(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					onConnectionStateChange_mainThread(device, gattStatus, newState);
-				}
-			});
-		}
-		else
-		{
-			onConnectionStateChange_mainThread(device, gattStatus, newState);
-		}
+				onConnectionStateChange_updateThread(device, gattStatus, newState);
+			}
+		});
 	}
 
-    private void onConnectionStateChange_mainThread(final BluetoothDevice device, final int gattStatus, final int newState)
+    private void onConnectionStateChange_updateThread(final BluetoothDevice device, final int gattStatus, final int newState)
 	{
 		m_logger.log_status(gattStatus, m_logger.gattConn(newState));
 
@@ -283,23 +264,16 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onServiceAdded(final int gattStatus, final BluetoothGattService service)
 	{
-		if( postNeeded() )
+		m_server.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			post(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					onServiceAdded_mainThread(gattStatus, service);
-				}
-			});
-		}
-		else
-		{
-			onServiceAdded_mainThread(gattStatus, service);
-		}
+				onServiceAdded_updateThread(gattStatus, service);
+			}
+		});
 	}
 
-	private void onServiceAdded_mainThread(final int gattStatus, final BluetoothGattService service)
+	private void onServiceAdded_updateThread(final int gattStatus, final BluetoothGattService service)
 	{
 		final P_Task_AddService task = m_queue.getCurrent(P_Task_AddService.class, m_server);
 
@@ -332,7 +306,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		return e;
 	}
 
-	private void onReadRequest_mainThread(final BluetoothDevice device, final int requestId, final int offset, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
+	private void onReadRequest_updateThread(final BluetoothDevice device, final int requestId, final int offset, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
 	{
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 
@@ -375,38 +349,24 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattCharacteristic characteristic)
 	{
-		if( postNeeded() )
+		m_server.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			post(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					onReadRequest_mainThread(device, requestId, offset, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
-				}
-			});
-		}
-		else
-		{
-			onReadRequest_mainThread(device, requestId, offset, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
-		}
+				onReadRequest_updateThread(device, requestId, offset, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
+			}
+		});
     }
 
 	@Override public void onDescriptorReadRequest(final BluetoothDevice device, final int requestId, final int offset, final BluetoothGattDescriptor descriptor)
 	{
-		if( postNeeded() )
+		m_server.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			post(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					onReadRequest_mainThread(device, requestId, offset, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
-				}
-			});
-		}
-		else
-		{
-			onReadRequest_mainThread(device, requestId, offset, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
-		}
+				onReadRequest_updateThread(device, requestId, offset, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
+			}
+		});
 	}
 
 	private OutgoingEvent newEarlyOutResponse_Write(final BluetoothDevice device, final Type type, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable, final int requestId, final int offset, final BleServer.OutgoingListener.Status status)
@@ -422,7 +382,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		return e;
 	}
 
-	private void onWriteRequest_mainThread(final BluetoothDevice device, final byte[] data, final int requestId, final int offset, final boolean preparedWrite, final boolean responseNeeded, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
+	private void onWriteRequest_updateThread(final BluetoothDevice device, final byte[] data, final int requestId, final int offset, final boolean preparedWrite, final boolean responseNeeded, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable)
 	{
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 		final Type type = preparedWrite ? Type.PREPARED_WRITE : Type.WRITE;
@@ -466,38 +426,24 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onCharacteristicWriteRequest(final BluetoothDevice device, final int requestId, final BluetoothGattCharacteristic characteristic, final boolean preparedWrite, final boolean responseNeeded, final int offset, final byte[] value)
 	{
-		if( postNeeded() )
+		m_server.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			post(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					onWriteRequest_mainThread(device, value, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
-				}
-			});
-		}
-		else
-		{
-			onWriteRequest_mainThread(device, value, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
-		}
+				onWriteRequest_updateThread(device, value, requestId, offset, preparedWrite, responseNeeded, characteristic.getService().getUuid(), characteristic.getUuid(), /*descUuid=*/null);
+			}
+		});
     }
 
 	@Override public void onDescriptorWriteRequest( final BluetoothDevice device, final int requestId, final BluetoothGattDescriptor descriptor, final boolean preparedWrite, final boolean responseNeeded, final int offset, final byte[] value)
 	{
-		if( postNeeded() )
+		m_server.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			post(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					onWriteRequest_mainThread(device, value, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
-				}
-			});
-		}
-		else
-		{
-			onWriteRequest_mainThread(device, value, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
-		}
+				onWriteRequest_updateThread(device, value, requestId, offset, preparedWrite, responseNeeded, descriptor.getCharacteristic().getService().getUuid(), descriptor.getCharacteristic().getUuid(), descriptor.getUuid());
+			}
+		});
     }
 
 	@Override public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute)
@@ -506,23 +452,16 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
 	@Override public void onNotificationSent( final BluetoothDevice device, final int gattStatus )
 	{
-		if( postNeeded() )
+		m_server.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			post(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					onNotificationSent_mainThread(device, gattStatus);
-				}
-			});
-		}
-		else
-		{
-			onNotificationSent_mainThread(device, gattStatus);
-		}
+				onNotificationSent_updateThread(device, gattStatus);
+			}
+		});
 	}
 
-	private void onNotificationSent_mainThread(final BluetoothDevice device, final int gattStatus)
+	private void onNotificationSent_updateThread(final BluetoothDevice device, final int gattStatus)
 	{
 		final P_Task_SendNotification task = m_queue.getCurrent(P_Task_SendNotification.class, m_server);
 

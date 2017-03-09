@@ -2,16 +2,18 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
-import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
-class P_NativeDeviceWrapper
+
+final class P_NativeDeviceWrapper
 {
 	private final BleDevice m_device;
-	private BluetoothDevice m_device_native;
-	private	BluetoothGatt m_gatt;
+	private P_NativeDeviceLayer m_device_native;
 	private final String m_address;
 
 	private String m_name_native;
@@ -22,13 +24,15 @@ class P_NativeDeviceWrapper
 	//--- DRK > We have to track connection state ourselves because using
 	//---		BluetoothManager.getConnectionState() is slightly out of date
 	//---		in some cases. Tracking ourselves from callbacks seems accurate.
-	private	Integer m_nativeConnectionState = null;
+	private AtomicInteger m_nativeConnectionState = null;
 	
-	public P_NativeDeviceWrapper(BleDevice device, BluetoothDevice device_native, String name_normalized, String name_native)
+	public P_NativeDeviceWrapper(BleDevice device, P_NativeDeviceLayer nativeLayer, String name_normalized, String name_native)
 	{
 		m_device = device;
-		m_device_native = device_native;
-		m_address = m_device_native == null || m_device_native.getAddress() == null ? BleDevice.NULL_MAC() : m_device_native.getAddress();
+		m_device_native = nativeLayer;
+		m_address = m_device_native.getAddress() == null || m_device.isNull() ? BleDevice.NULL_MAC() : m_device_native.getAddress();
+
+		m_nativeConnectionState = new AtomicInteger(-1);
 
 		updateName(name_native, name_normalized);
 
@@ -48,6 +52,20 @@ class P_NativeDeviceWrapper
 		}
 	}
 
+	private P_NativeDeviceLayer createLayer(Class<? extends P_NativeDeviceLayer> layerClass)
+	{
+		P_NativeDeviceLayer layer = null;
+		try
+		{
+			layer = layerClass.newInstance();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return layer;
+	}
+
 	private BleManager getManager()
 	{
 		return m_device.getManager();
@@ -58,13 +76,13 @@ class P_NativeDeviceWrapper
 		return m_device.getManager().getLogger();
 	}
 
-	void updateNativeDevice(final BluetoothDevice device_native)
+	void updateNativeDevice(final P_NativeDeviceLayer device_native)
 	{
 		final String name_native = device_native.getName();
 
 		updateNativeName(name_native);
 
-		m_device_native = device_native;
+		m_device_native.setNativeDevice(device_native.getNativeDevice());
 	}
 
 	void setName_override(final String name)
@@ -139,27 +157,32 @@ class P_NativeDeviceWrapper
 	{
 		return m_name_debug;
 	}
-	
+
+	public P_NativeDeviceLayer getDeviceLayer()
+	{
+		return m_device_native;
+	}
+
 	public BluetoothDevice getDevice()
 	{
 		if( m_device.isNull() )
 		{
-			return m_device.getManager().newNativeDevice(BleDevice.NULL_MAC());
+			return m_device.getManager().newNativeDevice(BleDevice.NULL_MAC()).getNativeDevice();
 		}
 		else
 		{
-			return m_device_native;
+			return m_device_native.getNativeDevice();
 		}
 	}
 	
 	public BluetoothGatt getGatt()
 	{
-		return m_gatt;
+		return m_device.layerManager().getGattLayer().getGatt();
 	}
 	
 	private void updateGattFromCallback(BluetoothGatt gatt)
 	{
-		if (gatt == null)
+		if (gatt == null && !getManager().m_config.unitTest)
 		{
 			getLogger().w("Gatt object from callback is null.");
 		}
@@ -183,16 +206,16 @@ class P_NativeDeviceWrapper
 	{
 		if( state == null )
 		{
-			m_nativeConnectionState = getNativeConnectionState();
+			m_nativeConnectionState.set(getNativeConnectionState());
 		}
 		else
 		{
-			m_nativeConnectionState = state;
+			m_nativeConnectionState.set(state);
 		}
 
 		updateGattFromCallback(gatt);
 
-		getLogger().i(getLogger().gattConn(m_nativeConnectionState));
+		getLogger().i(getLogger().gattConn(m_nativeConnectionState.get()));
 	}
 	
 	public int getNativeBondState()
@@ -237,126 +260,139 @@ class P_NativeDeviceWrapper
 	
 	public int getNativeConnectionState()
 	{
-		return m_device.getManager().getNative().getConnectionState(m_device_native, BluetoothGatt.GATT_SERVER );
+		return m_device.layerManager().getManagerLayer().getConnectionState(m_device_native, BluetoothGatt.GATT_SERVER);
 	}
 	
 	public int getConnectionState()
 	{
-		synchronized (this)
-		{
-			final int reportedNativeConnectionState = getNativeConnectionState();
-			int connectedStateThatWeWillGoWith = reportedNativeConnectionState;
-			
-			if( m_nativeConnectionState != null )
-			{
-				if( m_nativeConnectionState != reportedNativeConnectionState )
-				{
-					getLogger().e("Tracked native state " + getLogger().gattConn(m_nativeConnectionState) + " doesn't match reported state " + getLogger().gattConn(reportedNativeConnectionState) + ".");
-				}
-				
-				connectedStateThatWeWillGoWith = m_nativeConnectionState;
-			}
-			
-			if( connectedStateThatWeWillGoWith != BluetoothGatt.STATE_DISCONNECTED )
-			{
-				if( m_gatt == null )
-				{
-					//--- DRK > Can't assert here because gatt can legitmately be null even though we have a connecting/ed native state.
-					//---		This was observed on the moto G right after app start up...getNativeConnectionState() reported connecting/ed
-					//---		but we haven't called connect yet. Really rare...only seen once after 4 months.
-					if( m_nativeConnectionState == null )
-					{
-						getLogger().e("Gatt is null with " + getLogger().gattConn(connectedStateThatWeWillGoWith));
-						
-						connectedStateThatWeWillGoWith = BluetoothGatt.STATE_DISCONNECTED;
+		return performGetNativeState(null, null);
+		// It was thought that getting the state from the UI thread would alleviate some issues. It wasn't found to be the case
+		// I'm leaving it here just in case we need to switch back.
+//		if (Utils.isOnMainThread())
+//		{
+//			return performGetNativeState(null, null);
+//		}
+//		else
+//		{
+//			// > RB - This may not be necessary anymore. It was thought that the check of the native state had to be made on the UI thread,
+//			// so this is here to block the current thread until it gets the result back.
+//			final CountDownLatch latch = new CountDownLatch(1);
+//			final AtomicInteger state = new AtomicInteger(-1);
+//			getManager().getPostManager().postToMain(new Runnable()
+//			{
+//				@Override public void run()
+//				{
+//					performGetNativeState(state, latch);
+//				}
+//			});
+//			try
+//			{
+//				latch.await();
+//			} catch (Exception e)
+//			{
+//				e.printStackTrace();
+//			}
+//			return state.get();
+//		}
+	}
 
-						getManager().uhOh(UhOh.CONNECTED_WITHOUT_EVER_CONNECTING);
-					}
-					else
-					{
-						getManager().ASSERT(false, "Gatt is null with tracked native state: " + getLogger().gattConn(connectedStateThatWeWillGoWith));
-					}
+	private int performGetNativeState(AtomicInteger state, CountDownLatch latch)
+	{
+		final int reportedNativeConnectionState = getNativeConnectionState();
+		int connectedStateThatWeWillGoWith = reportedNativeConnectionState;
+
+		if( m_nativeConnectionState != null && m_nativeConnectionState.get() != -1 )
+		{
+			if( m_nativeConnectionState.get() != reportedNativeConnectionState )
+			{
+				getLogger().e("Tracked native state " + getLogger().gattConn(m_nativeConnectionState.get()) + " doesn't match reported state " + getLogger().gattConn(reportedNativeConnectionState) + ".");
+			}
+
+			connectedStateThatWeWillGoWith = m_nativeConnectionState.get();
+		}
+
+		if( connectedStateThatWeWillGoWith != BluetoothGatt.STATE_DISCONNECTED )
+		{
+			if( gattLayer().isGattNull() )
+			{
+				//--- DRK > Can't assert here because gatt can legitmately be null even though we have a connecting/ed native state.
+				//---		This was observed on the moto G right after app start up...getNativeConnectionState() reported connecting/ed
+				//---		but we haven't called connect yet. Really rare...only seen once after 4 months.
+				if( m_nativeConnectionState == null )
+				{
+					getLogger().e("Gatt is null with " + getLogger().gattConn(connectedStateThatWeWillGoWith));
+
+					connectedStateThatWeWillGoWith = BluetoothGatt.STATE_DISCONNECTED;
+
+					getManager().uhOh(UhOh.CONNECTED_WITHOUT_EVER_CONNECTING);
+				}
+				else
+				{
+					getManager().ASSERT(false, "Gatt is null with tracked native state: " + getLogger().gattConn(connectedStateThatWeWillGoWith));
 				}
 			}
-			else
-			{
-				//--- DRK > Had this assert here but must have been a brain fart because we can be disconnected
-				//---		but still have gatt be not null cause we're trying to reconnect.
-	//			if( !m_mngr.ASSERT(m_gatt == null) )
-	//			{
-	//				m_logger.e(m_logger.gattConn(connectedStateThatWeWillGoWith));
-	//			}
-			}
-			
-			return connectedStateThatWeWillGoWith;
 		}
+		else
+		{
+			//--- DRK > Had this assert here but must have been a brain fart because we can be disconnected
+			//---		but still have gatt be not null cause we're trying to reconnect.
+			//			if( !m_mngr.ASSERT(m_gatt == null) )
+			//			{
+			//				m_logger.e(m_logger.gattConn(connectedStateThatWeWillGoWith));
+			//			}
+		}
+		if (state != null)
+		{
+			state.set(connectedStateThatWeWillGoWith);
+		}
+		if (latch != null)
+		{
+			latch.countDown();
+		}
+		return connectedStateThatWeWillGoWith;
 	}
 	
 	void closeGattIfNeeded(boolean disconnectAlso)
 	{
 		m_device.m_reliableWriteMngr.onDisconnect();
 
-		if( m_gatt == null )  return;
+		if( gatt() == null )  return;
 
 		closeGatt(disconnectAlso);
 	}
 	
 	private void closeGatt(boolean disconnectAlso)
 	{
-		if( m_gatt == null )  return;
-
-		//--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
-		//---		Don't want to keep it here because I'm afraid it has a better chance to do bad than good.
-//			if( disconnectAlso )
-//			{
-//				m_gatt.disconnect();
-//			}
-
-		//--- DRK > This can randomly throw an NPE down stream...NOT from m_gatt being null, but a few methods downstream.
-		//---		See below for more info.
-		try
+		UhOh uhoh = m_device.layerManager().getGattLayer().closeGatt();
+		if (uhoh != null)
 		{
-			m_gatt.close();
+			m_device.getManager().uhOh(uhoh);
 		}
-		catch(NullPointerException e)
-		{
-			//--- DRK > From Flurry crash reports...happened several times on S4 running 4.4.4 but was not able to reproduce.
-//				This error occurred: java.lang.NullPointerException
-//				android.os.Parcel.readException(Parcel.java:1546)
-//				android.os.Parcel.readException(Parcel.java:1493)
-//				android.bluetooth.IBluetoothGatt$Stub$Proxy.unregisterClient(IBluetoothGatt.java:905)
-//				android.bluetooth.BluetoothGatt.unregisterApp(BluetoothGatt.java:710)
-//				android.bluetooth.BluetoothGatt.close(BluetoothGatt.java:649)
-//				com.idevicesinc.sweetblue.P_NativeDeviceWrapper.closeGatt(P_NativeDeviceWrapper.java:238)
-//				com.idevicesinc.sweetblue.P_NativeDeviceWrapper.closeGattIfNeeded(P_NativeDeviceWrapper.java:221)
-//				com.idevicesinc.sweetblue.BleDevice.onNativeConnectFail(BleDevice.java:2193)
-//				com.idevicesinc.sweetblue.P_BleDevice_Listeners$1.onStateChange_synchronized(P_BleDevice_Listeners.java:78)
-//				com.idevicesinc.sweetblue.P_BleDevice_Listeners$1.onStateChange(P_BleDevice_Listeners.java:49)
-//				com.idevicesinc.sweetblue.PA_Task.setState(PA_Task.java:118)
-//				com.idevicesinc.sweetblue.PA_Task.setEndingState(PA_Task.java:242)
-//				com.idevicesinc.sweetblue.P_TaskQueue.endCurrentTask(P_TaskQueue.java:220)
-//				com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask(P_TaskQueue.java:267)
-//				com.idevicesinc.sweetblue.P_TaskQueue.fail(P_TaskQueue.java:260)
-//				com.idevicesinc.sweetblue.P_BleDevice_Listeners.onConnectionStateChange_synchronized(P_BleDevice_Listeners.java:168)
-			m_device.getManager().uhOh(UhOh.RANDOM_EXCEPTION);
-		}
+		m_nativeConnectionState.set(BluetoothGatt.STATE_DISCONNECTED);
+	}
 
-		m_nativeConnectionState = BluetoothGatt.STATE_DISCONNECTED;
-		m_gatt = null;
+	private P_GattLayer gattLayer()
+	{
+		return m_device.layerManager().getGattLayer();
+	}
+
+	private BluetoothGatt gatt()
+	{
+		return gattLayer().getGatt();
 	}
 	
 	private void setGatt(BluetoothGatt gatt)
 	{
-		if( m_gatt != null )
+		if( gatt() != null )
 		{
 			//--- DRK > This tripped with an S5 and iGrillv2 with low battery (not sure that matters).
 			//---		AV was able to replicate twice but was not attached to debugger and now can't replicate.
 			//---		As a result of a brief audit, moved gatt object setting from the ending state
 			//---		handler of the connect task in P_BleDevice_Listeners to the execute method of the connect task itself.
 			//---		Doesn't solve any particular issue found, but seems more logical.
-			getManager().ASSERT(m_gatt == gatt, "Different gatt object set.");
+			getManager().ASSERT(gatt() == gatt, "Different gatt object set.");
 
-			if( m_gatt != gatt )
+			if( gatt() != gatt )
 			{
 				closeGatt(/*disconnectAlso=*/false);
 			}
@@ -368,11 +404,11 @@ class P_NativeDeviceWrapper
 
 		if( gatt == null )
 		{
-			m_gatt = null;
+			gattLayer().setGatt(null);
 		}
 		else
 		{
-			m_gatt = gatt;
+			gattLayer().setGatt(gatt);
 		}
 	}
 }

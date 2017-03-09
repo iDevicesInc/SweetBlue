@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
-class P_HistoricalDataManager_PreviousUuids
+final class P_HistoricalDataManager_PreviousUuids
 {
 	private static final int ACCESS_MODE = Context.MODE_PRIVATE;
 	private static final String NAMESPACE = "sweetblue__previous_historical_data_uuids";

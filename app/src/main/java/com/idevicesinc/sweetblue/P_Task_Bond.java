@@ -1,15 +1,10 @@
 package com.idevicesinc.sweetblue;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothDevice;
 
-import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 
-import java.lang.reflect.Method;
-
-class P_Task_Bond extends PA_Task_RequiresBleOn
+final class P_Task_Bond extends PA_Task_RequiresBleOn
 {
     private static final String METHOD_NAME__CREATE_BOND = "createBond";
 
@@ -109,7 +104,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
     {
         if (Utils.isKitKat())
         {
-            return K_Util.createBond(getDevice());
+            return getDevice().layerManager().createBond();
         }
         else
         {
@@ -122,9 +117,7 @@ class P_Task_Bond extends PA_Task_RequiresBleOn
     {
         if (Utils.isKitKat())
         {
-            final Class[] paramTypes = new Class[]{int.class};
-
-            return Utils_Reflection.callBooleanReturnMethod(getDevice().getNative(), METHOD_NAME__CREATE_BOND, paramTypes, getManager().m_config.loggingEnabled, BluetoothDevice.TRANSPORT_LE);
+            return getDevice().layerManager().createBondSneaky(METHOD_NAME__CREATE_BOND);
         }
         else
         {

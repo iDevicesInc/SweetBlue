@@ -1,56 +1,62 @@
 package com.idevicesinc.sweetblue;
 
-import java.lang.reflect.Method;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.utils.Interval;
 
-class P_Task_DiscoverServices extends PA_Task_RequiresConnection
+
+final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {
+
 	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
+	private boolean m_gattRefresh;
+	private double m_curGattDelay;
+	private double m_gattDelayTarget;
+	private boolean m_discoverAttempted;
+
 	
-	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener)
+	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener, boolean gattRefresh, Interval gattDelay)
 	{
 		super(bleDevice, listener);
+		m_gattRefresh = gattRefresh;
+		m_gattDelayTarget = Interval.isDisabled(gattDelay) || gattDelay == Interval.INFINITE ? 0.0 : gattDelay.secs();
 	}
 
 	@Override public void execute()
 	{
-//		if( !getDevice().getNativeGatt().getServices().isEmpty() )
+		if( m_gattRefresh )
 		{
-			final boolean useRefresh = BleDeviceConfig.bool(getDevice().conf_device().useGattRefresh, getDevice().conf_mngr().useGattRefresh);
-			
-			if( useRefresh )
-			{
-				refresh();
-			}
+			getDevice().layerManager().refreshGatt();
+			return;
 		}
-		
-		if( !getDevice().getNativeGatt().discoverServices() )
+
+		if( !getDevice().layerManager().discoverServices() )
 		{
 			failImmediately();
 			
 			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
 		}
+		m_discoverAttempted = true;
 	}
-	
-	private void refresh()
+
+	@Override protected void update(double timeStep)
 	{
-		try
+		if (m_gattRefresh && !m_discoverAttempted)
 		{
-	        Method method = getDevice().getNativeGatt().getClass().getMethod("refresh", (Class[]) null);
-	        Boolean result = (Boolean) method.invoke(getDevice().getNativeGatt(), (Object[]) null);
-	        
-	        if( result == null || !result )
-	        {
-//	        	failImmediately();
-	        }
-	    }
-		catch (Exception e)
-		{
-//			fail();
-	    }
+			m_curGattDelay += timeStep;
+			if (m_curGattDelay >= m_gattDelayTarget)
+			{
+				m_discoverAttempted = true;
+				if( !getDevice().layerManager().discoverServices() )
+				{
+					failImmediately();
+
+					getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
+				}
+			}
+		}
 	}
-	
+
 	@Override public PE_TaskPriority getPriority()
 	{
 		return PE_TaskPriority.MEDIUM;
@@ -59,6 +65,11 @@ class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 	public void onNativeFail(int gattStatus)
 	{
 		m_gattStatus = gattStatus;
+
+//		if (getDevice().is(BleDeviceState.CONNECTED))
+//		{
+//			getDevice().disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, BleDevice.ReadWriteListener.ReadWriteEvent.NULL(getDevice()));
+//		}
 		
 		this.fail();
 	}

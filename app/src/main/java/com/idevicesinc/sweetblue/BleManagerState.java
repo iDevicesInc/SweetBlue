@@ -11,7 +11,8 @@ import com.idevicesinc.sweetblue.utils.Utils_Byte;
 /**
  * An enumeration of the various states that a {@link BleManager} can be in.
  * The manager can be in multiple states simultaneously.
- * 
+ *
+ * @see ManagerStateListener
  * @see BleManager.StateListener
  * @see BleManager.NativeStateListener
  * @see BleManager#is(BleManagerState)
@@ -40,18 +41,43 @@ public enum BleManagerState implements State
 	TURNING_OFF			(BluetoothAdapter.STATE_TURNING_OFF),
 
 	/**
+	 * This is the state that {@link BleManager} is in when the update loop tick interval has been lowered, due to there being no
+	 * tasks in the queue for a time dictated by {@link BleManagerConfig#minTimeToIdle}.
+	 */
+	IDLE,
+
+	/**
 	 * This is the state that {@link BleManager} is in after calling {@link BleManager#startScan()} or related overloads. The {@link BleManager}
 	 * will only be in this state for a very short period before moving to {@link #SCANNING}.
 	 *
 	 * @see BleManager#startScan()
 	 */
 	STARTING_SCAN,
+
+	/**
+	 * This is the state that {@link BleManager} is in when {@link BleManagerConfig#scanClassicBoostLength} is not <code>null</code>, or
+	 * {@link Interval#DISABLED}. No devices will be discovered when in this state, it's simply here to make the BLE scan give more
+	 * reliable results, especially when looking for many devices. If you explicitly start a Bluetooth Classic scan, the manager will
+	 * <b>not</b> enter this state.
+	 */
+	BOOST_SCANNING,
 	
 	/**
 	 * This is the state that {@link BleManager} is in when scanning actually starts.
 	 *
 	 */
 	SCANNING,
+
+	/**
+	 * This is the state that {@link BleManager} is in when scanning has been paused (but will resume). This is mainly used with any of the startPeriodicScan
+	 * methods in {@link BleManager}.
+	 */
+	SCANNING_PAUSED,
+
+	/**
+	 * This state dictates that all permissions (if needed) have been granted to allow BLE scanning to return results. See {@link com.idevicesinc.sweetblue.utils.BluetoothEnabler}.
+	 */
+	BLE_SCAN_READY,
 	
 	/**
 	 * This is the state that {@link BleManager} is in after calling {@link BleManager#reset()}.
@@ -83,36 +109,7 @@ public enum BleManagerState implements State
 		m_nativeCode = nativeCode;
 	}
 
-	private BleScanMode m_mode;
-	private BleScanPower m_power;
 
-
-	@UnitTest
-	BleManagerState setScanMode(BleScanMode mode)
-	{
-		m_mode = mode;
-		return this;
-	}
-
-	@UnitTest
-	BleManagerState setPower(BleScanPower power)
-	{
-		m_power = power;
-		return this;
-	}
-
-	@UnitTest
-	BleScanMode getScanMode()
-	{
-		return m_mode;
-	}
-
-	@UnitTest
-	BleScanPower getScanPower()
-	{
-		return m_power;
-	}
-	
 	/**
 	 * Returns the analogous native code, if applicable. For example {@link BluetoothAdapter#STATE_OFF},
 	 * {@link BluetoothAdapter#STATE_ON}, etc. {@link #RESETTING} and {@link #SCANNING} do not have a native

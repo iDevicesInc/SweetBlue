@@ -9,7 +9,6 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.database.Cursor;
-
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.EmptyCursor;
@@ -25,14 +24,13 @@ import com.idevicesinc.sweetblue.utils.HistoricalDataQuery;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
-import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
 
 /**
  * Abstract base class for {@link BleDevice} and {@link BleServer}, mostly just to statically tie their APIs together
@@ -535,8 +533,6 @@ public abstract class BleNode implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor getNativeDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
 	}
 
@@ -555,8 +551,6 @@ public abstract class BleNode implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID charUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getCharacteristic(serviceUuid, charUuid);
 	}
 
@@ -566,8 +560,6 @@ public abstract class BleNode implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID serviceUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getServiceDirectlyFromNativeNode(serviceUuid);
 	}
 
@@ -577,8 +569,6 @@ public abstract class BleNode implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattService> getNativeServices()
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getServices();
 	}
 
@@ -588,8 +578,6 @@ public abstract class BleNode implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattService> getNativeServices_List()
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getServices_List();
 	}
 
@@ -598,8 +586,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeServices(final ForEach_Void<BluetoothGattService> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getServices(forEach);
 	}
 
@@ -608,8 +594,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeServices(final ForEach_Breakable<BluetoothGattService> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getServices(forEach);
 	}
 
@@ -618,8 +602,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeCharacteristics(final ForEach_Void<BluetoothGattCharacteristic> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getCharacteristics(null, forEach);
 	}
 
@@ -628,8 +610,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeCharacteristics(final ForEach_Breakable<BluetoothGattCharacteristic> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getCharacteristics(null, forEach);
 	}
 
@@ -638,8 +618,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeCharacteristics(final UUID serviceUuid, final ForEach_Void<BluetoothGattCharacteristic> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getCharacteristics(serviceUuid, forEach);
 	}
 
@@ -648,8 +626,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeCharacteristics(final UUID serviceUuid, final ForEach_Breakable<BluetoothGattCharacteristic> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getCharacteristics(serviceUuid, forEach);
 	}
 
@@ -658,8 +634,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics()
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getCharacteristics(null);
 	}
 
@@ -668,8 +642,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List()
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getCharacteristics_List(null);
 	}
 
@@ -678,8 +650,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattCharacteristic> getNativeCharacteristics(UUID serviceUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getCharacteristics(serviceUuid);
 	}
 
@@ -688,8 +658,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattCharacteristic> getNativeCharacteristics_List(UUID serviceUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getCharacteristics_List(serviceUuid);
 	}
 
@@ -698,8 +666,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattDescriptor> getNativeDescriptors()
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptors(null, null);
 	}
 
@@ -708,8 +674,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattDescriptor> getNativeDescriptors_List()
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptors_List(null, null);
 	}
 
@@ -718,8 +682,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattDescriptor> getNativeDescriptors_inService(final UUID serviceUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptors(serviceUuid, null);
 	}
 
@@ -728,8 +690,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattDescriptor> getNativeDescriptors_inService_List(final UUID serviceUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptors_List(serviceUuid, null);
 	}
 
@@ -738,8 +698,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattDescriptor> getNativeDescriptors_inChar(final UUID charUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptors(null, charUuid);
 	}
 
@@ -748,8 +706,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattDescriptor> getNativeDescriptors_inChar_List(final UUID charUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptors_List(null, charUuid);
 	}
 
@@ -758,8 +714,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) Iterator<BluetoothGattDescriptor> getNativeDescriptors(final UUID serviceUuid, final UUID charUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptors(serviceUuid, charUuid);
 	}
 
@@ -768,8 +722,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NEVER) List<BluetoothGattDescriptor> getNativeDescriptors_List(final UUID serviceUuid, final UUID charUuid)
 	{
-		enforceMainThread();
-
 		return m_serviceMngr.getDescriptors_List(serviceUuid, charUuid);
 	}
 
@@ -778,8 +730,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeDescriptors(final ForEach_Void<BluetoothGattDescriptor> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getDescriptors(null, null, forEach);
 	}
 
@@ -788,8 +738,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeDescriptors(final ForEach_Breakable<BluetoothGattDescriptor> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getDescriptors(null, null, forEach);
 	}
 
@@ -798,8 +746,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeDescriptors_inService(final UUID serviceUuid, final ForEach_Void<BluetoothGattDescriptor> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getDescriptors(serviceUuid, null, forEach);
 	}
 
@@ -808,8 +754,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeDescriptors_inService(final UUID serviceUuid, final ForEach_Breakable<BluetoothGattDescriptor> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getDescriptors(serviceUuid, null, forEach);
 	}
 
@@ -818,8 +762,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeDescriptors_inChar(final UUID charUuid, final ForEach_Void<BluetoothGattDescriptor> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getDescriptors(null, charUuid, forEach);
 	}
 
@@ -828,8 +770,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeDescriptors_inChar(final UUID charUuid, final ForEach_Breakable<BluetoothGattDescriptor> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getDescriptors(null, charUuid, forEach);
 	}
 
@@ -838,8 +778,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeDescriptors(final UUID serviceUuid, final UUID charUuid, final ForEach_Void<BluetoothGattDescriptor> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getDescriptors(serviceUuid, charUuid, forEach);
 	}
 
@@ -848,8 +786,6 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public void getNativeDescriptors(final UUID serviceUuid, final UUID charUuid, final ForEach_Breakable<BluetoothGattDescriptor> forEach)
 	{
-		enforceMainThread();
-
 		m_serviceMngr.getDescriptors(serviceUuid, charUuid, forEach);
 	}
 
@@ -957,7 +893,7 @@ public abstract class BleNode implements UsesCustomNull
 				{
 					final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = queryHistoricalData(query);
 
-					getManager().getUpdateLoop().postIfNeeded(new Runnable()
+					getManager().getPostManager().postCallback(new Runnable()
 					{
 						@Override public void run()
 						{
@@ -1006,16 +942,6 @@ public abstract class BleNode implements UsesCustomNull
 		else
 		{
 			return cast();
-		}
-	}
-
-	void enforceMainThread()
-	{
-		final boolean allowAllThreads = BleDeviceConfig.bool(conf_node().allowCallsFromAllThreads, conf_mngr().allowCallsFromAllThreads);
-
-		if( false == allowAllThreads )
-		{
-			Utils.enforceMainThread(BleNodeConfig.WRONG_THREAD_MESSAGE);
 		}
 	}
 

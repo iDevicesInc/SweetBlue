@@ -11,7 +11,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
  * 
  * 
  */
-class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_StateListener
+final class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {	
 	protected final BleDevice.ReadWriteListener m_readWriteListener;
 	private final Type m_type;
@@ -46,7 +46,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 
 	@Override public void execute()
 	{
-		if( false == getDevice().getNativeGatt().readRemoteRssi() )
+		if( false == getDevice().layerManager().readRemoteRssi() )
 		{
 			fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
@@ -67,7 +67,7 @@ class P_Task_ReadRssi extends PA_Task_Transactionable implements PA_Task.I_State
 	
 	public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 		
 		if( Utils.isSuccess(status) )
 		{

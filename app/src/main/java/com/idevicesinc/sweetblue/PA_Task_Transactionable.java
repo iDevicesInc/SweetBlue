@@ -145,9 +145,11 @@ abstract class PA_Task_Transactionable extends PA_Task_RequiresConnection
 		if( getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM ) )
 		{
 			//--- DRK > If reconnecting short term, we only allow transaction-related tasks to become armed.
+			//--- RB > Since we try to set the Mtu size as early as possible, this can return false, and then
+			// lock up the queue. If the task is P_Task_RequestMtu, let it be armable.
 			if( getDevice().is_internal(BleDeviceState.SERVICES_DISCOVERED) )
 			{
-				return getTxn() != null;
+				return getTxn() != null || (this instanceof P_Task_RequestMtu) || (this instanceof P_Task_ToggleNotify);
 			}
 			else
 			{

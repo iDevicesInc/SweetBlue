@@ -14,7 +14,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.UUID;
 
-class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
+final class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 {
 	private final UUID m_descriptorUuid;
 
@@ -44,10 +44,8 @@ class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 		return Target.DESCRIPTOR;
 	}
 
-	@Override public void execute()
+	@Override protected void executeReadOrWrite()
 	{
-		super.execute();
-
 		m_data = m_futureData.getData();
 
 		if( false == write_earlyOut(m_data) )
@@ -60,13 +58,13 @@ class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 			}
 			else
 			{
-				if( false == desc_native.setValue(m_data) )
+				if( false == getDevice().layerManager().setDescValue(desc_native, m_data) )
 				{
 					fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), getDescUuid());
 				}
 				else
 				{
-					if( false == getDevice().getNativeGatt().writeDescriptor(desc_native) )
+					if( false == getDevice().layerManager().writeDescriptor(desc_native) )
 					{
 						fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), getDescUuid());
 					}
@@ -81,7 +79,7 @@ class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 	
 	public void onDescriptorWrite(BluetoothGatt gatt, UUID uuid, int gattStatus)
 	{
-		getManager().ASSERT(gatt == getDevice().getNativeGatt());
+		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 
 //		if( !this.isForCharacteristic(uuid) )  return;
 

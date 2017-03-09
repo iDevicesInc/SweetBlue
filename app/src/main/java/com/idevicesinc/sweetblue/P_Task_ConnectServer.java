@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattServer;
 
-class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
+final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 {
 	private BleServer.ConnectionFailListener.Status m_status = BleServer.ConnectionFailListener.Status.NULL;
 

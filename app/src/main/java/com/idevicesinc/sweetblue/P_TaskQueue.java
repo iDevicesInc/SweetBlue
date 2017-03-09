@@ -2,14 +2,15 @@ package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import android.os.Handler;
 import android.os.Looper;
 
-class P_TaskQueue
+final class P_TaskQueue
 {
 	private final ArrayList<PA_Task> m_queue = new ArrayList<PA_Task>();
-	private PA_Task m_current;
+	private AtomicReference<PA_Task> m_current;
 	private long m_updateCount;
 	private final P_Logger m_logger;
 	private final BleManager m_mngr;
@@ -23,6 +24,8 @@ class P_TaskQueue
 	{
 		m_mngr = mngr;
 		m_logger = mngr.getLogger();
+
+		m_current = new AtomicReference<>(null);
 		
 		initHandler(); 
 	}
@@ -167,26 +170,31 @@ class P_TaskQueue
 	
 	public void add(final PA_Task newTask)
 	{
-		newTask.init();
-
-		if( m_mngr.getUpdateLoop().postNeeded() )
+		m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					add_mainThread(newTask);
-				}
-			});
-		}
-		else
-		{
-			add_mainThread(newTask);
-		}
+				newTask.init();
+				add_updateThread(newTask);
+			}
+		});
 	}
 
-	private void add_mainThread(final PA_Task newTask)
+	void addNow(final PA_Task newTask)
 	{
+		if (!m_mngr.getPostManager().isOnSweetBlueThread())
+		{
+			throw new Error("Tried to add a task when not on the SweetBlue update thread!");
+		}
+		newTask.init();
+		add_updateThread(newTask);
+	}
+
+	private void add_updateThread(final PA_Task newTask)
+	{
+		// Check the idle status to ensure the new task gets executed as soon as possible (rather than
+		// waiting until the idle interval's next tick)
+		m_mngr.checkIdleStatus();
 		if( tryCancellingCurrentTask(newTask) )
 		{
 			if( getCurrent() == null )
@@ -215,35 +223,40 @@ class P_TaskQueue
 		return m_time;
 	}
 	
-	public void update(double timeStep)
+	public boolean update(double timeStep)
 	{
+		boolean executingTask = false;
+
 		m_time += timeStep;
 		
 		if( m_executeHandler == null )
 		{
 			m_logger.d("Waiting for execute handler to initialize.");
 			
-			return;
+			return executingTask;
 		}
 
-		if( m_current == null )
+		if( m_current.get() == null )
 		{
-			dequeue();
+			executingTask = dequeue();
 		}
 		
 		if( getCurrent() != null )
 		{			
 			getCurrent().update_internal(timeStep);
+			executingTask = true;
 		}
 		
 		m_updateCount++;
+
+		return executingTask;
 	}
-	
-	private boolean dequeue()
+
+	private synchronized boolean dequeue()
 	{
-		if( !m_mngr.ASSERT(m_current == null) )  return false;
+		if( !m_mngr.ASSERT(m_current.get() == null) )  return false;
 		if( m_queue.size() == 0 )  return false;
-		
+
 		for( int i = 0; i < m_queue.size(); i++ )
 		{
 			PA_Task newPotentialCurrent = m_queue.get(i);
@@ -251,18 +264,15 @@ class P_TaskQueue
 			if( newPotentialCurrent.isArmable() )
 			{
 				m_queue.remove(i);
-				m_current = newPotentialCurrent;
-				m_current.arm();
-				m_current.tryExecuting();
-
-				print();
-				
+				m_current.set(newPotentialCurrent);
+				m_current.get().arm();
+				if (!m_current.get().tryExecuting())
+				{
+					print();
+				}
 				return true;
 			}
 		}
-
-		print();
-
 		return false;
 	}
 	
@@ -274,7 +284,7 @@ class P_TaskQueue
 	public PA_Task getCurrent()
 	{
 //		return m_pendingEndingStateForCurrentTask != null ? null : m_current;
-		return m_current;
+		return m_current.get();
 	}
 	
 	private boolean endCurrentTask(PE_TaskState endingState)
@@ -283,20 +293,22 @@ class P_TaskQueue
 		if( getCurrent() == null ) 							return false;
 //		if( m_pendingEndingStateForCurrentTask != null )	return false;
 		
-		PA_Task current_saved = m_current;
-		m_current = null;
+		PA_Task current_saved = m_current.get();
+		m_current.set(null);
 		current_saved.setEndingState(endingState);
+
+		boolean printed = false;
 
 		if( m_queue.size() > 0 && getCurrent() == null )
 		{
 			if( endingState.canGoToNextTaskImmediately() )
 			{
-				dequeue();
+				printed = dequeue();
 			}
 			else
 			{
 				//--- DRK > Posting to prevent potential stack overflow if queue is really big and all tasks are failing in a row.
-				m_mngr.getUpdateLoop().forcePost(new Runnable()
+				m_mngr.getPostManager().forcePostToUpdate(new Runnable()
 				{
 					@Override public void run()
 					{
@@ -308,8 +320,11 @@ class P_TaskQueue
 				});
 			}
 		}
-		
-		print();
+
+		if (!printed)
+		{
+			print();
+		}
 		
 //		m_pendingEndingStateForCurrentTask = endingState;
 		
@@ -372,23 +387,16 @@ class P_TaskQueue
 	
 	void tryEndingTask(final PA_Task task, final PE_TaskState endingState)
 	{
-		if( m_mngr.getUpdateLoop().postNeeded() )
+		m_mngr.getPostManager().postToUpdateThread(new Runnable()
 		{
-			m_mngr.getUpdateLoop().postIfNeeded(new Runnable()
+			@Override public void run()
 			{
-				@Override public void run()
-				{
-					tryEndingTask_mainThread(task, endingState);
-				}
-			});
-		}
-		else
-		{
-			tryEndingTask_mainThread(task, endingState);
-		}
+				tryEndingTask_updateThread(task, endingState);
+			}
+		});
 	}
 
-	private void tryEndingTask_mainThread(final PA_Task task, final PE_TaskState endingState)
+	private void tryEndingTask_updateThread(final PA_Task task, final PE_TaskState endingState)
 	{
 		if( task != null && task == getCurrent() )
 		{
@@ -576,7 +584,7 @@ class P_TaskQueue
 
 	@Override public String toString()
 	{
-		final String current = m_current != null ? m_current.toString() : "no current task";
+		final String current = m_current.get() != null ? m_current.toString() : "no current task";
 //		if( m_pendingEndingStateForCurrentTask != null)
 //		{
 //			current += "(" + m_pendingEndingStateForCurrentTask.name() +")";

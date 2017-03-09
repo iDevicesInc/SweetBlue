@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class BleScanInfo
+
+public final class BleScanInfo
 {
     private int m_manufactuerId;
     private byte[] m_manufacturerData;

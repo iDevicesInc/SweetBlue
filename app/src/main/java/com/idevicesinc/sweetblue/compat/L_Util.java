@@ -2,7 +2,10 @@ package com.idevicesinc.sweetblue.compat;
 
 
 import android.annotation.TargetApi;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import com.idevicesinc.sweetblue.BleDevice;
@@ -94,22 +97,55 @@ public class L_Util
     }
 
 
+    // TODO - Remove this in version 3.0
+    @Deprecated
     public static boolean requestMtu(BleDevice device, int mtu) {
         return device.getNativeGatt().requestMtu(mtu);
     }
 
+    public static boolean requestMtu(BluetoothGatt gatt, int mtu) {
+        return gatt.requestMtu(mtu);
+    }
+
+    // TODO - Remove this for version 3.0
+    @Deprecated
     public static boolean isAdvertisingSupportedByChipset(BleManager mgr) {
         return mgr.getNativeAdapter().isMultipleAdvertisementSupported();
     }
 
+    public static boolean isAdvertisingSupportedByChipset(BluetoothAdapter adapter) {
+        return adapter.isMultipleAdvertisementSupported();
+    }
+
+    public static BluetoothLeAdvertiser getBluetoothLeAdvertiser(BluetoothAdapter adapter)
+    {
+        return adapter.getBluetoothLeAdvertiser();
+    }
+
+    // TODO - Remove this for version 3.0
+    @Deprecated
     public static void stopNativeScan(BleManager mgr) {
         mgr.getNativeAdapter().getBluetoothLeScanner().stopScan(m_callback);
     }
 
-    public static boolean requestConnectionPriority(BleDevice device, int mode) {
-        return device.getNativeGatt().requestConnectionPriority(mode);
+    public static void stopNativeScan(BluetoothAdapter adapter) {
+        adapter.getBluetoothLeScanner().stopScan(m_callback);
     }
 
+
+    // TODO - Remove this for version 3.0
+    @Deprecated
+    public static boolean requestConnectionPriority(BleDevice device, int mode)
+    {
+        return requestConnectionPriority(device.getNativeGatt(), mode);
+    }
+
+    public static boolean requestConnectionPriority(BluetoothGatt gatt, int mode) {
+        return gatt.requestConnectionPriority(mode);
+    }
+
+    // TODO - Remove this in version 3.0
+    @Deprecated
     public static void startNativeScan(BleManager mgr, int scanMode, Interval scanReportDelay, ScanCallback listener) {
 
         final ScanSettings settings = buildSettings(mgr, scanMode, scanReportDelay).build();
@@ -117,6 +153,8 @@ public class L_Util
         startScan(mgr, settings, listener);
     }
 
+    // TODO - Remove this in version 3.0
+    @Deprecated
     static ScanSettings.Builder buildSettings(BleManager mgr, int scanMode, Interval scanReportDelay) {
         final ScanSettings.Builder builder = new ScanSettings.Builder();
         builder.setScanMode(scanMode);
@@ -133,9 +171,40 @@ public class L_Util
         return builder;
     }
 
+    // TODO - Remove this in version 3.0
+    @Deprecated
     static void startScan(BleManager mgr, ScanSettings scanSettings, ScanCallback listener) {
         m_UserCallback = listener;
         mgr.getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
+    }
+
+
+    public static void startNativeScan(BluetoothAdapter adapter, int scanMode, Interval scanReportDelay, ScanCallback listener) {
+
+        final ScanSettings settings = buildSettings(adapter, scanMode, scanReportDelay).build();
+
+        startScan(adapter, settings, listener);
+    }
+
+    static ScanSettings.Builder buildSettings(BluetoothAdapter adapter, int scanMode, Interval scanReportDelay) {
+        final ScanSettings.Builder builder = new ScanSettings.Builder();
+        builder.setScanMode(scanMode);
+
+        if( adapter.isOffloadedScanBatchingSupported() )
+        {
+            final long scanReportDelay_millis = false == Interval.isDisabled(scanReportDelay) ? scanReportDelay.millis() : 0;
+            builder.setReportDelay(scanReportDelay_millis);
+        }
+        else
+        {
+            builder.setReportDelay(0);
+        }
+        return builder;
+    }
+
+    static void startScan(BluetoothAdapter adapter, ScanSettings scanSettings, ScanCallback listener) {
+        m_UserCallback = listener;
+        adapter.getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
     }
 
 }

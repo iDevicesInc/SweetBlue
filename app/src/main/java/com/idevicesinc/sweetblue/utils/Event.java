@@ -1,9 +1,6 @@
 package com.idevicesinc.sweetblue.utils;
 
-import com.idevicesinc.sweetblue.utils.*;
-import com.idevicesinc.sweetblue.*;
-import com.idevicesinc.sweetblue.BleDevice.*;
-
+import com.idevicesinc.sweetblue.annotations.Extendable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -13,6 +10,7 @@ import java.util.List;
 /**
  * Abstract base class for all events in SweetBlue, e.g. {@link State.ChangeEvent}.
  */
+@Extendable
 public abstract class Event
 {
 	/**

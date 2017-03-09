@@ -1,10 +1,13 @@
 package com.idevicesinc.sweetblue.utils;
 
+import com.idevicesinc.sweetblue.annotations.Extendable;
+
 import java.util.List;
 
 /**
  * Convenience implementation that wraps a {@link java.util.List} of other {@link UuidNameMap} instances.
  */
+@Extendable
 public class UuidNameMap_ListWrapper implements UuidNameMap
 {
 	private final List<UuidNameMap> m_maps;

@@ -14,6 +14,9 @@ import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.P_StringHandler;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
+
 /**
  * This class is used to handle the new hairy logic for getting bluetooth low-energy scan results that is introduced with {@link android.os.Build.VERSION_CODES#M}.
  * With {@link android.os.Build.VERSION_CODES#M} you need to have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION}
@@ -35,7 +38,7 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
  * @see BleManager#willLocationPermissionSystemDialogBeShown(Activity)
  * @see <a target="_blank" href="https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues">https://github.com/iDevicesInc/SweetBlue/wiki/Android-BLE-Issues#android-m-issues</a>
  */
-public class BluetoothEnabler
+public final class BluetoothEnabler
 {
     /**
      * Overload of {@link #start(Activity)} but given {@link Context} must be an {@link Activity}.
@@ -481,6 +484,12 @@ public class BluetoothEnabler
         Please onEvent(final BluetoothEnablerEvent e);
     }
 
+    private static boolean hasActivity()
+    {
+        return s_instance.m_defaultActivity.get() != null;
+    }
+
+
     /**
      * A default implementation of BluetoothEnablerListener used in {@link BluetoothEnabler#start(Activity)}. It provides a
      * basic implementation for use/example and can be overridden.
@@ -489,15 +498,21 @@ public class BluetoothEnabler
     {
 		@Override public Please onEvent(BluetoothEnablerEvent e)
         {
+            // Just bail out if we have lost the activity reference.
+            if (!hasActivity())
+            {
+                Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+                return Please.stop();
+            }
 			if( e.stage().isLocationRelated() && e.status().isCancelled() )
 			{
-                final String fineButDotDotDot = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.DENYING_LOCATION_ACCESS);
+                final String fineButDotDotDot = P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.DENYING_LOCATION_ACCESS);
 
 				return Please.stop().withDialog(fineButDotDotDot);
 			}
 			else if( e.stage() == Stage.LOCATION_PERMISSION && e.status() == Status.MANIFEST_PERMISSION_NEEDED )
 			{
-				final String manifestPermissionWarning = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.APP_NEEDS_PERMISSION);
+				final String manifestPermissionWarning = P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.APP_NEEDS_PERMISSION);
 
 				return Please.stop().withDialog(manifestPermissionWarning);
 			}
@@ -509,14 +524,14 @@ public class BluetoothEnabler
 				}
 				else if( e.nextStage() == Stage.LOCATION_PERMISSION )
 				{
-					final String locationPermissionToastString = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.LOCATION_PERMISSION_TOAST);
+					final String locationPermissionToastString = P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.LOCATION_PERMISSION_TOAST);
 
 					//--- DRK > If both location stages need enabling then we show one dialog to rule them all,
 					//---		otherwise we show just one dialog for permissions.
 					final String dialogString =
 							false == e.isEnabled(Stage.LOCATION_SERVICES) && false == e.isEnabled(Stage.LOCATION_PERMISSION) ?
-                                    P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.REQUIRES_LOCATION_PERMISSION_AND_SERVICES) :
-                                    P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.REQUIRES_LOCATION_PERMISSION);
+                                    P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.REQUIRES_LOCATION_PERMISSION_AND_SERVICES) :
+                                    P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.REQUIRES_LOCATION_PERMISSION);
 
 					if( e.bleManager().willLocationPermissionSystemDialogBeShown(e.activity()) )
 					{
@@ -529,8 +544,8 @@ public class BluetoothEnabler
 				}
 				else if( e.nextStage() == Stage.LOCATION_SERVICES )
 				{
-					final String locationServicesNeedEnablingString = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.LOCATION_SERVICES_NEEDS_ENABLING);
-					final String locationServicesToastString = P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.LOCATION_SERVICES_TOAST);
+					final String locationServicesNeedEnablingString = P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.LOCATION_SERVICES_NEEDS_ENABLING);
+					final String locationServicesToastString = P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.LOCATION_SERVICES_TOAST);
 
 					//--- DRK > Here it's a little confusing, but only showing dialog for enabling services if a one dialog to rule them all didn't previously come up.
 					if( e.status()/*(for permissions)*/.wasPreviouslyNotEnabled() )
@@ -574,7 +589,7 @@ public class BluetoothEnabler
     }
 
     private /*finalish*/ BluetoothEnablerFilter m_enablerFilter;
-    private final Activity m_defaultActivity;
+    private final WeakReference<Activity> m_defaultActivity;
 	private final Application.ActivityLifecycleCallbacks m_lifecycleCallback;
 
     private BluetoothEnablerFilter.Please m_lastPlease = null;
@@ -588,20 +603,25 @@ public class BluetoothEnabler
      */
     private BluetoothEnabler(Activity activity, BluetoothEnablerFilter enablerFilter)
     {
-        m_defaultActivity = activity;
+        m_defaultActivity = new WeakReference<>(activity);
 		m_enablerFilter = enablerFilter;
         m_lifecycleCallback = newLifecycleCallbacks();
 
-        m_defaultActivity.getApplication().registerActivityLifecycleCallbacks(m_lifecycleCallback);
+        m_defaultActivity.get().getApplication().registerActivityLifecycleCallbacks(m_lifecycleCallback);
 		m_isForegrounded = true; // Assume we're foregrounded until told otherwise.
 		m_currentStage = BluetoothEnablerFilter.Stage.START;
     }
 
 	private void dispatchEvent(final BluetoothEnablerFilter.Stage currentStage, final BluetoothEnablerFilter.Stage nextStage, final BluetoothEnablerFilter.Status status_currentStage)
 	{
+        if (!hasActivity())
+        {
+            Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+            return;
+        }
 		final Object appData = m_lastPlease != null ? m_lastPlease.m_appData : null;
 
-		final BluetoothEnablerFilter.BluetoothEnablerEvent e = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_defaultActivity, currentStage, nextStage, status_currentStage, this, appData);
+		final BluetoothEnablerFilter.BluetoothEnablerEvent e = new BluetoothEnablerFilter.BluetoothEnablerEvent(m_defaultActivity.get(), currentStage, nextStage, status_currentStage, this, appData);
 
 		m_lastPlease = m_enablerFilter.onEvent(e);
         m_lastPlease = m_lastPlease != null ? m_lastPlease : BluetoothEnablerFilter.Please.stop();
@@ -654,6 +674,41 @@ public class BluetoothEnabler
 		}
 	}
 
+    private void updateBleManagerScanState()
+    {
+        boolean on = isEnabled(BluetoothEnablerFilter.Stage.BLUETOOTH);
+        boolean locService = isEnabled(BluetoothEnablerFilter.Stage.LOCATION_SERVICES);
+        boolean locPerms = isEnabled(BluetoothEnablerFilter.Stage.LOCATION_PERMISSION);
+        if (!Utils.isMarshmallow())
+        {
+            if (on)
+            {
+                updateBleScanState();
+            }
+        }
+        else
+        {
+            if (on && locPerms && locService)
+            {
+                updateBleScanState();
+            }
+        }
+    }
+
+    private void updateBleScanState()
+    {
+        try
+        {
+            Method scanstate = bleMngr().getClass().getMethod("setBleScanReady", (Class[]) null);
+            scanstate.setAccessible(true);
+            scanstate.invoke(bleMngr(), (Object[]) null);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
 	private void handlePleaseResponse_STEP2_maybeEarlyOutCauseAlreadyEnabled(final BluetoothEnablerFilter.Please please)
 	{
 		if( isEnabled(getStage()) )
@@ -686,6 +741,8 @@ public class BluetoothEnabler
 			handlePleaseResponse_STEP3a_maybeShowClosingDialog(please);
 			handlePleaseResponse_STEP8_maybeShowToast(please);
 
+            updateBleManagerScanState();
+
 			//--- DRK > Recurse back into dispatchEvent().
 			dispatchEvent(getStage(), BluetoothEnablerFilter.Stage.NULL, BluetoothEnablerFilter.Status.STOPPED);
 		}
@@ -703,11 +760,16 @@ public class BluetoothEnabler
 	{
 		if( please.shouldPopDialog(getStage()) )
 		{
-			final AlertDialog.Builder builder = new AlertDialog.Builder(please.activityOrDefault(m_defaultActivity));
+            if (!hasActivity())
+            {
+                Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+                return;
+            }
+			final AlertDialog.Builder builder = new AlertDialog.Builder(please.activityOrDefault(m_defaultActivity.get()));
 
 			builder.setMessage(m_lastPlease.m_dialogText);
 
-			builder.setNeutralButton(P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.OK), new DialogInterface.OnClickListener()
+			builder.setNeutralButton(P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.OK), new DialogInterface.OnClickListener()
 			{
 				@Override public void onClick(DialogInterface dialog, int which)
 				{
@@ -741,11 +803,16 @@ public class BluetoothEnabler
     {
         if( please.shouldPopDialog(getStage()) )
         {
-           final AlertDialog.Builder builder = new AlertDialog.Builder(please.activityOrDefault(m_defaultActivity));
+            if (!hasActivity())
+            {
+                Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+                return;
+            }
+           final AlertDialog.Builder builder = new AlertDialog.Builder(please.activityOrDefault(m_defaultActivity.get()));
 
 			builder.setMessage(m_lastPlease.m_dialogText);
 
-			builder.setNegativeButton(P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.DENY), new DialogInterface.OnClickListener()
+			builder.setNegativeButton(P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.DENY), new DialogInterface.OnClickListener()
 			{
 				@Override public void onClick(DialogInterface dialog, int which)
 				{
@@ -753,7 +820,7 @@ public class BluetoothEnabler
 				}
 			});
 
-			builder.setPositiveButton(P_StringHandler.getString(s_instance.m_defaultActivity, P_StringHandler.ACCEPT), new DialogInterface.OnClickListener()
+			builder.setPositiveButton(P_StringHandler.getString(s_instance.m_defaultActivity.get(), P_StringHandler.ACCEPT), new DialogInterface.OnClickListener()
 			{
 				@Override public void onClick(DialogInterface dialog, int which)
 				{
@@ -784,7 +851,12 @@ public class BluetoothEnabler
 
     private void handlePleaseResponse_STEP7_launchIntent(final BluetoothEnablerFilter.Please please)
     {
-		final Activity callingActivity = please.activityOrDefault(m_defaultActivity);
+        if (!hasActivity())
+        {
+            Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+            return;
+        }
+		final Activity callingActivity = please.activityOrDefault(m_defaultActivity.get());
 
 		switch(getStage())
 		{
@@ -831,7 +903,12 @@ public class BluetoothEnabler
 	{
 		if( please.shouldShowToast(getStage()) )
 		{
-			Toast.makeText(please.activityOrDefault(m_defaultActivity), please.m_toastText, Toast.LENGTH_LONG).show();
+            if (!hasActivity())
+            {
+                Log.e("BluetoothEnabler", "Lost the reference to the Activity, bailing out of enabler process.");
+                return;
+            }
+			Toast.makeText(please.activityOrDefault(m_defaultActivity.get()), please.m_toastText, Toast.LENGTH_LONG).show();
 		}
 
 		//--- DRK > Now we wait for onActivityResult or through implicit foreground listening to continue the process.
@@ -847,6 +924,8 @@ public class BluetoothEnabler
 			}
 			else
 			{
+                updateBleManagerScanState();
+
 				dispatchEvent(getStage(), getStage().next(), BluetoothEnablerFilter.Status.ENABLED);
 			}
 		}
@@ -928,7 +1007,7 @@ public class BluetoothEnabler
 
 	private BleManager bleMngr()
 	{
-		return BleManager.get(m_defaultActivity);
+		return BleManager.get(m_defaultActivity.get());
 	}
 
 	private void onSystemCallStart()

@@ -19,7 +19,7 @@ final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
 
     @Override void execute()
     {
-        getManager().getNativeAdapter().startDiscovery();
+        getDevice().layerManager().startDiscovery();
     }
 
     @Override protected void update(double timeStep)
@@ -28,7 +28,7 @@ final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
         scanTime += timeStep;
         if (scanTime > 1)
         {
-            getManager().getNativeAdapter().cancelDiscovery();
+            getDevice().layerManager().cancelDiscovery();
             succeed();
         }
     }
@@ -36,11 +36,7 @@ final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
     @Override protected void failWithoutRetry()
     {
         super.failWithoutRetry();
-        P_Task_Bond bond = getManager().getTaskQueue().get(P_Task_Bond.class, getManager());
-        if (bond != null)
-        {
-            bond.fail();
-        }
+        getManager().getTaskQueue().fail(P_Task_Bond.class, getDevice());
     }
 
     @Override public PE_TaskPriority getPriority()

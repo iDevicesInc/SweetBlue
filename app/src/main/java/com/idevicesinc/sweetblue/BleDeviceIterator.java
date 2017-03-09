@@ -10,7 +10,7 @@ import java.util.NoSuchElementException;
 /**
  * Implementation of {@link Iterator} for {@link BleDevice} instances, returned from {@link BleManager#getDevices()} and its overloads.
  */
-public class BleDeviceIterator implements Iterator<BleDevice>
+public final class BleDeviceIterator implements Iterator<BleDevice>
 {
 	private final List<Integer> m_all_states;
 	private final List<BleDevice> m_all;

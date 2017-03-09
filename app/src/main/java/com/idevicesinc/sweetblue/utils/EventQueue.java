@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue.utils;
 
 import java.util.ArrayList;
 
-public class EventQueue
+public final class EventQueue
 {
 	private static class DispatchEntry
 	{

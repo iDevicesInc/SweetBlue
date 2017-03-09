@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.utils.Pointer;
 import java.util.List;
 import java.util.UUID;
 
-class P_ServerServiceManager extends PA_ServiceManager
+final class P_ServerServiceManager extends PA_ServiceManager
 {
 	private final BleServer m_server;
 

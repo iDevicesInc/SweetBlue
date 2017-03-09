@@ -1,13 +1,12 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.UUID;
 
-class PU_File
+
+final class PU_File
 {
 	private static String EXTENSION = "history";
 	private static String FILENAME_DELIMITER = "_";

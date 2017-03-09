@@ -17,7 +17,7 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventT
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-class P_PollManager
+final class P_PollManager
 {
 	static final int E_NotifyState__NOT_ENABLED		= 0;
 	static final int E_NotifyState__ENABLING 		= 1;
@@ -28,7 +28,7 @@ class P_PollManager
 		protected CallbackEntry m_entry;
 		private ReadWriteListener m_overrideListener;
 		
-		PollingReadListener(ReadWriteListener readWriteListener, Handler handler, boolean postToMain)
+		PollingReadListener(ReadWriteListener readWriteListener, P_SweetHandler handler, boolean postToMain)
 		{
 			super(null, handler, postToMain);
 			
@@ -62,7 +62,7 @@ class P_PollManager
 	{
 		private byte[] m_lastValue = null;
 		
-		TrackingWrappingReadListener(ReadWriteListener readWriteListener, Handler handler, boolean postToMain)
+		TrackingWrappingReadListener(ReadWriteListener readWriteListener, P_SweetHandler handler, boolean postToMain)
 		{
 			super(readWriteListener, handler, postToMain);
 		}
@@ -117,11 +117,11 @@ class P_PollManager
 			
 			if( trackChanges || m_usingNotify)
 			{
-				m_pollingReadListener = new TrackingWrappingReadListener(readWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+				m_pollingReadListener = new TrackingWrappingReadListener(readWriteListener, m_device.getManager().getPostManager().getUIHandler(), m_device.getManager().m_config.postCallbacksToMainThread);
 			}
 			else
 			{
-				m_pollingReadListener = new PollingReadListener(readWriteListener, m_device.getManager().m_mainThreadHandler, m_device.getManager().m_config.postCallbacksToMainThread);
+				m_pollingReadListener = new PollingReadListener(readWriteListener, m_device.getManager().getPostManager().getUIHandler(), m_device.getManager().m_config.postCallbacksToMainThread);
 			}
 			
 			m_pollingReadListener.init(this);
@@ -220,7 +220,7 @@ class P_PollManager
 					{
 						m_waitingForResponse = true;
 						Type type = trackingChanges() ? Type.PSUEDO_NOTIFICATION : Type.POLL;
-						m_device.read_internal(m_serviceUuid, m_charUuid, Uuids.INVALID, type, m_pollingReadListener);
+						m_device.read_internal(m_serviceUuid, m_charUuid, Uuids.INVALID, type, null, m_pollingReadListener);
 					}
 				}
 			}

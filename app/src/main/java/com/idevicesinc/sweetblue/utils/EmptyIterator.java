@@ -1,10 +1,13 @@
 package com.idevicesinc.sweetblue.utils;
 
+import com.idevicesinc.sweetblue.annotations.Extendable;
+
 import java.util.Iterator;
 
 /**
  * Convenience class for implementing an {@link java.util.Iterator} with no elements.
  */
+@Extendable
 public class EmptyIterator<T> implements Iterator<T>
 {
 	@Override public boolean hasNext()

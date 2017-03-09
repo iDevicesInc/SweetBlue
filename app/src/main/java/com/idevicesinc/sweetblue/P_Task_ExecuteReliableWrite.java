@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothGatt;
 
 import com.idevicesinc.sweetblue.utils.Utils;
 
-class P_Task_ExecuteReliableWrite extends PA_Task_RequiresConnection implements PA_Task.I_StateListener
+final class P_Task_ExecuteReliableWrite extends PA_Task_RequiresConnection implements PA_Task.I_StateListener
 {
 	private final PE_TaskPriority m_priority;
 	private final BleDevice.ReadWriteListener m_listener;
@@ -43,7 +43,7 @@ class P_Task_ExecuteReliableWrite extends PA_Task_RequiresConnection implements 
 
 	@Override void execute()
 	{
-		if( false == getDevice().getNativeGatt().executeReliableWrite() )
+		if( false == getDevice().layerManager().executeReliableWrite() )
 		{
 			fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}

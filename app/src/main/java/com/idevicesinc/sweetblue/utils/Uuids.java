@@ -6,7 +6,7 @@ import java.util.UUID;
  * A collection of standard {@link UUID}s for services, characteristics, and descriptors.
  * Some convenience methods for creating {@link UUID}s also.
  */
-public class Uuids
+public final class Uuids
 {
 	/**
 	 * A {@link UUID} instance composed of all zeros and used instead of <code>null</code> in various places.
@@ -58,7 +58,7 @@ public class Uuids
 	public static final UUID CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID		= fromShort("2904");
 	
 
-	protected final static String BLUETOOTH_CONNECTED_HASH = "35452669a0050efc6823a77c0fc8f455fbe570eb";
+	protected final static String BLUETOOTH_CONNECTED_HASH = "06c4938be8e598602770461061af590f85a5cc8d";
 
 	
 	/**

@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 /**
  * Just some commented out snippets that I don't feel like digging through revision history for if I ever need them again.
  */
-class PS_BtSnippets
+final class PS_BtSnippets
 {
 //	private void createBondIfNeeded(BleCharacteristic characteristic)
 //	{
