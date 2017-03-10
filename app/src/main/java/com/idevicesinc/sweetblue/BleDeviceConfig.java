@@ -1,15 +1,12 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
-
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Extendable;
@@ -147,8 +144,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public boolean autoNegotiateMtuOnReconnect					= true;
 	
 	/**
-	 * Default is <code>false</code> - if <code>true</code> and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
-	 * or {@link BleDevice#startChangeTrackingPoll(UUID, Interval, BleDevice.ReadWriteListener)()} with identical
+	 * Default is <code>false</code> - if <code>true</code> and you call {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)}
+	 * or {@link BleDevice#startChangeTrackingPoll(UUID, Interval, ReadWriteListener)()} with identical
 	 * parameters then two identical polls would run which would probably be wasteful and unintentional.
 	 * This option provides a defense against that situation.
 	 */

@@ -3,19 +3,16 @@ package com.idevicesinc.sweetblue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
-
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.os.Handler;
-
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
+import com.idevicesinc.sweetblue.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.ReadWriteListener.Target;
+import com.idevicesinc.sweetblue.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
+
 
 final class P_PollManager
 {
@@ -384,7 +381,7 @@ final class P_PollManager
 				
 				if( notifyState == E_NotifyState__NOT_ENABLED )
 				{
-					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.serviceMngr_device().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, Uuids.INVALID, BleDevice.EMPTY_FUTURE_DATA, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
+					ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.serviceMngr_device().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, Uuids.INVALID, BleDevice.EMPTY_FUTURE_DATA, ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
 					
 					if( earlyOutResult != null )
 					{

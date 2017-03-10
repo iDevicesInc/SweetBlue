@@ -66,7 +66,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
 
         }
 
-        public Please onWriteFail(BleDevice.ReadWriteListener.ReadWriteEvent e);
+        public Please onWriteFail(ReadWriteListener.ReadWriteEvent e);
     }
 
     /**
@@ -109,11 +109,11 @@ public final class BleWriteTransaction extends BleTransaction.Ota
 
         }
 
-        public Please onWriteComplete(BleDevice.ReadWriteListener.ReadWriteEvent e);
+        public Please onWriteComplete(ReadWriteListener.ReadWriteEvent e);
 
     }
 
-    private final BleDevice.ReadWriteListener mListener = new BleDevice.ReadWriteListener()
+    private final ReadWriteListener mListener = new ReadWriteListener()
     {
         @Override public void onEvent(ReadWriteEvent e)
         {
@@ -177,7 +177,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
         }
     };
 
-    private final ArrayList<BleDevice.WriteBuilder> writeQueue = new ArrayList<BleDevice.WriteBuilder>();
+    private final ArrayList<WriteBuilder> writeQueue = new ArrayList<WriteBuilder>();
     private final FailListener mfailListener;
     private final WriteQueueListener mWriteListener;
 
@@ -231,10 +231,10 @@ public final class BleWriteTransaction extends BleTransaction.Ota
     }
 
     /**
-     * Add an {@link BleDevice.WriteBuilder} to the write queue. You can chain this method, to make it easier to add multiple
+     * Add an {@link WriteBuilder} to the write queue. You can chain this method, to make it easier to add multiple
      * writes.
      */
-    public BleWriteTransaction add(BleDevice.WriteBuilder write)
+    public BleWriteTransaction add(WriteBuilder write)
     {
         writeQueue.add(write);
         return this;
@@ -243,7 +243,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
     /**
      * Add a Collection of writes to the write queue.
      */
-    public BleWriteTransaction addAll(Collection<BleDevice.WriteBuilder> writes)
+    public BleWriteTransaction addAll(Collection<WriteBuilder> writes)
     {
         writeQueue.addAll(writes);
         return this;
@@ -255,7 +255,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
      */
     public BleWriteTransaction add(UUID charUuid, byte[] data)
     {
-        writeQueue.add(new BleDevice.WriteBuilder(charUuid).setBytes(data));
+        writeQueue.add(new WriteBuilder(charUuid).setBytes(data));
         return this;
     }
 
@@ -265,7 +265,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
      */
     public BleWriteTransaction add(UUID serviceUuid, UUID charUuid, byte[] data)
     {
-        writeQueue.add(new BleDevice.WriteBuilder(serviceUuid, charUuid).setBytes(data));
+        writeQueue.add(new WriteBuilder(serviceUuid, charUuid).setBytes(data));
         return this;
     }
 
@@ -284,7 +284,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
 
     private void performNextWrite()
     {
-        final BleDevice.WriteBuilder mCurWrite = writeQueue.get(0);
+        final WriteBuilder mCurWrite = writeQueue.get(0);
         getDevice().write(mCurWrite, mListener);
     }
 

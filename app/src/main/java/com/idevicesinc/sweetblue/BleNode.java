@@ -105,9 +105,9 @@ public abstract class BleNode implements UsesCustomNull
 			 * If not applicable, for example if {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#status()} is {@link BleDevice.ConnectionFailListener.Status#EXPLICIT_DISCONNECT},
 			 * then this is set to {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 * <br><br>
-			 * See {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
+			 * See {@link ReadWriteListener.ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
 			 *
-			 * @see BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()
+			 * @see ReadWriteListener.ReadWriteEvent#gattStatus()
 			 */
 			public int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;

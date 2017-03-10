@@ -7,7 +7,6 @@ import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
 import android.bluetooth.BluetoothGatt;
 
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 

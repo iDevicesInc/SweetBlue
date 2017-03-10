@@ -6,9 +6,9 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
+import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
+import com.idevicesinc.sweetblue.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
@@ -23,7 +23,7 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 	
 	private byte[] m_writeValue = null;
 
-	public P_Task_ToggleNotify(BleDevice device, BluetoothGattCharacteristic nativeChar, boolean enable, BleTransaction txn, final BleDevice.ReadWriteListener writeListener, PE_TaskPriority priority)
+	public P_Task_ToggleNotify(BleDevice device, BluetoothGattCharacteristic nativeChar, boolean enable, BleTransaction txn, final ReadWriteListener writeListener, PE_TaskPriority priority)
 	{
 		super(device, nativeChar, writeListener, false, txn, priority);
 		
@@ -31,7 +31,7 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 		m_enable = enable;
 	}
 
-	public P_Task_ToggleNotify(BleDevice device, UUID serviceUuid, UUID charUuid, DescriptorFilter filter, boolean enable, BleTransaction txn, final BleDevice.ReadWriteListener writeListener, PE_TaskPriority priority)
+	public P_Task_ToggleNotify(BleDevice device, UUID serviceUuid, UUID charUuid, DescriptorFilter filter, boolean enable, BleTransaction txn, final ReadWriteListener writeListener, PE_TaskPriority priority)
 	{
 		super(device, serviceUuid, charUuid, false, txn, priority, filter, writeListener);
 
@@ -204,9 +204,9 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 		return isMoreImportantThan_default(task);
 	}
 	
-	private BleDevice.ReadWriteListener.Type getReadWriteType()
+	private ReadWriteListener.Type getReadWriteType()
 	{
-		return m_enable ? BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION : BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION;
+		return m_enable ? ReadWriteListener.Type.ENABLING_NOTIFICATION : ReadWriteListener.Type.DISABLING_NOTIFICATION;
 	}
 
 	@Override protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)

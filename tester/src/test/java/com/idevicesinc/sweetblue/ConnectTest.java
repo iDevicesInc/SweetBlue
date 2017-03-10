@@ -450,7 +450,7 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override protected void start(BleDevice device)
             {
-                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new ReadWriteListener()
                 {
                     @Override public void onEvent(ReadWriteEvent e)
                     {
@@ -461,7 +461,7 @@ public class ConnectTest extends BaseBleUnitTest
                         }
                     }
                 });
-                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new ReadWriteListener()
                 {
                     @Override public void onEvent(ReadWriteEvent e)
                     {
@@ -536,7 +536,7 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override protected void start(BleDevice device)
             {
-                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new ReadWriteListener()
                 {
                     @Override public void onEvent(ReadWriteEvent e)
                     {

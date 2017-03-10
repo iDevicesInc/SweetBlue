@@ -1,16 +1,14 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
+import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
+import com.idevicesinc.sweetblue.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
@@ -160,20 +158,20 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 				size = m_characteristicList.size();
 				if (size == 0)
 				{
-					fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
+					fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
 					return;
 				}
 				BluetoothGattCharacteristic m_char = m_characteristicList.get(0);
 				BluetoothGattDescriptor m_desc = m_char.getDescriptor(m_descriptorFilter.descriptorUuid());
 				if (m_desc == null)
 				{
-					fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
+					fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
 				}
 				else
 				{
 					if (false == getDevice().layerManager().readDescriptor(m_desc))
 					{
-						fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, m_char.getUuid(), m_desc.getUuid());
+						fail(ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.DESCRIPTOR, m_char.getUuid(), m_desc.getUuid());
 					}
 					else
 					{
@@ -183,7 +181,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 			}
 			else
 			{
-				fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
+				fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
 			}
 		}
 	}
@@ -288,7 +286,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 					m_characteristicList.remove(desc.getCharacteristic());
 					if (m_characteristicList.size() == 0)
 					{
-						fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, desc.getCharacteristic().getUuid(), desc.getUuid());
+						fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.DESCRIPTOR, desc.getCharacteristic().getUuid(), desc.getUuid());
 					}
 					else
 					{
@@ -296,7 +294,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 						final BluetoothGattDescriptor descr = ch.getDescriptor(m_descriptorFilter.descriptorUuid());
 						if (false == getDevice().layerManager().readDescriptor(descr))
 						{
-							fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, ch.getUuid(), descr.getUuid());
+							fail(ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.DESCRIPTOR, ch.getUuid(), descr.getUuid());
 						}
 						else
 						{
@@ -307,7 +305,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 			}
 			else
 			{
-				fail(BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE, gattStatus, getDefaultTarget(), getCharUuid(), getDescUuid());
+				fail(ReadWriteListener.Status.REMOTE_GATT_FAILURE, gattStatus, getDefaultTarget(), getCharUuid(), getDescUuid());
 			}
 		}
 	}

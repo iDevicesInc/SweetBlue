@@ -10,7 +10,7 @@ import java.util.UUID;
  * Builder class for sending a write over BLE. Use this class to set the service and/or characteristic
  * UUIDs, and the data you'd like to write. This class provides convenience methods for sending
  * booleans, ints, shorts, longs, and Strings. Use with {@link BleDevice#write(WriteBuilder)},
- * or {@link BleDevice#write(WriteBuilder, BleDevice.ReadWriteListener)}.
+ * or {@link BleDevice#write(WriteBuilder, ReadWriteListener)}.
  */
 public final class WriteBuilder
 {
@@ -199,14 +199,5 @@ public final class WriteBuilder
         return setString(value, "UTF-8");
     }
 
-    static final WriteBuilder fromDeprecatedWriteBuilder(BleDevice.WriteBuilder builder)
-    {
-        WriteBuilder wbuilder = new WriteBuilder();
-        wbuilder.bigEndian = builder.bigEndian;
-        wbuilder.charUUID = builder.charUUID;
-        wbuilder.data = builder.data;
-        wbuilder.serviceUUID = builder.serviceUUID;
-        return wbuilder;
-    }
 
 }
