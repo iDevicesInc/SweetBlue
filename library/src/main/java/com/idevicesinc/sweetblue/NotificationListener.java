@@ -44,8 +44,8 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         SUCCESS,
 
         /**
-         * {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])},
-         * {@link BleDevice#enableNotify(UUID, BleDevice.ReadWriteListener)}, etc. was called on {@link BleDevice#NULL}.
+         * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])},
+         * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, etc. was called on {@link BleDevice#NULL}.
          */
         NULL_DEVICE,
 
@@ -55,11 +55,11 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         NOT_CONNECTED,
 
         /**
-         * Couldn't find a matching {@link BleDevice.ReadWriteListener.ReadWriteEvent#target} for the {@link BleDevice.ReadWriteListener.ReadWriteEvent#charUuid} (or
-         * {@link BleDevice.ReadWriteListener.ReadWriteEvent#descUuid} if {@link BleDevice.ReadWriteListener.ReadWriteEvent#target} is {@link BleDevice.ReadWriteListener.Target#DESCRIPTOR}) which was given to
-         * {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])}, etc. This most likely
+         * Couldn't find a matching {@link ReadWriteListener.ReadWriteEvent#target} for the {@link ReadWriteListener.ReadWriteEvent#charUuid} (or
+         * {@link ReadWriteListener.ReadWriteEvent#descUuid} if {@link ReadWriteListener.ReadWriteEvent#target} is {@link ReadWriteListener.Target#DESCRIPTOR}) which was given to
+         * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])}, etc. This most likely
          * means that the internal call to {@link BluetoothGatt#discoverServices()} didn't find any
-         * {@link BluetoothGattService} that contained a {@link BluetoothGattCharacteristic} for {@link BleDevice.ReadWriteListener.ReadWriteEvent#charUuid()}.
+         * {@link BluetoothGattService} that contained a {@link BluetoothGattCharacteristic} for {@link ReadWriteListener.ReadWriteEvent#charUuid()}.
          * This can also happen if the internal call to get a BluetoothService(s) causes an exception (seen on some phones).
          */
         NO_MATCHING_TARGET,
@@ -72,7 +72,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
 
         /**
          * The android api level doesn't support the lower level API call in the native stack. For example if you try to use
-         * {@link BleDevice#setMtu(int, BleDevice.ReadWriteListener)}, which requires API level 21, and you are at level 18.
+         * {@link BleDevice#setMtu(int, ReadWriteListener)}, which requires API level 21, and you are at level 18.
          */
         ANDROID_VERSION_NOT_SUPPORTED,
 
@@ -84,7 +84,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         /**
          * The operation was cancelled because {@link BleManager} went {@link BleManagerState#TURNING_OFF} and/or
          * {@link BleManagerState#OFF}. Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then
-         * {@link BleDevice.ReadWriteListener.ReadWriteEvent#status} could potentially be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
+         * {@link ReadWriteListener.ReadWriteEvent#status} could potentially be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
          * the disconnect callback before the turning off callback. Basic testing has revealed that this is *not* the case, but you never know.
          * <br><br>
          * Either way, the device was or will be disconnected.
@@ -92,7 +92,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         CANCELLED_FROM_BLE_TURNING_OFF,
 
         /**
-         * Used either when {@link BleDevice.ReadWriteListener.ReadWriteEvent#type()} {@link BleDevice.ReadWriteListener.Type#isRead()} and the stack returned a <code>null</code>
+         * Used either when {@link ReadWriteListener.ReadWriteEvent#type()} {@link ReadWriteListener.Type#isRead()} and the stack returned a <code>null</code>
          * value for {@link BluetoothGattCharacteristic#getValue()} despite the operation being otherwise "successful", <i>or</i>
          * {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter. For the read case, the library
          * will throw an {@link BleManager.UhOhListener.UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch. If the problem persists try {@link BleManager#reset()}.
@@ -100,15 +100,15 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         NULL_DATA,
 
         /**
-         * Used either when {@link BleDevice.ReadWriteListener.ReadWriteEvent#type} {@link BleDevice.ReadWriteListener.Type#isRead()} and the operation was "successful" but
-         * returned a zero-length array for {@link BleDevice.ReadWriteListener.ReadWriteEvent#data}, <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) )
-         * was called with a non-null but zero-length data parameter. Note that {@link BleDevice.ReadWriteListener.ReadWriteEvent#data} will be a zero-length array for
+         * Used either when {@link ReadWriteListener.ReadWriteEvent#type} {@link ReadWriteListener.Type#isRead()} and the operation was "successful" but
+         * returned a zero-length array for {@link ReadWriteListener.ReadWriteEvent#data}, <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) )
+         * was called with a non-null but zero-length data parameter. Note that {@link ReadWriteListener.ReadWriteEvent#data} will be a zero-length array for
          * all other error statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc. In other words it's never null.
          */
         EMPTY_DATA,
 
         /**
-         * For now only used when giving a negative or zero value to {@link BleDevice#setMtu(int, BleDevice.ReadWriteListener)}.
+         * For now only used when giving a negative or zero value to {@link BleDevice#setMtu(int, ReadWriteListener)}.
          */
         INVALID_DATA,
 
@@ -122,10 +122,10 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
          * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means for
          * example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
          * returned a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted,
-         * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}. {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()}
+         * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}. {@link ReadWriteListener.ReadWriteEvent#gattStatus()}
          * will most likely be non-zero, and you can check against the static fields in {@link BleStatuses} for more information.
          *
-         * @see BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()
+         * @see ReadWriteListener.ReadWriteEvent#gattStatus()
          */
         REMOTE_GATT_FAILURE,
 
@@ -142,7 +142,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
     }
 
     /**
-     * The type of operation for a {@link BleDevice.ReadWriteListener.ReadWriteEvent} - read, write, poll, etc.
+     * The type of operation for a {@link ReadWriteListener.ReadWriteEvent} - read, write, poll, etc.
      */
     enum Type implements UsesCustomNull
     {
@@ -152,19 +152,19 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         NULL,
 
         /**
-         * Associated with {@link BleDevice#enableNotify(UUID, BleDevice.ReadWriteListener)} when we  actually get a notification.
+         * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} when we  actually get a notification.
          */
         NOTIFICATION,
 
         /**
-         * Similar to {@link #NOTIFICATION}, kicked off from {@link BleDevice#enableNotify(UUID, BleDevice.ReadWriteListener)}, but
+         * Similar to {@link #NOTIFICATION}, kicked off from {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, but
          * under the hood this is treated slightly differently.
          */
         INDICATION,
 
         /**
-         * Associated with {@link BleDevice#startChangeTrackingPoll(UUID, Interval, BleDevice.ReadWriteListener)}
-         * or {@link BleDevice#enableNotify(UUID, Interval, BleDevice.ReadWriteListener)} where a force-read timeout is invoked.
+         * Associated with {@link BleDevice#startChangeTrackingPoll(UUID, Interval, ReadWriteListener)}
+         * or {@link BleDevice#enableNotify(UUID, Interval, ReadWriteListener)} where a force-read timeout is invoked.
          *
          * @deprecated - This is only marked as deprecated because it's misspelled. Rather than cause a breaking change to rename it, it's marked
          * as deprecated, and will be renamed in v3.
@@ -173,8 +173,8 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         PSUEDO_NOTIFICATION,
 
         /**
-         * Associated with {@link BleDevice#enableNotify(UUID, BleDevice.ReadWriteListener)} and called when enabling the notification completes by writing to the
-         * Descriptor of the given {@link UUID}. {@link BleDevice.ReadWriteListener.Status#SUCCESS} doesn't <i>necessarily</i> mean that notifications will
+         * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and called when enabling the notification completes by writing to the
+         * Descriptor of the given {@link UUID}. {@link ReadWriteListener.Status#SUCCESS} doesn't <i>necessarily</i> mean that notifications will
          * definitely now work (there may be other issues in the underlying stack), but it's a reasonable guarantee.
          */
         ENABLING_NOTIFICATION,
@@ -233,7 +233,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
 
         /**
-         * The {@link BleDevice} this {@link BleDevice.ReadWriteListener.ReadWriteEvent} is for.
+         * The {@link BleDevice} this {@link ReadWriteListener.ReadWriteEvent} is for.
          */
         public BleDevice device()
         {
@@ -261,7 +261,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         private final Type m_type;
 
         /**
-         * The {@link UUID} of the service associated with this {@link BleDevice.ReadWriteListener.ReadWriteEvent}. This will always be a non-null {@link UUID}.
+         * The {@link UUID} of the service associated with this {@link ReadWriteListener.ReadWriteEvent}. This will always be a non-null {@link UUID}.
          */
         public UUID serviceUuid()
         {
@@ -271,7 +271,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         private final UUID m_serviceUuid;
 
         /**
-         * The {@link UUID} of the characteristic associated with this {@link BleDevice.ReadWriteListener.ReadWriteEvent}. This will always be a non-null {@link UUID}.
+         * The {@link UUID} of the characteristic associated with this {@link ReadWriteListener.ReadWriteEvent}. This will always be a non-null {@link UUID}.
          */
         public UUID charUuid()
         {
@@ -316,7 +316,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         /**
          * Total time it took for the operation to complete, whether success
          * or failure. This mainly includes time spent in the internal job
-         * queue plus {@link BleDevice.ReadWriteListener.ReadWriteEvent#time_ota()}. This will always be
+         * queue plus {@link ReadWriteListener.ReadWriteEvent#time_ota()}. This will always be
          * longer than {@link #time_ota()}, though usually only slightly so.
          */
         public Interval time_total()
@@ -328,13 +328,13 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
 
         /**
          * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is, for example,
-         * {@link BleDevice.ReadWriteListener.Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point where a gatt status is
+         * {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point where a gatt status is
          * provided, in which case this member is set to {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE} (value of
          * {@value com.idevicesinc.sweetblue.BleStatuses#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater than
          * <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status} is
-         * {@link BleDevice.ReadWriteListener.Status#SUCCESS} or {@link BleDevice.ReadWriteListener.Status#REMOTE_GATT_FAILURE}. There are
+         * {@link ReadWriteListener.Status#SUCCESS} or {@link ReadWriteListener.Status#REMOTE_GATT_FAILURE}. There are
          * also some cases where this will be 0 for success but {@link #status} is for example
-         * {@link BleDevice.ReadWriteListener.Status#NULL_DATA} - in other words the underlying stack deemed the operation a success but SweetBlue
+         * {@link ReadWriteListener.Status#NULL_DATA} - in other words the underlying stack deemed the operation a success but SweetBlue
          * disagreed. For this reason it's recommended to treat this value as a debugging tool and use {@link #status} for actual
          * application logic if possible.
          * <br><br>
@@ -353,7 +353,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
          * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
          * {@link BleDevice#read(UUID)}, {@link BleDevice#write(UUID, byte[])}, etc. It will return <code>false</code> otherwise,
          * which can happen if for example you use {@link BleDevice#getNativeGatt()} to bypass SweetBlue for whatever reason.
-         * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status#TIMED_OUT},
+         * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.ReadWriteListener.Status#TIMED_OUT},
          * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
          */
         public boolean solicited()
@@ -510,7 +510,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         {
             if (isNull())
             {
-                return BleDevice.ReadWriteListener.Type.NULL.toString();
+                return ReadWriteListener.Type.NULL.toString();
             }
             else
             {

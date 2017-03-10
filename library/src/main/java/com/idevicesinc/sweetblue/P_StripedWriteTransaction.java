@@ -17,14 +17,15 @@ final class P_StripedWriteTransaction extends BleTransaction
     private final FutureData m_data;
     private final BluetoothGattCharacteristic m_characteristic;
     private final boolean m_requiresBonding;
-    private final BleDevice.ReadWriteListener.Type m_writeType;
-    private final BleDevice.ReadWriteListener m_listener;
+    private final ReadWriteListener m_listener;
+    private final ReadWriteListener.Type m_writeType;
     private final List<P_Task_Write> m_writeList;
     private final WriteListener m_internalListener;
     private final DescriptorFilter m_descriptorFilter;
 
 
-    P_StripedWriteTransaction(FutureData data, BluetoothGattCharacteristic characteristic, boolean requiresBonding, DescriptorFilter filter, BleDevice.ReadWriteListener.Type writeType, BleDevice.ReadWriteListener listener)
+
+    P_StripedWriteTransaction(FutureData data, BluetoothGattCharacteristic characteristic, boolean requiresBonding, DescriptorFilter filter, ReadWriteListener.Type writeType, ReadWriteListener listener)
     {
         m_data = data;
         m_characteristic = characteristic;
@@ -62,10 +63,10 @@ final class P_StripedWriteTransaction extends BleTransaction
         device.queue().add(m_writeList.remove(0));
     }
 
-    private final class WriteListener implements BleDevice.ReadWriteListener
+    private final class WriteListener implements ReadWriteListener
     {
 
-        @Override public final void onEvent(BleDevice.ReadWriteListener.ReadWriteEvent e)
+        @Override public final void onEvent(ReadWriteListener.ReadWriteEvent e)
         {
             if (e.wasSuccess())
             {

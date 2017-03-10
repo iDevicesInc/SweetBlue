@@ -1,17 +1,16 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
-
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
+import com.idevicesinc.sweetblue.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.ReadWriteListener.Target;
+import com.idevicesinc.sweetblue.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+
 
 final class P_Task_Write extends PA_Task_ReadOrWrite
 {
@@ -23,7 +22,7 @@ final class P_Task_Write extends PA_Task_ReadOrWrite
 	private final Type m_writeType;
 
 
-	public P_Task_Write(BleDevice device, BluetoothGattCharacteristic characteristic, final FutureData futureData, boolean requiresBonding, Type writeType, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
+	public P_Task_Write(BleDevice device, BluetoothGattCharacteristic characteristic, final FutureData futureData, boolean requiresBonding, Type writeType, ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
 	{
 		super(device, characteristic, writeListener, requiresBonding, txn, priority);
 
@@ -32,7 +31,7 @@ final class P_Task_Write extends PA_Task_ReadOrWrite
 		m_writeType = writeType;
 	}
 
-	public P_Task_Write(BleDevice device, UUID serviceUuid, UUID charUuid, DescriptorFilter filter, final FutureData futureData, boolean requiresBonding, Type writeType, BleDevice.ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
+	public P_Task_Write(BleDevice device, UUID serviceUuid, UUID charUuid, DescriptorFilter filter, final FutureData futureData, boolean requiresBonding, Type writeType, ReadWriteListener writeListener, BleTransaction txn, PE_TaskPriority priority)
 	{
 		super(device, serviceUuid, charUuid, requiresBonding, txn, priority, filter, writeListener);
 

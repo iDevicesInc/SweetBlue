@@ -70,7 +70,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                                     {
                                         return mTestDesc;
                                     }
-                                }, new BleDevice.ReadWriteListener()
+                                }, new ReadWriteListener()
                                 {
                                     @Override public void onEvent(ReadWriteEvent e)
                                     {
@@ -120,7 +120,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                                     {
                                         return mTestDesc;
                                     }
-                                }, new BleDevice.ReadWriteListener()
+                                }, new ReadWriteListener()
                                 {
                                     @Override public void onEvent(ReadWriteEvent e)
                                     {
@@ -236,7 +236,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                                     {
                                         return mTestDesc;
                                     }
-                                }, new BleDevice.ReadWriteListener()
+                                }, new ReadWriteListener()
                                 {
                                     @Override public void onEvent(ReadWriteEvent e)
                                     {

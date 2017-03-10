@@ -1,17 +1,17 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothGatt;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
+import com.idevicesinc.sweetblue.ReadWriteListener.Status;
 
 
 final class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {
-	protected final BleDevice.ReadWriteListener m_readWriteListener;
+	protected final ReadWriteListener m_readWriteListener;
 	private final int m_mtu;
 
-	public P_Task_RequestMtu(BleDevice device, BleDevice.ReadWriteListener readWriteListener, BleTransaction txn_nullable, PE_TaskPriority priority, final int mtu)
+	public P_Task_RequestMtu(BleDevice device, ReadWriteListener readWriteListener, BleTransaction txn_nullable, PE_TaskPriority priority, final int mtu)
 	{
 		super(device, txn_nullable, false, priority);
 		

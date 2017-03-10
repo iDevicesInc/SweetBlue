@@ -1,8 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.ReadWriteListener.Type;
 
 
 final class P_RssiPollManager

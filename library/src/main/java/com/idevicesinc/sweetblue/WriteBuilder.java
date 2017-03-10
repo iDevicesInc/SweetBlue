@@ -1,20 +1,18 @@
 package com.idevicesinc.sweetblue;
 
 import android.util.Log;
-
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import java.io.UnsupportedEncodingException;
-import java.net.Proxy;
 import java.util.UUID;
 
 /**
  * Builder class for sending a write over BLE. Use this class to set the service and/or characteristic
  * UUIDs, and the data you'd like to write. This class provides convenience methods for sending
  * booleans, ints, shorts, longs, and Strings. Use with {@link BleDevice#write(WriteBuilder)},
- * or {@link BleDevice#write(WriteBuilder, BleDevice.ReadWriteListener)}.
+ * or {@link BleDevice#write(WriteBuilder, ReadWriteListener)}.
  */
 public final class WriteBuilder
 {
@@ -25,8 +23,8 @@ public final class WriteBuilder
     UUID charUuid = null;
     UUID descriptorUuid = null;
     FutureData data = null;
-    BleDevice.ReadWriteListener.Type writeType = null;
-    BleDevice.ReadWriteListener readWriteListener = null;
+    ReadWriteListener.Type writeType = null;
+    ReadWriteListener readWriteListener = null;
     DescriptorFilter descriptorFilter = null;
     boolean bigEndian = true;
 
@@ -122,18 +120,18 @@ public final class WriteBuilder
     }
 
     /**
-     * Set the {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type} of the write to perform. This is here in the case that the
+     * Set the {@link com.idevicesinc.sweetblue.ReadWriteListener.Type} of the write to perform. This is here in the case that the
      * characteristic you are writing to has more than one write type associated with it eg. {@link android.bluetooth.BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE},
      * {@link android.bluetooth.BluetoothGattCharacteristic#WRITE_TYPE_SIGNED} along with standard writes.
      */
     @Advanced
-    public final WriteBuilder setWriteType(BleDevice.ReadWriteListener.Type writeType)
+    public final WriteBuilder setWriteType(ReadWriteListener.Type writeType)
     {
         this.writeType = writeType;
-        if (writeType != BleDevice.ReadWriteListener.Type.WRITE && writeType != BleDevice.ReadWriteListener.Type.WRITE_NO_RESPONSE && writeType != BleDevice.ReadWriteListener.Type.WRITE_SIGNED)
+        if (writeType != ReadWriteListener.Type.WRITE && writeType != ReadWriteListener.Type.WRITE_NO_RESPONSE && writeType != ReadWriteListener.Type.WRITE_SIGNED)
         {
-            Log.e(TAG, "Tried to set a write type of " + writeType.toString() + ". Only " + BleDevice.ReadWriteListener.Type.WRITE + ", " + BleDevice.ReadWriteListener.Type.WRITE_NO_RESPONSE +
-            ", or " + BleDevice.ReadWriteListener.Type.WRITE_SIGNED + " is allowed here. " + BleDevice.ReadWriteListener.Type.WRITE + " will be used by default.");
+            Log.e(TAG, "Tried to set a write type of " + writeType.toString() + ". Only " + ReadWriteListener.Type.WRITE + ", " + ReadWriteListener.Type.WRITE_NO_RESPONSE +
+            ", or " + ReadWriteListener.Type.WRITE_SIGNED + " is allowed here. " + ReadWriteListener.Type.WRITE + " will be used by default.");
         }
         return this;
     }
@@ -143,7 +141,7 @@ public final class WriteBuilder
      */
     public final WriteBuilder setReadWriteListener(final ReadWriteListener listener)
     {
-        readWriteListener = new BleDevice.ReadWriteListener()
+        readWriteListener = new ReadWriteListener()
         {
             @Override
             public void onEvent(ReadWriteEvent e)
@@ -158,12 +156,12 @@ public final class WriteBuilder
     }
 
     /**
-     * Set the {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener} for listening to the callback of the write.
+     * Set the {@link com.idevicesinc.sweetblue.ReadWriteListener} for listening to the callback of the write.
      *
      * @deprecated This will be removed in v3. It's safe, and ok to use this method until then.
      */
     @Deprecated
-    public final WriteBuilder setReadWriteListener_dep(final BleDevice.ReadWriteListener listener)
+    public final WriteBuilder setReadWriteListener_dep(final ReadWriteListener listener)
     {
         readWriteListener = listener;
         return this;
@@ -272,16 +270,6 @@ public final class WriteBuilder
     public final WriteBuilder setString(String value)
     {
         return setString(value, "UTF-8");
-    }
-
-    static final WriteBuilder fromDeprecatedWriteBuilder(BleDevice.WriteBuilder builder)
-    {
-        WriteBuilder wbuilder = new WriteBuilder();
-        wbuilder.bigEndian = builder.bigEndian;
-        wbuilder.charUuid = builder.charUUID;
-        wbuilder.data = builder.data;
-        wbuilder.serviceUuid = builder.serviceUUID;
-        return wbuilder;
     }
 
 }

@@ -375,16 +375,16 @@ public final class BleManager
 			BOND_TIMED_OUT,
 
 			/**
-			 * A {@link BleDevice#read(java.util.UUID, BleDevice.ReadWriteListener)}
+			 * A {@link BleDevice#read(java.util.UUID, ReadWriteListener)}
 			 * took longer than timeout set by {@link BleDeviceConfig#taskTimeoutRequestFilter}.
-			 * You will also get a {@link BleDevice.ReadWriteListener.ReadWriteEvent} with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}
+			 * You will also get a {@link ReadWriteListener.ReadWriteEvent} with {@link ReadWriteListener.Status#TIMED_OUT}
 			 * but a timeout is a sort of fringe case that should not regularly happen.
 			 */
 			READ_TIMED_OUT,
 
 			/**
-			 * A {@link BleDevice#read(java.util.UUID, BleDevice.ReadWriteListener)} returned with a <code>null</code>
-			 * characteristic value. The <code>null</code> value will end up as an empty array in {@link BleDevice.ReadWriteListener.ReadWriteEvent#data}
+			 * A {@link BleDevice#read(java.util.UUID, ReadWriteListener)} returned with a <code>null</code>
+			 * characteristic value. The <code>null</code> value will end up as an empty array in {@link ReadWriteListener.ReadWriteEvent#data}
 			 * so app-land doesn't have to do any special <code>null</code> handling.
 			 */
 			READ_RETURNED_NULL,
@@ -1363,34 +1363,6 @@ public final class BleManager
 	public final void setListener_Bond(@Nullable(Prevalence.NORMAL) BleDevice.BondListener listener_nullable)
 	{
 		m_defaultBondListener = listener_nullable;
-	}
-
-	/**
-	 * Sets a default backup {@link ReadWriteListener} that will be called for all {@link BleDevice} instances.
-	 * <br><br>
-	 * TIP: Place some analytics code in the listener here.
-	 *
-	 * @deprecated - This will be removed in version 3. Use {@link ReadWriteListener} instead (it was refactored to be in it's own class file, rather than an inner class).
-	 */
-	public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final com.idevicesinc.sweetblue.BleDevice.ReadWriteListener listener_nullable)
-	{
-		if (listener_nullable != null)
-		{
-			m_defaultReadWriteListener = new ReadWriteListener()
-			{
-				@Override public void onEvent(BleDevice.ReadWriteListener.ReadWriteEvent e)
-				{
-					if (listener_nullable != null)
-					{
-						listener_nullable.onEvent(e);
-					}
-				}
-			};
-		}
-		else
-		{
-			m_defaultReadWriteListener = null;
-		}
 	}
 
 	/**

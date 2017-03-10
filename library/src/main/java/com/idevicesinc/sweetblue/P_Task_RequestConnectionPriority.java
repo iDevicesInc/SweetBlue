@@ -1,17 +1,17 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
+import com.idevicesinc.sweetblue.ReadWriteListener.Status;
 
 
 final class P_Task_RequestConnectionPriority extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {
-	protected final BleDevice.ReadWriteListener m_readWriteListener;
+	protected final ReadWriteListener m_readWriteListener;
 	private final BleConnectionPriority m_connectionPriority;
 
-	public P_Task_RequestConnectionPriority(BleDevice device, BleDevice.ReadWriteListener readWriteListener, BleTransaction txn_nullable, PE_TaskPriority priority, final BleConnectionPriority connectionPriority)
+	public P_Task_RequestConnectionPriority(BleDevice device, ReadWriteListener readWriteListener, BleTransaction txn_nullable, PE_TaskPriority priority, final BleConnectionPriority connectionPriority)
 	{
 		super(device, txn_nullable, false, priority);
 		
