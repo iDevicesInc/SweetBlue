@@ -2,14 +2,13 @@ package com.idevicesinc.sweetblue;
 
 import java.util.List;
 import java.util.UUID;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
+import com.idevicesinc.sweetblue.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.ReadWriteListener.Target;
+import com.idevicesinc.sweetblue.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.FutureData;
 
 
@@ -22,14 +21,14 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		m_device = device;
 	}
 	
-	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetEvent(Type type, Target target, byte[] data, UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid)
+	private ReadWriteListener.ReadWriteEvent newNoMatchingTargetEvent(Type type, Target target, byte[] data, UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid)
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
 		return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, type, target, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0, /*solicited=*/true);
 	}
 	
-	final BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, FutureData futureData, BleDevice.ReadWriteListener.Type type, final Target target)
+	final ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, FutureData futureData, ReadWriteListener.Type type, final Target target)
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
@@ -40,7 +39,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		
 		if( false == m_device.is(BleDeviceState.CONNECTED) )
 		{
-			if( type != BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION && type != BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION)
+			if( type != ReadWriteListener.Type.ENABLING_NOTIFICATION && type != ReadWriteListener.Type.DISABLING_NOTIFICATION)
 			{				
 				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, type, target, futureData.getData(), Status.NOT_CONNECTED, gattStatus, 0.0, 0.0, /*solicited=*/true);
 			}
@@ -89,7 +88,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		return null;
 	}
 	
-	static BleDevice.ReadWriteListener.Type modifyResultType(BluetoothGattCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
+	static ReadWriteListener.Type modifyResultType(BluetoothGattCharacteristic char_native, ReadWriteListener.Type type)
 	{
 		if( char_native != null )
 		{
@@ -122,7 +121,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		return type;
 	}
 	
-	private static int getProperty(BleDevice.ReadWriteListener.Type type)
+	private static int getProperty(ReadWriteListener.Type type)
 	{
 		switch(type)
 		{

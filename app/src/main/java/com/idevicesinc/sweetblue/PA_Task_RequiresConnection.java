@@ -29,17 +29,17 @@ abstract class PA_Task_RequiresConnection extends PA_Task_RequiresBleOn
 		return false;
 	}
 
-	protected final BleDevice.ReadWriteListener.Status getCancelType()
+	protected final ReadWriteListener.Status getCancelType()
 	{
 		BleManager mngr = this.getManager();
 
 		if( mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
 		{
-			return BleDevice.ReadWriteListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
+			return ReadWriteListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
 		}
 		else
 		{
-			return BleDevice.ReadWriteListener.Status.CANCELLED_FROM_DISCONNECT;
+			return ReadWriteListener.Status.CANCELLED_FROM_DISCONNECT;
 		}
 	}
 	

@@ -3,10 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +15,7 @@ final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
     private List<BluetoothGattCharacteristic> batteryChars;
 
 
-    P_Task_BatteryLevel(BleDevice device, final byte[] nameSpaceAndDescription, final UUID descriptorUuid, BleDevice.ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+    P_Task_BatteryLevel(BleDevice device, final byte[] nameSpaceAndDescription, final UUID descriptorUuid, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
     {
         super(device, Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, requiresBonding, txn_nullable, priority, new DescriptorFilter()
         {
@@ -34,10 +31,10 @@ final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
         }, readWriteListener);
     }
 
-    @Override protected BleDevice.ReadWriteListener.ReadWriteEvent newReadWriteEvent(BleDevice.ReadWriteListener.Status status, int gattStatus, BleDevice.ReadWriteListener.Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
+    @Override protected ReadWriteListener.ReadWriteEvent newReadWriteEvent(ReadWriteListener.Status status, int gattStatus, ReadWriteListener.Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
     {
         final UUID actualDescUuid = getActualDescUuid(descUuid);
-        return new BleDevice.ReadWriteListener.ReadWriteEvent(getDevice(), serviceUuid, charUuid, actualDescUuid, BleDevice.ReadWriteListener.Type.READ, target, BleDevice.EMPTY_BYTE_ARRAY, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), true);
+        return new ReadWriteListener.ReadWriteEvent(getDevice(), serviceUuid, charUuid, actualDescUuid, ReadWriteListener.Type.READ, target, BleDevice.EMPTY_BYTE_ARRAY, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), true);
     }
 
     @Override protected BleTask getTaskType()
@@ -57,7 +54,7 @@ final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
         {
             if (false == getDevice().layerManager().readCharacteristic(characteristic))
             {
-                fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, characteristic.getUuid(), BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID);
+                fail(ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.DESCRIPTOR, characteristic.getUuid(), ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID);
             }
             else
             {
@@ -72,7 +69,7 @@ final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
 
         if( false == this.isForCharacteristic(uuid) )  return;
 
-        onCharacteristicOrDescriptorRead(gatt, uuid, value, gattStatus, BleDevice.ReadWriteListener.Type.READ);
+        onCharacteristicOrDescriptorRead(gatt, uuid, value, gattStatus, ReadWriteListener.Type.READ);
     }
 
 }

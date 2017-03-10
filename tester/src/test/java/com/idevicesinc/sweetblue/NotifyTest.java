@@ -63,7 +63,7 @@ public class NotifyTest extends BaseBleUnitTest
                     {
                         @Override protected void start(BleDevice device)
                         {
-                            m_device.enableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                            m_device.enableNotify(mTestChar, new ReadWriteListener()
                             {
                                 @Override public void onEvent(ReadWriteEvent e)
                                 {
@@ -116,7 +116,7 @@ public class NotifyTest extends BaseBleUnitTest
                     {
                         @Override protected void start(BleDevice device)
                         {
-                            m_device.enableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                            m_device.enableNotify(mTestChar, new ReadWriteListener()
                             {
                                 @Override public void onEvent(ReadWriteEvent e)
                                 {
@@ -167,7 +167,7 @@ public class NotifyTest extends BaseBleUnitTest
                     {
                         @Override protected void start(BleDevice device)
                         {
-                            m_device.enableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                            m_device.enableNotify(mTestChar, new ReadWriteListener()
                             {
                                 @Override public void onEvent(ReadWriteEvent e)
                                 {
@@ -175,7 +175,7 @@ public class NotifyTest extends BaseBleUnitTest
                                     {
                                         assertTrue(e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
-                                        m_device.disableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                                        m_device.disableNotify(mTestChar, new ReadWriteListener()
                                         {
                                             @Override public void onEvent(ReadWriteEvent e)
                                             {
@@ -229,7 +229,7 @@ public class NotifyTest extends BaseBleUnitTest
                     {
                         @Override protected void start(BleDevice device)
                         {
-                            m_device.enableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                            m_device.enableNotify(mTestChar, new ReadWriteListener()
                             {
                                 @Override public void onEvent(ReadWriteEvent e)
                                 {
@@ -237,7 +237,7 @@ public class NotifyTest extends BaseBleUnitTest
                                     {
                                         assertTrue(e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
-                                        m_device.disableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                                        m_device.disableNotify(mTestChar, new ReadWriteListener()
                                         {
                                             @Override public void onEvent(ReadWriteEvent e)
                                             {
@@ -296,7 +296,7 @@ public class NotifyTest extends BaseBleUnitTest
                     {
                         @Override protected void start(BleDevice device)
                         {
-                            m_device.enableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                            m_device.enableNotify(mTestChar, new ReadWriteListener()
                             {
                                 @Override public void onEvent(ReadWriteEvent e)
                                 {
@@ -419,7 +419,7 @@ public class NotifyTest extends BaseBleUnitTest
                     {
                         @Override protected void start(BleDevice device)
                         {
-                            m_device.enableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                            m_device.enableNotify(mTestChar, new ReadWriteListener()
                             {
                                 @Override public void onEvent(ReadWriteEvent e)
                                 {

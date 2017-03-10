@@ -9,7 +9,7 @@ final class P_ReliableWriteManager
 {
 	private final BleDevice m_device;
 
-	private BleDevice.ReadWriteListener m_listener;
+	private ReadWriteListener m_listener;
 
 	P_ReliableWriteManager(final BleDevice device)
 	{
@@ -21,28 +21,28 @@ final class P_ReliableWriteManager
 		m_listener = null;
 	}
 
-	BleDevice.ReadWriteListener.ReadWriteEvent newEvent(final BleDevice.ReadWriteListener.Status status, final int gattStatus, final boolean solicited)
+	ReadWriteListener.ReadWriteEvent newEvent(final ReadWriteListener.Status status, final int gattStatus, final boolean solicited)
 	{
-		return new BleDevice.ReadWriteListener.ReadWriteEvent(m_device, Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.RELIABLE_WRITE, BleDevice.EMPTY_BYTE_ARRAY, status, gattStatus, 0.0, 0.0, solicited);
+		return new ReadWriteListener.ReadWriteEvent(m_device, Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, ReadWriteListener.Type.WRITE, ReadWriteListener.Target.RELIABLE_WRITE, BleDevice.EMPTY_BYTE_ARRAY, status, gattStatus, 0.0, 0.0, solicited);
 	}
 
-	private BleDevice.ReadWriteListener.ReadWriteEvent getGeneralEarlyOutEvent()
+	private ReadWriteListener.ReadWriteEvent getGeneralEarlyOutEvent()
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 
 		if( m_device.isNull() )
 		{
-			return newEvent(BleDevice.ReadWriteListener.Status.NULL_DEVICE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
+			return newEvent(ReadWriteListener.Status.NULL_DEVICE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 		}
 		else
 		{
 			if( false == m_device.is(BleDeviceState.CONNECTED) )
 			{
-				return newEvent(BleDevice.ReadWriteListener.Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
+				return newEvent(ReadWriteListener.Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 			}
 			else if( true == m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) )
 			{
-				return newEvent(BleDevice.ReadWriteListener.Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
+				return newEvent(ReadWriteListener.Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 			}
 			else
 			{
@@ -51,11 +51,11 @@ final class P_ReliableWriteManager
 		}
 	}
 
-	private BleDevice.ReadWriteListener.ReadWriteEvent getNeverBeganEarlyOutEvent()
+	private ReadWriteListener.ReadWriteEvent getNeverBeganEarlyOutEvent()
 	{
 		if( m_listener == null )
 		{
-			final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut = getGeneralEarlyOutEvent();
+			final ReadWriteListener.ReadWriteEvent e_earlyOut = getGeneralEarlyOutEvent();
 
 			if( e_earlyOut != null )
 			{
@@ -63,7 +63,7 @@ final class P_ReliableWriteManager
 			}
 			else
 			{
-				final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut_specific = newEvent(BleDevice.ReadWriteListener.Status.RELIABLE_WRITE_NEVER_BEGAN, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
+				final ReadWriteListener.ReadWriteEvent e_earlyOut_specific = newEvent(ReadWriteListener.Status.RELIABLE_WRITE_NEVER_BEGAN, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 
 				return e_earlyOut_specific;
 			}
@@ -74,9 +74,9 @@ final class P_ReliableWriteManager
 		}
 	}
 
-	public BleDevice.ReadWriteListener.ReadWriteEvent begin(final BleDevice.ReadWriteListener listener)
+	public ReadWriteListener.ReadWriteEvent begin(final ReadWriteListener listener)
 	{
-		final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut = getGeneralEarlyOutEvent();
+		final ReadWriteListener.ReadWriteEvent e_earlyOut = getGeneralEarlyOutEvent();
 
 		if( e_earlyOut != null )
 		{
@@ -88,7 +88,7 @@ final class P_ReliableWriteManager
 		{
 			if( m_listener != null )
 			{
-				final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut_specific = newEvent(BleDevice.ReadWriteListener.Status.RELIABLE_WRITE_ALREADY_BEGAN, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
+				final ReadWriteListener.ReadWriteEvent e_earlyOut_specific = newEvent(ReadWriteListener.Status.RELIABLE_WRITE_ALREADY_BEGAN, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 
 				m_device.invokeReadWriteCallback(listener, e_earlyOut_specific);
 
@@ -98,7 +98,7 @@ final class P_ReliableWriteManager
 			{
 				if( false == m_device.layerManager().getGattLayer().beginReliableWrite() )
 				{
-					final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut_specific = newEvent(BleDevice.ReadWriteListener.Status.RELIABLE_WRITE_FAILED_TO_BEGIN, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
+					final ReadWriteListener.ReadWriteEvent e_earlyOut_specific = newEvent(ReadWriteListener.Status.RELIABLE_WRITE_FAILED_TO_BEGIN, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 
 					m_device.invokeReadWriteCallback(listener, e_earlyOut_specific);
 
@@ -114,9 +114,9 @@ final class P_ReliableWriteManager
 		}
 	}
 
-	public BleDevice.ReadWriteListener.ReadWriteEvent abort()
+	public ReadWriteListener.ReadWriteEvent abort()
 	{
-		final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut = getNeverBeganEarlyOutEvent();
+		final ReadWriteListener.ReadWriteEvent e_earlyOut = getNeverBeganEarlyOutEvent();
 
 		if( e_earlyOut != null )
 		{
@@ -126,12 +126,12 @@ final class P_ReliableWriteManager
 		}
 		else
 		{
-			final BleDevice.ReadWriteListener listener = m_listener;
+			final ReadWriteListener listener = m_listener;
 			m_listener = null;
 
 			abortReliableWrite();
 
-			final BleDevice.ReadWriteListener.ReadWriteEvent e = newEvent(BleDevice.ReadWriteListener.Status.RELIABLE_WRITE_ABORTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
+			final ReadWriteListener.ReadWriteEvent e = newEvent(ReadWriteListener.Status.RELIABLE_WRITE_ABORTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 
 			m_device.invokeReadWriteCallback(listener, e);
 
@@ -144,9 +144,9 @@ final class P_ReliableWriteManager
 		m_device.layerManager().getGattLayer().abortReliableWrite(m_device.getNative());
 	}
 
-	public BleDevice.ReadWriteListener.ReadWriteEvent execute()
+	public ReadWriteListener.ReadWriteEvent execute()
 	{
-		final BleDevice.ReadWriteListener.ReadWriteEvent e_earlyOut = getNeverBeganEarlyOutEvent();
+		final ReadWriteListener.ReadWriteEvent e_earlyOut = getNeverBeganEarlyOutEvent();
 
 		if( e_earlyOut != null )
 		{
@@ -156,7 +156,7 @@ final class P_ReliableWriteManager
 		}
 		else
 		{
-			final BleDevice.ReadWriteListener listener = m_listener;
+			final ReadWriteListener listener = m_listener;
 			m_listener = null;
 
 			final P_Task_ExecuteReliableWrite task = new P_Task_ExecuteReliableWrite(m_device, listener, m_device.getOverrideReadWritePriority());
@@ -169,11 +169,11 @@ final class P_ReliableWriteManager
 
 	public void onReliableWriteCompleted_unsolicited(final BluetoothGatt gatt, final int gattStatus)
 	{
-		final BleDevice.ReadWriteListener listener = m_listener;
+		final ReadWriteListener listener = m_listener;
 		m_listener = null;
 
-		final BleDevice.ReadWriteListener.Status status = Utils.isSuccess(gattStatus) ? BleDevice.ReadWriteListener.Status.SUCCESS : BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE;
-		final BleDevice.ReadWriteListener.ReadWriteEvent e = newEvent(status, gattStatus, /*solicited=*/false);
+		final ReadWriteListener.Status status = Utils.isSuccess(gattStatus) ? ReadWriteListener.Status.SUCCESS : ReadWriteListener.Status.REMOTE_GATT_FAILURE;
+		final ReadWriteListener.ReadWriteEvent e = newEvent(status, gattStatus, /*solicited=*/false);
 
 		m_device.invokeReadWriteCallback(listener, e);
 	}

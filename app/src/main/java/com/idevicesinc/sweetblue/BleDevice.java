@@ -7,13 +7,12 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
-
+import com.idevicesinc.sweetblue.ReadWriteListener.Type;
+import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Timing;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
@@ -22,7 +21,6 @@ import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.WriteBuilder;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Distance;
@@ -45,16 +43,12 @@ import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Utils_Rssi;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_State;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
-
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -103,893 +97,6 @@ public final class BleDevice extends BleNode
     public static final BleDevice NULL = new BleDevice(null, P_NativeDeviceLayer.NULL, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
 
 
-    /**
-     * Provide an implementation of this callback to various methods like {@link BleDevice#read(UUID, ReadWriteListener)},
-     * {@link BleDevice#write(UUID, byte[], ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)},
-     * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, {@link BleDevice#readRssi(ReadWriteListener)}, etc.
-     *
-     * @deprecated - Refactored to {@link com.idevicesinc.sweetblue.ReadWriteListener}. This class will stay until version 3.0, when it will
-     * be removed.
-     */
-    @com.idevicesinc.sweetblue.annotations.Lambda
-    public static interface ReadWriteListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<ReadWriteListener.ReadWriteEvent>
-    {
-        /**
-         * A value returned to {@link ReadWriteListener#onEvent(Event)}
-         * by way of {@link ReadWriteEvent#status} that indicates success of the
-         * operation or the reason for its failure. This enum is <i>not</i>
-         * meant to match up with {@link BluetoothGatt}.GATT_* values in any way.
-         *
-         * @see ReadWriteEvent#status()
-         */
-        public static enum Status implements UsesCustomNull
-        {
-            /**
-             * As of now, only used for {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
-             */
-            NULL,
-
-            /**
-             * If {@link ReadWriteEvent#type} {@link Type#isRead()} then {@link ReadWriteEvent#data} will contain some data returned from
-             * the device. If type is {@link Type#WRITE} then {@link ReadWriteEvent#data} was sent to the device.
-             */
-            SUCCESS,
-
-            /**
-             * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])},
-             * {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, etc. was called on {@link BleDevice#NULL}.
-             */
-            NULL_DEVICE,
-
-            /**
-             * Device is not {@link BleDeviceState#CONNECTED}.
-             */
-            NOT_CONNECTED,
-
-            /**
-             * Couldn't find a matching {@link ReadWriteEvent#target} for the {@link ReadWriteEvent#charUuid} (or
-             * {@link ReadWriteEvent#descUuid} if {@link ReadWriteEvent#target} is {@link Target#DESCRIPTOR}) which was given to
-             * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])}, etc. This most likely
-             * means that the internal call to {@link BluetoothGatt#discoverServices()} didn't find any
-             * {@link BluetoothGattService} that contained a {@link BluetoothGattCharacteristic} for {@link ReadWriteEvent#charUuid()}.
-             * This can also happen if the internal call to get a BluetoothService(s) causes an exception (seen on some phones).
-             */
-            NO_MATCHING_TARGET,
-
-            /**
-             * Specific to {@link Target#RELIABLE_WRITE}, this means the underlying call to {@link BluetoothGatt#beginReliableWrite()}
-             * returned <code>false</code>.
-             */
-            RELIABLE_WRITE_FAILED_TO_BEGIN,
-
-            /**
-             * Specific to {@link Target#RELIABLE_WRITE}, this means {@link BleDevice#reliableWrite_begin(ReadWriteListener)} was
-             * called twice without an intervening call to either {@link BleDevice#reliableWrite_abort()} or {@link BleDevice#reliableWrite_execute()}.
-             */
-            RELIABLE_WRITE_ALREADY_BEGAN,
-
-            /**
-             * Specific to {@link Target#RELIABLE_WRITE}, this means {@link BleDevice#reliableWrite_abort()} or {@link BleDevice#reliableWrite_execute()}
-             * was called without a previous call to {@link BleDevice#reliableWrite_begin(ReadWriteListener)}.
-             */
-            RELIABLE_WRITE_NEVER_BEGAN,
-
-            /**
-             * Specific to {@link Target#RELIABLE_WRITE}, this means {@link BleDevice#reliableWrite_abort()} was called.
-             */
-            RELIABLE_WRITE_ABORTED,
-
-            /**
-             * You tried to do a read on a characteristic that is write-only, or
-             * vice-versa, or tried to read a notify-only characteristic, or etc., etc.
-             */
-            OPERATION_NOT_SUPPORTED,
-
-            /**
-             * The android api level doesn't support the lower level API call in the native stack. For example if you try to use
-             * {@link BleDevice#setMtu(int, ReadWriteListener)}, which requires API level 21, and you are at level 18.
-             */
-            ANDROID_VERSION_NOT_SUPPORTED,
-
-            /**
-             * {@link BluetoothGatt#setCharacteristicNotification(BluetoothGattCharacteristic, boolean)}
-             * returned <code>false</code> for an unknown reason. This {@link Status} is only relevant for calls to
-             * {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and {@link BleDevice#disableNotify(UUID, ReadWriteListener)}
-             * (or the various overloads).
-             */
-            FAILED_TO_TOGGLE_NOTIFICATION,
-
-            /**
-             * {@link BluetoothGattCharacteristic#setValue(byte[])} (or one of its overloads) or
-             * {@link BluetoothGattDescriptor#setValue(byte[])} (or one of its overloads) returned <code>false</code>.
-             */
-            FAILED_TO_SET_VALUE_ON_TARGET,
-
-            /**
-             * The call to {@link BluetoothGatt#readCharacteristic(BluetoothGattCharacteristic)}
-             * or {@link BluetoothGatt#writeCharacteristic(BluetoothGattCharacteristic)}
-             * or etc. returned <code>false</code> and thus failed immediately
-             * for unknown reasons. No good remedy for this...perhaps try {@link BleManager#reset()}.
-             */
-            FAILED_TO_SEND_OUT,
-
-            /**
-             * The operation was cancelled by the device becoming {@link BleDeviceState#DISCONNECTED}.
-             */
-            CANCELLED_FROM_DISCONNECT,
-
-            /**
-             * The operation was cancelled because {@link BleManager} went {@link BleManagerState#TURNING_OFF} and/or
-             * {@link BleManagerState#OFF}. Note that if the user turns off BLE from their OS settings (airplane mode, etc.) then
-             * {@link ReadWriteEvent#status} could potentially be {@link #CANCELLED_FROM_DISCONNECT} because SweetBlue might get
-             * the disconnect callback before the turning off callback. Basic testing has revealed that this is *not* the case, but you never know.
-             * <br><br>
-             * Either way, the device was or will be disconnected.
-             */
-            CANCELLED_FROM_BLE_TURNING_OFF,
-
-            /**
-             * Used either when {@link ReadWriteEvent#type()} {@link Type#isRead()} and the stack returned a <code>null</code>
-             * value for {@link BluetoothGattCharacteristic#getValue()} despite the operation being otherwise "successful", <i>or</i>
-             * {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter. For the read case, the library
-             * will throw an {@link BleManager.UhOhListener.UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch. If the problem persists try {@link BleManager#reset()}.
-             */
-            NULL_DATA,
-
-            /**
-             * Used either when {@link ReadWriteEvent#type} {@link Type#isRead()} and the operation was "successful" but
-             * returned a zero-length array for {@link ReadWriteEvent#data}, <i>or</i> {@link BleDevice#write(UUID, byte[])} (or overload(s) )
-             * was called with a non-null but zero-length data parameter. Note that {@link ReadWriteEvent#data} will be a zero-length array for
-             * all other error statuses as well, for example {@link #NO_MATCHING_TARGET}, {@link #NOT_CONNECTED}, etc. In other words it's never null.
-             */
-            EMPTY_DATA,
-
-            /**
-             * For now only used when giving a negative or zero value to {@link BleDevice#setMtu(int, ReadWriteListener)}.
-             */
-            INVALID_DATA,
-
-            /**
-             * The operation failed in a "normal" fashion, at least relative to all the other strange ways an operation can fail. This means for
-             * example that {@link BluetoothGattCallback#onCharacteristicRead(BluetoothGatt, BluetoothGattCharacteristic, int)}
-             * returned a status code that was not zero. This could mean the device went out of range, was turned off, signal was disrupted,
-             * whatever. Often this means that the device is about to become {@link BleDeviceState#DISCONNECTED}. {@link ReadWriteEvent#gattStatus()}
-             * will most likely be non-zero, and you can check against the static fields in {@link BleStatuses} for more information.
-             *
-             * @see ReadWriteEvent#gattStatus()
-             */
-            REMOTE_GATT_FAILURE,
-
-            /**
-             * Operation took longer than time specified in {@link BleNodeConfig#taskTimeoutRequestFilter} so we cut it loose.
-             */
-            TIMED_OUT;
-
-            /**
-             * Returns <code>true</code> for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
-             */
-            public final boolean wasCancelled()
-            {
-                return this == CANCELLED_FROM_DISCONNECT || this == Status.CANCELLED_FROM_BLE_TURNING_OFF;
-            }
-
-            @Override public final boolean isNull()
-            {
-                return this == NULL;
-            }
-        }
-
-        /**
-         * The type of operation for a {@link ReadWriteEvent} - read, write, poll, etc.
-         */
-        public static enum Type implements UsesCustomNull
-        {
-            /**
-             * As of now, only used for {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
-             */
-            NULL,
-
-            /**
-             * Associated with {@link BleDevice#read(UUID, ReadWriteListener)} or {@link BleDevice#readRssi(ReadWriteListener)}.
-             */
-            READ,
-
-            /**
-             * Associated with {@link BleDevice#write(UUID, byte[])} or {@link BleDevice#write(UUID, byte[], ReadWriteListener)}
-             * or {@link BleDevice#setMtu(int)} or {@link BleDevice#setName(String, UUID, ReadWriteListener)}.
-             *
-             * @see #isWrite()
-             */
-            WRITE,
-
-            /**
-             * Similar to {@link #WRITE} but under the hood {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE} is used.
-             * See also {@link BluetoothGattCharacteristic#PROPERTY_WRITE_NO_RESPONSE}.
-             *
-             * @see #isWrite()
-             */
-            WRITE_NO_RESPONSE,
-
-            /**
-             * Similar to {@link #WRITE} but under the hood {@link BluetoothGattCharacteristic#WRITE_TYPE_SIGNED} is used.
-             * See also {@link BluetoothGattCharacteristic#PROPERTY_SIGNED_WRITE}.
-             *
-             * @see #isWrite()
-             */
-            WRITE_SIGNED,
-
-            /**
-             * Associated with {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)} or {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
-             */
-            POLL,
-
-            /**
-             * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} when we  actually get a notification.
-             */
-            NOTIFICATION,
-
-            /**
-             * Similar to {@link #NOTIFICATION}, kicked off from {@link BleDevice#enableNotify(UUID, ReadWriteListener)}, but
-             * under the hood this is treated slightly differently.
-             */
-            INDICATION,
-
-            /**
-             * Associated with {@link BleDevice#startChangeTrackingPoll(UUID, Interval, ReadWriteListener)}
-             * or {@link BleDevice#enableNotify(UUID, Interval, ReadWriteListener)} where a force-read timeout is invoked.
-             */
-            PSUEDO_NOTIFICATION,
-
-            /**
-             * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and called when enabling the notification completes by writing to the
-             * Descriptor of the given {@link UUID}. {@link BleDevice.ReadWriteListener.Status#SUCCESS} doesn't <i>necessarily</i> mean that notifications will
-             * definitely now work (there may be other issues in the underlying stack), but it's a reasonable guarantee.
-             */
-            ENABLING_NOTIFICATION,
-
-            /**
-             * Opposite of {@link #ENABLING_NOTIFICATION}.
-             */
-            DISABLING_NOTIFICATION;
-
-            /**
-             * Returns <code>true</code> for every {@link Type} except {@link #isWrite()}, {@link #ENABLING_NOTIFICATION}, and
-             * {@link #DISABLING_NOTIFICATION}. Overall this convenience method is meant to tell you when we've <i>received</i> something from
-             * the device as opposed to writing something to it.
-             */
-            public final boolean isRead()
-            {
-                return !isWrite() && this != ENABLING_NOTIFICATION && this != DISABLING_NOTIFICATION;
-            }
-
-            /**
-             * Returns <code>true</code> if <code>this</code> is {@link #WRITE} or {@link #WRITE_NO_RESPONSE} or {@link #WRITE_SIGNED}.
-             */
-            public final boolean isWrite()
-            {
-                return this == WRITE || this == WRITE_NO_RESPONSE || this == WRITE_SIGNED;
-            }
-
-            /**
-             * Returns true if <code>this</code> is {@link #NOTIFICATION}, {@link #PSUEDO_NOTIFICATION}, or {@link #INDICATION}.
-             */
-            public final boolean isNotification()
-            {
-                return this.isNativeNotification() || this == PSUEDO_NOTIFICATION;
-            }
-
-            /**
-             * Subset of {@link #isNotification()}, returns <code>true</code> only for {@link #NOTIFICATION} and {@link #INDICATION}, i.e. only
-             * notifications who origin is an *actual* notification (or indication) sent from the remote BLE device.
-             */
-            public final boolean isNativeNotification()
-            {
-                return this == NOTIFICATION || this == INDICATION;
-            }
-
-            /**
-             * Returns the {@link BleNodeConfig.HistoricalDataLogFilter.Source} equivalent
-             * for this {@link BleDevice.ReadWriteListener.Type}, or {@link BleNodeConfig.HistoricalDataLogFilter.Source#NULL}.
-             */
-            public final BleNodeConfig.HistoricalDataLogFilter.Source toHistoricalDataSource()
-            {
-                switch (this)
-                {
-                    case READ:
-                        return BleNodeConfig.HistoricalDataLogFilter.Source.READ;
-                    case POLL:
-                        return BleNodeConfig.HistoricalDataLogFilter.Source.POLL;
-                    case NOTIFICATION:
-                        return BleNodeConfig.HistoricalDataLogFilter.Source.NOTIFICATION;
-                    case INDICATION:
-                        return BleNodeConfig.HistoricalDataLogFilter.Source.INDICATION;
-                    case PSUEDO_NOTIFICATION:
-                        return BleNodeConfig.HistoricalDataLogFilter.Source.PSUEDO_NOTIFICATION;
-                }
-
-                return BleNodeConfig.HistoricalDataLogFilter.Source.NULL;
-            }
-
-            @Override public final boolean isNull()
-            {
-                return this == NULL;
-            }
-        }
-
-        /**
-         * The type of GATT "object", provided by {@link ReadWriteEvent#target()}.
-         */
-        public static enum Target implements UsesCustomNull
-        {
-            /**
-             * As of now, only used for {@link ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
-             */
-            NULL,
-
-            /**
-             * The {@link ReadWriteEvent} returned has to do with a {@link BluetoothGattCharacteristic} under the hood.
-             */
-            CHARACTERISTIC,
-
-            /**
-             * The {@link ReadWriteEvent} returned has to do with a {@link BluetoothGattDescriptor} under the hood.
-             */
-            DESCRIPTOR,
-
-            /**
-             * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#readRssi(ReadWriteListener)} or
-             * {@link BleDevice#startRssiPoll(Interval, ReadWriteListener)}.
-             */
-            RSSI,
-
-            /**
-             * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#setMtu(int, ReadWriteListener)} or overloads.
-             */
-            MTU,
-
-            /**
-             * The {@link ReadWriteEvent} is coming in from using <code>reliableWrite_*()</code> overloads such as {@link BleDevice#reliableWrite_begin(ReadWriteListener)},
-             * {@link BleDevice#reliableWrite_execute()}, etc.
-             */
-            RELIABLE_WRITE,
-
-            /**
-             * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)} or overloads.
-             */
-            CONNECTION_PRIORITY;
-
-            @Override public final boolean isNull()
-            {
-                return this == NULL;
-            }
-        }
-
-        /**
-         * Provides a bunch of information about a completed read, write, or notification.
-         */
-        @com.idevicesinc.sweetblue.annotations.Immutable
-        public static class ReadWriteEvent extends com.idevicesinc.sweetblue.utils.Event implements com.idevicesinc.sweetblue.utils.UsesCustomNull
-        {
-            /**
-             * Value used in place of <code>null</code>, either indicating that {@link #descUuid} isn't used for the {@link ReadWriteEvent}
-             * because {@link #target} is {@link Target#CHARACTERISTIC}, or that both {@link #descUuid} and {@link #charUuid} aren't applicable
-             * because {@link #target} is {@link Target#RSSI}.
-             */
-            public static final UUID NON_APPLICABLE_UUID = Uuids.INVALID;
-
-            /**
-             * The {@link BleDevice} this {@link ReadWriteEvent} is for.
-             */
-            public final BleDevice device()
-            {
-                return m_device;
-            }
-
-            private final BleDevice m_device;
-
-            /**
-             * Convience to return the mac address of {@link #device()}.
-             */
-            public final String macAddress()
-            {
-                return m_device.getMacAddress();
-            }
-
-            /**
-             * The type of operation, read, write, etc.
-             */
-            public final Type type()
-            {
-                return m_type;
-            }
-
-            private final Type m_type;
-
-            /**
-             * The type of GATT object this {@link ReadWriteEvent} is for, currently characteristic, descriptor, or rssi.
-             */
-            public final Target target()
-            {
-                return m_target;
-            }
-
-            private final Target m_target;
-
-            /**
-             * The {@link UUID} of the service associated with this {@link ReadWriteEvent}. This will always be a non-null {@link UUID},
-             * even if {@link #target} is {@link Target#DESCRIPTOR}. If {@link #target} is {@link Target#RSSI} then this will be referentially equal
-             * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
-             */
-            public final UUID serviceUuid()
-            {
-                return m_serviceUuid;
-            }
-
-            private final UUID m_serviceUuid;
-
-            /**
-             * The {@link UUID} of the characteristic associated with this {@link ReadWriteEvent}. This will always be a non-null {@link UUID},
-             * even if {@link #target} is {@link Target#DESCRIPTOR}. If {@link #target} is {@link Target#RSSI} then this will be referentially equal
-             * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
-             */
-            public final UUID charUuid()
-            {
-                return m_charUuid;
-            }
-
-            private final UUID m_charUuid;
-
-            /**
-             * The {@link UUID} of the descriptor associated with this {@link ReadWriteEvent}. If {@link #target} is
-             * {@link Target#CHARACTERISTIC} or {@link Target#RSSI} then this will be referentially equal
-             * (i.e. you can use == to compare) to {@link #NON_APPLICABLE_UUID}.
-             */
-            public final UUID descUuid()
-            {
-                return m_descUuid;
-            }
-
-            private final UUID m_descUuid;
-
-            /**
-             * The data sent to the peripheral if {@link ReadWriteEvent#type} {@link Type#isWrite()}, otherwise the data received from the
-             * peripheral if {@link ReadWriteEvent#type} {@link Type#isRead()}. This will never be <code>null</code>. For error cases it will be a
-             * zero-length array.
-             */
-            public final @Nullable(Nullable.Prevalence.NEVER) byte[] data()
-            {
-                return m_data;
-            }
-
-            private final byte[] m_data;
-
-            /**
-             * This value gets updated as a result of a {@link BleDevice#readRssi(ReadWriteListener)} call. It will
-             * always be equivalent to {@link BleDevice#getRssi()} but is included here for convenience.
-             *
-             * @see BleDevice#getRssi()
-             * @see BleDevice#getRssiPercent()
-             * @see BleDevice#getDistance()
-             */
-            public final int rssi()
-            {
-                return m_rssi;
-            }
-
-            private final int m_rssi;
-
-            /**
-             * This value gets set as a result of a {@link BleDevice#setMtu(int, ReadWriteListener)} call. The value returned
-             * will be the same as that given to {@link BleDevice#setMtu(int, ReadWriteListener)}, which means it will be the
-             * same as {@link BleDevice#getMtu()} if {@link #status()} equals {@link ReadWriteListener.Status#SUCCESS}.
-             *
-             * @see BleDevice#getMtu()
-             */
-            public final int mtu()
-            {
-                return m_mtu;
-            }
-
-            private final int m_mtu;
-
-            /**
-             * Indicates either success or the type of failure. Some values of {@link Status} are not used for certain values of {@link Type}.
-             * For example a {@link Type#NOTIFICATION} cannot fail with {@link BleDevice.ReadWriteListener.Status#TIMED_OUT}.
-             */
-            public final Status status()
-            {
-                return m_status;
-            }
-
-            private final Status m_status;
-
-            /**
-             * Time spent "over the air" - so in the native stack, processing in
-             * the peripheral's embedded software, what have you. This will
-             * always be slightly less than {@link #time_total()}.
-             */
-            public final Interval time_ota()
-            {
-                return m_transitTime;
-            }
-
-            private final Interval m_transitTime;
-
-            /**
-             * Total time it took for the operation to complete, whether success
-             * or failure. This mainly includes time spent in the internal job
-             * queue plus {@link ReadWriteEvent#time_ota()}. This will always be
-             * longer than {@link #time_ota()}, though usually only slightly so.
-             */
-            public final Interval time_total()
-            {
-                return m_totalTime;
-            }
-
-            private final Interval m_totalTime;
-
-            /**
-             * The native gatt status returned from the stack, if applicable. If the {@link #status} returned is, for example,
-             * {@link ReadWriteListener.Status#NO_MATCHING_TARGET}, then the operation didn't even reach the point where a gatt status is
-             * provided, in which case this member is set to {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE} (value of
-             * {@value com.idevicesinc.sweetblue.BleStatuses#GATT_STATUS_NOT_APPLICABLE}). Otherwise it will be <code>0</code> for success or greater than
-             * <code>0</code> when there's an issue. <i>Generally</i> this value will only be meaningful when {@link #status} is
-             * {@link ReadWriteListener.Status#SUCCESS} or {@link ReadWriteListener.Status#REMOTE_GATT_FAILURE}. There are
-             * also some cases where this will be 0 for success but {@link #status} is for example
-             * {@link ReadWriteListener.Status#NULL_DATA} - in other words the underlying stack deemed the operation a success but SweetBlue
-             * disagreed. For this reason it's recommended to treat this value as a debugging tool and use {@link #status} for actual
-             * application logic if possible.
-             * <br><br>
-             * See {@link BluetoothGatt} for its static <code>GATT_*</code> status code members. Also see the source code of
-             * {@link BleStatuses} for SweetBlue's more comprehensive internal reference list of gatt status values. This list may not be
-             * totally accurate or up-to-date, nor may it match GATT_ values used by the bluetooth stack on your phone.
-             */
-            public final int gattStatus()
-            {
-                return m_gattStatus;
-            }
-
-            private final int m_gattStatus;
-
-            /**
-             * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
-             * {@link BleDevice#read(UUID)}, {@link BleDevice#write(UUID, byte[])}, etc. It will return <code>false</code> otherwise,
-             * which can happen if for example you use {@link BleDevice#getNativeGatt()} to bypass SweetBlue for whatever reason.
-             * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status#TIMED_OUT},
-             * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
-             */
-            public final boolean solicited()
-            {
-                return m_solicited;
-            }
-
-            private final boolean m_solicited;
-
-            /**
-             * This value gets set as a result of a {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)} call. The value returned
-             * will be the same as that given to {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)}, which means it will be the
-             * same as {@link BleDevice#getConnectionPriority()} if {@link #status()} equals {@link ReadWriteListener.Status#SUCCESS}.
-             *
-             * @see BleDevice#getConnectionPriority()
-             */
-            public final BleConnectionPriority connectionPriority()
-            {
-                return m_connectionPriority;
-            }
-
-            private final BleConnectionPriority m_connectionPriority;
-
-            ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
-            {
-                this.m_device = device;
-                this.m_serviceUuid = serviceUuid != null ? serviceUuid : NON_APPLICABLE_UUID;
-                this.m_charUuid = charUuid != null ? charUuid : NON_APPLICABLE_UUID;
-                this.m_descUuid = descUuid != null ? descUuid : NON_APPLICABLE_UUID;
-                this.m_type = type;
-                this.m_target = target;
-                this.m_status = status;
-                this.m_gattStatus = gattStatus;
-                this.m_totalTime = Interval.secs(totalTime);
-                this.m_transitTime = Interval.secs(transitTime);
-                this.m_data = data != null ? data : EMPTY_BYTE_ARRAY;
-                this.m_rssi = device.getRssi();
-                this.m_mtu = device.getMtu();
-                this.m_solicited = solicited;
-                this.m_connectionPriority = device.getConnectionPriority();
-            }
-
-            ReadWriteEvent(BleDevice device, Type type, int rssi, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
-            {
-                this.m_device = device;
-                this.m_charUuid = NON_APPLICABLE_UUID;
-                this.m_descUuid = NON_APPLICABLE_UUID;
-                this.m_serviceUuid = NON_APPLICABLE_UUID;
-                this.m_type = type;
-                this.m_target = Target.RSSI;
-                this.m_status = status;
-                this.m_gattStatus = gattStatus;
-                this.m_totalTime = Interval.secs(totalTime);
-                this.m_transitTime = Interval.secs(transitTime);
-                this.m_data = EMPTY_BYTE_ARRAY;
-                this.m_rssi = status == Status.SUCCESS ? rssi : device.getRssi();
-                this.m_mtu = device.getMtu();
-                this.m_solicited = solicited;
-                this.m_connectionPriority = device.getConnectionPriority();
-            }
-
-            ReadWriteEvent(BleDevice device, int mtu, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
-            {
-                this.m_device = device;
-                this.m_charUuid = NON_APPLICABLE_UUID;
-                this.m_descUuid = NON_APPLICABLE_UUID;
-                this.m_serviceUuid = NON_APPLICABLE_UUID;
-                this.m_type = Type.WRITE;
-                this.m_target = Target.MTU;
-                this.m_status = status;
-                this.m_gattStatus = gattStatus;
-                this.m_totalTime = Interval.secs(totalTime);
-                this.m_transitTime = Interval.secs(transitTime);
-                this.m_data = EMPTY_BYTE_ARRAY;
-                this.m_rssi = device.getRssi();
-                this.m_mtu = status == Status.SUCCESS ? mtu : device.getMtu();
-                this.m_solicited = solicited;
-                this.m_connectionPriority = device.getConnectionPriority();
-            }
-
-            ReadWriteEvent(BleDevice device, BleConnectionPriority connectionPriority, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
-            {
-                this.m_device = device;
-                this.m_charUuid = NON_APPLICABLE_UUID;
-                this.m_descUuid = NON_APPLICABLE_UUID;
-                this.m_serviceUuid = NON_APPLICABLE_UUID;
-                this.m_type = Type.WRITE;
-                this.m_target = Target.CONNECTION_PRIORITY;
-                this.m_status = status;
-                this.m_gattStatus = gattStatus;
-                this.m_totalTime = Interval.secs(totalTime);
-                this.m_transitTime = Interval.secs(transitTime);
-                this.m_data = EMPTY_BYTE_ARRAY;
-                this.m_rssi = device.getRssi();
-                this.m_mtu = device.getMtu();
-                this.m_solicited = solicited;
-                this.m_connectionPriority = connectionPriority;
-            }
-
-            static ReadWriteEvent NULL(BleDevice device)
-            {
-                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
-            }
-
-            /**
-             * Forwards {@link BleDevice#getNativeService(UUID)}, which will be nonnull
-             * if {@link #target()} is {@link Target#CHARACTERISTIC} or {@link Target#DESCRIPTOR}.
-             */
-            public final @Nullable(Prevalence.NORMAL) BluetoothGattService service()
-            {
-                return device().getNativeService(serviceUuid());
-            }
-
-            /**
-             * Forwards {@link BleDevice#getNativeCharacteristic(UUID, UUID)}, which will be nonnull
-             * if {@link #target()} is {@link Target#CHARACTERISTIC} or {@link Target#DESCRIPTOR}.
-             */
-            public final @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
-            {
-                return device().getNativeCharacteristic(serviceUuid(), charUuid());
-            }
-
-            /**
-             * Forwards {@link BleDevice#getNativeDescriptor_inChar(UUID, UUID)}, which will be nonnull
-             * if {@link #target()} is {@link Target#DESCRIPTOR}.
-             */
-            public final @Nullable(Prevalence.NORMAL) BluetoothGattDescriptor descriptor()
-            {
-                return device().getNativeDescriptor_inChar(charUuid(), descUuid());
-            }
-
-            /**
-             * Convenience method for checking if {@link ReadWriteEvent#status} equals {@link BleDevice.ReadWriteListener.Status#SUCCESS}.
-             */
-            public final boolean wasSuccess()
-            {
-                return status() == Status.SUCCESS;
-            }
-
-            /**
-             * Forwards {@link Status#wasCancelled()}.
-             */
-            public final boolean wasCancelled()
-            {
-                return status().wasCancelled();
-            }
-
-            /**
-             * Forwards {@link Type#isNotification()}.
-             */
-            public final boolean isNotification()
-            {
-                return type().isNotification();
-            }
-
-            /**
-             * Forwards {@link Type#isRead()}.
-             */
-            public final boolean isRead()
-            {
-                return type().isRead();
-            }
-
-            /**
-             * Forwards {@link Type#isWrite()}.
-             */
-            public final boolean isWrite()
-            {
-                return type().isWrite();
-            }
-
-            /**
-             * Returns the first byte from {@link #data()}, or 0x0 if not available.
-             */
-            public final byte data_byte()
-            {
-                return data().length > 0 ? data()[0] : 0x0;
-            }
-
-            /**
-             * Convenience method that attempts to parse the data as a UTF-8 string.
-             */
-            public final @Nullable(Prevalence.NEVER) String data_utf8()
-            {
-                return data_string("UTF-8");
-            }
-
-            /**
-             * Best effort parsing of {@link #data()} as a {@link String}. For now simply forwards {@link #data_utf8()}.
-             * In the future may try to autodetect encoding first.
-             */
-            public final @Nullable(Prevalence.NEVER) String data_string()
-            {
-                return data_utf8();
-            }
-
-            /**
-             * Convenience method that attempts to parse {@link #data()} as a {@link String} with the given charset, for example <code>"UTF-8"</code>.
-             */
-            public final @Nullable(Prevalence.NEVER) String data_string(final String charset)
-            {
-                return Utils_String.getStringValue(data(), charset);
-            }
-
-            /**
-             * Convenience method that attempts to parse {@link #data()} as an int.
-             *
-             * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
-             */
-            public final @Nullable(Prevalence.NEVER) int data_int(boolean reverse)
-            {
-                if (reverse)
-                {
-                    byte[] data = data();
-                    Utils_Byte.reverseBytes(data);
-                    return Utils_Byte.bytesToInt(data);
-                }
-                else
-                {
-                    return Utils_Byte.bytesToInt(data());
-                }
-            }
-
-            /**
-             * Convenience method that attempts to parse {@link #data()} as a short.
-             *
-             * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
-             */
-            public final @Nullable(Prevalence.NEVER) short data_short(boolean reverse)
-            {
-                if (reverse)
-                {
-                    byte[] data = data();
-                    Utils_Byte.reverseBytes(data);
-                    return Utils_Byte.bytesToShort(data);
-                }
-                else
-                {
-                    return Utils_Byte.bytesToShort(data());
-                }
-            }
-
-            /**
-             * Convenience method that attempts to parse {@link #data()} as a long.
-             *
-             * @param reverse - Set to true if you are connecting to a device with {@link java.nio.ByteOrder#BIG_ENDIAN} byte order, to automatically reverse the bytes before conversion.
-             */
-            public final @Nullable(Prevalence.NEVER) long data_long(boolean reverse)
-            {
-                if (reverse)
-                {
-                    byte[] data = data();
-                    Utils_Byte.reverseBytes(data);
-                    return Utils_Byte.bytesToLong(data);
-                }
-                else
-                {
-                    return Utils_Byte.bytesToLong(data());
-                }
-            }
-
-            /**
-             * Forwards {@link Type#isNull()}.
-             */
-            @Override public final boolean isNull()
-            {
-                return type().isNull();
-            }
-
-            @Override public final String toString()
-            {
-                if (isNull())
-                {
-                    return Type.NULL.toString();
-                }
-                else
-                {
-                    if (target() == Target.RSSI)
-                    {
-                        return Utils_String.toString
-                                (
-                                        this.getClass(),
-                                        "status", status(),
-                                        "type", type(),
-                                        "target", target(),
-                                        "rssi", rssi(),
-                                        "gattStatus", device().getManager().getLogger().gattStatus(gattStatus())
-                                );
-                    }
-                    else if (target() == Target.MTU)
-                    {
-                        return Utils_String.toString
-                                (
-                                        this.getClass(),
-                                        "status", status(),
-                                        "type", type(),
-                                        "target", target(),
-                                        "mtu", mtu(),
-                                        "gattStatus", device().getManager().getLogger().gattStatus(gattStatus())
-                                );
-                    }
-                    else if (target() == Target.CONNECTION_PRIORITY)
-                    {
-                        return Utils_String.toString
-                                (
-                                        this.getClass(),
-                                        "status", status(),
-                                        "type", type(),
-                                        "target", target(),
-                                        "connectionPriority", connectionPriority(),
-                                        "gattStatus", device().getManager().getLogger().gattStatus(gattStatus())
-                                );
-                    }
-                    else
-                    {
-                        return Utils_String.toString
-                                (
-                                        this.getClass(),
-                                        "status", status(),
-                                        "data", Arrays.toString(data()),
-                                        "type", type(),
-                                        "charUuid", device().getManager().getLogger().uuidName(charUuid()),
-                                        "gattStatus", device().getManager().getLogger().gattStatus(gattStatus())
-                                );
-                    }
-                }
-            }
-        }
-
-        /**
-         * Called when a read or write is complete or when a notification comes in or when a notification is enabled/disabled.
-         */
-//		void onEvent(final ReadWriteEvent e);
-    }
 
     /**
      * Provide an implementation to {@link BleDevice#setListener_State(StateListener)} and/or
@@ -1335,8 +442,8 @@ public final class BleDevice extends BleNode
             /**
              * If {@link ConnectionFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or
              * {@link Status#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called somewhere in or
-             * downstream of {@link ReadWriteListener#onEvent(Event)}, then the {@link ReadWriteEvent} passed there will be returned
-             * here. Otherwise, this will return a {@link ReadWriteEvent} for which {@link ReadWriteEvent#isNull()} returns <code>true</code>.
+             * downstream of {@link ReadWriteListener#onEvent(Event)}, then the {@link ReadWriteListener.ReadWriteEvent} passed there will be returned
+             * here. Otherwise, this will return a {@link ReadWriteListener.ReadWriteEvent} for which {@link ReadWriteListener.ReadWriteEvent#isNull()} returns <code>true</code>.
              */
             public final ReadWriteListener.ReadWriteEvent txnFailReason()
             {
@@ -1842,7 +949,7 @@ public final class BleDevice extends BleNode
     private final P_HistoricalDataManager m_historicalDataMngr;
     final P_BondManager m_bondMngr;
 
-    private com.idevicesinc.sweetblue.ReadWriteListener m_defaultReadWriteListener = null;
+    private ReadWriteListener m_defaultReadWriteListener = null;
     private NotificationListener m_defaultNotificationListener = null;
 
     private TimeEstimator m_writeTimeEstimator;
@@ -2246,45 +1353,14 @@ public final class BleDevice extends BleNode
      * {@link #write(UUID, byte[], ReadWriteListener)}, {@link #enableNotify(UUID, ReadWriteListener)}, etc.
      * <br><br>
      * NOTE: This will be called after the {@link ReadWriteListener} provided directly through the method params.
-     *
-     * @deprecated - This will be removed in version 3. Use {@link com.idevicesinc.sweetblue.ReadWriteListener} instead (it was refactored to be in it's own class file, rather than an inner class).
      */
     public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final ReadWriteListener listener_nullable)
     {
         if (isNull()) return;
 
-        if (listener_nullable == null)
-        {
-            m_defaultReadWriteListener = null;
-        }
-        else
-        {
-            m_defaultReadWriteListener = new com.idevicesinc.sweetblue.ReadWriteListener()
-            {
-                @Override public void onEvent(ReadWriteEvent e)
-                {
-                    if (listener_nullable != null)
-                    {
-                        listener_nullable.onEvent(e);
-                    }
-                }
-            };
-        }
-    }
-
-
-    /**
-     * Sets a default backup {@link ReadWriteListener} that will be called for all calls to {@link #read(UUID, ReadWriteListener)},
-     * {@link #write(UUID, byte[], ReadWriteListener)}, {@link #enableNotify(UUID, ReadWriteListener)}, etc.
-     * <br><br>
-     * NOTE: This will be called after the {@link ReadWriteListener} provided directly through the method params.
-     */
-    public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) com.idevicesinc.sweetblue.ReadWriteListener listener_nullable)
-    {
-        if (isNull()) return;
-
         m_defaultReadWriteListener = listener_nullable;
     }
+
 
     /**
      * Sets a default {@link NotificationListener} that will be called when receiving notifications, or indications. This listener will also
@@ -3097,7 +2173,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #setName(String, UUID, BleDevice.ReadWriteListener)} but will not attempt to propagate the
+     * Same as {@link #setName(String, UUID, ReadWriteListener)} but will not attempt to propagate the
      * name change to the remote device. Only {@link #getName_override()} will be affected by this.
      */
     public final void setName(final String name)
@@ -3106,7 +2182,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #setName(String, UUID, BleDevice.ReadWriteListener)} but you can use this
+     * Same as {@link #setName(String, UUID, ReadWriteListener)} but you can use this
      * if you don't care much whether the device name change actually successfully reaches
      * the remote device. The write will be attempted regardless.
      */
@@ -3116,7 +2192,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Sets the local name of the device and also attempts a {@link #write(java.util.UUID, byte[], BleDevice.ReadWriteListener)}
+     * Sets the local name of the device and also attempts a {@link #write(java.util.UUID, byte[], ReadWriteListener)}
      * using the given {@link UUID}. Further calls to {@link #getName_override()} will immediately reflect the name given here.
      * Further calls to {@link #getName_native()}, {@link #getName_debug()} and {@link #getName_normalized()} will only reflect
      * the name given here if the write is successful. It is somewhat assumed that doing this write will cause the remote device
@@ -3680,7 +2756,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #startPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} but without a listener.
+     * Same as {@link #startPoll(java.util.UUID, Interval, ReadWriteListener)} but without a listener.
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
@@ -3706,7 +2782,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Convenience to call {@link #startPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
+     * Convenience to call {@link #startPoll(java.util.UUID, Interval, ReadWriteListener)} for multiple
      * characteristic uuids all at once.
      */
     public final void startPoll(final UUID[] charUuids, final Interval interval, final ReadWriteListener listener)
@@ -3718,7 +2794,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #startPoll(java.util.UUID[], Interval, BleDevice.ReadWriteListener)} but without a listener.
+     * Same as {@link #startPoll(java.util.UUID[], Interval, ReadWriteListener)} but without a listener.
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
@@ -3728,7 +2804,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Convenience to call {@link #startPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
+     * Convenience to call {@link #startPoll(java.util.UUID, Interval, ReadWriteListener)} for multiple
      * characteristic uuids all at once.
      */
     public final void startPoll(final Iterable<UUID> charUuids, final Interval interval, final ReadWriteListener listener)
@@ -3744,7 +2820,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #startPoll(java.util.UUID[], Interval, BleDevice.ReadWriteListener)} but without a listener.
+     * Same as {@link #startPoll(java.util.UUID[], Interval, ReadWriteListener)} but without a listener.
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
@@ -3754,7 +2830,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Convenience to call {@link #startChangeTrackingPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
+     * Convenience to call {@link #startChangeTrackingPoll(java.util.UUID, Interval, ReadWriteListener)} for multiple
      * characteristic uuids all at once.
      */
     public final void startChangeTrackingPoll(final UUID[] charUuids, final Interval interval, final ReadWriteListener listener)
@@ -3766,7 +2842,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #startChangeTrackingPoll(java.util.UUID[], Interval, BleDevice.ReadWriteListener)} but without a listener.
+     * Same as {@link #startChangeTrackingPoll(java.util.UUID[], Interval, ReadWriteListener)} but without a listener.
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
@@ -3776,7 +2852,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Convenience to call {@link #startChangeTrackingPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} for multiple
+     * Convenience to call {@link #startChangeTrackingPoll(java.util.UUID, Interval, ReadWriteListener)} for multiple
      * characteristic uuids all at once.
      */
     public final void startChangeTrackingPoll(final Iterable<UUID> charUuids, final Interval interval, final ReadWriteListener listener)
@@ -3792,7 +2868,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #startChangeTrackingPoll(java.util.UUID[], Interval, BleDevice.ReadWriteListener)} but without a listener.
+     * Same as {@link #startChangeTrackingPoll(java.util.UUID[], Interval, ReadWriteListener)} but without a listener.
      * <br><br>
      * See {@link #read(java.util.UUID)} for an explanation of why you would do this.
      */
@@ -3839,7 +2915,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #stopPoll(java.util.UUID, BleDevice.ReadWriteListener)} but without the listener.
+     * Same as {@link #stopPoll(java.util.UUID, ReadWriteListener)} but without the listener.
      */
     public final void stopPoll(final UUID characteristicUuid)
     {
@@ -3857,7 +2933,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #stopPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} but without the listener.
+     * Same as {@link #stopPoll(java.util.UUID, Interval, ReadWriteListener)} but without the listener.
      */
     public final void stopPoll(final UUID characteristicUuid, final Interval interval)
     {
@@ -3899,7 +2975,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Calls {@link #stopPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} multiple times for you.
+     * Calls {@link #stopPoll(java.util.UUID, Interval, ReadWriteListener)} multiple times for you.
      */
     public final void stopPoll(final UUID[] uuids, final Interval interval, final ReadWriteListener listener)
     {
@@ -3926,7 +3002,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Calls {@link #stopPoll(java.util.UUID, Interval, BleDevice.ReadWriteListener)} multiple times for you.
+     * Calls {@link #stopPoll(java.util.UUID, Interval, ReadWriteListener)} multiple times for you.
      */
     public final void stopPoll(final Iterable<UUID> uuids, final Interval interval, final ReadWriteListener listener)
     {
@@ -3956,41 +3032,13 @@ public final class BleDevice extends BleNode
         stopPoll(uuids, null, null);
     }
 
-
     /**
      * Writes to the device without a callback.
      *
      * @return (same as {@link #write(UUID, UUID, byte[])}).
      * @see #write(UUID, UUID, byte[])
-     *
-     * @deprecated - Use {@link #write(com.idevicesinc.sweetblue.WriteBuilder)} instead. This will be removed in v3.0
      */
-    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder)
-    {
-        return write(com.idevicesinc.sweetblue.WriteBuilder.fromDeprecatedWriteBuilder(writeBuilder));
-    }
-
-    /**
-     * Writes to the device with a callback.
-     *
-     * @return (same as {@link #write(UUID, UUID, byte[], ReadWriteListener)}).
-     * @see #write(UUID, UUID, byte[], ReadWriteListener)
-     * @deprecated - Use {@link #write(com.idevicesinc.sweetblue.WriteBuilder, ReadWriteListener)} instead. This will be removed in v3.0
-     */
-    @Deprecated
-    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder, ReadWriteListener listener)
-    {
-        return write(com.idevicesinc.sweetblue.WriteBuilder.fromDeprecatedWriteBuilder(writeBuilder), listener);
-    }
-
-    /**
-     * Writes to the device without a callback.
-     *
-     * @return (same as {@link #write(UUID, UUID, byte[])}).
-     * @see #write(UUID, UUID, byte[])
-     */
-    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(com.idevicesinc.sweetblue.WriteBuilder writeBuilder)
     {
         return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data, writeBuilder.descriptorFilter);
     }
@@ -4001,7 +3049,7 @@ public final class BleDevice extends BleNode
      * @return (same as {@link #write(UUID, UUID, byte[], ReadWriteListener)}).
      * @see #write(UUID, UUID, byte[], ReadWriteListener)
      */
-    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(com.idevicesinc.sweetblue.WriteBuilder writeBuilder, ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder, ReadWriteListener listener)
     {
         return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data, listener);
     }
@@ -4256,7 +3304,7 @@ public final class BleDevice extends BleNode
 
     /**
      * Reads from the device without a callback - the callback will still be sent through any listeners provided
-     * to either {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} or {@link BleManager#setListener_ReadWrite(com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+     * to either {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} or {@link BleManager#setListener_Read_Write(ReadWriteListener)}.
      *
      * @return (same as {@link #readDescriptor(UUID, BleDevice.ReadWriteListener)}).
      * @see #readDescriptor(UUID, ReadWriteListener)
@@ -4848,10 +3896,10 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #read(java.util.UUID, BleDevice.ReadWriteListener)} but you can use this
-     * if you don't immediately care about the result. The callback will still be posted to {@link BleDevice.ReadWriteListener}
-     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
-     * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
+     * Same as {@link #read(java.util.UUID, ReadWriteListener)} but you can use this
+     * if you don't immediately care about the result. The callback will still be posted to {@link ReadWriteListener}
+     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
+     * {@link BleManager#setListener_Read_Write(ReadWriteListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid)
     {
@@ -4861,10 +3909,10 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #read(java.util.UUID, DescriptorFilter, BleDevice.ReadWriteListener)} but you can use this
-     * if you don't immediately care about the result. The callback will still be posted to {@link BleDevice.ReadWriteListener}
-     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
-     * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
+     * Same as {@link #read(java.util.UUID, DescriptorFilter, ReadWriteListener)} but you can use this
+     * if you don't immediately care about the result. The callback will still be posted to {@link ReadWriteListener}
+     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
+     * {@link BleManager#setListener_Read_Write(ReadWriteListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final DescriptorFilter descriptorFilter)
     {
@@ -4938,49 +3986,6 @@ public final class BleDevice extends BleNode
     public final ReadWriteEvent readBatteryLevel(ReadWriteListener listener)
     {
         return read_internal(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, Type.READ, null, listener);
-    }
-
-    /**
-     * This method is intended to be used when the device has 2 battery characteristics in the same service. The @param valueToMatch tells SweetBlue which
-     * characteristic to actually read from. NOTE: This expects the FULL byte array for comparison, which by the Bluetooth spec found here
-     * <a href="https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.characteristic_presentation_format.xml"</a>
-     * says that it should be 7 bytes. SweetBlue will NOT enforce the 7 byte length, in the odd case that someone implements this descriptor out-of-spec.
-     *
-     * @deprecated - Use any of the read() methods which accept a {@link DescriptorFilter} instead. This way, you're not limited to just the battery service/char
-     */
-    @Deprecated
-    public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, ReadWriteListener listener)
-    {
-        return readBatteryLevel(valueToMatch, Uuids.CHARACTERISTIC_PRESENTATION_FORMAT_DESCRIPTOR_UUID, listener);
-    }
-
-    /**
-     * Read the battery level of this device. This method is intended to be used if the device being read has two battery characteristics in the battery service.
-     * This method allows you to state which descriptor to match the @param valueToMatch to, to pick the correct characteristic to read the battery level from.
-     * This method is needed if you do not implement dual battery level exactly to the Bluetooth spec.
-     *
-     * @deprecated - Use any of the read() methods which accept a {@link DescriptorFilter} instead, so you're not locked into the default service/char for battery.
-     */
-    @Deprecated
-    @Advanced
-    public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
-    {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
-
-        if (earlyOutResult != null)
-        {
-            invokeReadWriteCallback(listener, earlyOutResult);
-
-            return earlyOutResult;
-        }
-
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
-
-        final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
-
-        queue().add(new P_Task_BatteryLevel(this, valueToMatch, descriptorUuid, listener, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
-
-        return NULL_READWRITE_EVENT();
     }
 
     /**
@@ -5093,10 +4098,10 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #enableNotify(java.util.UUID, BleDevice.ReadWriteListener)} but you can use
-     * this if you don't need a callback. Callbacks will still be posted to {@link BleDevice.ReadWriteListener}
-     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
-     * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
+     * Same as {@link #enableNotify(java.util.UUID, ReadWriteListener)} but you can use
+     * this if you don't need a callback. Callbacks will still be posted to {@link ReadWriteListener}
+     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
+     * {@link BleManager#setListener_Read_Write(ReadWriteListener)} .
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid)
     {
@@ -5116,10 +4121,10 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #enableNotify(java.util.UUID, Interval, BleDevice.ReadWriteListener)} but you can use
-     * this if you don't need a callback. Callbacks will still be posted to {@link BleDevice.ReadWriteListener}
-     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
-     * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
+     * Same as {@link #enableNotify(java.util.UUID, Interval, ReadWriteListener)} but you can use
+     * this if you don't need a callback. Callbacks will still be posted to {@link ReadWriteListener}
+     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
+     * {@link BleManager#setListener_Read_Write(ReadWriteListener)} .
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
     {
@@ -5264,10 +4269,10 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #disableNotify(java.util.UUID, BleDevice.ReadWriteListener)} but you can use this if you don't care about the result.
-     * The callback will still be posted to {@link BleDevice.ReadWriteListener}
-     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(BleDevice.ReadWriteListener)} and
-     * {@link BleManager#setListener_ReadWrite(BleDevice.ReadWriteListener)}.
+     * Same as {@link #disableNotify(java.util.UUID, ReadWriteListener)} but you can use this if you don't care about the result.
+     * The callback will still be posted to {@link ReadWriteListener}
+     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
+     * {@link BleManager#setListener_Read_Write(ReadWriteListener)} .
      */
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid)
     {
@@ -5353,7 +4358,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Overload for {@link #disableNotify(UUID, Interval, BleDevice.ReadWriteListener)}.
+     * Overload for {@link #disableNotify(UUID, Interval, ReadWriteListener)}.
      */
     public final void disableNotify(final UUID[] uuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
@@ -6813,203 +5818,5 @@ public final class BleDevice extends BleNode
         });
     }
 
-
-
-
-    /**
-     * Builder class for sending a write over BLE. Use this class to set the service and/or characteristic
-     * UUIDs, and the data you'd like to write. This class provides convenience methods for sending
-     * booleans, ints, shorts, longs, and Strings. Use with {@link #write(WriteBuilder)},
-     * or {@link #write(WriteBuilder, ReadWriteListener)}.
-     *
-     * @deprecated - Use {@link com.idevicesinc.sweetblue.WriteBuilder} instead. This will be removed in v 3.0
-     */
-    @Deprecated
-    public static class WriteBuilder
-    {
-
-        UUID serviceUUID = null;
-        UUID charUUID = null;
-        FutureData data = null;
-        DescriptorFilter descriptorFilter;
-        boolean bigEndian = true;
-
-
-        /**
-         * Basic constructor. You must at the very least call {@link #setCharacteristicUUID(UUID)}, and one of the
-         * methods that add data ({@link #setBytes(byte[])}, {@link #setInt(int)}, etc..) before attempting to
-         * send the write.
-         */
-        public WriteBuilder()
-        {
-            this(/*bigEndian*/true, null, null);
-        }
-
-        /**
-         * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
-         *
-         * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
-         *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
-         */
-        public WriteBuilder(boolean isBigEndian)
-        {
-            this(isBigEndian, null, null);
-        }
-
-        /**
-         * Overload of {@link  com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID)}. If @param isBigEndian is true,
-         *
-         * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
-         *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
-         */
-        public WriteBuilder(boolean isBigEndian, UUID characteristicUUID)
-        {
-            this(isBigEndian, null, characteristicUUID);
-        }
-
-        /**
-         * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID)}.
-         */
-        public WriteBuilder(UUID characteristicUUID)
-        {
-            this(/*bigendian*/true, null, characteristicUUID);
-        }
-
-        /**
-         * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID)}.
-         */
-        public WriteBuilder(UUID serviceUUID, UUID characteristicUUID)
-        {
-            this(/*bigendian*/true, serviceUUID, characteristicUUID);
-        }
-
-        /**
-         * Overload of {@link com.idevicesinc.sweetblue.BleDevice.WriteBuilder#BleDevice.WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}.
-         */
-        public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID)
-        {
-            this(isBigEndian, serviceUUID, characteristicUUID, null);
-        }
-
-        /**
-         * Main constructor to use. All other constructors overload this one.
-         *
-         * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
-         *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
-         */
-        public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID, DescriptorFilter descriptorFilter)
-        {
-            bigEndian = isBigEndian;
-            this.serviceUUID = serviceUUID;
-            charUUID = characteristicUUID;
-            this.descriptorFilter = descriptorFilter;
-        }
-
-
-        /**
-         * Set the service UUID for this write. This is only needed when you have characteristics with identical uuids under different services.
-         */
-        public final WriteBuilder setServiceUUID(UUID uuid)
-        {
-            serviceUUID = uuid;
-            return this;
-        }
-
-        /**
-         * Set the characteristic UUID to write to.
-         */
-        public final WriteBuilder setCharacteristicUUID(UUID uuid)
-        {
-            charUUID = uuid;
-            return this;
-        }
-
-        /**
-         * Set the raw bytes to write.
-         */
-        public final WriteBuilder setBytes(byte[] data)
-        {
-            this.data = new PresentData(data);
-            return this;
-        }
-
-        /**
-         * Set the boolean to write.
-         */
-        public final WriteBuilder setBoolean(boolean value)
-        {
-            data = new PresentData(value ? new byte[]{0x1} : new byte[]{0x0});
-            return this;
-        }
-
-        /**
-         * Set an int to be written.
-         */
-        public final WriteBuilder setInt(int val)
-        {
-            final byte[] d = Utils_Byte.intToBytes(val);
-            if (bigEndian)
-            {
-                Utils_Byte.reverseBytes(d);
-            }
-            data = new PresentData(d);
-            return this;
-        }
-
-        /**
-         * Set a short to be written.
-         */
-        public final WriteBuilder setShort(short val)
-        {
-            final byte[] d = Utils_Byte.shortToBytes(val);
-            if (bigEndian)
-            {
-                Utils_Byte.reverseBytes(d);
-            }
-            data = new PresentData(d);
-            return this;
-        }
-
-        /**
-         * Set a long to be written.
-         */
-        public final WriteBuilder setLong(long val)
-        {
-            final byte[] d = Utils_Byte.longToBytes(val);
-            if (bigEndian)
-            {
-                Utils_Byte.reverseBytes(d);
-            }
-            data = new PresentData(d);
-            return this;
-        }
-
-        /**
-         * Set a string to be written. This method also allows you to specify the string encoding. If the encoding
-         * fails, then {@link String#getBytes()} is used instead, which uses "UTF-8" by default.
-         */
-        public final WriteBuilder setString(String value, String stringEncoding)
-        {
-            byte[] bytes;
-            try
-            {
-                bytes = value.getBytes(stringEncoding);
-            } catch (UnsupportedEncodingException e)
-            {
-                bytes = value.getBytes();
-            }
-            data = new PresentData(bytes);
-            return this;
-        }
-
-        /**
-         * Set a string to be written. This defaults to "UTF-8" encoding.
-         */
-        public final WriteBuilder setString(String value)
-        {
-            return setString(value, "UTF-8");
-        }
-
-    }
 
 }

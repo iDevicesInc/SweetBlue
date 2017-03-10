@@ -1,8 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
-
 /**
  * 
  * 

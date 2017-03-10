@@ -52,7 +52,7 @@ public class WriteStripeTest extends BaseBleUnitTest
                             {
                                 byte[] data = new byte[100];
                                 new Random().nextBytes(data);
-                                m_device.write(tempUuid, data, new BleDevice.ReadWriteListener()
+                                m_device.write(tempUuid, data, new ReadWriteListener()
                                 {
                                     @Override public void onEvent(ReadWriteEvent e)
                                     {
@@ -95,7 +95,7 @@ public class WriteStripeTest extends BaseBleUnitTest
                             {
                                 byte[] data = new byte[100];
                                 new Random().nextBytes(data);
-                                m_device.writeDescriptor(tempUuid, tempDescUuid, data, new BleDevice.ReadWriteListener()
+                                m_device.writeDescriptor(tempUuid, tempDescUuid, data, new ReadWriteListener()
                                 {
                                     @Override public void onEvent(ReadWriteEvent e)
                                     {

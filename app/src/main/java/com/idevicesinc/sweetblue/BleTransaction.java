@@ -1,8 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.ReadWriteListener;
-import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
+import com.idevicesinc.sweetblue.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -134,7 +133,7 @@ public abstract class BleTransaction
 		start(m_device);
 	}
 	
-	private boolean end(final EndReason reason, final BleDevice.ReadWriteListener.ReadWriteEvent failReason)
+	private boolean end(final EndReason reason, final ReadWriteListener.ReadWriteEvent failReason)
 	{
 		if( !m_isRunning )
 		{
@@ -185,7 +184,7 @@ public abstract class BleTransaction
 	 */
 	protected final boolean fail()
 	{
-		final BleDevice.ReadWriteListener.ReadWriteEvent failReason = m_device.m_txnMngr.m_failReason;
+		final ReadWriteListener.ReadWriteEvent failReason = m_device.m_txnMngr.m_failReason;
 		
 		return this.end(EndReason.FAILED, failReason);
 	}
