@@ -16,7 +16,7 @@ final class P_ConnectionFailManager
 {
 	private final BleDevice m_device;
 	
-	private ConnectionFailListener m_connectionFailListener = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER;
+	private ConnectionFailListener m_connectionFailListener = null;
 	
 	private int m_failCount = 0;
 	private BleDeviceState m_highestStateReached_total = null;
@@ -214,6 +214,13 @@ final class P_ConnectionFailManager
 			final Please please = m_device.getManager().m_defaultConnectionFailListener.onEvent(moreInfo);
 			retryChoice__PE_Please = please != null ? please.please() : Please.PE_Please_NULL;
 			
+			m_device.getManager().getLogger().checkPlease(please, Please.class);
+		}
+		else
+		{
+			final Please please = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER.onEvent(moreInfo);
+			retryChoice__PE_Please = please != null ? please.please() : Please.PE_Please_NULL;
+
 			m_device.getManager().getLogger().checkPlease(please, Please.class);
 		}
 
