@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import com.idevicesinc.sweetblue.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
-import com.idevicesinc.sweetblue.DeviceConnectionFailListener.ConnectionFailEvent;
 import com.idevicesinc.sweetblue.DeviceConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.DeviceConnectionFailListener.Timing;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;

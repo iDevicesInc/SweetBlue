@@ -228,7 +228,6 @@ public final class BleManager
 	private boolean m_doingInfiniteScan = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
-	private boolean m_unitTestCheckDone = false;
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
