@@ -18,7 +18,7 @@ import android.bluetooth.BluetoothGatt;
 public final class BleStatuses
 {
 	/**
-	 * Status code used for {@link BleDevice.ReadWriteListener.ReadWriteEvent#gattStatus()} when the operation failed at a point where a
+	 * Status code used for {@link ReadWriteListener.ReadWriteEvent#gattStatus()} when the operation failed at a point where a
 	 * gatt status from the underlying stack isn't provided or applicable.
 	 * <br><br>
 	 * Also used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#gattStatus()} for when the failure didn't involve the gatt layer.

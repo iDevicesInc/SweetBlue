@@ -58,7 +58,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -116,7 +116,7 @@ public class ConnectTest extends BaseBleUnitTest
                 {
                     m_mgr.stopScan();
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -186,7 +186,7 @@ public class ConnectTest extends BaseBleUnitTest
             {
                 if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
                 {
-                    e.device().connect(new BleDevice.StateListener()
+                    e.device().connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -258,7 +258,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -325,7 +325,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -388,7 +388,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -616,7 +616,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -674,7 +674,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -731,7 +731,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {

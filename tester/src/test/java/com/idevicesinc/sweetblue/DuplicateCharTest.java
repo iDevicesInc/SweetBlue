@@ -46,7 +46,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -98,7 +98,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -152,7 +152,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {

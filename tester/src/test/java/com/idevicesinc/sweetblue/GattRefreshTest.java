@@ -36,7 +36,7 @@ public class GattRefreshTest extends BaseBleUnitTest
             {
                 if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
                 {
-                    e.device().connect(new BleDevice.StateListener()
+                    e.device().connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {

@@ -1203,39 +1203,9 @@ public final class BleManager
 	/**
 	 * Convenience method to listen for all changes in {@link BleDeviceState} for all devices.
 	 * The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleDevice#setListener_State(BleDevice.StateListener)}.
+	 * to {@link BleDevice#setListener_State(DeviceStateListener)}.
 	 *
-	 * @see BleDevice#setListener_State(BleDevice.StateListener)
-	 *
-	 * @deprecated - This will be removed in version 3. It has been refactored to {@link DeviceStateListener}.
-	 */
-	public final void setListener_DeviceState(@Nullable(Prevalence.NORMAL) final BleDevice.StateListener listener_nullable)
-	{
-		if (listener_nullable == null)
-		{
-			m_defaultDeviceStateListener = null;
-		}
-		else
-		{
-			m_defaultDeviceStateListener = new DeviceStateListener()
-			{
-				@Override public void onEvent(BleDevice.StateListener.StateEvent e)
-				{
-					if (listener_nullable != null)
-					{
-						listener_nullable.onEvent(e);
-					}
-				}
-			};
-		}
-	}
-
-	/**
-	 * Convenience method to listen for all changes in {@link BleDeviceState} for all devices.
-	 * The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleDevice#setListener_State(BleDevice.StateListener)}.
-	 *
-	 * @see BleDevice#setListener_State(BleDevice.StateListener)
+	 * @see BleDevice#setListener_State(DeviceStateListener)
 	 */
 	public final void setListener_DeviceState(@Nullable(Prevalence.NORMAL) DeviceStateListener listener_nullable)
 	{
@@ -1310,7 +1280,7 @@ public final class BleManager
 	 * Convenience method to handle connection fail events at the manager level. The listener provided
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
 	 * {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)}. This is unlike the behavior
-	 * behind {@link #setListener_DeviceState(BleDevice.StateListener)} because
+	 * behind {@link #setListener_DeviceState(DeviceStateListener)} because
 	 * {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
 	 * @see BleDevice#setListener_ConnectionFail(BleDevice.ConnectionFailListener)

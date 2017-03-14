@@ -80,7 +80,7 @@ public class ConnectBlitzer extends BaseTester<MainActivity>
 
     public void doConnect()
     {
-        device.connect(new BleDevice.StateListener()
+        device.connect(new DeviceStateListener()
         {
             @Override public void onEvent(StateEvent e)
             {
