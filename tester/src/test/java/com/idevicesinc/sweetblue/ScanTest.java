@@ -34,7 +34,7 @@ public class ScanTest extends BaseBleUnitTest
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
-                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
+                    @Override public void onEvent(ManagerStateListener.StateEvent e)
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
@@ -59,7 +59,7 @@ public class ScanTest extends BaseBleUnitTest
         {
             @Override public void run(final Semaphore semaphore)
             {
-                m_mgr.setListener_State(new BleManager.StateListener()
+                m_mgr.setListener_State(new ManagerStateListener()
                 {
                     @Override public void onEvent(StateEvent e)
                     {
@@ -87,7 +87,7 @@ public class ScanTest extends BaseBleUnitTest
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
-                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
+                    @Override public void onEvent(ManagerStateListener.StateEvent e)
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
@@ -112,7 +112,7 @@ public class ScanTest extends BaseBleUnitTest
         {
             @Override public void run(final Semaphore semaphore)
             {
-                m_mgr.setListener_State(new BleManager.StateListener()
+                m_mgr.setListener_State(new ManagerStateListener()
                 {
                     @Override public void onEvent(StateEvent e)
                     {
@@ -140,7 +140,7 @@ public class ScanTest extends BaseBleUnitTest
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
-                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
+                    @Override public void onEvent(ManagerStateListener.StateEvent e)
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
@@ -165,7 +165,7 @@ public class ScanTest extends BaseBleUnitTest
         {
             @Override public void run(final Semaphore semaphore)
             {
-                m_mgr.setListener_State(new BleManager.StateListener()
+                m_mgr.setListener_State(new ManagerStateListener()
                 {
                     @Override public void onEvent(StateEvent e)
                     {
@@ -193,7 +193,7 @@ public class ScanTest extends BaseBleUnitTest
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
-                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
+                    @Override public void onEvent(ManagerStateListener.StateEvent e)
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
@@ -218,7 +218,7 @@ public class ScanTest extends BaseBleUnitTest
         {
             @Override public void run(final Semaphore semaphore)
             {
-                m_mgr.setListener_State(new BleManager.StateListener()
+                m_mgr.setListener_State(new ManagerStateListener()
                 {
                     @Override public void onEvent(StateEvent e)
                     {
@@ -249,7 +249,7 @@ public class ScanTest extends BaseBleUnitTest
 
                     boolean boosted = false;
 
-                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
+                    @Override public void onEvent(ManagerStateListener.StateEvent e)
                     {
                         if (e.didEnter(BleManagerState.BOOST_SCANNING))
                         {
@@ -298,7 +298,7 @@ public class ScanTest extends BaseBleUnitTest
                 final AtomicLong time = new AtomicLong();
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
-                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
+                    @Override public void onEvent(ManagerStateListener.StateEvent e)
                     {
                         if (e.didExit(BleManagerState.SCANNING))
                         {
@@ -333,7 +333,7 @@ public class ScanTest extends BaseBleUnitTest
             @Override public void run(final Semaphore semaphore)
             {
                 final Pointer<Long> time = new Pointer<Long>();
-                m_mgr.setListener_State(new BleManager.StateListener()
+                m_mgr.setListener_State(new ManagerStateListener()
                 {
                     @Override public void onEvent(StateEvent e)
                     {

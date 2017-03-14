@@ -107,7 +107,7 @@ public class MainActivity extends Activity
         config.runOnMainThread = false;
 
         mgr = BleManager.get(this, config);
-        mgr.setListener_State(new BleManager.StateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(StateEvent event)
             {

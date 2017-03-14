@@ -29,7 +29,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
             long timeStarted;
 
             @Override
-            public void onEvent(BleManager.StateListener.StateEvent e) {
+            public void onEvent(ManagerStateListener.StateEvent e) {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
                     timeStarted = e.manager().currentTime();
@@ -62,7 +62,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
             long timeStarted;
 
             @Override
-            public void onEvent(BleManager.StateListener.StateEvent e) {
+            public void onEvent(ManagerStateListener.StateEvent e) {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
                     hasStartedScan = true;
@@ -110,7 +110,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
 
         mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
@@ -152,7 +152,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
 
         mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 started.set(true);
             }
@@ -178,7 +178,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
             boolean checkedScan = false;
             long timeStopped;
 
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (!checkedScan)
                 {
@@ -222,7 +222,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
             boolean checkedScan = false;
             long timeStopped;
 
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (!checkedScan)
                 {
@@ -267,7 +267,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
 
         mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
@@ -301,7 +301,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
 
         mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
@@ -335,7 +335,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
 
         mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
@@ -367,7 +367,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
 
         mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
@@ -399,7 +399,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
 
         mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
@@ -431,7 +431,7 @@ public class BleScanTest extends BaseTester<BleScanActivity>
 
         mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {

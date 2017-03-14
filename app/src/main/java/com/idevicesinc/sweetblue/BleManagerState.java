@@ -13,8 +13,8 @@ import com.idevicesinc.sweetblue.utils.Utils_Byte;
  * The manager can be in multiple states simultaneously.
  *
  * @see ManagerStateListener
- * @see BleManager.StateListener
- * @see BleManager.NativeStateListener
+ * @see ManagerStateListener
+ * @see NativeManagerStateListener
  * @see BleManager#is(BleManagerState)
  * @see BleManager#getStateMask()
  */
