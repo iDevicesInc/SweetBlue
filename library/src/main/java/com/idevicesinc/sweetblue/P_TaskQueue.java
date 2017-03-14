@@ -19,8 +19,6 @@ final class P_TaskQueue
 	private double m_time = 0.0;
 	private double m_timeSinceEnding = 0.0;
 	
-	private Handler m_executeHandler = null;
-	
 	private int m_currentOrdinal;
 
 	
@@ -30,8 +28,7 @@ final class P_TaskQueue
 		m_logger = mngr.getLogger();
 
 		m_current = new AtomicReference<>(null);
-		
-		initHandler(); 
+
 	}
 	
 	final int assignOrdinal()
@@ -43,11 +40,6 @@ final class P_TaskQueue
 		return toReturn;
 	}
 
-	public final Handler getExecuteHandler()
-	{
-		return m_executeHandler;
-	}
-
 	final int getCurrentOrdinal()
 	{
 		return m_currentOrdinal;
@@ -56,21 +48,6 @@ final class P_TaskQueue
 	public final PA_Task peek()
 	{
 		return m_queue.size() > 0 ? m_queue.get(0) : null;
-	}
-
-	private void initHandler()
-	{
-		final Thread thread = new Thread()
-		{
-			@Override public void run()
-			{
-				Looper.prepare();
-				m_executeHandler = new Handler(Looper.myLooper());
-				Looper.loop();
-			}
-		};
-
-		thread.start();
 	}
 
 	private boolean tryCancellingCurrentTask(PA_Task newTask)
@@ -235,13 +212,6 @@ final class P_TaskQueue
 
 		if (getCurrent() == null)
 			m_timeSinceEnding += timeStep;
-
-		if( m_executeHandler == null )
-		{
-			m_logger.d("Waiting for execute handler to initialize.");
-
-			return executingTask;
-		}
 
 		if( m_current.get() == null )
 		{

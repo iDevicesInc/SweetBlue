@@ -235,6 +235,7 @@ public final class BleManager
 	private boolean m_unitTestCheckDone = false;
     private long m_lastUpdateLoopWarning = 0;
 
+
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
 	IncomingListener m_defaultServerIncomingListener;

@@ -36,7 +36,7 @@ final class P_Task_CrashResolver extends PA_Task_RequiresBleOn implements PA_Tas
 		{
 			m_resolver.start();
 
-			getQueue().getExecuteHandler().post(new Runnable()
+			getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 			{
 				@Override public void run()
 				{
