@@ -21,7 +21,7 @@ public final class BleStatuses
 	 * Status code used for {@link ReadWriteListener.ReadWriteEvent#gattStatus()} when the operation failed at a point where a
 	 * gatt status from the underlying stack isn't provided or applicable.
 	 * <br><br>
-	 * Also used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#gattStatus()} for when the failure didn't involve the gatt layer.
+	 * Also used for {@link DeviceConnectionFailListener.ConnectionFailEvent#gattStatus()} for when the failure didn't involve the gatt layer.
 	 */
 	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 	

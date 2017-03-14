@@ -85,8 +85,8 @@ public class BleNodeConfig
 	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
-	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link BleNode.ConnectionFailListener.Please}
-	 * returned from {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} (or the equivalent
+	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link NodeConnectionFailListener.Please}
+	 * returned from {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)} (or the equivalent
 	 * structures that are inner structures of {@link BleServer}).
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device or server that only works
@@ -792,12 +792,12 @@ public class BleNodeConfig
 			private Interval m_previousDelay;
 
 			/**
-			 * Returns the more detailed information about why the connection failed. This is passed to {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)}
+			 * Returns the more detailed information about why the connection failed. This is passed to {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)}
 			 * before the call is made to {@link BleNodeConfig.ReconnectFilter#onEvent(ReconnectEvent)}. For the first call to {@link ReconnectFilter#onEvent(ReconnectEvent)},
-			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link BleNode.ConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
+			 * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link NodeConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
 			 */
-			public BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent(){  return m_connectionFailEvent;  }
-			private BleNode.ConnectionFailListener.ConnectionFailEvent m_connectionFailEvent;
+			public NodeConnectionFailListener.ConnectionFailEvent connectionFailEvent(){  return m_connectionFailEvent;  }
+			private NodeConnectionFailListener.ConnectionFailEvent m_connectionFailEvent;
 
 			/**
 			 * See {@link BleNodeConfig.ReconnectFilter.Type} for more info.
@@ -805,7 +805,7 @@ public class BleNodeConfig
 			public Type type(){  return m_type;  }
 			private Type m_type;
 
-			/*package*/ ReconnectEvent(BleNode node, final String macAddress, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
+			/*package*/ ReconnectEvent(BleNode node, final String macAddress, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, NodeConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
 			{
 				this.init(node, macAddress, failureCount, totalTimeReconnecting, previousDelay, connectionFailEvent, type);
 			}
@@ -814,7 +814,7 @@ public class BleNodeConfig
 			{
 			}
 
-			/*package*/ void init(BleNode node, final String macAddress, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, BleNode.ConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
+			/*package*/ void init(BleNode node, final String macAddress, int failureCount, Interval totalTimeReconnecting, Interval previousDelay, NodeConnectionFailListener.ConnectionFailEvent connectionFailEvent, final Type type)
 			{
 				this.m_node						= node;
 				this.m_macAddress				= macAddress;

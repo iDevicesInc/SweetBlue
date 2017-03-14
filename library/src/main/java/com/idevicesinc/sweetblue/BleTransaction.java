@@ -178,7 +178,7 @@ public abstract class BleTransaction
 	/**
 	 * Call this from subclasses to indicate that the transaction has failed. Usually you call this in your
 	 * {@link ReadWriteListener#onEvent(Event)} when {@link Status} is something other than {@link Status#SUCCESS}. If you do so,
-	 * {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} will be set.
+	 * {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} will be set.
 	 * 
 	 * @return <code>false</code> if the transaction wasn't running to begin with.
 	 */

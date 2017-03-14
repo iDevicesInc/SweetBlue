@@ -66,9 +66,9 @@ public class ConnectBlitzer extends BaseTester<MainActivity>
                 }
             }
         });
-        mgr.setListener_ConnectionFail(new BleDevice.ConnectionFailListener()
+        mgr.setListener_ConnectionFail(new DeviceConnectionFailListener()
         {
-            @Override public Please onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent e)
+            @Override public Please onEvent(DeviceConnectionFailListener.ConnectionFailEvent e)
             {
                 assertTrue("Connection failed with status " + e.status().name() + ". Connected successfully " + connectCount + " times.", false);
                 return Please.doNotRetry();
@@ -110,7 +110,7 @@ public class ConnectBlitzer extends BaseTester<MainActivity>
         }, listener);
     }
 
-    private class FailListener2 extends BleDevice.DefaultConnectionFailListener
+    private class FailListener2 extends DefaultDeviceConnectionFailListener
     {
         @Override public Please onEvent(ConnectionFailEvent e)
         {
@@ -125,7 +125,7 @@ public class ConnectBlitzer extends BaseTester<MainActivity>
         }
     }
 
-    private class FailListener implements BleDevice.ConnectionFailListener
+    private class FailListener implements DeviceConnectionFailListener
     {
 
         @Override public Please onEvent(ConnectionFailEvent e)

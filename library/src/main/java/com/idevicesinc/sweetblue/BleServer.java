@@ -857,7 +857,7 @@ public final class BleServer extends BleNode
 	 * @see BleServer#setListener_ConnectionFail(ConnectionFailListener)
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ConnectionFailListener extends BleNode.ConnectionFailListener
+	public static interface ConnectionFailListener extends NodeConnectionFailListener
 	{
 		/**
 		 * The reason for the connection failure.
@@ -940,7 +940,7 @@ public final class BleServer extends BleNode
 			}
 
 			/**
-			 * Whether this reason honors a {@link BleNode.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
+			 * Whether this reason honors a {@link NodeConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
 			 * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
 			 */
 			public final boolean allowsRetry()
@@ -970,7 +970,7 @@ public final class BleServer extends BleNode
 		 * Structure passed to {@link ConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
 		 */
 		@Immutable
-		public static class ConnectionFailEvent extends BleNode.ConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
+		public static class ConnectionFailEvent extends NodeConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
 		{
 			/**
 			 * The {@link BleServer} this {@link ConnectionFailEvent} is for.
@@ -1057,7 +1057,7 @@ public final class BleServer extends BleNode
 			}
 
 			/**
-			 * Forwards {@link BleDevice.ConnectionFailListener.Status#shouldBeReportedToUser()}
+			 * Forwards {@link DeviceConnectionFailListener.Status#shouldBeReportedToUser()}
 			 * using {@link #status()}.
 			 */
 			public final boolean shouldBeReportedToUser()
@@ -1110,7 +1110,7 @@ public final class BleServer extends BleNode
 		public static final int DEFAULT_CONNECTION_FAIL_RETRY_COUNT = 2;
 
 		/**
-		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link BleNode.ConnectionFailListener.Please#retryWithAutoConnectTrue()}.
+		 * The default connection fail limit past which {@link DefaultConnectionFailListener} will start returning {@link NodeConnectionFailListener.Please#retryWithAutoConnectTrue()}.
 		 */
 		public static final int DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT = 2;
 

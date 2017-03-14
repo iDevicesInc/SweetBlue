@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.BleNodeConfig.*;
@@ -19,7 +18,7 @@ final class P_ReconnectManager
 	
 	private int m_gattStatusOfOriginalDisconnect = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	
-	private ConnectionFailListener.ConnectionFailEvent m_connectionFailEvent;
+	private DeviceConnectionFailListener.ConnectionFailEvent m_connectionFailEvent;
 	
 	private final boolean m_isShortTerm;
 	
@@ -90,7 +89,7 @@ final class P_ReconnectManager
 		return filter != null ? filter : m_device.conf_mngr().reconnectFilter;
 	}
 	
-	private double getNextTime(ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
+	private double getNextTime(DeviceConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 	{
 		final ReconnectFilter filter = getFilter();
 		
@@ -120,7 +119,7 @@ final class P_ReconnectManager
 		}
 	}
 	
-	void onConnectionFailed(final ConnectionFailListener.ConnectionFailEvent connectionFailInfo)
+	void onConnectionFailed(final DeviceConnectionFailListener.ConnectionFailEvent connectionFailInfo)
 	{
 		if( !isRunning() )
 		{

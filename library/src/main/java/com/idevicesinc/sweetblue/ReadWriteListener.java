@@ -40,7 +40,7 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
     public static enum Status implements UsesCustomNull
     {
         /**
-         * As of now, only used for {@link BleNode.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
+         * As of now, only used for {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
          */
         NULL,
 
@@ -200,7 +200,7 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
     public static enum Type implements UsesCustomNull
     {
         /**
-         * As of now, only used for {@link BleNode.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
+         * As of now, only used for {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
          */
         NULL,
 
@@ -337,7 +337,7 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
     public static enum Target implements UsesCustomNull
     {
         /**
-         * As of now, only used for {@link BleNode.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
+         * As of now, only used for {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
          */
         NULL,
 
@@ -568,8 +568,8 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
 
         /**
          * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
-         * {@link ReadWriteListener.ReadWriteEvent.BleDevice#read(UUID)}, {@link ReadWriteListener.ReadWriteEvent.BleDevice#write(UUID, byte[])}, etc. It will return <code>false</code> otherwise,
-         * which can happen if for example you use {@link ReadWriteListener.ReadWriteEvent.BleDevice#getNativeGatt()} to bypass SweetBlue for whatever reason.
+         * {@link BleDevice#read(UUID)}, {@link BleDevice#write(UUID, byte[])}, etc. It will return <code>false</code> otherwise,
+         * which can happen if for example you use {@link BleDevice#getNativeGatt()} to bypass SweetBlue for whatever reason.
          * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.ReadWriteListener.Status#TIMED_OUT},
          * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
          */
@@ -581,11 +581,11 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
         private final boolean m_solicited;
 
         /**
-         * This value gets set as a result of a {@link ReadWriteListener.ReadWriteEvent.BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)} call. The value returned
-         * will be the same as that given to {@link ReadWriteListener.ReadWriteEvent.BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)}, which means it will be the
-         * same as {@link ReadWriteListener.ReadWriteEvent.BleDevice#getConnectionPriority()} if {@link #status()} equals {@link ReadWriteListener.Status#SUCCESS}.
+         * This value gets set as a result of a {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)} call. The value returned
+         * will be the same as that given to {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)}, which means it will be the
+         * same as {@link BleDevice#getConnectionPriority()} if {@link #status()} equals {@link ReadWriteListener.Status#SUCCESS}.
          *
-         * @see ReadWriteListener.ReadWriteEvent.BleDevice#getConnectionPriority()
+         * @see BleDevice#getConnectionPriority()
          */
         public final BleConnectionPriority connectionPriority()
         {
