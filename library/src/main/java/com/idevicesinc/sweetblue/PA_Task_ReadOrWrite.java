@@ -364,7 +364,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 			{
 				fail(Status.NULL_DATA, gattStatus, getDefaultTarget(), getCharUuid(), getDescUuid());
 
-				getManager().uhOh(BleManager.UhOhListener.UhOh.READ_RETURNED_NULL);
+				getManager().uhOh(UhOhListener.UhOh.READ_RETURNED_NULL);
 			}
 		}
 		else

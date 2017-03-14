@@ -51,7 +51,7 @@ public class UnitTestGatt implements P_GattLayer {
     }
 
     @Override
-    public BleManager.UhOhListener.UhOh closeGatt() {
+    public UhOhListener.UhOh closeGatt() {
         return null;
     }
 

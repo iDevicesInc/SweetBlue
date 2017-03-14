@@ -161,7 +161,7 @@ public class MainActivity extends Activity
 
         mgr = BleManager.get(this, config);
 
-        mgr.setListener_UhOh(new BleManager.UhOhListener()
+        mgr.setListener_UhOh(new UhOhListener()
         {
             @Override public void onEvent(UhOhEvent e)
             {

@@ -145,10 +145,9 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public final BleManager.UhOhListener.UhOh closeGatt()
-    {
-        BleManager.UhOhListener.UhOh uhoh = null;
-        if (m_gatt == null) return uhoh;
+    public final UhOhListener.UhOh closeGatt() {
+        UhOhListener.UhOh uhoh = null;
+        if( m_gatt == null )  return uhoh;
 
         //--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
         //---		Don't want to keep it here because I'm afraid it has a better chance to do bad than good.
@@ -197,7 +196,7 @@ final class P_AndroidGatt implements P_GattLayer
 //				at java.lang.reflect.Method.invoke(Native Method)
 //				at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:1230)
 //				at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1120)
-                uhoh = BleManager.UhOhListener.UhOh.DEAD_OBJECT_EXCEPTION;
+                uhoh = UhOhListener.UhOh.DEAD_OBJECT_EXCEPTION;
             }
             else
             {
@@ -219,7 +218,7 @@ final class P_AndroidGatt implements P_GattLayer
 //				com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask(P_TaskQueue.java:267)
 //				com.idevicesinc.sweetblue.P_TaskQueue.fail(P_TaskQueue.java:260)
 //				com.idevicesinc.sweetblue.P_BleDevice_Listeners.onConnectionStateChange_synchronized(P_BleDevice_Listeners.java:168)
-                uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
+                uhoh = UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
         }
         m_gatt = null;
@@ -240,14 +239,14 @@ final class P_AndroidGatt implements P_GattLayer
             list_native = m_gatt.getServices();
         } catch (Exception e)
         {
-            BleManager.UhOhListener.UhOh uhoh;
+            UhOhListener.UhOh uhoh;
             if (e instanceof ConcurrentModificationException)
             {
-                uhoh = BleManager.UhOhListener.UhOh.CONCURRENT_EXCEPTION;
+                uhoh = UhOhListener.UhOh.CONCURRENT_EXCEPTION;
             }
             else
             {
-                uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
+                uhoh = UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
             m_device.getManager().uhOh(uhoh);
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the list of native services!");
@@ -264,14 +263,14 @@ final class P_AndroidGatt implements P_GattLayer
             service = m_gatt.getService(serviceUuid);
         } catch (Exception e)
         {
-            BleManager.UhOhListener.UhOh uhoh;
+            UhOhListener.UhOh uhoh;
             if (e instanceof ConcurrentModificationException)
             {
-                uhoh = BleManager.UhOhListener.UhOh.CONCURRENT_EXCEPTION;
+                uhoh = UhOhListener.UhOh.CONCURRENT_EXCEPTION;
             }
             else
             {
-                uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
+                uhoh = UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
             m_device.getManager().uhOh(uhoh);
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the native service!");

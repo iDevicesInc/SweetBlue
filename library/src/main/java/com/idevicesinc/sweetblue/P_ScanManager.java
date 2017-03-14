@@ -150,7 +150,7 @@ final class P_ScanManager
                 //			07-02 15:04:48.149: E/AndroidRuntime(24389): 	at android.bluetooth.BluetoothAdapter.stopLeScan(BluetoothAdapter.java:1722)
                 m_manager.getLogger().w(e.getStackTrace().toString());
 
-                m_manager.uhOh(BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION);
+                m_manager.uhOh(UhOhListener.UhOh.RANDOM_EXCEPTION);
             }
         }
         else if ( m_mode == Mode_BLE_POST_LOLLIPOP)
@@ -163,7 +163,7 @@ final class P_ScanManager
             {
                 m_manager.getLogger().w(e.getStackTrace().toString());
 
-                m_manager.uhOh(BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION);
+                m_manager.uhOh(UhOhListener.UhOh.RANDOM_EXCEPTION);
             }
         }
         else if( m_mode == Mode_CLASSIC )
@@ -650,7 +650,7 @@ final class P_ScanManager
 
                 fail();
 
-                m_manager.uhOh(BleManager.UhOhListener.UhOh.CLASSIC_DISCOVERY_FAILED);
+                m_manager.uhOh(UhOhListener.UhOh.CLASSIC_DISCOVERY_FAILED);
 
                 return false;
             }
@@ -658,7 +658,7 @@ final class P_ScanManager
             {
                 if (false == suppressUhOh)
                 {
-                    m_manager.uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
+                    m_manager.uhOh(UhOhListener.UhOh.START_BLE_SCAN_FAILED__USING_CLASSIC);
                 }
 
                 m_mode = Mode_CLASSIC;
@@ -671,7 +671,7 @@ final class P_ScanManager
         {
             fail();
 
-            m_manager.uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
+            m_manager.uhOh(UhOhListener.UhOh.START_BLE_SCAN_FAILED);
 
             return false;
         }

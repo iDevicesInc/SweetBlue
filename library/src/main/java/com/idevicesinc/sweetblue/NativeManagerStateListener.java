@@ -1,6 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 

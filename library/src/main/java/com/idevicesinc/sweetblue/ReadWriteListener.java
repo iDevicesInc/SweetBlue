@@ -147,7 +147,7 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
          * Used either when {@link ReadWriteListener.ReadWriteEvent#type()} {@link ReadWriteListener.Type#isRead()} and the stack returned a <code>null</code>
          * value for {@link BluetoothGattCharacteristic#getValue()} despite the operation being otherwise "successful", <i>or</i>
          * {@link BleDevice#write(UUID, byte[])} (or overload(s) ) were called with a null data parameter. For the read case, the library
-         * will throw an {@link BleManager.UhOhListener.UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch. If the problem persists try {@link BleManager#reset()}.
+         * will throw an {@link UhOhListener.UhOh#READ_RETURNED_NULL}, but hopefully it was just a temporary glitch. If the problem persists try {@link BleManager#reset()}.
          */
         NULL_DATA,
 

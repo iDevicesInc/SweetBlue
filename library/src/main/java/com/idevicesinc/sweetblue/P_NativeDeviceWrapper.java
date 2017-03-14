@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothGatt;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 import java.util.concurrent.CountDownLatch;

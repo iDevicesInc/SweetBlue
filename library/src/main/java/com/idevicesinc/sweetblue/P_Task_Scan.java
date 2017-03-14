@@ -59,7 +59,7 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
                 {
                     fail();
 
-                    getManager().uhOh(BleManager.UhOhListener.UhOh.CLASSIC_DISCOVERY_FAILED);
+                    getManager().uhOh(UhOhListener.UhOh.CLASSIC_DISCOVERY_FAILED);
                 }
             }
             else
@@ -68,7 +68,7 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
                 {
                     fail();
 
-                    getManager().uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
+                    getManager().uhOh(UhOhListener.UhOh.START_BLE_SCAN_FAILED);
                 }
                 else
                 {
@@ -90,7 +90,7 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
         {
             fail();
 
-            getManager().uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
+            getManager().uhOh(UhOhListener.UhOh.START_BLE_SCAN_FAILED);
         }
     }
 
