@@ -9,7 +9,7 @@ import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;

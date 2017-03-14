@@ -3,7 +3,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 import java.util.concurrent.CountDownLatch;

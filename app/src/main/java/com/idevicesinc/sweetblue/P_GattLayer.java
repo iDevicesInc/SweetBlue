@@ -16,7 +16,7 @@ interface P_GattLayer
 {
 
     void setGatt(BluetoothGatt gatt);
-    BleManager.UhOhListener.UhOh closeGatt();
+    UhOhListener.UhOh closeGatt();
     BluetoothGatt getGatt();
     Boolean getAuthRetryValue();
     boolean equals(BluetoothGatt gatt);

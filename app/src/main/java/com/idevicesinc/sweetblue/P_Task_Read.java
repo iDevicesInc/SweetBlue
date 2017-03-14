@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 
 
 final class P_Task_Read extends PA_Task_ReadOrWrite

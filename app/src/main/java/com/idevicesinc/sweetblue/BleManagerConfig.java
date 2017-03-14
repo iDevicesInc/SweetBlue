@@ -228,11 +228,11 @@ public class BleManagerConfig extends BleDeviceConfig
 	public boolean autoPauseResumeDetection				= true;
 	
 	/**
-	 * Default is {@value #DEFAULT_UH_OH_CALLBACK_THROTTLE} seconds - {@link BleManager.UhOhListener.UhOh} callbacks from {@link BleManager.UhOhListener}
-	 * can be a little spammy at times so this is an option to throttle them back on a per-{@link BleManager.UhOhListener.UhOh} basis.
-	 * Set this to {@link Interval#DISABLED} to receive all every {@link BleManager.UhOhListener.UhOh} and manage them yourself.
+	 * Default is {@value #DEFAULT_UH_OH_CALLBACK_THROTTLE} seconds - {@link UhOhListener.UhOh} callbacks from {@link UhOhListener}
+	 * can be a little spammy at times so this is an option to throttle them back on a per-{@link UhOhListener.UhOh} basis.
+	 * Set this to {@link Interval#DISABLED} to receive all every {@link UhOhListener.UhOh} and manage them yourself.
 	 * 
-	 * @see BleManager.UhOhListener
+	 * @see UhOhListener
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)

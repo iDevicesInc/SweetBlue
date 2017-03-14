@@ -1,10 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.HashMap;
-
-import com.idevicesinc.sweetblue.BleManager.UhOhListener;
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOhEvent;
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.UhOhListener.UhOhEvent;
+import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 
 
 /**

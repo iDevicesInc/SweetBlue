@@ -92,8 +92,8 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public BleManager.UhOhListener.UhOh closeGatt() {
-        BleManager.UhOhListener.UhOh uhoh = null;
+    public UhOhListener.UhOh closeGatt() {
+        UhOhListener.UhOh uhoh = null;
         if( m_gatt == null )  return uhoh;
 
         //--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
@@ -144,7 +144,7 @@ final class P_AndroidGatt implements P_GattLayer
 //				at java.lang.reflect.Method.invoke(Native Method)
 //				at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:1230)
 //				at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1120)
-                uhoh = BleManager.UhOhListener.UhOh.DEAD_OBJECT_EXCEPTION;
+                uhoh = UhOhListener.UhOh.DEAD_OBJECT_EXCEPTION;
             }
             else
             {
@@ -166,7 +166,7 @@ final class P_AndroidGatt implements P_GattLayer
 //				com.idevicesinc.sweetblue.P_TaskQueue.tryEndingTask(P_TaskQueue.java:267)
 //				com.idevicesinc.sweetblue.P_TaskQueue.fail(P_TaskQueue.java:260)
 //				com.idevicesinc.sweetblue.P_BleDevice_Listeners.onConnectionStateChange_synchronized(P_BleDevice_Listeners.java:168)
-                uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
+                uhoh = UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
         }
         m_gatt = null;

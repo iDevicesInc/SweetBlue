@@ -14,7 +14,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
