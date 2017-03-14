@@ -23,10 +23,10 @@ public abstract class Event
 
 	/**
 	 * Convenience query method to check if this event "is for"/relevant-to any of the supplied values.
-	 * For example for {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent} you could write
+	 * For example for {@link com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent} you could write
 	 * <code>e.isForAny("DE:CA::FF:CO::FF::EE", "DE:AD:BE:EF:BA:BE")</code> to quickly check if the event
 	 * is associated with either of the two devices. This method would then just do a comparison
-	 * with the input strings against {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#macAddress()}.
+	 * with the input strings against {@link com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent#macAddress()}.
 	 */
 	public boolean isForAny(final Object ... values)
 	{
@@ -55,12 +55,12 @@ public abstract class Event
 
 	/**
 	 * Convenience query method to check if this event "is for"/relevant-to all of the supplied values.
-	 * For example for {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent} you could write
+	 * For example for {@link com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent} you could write
 	 * <code>e.isForAll("DE:CA::FF:CO::FF::EE", MY_UUID)</code> to quickly check if the event
 	 * is associated with both the given mac address and the given {@link java.util.UUID} (e.g. for a characteristic).
-	 * This method would then just do a comparison with the input values against {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#macAddress()},
-	 * {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#charUuid()} {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#descUuid()}, and
-	 * {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent#serviceUuid()}.
+	 * This method would then just do a comparison with the input values against {@link com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent#macAddress()},
+	 * {@link com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent#charUuid()} {@link com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent#descUuid()}, and
+	 * {@link com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent#serviceUuid()}.
 	 */
 	public boolean isForAll(final Object ... values)
 	{

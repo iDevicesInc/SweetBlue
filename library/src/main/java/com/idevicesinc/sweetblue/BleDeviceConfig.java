@@ -501,10 +501,10 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static interface BondFilter
 	{
 		/**
-		 * Just a dummy subclass of {@link BleDevice.StateListener.StateEvent} so that this gets auto-imported for implementations of {@link BondFilter}.
+		 * Just a dummy subclass of {@link DeviceStateListener.StateEvent} so that this gets auto-imported for implementations of {@link BondFilter}.
 		 */
 		@com.idevicesinc.sweetblue.annotations.Advanced
-		public static class StateChangeEvent extends BleDevice.StateListener.StateEvent
+		public static class StateChangeEvent extends DeviceStateListener.StateEvent
 		{
 			StateChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
 			{

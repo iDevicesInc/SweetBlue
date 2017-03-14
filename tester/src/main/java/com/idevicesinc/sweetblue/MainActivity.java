@@ -60,7 +60,7 @@ public class MainActivity extends Activity
             @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
                 final BleDevice device = mDevices.get(position);
-                device.setListener_State(new BleDevice.StateListener()
+                device.setListener_State(new DeviceStateListener()
                 {
                     @Override public void onEvent(StateEvent e)
                     {

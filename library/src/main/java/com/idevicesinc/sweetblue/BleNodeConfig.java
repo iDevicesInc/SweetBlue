@@ -197,38 +197,38 @@ public class BleNodeConfig
 			NULL,
 
 			/**
-			 * Originates from {@link BleDevice#read(java.util.UUID, BleDevice.ReadWriteListener)}.
+			 * Originates from {@link BleDevice#read(java.util.UUID, ReadWriteListener)}.
 			 *
-			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#READ
+			 * @see com.idevicesinc.sweetblue.ReadWriteListener.Type#READ
 			 */
 			READ,
 
 			/**
-			 * Originates from {@link BleDevice#startPoll(java.util.UUID, com.idevicesinc.sweetblue.utils.Interval, BleDevice.ReadWriteListener)}.
+			 * Originates from {@link BleDevice#startPoll(java.util.UUID, com.idevicesinc.sweetblue.utils.Interval, ReadWriteListener)}.
 			 *
-			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#POLL
+			 * @see com.idevicesinc.sweetblue.ReadWriteListener.Type#POLL
 			 */
 			POLL,
 
 			/**
-			 * Originates from {@link BleDevice#enableNotify(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+			 * Originates from {@link BleDevice#enableNotify(java.util.UUID, com.idevicesinc.sweetblue.ReadWriteListener)}.
 			 *
-			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#NOTIFICATION
+			 * @see com.idevicesinc.sweetblue.ReadWriteListener.Type#NOTIFICATION
 			 */
 			NOTIFICATION,
 
 			/**
-			 * Originates from {@link com.idevicesinc.sweetblue.BleDevice#enableNotify(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+			 * Originates from {@link com.idevicesinc.sweetblue.BleDevice#enableNotify(java.util.UUID, com.idevicesinc.sweetblue.ReadWriteListener)}.
 			 *
-			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#INDICATION
+			 * @see com.idevicesinc.sweetblue.ReadWriteListener.Type#INDICATION
 			 */
 			INDICATION,
 
 			/**
-			 * Originates from {@link com.idevicesinc.sweetblue.BleDevice#enableNotify(java.util.UUID, Interval, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)},
-			 * where a force-read timeout is invoked, or from {@link BleDevice#startChangeTrackingPoll(java.util.UUID, com.idevicesinc.sweetblue.utils.Interval, BleDevice.ReadWriteListener)}.
+			 * Originates from {@link com.idevicesinc.sweetblue.BleDevice#enableNotify(java.util.UUID, Interval, com.idevicesinc.sweetblue.ReadWriteListener)},
+			 * where a force-read timeout is invoked, or from {@link BleDevice#startChangeTrackingPoll(java.util.UUID, com.idevicesinc.sweetblue.utils.Interval, ReadWriteListener)}.
 			 *
-			 * @see com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type#PSUEDO_NOTIFICATION
+			 * @see com.idevicesinc.sweetblue.ReadWriteListener.Type#PSUEDO_NOTIFICATION
 			 */
 			PSUEDO_NOTIFICATION,
 

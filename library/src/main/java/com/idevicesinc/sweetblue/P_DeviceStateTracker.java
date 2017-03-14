@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleDevice.StateListener.StateEvent;
+import com.idevicesinc.sweetblue.DeviceStateListener.StateEvent;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.utils.State;
 
