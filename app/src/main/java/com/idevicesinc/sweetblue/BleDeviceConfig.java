@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Extendable;
@@ -232,8 +231,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Boolean cacheDeviceOnUndiscovery						= true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether {@link BleDevice.ConnectionFailListener.Status#BONDING_FAILED} is capable of
-	 * inducing {@link ConnectionFailListener#onEvent(com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent)}
+	 * Default is <code>true</code> - controls whether {@link DeviceConnectionFailListener.Status#BONDING_FAILED} is capable of
+	 * inducing {@link DeviceConnectionFailListener#onEvent(com.idevicesinc.sweetblue.DeviceConnectionFailListener.ConnectionFailEvent)}
 	 * while a device is {@link BleDeviceState#CONNECTING_OVERALL}.
 	 */
 	@Nullable(Prevalence.NORMAL)
@@ -383,7 +382,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 	/**
 	 * Default is {@link #DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE} - This sets the size of the list that tracks the history
-	 * of {@link com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.ConnectionFailEvent}s. Note that this will always be
+	 * of {@link com.idevicesinc.sweetblue.NodeConnectionFailListener.ConnectionFailEvent}s. Note that this will always be
 	 * at least 1. If set to anything lower, it will be ignored, and the max size will be 1.
 	 */
 	public int maxConnectionFailHistorySize									= DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE;

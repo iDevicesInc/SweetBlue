@@ -8,7 +8,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 import com.idevicesinc.sweetblue.BondListener.Status;
-import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.NodeConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -74,7 +74,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 					
 					if( simulateServiceDiscoveryFailure && m_device.getConnectionRetryCount() == 0 )
 					{
-						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
+						m_device.disconnectWithReason(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
 					else
 					{
@@ -89,18 +89,18 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 					}
 					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
 					{
-						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.IMMEDIATELY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
+						m_device.disconnectWithReason(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.IMMEDIATELY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
 					else if( state == PE_TaskState.TIMED_OUT )
 					{
-						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.TIMED_OUT, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
+						m_device.disconnectWithReason(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.TIMED_OUT, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
 					else
 					{
 						// If an explicit disconnect() was called while discovering services, we do NOT want to throw another disconnectWithReason (the task will do it when it executes)
 						if (!m_device.queue().isInQueue(P_Task_Disconnect.class, m_device))
 						{
-							m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
+							m_device.disconnectWithReason(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 						}
 					}
 				}

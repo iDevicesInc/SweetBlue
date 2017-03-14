@@ -146,7 +146,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
     enum Type implements UsesCustomNull
     {
         /**
-         * As of now, only used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
+         * As of now, only used for {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
          */
         NULL,
 

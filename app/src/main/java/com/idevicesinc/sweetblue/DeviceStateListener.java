@@ -48,7 +48,7 @@ public interface DeviceStateListener extends GenericListener_Void<DeviceStateLis
          * {@link #didExit(State)} with {@link BleDeviceState#CONNECTING} is also <code>true</code> then {@link #gattStatus()} may be greater
          * than zero and give some further hint as to why the connection failed.
          * <br><br>
-         * See {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#gattStatus()} for more information.
+         * See {@link DeviceConnectionFailListener.ConnectionFailEvent#gattStatus()} for more information.
          */
         public final int gattStatus()
         {

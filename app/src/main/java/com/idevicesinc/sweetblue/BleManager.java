@@ -26,7 +26,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import com.idevicesinc.sweetblue.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BondListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleServer.IncomingListener;
@@ -215,7 +214,7 @@ public final class BleManager
 	private P_WrappingResetListener m_resetListeners;
 	private AssertListener m_assertionListener;
 			DeviceStateListener m_defaultDeviceStateListener;
-			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
+			DeviceConnectionFailListener m_defaultConnectionFailListener;
 			BleServer.ConnectionFailListener m_defaultConnectionFailListener_server;
 			BondListener m_defaultBondListener;
 			ReadWriteListener m_defaultReadWriteListener;
@@ -713,13 +712,13 @@ public final class BleManager
 	/**
 	 * Convenience method to handle connection fail events at the manager level. The listener provided
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
-	 * {@link BleDevice#setListener_ConnectionFail(ConnectionFailListener)}. This is unlike the behavior
+	 * {@link BleDevice#setListener_ConnectionFail(DeviceConnectionFailListener)}. This is unlike the behavior
 	 * behind {@link #setListener_DeviceState(DeviceStateListener)} because
-	 * {@link BleDevice.ConnectionFailListener#onEvent(BleDevice.ConnectionFailListener.ConnectionFailEvent)} requires a return value.
+	 * {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
-	 * @see BleDevice#setListener_ConnectionFail(BleDevice.ConnectionFailListener)
+	 * @see BleDevice#setListener_ConnectionFail(DeviceConnectionFailListener)
 	 */
-	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) BleDevice.ConnectionFailListener listener_nullable)
+	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceConnectionFailListener listener_nullable)
 	{
 		m_defaultConnectionFailListener = listener_nullable;
 	}

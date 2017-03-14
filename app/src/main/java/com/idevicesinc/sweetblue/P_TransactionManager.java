@@ -6,7 +6,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
 import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
 import android.bluetooth.BluetoothGatt;
 
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
+import com.idevicesinc.sweetblue.DeviceConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.BleTransaction.EndReason;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
@@ -58,7 +58,7 @@ final class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Status.AUTHENTICATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
+					m_device.disconnectWithReason(Status.AUTHENTICATION_FAILED, DeviceConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
 			else if (txn == m_initTxn )
@@ -69,7 +69,7 @@ final class P_TransactionManager
 				}
 				else
 				{
-					m_device.disconnectWithReason(Status.INITIALIZATION_FAILED, BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
+					m_device.disconnectWithReason(Status.INITIALIZATION_FAILED, DeviceConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, txnFailReason);
 				}
 			}
 			else if (txn == m_device.getOtaTxn())
