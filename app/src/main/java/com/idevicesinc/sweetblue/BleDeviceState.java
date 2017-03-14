@@ -2,8 +2,8 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import com.idevicesinc.sweetblue.utils.State;
@@ -26,7 +26,7 @@ public enum BleDeviceState implements State
 	NULL,
 	
 	/**
-	 * The device has been undiscovered and you should have been notified through {@link BleManager.DiscoveryListener#onEvent(DiscoveryEvent)}.
+	 * The device has been undiscovered and you should have been notified through {@link DiscoveryListener#onEvent(DiscoveryEvent)}.
 	 * This means the object is effectively dead. {@link BleManager} has removed all references to it and you should do the same.
 	 */
 	UNDISCOVERED,

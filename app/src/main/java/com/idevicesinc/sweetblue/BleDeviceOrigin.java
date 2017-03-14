@@ -13,7 +13,7 @@ public enum BleDeviceOrigin
 	EXPLICIT,
 	
 	/**
-	 * Created from an advertising discovery right before {@link BleManager.DiscoveryListener#onEvent(com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent)} is called.
+	 * Created from an advertising discovery right before {@link DiscoveryListener#onEvent(com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent)} is called.
 	 */
 	FROM_DISCOVERY;
 }

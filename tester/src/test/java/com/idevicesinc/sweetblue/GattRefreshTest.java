@@ -30,7 +30,7 @@ public class GattRefreshTest extends BaseBleUnitTest
         final Pointer<Boolean> refreshingGatt = new Pointer<>(false);
 
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
