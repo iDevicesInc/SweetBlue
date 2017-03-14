@@ -5,10 +5,8 @@ import android.bluetooth.BluetoothDevice;
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
-import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
-import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
+import com.idevicesinc.sweetblue.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -27,7 +25,7 @@ final class P_BondManager
 
 	private int m_bondRetries = 0;
 	
-	private BleDevice.BondListener m_listener;
+	private BondListener m_listener;
 
 	private boolean m_bondRequested;
 
@@ -38,7 +36,8 @@ final class P_BondManager
 	}
 
 	
-	public final void setListener(BleDevice.BondListener listener_nullable)
+
+	public final void setListener(BondListener listener_nullable)
 	{
 		m_listener = listener_nullable;
 	}
@@ -290,16 +289,16 @@ final class P_BondManager
 		return bond;
 	}
 
-	final BondEvent invokeCallback(Status status, int failReason, State.ChangeIntent intent)
+	final BondListener.BondEvent invokeCallback(Status status, int failReason, State.ChangeIntent intent)
 	{
-		final BondEvent event = new BondEvent(m_device, status, failReason, intent);
+		final BondListener.BondEvent event = new BondListener.BondEvent(m_device, status, failReason, intent);
 		
 		invokeCallback(event);
 		
 		return event;
 	}
 
-	final void invokeCallback(final BondEvent event)
+	final void invokeCallback(final BondListener.BondEvent event)
 	{		
 		if( m_listener != null )
 		{

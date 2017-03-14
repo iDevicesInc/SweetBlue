@@ -26,8 +26,8 @@ public final class BleStatuses
 	public static final int GATT_STATUS_NOT_APPLICABLE 					= -1;
 	
 	/**
-	 * Used on {@link BleDevice.BondListener.BondEvent#failReason()} when {@link BleDevice.BondListener.BondEvent#status()}
-	 * isn't applicable, for example {@link BleDevice.BondListener.Status#SUCCESS}.
+	 * Used on {@link BondListener.BondEvent#failReason()} when {@link BondListener.BondEvent#status()}
+	 * isn't applicable, for example {@link BondListener.Status#SUCCESS}.
 	 */
 	public static final int BOND_FAIL_REASON_NOT_APPLICABLE				= GATT_STATUS_NOT_APPLICABLE;
 

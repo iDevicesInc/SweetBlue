@@ -26,9 +26,8 @@ import android.os.DeadObjectException;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
-import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
-import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
-import com.idevicesinc.sweetblue.BleDevice.BondListener;
+import com.idevicesinc.sweetblue.BondListener.BondEvent;
+import com.idevicesinc.sweetblue.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
@@ -39,19 +38,16 @@ import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.backend.historical.Backend_HistoricalDatabase;
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.EpochTime;
-import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
@@ -225,7 +221,7 @@ public final class BleManager
 			DeviceStateListener m_defaultDeviceStateListener;
 			BleDevice.ConnectionFailListener m_defaultConnectionFailListener;
 			BleServer.ConnectionFailListener m_defaultConnectionFailListener_server;
-			BleDevice.BondListener m_defaultBondListener;
+			BondListener m_defaultBondListener;
 			ReadWriteListener m_defaultReadWriteListener;
 			NotificationListener m_defaultNotificationListener;
 	final P_DiskOptionsManager m_diskOptionsMngr;
@@ -744,7 +740,7 @@ public final class BleManager
 	/**
 	 * Convenience method to set a default back up listener for all {@link BondEvent}s across all {@link BleDevice} instances.
 	 */
-	public final void setListener_Bond(@Nullable(Prevalence.NORMAL) BleDevice.BondListener listener_nullable)
+	public final void setListener_Bond(@Nullable(Prevalence.NORMAL) BondListener listener_nullable)
 	{
 		m_defaultBondListener = listener_nullable;
 	}
