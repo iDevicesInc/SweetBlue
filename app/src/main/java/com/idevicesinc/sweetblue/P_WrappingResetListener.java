@@ -9,18 +9,18 @@ import android.os.Handler;
  * 
  *
  */
-final class P_WrappingResetListener extends PA_CallbackWrapper implements BleManager.ResetListener
+final class P_WrappingResetListener extends PA_CallbackWrapper implements ResetListener
 {
-	private final ArrayList<BleManager.ResetListener> m_listeners = new ArrayList<BleManager.ResetListener>();
+	private final ArrayList<ResetListener> m_listeners = new ArrayList<ResetListener>();
 	
-	P_WrappingResetListener(BleManager.ResetListener listener, P_SweetHandler handler, boolean postToMain)
+	P_WrappingResetListener(ResetListener listener, P_SweetHandler handler, boolean postToMain)
 	{
 		super(handler, postToMain);
 
 		m_listeners.add(listener);
 	}
 	
-	public void addListener(BleManager.ResetListener listener)
+	public void addListener(ResetListener listener)
 	{
 		m_listeners.add(listener);
 	}
