@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent;
+import com.idevicesinc.sweetblue.ManagerStateListener.StateEvent;
 
 
 final class P_BleStateTracker extends PA_StateTracker

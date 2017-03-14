@@ -18,7 +18,7 @@ public class TaskManagerIdleTest extends BaseTester<TestActivity>
         mgr.setListener_State(new ManagerStateListener()
         {
             @Override
-            public void onEvent(BleManager.StateListener.StateEvent event)
+            public void onEvent(ManagerStateListener.StateEvent event)
             {
                 if (event.didEnter(BleManagerState.IDLE))
                 {
