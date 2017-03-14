@@ -48,7 +48,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -101,12 +103,12 @@ public class ConnectTest extends BaseBleUnitTest
 
         m_device = m_mgr.newDevice(Util.randomMacAddress());
 
-        m_device.connect(new BleDevice.StateListener() {
+        m_device.connect(new DeviceStateListener() {
 
             int timesTried = 0;
 
             @Override
-            public void onEvent(BleDevice.StateListener.StateEvent e)
+            public void onEvent(DeviceStateListener.StateEvent e)
             {
                 if (e.didEnter(BleDeviceState.DISCONNECTED))
                 {
@@ -158,7 +160,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -235,7 +239,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             final Pointer<Integer> connected = new Pointer(0);
 
@@ -315,7 +321,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -416,14 +424,14 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -478,7 +486,7 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -548,7 +556,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -649,7 +659,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         };
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -729,7 +739,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         };
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -793,7 +803,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
 
             boolean hasConnected = false;
@@ -858,7 +870,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
 
             boolean hasConnected = false;
@@ -922,7 +936,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
 
             boolean hasConnected = false;

@@ -11,6 +11,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -52,7 +54,9 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -104,7 +108,9 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -154,7 +160,9 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -214,7 +222,9 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -279,7 +289,7 @@ public class NotifyTest extends BaseBleUnitTest
         final byte[] notifyData = new byte[20];
         new Random().nextBytes(notifyData);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -339,7 +349,7 @@ public class NotifyTest extends BaseBleUnitTest
         final byte[] notifyData = new byte[20];
         new Random().nextBytes(notifyData);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -412,7 +422,7 @@ public class NotifyTest extends BaseBleUnitTest
         final byte[] notifyData = new byte[20];
         new Random().nextBytes(notifyData);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {

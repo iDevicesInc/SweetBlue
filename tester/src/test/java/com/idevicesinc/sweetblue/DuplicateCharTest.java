@@ -12,7 +12,6 @@ import org.robolectric.annotation.Config;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
-
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -46,7 +45,9 @@ public class DuplicateCharTest extends BaseBleUnitTest
     {
         m_device = null;
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -96,7 +97,9 @@ public class DuplicateCharTest extends BaseBleUnitTest
     {
         m_device = null;
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        final Semaphore s = new Semaphore(0);
+
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -159,14 +162,14 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new BleDevice.StateListener()
+                    m_device.connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -184,7 +187,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                                     {
                                         return null;
                                     }
-                                }, new BleDevice.ReadWriteListener()
+                                }, new ReadWriteListener()
                                 {
                                     @Override public void onEvent(ReadWriteEvent e)
                                     {
@@ -212,7 +215,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
     {
         m_device = null;
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {

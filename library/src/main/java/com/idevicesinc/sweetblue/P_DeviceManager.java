@@ -8,8 +8,8 @@ import java.util.List;
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.Status;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
@@ -525,7 +525,7 @@ final class P_DeviceManager
         }
     }
 
-    private static void undiscoverDevice(BleDevice device, BleManager.DiscoveryListener listener, PA_StateTracker.E_Intent intent)
+    private static void undiscoverDevice(BleDevice device, DiscoveryListener listener, PA_StateTracker.E_Intent intent)
     {
         if (!device.is(BleDeviceState.DISCOVERED)) return;
 
@@ -538,14 +538,14 @@ final class P_DeviceManager
         }
     }
 
-    void undiscoverAndRemove(BleDevice device, BleManager.DiscoveryListener discoveryListener, P_DeviceManager cache, E_Intent intent)
+    void undiscoverAndRemove(BleDevice device, DiscoveryListener discoveryListener, P_DeviceManager cache, E_Intent intent)
     {
         remove(device, cache);
 
         undiscoverDevice(device, discoveryListener, intent);
     }
 
-    void purgeStaleDevices(final double scanTime, final P_DeviceManager cache, final BleManager.DiscoveryListener listener)
+    void purgeStaleDevices(final double scanTime, final P_DeviceManager cache, final DiscoveryListener listener)
     {
         if (m_updating)
         {

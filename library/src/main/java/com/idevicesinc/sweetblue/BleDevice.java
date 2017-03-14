@@ -89,7 +89,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.UNDISCOVERED;
  * {@link BleManager#newDevice(String, String)}, usually they're created
  * implicitly by {@link BleManager} as a result of a scanning operation (e.g.
  * {@link BleManager#startScan()}) and sent to you through
- * {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
+ * {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)}.
  */
 public final class BleDevice extends BleNode
 {
@@ -1138,7 +1138,7 @@ public final class BleDevice extends BleNode
      * How the device was originally created, either from scanning or explicit creation.
      * <br><br>
      * NOTE: That devices for which this returns {@link BleDeviceOrigin#EXPLICIT} may still be
-     * {@link BleManager.DiscoveryListener.LifeCycle#REDISCOVERED} through {@link BleManager#startScan()}.
+     * {@link DiscoveryListener.LifeCycle#REDISCOVERED} through {@link BleManager#startScan()}.
      */
     public final BleDeviceOrigin getOrigin()
     {
@@ -1146,10 +1146,10 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Returns the last time the device was {@link BleManager.DiscoveryListener.LifeCycle#DISCOVERED}
-     * or {@link BleManager.DiscoveryListener.LifeCycle#REDISCOVERED}. If {@link #getOrigin()} returns
+     * Returns the last time the device was {@link DiscoveryListener.LifeCycle#DISCOVERED}
+     * or {@link DiscoveryListener.LifeCycle#REDISCOVERED}. If {@link #getOrigin()} returns
      * {@link BleDeviceOrigin#EXPLICIT} then this will return {@link EpochTime#NULL} unless or until
-     * the device is {@link BleManager.DiscoveryListener.LifeCycle#REDISCOVERED}.
+     * the device is {@link DiscoveryListener.LifeCycle#REDISCOVERED}.
      */
     public final EpochTime getLastDiscoveryTime()
     {

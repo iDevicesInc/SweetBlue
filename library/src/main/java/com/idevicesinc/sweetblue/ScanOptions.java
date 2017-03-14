@@ -13,7 +13,7 @@ public final class ScanOptions
     Interval m_scanTime;
     Interval m_pauseTime;
     BleManagerConfig.ScanFilter m_scanFilter;
-    BleManager.DiscoveryListener m_discoveryListener;
+    DiscoveryListener m_discoveryListener;
     boolean m_isPeriodic;
     boolean m_isPriorityScan;
     boolean m_forceIndefinite;
@@ -27,12 +27,12 @@ public final class ScanOptions
         m_scanFilter = scanFilter;
     }
 
-    public ScanOptions(BleManager.DiscoveryListener listener_nullable)
+    public ScanOptions(DiscoveryListener listener_nullable)
     {
         m_discoveryListener = listener_nullable;
     }
 
-    public ScanOptions(BleManagerConfig.ScanFilter scanFilter, BleManager.DiscoveryListener listener_nullable)
+    public ScanOptions(BleManagerConfig.ScanFilter scanFilter, DiscoveryListener listener_nullable)
     {
         m_scanFilter = scanFilter;
         m_discoveryListener = listener_nullable;
@@ -96,9 +96,9 @@ public final class ScanOptions
     }
 
     /**
-     * Set a {@link com.idevicesinc.sweetblue.BleManager.DiscoveryListener} for this scan.
+     * Set a {@link com.idevicesinc.sweetblue.DiscoveryListener} for this scan.
      */
-    public final ScanOptions withDiscoveryListener(BleManager.DiscoveryListener listener)
+    public final ScanOptions withDiscoveryListener(DiscoveryListener listener)
     {
         m_discoveryListener = listener;
         return this;
