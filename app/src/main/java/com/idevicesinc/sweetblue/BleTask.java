@@ -49,18 +49,18 @@ public enum BleTask
 	UNBOND,
 	
 	/**
-	 * Associated with {@link BleDevice#read(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+	 * Associated with {@link BleDevice#read(java.util.UUID, com.idevicesinc.sweetblue.ReadWriteListener)}.
 	 */
 	READ,
 	
 	/**
-	 * Associated with {@link BleDevice#write(java.util.UUID, byte[], com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+	 * Associated with {@link BleDevice#write(java.util.UUID, byte[], com.idevicesinc.sweetblue.ReadWriteListener)}.
 	 */
 	WRITE,
 	
 	/**
-	 * Associated with {@link BleDevice#enableNotify(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)} and
-	 * {@link BleDevice#disableNotify(java.util.UUID, com.idevicesinc.sweetblue.BleDevice.ReadWriteListener)}.
+	 * Associated with {@link BleDevice#enableNotify(java.util.UUID, com.idevicesinc.sweetblue.ReadWriteListener)} and
+	 * {@link BleDevice#disableNotify(java.util.UUID, com.idevicesinc.sweetblue.ReadWriteListener)}.
 	 */
 	TOGGLE_NOTIFY,
 	
@@ -107,17 +107,17 @@ public enum BleTask
 	SET_MTU,
 
 	/**
-	 * Associated with {@link BleDevice#setConnectionPriority(BleConnectionPriority, BleDevice.ReadWriteListener)} or overloads.
+	 * Associated with {@link BleDevice#setConnectionPriority(BleConnectionPriority, ReadWriteListener)} or overloads.
 	 */
 	SET_CONNECTION_PRIORITY,
 
 	/**
-	 * Associated with {@link BleDevice#readDescriptor(UUID, UUID, BleDevice.ReadWriteListener)} or overloads.
+	 * Associated with {@link BleDevice#readDescriptor(UUID, UUID, ReadWriteListener)} or overloads.
 	 */
 	READ_DESCRIPTOR,
 
 	/**
-	 * Associated with {@link BleDevice#writeDescriptor(UUID, UUID, byte[], BleDevice.ReadWriteListener)} or overloads.
+	 * Associated with {@link BleDevice#writeDescriptor(UUID, UUID, byte[], ReadWriteListener)} or overloads.
 	 */
 	WRITE_DESCRIPTOR,
 

@@ -2,8 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
-
-import com.idevicesinc.sweetblue.BleDevice.StateListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Advanced;
@@ -15,9 +13,9 @@ import java.util.UUID;
 /**
  * An enumeration of the various states that a {@link BleDevice} can be in.
  * Note that a device can and usually will be in multiple states simultaneously.
- * Use {@link BleDevice#setListener_State(StateListener)} to be notified of state changes.
+ * Use {@link BleDevice#setListener_State(DeviceStateListener)} to be notified of state changes.
  * 
- * @see BleDevice.StateListener
+ * @see DeviceStateListener
  */
 public enum BleDeviceState implements State
 {
@@ -48,7 +46,7 @@ public enum BleDeviceState implements State
 	 * Unlike with {@link #RECONNECTING_LONG_TERM}, entering this state does not mean that the {@link BleDevice} becomes {@link #DISCONNECTED}.
 	 * By all outward appearances the library treats the {@link BleDevice} as still being {@link #CONNECTED} while transparently trying
 	 * to reconnect under the hood using {@link BleNodeConfig#reconnectFilter}. You can even perform
-	 * {@link BleDevice#read(UUID, BleDevice.ReadWriteListener)}, {@link BleDevice#write(java.util.UUID, byte[])}, etc.
+	 * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(java.util.UUID, byte[])}, etc.
 	 * and they will be queued up until the device *actually* reconnects under the hood.
 	 * 
 	 * @see #RECONNECTING_LONG_TERM
