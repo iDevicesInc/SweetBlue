@@ -4,10 +4,9 @@ import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
 
-import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
-import com.idevicesinc.sweetblue.BleDevice.BondListener;
+import com.idevicesinc.sweetblue.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
+import com.idevicesinc.sweetblue.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -24,14 +23,14 @@ final class P_BondManager
 	
 	private final BleDevice m_device;
 	
-	private BleDevice.BondListener m_listener;
+	private BondListener m_listener;
 	
 	P_BondManager(BleDevice device)
 	{
 		m_device = device;
 	}
 	
-	public void setListener(BleDevice.BondListener listener_nullable)
+	public void setListener(BondListener listener_nullable)
 	{
 		m_listener = listener_nullable;
 	}
