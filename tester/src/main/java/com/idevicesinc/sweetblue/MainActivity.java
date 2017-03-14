@@ -128,7 +128,7 @@ public class MainActivity extends Activity
                     @Override
                     protected void start(BleDevice device)
                     {
-                        device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+                        device.read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
                         {
                             @Override
                             public void onEvent(ReadWriteEvent e)
@@ -169,7 +169,7 @@ public class MainActivity extends Activity
             }
         });
 
-        mgr.setListener_State(new BleManager.StateListener()
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(StateEvent event)
             {
@@ -181,7 +181,7 @@ public class MainActivity extends Activity
         mgr.setListener_DeviceState(new DeviceStateListener()
         {
             @Override
-            public void onEvent(BleDevice.StateListener.StateEvent e)
+            public void onEvent(DeviceStateListener.StateEvent e)
             {
                 if (System.currentTimeMillis() - mLastStateChange > STATE_CHANGE_MIN_TIME)
                     mAdaptor.notifyDataSetChanged();

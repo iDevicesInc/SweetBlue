@@ -1,10 +1,8 @@
 package com.idevicesinc.sweetblue.utils;
 
 import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.BleDeviceConfig;
 import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManager.StateListener.*;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleManagerState;
 
@@ -16,7 +14,7 @@ import com.idevicesinc.sweetblue.BleManagerState;
 public interface State extends UsesCustomNull, BitwiseEnum
 {
 	/**
-	 * Abstract base class for {@link com.idevicesinc.sweetblue.DeviceStateListener.StateEvent} and {@link com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent}.
+	 * Abstract base class for {@link com.idevicesinc.sweetblue.DeviceStateListener.StateEvent} and {@link com.idevicesinc.sweetblue.ManagerStateListener.StateEvent}.
 	 */
 	public static abstract class ChangeEvent<T_State extends State> extends Event
 	{
@@ -255,7 +253,7 @@ public interface State extends UsesCustomNull, BitwiseEnum
 	
 	/**
 	 * Given an old and new state mask, for example from {@link com.idevicesinc.sweetblue.DeviceStateListener#onEvent(com.idevicesinc.sweetblue.DeviceStateListener.StateEvent)}
-	 *  or {@link com.idevicesinc.sweetblue.BleManager.StateListener#onEvent(com.idevicesinc.sweetblue.BleManager.StateListener.StateEvent)}, this method tells you whether the
+	 *  or {@link com.idevicesinc.sweetblue.ManagerStateListener#onEvent(com.idevicesinc.sweetblue.ManagerStateListener.StateEvent)}, this method tells you whether the
 	 * the 'this' state was appended.
 	 * 
 	 * @see #didExit(int, int)

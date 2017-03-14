@@ -27,7 +27,7 @@ public class IdleTest extends BaseBleUnitTest
 
         m_mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.IDLE))
                 {
@@ -51,7 +51,7 @@ public class IdleTest extends BaseBleUnitTest
 
         m_mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didEnter(BleManagerState.IDLE))
                 {

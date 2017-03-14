@@ -271,81 +271,6 @@ public final class BleManager
 		void onEvent(final DiscoveryEvent e);
 	}
 
-	/**
-	 * Provide an implementation to {@link BleManager#setListener_State(BleManager.StateListener)} to receive callbacks
-	 * when the {@link BleManager} undergoes a {@link BleManagerState} change.
-	 *
-	 * @deprecated - Refactored to {@link ManagerStateListener}.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface StateListener
-	{
-		/**
-		 * Subclass that adds the manager field.
-		 */
-		@Immutable
-		public static class StateEvent extends State.ChangeEvent<BleManagerState>
-		{
-			/**
-			 * The singleton manager undergoing the state change.
-			 */
-			public BleManager manager(){  return m_manager;  }
-			private final BleManager m_manager;
-
-			StateEvent(final BleManager manager, final int oldStateBits, final int newStateBits, final int intentMask)
-			{
-				super(oldStateBits, newStateBits, intentMask);
-
-				this.m_manager = manager;
-			}
-
-			@Override public String toString()
-			{
-				return Utils_String.toString
-				(
-					this.getClass(),
-					"entered",			Utils_String.toString(enterMask(), BleManagerState.VALUES()),
-					"exited",			Utils_String.toString(exitMask(), BleManagerState.VALUES()),
-					"current",			Utils_String.toString(newStateBits(), BleManagerState.VALUES())
-				);
-			}
-		}
-
-		/**
-		 * Called when the manager's abstracted {@link BleManagerState} changes.
-		 */
-		void onEvent(final StateEvent e);
-	}
-
-	/**
-	 * Provide an implementation to {@link BleManager#setListener_NativeState(BleManager.NativeStateListener)} to receive callbacks
-	 * when the {@link BleManager} undergoes a *native* {@link BleManagerState} change. This is similar to {@link BleManager.StateListener}
-	 * but reflects what is going on in the actual underlying stack, which may lag slightly behind the
-	 * abstracted state reflected by {@link BleManager.StateListener}. Most apps will not find this callback useful.
-	 */
-	@Advanced
-	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface NativeStateListener
-	{
-		/**
-		 * Class declared here to be make it implicitly imported for overrides.
-		 */
-		@Advanced
-		@Immutable
-		public static class NativeStateEvent extends StateListener.StateEvent
-		{
-			NativeStateEvent(final BleManager manager, final int oldStateBits, final int newStateBits, final int intentMask)
-			{
-				super(manager, oldStateBits, newStateBits, intentMask);
-			}
-		}
-
-		/**
-		 * Called when the manager's native bitwise {@link BleManagerState} changes. As many bits as possible are flipped at the same time.
-		 */
-		@Advanced
-		void onEvent(final NativeStateEvent e);
-	}
 
 	/**
 	 * Provide an implementation to {@link BleManager#setListener_UhOh(BleManager.UhOhListener)}
@@ -1205,32 +1130,6 @@ public final class BleManager
 
 	/**
 	 * Set a listener here to be notified whenever this manager's {@link BleManagerState} changes.
-	 *
-	 * @deprecated - This will be removed in version 3. This class has been refactored to {@link ManagerStateListener}.
-	 */
-	public final void setListener_State(@Nullable(Prevalence.NORMAL) final StateListener listener_nullable)
-	{
-		if (listener_nullable == null)
-		{
-			m_stateTracker.setListener(null);
-		}
-		else
-		{
-			m_stateTracker.setListener(new ManagerStateListener()
-			{
-				@Override public void onEvent(StateListener.StateEvent e)
-				{
-					if (listener_nullable != null)
-					{
-						listener_nullable.onEvent(e);
-					}
-				}
-			});
-		}
-	}
-
-	/**
-	 * Set a listener here to be notified whenever this manager's {@link BleManagerState} changes.
 	 */
 	public final void setListener_State(@Nullable(Prevalence.NORMAL) ManagerStateListener listener_nullable)
 	{
@@ -1353,7 +1252,7 @@ public final class BleManager
 	/**
 	 * Set a listener here to be notified whenever this manager's native {@link BleManagerState} changes.
 	 */
-	public final void setListener_NativeState(NativeStateListener listener)
+	public final void setListener_NativeState(NativeManagerStateListener listener)
 	{
 		m_nativeStateTracker.setListener(listener);
 	}
