@@ -39,7 +39,7 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
     public static enum Status implements UsesCustomNull
     {
         /**
-         * As of now, only used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
+         * As of now, only used for {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
          */
         NULL,
 
@@ -199,7 +199,7 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
     public static enum Type implements UsesCustomNull
     {
         /**
-         * As of now, only used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
+         * As of now, only used for {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
          */
         NULL,
 
@@ -336,7 +336,7 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
     public static enum Target implements UsesCustomNull
     {
         /**
-         * As of now, only used for {@link BleDevice.ConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
+         * As of now, only used for {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
          */
         NULL,
 

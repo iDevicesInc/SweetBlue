@@ -2,19 +2,19 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTED;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
-import java.util.ArrayList;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener.ConnectionFailEvent;
-import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.DeviceConnectionFailListener.ConnectionFailEvent;
+import com.idevicesinc.sweetblue.NodeConnectionFailListener.Please;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
+
+import java.util.ArrayList;
 
 
 final class P_ConnectionFailManager
 {
 	private final BleDevice m_device;
 	
-	private ConnectionFailListener m_connectionFailListener = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER;
+	private DeviceConnectionFailListener m_connectionFailListener = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER;
 	
 	private int m_failCount = 0;
 	private BleDeviceState m_highestStateReached_total = null;
@@ -85,9 +85,9 @@ final class P_ConnectionFailManager
 		return retryCount;
 	}
 
-	int/*__PE_Please*/ onConnectionFailed(ConnectionFailListener.Status reason_nullable, ConnectionFailListener.Timing timing, boolean isAttemptingReconnect_longTerm, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, ConnectionFailListener.AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
+	int/*__PE_Please*/ onConnectionFailed(DeviceConnectionFailListener.Status reason_nullable, DeviceConnectionFailListener.Timing timing, boolean isAttemptingReconnect_longTerm, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, NodeConnectionFailListener.AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
 	{
-		if( reason_nullable == null )  return ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+		if( reason_nullable == null )  return DeviceConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
 		
 		final long currentTime = System.currentTimeMillis();
 		
@@ -220,7 +220,7 @@ final class P_ConnectionFailManager
 		return retryChoice__PE_Please;
 	}
 	
-	public void setListener(ConnectionFailListener listener)
+	public void setListener(DeviceConnectionFailListener listener)
 	{
 		m_connectionFailListener = listener;
 	}

@@ -1,8 +1,7 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.NodeConnectionFailListener.AutoConnectUsage;
 
-import android.bluetooth.BluetoothGatt;
 
 final class P_Task_Connect extends PA_Task_RequiresBleOn
 {

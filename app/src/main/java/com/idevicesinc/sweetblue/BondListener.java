@@ -85,18 +85,18 @@ public interface BondListener
             return this == FAILED_IMMEDIATELY || this == FAILED_EVENTUALLY || this == TIMED_OUT;
         }
 
-        final BleDevice.ConnectionFailListener.Timing timing()
+        final DeviceConnectionFailListener.Timing timing()
         {
             switch (this)
             {
                 case FAILED_IMMEDIATELY:
-                    return BleDevice.ConnectionFailListener.Timing.IMMEDIATELY;
+                    return DeviceConnectionFailListener.Timing.IMMEDIATELY;
                 case FAILED_EVENTUALLY:
-                    return BleDevice.ConnectionFailListener.Timing.EVENTUALLY;
+                    return DeviceConnectionFailListener.Timing.EVENTUALLY;
                 case TIMED_OUT:
-                    return BleDevice.ConnectionFailListener.Timing.TIMED_OUT;
+                    return DeviceConnectionFailListener.Timing.TIMED_OUT;
                 default:
-                    return BleDevice.ConnectionFailListener.Timing.NOT_APPLICABLE;
+                    return DeviceConnectionFailListener.Timing.NOT_APPLICABLE;
             }
         }
 

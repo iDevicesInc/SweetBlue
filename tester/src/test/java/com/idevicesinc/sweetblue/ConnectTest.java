@@ -267,7 +267,7 @@ public class ConnectTest extends BaseBleUnitTest
                                 s.release();
                             }
                         }
-                    }, new BleDevice.DefaultConnectionFailListener()
+                    }, new DefaultDeviceConnectionFailListener()
                     {
                         @Override public Please onEvent(ConnectionFailEvent e)
                         {
@@ -330,7 +330,7 @@ public class ConnectTest extends BaseBleUnitTest
                         @Override public void onEvent(StateEvent e)
                         {
                         }
-                    }, new BleDevice.DefaultConnectionFailListener() {
+                    }, new DefaultDeviceConnectionFailListener() {
                         @Override public Please onEvent(ConnectionFailEvent e)
                         {
                             System.out.println("Connection fail event: " + e.toString());
@@ -393,7 +393,7 @@ public class ConnectTest extends BaseBleUnitTest
                         @Override public void onEvent(StateEvent e)
                         {
                         }
-                    }, new BleDevice.DefaultConnectionFailListener() {
+                    }, new DefaultDeviceConnectionFailListener() {
                         @Override public Please onEvent(ConnectionFailEvent e)
                         {
                             System.out.println("Connection fail event: " + e.toString());
@@ -482,7 +482,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(init, null, new BleDevice.DefaultConnectionFailListener() {
+                    m_device.connect(init, null, new DefaultDeviceConnectionFailListener() {
                         @Override public Please onEvent(ConnectionFailEvent e)
                         {
                             System.out.println("Connection fail event: " + e.toString());
@@ -557,7 +557,7 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(init, null, new BleDevice.DefaultConnectionFailListener() {
+                    m_device.connect(init, null, new DefaultDeviceConnectionFailListener() {
                         @Override public Please onEvent(ConnectionFailEvent e)
                         {
                             System.out.println("Connection fail event: " + e.toString());
