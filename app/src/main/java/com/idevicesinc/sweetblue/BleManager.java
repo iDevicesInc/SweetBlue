@@ -28,8 +28,8 @@ import com.idevicesinc.sweetblue.BleDevice.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleServer.IncomingListener;
 import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
 import com.idevicesinc.sweetblue.UhOhListener.UhOh;
@@ -141,125 +141,6 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  */
 public final class BleManager
 {
-	/**
-	 * Provide an implementation to {@link BleManager#setListener_Discovery(BleManager.DiscoveryListener)} to receive
-	 * callbacks when a device is newly discovered, rediscovered, or undiscovered after calling various {@link BleManager#startScan()}
-	 * or {@link BleManager#startPeriodicScan(Interval, Interval)} methods. You can also provide this to various
-	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface DiscoveryListener
-	{
-		/**
-		 * Enumerates changes in the "discovered" state of a device.
-		 * Used at {@link BleManager.DiscoveryListener.DiscoveryEvent#lifeCycle()}.
-		 */
-		public static enum LifeCycle
-		{
-			/**
-			 * Used when a device is discovered for the first time after
-			 * calling {@link BleManager#startScan()} (or its overloads)
-			 * or {@link BleManager#startPeriodicScan(Interval, Interval)}.
-			 */
-			DISCOVERED,
-
-			/**
-			 * Used when a device is rediscovered after already being discovered at least once.
-			 */
-			REDISCOVERED,
-
-			/**
-			 * Used when a device is "undiscovered" after being discovered at least once. There is no native equivalent
-			 * for this callback. Undiscovery is approximated with a timeout based on the last time we discovered a device, configured
-			 * by {@link BleDeviceConfig#undiscoveryKeepAlive}. This option is disabled by default. If set, you should expect that the undiscovery
-			 * callback will take some amount of time to receive after an advertising device is turned off or goes out of range or what have you.
-			 * It's generally not as fast as other state changes like {@link BleDeviceState#DISCONNECTED} or getting {@link BleDeviceState#DISCOVERED} in the first place.
-			 *
-			 * @see BleDeviceConfig#minScanTimeNeededForUndiscovery
-			 * @see BleDeviceConfig#undiscoveryKeepAlive
-			 */
-			UNDISCOVERED;
-		}
-
-		/**
-		 * Struct passed to {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
-		 */
-		@Immutable
-		public static class DiscoveryEvent extends Event
-		{
-			/**
-			 * The {@link BleManager} which is currently {@link BleManagerState#SCANNING}.
-			 */
-			public BleManager manager(){  return device().getManager();  }
-
-			/**
-			 * The device in question.
-			 */
-			public BleDevice device(){  return m_device;  }
-			private final BleDevice m_device;
-
-			/**
-			 * Convience to return the mac address of {@link #device()}.
-			 */
-			public String macAddress()  {  return m_device.getMacAddress();  }
-
-			/**
-			 * The discovery {@link BleManager.DiscoveryListener.LifeCycle} that the device has undergone.
-			 */
-			public LifeCycle lifeCycle(){  return m_lifeCycle;  }
-			private final LifeCycle m_lifeCycle;
-
-			DiscoveryEvent(final BleDevice device, final LifeCycle lifeCycle)
-			{
-				m_device = device;
-				m_lifeCycle = lifeCycle;
-			}
-
-			/**
-			 * Forwards {@link BleDevice#getRssi()}.
-			 */
-			public int rssi()
-			{
-				return device().getRssi();
-			}
-
-			/**
-			 * Forwards {@link BleDevice#getRssiPercent()}.
-			 */
-			public Percent rssi_percent()
-			{
-				return device().getRssiPercent();
-			}
-
-			/**
-			 * Convenience method for checking equality of given {@link BleManager.DiscoveryListener.LifeCycle} and {@link #lifeCycle()}.
-			 */
-			public boolean was(LifeCycle lifeCycle)
-			{
-				return lifeCycle == lifeCycle();
-			}
-
-			@Override public String toString()
-			{
-				return Utils_String.toString
-				(
-					this.getClass(),
-					"device", device().getName_debug(),
-					"lifeCycle", lifeCycle(),
-					"rssi", rssi(),
-					"rssi_percent", rssi_percent()
-				);
-			}
-		}
-
-		/**
-		 * Called when the discovery lifecycle of a device is updated.
-		 * <br><br>
-		 * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}
-		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
-		 */
-		void onEvent(final DiscoveryEvent e);
-	}
 
 	/**
 	 * Provide an implementation to {@link BleManager#reset(BleManager.ResetListener)}
@@ -860,7 +741,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Returns the discovery listener set with {@link #setListener_Discovery(BleManager.DiscoveryListener)} or
+	 * Returns the discovery listener set with {@link #setListener_Discovery(DiscoveryListener)} or
 	 * {@link BleManagerConfig#defaultDiscoveryListener}, or <code>null</code> if not set.
 	 */
 	public final DiscoveryListener getListener_Discovery()
@@ -1022,7 +903,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you too.
+	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(DiscoveryListener)} for you too.
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
@@ -1042,7 +923,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you too and adds a filter.
+	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(DiscoveryListener)} for you too and adds a filter.
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
@@ -1119,7 +1000,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
+	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
@@ -1131,7 +1012,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, BleManager.DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)}
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
@@ -1143,7 +1024,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, BleManager.DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)}
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
@@ -1155,7 +1036,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
+	 * Same as {@link #startScan()} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
@@ -1179,7 +1060,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(BleManager.DiscoveryListener)} for you.
+	 * Same as {@link #startScan(Interval)} but also calls {@link #setListener_Discovery(DiscoveryListener)} for you.
 	 * <br><br>
 	 * WARNING: For {@link android.os.Build.VERSION_CODES#M} and up, in order for this method to return scan events
 	 * through {@link ScanFilter} you must have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} or {@link android.Manifest.permission#ACCESS_FINE_LOCATION}
@@ -2303,7 +2184,7 @@ public final class BleManager
 
 	/**
 	 * Creates a new {@link BleDevice} or returns an existing one if the macAddress matches.
-	 * {@link BleManager.DiscoveryListener#onEvent(DiscoveryEvent)} will be called if a new device
+	 * {@link DiscoveryListener#onEvent(DiscoveryEvent)} will be called if a new device
 	 * is created.
 	 * <br><br>
 	 * NOTE: You should always do a {@link BleDevice#isNull()} check on this method's return value just in case. Android
@@ -2362,7 +2243,7 @@ public final class BleManager
 
 	/**
 	 * Forcefully undiscovers a device, disconnecting it first if needed and removing it from this manager's internal list.
-	 * {@link BleManager.DiscoveryListener#onEvent(DiscoveryEvent)} with {@link LifeCycle#UNDISCOVERED} will be called.
+	 * {@link DiscoveryListener#onEvent(DiscoveryEvent)} with {@link LifeCycle#UNDISCOVERED} will be called.
 	 * No clear use case has been thought of but the method is here just in case anyway.
 	 *
 	 * @return	<code>true</code> if the device was undiscovered, <code>false</code> if device is already {@link BleDeviceState#UNDISCOVERED} or manager

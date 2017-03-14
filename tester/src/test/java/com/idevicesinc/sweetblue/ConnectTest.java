@@ -51,7 +51,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -108,7 +108,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -178,7 +178,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             final Pointer<Integer> connected = new Pointer(0);
 
@@ -251,7 +251,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -318,7 +318,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -381,7 +381,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -475,7 +475,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         };
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -550,7 +550,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         };
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -606,7 +606,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
 
             boolean hasConnected = false;
@@ -664,7 +664,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
 
             boolean hasConnected = false;
@@ -721,7 +721,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         final Semaphore s = new Semaphore(0);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
 
             boolean hasConnected = false;

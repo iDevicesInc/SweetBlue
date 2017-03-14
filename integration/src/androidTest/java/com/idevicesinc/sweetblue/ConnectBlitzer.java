@@ -54,7 +54,7 @@ public class ConnectBlitzer extends BaseTester<MainActivity>
         UIUtil.handleBluetoothEnablerDialogs(uiDevice, activity);
         s = new Semaphore(0);
 
-        mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {

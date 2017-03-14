@@ -42,7 +42,7 @@ public class ScanClassicTest extends BaseTester<MainActivity>
         final List<BleDevice> devices = new ArrayList<>();
         mConfig.scanClassicBoostLength = Interval.DISABLED;
         mgr.setConfig(mConfig);
-        mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {
@@ -75,7 +75,7 @@ public class ScanClassicTest extends BaseTester<MainActivity>
         final List<BleDevice> devices = new ArrayList<>();
         mConfig.scanClassicBoostLength = Interval.secs(0.5);
         mgr.setConfig(mConfig);
-        mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
             {

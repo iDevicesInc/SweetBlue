@@ -7,8 +7,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
+import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -215,7 +215,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	
 	/**
 	 * Default is <code>true</code> - controls whether a {@link BleDevice} is placed into an in-memory cache when it becomes {@link BleDeviceState#UNDISCOVERED}.
-	 * If <code>true</code>, subsequent calls to {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)} with
+	 * If <code>true</code>, subsequent calls to {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)} with
 	 * {@link LifeCycle#DISCOVERED} (or calls to {@link BleManager#newDevice(String)}) will return the cached {@link BleDevice} instead of creating a new one.
 	 * <br><br>
 	 * The advantages of caching are:<br>
@@ -286,7 +286,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * <br><br>
 	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
-	 * @see BleManager.DiscoveryListener#onEvent(DiscoveryEvent)
+	 * @see DiscoveryListener#onEvent(DiscoveryEvent)
 	 * @see #undiscoveryKeepAlive
 	 */
 	@Nullable(Prevalence.NORMAL)
@@ -301,7 +301,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * <br><br>
 	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
-	 * @see BleManager.DiscoveryListener#onEvent(DiscoveryEvent)
+	 * @see DiscoveryListener#onEvent(DiscoveryEvent)
 	 * @see #minScanTimeNeededForUndiscovery
 	 */
 	@Nullable(Prevalence.NORMAL)

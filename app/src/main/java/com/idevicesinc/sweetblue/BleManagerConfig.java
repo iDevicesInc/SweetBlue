@@ -12,7 +12,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.SparseArray;
-import com.idevicesinc.sweetblue.BleManager.DiscoveryListener;
+import com.idevicesinc.sweetblue.DiscoveryListener;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -352,7 +352,7 @@ public class BleManagerConfig extends BleDeviceConfig
 
 	/**
 	 * Default is <code>null</code>, meaning no filtering - all discovered devices will
-	 * be piped through your {@link BleManager.DiscoveryListener} instance
+	 * be piped through your {@link DiscoveryListener} instance
 	 * and added to the internal list of {@link BleManager}.
 	 * 
 	 * @see ScanFilter
@@ -364,7 +364,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Default is <code>null</code> - can also be set post-construction with {@link BleManager#setListener_Discovery(DiscoveryListener)},
 	 * which will override the implementation provided here.
 	 * 
-	 * @see BleManager.DiscoveryListener
+	 * @see DiscoveryListener
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public DiscoveryListener defaultDiscoveryListener		= null;
@@ -713,7 +713,7 @@ public class BleManagerConfig extends BleDeviceConfig
 
 			/**
 			 * Return this from {@link ScanFilter#onEvent(ScanEvent)} to acknowledge the discovery.
-			 * {@link BleManager.DiscoveryListener#onEvent(com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent)}
+			 * {@link DiscoveryListener#onEvent(com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent)}
 			 * will be called presently with a newly created {@link BleDevice}.
 			 */
 			public static Please acknowledge()
@@ -764,7 +764,7 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 
 		/**
-		 * Return {@link Please#acknowledge()} to acknowledge the discovery, in which case {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}
+		 * Return {@link Please#acknowledge()} to acknowledge the discovery, in which case {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)}
 		 * will be called shortly. Otherwise return {@link Please#ignore()} to ignore the discovered device.
 		 *
 		 * @return {@link Please#acknowledge()}, {@link Please#ignore()}, or {@link Please#acknowledge(BleDeviceConfig)} (or other static constructor methods that may be added in the future).

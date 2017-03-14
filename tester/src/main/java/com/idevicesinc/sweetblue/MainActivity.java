@@ -127,11 +127,11 @@ public class MainActivity extends Activity
                 }
             }
         });
-        mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        mgr.setListener_Discovery(new DiscoveryListener()
         {
-            @Override public void onEvent(BleManager.DiscoveryListener.DiscoveryEvent e)
+            @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
             {
-                if (e.was(BleManager.DiscoveryListener.LifeCycle.DISCOVERED))
+                if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
                 {
                     if (!mDevices.contains(e.device()))
                     {
@@ -140,7 +140,7 @@ public class MainActivity extends Activity
 
                     }
                 }
-                else if (e.was(BleManager.DiscoveryListener.LifeCycle.REDISCOVERED))
+                else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
                 {
 
                 }
