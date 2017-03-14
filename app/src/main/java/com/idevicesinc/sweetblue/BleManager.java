@@ -1446,7 +1446,7 @@ public final class BleManager
 		{
 			if( doAutoScan() )
 			{
-				startScan_private(m_config.autoScanActiveTime, null, null, /*isPoll=*/true);
+				startScan_private(new ScanOptions().scanFor(m_config.autoScanActiveTime).asPoll(true));
 			}
 		}
 	}
@@ -1582,7 +1582,14 @@ public final class BleManager
 	{
 		showScanWarningIfNeeded();
 
-		return startScan_private(scanTime, filter, discoveryListener, /*isPoll=*/false);
+		return startScan_private(new ScanOptions().scanFor(scanTime).withScanFilter(filter).withDiscoveryListener(discoveryListener).asPoll(false));
+	}
+
+	public final boolean startScan(ScanOptions options)
+	{
+		showScanWarningIfNeeded();
+
+		return startScan_private(options);
 	}
 
 	private void showScanWarningIfNeeded()
@@ -1614,10 +1621,13 @@ public final class BleManager
 		}
 	}
 
-	final boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
+//
+//    final boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
+//    {
+	final boolean startScan_private(ScanOptions options)
 	{
 		m_scanManager.resetTimeNotScanning();
-		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
+		options.m_scanTime = options.m_scanTime.secs() < 0.0 ? Interval.INFINITE : options.m_scanTime;
 
 		if( false == isBluetoothEnabled() )
 		{
@@ -1626,29 +1636,53 @@ public final class BleManager
 			return false;
 		}
 
-		m_doingInfiniteScan = scanTime.equals(Interval.INFINITE);
+		m_doingInfiniteScan = options.m_scanTime.equals(Interval.INFINITE);
 
-		if( discoveryListener != null )
+		if( options.m_discoveryListener != null )
 		{
-			setListener_Discovery(discoveryListener);
+			setListener_Discovery(options.m_discoveryListener);
 		}
 
-		m_filterMngr.add(filter);
+
+		if (options.m_scanFilter != null)
+		{
+			m_filterMngr.add(options.m_scanFilter);
+		}
+
+		if (options.m_isPeriodic)
+		{
+			m_config.autoScanActiveTime = options.m_scanTime;
+			m_config.autoScanPauseInterval = options.m_pauseTime;
+		}
 
 		final P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
 
 		if( scanTask != null )
 		{
-			scanTask.resetTimeout(scanTime.secs());
+			scanTask.resetTimeout(options.m_scanTime.secs());
 		}
 		else
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
-
 			m_stateTracker.append(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs(), isPoll, null));
+            PE_TaskPriority pri = options.m_isPriorityScan ? PE_TaskPriority.CRITICAL : null;
+
+			boolean startScan = true;
+
+			if (options.m_isPeriodic)
+			{
+				if (!Interval.isEnabled(m_config.autoScanActiveTime) && !doAutoScan() )
+				{
+					startScan = false;
+				}
+			}
+
+			if (startScan)
+			{
+				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), options.m_isPoll, pri));
+			}
 		}
 
 		return true;
