@@ -33,7 +33,6 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleServer.IncomingListener;
-import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
@@ -145,125 +144,6 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  */
 public final class BleManager
 {
-	/**
-	 * Provide an implementation to {@link BleManager#reset(BleManager.ResetListener)}
-	 * to be notified when a reset operation is complete.
-	 *
-	 * @see BleManager#reset(BleManager.ResetListener)
-	 */
-	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ResetListener
-	{
-		/**
-		 * Enumeration of the progress of the reset.
-		 * More entries may be added in the future.
-		 */
-		public static enum Progress
-		{
-			/**
-			 * The reset has completed successfully.
-			 */
-			COMPLETED;
-		}
-
-		/**
-		 * Struct passed to {@link BleManager.ResetListener#onEvent(BleManager.ResetListener.ResetEvent)}.
-		 */
-		@Immutable
-		public static class ResetEvent extends Event
-		{
-			/**
-			 * The {@link BleManager} the reset was applied to.
-			 */
-			public BleManager manager(){  return m_manager;  }
-			private final BleManager m_manager;
-
-			/**
-			 * The progress of the reset.
-			 */
-			public Progress progress(){  return m_progress;  }
-			private final Progress m_progress;
-
-			ResetEvent(BleManager manager, Progress progress)
-			{
-				m_manager = manager;
-				m_progress = progress;
-			}
-
-			@Override public String toString()
-			{
-				return Utils_String.toString
-				(
-					this.getClass(),
-					"progress",		progress()
-				);
-			}
-		}
-
-		/**
-		 * The reset event, for now only fired when the reset is completed. Hopefully the bluetooth stack is OK now.
-		 */
-		void onEvent(final ResetEvent e);
-	}
-
-	/**
-	 * Mostly only for SweetBlue library developers. Provide an implementation to
-	 * {@link BleManager#setListener_Assert(BleManager.AssertListener)} to be notified whenever
-	 * an assertion fails through {@link BleManager#ASSERT(boolean, String)}.
-	 */
-	@Advanced
-	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface AssertListener
-	{
-		/**
-		 * Struct passed to {@link BleManager.AssertListener#onEvent(BleManager.AssertListener.AssertEvent)}.
-		 */
-		@Immutable
-		public static class AssertEvent extends Event
-		{
-			/**
-			 * The {@link BleManager} instance for your application.
-			 */
-			public BleManager manager(){  return m_manager;  }
-			private final BleManager m_manager;
-
-			/**
-			 * Message associated with the assert, or an empty string.
-			 */
-			public String message(){  return m_message;  }
-			private final String m_message;
-
-			/**
-			 * Stack trace leading up to the assert.
-			 */
-			public StackTraceElement[] stackTrace(){  return m_stackTrace;  }
-			private final StackTraceElement[] m_stackTrace;
-
-			AssertEvent(BleManager manager, String message, StackTraceElement[] stackTrace)
-			{
-				m_manager = manager;
-				m_message = message;
-				m_stackTrace = stackTrace;
-			}
-
-			@Override public String toString()
-			{
-				return Utils_String.toString
-				(
-					this.getClass(),
-					"message",			message(),
-					"stackTrace",		stackTrace()
-				);
-			}
-		}
-
-		/**
-		 * Provides additional info about the circumstances surrounding the assert.
-		 */
-		void onEvent(final AssertEvent e);
-	}
-
-
 	/**
 	 * Create the singleton instance or retrieve the already-created singleton instance with default configuration options set.
 	 * If you call this after you call {@link #get(android.content.Context, BleManagerConfig)} (for example in another
@@ -1225,7 +1105,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Fires a callback to {@link BleManager.AssertListener} if condition is false. Will post a {@link android.util.Log#ERROR}-level
+	 * Fires a callback to {@link AssertListener} if condition is false. Will post a {@link android.util.Log#ERROR}-level
 	 * message with a stack trace to the console as well if {@link BleManagerConfig#loggingEnabled} is true.
 	 */
 	@Advanced
@@ -1385,7 +1265,7 @@ public final class BleManager
 
 					if (nukeListeners != null)
 					{
-						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
+						ResetListener.ResetEvent event = new ResetListener.ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
 						nukeListeners.onEvent(event);
 					}
 				}
