@@ -26,9 +26,7 @@ final class P_BleManager_Listeners
 {
     private static final String BluetoothDevice_EXTRA_REASON = "android.bluetooth.device.extra.REASON";
     private static final String BluetoothDevice_ACTION_DISAPPEARED = "android.bluetooth.device.action.DISAPPEARED";
-    private static Method m_getLeState_marshmallow;
-    private static Integer m_refState;
-    private static Integer m_state;
+
 
     private Interval m_pollRate;
     private double m_timeSinceLastPoll;
@@ -547,12 +545,22 @@ final class P_BleManager_Listeners
                         //--- RB > Adding this missing state. Due to the IDLE state, it's possible we miss other states in between update loops, so we must make sure
                         //--- 		to account for all states in this check. This case is a bit more odd, as we went from TURNING_OFF, to BLE_TURNING_ON. Will treat this as
                         //---		STATE_TURNING_ON (usually, that state comes before this one)
+
+                        // Fail the Turn off task, as we're now turning on
+
+                        m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
+
                         onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_OFF, BleStatuses.STATE_TURNING_ON);
                     }
                     else if (newState == BleStatuses.STATE_TURNING_ON)
                     {
                         //--- RB > Adding this missing state. Due to the IDLE state, it's possible we miss other states in between update loops, so we must make sure
                         //--- 		to account for all states in this check.
+
+                        // Fail the Turn off task, as we're now turning on
+
+                        m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
+
                         onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_OFF, BleStatuses.STATE_TURNING_ON);
                     }
                     else
@@ -662,36 +670,11 @@ final class P_BleManager_Listeners
         }
     }
 
-    private static int getBleStateReflect(BluetoothAdapter adapter)
-    {
-        try
-        {
-            if (m_getLeState_marshmallow == null)
-            {
-                m_getLeState_marshmallow = BluetoothAdapter.class.getDeclaredMethod("getLeState");
-            }
-            m_refState = (Integer) m_getLeState_marshmallow.invoke(adapter);
-            m_state = adapter.getState();
-            // This is to fix an issue on the S7 (and perhaps other phones as well), where the OFF
-            // state is never returned from the getLeState method. This is because the BLE_ states represent if LE only mode is on/off. This does NOT
-            // relate to the Bluetooth radio being on/off. So, we check if STATE_BLE_ON, and the normal getState() method returns OFF, we
-            // will return a state of OFF here.
-            if (m_refState == BleStatuses.STATE_BLE_ON && m_state == OFF.getNativeCode())
-            {
-                return m_state;
-            }
-            return m_refState;
-        } catch (Exception e)
-        {
-            return adapter.getState();
-        }
-    }
-
     private int getBleState()
     {
         if (Utils.isMarshmallow() && m_mngr.getNativeAdapter() != null)
         {
-            return getBleStateReflect(m_mngr.getNativeAdapter());
+            return m_mngr.managerLayer().getBleState();
         }
         else
         {
