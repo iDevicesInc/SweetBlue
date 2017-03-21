@@ -84,7 +84,7 @@ public final class ManagerStateTest extends BaseBleUnitTest
         s.acquire();
     }
 
-    @Test
+//    @Test
     public void turningOffToTurningOnTest() throws Exception
     {
         m_config.loggingEnabled = true;
