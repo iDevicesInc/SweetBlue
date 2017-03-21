@@ -2869,6 +2869,32 @@ public final class BleManager
 		m_taskQueue.add(task);
 	}
 
+	private String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
+	{
+		final String nameFromDevice;
+		final String nameFromRecord;
+		nameFromDevice = device.getName();
+		nameFromRecord = Utils_ScanRecord.parseName(scanRecord);
+		if (isDeviceThatReturnsShortName())
+		{
+			if (!TextUtils.isEmpty(nameFromRecord))
+			{
+				return nameFromRecord;
+			}
+			else
+			{
+				m_logger.w("Unable to get complete name from scan record! Defaulting to the short name given from BluetoothDevice.");
+			}
+		}
+		return TextUtils.isEmpty(nameFromDevice) ? nameFromRecord : nameFromDevice;
+	}
+
+	private boolean isDeviceThatReturnsShortName()
+	{
+		// TODO - Get the model/product and manufacurer strings for the Arbor IOT-500 -- It's the only one we're aware of that does this.
+		return false;
+	}
+
 	final void onDiscoveredFromNativeStack(final P_NativeDeviceLayer device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
@@ -2886,7 +2912,7 @@ public final class BleManager
 
 		try
 		{
-			rawDeviceName = TextUtils.isEmpty(device_native.getName()) ? Utils_ScanRecord.parseName(scanRecord_nullable) : device_native.getName();
+			rawDeviceName = getDeviceName(device_native, scanRecord_nullable);
 		}
 
 		//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.
