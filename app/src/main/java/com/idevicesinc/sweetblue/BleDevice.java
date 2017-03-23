@@ -22,7 +22,6 @@ import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
-import com.idevicesinc.sweetblue.WriteBuilder;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Distance;
@@ -6478,14 +6477,14 @@ public final class BleDevice extends BleNode
         return NULL_READWRITE_EVENT();
     }
 
-    private int getEffectiveMtuSize()
+    private int getEffectiveWriteMtuSize()
     {
-        return getMtu() - BleManagerConfig.GATT_MTU_OVERHEAD;
+        return getMtu() - BleManagerConfig.GATT_WRITE_MTU_OVERHEAD;
     }
 
     private void addWriteDescriptorTasks(BluetoothGattDescriptor descriptor, FutureData data, boolean requiresBonding, ReadWriteListener listener)
     {
-        int mtuSize = getEffectiveMtuSize();
+        int mtuSize = getEffectiveWriteMtuSize();
         if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
         {
             queue().add(new P_Task_WriteDescriptor(this, descriptor, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
@@ -6499,7 +6498,7 @@ public final class BleDevice extends BleNode
 
     private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, DescriptorFilter filter, ReadWriteListener listener)
     {
-        int mtuSize = getEffectiveMtuSize();
+        int mtuSize = getEffectiveWriteMtuSize();
         if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
         {
             final P_Task_Write task_write;
