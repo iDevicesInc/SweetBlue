@@ -467,6 +467,10 @@ final class P_BleManager_Listeners
         //--- DRK > Note this is not an assert SweetBlue-logic-wise...just want to call out attention to state changes that I assumed were impossible.
         //---		That said I will not be surprised if this trips.
         m_mngr.ASSERT(false, "Weird BLE state change detected from polling: " + m_mngr.getLogger().gattBleState(oldState) + " -> " + m_mngr.getLogger().gattBleState(newState));
+
+        //--- RB > We still want to update the native state here, even if it's a state change we weren't expecting to get. This will probably happen more often now that the IDLE
+        //---       state is in, which means it's possible we miss more state changes as a result
+        onNativeBleStateChange_fromPolling(oldState, newState);
     }
 
     private void onNativeBleStateChange_fromPolling(final int oldState, final int newState)
