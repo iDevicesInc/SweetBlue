@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import static com.idevicesinc.sweetblue.BleManagerState.IDLE;
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
@@ -32,6 +33,7 @@ final class P_BleManager_Listeners
 
     private Interval m_pollRate;
     private double m_timeSinceLastPoll;
+    private boolean m_checkingState;
 
 
     private final PA_Task.I_StateListener m_scanTaskListener = new PA_Task.I_StateListener()
@@ -227,7 +229,20 @@ final class P_BleManager_Listeners
 
         if (Utils.isMarshmallow())
         {
-            if (previousNativeState == BleStatuses.STATE_ON && newNativeState == BleStatuses.STATE_TURNING_OFF)
+            // If in the IDLE state, we will pass the state change through as if pre 6.0, and bump out of the IDLE state
+            // to catch any other changes that may happen in polling.
+            if (m_mngr.is(IDLE))
+            {
+                // If we're checking the state in the update method, don't bother posting this here. We'll fall out of IDLE state, so any further changes
+                // will be caught soon in polling.
+                if (!m_checkingState)
+                {
+                    onNativeBleStateChange(previousNativeState, newNativeState);
+                }
+                m_mngr.m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
+                m_mngr.checkIdleStatus();
+            }
+            else if (previousNativeState == BleStatuses.STATE_ON && newNativeState == BleStatuses.STATE_TURNING_OFF)
             {
                 if (m_nativeState == BleStatuses.STATE_ON)
                 {
@@ -493,6 +508,8 @@ final class P_BleManager_Listeners
 
         if (Utils.isMarshmallow() && m_mngr.m_config.allowManagerStatePolling && Interval.isEnabled(m_pollRate) && m_timeSinceLastPoll >= m_pollRate.secs())
         {
+            m_checkingState = true;
+
             m_timeSinceLastPoll = 0.0;
 
             final int oldState = m_nativeState;
@@ -655,6 +672,7 @@ final class P_BleManager_Listeners
                     }
                 }
             }
+            m_checkingState = false;
         }
         else if (Interval.isEnabled(m_pollRate) && m_timeSinceLastPoll < m_pollRate.secs())
         {
