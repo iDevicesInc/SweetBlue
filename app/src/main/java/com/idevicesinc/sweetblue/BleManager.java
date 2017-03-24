@@ -2891,7 +2891,11 @@ public final class BleManager
 
 	private boolean isDeviceThatReturnsShortName()
 	{
-		// TODO - Get the model/product and manufacurer strings for the Arbor IOT-500 -- It's the only one we're aware of that does this.
+		//--- > RB  Right now, this is the only device we're aware of that returns the short name from BluetoothDevice.getName(). This may grow in the future.
+		if (Build.MANUFACTURER.equalsIgnoreCase("amobile") && Build.PRODUCT.equalsIgnoreCase("full_amobile2601_wp_l") && Build.MODEL.equalsIgnoreCase("iot-500"))
+		{
+			return true;
+		}
 		return false;
 	}
 
