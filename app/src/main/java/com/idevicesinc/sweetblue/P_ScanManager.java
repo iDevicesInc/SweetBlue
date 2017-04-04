@@ -486,7 +486,7 @@ final class P_ScanManager
         {
             if( m_manager.doAutoScan() )
             {
-                m_manager.startScan_private(m_manager.m_config.autoScanActiveTime, null, null, /*isPoll=*/true);
+                m_manager.startScan_private(new ScanOptions().scanFor(m_manager.m_config.autoScanActiveTime).asPoll(true));
             }
         }
 
