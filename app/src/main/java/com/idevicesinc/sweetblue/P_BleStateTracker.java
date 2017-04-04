@@ -28,8 +28,13 @@ final class P_BleStateTracker extends PA_StateTracker
 			{
 				@Override public void run()
 				{
-					final StateEvent event = new StateEvent(m_mngr, oldStateBits, newStateBits, intentMask);
-					m_stateListener.onEvent(event);
+					//--- RB > Add an additional null guard here. It's possible that in the time it took for this Runnable to execute,
+					//---		the listener got nulled out.
+					if (m_stateListener != null)
+					{
+						final StateEvent event = new StateEvent(m_mngr, oldStateBits, newStateBits, intentMask);
+						m_stateListener.onEvent(event);
+					}
 				}
 			});
 		}
