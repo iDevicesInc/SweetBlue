@@ -96,6 +96,14 @@ public final class DebugLogger implements SweetLogger
         return new ArrayList<>(logList);
     }
 
+    /**
+     * This is a convenience method which calls {@link #getLogList()}, then runs it through {@link Utils_String#prettyFormatLogList(List)}.
+     */
+    public final String getLogList_prettyString()
+    {
+        return Utils_String.prettyFormatLogList(getLogList());
+    }
+
     private static String level(int level)
     {
         switch (level)
