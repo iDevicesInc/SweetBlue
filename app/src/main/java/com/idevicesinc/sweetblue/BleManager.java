@@ -1612,7 +1612,7 @@ public final class BleManager
 
 							"As of Android M, in order for low energy scan results to return you must have the following:\n" +
 									"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
-									"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
+									"(B) Runtime permissions for aforementioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
 									"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
 									"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
 									"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
