@@ -1,9 +1,12 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.content.Context;
+import android.content.Intent;
 
 import com.idevicesinc.sweetblue.utils.ByteBuffer;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
@@ -44,6 +47,14 @@ public final class UnitTestUtils
         byte[] add = new byte[6];
         new Random().nextBytes(add);
         return Utils_String.bytesToMacAddress(add);
+    }
+
+    public static void sendBluetoothStateBroadcast(Context context, int previousState, int newState)
+    {
+        Intent intent = new Intent(BluetoothAdapter.ACTION_STATE_CHANGED);
+        intent.putExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE, previousState);
+        intent.putExtra(BluetoothAdapter.EXTRA_STATE, newState);
+        context.sendBroadcast(intent);
     }
 
     public static void readError(BleDevice device, BluetoothGattCharacteristic characteristic, int gattStatus)

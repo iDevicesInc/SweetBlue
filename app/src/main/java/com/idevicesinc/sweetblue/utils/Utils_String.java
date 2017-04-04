@@ -6,6 +6,7 @@ import android.text.style.CharacterStyle;
 
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
+import java.util.List;
 
 /**
  * Utility methods for string manipulation and creation needed by SweetBlue, mostly for debug purposes.
@@ -180,6 +181,24 @@ public class Utils_String extends Utils
 			}
 		}
 		return builder.toString();
+	}
+
+	public static String prettyFormatLogList(List<String> logEntries)
+	{
+		int size = logEntries == null ? 0 : logEntries.size();
+		StringBuilder b = new StringBuilder();
+		b.append("Log entry count: ").append(size);
+		if (size > 0)
+		{
+			b.append("\n\n");
+			b.append("Entries:\n\n[\n");
+			for (int i = 0; i < size; i++)
+			{
+				b.append(logEntries.get(i)).append("\n\n");
+			}
+			b.append("]\n");
+		}
+		return b.toString();
 	}
 
 	public static String toString(int mask, State[] values)

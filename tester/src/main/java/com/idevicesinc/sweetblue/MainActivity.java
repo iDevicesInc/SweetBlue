@@ -3,7 +3,9 @@ package com.idevicesinc.sweetblue;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +15,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
+import com.idevicesinc.sweetblue.utils.DebugLogger;
 import com.idevicesinc.sweetblue.utils.Interval;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +34,7 @@ public class MainActivity extends Activity
     private Button mStopScan;
     private ScanAdaptor mAdaptor;
     private ArrayList<BleDevice> mDevices;
+    private DebugLogger mLogger;
 
 
     private final static UUID tempUuid = UUID.fromString("47495078-0002-491E-B9A4-F85CD01C3698");
@@ -106,6 +110,9 @@ public class MainActivity extends Activity
         config.useGattRefresh = true;
         config.runOnMainThread = false;
 
+        mLogger = new DebugLogger(100);
+        config.logger = mLogger;
+
         mgr = BleManager.get(this, config);
         mgr.setListener_State(new BleManager.StateListener()
         {
@@ -162,6 +169,23 @@ public class MainActivity extends Activity
                     }
                 }
         );
+    }
+
+    @Override public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case R.id.print_pretty_log:
+                Log.e("Logs!", Utils_String.prettyFormatLogList(mLogger.getLogList()));
+                return true;
+        }
+        return false;
+    }
+
+    @Override public boolean onCreateOptionsMenu(Menu menu)
+    {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
     }
 
     @Override public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)

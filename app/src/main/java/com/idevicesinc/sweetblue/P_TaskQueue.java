@@ -433,6 +433,19 @@ final class P_TaskQueue
 		
 		return false;
 	}
+
+	private int positionInQueue(Class<? extends PA_Task> taskClass, BleManager mngr_nullable, BleDevice device_nullable, BleServer server_nullable)
+	{
+		for( int i = 0; i < m_queue.size(); i++ )
+		{
+			if( PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr_nullable, device_nullable, server_nullable) )
+			{
+				return i;
+			}
+		}
+
+		return -1;
+	}
 	
 	public int getSize()
 	{
@@ -442,6 +455,21 @@ final class P_TaskQueue
 	public List<PA_Task> getRaw()
 	{
 		return m_queue;
+	}
+
+	public int positionInQueue(Class<? extends PA_Task> taskClass, BleManager mngr)
+	{
+		return positionInQueue(taskClass, mngr, null, null);
+	}
+
+	public int positionInQueue(Class<? extends PA_Task> taskClass, BleDevice device)
+	{
+		return positionInQueue(taskClass, null, device, null);
+	}
+
+	public int positionInQueue(Class<? extends PA_Task> taskClass, BleServer server)
+	{
+		return positionInQueue(taskClass, null, null, server);
 	}
 	
 	public boolean isInQueue(Class<? extends PA_Task> taskClass, BleManager mngr)

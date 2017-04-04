@@ -24,6 +24,7 @@ interface P_NativeManagerLayer {
     boolean isMultipleAdvertisementSupported();
     void resetManager(Context context);
     int getState();
+    int getBleState();
     String getAddress();
     Set<BluetoothDevice> getBondedDevices();
     BluetoothAdapter getNativeAdaptor();

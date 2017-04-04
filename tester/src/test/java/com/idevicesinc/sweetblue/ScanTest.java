@@ -284,6 +284,56 @@ public class ScanTest extends BaseBleUnitTest
         doPeriodicScanTest(1000);
     }
 
+    @Test(timeout = 7000)
+    public void periodicScanWithOptionsTest() throws Exception
+    {
+        doPeriodicScanOptionsTest(1000);
+    }
+
+    @Test(timeout = 14000)
+    public void highPriorityScanTest() throws Exception
+    {
+        final Semaphore s = new Semaphore(0);
+
+        final Pointer<Integer> connected = new Pointer<>(0);
+
+        final BleDevice device2;
+
+        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        {
+            @Override public void onEvent(DiscoveryEvent e)
+            {
+                if (e.was(LifeCycle.DISCOVERED))
+                {
+                    e.device().connect();
+                    if (connected.value == 1)
+                    {
+                        m_mgr.startScan(new ScanOptions().scanFor(Interval.TEN_SECS).asHighPriority(true));
+                    }
+                    connected.value += 1;
+                }
+            }
+        });
+
+        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        device2 = m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device 2");
+
+        m_mgr.setListener_State(new ManagerStateListener()
+        {
+            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            {
+                if (e.didEnter(BleManagerState.SCANNING))
+                {
+                    P_TaskQueue queue = m_mgr.getTaskQueue();
+                    assertTrue(queue.isInQueue(P_Task_Connect.class, device2));
+                    int position = queue.positionInQueue(P_Task_Connect.class, device2);
+                    assertTrue(position == -1);
+                    s.release();
+                }
+            }
+        });
+    }
+
 
 
 
@@ -322,6 +372,45 @@ public class ScanTest extends BaseBleUnitTest
                 });
                 time.set(m_mgr.currentTime());
                 m_mgr.startPeriodicScan(Interval.millis(scanTime), Interval.millis(scanTime));
+            }
+        });
+    }
+
+    private void doPeriodicScanOptionsTest(final long scanTime) throws Exception
+    {
+        final AtomicBoolean didStop = new AtomicBoolean(false);
+        doTestOperation(new TestOp()
+        {
+            @Override public void run(final Semaphore semaphore)
+            {
+                final AtomicLong time = new AtomicLong();
+                m_mgr.setListener_State(new ManagerStateListener()
+                {
+                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
+                    {
+                        if (e.didExit(BleManagerState.SCANNING))
+                        {
+                            if (didStop.get())
+                            {
+                                long diff = m_mgr.currentTime() - time.get();
+                                // Make sure that our scan time is correct, this checks against
+                                // 3x the scan amount (2 scans, 1 pause). We may need to add a bit
+                                // to LEEWAY here, as it's going through 3 iterations, but for now
+                                // it seems to be ok for the test
+                                long targetTime = scanTime * 3;
+                                assertTrue("Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
+                                semaphore.release();
+                            }
+                            else
+                            {
+                                didStop.set(true);
+                            }
+                        }
+                    }
+                });
+                time.set(m_mgr.currentTime());
+                ScanOptions options = new ScanOptions().scanPeriodically(Interval.millis(scanTime), Interval.millis(scanTime));
+                m_mgr.startScan(options);
             }
         });
     }
