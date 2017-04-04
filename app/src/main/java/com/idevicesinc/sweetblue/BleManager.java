@@ -2903,6 +2903,36 @@ public final class BleManager
 		m_taskQueue.add(task);
 	}
 
+	private String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
+	{
+		final String nameFromDevice;
+		final String nameFromRecord;
+		nameFromDevice = device.getName();
+		nameFromRecord = Utils_ScanRecord.parseName(scanRecord);
+		if (isDeviceThatReturnsShortName())
+		{
+			if (!TextUtils.isEmpty(nameFromRecord))
+			{
+				return nameFromRecord;
+			}
+			else
+			{
+				m_logger.w("Unable to get complete name from scan record! Defaulting to the short name given from BluetoothDevice.");
+			}
+		}
+		return TextUtils.isEmpty(nameFromDevice) ? nameFromRecord : nameFromDevice;
+	}
+
+	private boolean isDeviceThatReturnsShortName()
+	{
+		//--- > RB  Right now, this is the only device we're aware of that returns the short name from BluetoothDevice.getName(). This may grow in the future.
+		if (Build.MANUFACTURER.equalsIgnoreCase("amobile") && Build.PRODUCT.equalsIgnoreCase("full_amobile2601_wp_l") && Build.MODEL.equalsIgnoreCase("iot-500"))
+		{
+			return true;
+		}
+		return false;
+	}
+
 	final void onDiscoveredFromNativeStack(final P_NativeDeviceLayer device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
@@ -2920,7 +2950,7 @@ public final class BleManager
 
 		try
 		{
-			rawDeviceName = TextUtils.isEmpty(device_native.getName()) ? Utils_ScanRecord.parseName(scanRecord_nullable) : device_native.getName();
+			rawDeviceName = getDeviceName(device_native, scanRecord_nullable);
 		}
 
 		//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.

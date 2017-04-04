@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.annotation.TargetApi;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -9,15 +9,13 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
-import android.os.Build;
-
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
-
+import java.lang.reflect.Method;
 import java.util.Set;
-
+import static com.idevicesinc.sweetblue.BleManagerState.OFF;
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
 
 
@@ -28,6 +26,9 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
     private BluetoothManager m_manager;
     private BluetoothAdapter m_adaptor;
     private BleManager m_bleManager;
+    private static Method m_getLeState_marshmallow;
+    private static Integer m_refState;
+    private static Integer m_state;
 
 
 
@@ -87,6 +88,31 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
     @Override public int getState()
     {
         return m_adaptor.getState();
+    }
+
+    @Override public int getBleState()
+    {
+        try
+        {
+            if (m_getLeState_marshmallow == null)
+            {
+                m_getLeState_marshmallow = BluetoothAdapter.class.getDeclaredMethod("getLeState");
+            }
+            m_refState = (Integer) m_getLeState_marshmallow.invoke(m_adaptor);
+            m_state = m_adaptor.getState();
+            // This is to fix an issue on the S7 (and perhaps other phones as well), where the OFF
+            // state is never returned from the getLeState method. This is because the BLE_ states represent if LE only mode is on/off. This does NOT
+            // relate to the Bluetooth radio being on/off. So, we check if STATE_BLE_ON, and the normal getState() method returns OFF, we
+            // will return a state of OFF here.
+            if (m_refState == BleStatuses.STATE_BLE_ON && m_state == OFF.getNativeCode())
+            {
+                return m_state;
+            }
+            return m_refState;
+        } catch (Exception e)
+        {
+            return m_adaptor.getState();
+        }
     }
 
     @Override public String getAddress()
