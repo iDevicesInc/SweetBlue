@@ -191,11 +191,12 @@ public class Utils_String extends Utils
 		if (size > 0)
 		{
 			b.append("\n\n");
-			b.append("Entries:\n\n");
+			b.append("Entries:\n\n[\n");
 			for (int i = 0; i < size; i++)
 			{
 				b.append(logEntries.get(i)).append("\n\n");
 			}
+			b.append("]\n");
 		}
 		return b.toString();
 	}
