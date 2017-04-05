@@ -560,7 +560,7 @@ public abstract class BleNode implements UsesCustomNull
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService getNativeService(final UUID serviceUuid)
 	{
-		return m_serviceMngr.getServiceDirectlyFromNativeNode(serviceUuid);
+		return m_serviceMngr.getServiceDirectlyFromNativeNode(serviceUuid).m_service;
 	}
 
 	/**

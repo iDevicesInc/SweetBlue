@@ -35,7 +35,7 @@ abstract class PA_ServiceManager
 	{
 	}
 
-	public abstract BluetoothGattService getServiceDirectlyFromNativeNode(final UUID uuid);
+	public abstract WrappedNativeGattService getServiceDirectlyFromNativeNode(final UUID uuid);
 
 	protected abstract List<BluetoothGattService> getNativeServiceList_original();
 
@@ -61,11 +61,11 @@ abstract class PA_ServiceManager
 		}
 		else
 		{
-			final BluetoothGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+			final WrappedNativeGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
 
-			if( service_nullable != null )
+			if( service_nullable != null && service_nullable.m_service != null)
 			{
-				return getCharacteristic(service_nullable, charUuid);
+				return getCharacteristic(service_nullable.m_service, charUuid);
 			}
 			else
 			{
@@ -95,9 +95,9 @@ abstract class PA_ServiceManager
 		}
 		else
 		{
-			final BluetoothGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+			final WrappedNativeGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
 
-			if( service_nullable != null )
+			if( service_nullable != null && service_nullable.m_service != null )
 			{
 				return getCharacteristic(service_nullable, charUuid, filter);
 			}
@@ -384,5 +384,17 @@ abstract class PA_ServiceManager
 		{
 			return false;
 		}
+	}
+
+	static class WrappedNativeGattService
+    {
+        BluetoothGattService m_service;
+        BleManager.UhOhListener.UhOh m_uhOh;
+    }
+
+    static class WrappedNativeCharacteristic
+	{
+		BluetoothGattCharacteristic m_characteristic;
+		BleManager.UhOhListener.UhOh m_uhOh;
 	}
 }

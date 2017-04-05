@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import java.util.List;
 import java.util.UUID;
-import android.bluetooth.BluetoothGatt;
+
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -144,7 +144,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		return 0x0;
 	}
 
-	@Override public final BluetoothGattService getServiceDirectlyFromNativeNode(UUID serviceUuid)
+	@Override public final WrappedNativeGattService getServiceDirectlyFromNativeNode(UUID serviceUuid)
 	{
 		return m_device.layerManager().getService(serviceUuid);
 	}

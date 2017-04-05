@@ -21,7 +21,7 @@ interface P_GattLayer
     Boolean getAuthRetryValue();
     boolean equals(BluetoothGatt gatt);
     List<BluetoothGattService> getNativeServiceList(P_Logger logger);
-    BluetoothGattService getService(UUID serviceUuid, P_Logger logger);
+    PA_ServiceManager.WrappedNativeGattService getService(UUID serviceUuid, P_Logger logger);
     boolean isGattNull();
     BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback);
     void disconnect();

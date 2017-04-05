@@ -14,7 +14,6 @@ import android.os.DeadObjectException;
 
 import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.compat.L_Util;
-import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.lang.reflect.Field;
@@ -203,8 +202,9 @@ final class P_AndroidGatt implements P_GattLayer
         return list_native;
     }
 
-    @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
+    @Override public PA_ServiceManager.WrappedNativeGattService getService(UUID serviceUuid, P_Logger logger)
     {
+        PA_ServiceManager.WrappedNativeGattService wService = new PA_ServiceManager.WrappedNativeGattService();
         BluetoothGattService service = null;
         try
         {
@@ -222,9 +222,11 @@ final class P_AndroidGatt implements P_GattLayer
                 uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
             m_device.getManager().uhOh(uhoh);
+            wService.m_uhOh = uhoh;
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the native service!");
         }
-        return service;
+        wService.m_service = service;
+        return wService;
     }
 
     @Override public boolean isGattNull()
