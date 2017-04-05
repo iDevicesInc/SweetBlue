@@ -4474,6 +4474,11 @@ public final class BleDevice extends BleNode
      * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
      * this call to succeed.
      *
+     * <b>NOTE 1:</b> This will only work on devices running Android Lollipop (5.0) or higher. Otherwise it will be ignored.
+     * <b>NOTE 2:</b> Some phones will request an MTU, and accept a higher number, but will fail (time out) when writing a characteristic with a large
+     * payload. Namely, we've found the Moto Pure X, and the OnePlus OnePlus2 to have this behavior. For those phones any MTU above
+     * 50 failed.
+     *
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     @Advanced
