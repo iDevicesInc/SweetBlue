@@ -4474,6 +4474,11 @@ public final class BleDevice extends BleNode
      * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
      * this call to succeed.
      *
+     * <b>NOTE 1:</b> This will only work on devices running Android Lollipop (5.0) or higher. Otherwise it will be ignored.
+     * <b>NOTE 2:</b> Some phones will request an MTU, and accept a higher number, but will fail (time out) when writing a characteristic with a large
+     * payload. Namely, we've found the Moto Pure X, and the OnePlus OnePlus2 to have this behavior. For those phones any MTU above
+     * 50 failed.
+     *
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
      */
     @Advanced
@@ -5731,6 +5736,32 @@ public final class BleDevice extends BleNode
         connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /*isReconnect=*/true);
     }
 
+    private BleTransaction.Auth getAuthTxn(BleTransaction.Auth txn)
+    {
+        if (txn != null)
+        {
+            return txn;
+        }
+        if (conf_device().defaultAuthFactory != null)
+        {
+            return conf_device().defaultAuthFactory.newAuthTxn();
+        }
+        return conf_device().defaultAuthTransaction;
+    }
+
+    private BleTransaction.Init getInitTxn(BleTransaction.Init txn)
+    {
+        if (txn != null)
+        {
+            return txn;
+        }
+        if (conf_device().defaultInitFactory != null)
+        {
+            return conf_device().defaultInitFactory.newInitTxn();
+        }
+        return conf_device().defaultInitTransaction;
+    }
+
     private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, final boolean isReconnect)
     {
         if (is_internal(INITIALIZED))
@@ -5740,8 +5771,8 @@ public final class BleDevice extends BleNode
             return;
         }
 
-        BleTransaction.Auth auth = authenticationTxn != null ? authenticationTxn : conf_device().defaultAuthTransaction;
-        BleTransaction.Init init = initTxn != null ? initTxn : conf_device().defaultInitTransaction;
+        BleTransaction.Auth auth = getAuthTxn(authenticationTxn);
+        BleTransaction.Init init = getInitTxn(initTxn);
 
         m_txnMngr.onConnect(auth, init);
 

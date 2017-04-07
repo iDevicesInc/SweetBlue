@@ -373,17 +373,45 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Auth} which will be used when
 	 * connecting to a {@link BleDevice}. This transaction will also be called if the {@link BleDevice} has
 	 * to reconnect for any reason.
+	 *
+	 * @deprecated This is still here only so we don't break current builds. It will be removed in version 3. Use
+	 * {@link #defaultAuthFactory} instead, so each device gets it's own instance, instead of sharing the same one.
+	 * If you are connecting to more than 1 device at a time, SweetBlue will throw an Exception.
 	 */
+	@Deprecated
 	@Nullable(Prevalence.NORMAL)
 	public BleTransaction.Auth defaultAuthTransaction			= null;
+
+
+	/**
+	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Auth} factory which will be used to dispatch a new instance
+	 * of the transaction when connecting to a {@link BleDevice}. This transaction will also be called if the {@link BleDevice} has
+	 * to reconnect for any reason.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public AuthTransactionFactory defaultAuthFactory			= null;
 
 	/**
 	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Init} which will be used when
 	 * connecting to a {@link BleDevice}. This transaction will also be called if the {@link BleDevice} has
 	 * to reconnect for any reason.
+	 *
+	 * @deprecated This is still here only so we don't break current builds. It will be removed in version 3. Use
+	 * {@link #defaultInitFactory} instead, so each device gets it's own instance, instead of sharing the same one. If you are connecting
+	 * to more than 1 device at a time, SweetBlue will throw an Exception.
 	 */
+	@Deprecated
 	@Nullable(Prevalence.NORMAL)
 	public BleTransaction.Init defaultInitTransaction			= null;
+
+
+	/**
+	 * Set a default {@link com.idevicesinc.sweetblue.BleTransaction.Init} factory which will be used to dispatch a new instance
+	 * of the transaction when connecting to a {@link BleDevice}. This transaction will also be called if the {@link BleDevice} has
+	 * to reconnect for any reason.
+	 */
+	@Nullable(Prevalence.NORMAL)
+	public InitTransactionFactory defaultInitFactory			= null;
 
 	/**
 	 * Default is {@link #DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE} - This sets the size of the list that tracks the history
@@ -622,6 +650,16 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 		{
 			return Please.doNothing();
 		}
+	}
+
+	public interface InitTransactionFactory<T extends BleTransaction.Init>
+	{
+		T newInitTxn();
+	}
+
+	public interface AuthTransactionFactory<T extends BleTransaction.Auth>
+	{
+		T newAuthTxn();
 	}
 
 	/**
