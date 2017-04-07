@@ -435,6 +435,12 @@ public final class BleManager
 			RANDOM_EXCEPTION,
 
 			/**
+			 * Occasionally, when trying to get the native GattService, android will throw a ConcurrentModificationException. This can happen
+			 * when trying to perform any read or write. Usually, you simply have to just try again.
+			 */
+			CONCURRENT_EXCEPTION,
+
+			/**
 			 * {@link android.bluetooth.BluetoothAdapter#startLeScan(BluetoothAdapter.LeScanCallback)} failed and {@link BleManagerConfig#revertToClassicDiscoveryIfNeeded} is <code>false</code>.
 			 *
 			 * @see BleManagerConfig#revertToClassicDiscoveryIfNeeded

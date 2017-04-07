@@ -5736,6 +5736,32 @@ public final class BleDevice extends BleNode
         connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /*isReconnect=*/true);
     }
 
+    private BleTransaction.Auth getAuthTxn(BleTransaction.Auth txn)
+    {
+        if (txn != null)
+        {
+            return txn;
+        }
+        if (conf_device().defaultAuthFactory != null)
+        {
+            return conf_device().defaultAuthFactory.newAuthTxn();
+        }
+        return conf_device().defaultAuthTransaction;
+    }
+
+    private BleTransaction.Init getInitTxn(BleTransaction.Init txn)
+    {
+        if (txn != null)
+        {
+            return txn;
+        }
+        if (conf_device().defaultInitFactory != null)
+        {
+            return conf_device().defaultInitFactory.newInitTxn();
+        }
+        return conf_device().defaultInitTransaction;
+    }
+
     private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, final boolean isReconnect)
     {
         if (is_internal(INITIALIZED))
@@ -5745,8 +5771,8 @@ public final class BleDevice extends BleNode
             return;
         }
 
-        BleTransaction.Auth auth = authenticationTxn != null ? authenticationTxn : conf_device().defaultAuthTransaction;
-        BleTransaction.Init init = initTxn != null ? initTxn : conf_device().defaultInitTransaction;
+        BleTransaction.Auth auth = getAuthTxn(authenticationTxn);
+        BleTransaction.Init init = getInitTxn(initTxn);
 
         m_txnMngr.onConnect(auth, init);
 

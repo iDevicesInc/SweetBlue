@@ -18,6 +18,7 @@ import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.lang.reflect.Field;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.UUID;
 
@@ -187,6 +188,16 @@ final class P_AndroidGatt implements P_GattLayer
         }
         catch (Exception e)
         {
+            BleManager.UhOhListener.UhOh uhoh;
+            if (e instanceof ConcurrentModificationException)
+            {
+                uhoh = BleManager.UhOhListener.UhOh.CONCURRENT_EXCEPTION;
+            }
+            else
+            {
+                uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
+            }
+            m_device.getManager().uhOh(uhoh);
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the list of native services!");
         }
         return list_native;
@@ -201,6 +212,16 @@ final class P_AndroidGatt implements P_GattLayer
         }
         catch (Exception e)
         {
+            BleManager.UhOhListener.UhOh uhoh;
+            if (e instanceof ConcurrentModificationException)
+            {
+                uhoh = BleManager.UhOhListener.UhOh.CONCURRENT_EXCEPTION;
+            }
+            else
+            {
+                uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
+            }
+            m_device.getManager().uhOh(uhoh);
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the native service!");
         }
         return service;
