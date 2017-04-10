@@ -106,9 +106,10 @@ public class MainActivity extends Activity
 
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
-        config.scanApi = BleScanApi.PRE_LOLLIPOP;
+        config.scanApi = BleScanApi.POST_LOLLIPOP;
         config.useGattRefresh = true;
         config.runOnMainThread = false;
+
 
         mLogger = new DebugLogger(100);
         config.logger = mLogger;
@@ -246,6 +247,7 @@ public class MainActivity extends Activity
         @Override public View getView(int position, View convertView, ViewGroup parent)
         {
             ViewHolder v;
+            final BleDevice device = mDevices.get(position);
             if (convertView == null)
             {
                 convertView = View.inflate(getContext(), R.layout.scan_listitem_layout, null);
@@ -258,7 +260,7 @@ public class MainActivity extends Activity
             {
                 v = (ViewHolder) convertView.getTag();
             }
-            v.name.setText(Utils_String.concatStrings(mDevices.get(position).toString(), "\nNative Name: ", mDevices.get(position).getName_native()));
+            v.name.setText(Utils_String.concatStrings(device.toString(), "\nNative Name: ", device.getName_native()));
             //v.rssi.setText(String.valueOf(mDevices.get(position).getRssi()));
             return convertView;
         }
