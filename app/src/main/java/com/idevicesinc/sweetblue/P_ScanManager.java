@@ -183,7 +183,7 @@ final class P_ScanManager
 
     final void postScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord)
     {
-        final Pointer<String> name = new Pointer<>(device.getName());
+        final Pointer<String> name = new Pointer<>(device != null ? device.getName() : null);
         m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
         {
             @Override public void run()
@@ -194,7 +194,7 @@ final class P_ScanManager
                 //--- > RB This is here because it has been observed that on Samsung devices, the BluetoothDevice getName() method can return a different name
                 //          here, versus before posting this Runnable. This hack prevents bad discoveries from getting piped up to app-level.
 
-                final String name2 = device.getName();
+                final String name2 = device != null ? device.getName() : null;
 
                 if (name.value != null && name2 != null && !name.value.equals(name2))
                 {

@@ -149,7 +149,7 @@ public final class BleManager
 	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface DiscoveryListener extends GenericListener_Void<DiscoveryEvent>
+	public static interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<DiscoveryListener.DiscoveryEvent>
 	{
 		/**
 		 * Enumerates changes in the "discovered" state of a device.
@@ -185,8 +185,8 @@ public final class BleManager
 		/**
 		 * Struct passed to {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
 		 */
-		@Immutable
-		public static class DiscoveryEvent extends Event
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class DiscoveryEvent extends com.idevicesinc.sweetblue.utils.Event
 		{
 			/**
 			 * The {@link BleManager} which is currently {@link BleManagerState#SCANNING}.
