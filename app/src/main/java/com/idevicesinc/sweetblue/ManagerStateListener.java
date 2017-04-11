@@ -1,12 +1,14 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
+
 /**
  * Provide an implementation to {@link BleManager#setListener_State(ManagerStateListener)} to receive callbacks
  * when the {@link BleManager} undergoes a {@link BleManagerState} change.
  */
 @com.idevicesinc.sweetblue.annotations.Lambda
-public interface ManagerStateListener
+public interface ManagerStateListener extends GenericListener_Void<BleManager.StateListener.StateEvent>
 {
 
     // TODO - Uncomment the below for version 3 (or better yet, copy it from BleManager in case of changes/bug fixes)

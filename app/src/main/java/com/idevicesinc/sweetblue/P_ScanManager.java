@@ -4,8 +4,11 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import com.idevicesinc.sweetblue.compat.L_Util;
+import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -178,15 +181,25 @@ final class P_ScanManager
         stopScan_private(false);
     }
 
-    final synchronized void postScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord)
+    final void postScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord)
     {
-        m_manager.getPostManager().postToUpdateThread(new Runnable()
+        final Pointer<String> name = new Pointer<>(device != null ? device.getName() : null);
+        m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
         {
             @Override public void run()
             {
-
                 final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
                 layer.setNativeDevice(device);
+
+                //--- > RB This is here because it has been observed that on Samsung devices, the BluetoothDevice getName() method can return a different name
+                //          here, versus before posting this Runnable. This hack prevents bad discoveries from getting piped up to app-level.
+
+                final String name2 = device != null ? device.getName() : null;
+
+                if (name.value != null && name2 != null && !name.value.equals(name2))
+                {
+                    return;
+                }
 
                 m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
 
@@ -195,9 +208,9 @@ final class P_ScanManager
         });
     }
 
-    final synchronized void postBatchScanResult(final List<L_Util.ScanResult> devices)
+    final void postBatchScanResult(final List<L_Util.ScanResult> devices)
     {
-        m_manager.getPostManager().postToUpdateThread(new Runnable()
+        m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
         {
             @Override public void run()
             {

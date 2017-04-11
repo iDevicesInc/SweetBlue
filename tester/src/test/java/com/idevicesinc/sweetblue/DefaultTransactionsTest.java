@@ -26,7 +26,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     private final static UUID mInitCharUuid = UUID.randomUUID();
 
 
-    @Test
+    @Test(timeout = 10000)
     public void defaultAuthTransactionTest() throws Exception
     {
         m_config.runOnMainThread = false;
@@ -69,7 +69,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         connectToMultipleDevices(m_config);
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void defaultInitTransactionTest() throws Exception
     {
         m_config.runOnMainThread = false;
@@ -112,7 +112,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         connectToMultipleDevices(m_config);
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void defaultAuthAndInitTransactionTest() throws Exception
     {
         m_config.runOnMainThread = false;
