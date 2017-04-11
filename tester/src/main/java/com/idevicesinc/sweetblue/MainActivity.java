@@ -106,10 +106,17 @@ public class MainActivity extends Activity
 
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
-        config.scanApi = BleScanApi.POST_LOLLIPOP;
+        config.scanApi = BleScanApi.PRE_LOLLIPOP;
         config.useGattRefresh = true;
+        config.saveNameChangesToDisk = false;
         config.runOnMainThread = false;
-
+        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        {
+            @Override public Please onEvent(ScanEvent e)
+            {
+                return Please.acknowledgeIf(e.name_normalized().contains("tag") || e.name_normalized().contains("pavlok"));
+            }
+        };
 
         mLogger = new DebugLogger(100);
         config.logger = mLogger;

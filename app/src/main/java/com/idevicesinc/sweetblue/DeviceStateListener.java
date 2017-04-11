@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
+
 /**
  * Provide an implementation to {@link BleDevice#setListener_State(DeviceStateListener)} and/or
  * {@link BleManager#setListener_DeviceState(DeviceStateListener)} to receive state change events.
@@ -9,7 +11,7 @@ package com.idevicesinc.sweetblue;
  * @see BleDevice#setListener_State(DeviceStateListener)
  */
 @com.idevicesinc.sweetblue.annotations.Lambda
-public interface DeviceStateListener
+public interface DeviceStateListener extends GenericListener_Void<BleDevice.StateListener.StateEvent>
 {
 
     // TODO - Uncomment the below for version 3 (or better yet, copy it from BleDevice in case of changes)
