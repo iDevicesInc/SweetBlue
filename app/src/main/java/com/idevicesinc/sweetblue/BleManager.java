@@ -46,6 +46,7 @@ import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Percent;
@@ -148,7 +149,7 @@ public final class BleManager
 	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface DiscoveryListener
+	public static interface DiscoveryListener extends GenericListener_Void<DiscoveryEvent>
 	{
 		/**
 		 * Enumerates changes in the "discovered" state of a device.
@@ -3076,6 +3077,20 @@ public final class BleManager
 		onDiscovered_wrapItUp(device, device.layerManager().getDeviceLayer(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
 	}
 
+	void postEvent(final GenericListener_Void listener, final Event event)
+	{
+		m_postManager.postCallback(new Runnable()
+		{
+			@Override public void run()
+			{
+				if (listener != null)
+				{
+					listener.onEvent(event);
+				}
+			}
+		});
+	}
+
     private void onDiscovered_wrapItUp(final BleDevice device, final P_NativeDeviceLayer device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
     {
     	if( newlyDiscovered )
@@ -3084,14 +3099,8 @@ public final class BleManager
 
     		if( m_discoveryListener != null )
     		{
-				m_postManager.postCallback(new Runnable()
-				{
-					@Override public void run()
-					{
-						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
-						m_discoveryListener.onEvent(event);
-					}
-				});
+				final DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+				postEvent(m_discoveryListener, event);
     		}
     	}
     	else
@@ -3100,14 +3109,8 @@ public final class BleManager
 
     		if( m_discoveryListener != null )
     		{
-				m_postManager.postCallback(new Runnable()
-				{
-					@Override public void run()
-					{
-						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
-						m_discoveryListener.onEvent(event);
-					}
-				});
+				final DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
+				postEvent(m_discoveryListener, event);
     		}
     	}
     }

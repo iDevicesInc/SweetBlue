@@ -6623,27 +6623,27 @@ public final class BleDevice extends BleNode
 
         if (listener_nullable != null)
         {
-            postEvent(listener_nullable, event);
+            postEventAsCallback(listener_nullable, event);
         }
 
         if (m_defaultReadWriteListener != null)
         {
-            postEvent(m_defaultReadWriteListener, event);
+            postEventAsCallback(m_defaultReadWriteListener, event);
         }
 
         if (getManager() != null && getManager().m_defaultReadWriteListener != null)
         {
-            postEvent(getManager().m_defaultReadWriteListener, event);
+            postEventAsCallback(getManager().m_defaultReadWriteListener, event);
         }
 
         if (m_defaultNotificationListener != null && (event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION))
         {
-            postEvent(m_defaultNotificationListener, fromReadWriteEvent(event));
+            postEventAsCallback(m_defaultNotificationListener, fromReadWriteEvent(event));
         }
 
         if (getManager() != null && getManager().m_defaultNotificationListener != null)
         {
-            postEvent(getManager().m_defaultNotificationListener, fromReadWriteEvent(event));
+            postEventAsCallback(getManager().m_defaultNotificationListener, fromReadWriteEvent(event));
         }
 
         m_txnMngr.onReadWriteResultCallbacksCalled();
@@ -6832,13 +6832,16 @@ public final class BleDevice extends BleNode
     }
     // static String NULL_MAC = "DE:AD:BE:EF:BA:BE";
 
-    private void postEvent(final GenericListener_Void listener, final Event event)
+    void postEventAsCallback(final GenericListener_Void listener, final Event event)
     {
         getManager().getPostManager().postCallback(new Runnable()
         {
             @Override public void run()
             {
-                listener.onEvent(event);
+                if (listener != null)
+                {
+                    listener.onEvent(event);
+                }
             }
         });
     }

@@ -24,19 +24,8 @@ final class P_BleStateTracker extends PA_StateTracker
 	{
 		if( m_stateListener != null )
 		{
-			m_mngr.getPostManager().postCallback(new Runnable()
-			{
-				@Override public void run()
-				{
-					//--- RB > Add an additional null guard here. It's possible that in the time it took for this Runnable to execute,
-					//---		the listener got nulled out.
-					if (m_stateListener != null)
-					{
-						final StateEvent event = new StateEvent(m_mngr, oldStateBits, newStateBits, intentMask);
-						m_stateListener.onEvent(event);
-					}
-				}
-			});
+			final StateEvent event = new StateEvent(m_mngr, oldStateBits, newStateBits, intentMask);
+			m_mngr.postEvent(m_stateListener, event);
 		}
 	}
 	

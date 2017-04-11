@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.IDLE;
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
+import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
@@ -192,7 +193,10 @@ final class P_BleManager_Listeners
         // If this was discovered via the hack to show the bond popup, then do not propogate this
         // any further, as this scan is JUST to get the dialog to pop up (rather than show in the notification area)
         P_Task_BondPopupHack hack = m_mngr.getTaskQueue().getCurrent(P_Task_BondPopupHack.class, m_mngr);
-        if (hack == null)
+
+        // Only pipe discovery event if the scan task is running, and the manager says we're doing a classic scan
+        P_Task_Scan scan = m_mngr.getTaskQueue().getCurrent(P_Task_Scan.class, m_mngr);
+        if (hack == null && scan != null && m_mngr.m_config.scanApi == BleScanApi.CLASSIC)
         {
             final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
