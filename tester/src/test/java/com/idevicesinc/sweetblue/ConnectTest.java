@@ -692,8 +692,8 @@ public class ConnectTest extends BaseBleUnitTest
                             if (e.didEnter(BleDeviceState.CONNECTING))
                             {
                                 hasConnected = true;
-                                m_device.disconnect();
                                 ((DisconnectGattLayer) m_device.layerManager().getGattLayer()).disconnectCalled = true;
+                                m_device.disconnect();
                             }
                             else if (hasConnected && e.didEnter(BleDeviceState.DISCONNECTED))
                             {

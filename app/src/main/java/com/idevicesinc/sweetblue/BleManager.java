@@ -345,7 +345,7 @@ public final class BleManager
 	 * @see BleManager.UhOhListener.UhOh
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface UhOhListener
+	public static interface UhOhListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<UhOhListener.UhOhEvent>
 	{
 		/**
 		 * An UhOh is a warning about an exceptional (in the bad sense) and unfixable problem with the underlying stack that
@@ -523,8 +523,8 @@ public final class BleManager
 		/**
 		 * Struct passed to {@link BleManager.UhOhListener#onEvent(BleManager.UhOhListener.UhOhEvent)}.
 		 */
-		@Immutable
-		public static class UhOhEvent extends Event
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class UhOhEvent extends com.idevicesinc.sweetblue.utils.Event
 		{
 			/**
 			 * The manager associated with the {@link BleManager.UhOhListener.UhOhEvent}
@@ -740,6 +740,8 @@ public final class BleManager
 //		}
 	}
 
+	private final static long UPDATE_LOOP_WARNING_DELAY = 10000;
+
 	private final Context m_context;
 	private UpdateRunnable m_updateRunnable;
 	private final P_ScanFilterManager m_filterMngr;
@@ -777,6 +779,7 @@ public final class BleManager
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
 	private boolean m_unitTestCheckDone = false;
+    private long m_lastUpdateLoopWarning = 0;
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
@@ -3216,8 +3219,9 @@ public final class BleManager
 			m_config.updateLoopCallback.onUpdate(timeStep_seconds);
 		}
 
-		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick))
+		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick) && (m_lastUpdateLoopWarning + UPDATE_LOOP_WARNING_DELAY <= m_currentTick))
 		{
+            m_lastUpdateLoopWarning = m_currentTick;
 			getLogger().w("BleManager", String.format("Update loop took longer to run than the current interval of %dms", m_config.autoUpdateRate.millis()));
 		}
 	}
