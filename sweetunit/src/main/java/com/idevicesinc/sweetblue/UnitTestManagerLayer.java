@@ -52,13 +52,53 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     @Override public boolean disable()
     {
-        m_nativeState = BleStatuses.STATE_OFF;
+        if (BleManager.s_instance != null)
+        {
+            BleManager.s_instance.getPostManager().postToUpdateThreadDelayed(new Runnable()
+            {
+                @Override public void run()
+                {
+                    setToTurningOff();
+                }
+            }, 50);
+            BleManager.s_instance.getPostManager().postToUpdateThreadDelayed(new Runnable()
+            {
+                @Override public void run()
+                {
+                    setToOff();
+                }
+            }, 150);
+        }
+        else
+        {
+            m_nativeState = BleStatuses.STATE_OFF;
+        }
         return true;
     }
 
     @Override public boolean enable()
     {
-        m_nativeState = BleStatuses.STATE_ON;
+        if (BleManager.s_instance != null)
+        {
+            BleManager.s_instance.getPostManager().postToUpdateThreadDelayed(new Runnable()
+            {
+                @Override public void run()
+                {
+                    setToTurningOn();
+                }
+            }, 50);
+            BleManager.s_instance.getPostManager().postToUpdateThreadDelayed(new Runnable()
+            {
+                @Override public void run()
+                {
+                    setToOn();
+                }
+            }, 150);
+        }
+        else
+        {
+            m_nativeState = BleStatuses.STATE_ON;
+        }
         return true;
     }
 
@@ -72,6 +112,11 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
     }
 
     @Override public int getState()
+    {
+        return m_nativeState;
+    }
+
+    @Override public int getBleState()
     {
         return m_nativeState;
     }
@@ -127,7 +172,7 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     @Override public boolean isBluetoothEnabled()
     {
-        return true;
+        return m_nativeState == BleStatuses.STATE_ON;
     }
 
     @Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)
@@ -150,5 +195,34 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
     @Override public BluetoothDevice getRemoteDevice(String macAddress)
     {
         return null;
+    }
+
+    protected void manuallySetState(int newState)
+    {
+        m_nativeState = newState;
+    }
+
+    protected void setToTurningOff()
+    {
+        UnitTestUtils.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_TURNING_OFF);
+        m_nativeState = BluetoothAdapter.STATE_TURNING_OFF;
+    }
+
+    protected void setToOff()
+    {
+        UnitTestUtils.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_OFF);
+        m_nativeState = BluetoothAdapter.STATE_OFF;
+    }
+
+    protected void setToTurningOn()
+    {
+        UnitTestUtils.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_TURNING_ON);
+        m_nativeState = BluetoothAdapter.STATE_TURNING_ON;
+    }
+
+    protected void setToOn()
+    {
+        UnitTestUtils.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_ON);
+        m_nativeState = BluetoothAdapter.STATE_ON;
     }
 }

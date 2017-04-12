@@ -24,14 +24,8 @@ final class P_BleStateTracker extends PA_StateTracker
 	{
 		if( m_stateListener != null )
 		{
-			m_mngr.getPostManager().postCallback(new Runnable()
-			{
-				@Override public void run()
-				{
-					final StateEvent event = new StateEvent(m_mngr, oldStateBits, newStateBits, intentMask);
-					m_stateListener.onEvent(event);
-				}
-			});
+			final StateEvent event = new StateEvent(m_mngr, oldStateBits, newStateBits, intentMask);
+			m_mngr.postEvent(m_stateListener, event);
 		}
 	}
 	

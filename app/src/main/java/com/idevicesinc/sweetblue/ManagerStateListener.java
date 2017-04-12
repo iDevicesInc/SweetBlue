@@ -5,6 +5,7 @@ import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 
 /**
  * Provide an implementation to {@link BleManager#setListener_State(ManagerStateListener)} to receive callbacks

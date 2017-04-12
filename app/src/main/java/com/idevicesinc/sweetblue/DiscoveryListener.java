@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.utils.Event;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -13,7 +14,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
  */
 @com.idevicesinc.sweetblue.annotations.Lambda
-public interface DiscoveryListener
+public interface DiscoveryListener extends GenericListener_Void<DiscoveryListener.DiscoveryEvent>
 {
 
     /**

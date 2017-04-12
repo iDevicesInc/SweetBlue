@@ -47,27 +47,14 @@ final class P_DeviceStateTracker extends PA_StateTracker
 
 		if( m_stateListener != null )
 		{
-			m_device.getManager().getPostManager().postCallback(new Runnable()
-			{
-				@Override public void run()
-				{
-					StateEvent event = new StateEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
-					m_stateListener.onEvent(event);
-				}
-			});
+			final StateEvent event = new StateEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
+			m_device.postEventAsCallback(m_stateListener, event);
 		}
 		
 		if( !m_forShortTermReconnect && m_device.getManager().m_defaultDeviceStateListener != null )
 		{
-			m_device.getManager().getPostManager().postCallback(new Runnable()
-			{
-				@Override public void run()
-				{
-					StateEvent event = new StateEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
-					m_device.getManager().m_defaultDeviceStateListener.onEvent(event);
-				}
-			});
-
+			final StateEvent event = new StateEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
+			m_device.postEventAsCallback(m_device.getManager().m_defaultDeviceStateListener, event);
 		}
 
 		final BleDeviceConfig.BondFilter bondFilter = BleDeviceConfig.filter(m_device.conf_device().bondFilter, m_device.conf_mngr().bondFilter);

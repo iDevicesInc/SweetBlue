@@ -43,10 +43,17 @@ public class BleNodeConfig
 
 	/**
 	 * The overhead in bytes that is subtracted from the total mtu size (e.g. {@link #DEFAULT_MTU_SIZE}) to
-	 * give you the effective payload size that your application can send or receive. For Android this
+	 * give you the effective payload size that your application can send. For Android this
 	 * payload size is almost always 23-3=20 bytes.
 	 */
-	public static final int GATT_MTU_OVERHEAD							= 3;
+	public static final int GATT_WRITE_MTU_OVERHEAD = 3;
+
+	/**
+	 * The overhead in bytes that is subtracted from the total mtu size (e.g. {@link #DEFAULT_MTU_SIZE}) to
+	 * give you the effective payload size that your application can receive. For Android this
+	 * payload size is almost always 23-1=22 bytes.
+	 */
+	public static final int GATT_READ_MTU_OVERHEAD = 1;
 
 	/**
 	 * Constant for an invalid or unknown transmission power.

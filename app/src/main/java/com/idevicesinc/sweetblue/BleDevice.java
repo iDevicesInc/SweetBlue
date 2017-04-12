@@ -2639,7 +2639,16 @@ public final class BleDevice extends BleNode
      * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
      * this call to succeed.
      *
+<<<<<<< HEAD
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+=======
+     * <b>NOTE 1:</b> This will only work on devices running Android Lollipop (5.0) or higher. Otherwise it will be ignored.
+     * <b>NOTE 2:</b> Some phones will request an MTU, and accept a higher number, but will fail (time out) when writing a characteristic with a large
+     * payload. Namely, we've found the Moto Pure X, and the OnePlus OnePlus2 to have this behavior. For those phones any MTU above
+     * 50 failed.
+     *
+     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
+>>>>>>> dev
      */
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
@@ -3853,6 +3862,32 @@ public final class BleDevice extends BleNode
         connect_private(m_txnMngr.m_authTxn, m_txnMngr.m_initTxn, /*isReconnect=*/true);
     }
 
+    private BleTransaction.Auth getAuthTxn(BleTransaction.Auth txn)
+    {
+        if (txn != null)
+        {
+            return txn;
+        }
+        if (conf_device().defaultAuthFactory != null)
+        {
+            return conf_device().defaultAuthFactory.newAuthTxn();
+        }
+        return conf_device().defaultAuthTransaction;
+    }
+
+    private BleTransaction.Init getInitTxn(BleTransaction.Init txn)
+    {
+        if (txn != null)
+        {
+            return txn;
+        }
+        if (conf_device().defaultInitFactory != null)
+        {
+            return conf_device().defaultInitFactory.newInitTxn();
+        }
+        return conf_device().defaultInitTransaction;
+    }
+
     private void connect_private(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, final boolean isReconnect)
     {
         if (is_internal(INITIALIZED))
@@ -3862,8 +3897,8 @@ public final class BleDevice extends BleNode
             return;
         }
 
-        BleTransaction.Auth auth = authenticationTxn != null ? authenticationTxn : conf_device().defaultAuthTransaction;
-        BleTransaction.Init init = initTxn != null ? initTxn : conf_device().defaultInitTransaction;
+        BleTransaction.Auth auth = getAuthTxn(authenticationTxn);
+        BleTransaction.Init init = getInitTxn(initTxn);
 
         m_txnMngr.onConnect(auth, init);
 
@@ -4599,14 +4634,14 @@ public final class BleDevice extends BleNode
         return NULL_READWRITE_EVENT();
     }
 
-    private int getEffectiveMtuSize()
+    private int getEffectiveWriteMtuSize()
     {
-        return getMtu() - BleManagerConfig.GATT_MTU_OVERHEAD;
+        return getMtu() - BleManagerConfig.GATT_WRITE_MTU_OVERHEAD;
     }
 
     private void addWriteDescriptorTasks(BluetoothGattDescriptor descriptor, FutureData data, boolean requiresBonding, ReadWriteListener listener)
     {
-        int mtuSize = getEffectiveMtuSize();
+        int mtuSize = getEffectiveWriteMtuSize();
         if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
         {
             queue().add(new P_Task_WriteDescriptor(this, descriptor, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
@@ -4620,7 +4655,7 @@ public final class BleDevice extends BleNode
 
     private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, DescriptorFilter filter, ReadWriteListener listener)
     {
-        int mtuSize = getEffectiveMtuSize();
+        int mtuSize = getEffectiveWriteMtuSize();
         if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
         {
             final P_Task_Write task_write;
@@ -4714,27 +4749,27 @@ public final class BleDevice extends BleNode
 
         if (listener_nullable != null)
         {
-            postEvent(listener_nullable, event);
+            postEventAsCallback(listener_nullable, event);
         }
 
         if (m_defaultReadWriteListener != null)
         {
-            postEvent(m_defaultReadWriteListener, event);
+            postEventAsCallback(m_defaultReadWriteListener, event);
         }
 
         if (getManager() != null && getManager().m_defaultReadWriteListener != null)
         {
-            postEvent(getManager().m_defaultReadWriteListener, event);
+            postEventAsCallback(getManager().m_defaultReadWriteListener, event);
         }
 
         if (m_defaultNotificationListener != null && (event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION))
         {
-            postEvent(m_defaultNotificationListener, fromReadWriteEvent(event));
+            postEventAsCallback(m_defaultNotificationListener, fromReadWriteEvent(event));
         }
 
         if (getManager() != null && getManager().m_defaultNotificationListener != null)
         {
-            postEvent(getManager().m_defaultNotificationListener, fromReadWriteEvent(event));
+            postEventAsCallback(getManager().m_defaultNotificationListener, fromReadWriteEvent(event));
         }
 
         m_txnMngr.onReadWriteResultCallbacksCalled();
@@ -4923,13 +4958,16 @@ public final class BleDevice extends BleNode
     }
     // static String NULL_MAC = "DE:AD:BE:EF:BA:BE";
 
-    private void postEvent(final GenericListener_Void listener, final Event event)
+    void postEventAsCallback(final GenericListener_Void listener, final Event event)
     {
         getManager().getPostManager().postCallback(new Runnable()
         {
             @Override public void run()
             {
-                listener.onEvent(event);
+                if (listener != null)
+                {
+                    listener.onEvent(event);
+                }
             }
         });
     }

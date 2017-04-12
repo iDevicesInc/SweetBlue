@@ -42,6 +42,7 @@ import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
@@ -136,7 +137,6 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  */
 public final class BleManager
 {
-
 	/**
 	 * Create the singleton instance or retrieve the already-created singleton instance with default configuration options set.
 	 * If you call this after you call {@link #get(android.content.Context, BleManagerConfig)} (for example in another
@@ -192,6 +192,8 @@ public final class BleManager
 //		}
 	}
 
+	private final static long UPDATE_LOOP_WARNING_DELAY = 10000;
+
 	private final Context m_context;
 	private UpdateRunnable m_updateRunnable;
 	private final P_ScanFilterManager m_filterMngr;
@@ -228,6 +230,9 @@ public final class BleManager
 	private boolean m_doingInfiniteScan = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
+
+	private boolean m_unitTestCheckDone = false;
+    private long m_lastUpdateLoopWarning = 0;
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
@@ -820,7 +825,7 @@ public final class BleManager
 		{
 			if( doAutoScan() )
 			{
-				startScan_private(m_config.autoScanActiveTime, null, null, /*isPoll=*/true);
+				startScan_private(new ScanOptions().scanFor(m_config.autoScanActiveTime).asPoll(true));
 			}
 		}
 	}
@@ -956,7 +961,14 @@ public final class BleManager
 	{
 		showScanWarningIfNeeded();
 
-		return startScan_private(scanTime, filter, discoveryListener, /*isPoll=*/false);
+		return startScan_private(new ScanOptions().scanFor(scanTime).withScanFilter(filter).withDiscoveryListener(discoveryListener).asPoll(false));
+	}
+
+	public final boolean startScan(ScanOptions options)
+	{
+		showScanWarningIfNeeded();
+
+		return startScan_private(options);
 	}
 
 	private void showScanWarningIfNeeded()
@@ -979,7 +991,7 @@ public final class BleManager
 
 							"As of Android M, in order for low energy scan results to return you must have the following:\n" +
 									"(A) " + Manifest.permission.ACCESS_COARSE_LOCATION + " or " + Manifest.permission.ACCESS_FINE_LOCATION + " in your AndroidManifest.xml.\n" +
-									"(B) Runtime permissions for aformentioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
+									"(B) Runtime permissions for aforementioned location permissions as described at https://developer.android.com/training/permissions/requesting.html.\n" +
 									"(C) Location services enabled, the same as if you go to OS settings App and enable Location.\n" +
 									"It looks like (A) is " + enabledA + ", (B) is " + enabledB + ", and (C) is " + enabledC + ".\n" +
 									"Various methods like BleManager.isLocationEnabledForScanning*() overloads and BleManager.turnOnLocationWithIntent*() overloads can help with this painful process.\n" +
@@ -988,10 +1000,13 @@ public final class BleManager
 		}
 	}
 
-	final boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
+//
+//    final boolean startScan_private(Interval scanTime, ScanFilter filter, DiscoveryListener discoveryListener, final boolean isPoll)
+//    {
+	final boolean startScan_private(ScanOptions options)
 	{
 		m_scanManager.resetTimeNotScanning();
-		scanTime = scanTime.secs() < 0.0 ? Interval.INFINITE : scanTime;
+		options.m_scanTime = options.m_scanTime.secs() < 0.0 ? Interval.INFINITE : options.m_scanTime;
 
 		if( false == isBluetoothEnabled() )
 		{
@@ -1000,29 +1015,53 @@ public final class BleManager
 			return false;
 		}
 
-		m_doingInfiniteScan = scanTime.equals(Interval.INFINITE);
+		m_doingInfiniteScan = options.m_scanTime.equals(Interval.INFINITE);
 
-		if( discoveryListener != null )
+		if( options.m_discoveryListener != null )
 		{
-			setListener_Discovery(discoveryListener);
+			setListener_Discovery(options.m_discoveryListener);
 		}
 
-		m_filterMngr.add(filter);
+
+		if (options.m_scanFilter != null)
+		{
+			m_filterMngr.add(options.m_scanFilter);
+		}
+
+		if (options.m_isPeriodic)
+		{
+			m_config.autoScanActiveTime = options.m_scanTime;
+			m_config.autoScanPauseInterval = options.m_pauseTime;
+		}
 
 		final P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
 
 		if( scanTask != null )
 		{
-			scanTask.resetTimeout(scanTime.secs());
+			scanTask.resetTimeout(options.m_scanTime.secs());
 		}
 		else
 		{
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
-
 			m_stateTracker.append(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-			m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), scanTime.secs(), isPoll, null));
+            PE_TaskPriority pri = options.m_isPriorityScan ? PE_TaskPriority.CRITICAL : null;
+
+			boolean startScan = true;
+
+			if (options.m_isPeriodic)
+			{
+				if (!Interval.isEnabled(m_config.autoScanActiveTime) && !doAutoScan() )
+				{
+					startScan = false;
+				}
+			}
+
+			if (startScan)
+			{
+				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), options.m_isPoll, pri));
+			}
 		}
 
 		return true;
@@ -2243,6 +2282,36 @@ public final class BleManager
 		m_taskQueue.add(task);
 	}
 
+	private String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
+	{
+		final String nameFromDevice;
+		final String nameFromRecord;
+		nameFromDevice = device.getName();
+		nameFromRecord = Utils_ScanRecord.parseName(scanRecord);
+		if (isDeviceThatReturnsShortName())
+		{
+			if (!TextUtils.isEmpty(nameFromRecord))
+			{
+				return nameFromRecord;
+			}
+			else
+			{
+				m_logger.w("Unable to get complete name from scan record! Defaulting to the short name given from BluetoothDevice.");
+			}
+		}
+		return TextUtils.isEmpty(nameFromDevice) ? nameFromRecord : nameFromDevice;
+	}
+
+	private boolean isDeviceThatReturnsShortName()
+	{
+		//--- > RB  Right now, this is the only device we're aware of that returns the short name from BluetoothDevice.getName(). This may grow in the future.
+		if (Build.MANUFACTURER.equalsIgnoreCase("amobile") && Build.PRODUCT.equalsIgnoreCase("full_amobile2601_wp_l") && Build.MODEL.equalsIgnoreCase("iot-500"))
+		{
+			return true;
+		}
+		return false;
+	}
+
 	final void onDiscoveredFromNativeStack(final P_NativeDeviceLayer device_native, final int rssi, final byte[] scanRecord_nullable)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
@@ -2260,7 +2329,7 @@ public final class BleManager
 
 		try
 		{
-			rawDeviceName = TextUtils.isEmpty(device_native.getName()) ? Utils_ScanRecord.parseName(scanRecord_nullable) : device_native.getName();
+			rawDeviceName = getDeviceName(device_native, scanRecord_nullable);
 		}
 
 		//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.
@@ -2380,6 +2449,20 @@ public final class BleManager
 		onDiscovered_wrapItUp(device, device.layerManager().getDeviceLayer(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
 	}
 
+	void postEvent(final GenericListener_Void listener, final Event event)
+	{
+		m_postManager.postCallback(new Runnable()
+		{
+			@Override public void run()
+			{
+				if (listener != null)
+				{
+					listener.onEvent(event);
+				}
+			}
+		});
+	}
+
     private void onDiscovered_wrapItUp(final BleDevice device, final P_NativeDeviceLayer device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
     {
     	if( newlyDiscovered )
@@ -2388,14 +2471,8 @@ public final class BleManager
 
     		if( m_discoveryListener != null )
     		{
-				m_postManager.postCallback(new Runnable()
-				{
-					@Override public void run()
-					{
-						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
-						m_discoveryListener.onEvent(event);
-					}
-				});
+				final DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+				postEvent(m_discoveryListener, event);
     		}
     	}
     	else
@@ -2404,14 +2481,8 @@ public final class BleManager
 
     		if( m_discoveryListener != null )
     		{
-				m_postManager.postCallback(new Runnable()
-				{
-					@Override public void run()
-					{
-						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
-						m_discoveryListener.onEvent(event);
-					}
-				});
+				final DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
+				postEvent(m_discoveryListener, event);
     		}
     	}
     }
@@ -2517,8 +2588,9 @@ public final class BleManager
 			m_config.updateLoopCallback.onUpdate(timeStep_seconds);
 		}
 
-		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick))
+		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick) && (m_lastUpdateLoopWarning + UPDATE_LOOP_WARNING_DELAY <= m_currentTick))
 		{
+            m_lastUpdateLoopWarning = m_currentTick;
 			getLogger().w("BleManager", String.format("Update loop took longer to run than the current interval of %dms", m_config.autoUpdateRate.millis()));
 		}
 	}

@@ -5,7 +5,7 @@
 <b>|</b>&nbsp;<a href="https://github.com/iDevicesInc/SweetBlue/wiki">Wiki</a>
 <b>|</b>
 <a href="https://travis-ci.org/iDevicesInc/SweetBlue">
-  <img align="right" src="https://img.shields.io/badge/version-2.52.01-blue.svg" />
+  <img align="right" src="https://img.shields.io/badge/version-2.52.04-blue.svg" />
   <img align="right" src="https://travis-ci.org/iDevicesInc/SweetBlue.svg?branch=master"/>
 </a>
 <p align="center">
@@ -72,7 +72,7 @@ Getting Started
   2. Open the app module's `build.gradle` file.
   3. If building with source, your gradle file should look something like this:
 
-    ```gradle
+    ```
     
     android {
         compileSdkVersion 23
@@ -96,7 +96,7 @@ Getting Started
     
   4. If you're building with source from github, the sourceSet path is a bit different:
   
-    ```gradle
+    ```
       
       android {
           compileSdkVersion 23
@@ -120,7 +120,7 @@ Getting Started
     
   5. Else if building with JAR, it should look something like this:
 
-    ```gradle
+    ```
     
     android {
         compileSdkVersion 23
@@ -141,22 +141,9 @@ Getting Started
     
     ```
     
-2. Else if using **Eclipse**...
-  1. [Download](http://idevicesinc.com/sweetblue/#tryit) the latest release to a subfolder of your project such as `MyApp/libs/`. This ZIP contains several samples, precompiled JARS, and API docs and is preferable to downloading from GitHub, which only contains the raw source.
-  2. Open the `Package Explorer` view.
-  3. Expand `MyApp/libs/sweetblue/`.
-  4. If building with source...
-    1. Right-click on the `src` folder.
-    2. Hover over `Build Path->`.
-    3. Click `Use as Source Folder`.
-  5. Else if building with JAR...
-    1. Expand the `jars` folder.
-    2. Right click on `sweetblue_{version}.jar`.
-    3. Hover over `Build Path->`.
-    4. Click `Add to Build Path`.
-3. Now add these to the root of `MyApp/AndroidManifest.xml`:
+2. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
-    ```xml
+    ```
     <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="23" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -169,8 +156,8 @@ Getting Started
     <!--       You may use ACCESS_FINE_LOCATION also or instead.         -->
     ```
         
-4. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
-    ```java
+3. From your `Activity` or `Service` or `Application` instance, this is all it takes to discover a device, connect to it, and read a characteristic:
+    ```
     // A ScanFilter decides whether a BleDevice instance will be created from a
     // BLE advertisement and passed to the DiscoveryListener implementation below.
     final ScanFilter scanFilter = new ScanFilter()

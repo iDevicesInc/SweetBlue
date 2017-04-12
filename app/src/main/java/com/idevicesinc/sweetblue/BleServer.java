@@ -2198,7 +2198,10 @@ public final class BleServer extends BleNode
 			{
 				@Override public void run()
 				{
-					listener_specific_nullable.onEvent(e);
+					if (listener_specific_nullable != null)
+					{
+						listener_specific_nullable.onEvent(e);
+					}
 				}
 			});
 		}
@@ -2209,7 +2212,10 @@ public final class BleServer extends BleNode
 			{
 				@Override public void run()
 				{
-					m_outgoingListener_default.onEvent(e);
+					if (m_outgoingListener_default != null)
+					{
+						m_outgoingListener_default.onEvent(e);
+					}
 				}
 			});
 		}
@@ -2220,7 +2226,10 @@ public final class BleServer extends BleNode
 			{
 				@Override public void run()
 				{
-					getManager().m_defaultServerOutgoingListener.onEvent(e);
+					if (getManager().m_defaultServerOutgoingListener != null)
+					{
+						getManager().m_defaultServerOutgoingListener.onEvent(e);
+					}
 				}
 			});
 		}

@@ -7,6 +7,7 @@ import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_SHORT_TERM;
 
+
 /**
  * Provide an implementation to {@link BleDevice#setListener_State(DeviceStateListener)} and/or
  * {@link BleManager#setListener_DeviceState(DeviceStateListener)} to receive state change events.
