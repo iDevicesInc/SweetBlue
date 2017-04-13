@@ -6,7 +6,10 @@ import android.content.Context;
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.DiscoveryListener;
+import com.idevicesinc.sweetblue.ReadWriteListener;
 import com.idevicesinc.sweetblue.ScanOptions;
+
+import java.util.UUID;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -18,7 +21,8 @@ import io.reactivex.functions.Action;
 public class RxBleHelper
 {
 
-    public static Observable<BleDevice> scan(final Context context, final ScanOptions options) {
+    public static Observable<BleDevice> scan(final Context context, final ScanOptions options)
+    {
         final BleManager mgr = BleManager.get(context);
         return Observable.create(new ObservableOnSubscribe<BleDevice>()
         {
@@ -46,6 +50,48 @@ public class RxBleHelper
             {
                 mgr.stopPeriodicScan();
                 mgr.stopScan();
+            }
+        });
+    }
+
+    public static Observable<ReadWriteListener.ReadWriteEvent> read(final BleDevice device, final UUID serviceUuid, final UUID charUuid)
+    {
+        return Observable.create(new ObservableOnSubscribe<ReadWriteListener.ReadWriteEvent>()
+        {
+            @Override public void subscribe(@NonNull final ObservableEmitter<ReadWriteListener.ReadWriteEvent> emitter) throws Exception
+            {
+                if (!emitter.isDisposed())
+                {
+                    device.read(serviceUuid, charUuid, new ReadWriteListener()
+                    {
+                        @Override public void onEvent(ReadWriteEvent e)
+                        {
+                            emitter.onNext(e);
+                            emitter.onComplete();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    public static Observable<ReadWriteListener.ReadWriteEvent> write(final BleDevice device, final UUID serviceUuid, final UUID charUuid, final byte[] data)
+    {
+        return Observable.create(new ObservableOnSubscribe<ReadWriteListener.ReadWriteEvent>()
+        {
+            @Override public void subscribe(@NonNull final ObservableEmitter<ReadWriteListener.ReadWriteEvent> emitter) throws Exception
+            {
+                if (!emitter.isDisposed())
+                {
+                    device.write(serviceUuid, charUuid, data, new ReadWriteListener()
+                    {
+                        @Override public void onEvent(ReadWriteEvent e)
+                        {
+                            emitter.onNext(e);
+                            emitter.onComplete();
+                        }
+                    });
+                }
             }
         });
     }
