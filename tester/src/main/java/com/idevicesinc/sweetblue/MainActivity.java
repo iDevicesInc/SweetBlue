@@ -14,6 +14,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.idevicesinc.sweetblue.rx.RxBleHelper;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.DebugLogger;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -23,6 +25,13 @@ import java.util.Random;
 import java.util.UUID;
 import com.idevicesinc.sweetblue.tester.R;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+
+import org.reactivestreams.Subscription;
+
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.subjects.AsyncSubject;
 
 
 public class MainActivity extends Activity
@@ -35,6 +44,7 @@ public class MainActivity extends Activity
     private ScanAdaptor mAdaptor;
     private ArrayList<BleDevice> mDevices;
     private DebugLogger mLogger;
+    private Disposable scan;
 
 
     private final static UUID tempUuid = UUID.fromString("47495078-0002-491E-B9A4-F85CD01C3698");
@@ -92,7 +102,25 @@ public class MainActivity extends Activity
         {
             @Override public void onClick(View v)
             {
-                mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.ONE_SEC);
+                //mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.ONE_SEC);
+                ScanOptions options = new ScanOptions().scanPeriodically(Interval.FIVE_SECS, Interval.ONE_SEC).withScanFilter(new BleManagerConfig.ScanFilter()
+                {
+                    @Override public Please onEvent(ScanEvent e)
+                    {
+                        return Please.acknowledgeIf(e.name_normalized().contains("tag"));
+                    }
+                });
+                scan = RxBleHelper.scan(MainActivity.this, options).subscribe(new Consumer<BleDevice>()
+                {
+                    @Override public void accept(@NonNull BleDevice bleDevice) throws Exception
+                    {
+                        if (!mDevices.contains(bleDevice))
+                        {
+                            mDevices.add(bleDevice);
+                            mAdaptor.notifyDataSetChanged();
+                        }
+                    }
+                });
             }
         });
         mStopScan = (Button) findViewById(R.id.stopScan);
@@ -100,7 +128,8 @@ public class MainActivity extends Activity
         {
             @Override public void onClick(View v)
             {
-                mgr.stopPeriodicScan();
+//                mgr.stopPeriodicScan();
+                scan.dispose();
             }
         });
 
@@ -119,20 +148,17 @@ public class MainActivity extends Activity
         };
 
         mgr = BleManager.get(this, config);
-<<<<<<< HEAD
-        mgr.setListener_State(new ManagerStateListener()
-=======
 
-        mgr.setListener_UhOh(new BleManager.UhOhListener()
+
+        mgr.setListener_UhOh(new UhOhListener()
         {
-            @Override public void onEvent(UhOhEvent e)
+            @Override public void onEvent(UhOhListener.UhOhEvent e)
             {
                 Log.e("UhOhs", "Got " + e.uhOh() + " with remedy " + e.remedy());
             }
         });
 
-        mgr.setListener_State(new BleManager.StateListener()
->>>>>>> dev
+        mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(StateEvent event)
             {
@@ -152,25 +178,25 @@ public class MainActivity extends Activity
                 }
             }
         });
-        mgr.setListener_Discovery(new DiscoveryListener()
-        {
-            @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
-            {
-                if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
-                {
-                    if (!mDevices.contains(e.device()))
-                    {
-                        mDevices.add(e.device());
-                        mAdaptor.notifyDataSetChanged();
-
-                    }
-                }
-                else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
-                {
-
-                }
-            }
-        });
+//        mgr.setListener_Discovery(new DiscoveryListener()
+//        {
+//            @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
+//            {
+//                if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
+//                {
+//                    if (!mDevices.contains(e.device()))
+//                    {
+//                        mDevices.add(e.device());
+//                        mAdaptor.notifyDataSetChanged();
+//
+//                    }
+//                }
+//                else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
+//                {
+//
+//                }
+//            }
+//        });
 
 
         mStartScan.setEnabled(false);

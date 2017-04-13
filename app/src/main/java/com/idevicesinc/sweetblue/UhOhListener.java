@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.utils.Event;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 /**
@@ -14,7 +15,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * @see UhOhListener.UhOh
  */
 @com.idevicesinc.sweetblue.annotations.Lambda
-public interface UhOhListener
+public interface UhOhListener extends GenericListener_Void<UhOhListener.UhOhEvent>
 {
 
     /**
@@ -98,6 +99,9 @@ public interface UhOhListener
          * Similar in concept to {@link UhOhListener.UhOh#RANDOM_EXCEPTION} but used when {@link android.os.DeadObjectException} is thrown.
          */
         DEAD_OBJECT_EXCEPTION,
+
+        // TODO - Fill in javadoc
+        CONCURRENT_EXCEPTION,
 
         /**
          * The underlying native BLE stack enjoys surprising you with random exceptions. Every time a new one is discovered

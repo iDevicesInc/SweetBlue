@@ -11,6 +11,8 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothProfile;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Process;
 import android.util.Log;
 
@@ -23,6 +25,8 @@ import com.idevicesinc.sweetblue.utils.UuidNameMap_ListWrapper;
 final class P_Logger
 {
 
+	private final static String MAIN = "MAIN";
+	private final static String UPDATE = "UPDATE";
 	private String[] m_debugThreadNamePool;
 	private int m_poolIndex = 0;
 	private final HashMap<Integer, String> m_threadNames = new HashMap<Integer, String>();
@@ -57,7 +61,7 @@ final class P_Logger
 		{
 			// We want to force the first name (MAIN) to be the UI thread, then the update thread after that. Then the other names can be
 			// whatever.
-			manager.getPostManager().postToMainDelayed(new Runnable()
+			manager.getPostManager().postToMain(new Runnable()
 			{
 				@Override public void run()
 				{
@@ -70,8 +74,13 @@ final class P_Logger
 						}
 					});
 				}
-			}, 50);
+			});
 		}
+	}
+
+	public void setThreadName(int tid)
+	{
+		getThreadName(tid);
 	}
 	
 	public void printBuildInfo()
@@ -122,6 +131,16 @@ final class P_Logger
 		}
 		
 		return threadName == null ? "" : threadName;
+	}
+
+	public void setMainThread(int threadId)
+	{
+		m_threadNames.put(threadId, MAIN);
+	}
+
+	public void setUpdateThread(int threadId)
+	{
+		m_threadNames.put(threadId, UPDATE);
 	}
 	
 	private StackTraceElement getSoonestTrace()

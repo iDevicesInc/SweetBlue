@@ -188,14 +188,14 @@ final class P_AndroidGatt implements P_GattLayer
         }
         catch (Exception e)
         {
-            BleManager.UhOhListener.UhOh uhoh;
+            UhOhListener.UhOh uhoh;
             if (e instanceof ConcurrentModificationException)
             {
-                uhoh = BleManager.UhOhListener.UhOh.CONCURRENT_EXCEPTION;
+                uhoh = UhOhListener.UhOh.CONCURRENT_EXCEPTION;
             }
             else
             {
-                uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
+                uhoh = UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
             m_device.getManager().uhOh(uhoh);
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the list of native services!");
@@ -212,14 +212,14 @@ final class P_AndroidGatt implements P_GattLayer
         }
         catch (Exception e)
         {
-            BleManager.UhOhListener.UhOh uhoh;
+            UhOhListener.UhOh uhoh;
             if (e instanceof ConcurrentModificationException)
             {
-                uhoh = BleManager.UhOhListener.UhOh.CONCURRENT_EXCEPTION;
+                uhoh = UhOhListener.UhOh.CONCURRENT_EXCEPTION;
             }
             else
             {
-                uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
+                uhoh = UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
             m_device.getManager().uhOh(uhoh);
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the native service!");
