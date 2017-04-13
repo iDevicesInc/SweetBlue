@@ -275,7 +275,7 @@ public class BleManagerConfig extends BleDeviceConfig
 
 	/**
 	 * Default is <code>true</code> - This allows SweetBlue to store the last Uh Oh time to disk. This makes it so that even if you shutdown, and restart
-	 * {@link BleManager}, SweetBlue will still respect the {@link #uhOhCallbackThrottle}. Otherwise, if you restart the manager, and get an {@link com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh}
+	 * {@link BleManager}, SweetBlue will still respect the {@link #uhOhCallbackThrottle}. Otherwise, if you restart the manager, and get an {@link com.idevicesinc.sweetblue.UhOhListener.UhOh}
 	 * it will be dispatched immediately.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced

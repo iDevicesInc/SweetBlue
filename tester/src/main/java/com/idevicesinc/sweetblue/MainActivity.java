@@ -19,10 +19,8 @@ import com.idevicesinc.sweetblue.utils.DebugLogger;
 import com.idevicesinc.sweetblue.utils.Interval;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 import com.idevicesinc.sweetblue.tester.R;
-import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -40,6 +38,7 @@ public class MainActivity extends Activity
     private ArrayList<BleDevice> mDevices;
     private DebugLogger mLogger;
     private long mLastStateChange;
+
 
 
     private final static UUID tempUuid = UUID.fromString("47495078-0002-491E-B9A4-F85CD01C3698");
@@ -163,7 +162,7 @@ public class MainActivity extends Activity
 
         mgr.setListener_UhOh(new UhOhListener()
         {
-            @Override public void onEvent(UhOhEvent e)
+            @Override public void onEvent(UhOhListener.UhOhEvent e)
             {
                 Log.e("UhOhs", "Got " + e.uhOh() + " with remedy " + e.remedy());
             }
@@ -187,25 +186,25 @@ public class MainActivity extends Activity
                     mAdaptor.notifyDataSetChanged();
             }
         });
-        mgr.setListener_Discovery(new DiscoveryListener()
-        {
-            @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
-            {
-                if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
-                {
-                    if (!mDevices.contains(e.device()))
-                    {
-                        mDevices.add(e.device());
-                        mAdaptor.notifyDataSetChanged();
-
-                    }
-                }
-                else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
-                {
-
-                }
-            }
-        });
+//        mgr.setListener_Discovery(new DiscoveryListener()
+//        {
+//            @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
+//            {
+//                if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
+//                {
+//                    if (!mDevices.contains(e.device()))
+//                    {
+//                        mDevices.add(e.device());
+//                        mAdaptor.notifyDataSetChanged();
+//
+//                    }
+//                }
+//                else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
+//                {
+//
+//                }
+//            }
+//        });
 
 
         mStartScan.setEnabled(false);
@@ -273,7 +272,7 @@ public class MainActivity extends Activity
         }
         else if (item.getItemId() == 1)
         {
-            mDevices.get(info.position).bond(new BleDevice.BondListener()
+            mDevices.get(info.position).bond(new BondListener()
             {
                 @Override
                 public void onEvent(BondEvent e)

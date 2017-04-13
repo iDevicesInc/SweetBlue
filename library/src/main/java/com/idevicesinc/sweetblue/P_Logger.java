@@ -11,6 +11,8 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothProfile;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Process;
 import android.util.Log;
 
@@ -46,6 +48,34 @@ final class P_Logger
 		m_debugThreadNamePool = debugThreadNamePool;
 		m_nameMap = new UuidNameMap_ListWrapper(debugUuidNameDicts);
 		m_enabled = enabled;
+	}
+
+	public void getMainAndUpdateThreadNames(final BleManager manager)
+	{
+		if (manager != null)
+		{
+			// We want to force the first name (MAIN) to be the UI thread, then the update thread after that. Then the other names can be
+			// whatever.
+			manager.getPostManager().postToMain(new Runnable()
+			{
+				@Override public void run()
+				{
+					getThreadName(Process.myTid());
+					manager.getPostManager().postToUpdateThread(new Runnable()
+					{
+						@Override public void run()
+						{
+							getThreadName(Process.myTid());
+						}
+					});
+				}
+			});
+		}
+	}
+
+	public void setThreadName(int tid)
+	{
+		getThreadName(tid);
 	}
 
 	public void printBuildInfo()

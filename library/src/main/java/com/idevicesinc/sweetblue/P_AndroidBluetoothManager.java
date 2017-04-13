@@ -131,7 +131,7 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
         {
             if (e instanceof DeadObjectException)
             {
-                BleManager.UhOhListener.UhOh uhoh = BleManager.UhOhListener.UhOh.DEAD_OBJECT_EXCEPTION;
+                UhOhListener.UhOh uhoh = UhOhListener.UhOh.DEAD_OBJECT_EXCEPTION;
                 m_bleManager.uhOh(uhoh);
             }
             return m_adaptor.getState();

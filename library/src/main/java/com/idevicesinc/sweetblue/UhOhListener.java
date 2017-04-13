@@ -3,6 +3,8 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 /**
@@ -12,7 +14,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * @see UhOhListener.UhOh
  */
 @com.idevicesinc.sweetblue.annotations.Lambda
-public interface UhOhListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<UhOhListener.UhOhEvent>
+public interface UhOhListener extends GenericListener_Void<UhOhListener.UhOhEvent>
 {
     /**
      * An UhOh is a warning about an exceptional (in the bad sense) and unfixable problem with the underlying stack that

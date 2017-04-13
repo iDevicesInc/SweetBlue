@@ -298,14 +298,22 @@ public final class BleManager
 
 		initConfigDependentMembers();
 
-		m_postManager.postToUpdateThread(new Runnable()
+		initLogger(this);
+
+		m_postManager.postToMain(new Runnable()
 		{
 			@Override public void run()
 			{
-				if (!m_config.unitTest)
+				m_postManager.postToUpdateThread(new Runnable()
 				{
-					m_logger.printBuildInfo();
-				}
+					@Override public void run()
+					{
+						if (!m_config.unitTest)
+						{
+							m_logger.printBuildInfo();
+						}
+					}
+				});
 			}
 		});
 	}
@@ -415,7 +423,7 @@ public final class BleManager
 
 	private void initPostManager()
 	{
-		P_SweetHandler update;
+		final P_SweetHandler update;
 		P_SweetHandler ui;
 		if (m_config.runOnMainThread)
 		{
