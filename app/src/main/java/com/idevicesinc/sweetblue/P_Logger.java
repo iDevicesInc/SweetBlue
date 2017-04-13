@@ -29,7 +29,7 @@ final class P_Logger
 	private final static String UPDATE = "UPDATE";
 	private String[] m_debugThreadNamePool;
 	private int m_poolIndex = 0;
-	private final HashMap<Integer, String> m_threadNames = new HashMap<Integer, String>();
+	private final HashMap<Integer, String> m_threadNames = new HashMap<>();
 	private HashMap<Integer, String> m_gattStatusCodes = null;
 	private HashMap<Integer, String> m_gattConnStates = null;
 	private HashMap<Integer, String> m_gattBleStates = null;
@@ -40,7 +40,7 @@ final class P_Logger
 	private SweetLogger m_logger = null;
 	private final BleManager m_mgr;
 
-	
+
 	public P_Logger(final BleManager manager, String[] debugThreadNamePool, List<UuidNameMap> debugUuidNameDicts, boolean enabled, SweetLogger logger)
 	{
 		m_mgr = manager;
@@ -48,88 +48,55 @@ final class P_Logger
 		m_debugThreadNamePool = debugThreadNamePool;
 		m_nameMap = new UuidNameMap_ListWrapper(debugUuidNameDicts);
 		m_enabled = enabled;
-
-		if( m_enabled )
-		{
-			getMainAndUpdateThreadNames(m_mgr);
-		}
 	}
 
-	public void getMainAndUpdateThreadNames(final BleManager manager)
-	{
-		if (manager != null)
-		{
-			// We want to force the first name (MAIN) to be the UI thread, then the update thread after that. Then the other names can be
-			// whatever.
-			manager.getPostManager().postToMain(new Runnable()
-			{
-				@Override public void run()
-				{
-					getThreadName(Process.myTid());
-					manager.getPostManager().postToUpdateThread(new Runnable()
-					{
-						@Override public void run()
-						{
-							getThreadName(Process.myTid());
-						}
-					});
-				}
-			});
-		}
-	}
-
-	public void setThreadName(int tid)
-	{
-		getThreadName(tid);
-	}
-	
 	public void printBuildInfo()
 	{
-		if( !m_enabled)  return;
-		
+		if (!m_enabled) return;
+
 		int level = Log.DEBUG;
 
-		for( Field field : Build.class.getFields() )
+		for (Field field : Build.class.getFields())
 		{
 			String fieldName = field.getName();
 			String fieldValue = Utils_Reflection.fieldStringValue(field);
-			
+
 			this.log(level, fieldName + ": " + fieldValue);
 		}
 	}
-	
+
 	public boolean isEnabled()
 	{
 		return m_enabled;
 	}
-	
+
 	public synchronized String getDebugAction(String action)
 	{
-        String[] action_split = action.split("\\.");
-    	String action_debug = action_split[action_split.length-1];
-    	
-    	return action_debug;
+		String[] action_split = action.split("\\.");
+		String action_debug = action_split[action_split.length - 1];
+
+		return action_debug;
 	}
-	
+
 	public synchronized String getThreadName(int threadId)
 	{
 		String threadName = null;
-		
-		if( m_threadNames != null )
+
+		if (m_threadNames != null)
 		{
 			threadName = m_threadNames.get(threadId);
-			
-			if( threadName == null )
+
+			if (threadName == null)
 			{
 				threadName = m_debugThreadNamePool[m_poolIndex % m_debugThreadNamePool.length];
-				threadName = threadName + "(" + threadId +")";
-				
+				threadName = threadName + "(" + threadId + ")";
+
 				m_threadNames.put(threadId, threadName);
-				
+
 				m_poolIndex++;
 			}
 		}
-		
+
 		return threadName == null ? "" : threadName;
 	}
 

@@ -466,8 +466,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	@Nullable(Prevalence.NORMAL)
 	final String[] debugThreadNames =
 	{
-		"ABE", "BOB", "CAM", "DON", "ELI", "FAY", "GUS", "HAL", "IAN", "JAY", "LEO",
-		"MAX", "NED", "OLA", "PAT", "RON", "SAL", "TED", "VAL", "WES", "YEE", "ZED"
+		"ABE", "BOB", "CAM", "DON", "ELI", "FAY", "GUS", "HAL", "IAN", "JAY", "KAY", "LEO",
+		"MAX", "NED", "OLA", "PAT", "QUE", "RON", "SAL", "TED", "UVA", "VAL", "WES", "XIB", "YEE", "ZED"
 	};
 	
 	/**

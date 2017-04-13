@@ -265,8 +265,8 @@ public final class BleManager
 		m_currentTick = System.currentTimeMillis();
 
 		addLifecycleCallbacks();
-
 		m_config = config.clone();
+		initLogger(this);
 		m_scanManager = new P_ScanManager(this);
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
