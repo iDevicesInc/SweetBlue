@@ -811,10 +811,9 @@ public final class BleManager
 		m_currentTick = System.currentTimeMillis();
 
 		addLifecycleCallbacks();
-
 		m_config = config.clone();
+		initLogger(this);
 		m_scanManager = new P_ScanManager(this);
-		initLogger(null);
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
 		m_filterMngr = new P_ScanFilterManager(this, m_config.defaultScanFilter);
@@ -965,18 +964,21 @@ public final class BleManager
 		{
 			ui = new P_SweetUIHandler(this);
 			update = new P_SweetBlueThread();
-//			if (m_config.updateLooper == null)
-//			{
-//				m_updateThread = new P_SweetBlueHandlerThread(this);
-//				m_updateThread.start();
-//				update = m_updateThread.prepareHandler();
-//
-//			}
-//			else
-//			{
-//				update = new Handler(m_config.updateLooper);
-//			}
+			update.post(new Runnable()
+			{
+				@Override public void run()
+				{
+					m_logger.setUpdateThread(android.os.Process.myTid());
+				}
+			});
 		}
+		ui.post(new Runnable()
+		{
+			@Override public void run()
+			{
+				m_logger.setMainThread(android.os.Process.myTid());
+			}
+		});
 		m_postManager = new P_PostManager(this, ui, update);
 	}
 
