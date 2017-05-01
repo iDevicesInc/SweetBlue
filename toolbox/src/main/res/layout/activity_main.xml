@@ -10,7 +10,7 @@
     android:paddingRight="12dp"
     android:paddingTop="12dp"
     tools:menu="@menu/main"
-    tools:context="com.idevicesinc.sweetblue.util.MainActivity">
+    tools:context="com.idevicesinc.sweetblue.toolbox.MainActivity">
 
     <TextView
         android:id="@+id/scanStatusTitle"
@@ -45,13 +45,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"/>
 
-        <Spinner
+        <com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner
             android:id="@+id/apiSpinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:entries="@array/scan_apis">
 
-        </Spinner>
+        </com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner>
 
     </LinearLayout>
 

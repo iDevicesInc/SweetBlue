@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SweetBlue Utility app</string>
+    <string name="app_name">SweetBlue Toolbox</string>
     <string name="not_scanning">Not scanning</string>
     <string name="auto">Auto</string>
     <string name="classic">Classic</string>
