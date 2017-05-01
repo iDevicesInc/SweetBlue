@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">SweetBlue Utility app</string>
+    <string name="not_scanning">Not scanning</string>
+    <string name="auto">Auto</string>
+    <string name="classic">Classic</string>
+    <string name="pre_lollipop">Pre-Lollipop</string>
+    <string name="post_lollipop">Post-Lollipop</string>
+    <string name="scanning">Scanning</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="bond">Bond</string>
+    <string name="unbond">Unbond</string>
+    <array name="scan_apis">
+        <item>@string/auto</item>
+        <item>@string/classic</item>
+        <item>@string/pre_lollipop</item>
+        <item>@string/post_lollipop</item>
+    </array>
+    <array name="device_connect_array">
+        <item>@string/connect</item>
+        <item>@string/disconnect</item>
+        <item>@string/bond</item>
+        <item>@string/unbond</item>
+    </array>
+</resources>

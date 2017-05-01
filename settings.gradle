@@ -1,1 +1,1 @@
-include ':app', ':tester', ':integration', ':sweetunit'
+include ':app', ':tester', ':integration', ':sweetunit', ':sweetblueutilityapp'

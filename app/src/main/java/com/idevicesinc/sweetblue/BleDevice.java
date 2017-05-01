@@ -1965,6 +1965,14 @@ public final class BleDevice extends BleNode
         return m_reliableWriteMngr.execute();
     }
 
+    /**
+     * Returns a string of all the states this {@link BleDevice} is currently in.
+     */
+    public final String printState()
+    {
+        return stateTracker_main().toString();
+    }
+
     @Override protected final PA_ServiceManager newServiceManager()
     {
         return new P_DeviceServiceManager(this);

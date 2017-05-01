@@ -19,12 +19,45 @@ public final class ScanOptions
     boolean m_isPriorityScan;
 
 
+    public ScanOptions()
+    {}
+
+    public ScanOptions(BleManagerConfig.ScanFilter scanFilter)
+    {
+        m_scanFilter = scanFilter;
+    }
+
+    public ScanOptions(BleManager.DiscoveryListener listener_nullable)
+    {
+        m_discoveryListener = listener_nullable;
+    }
+
+    public ScanOptions(BleManagerConfig.ScanFilter scanFilter, BleManager.DiscoveryListener listener_nullable)
+    {
+        m_scanFilter = scanFilter;
+        m_discoveryListener = listener_nullable;
+    }
+
+
+    /**
+     * Scan indefinitely until {@link BleManager#stopScan()} is called. If this is called after
+     * {@link #scanPeriodically(Interval, Interval)}, this will override the periodic scan.
+     */
+    public final ScanOptions scanInfinitely()
+    {
+        return scanFor(Interval.INFINITE);
+    }
+
     /**
      * Scan for the specified amount of time. This method implies a one-time scan. If you want to
      * perform a periodic scan, then use {@link #scanPeriodically(Interval, Interval)} instead.
+     *
+     * If this is called after {@link #scanPeriodically(Interval, Interval)}, it will override the periodic scan.
      */
     public final ScanOptions scanFor(Interval time)
     {
+        m_isPeriodic = false;
+        m_pauseTime = null;
         m_scanTime = time;
         return this;
     }
