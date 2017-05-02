@@ -231,9 +231,12 @@ final class P_BondManager
 		{
 			m_device.bond(please_nullable.listener());
 		}
-		else if( !bond )
+		else
 		{
-			m_device.unbond();
+            if (m_device.isAny(BONDING, BONDED))
+			{
+				m_device.unbond();
+			}
 		}
 		
 		return bond;

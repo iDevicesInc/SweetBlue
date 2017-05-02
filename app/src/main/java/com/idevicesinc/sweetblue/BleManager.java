@@ -345,7 +345,7 @@ public final class BleManager
 	 * @see BleManager.UhOhListener.UhOh
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface UhOhListener
+	public static interface UhOhListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<UhOhListener.UhOhEvent>
 	{
 		/**
 		 * An UhOh is a warning about an exceptional (in the bad sense) and unfixable problem with the underlying stack that
@@ -523,8 +523,8 @@ public final class BleManager
 		/**
 		 * Struct passed to {@link BleManager.UhOhListener#onEvent(BleManager.UhOhListener.UhOhEvent)}.
 		 */
-		@Immutable
-		public static class UhOhEvent extends Event
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class UhOhEvent extends com.idevicesinc.sweetblue.utils.Event
 		{
 			/**
 			 * The manager associated with the {@link BleManager.UhOhListener.UhOhEvent}
@@ -740,6 +740,8 @@ public final class BleManager
 //		}
 	}
 
+	private final static long UPDATE_LOOP_WARNING_DELAY = 10000;
+
 	private final Context m_context;
 	private UpdateRunnable m_updateRunnable;
 	private final P_ScanFilterManager m_filterMngr;
@@ -777,6 +779,7 @@ public final class BleManager
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
 	private boolean m_unitTestCheckDone = false;
+    private long m_lastUpdateLoopWarning = 0;
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
@@ -808,10 +811,9 @@ public final class BleManager
 		m_currentTick = System.currentTimeMillis();
 
 		addLifecycleCallbacks();
-
 		m_config = config.clone();
+		initLogger(this);
 		m_scanManager = new P_ScanManager(this);
-		initLogger(null);
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
 		m_filterMngr = new P_ScanFilterManager(this, m_config.defaultScanFilter);
@@ -962,18 +964,21 @@ public final class BleManager
 		{
 			ui = new P_SweetUIHandler(this);
 			update = new P_SweetBlueThread();
-//			if (m_config.updateLooper == null)
-//			{
-//				m_updateThread = new P_SweetBlueHandlerThread(this);
-//				m_updateThread.start();
-//				update = m_updateThread.prepareHandler();
-//
-//			}
-//			else
-//			{
-//				update = new Handler(m_config.updateLooper);
-//			}
+			update.post(new Runnable()
+			{
+				@Override public void run()
+				{
+					m_logger.setUpdateThread(android.os.Process.myTid());
+				}
+			});
 		}
+		ui.post(new Runnable()
+		{
+			@Override public void run()
+			{
+				m_logger.setMainThread(android.os.Process.myTid());
+			}
+		});
 		m_postManager = new P_PostManager(this, ui, update);
 	}
 
@@ -2910,7 +2915,7 @@ public final class BleManager
 		m_taskQueue.add(task);
 	}
 
-	private String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
+	String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
 	{
 		final String nameFromDevice;
 		final String nameFromRecord;
@@ -3024,7 +3029,7 @@ public final class BleManager
 
     	if ( device_sweetblue == null )
     	{
-			final String name_native = rawDeviceName;//device_native.getName();
+			final String name_native = rawDeviceName;
 
     		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
     		device_sweetblue = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
@@ -3216,8 +3221,9 @@ public final class BleManager
 			m_config.updateLoopCallback.onUpdate(timeStep_seconds);
 		}
 
-		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick))
+		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick) && (m_lastUpdateLoopWarning + UPDATE_LOOP_WARNING_DELAY <= m_currentTick))
 		{
+            m_lastUpdateLoopWarning = m_currentTick;
 			getLogger().w("BleManager", String.format("Update loop took longer to run than the current interval of %dms", m_config.autoUpdateRate.millis()));
 		}
 	}

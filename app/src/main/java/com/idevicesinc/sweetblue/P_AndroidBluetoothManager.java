@@ -189,7 +189,14 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
 
     @Override public boolean isBluetoothEnabled()
     {
-        return m_bleManager.is(ON);
+        if (m_adaptor != null)
+        {
+            return m_adaptor.isEnabled();
+        }
+        else
+        {
+            return m_bleManager.is(ON);
+        }
     }
 
     @Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)

@@ -107,21 +107,27 @@ public class MainActivity extends Activity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
-        config.useGattRefresh = true;
         config.saveNameChangesToDisk = false;
         config.runOnMainThread = false;
+        config.uhOhCallbackThrottle = Interval.secs(60.0);
         config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
-                return Please.acknowledgeIf(e.name_normalized().contains("tag") || e.name_normalized().contains("pavlok"));
+                return Please.acknowledgeIf(e.name_normalized().contains("sc") || e.name_normalized().contains("smartcap"));
             }
         };
 
-        mLogger = new DebugLogger(100);
-        config.logger = mLogger;
-
         mgr = BleManager.get(this, config);
+
+        mgr.setListener_UhOh(new BleManager.UhOhListener()
+        {
+            @Override public void onEvent(UhOhEvent e)
+            {
+                Log.e("UhOhs", "Got " + e.uhOh() + " with remedy " + e.remedy());
+            }
+        });
+
         mgr.setListener_State(new BleManager.StateListener()
         {
             @Override public void onEvent(StateEvent event)
