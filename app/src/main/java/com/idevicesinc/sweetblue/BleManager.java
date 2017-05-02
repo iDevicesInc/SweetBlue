@@ -2915,7 +2915,7 @@ public final class BleManager
 		m_taskQueue.add(task);
 	}
 
-	private String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
+	String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
 	{
 		final String nameFromDevice;
 		final String nameFromRecord;

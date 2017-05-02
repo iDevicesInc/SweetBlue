@@ -5553,7 +5553,7 @@ public final class BleDevice extends BleNode
 
         clear_discovery();
 
-        m_nativeWrapper.updateNativeDevice(device_native);
+        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable);
 
         onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 
@@ -5564,7 +5564,7 @@ public final class BleDevice extends BleNode
     {
         m_origin_latest = origin;
 
-        m_nativeWrapper.updateNativeDevice(device_native);
+        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable);
 
         onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 

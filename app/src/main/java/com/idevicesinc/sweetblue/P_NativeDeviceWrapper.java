@@ -80,9 +80,18 @@ final class P_NativeDeviceWrapper
 		return m_device.getManager().getLogger();
 	}
 
-	void updateNativeDevice(final P_NativeDeviceLayer device_native)
+	void updateNativeDevice(final P_NativeDeviceLayer device_native, final byte[] scanRecord_nullable)
 	{
-		final String name_native = device_native.getName();
+		String name_native;
+		try
+		{
+			name_native = getManager().getDeviceName(device_native, scanRecord_nullable);
+		}
+		catch (Exception e)
+		{
+			getLogger().e("Failed to parse name, returning what BluetoothDevice returns.");
+			name_native = device_native.getName();
+		}
 
 		updateNativeName(name_native);
 

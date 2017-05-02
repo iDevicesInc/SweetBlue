@@ -114,7 +114,7 @@ public class MainActivity extends Activity
         {
             @Override public Please onEvent(ScanEvent e)
             {
-                return Please.acknowledgeIf(e.name_normalized().contains("tag") || e.name_normalized().contains("pavlok"));
+                return Please.acknowledgeIf(e.name_normalized().contains("sc") || e.name_normalized().contains("smartcap"));
             }
         };
 
