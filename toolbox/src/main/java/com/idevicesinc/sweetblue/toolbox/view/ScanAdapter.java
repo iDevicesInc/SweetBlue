@@ -1,9 +1,13 @@
 package com.idevicesinc.sweetblue.toolbox.view;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.view.ViewGroup;
 import com.idevicesinc.sweetblue.BleDevice;
+import com.idevicesinc.sweetblue.toolbox.BleServicesActivity;
+
 import java.util.List;
 
 
@@ -27,11 +31,24 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.DeviceHolder>
         return holder;
     }
 
-    @Override public void onBindViewHolder(DeviceHolder holder, int position)
+    @Override public void onBindViewHolder(final DeviceHolder holder, int position)
     {
         BleDevice device = m_deviceList.get(position);
 
         holder.setDevice(device);
+
+        holder.row.setOnClickListener(new View.OnClickListener()
+        {
+            @Override public void onClick(View v)
+            {
+                if (holder.row.hasDevice() && holder.row.isConnected())
+                {
+                    Intent intent = new Intent(m_context, BleServicesActivity.class);
+                    intent.putExtra("mac", holder.row.macAddress());
+                    m_context.startActivity(intent);
+                }
+            }
+        });
     }
 
     @Override public int getItemCount()

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -142,6 +143,14 @@ public class MainActivity extends Activity
         return (T) findViewById(id);
     }
 
+    @Override protected void onDestroy()
+    {
+        if (isFinishing())
+        {
+            m_manager.shutdown();
+        }
+        super.onDestroy();
+    }
 
     private final class DeviceDiscovery implements BleManager.DiscoveryListener
     {

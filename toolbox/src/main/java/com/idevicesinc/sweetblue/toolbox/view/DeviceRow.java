@@ -9,6 +9,7 @@ import android.widget.FrameLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.BleDevice;
+import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.DeviceStateListener;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -54,13 +55,28 @@ public class DeviceRow extends FrameLayout
         m_device.setListener_State(new StateListener());
         m_name.setText(m_device.getName_debug());
         m_status.setText(m_device.printState());
-        m_rssi.setText(String.format(RSSI_BASE, m_device.getRssi()));
+        m_rssi.setText(m_device.getRssiPercent().toString());
     }
 
     public void clearDevice()
     {
         m_device.setListener_State((DeviceStateListener) null);
         m_device = null;
+    }
+
+    public boolean hasDevice()
+    {
+        return m_device != null;
+    }
+
+    public boolean isConnected()
+    {
+        return hasDevice() && m_device.is(BleDeviceState.INITIALIZED);
+    }
+
+    public String macAddress()
+    {
+        return hasDevice() ? m_device.getMacAddress() : "00:00:00:00:00:00";
     }
 
     private void getViews()
