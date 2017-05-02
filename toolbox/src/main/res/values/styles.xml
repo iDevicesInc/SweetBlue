@@ -3,6 +3,7 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="android:Theme.DeviceDefault.Light.DarkActionBar">
         <item name="android:textColor">@color/colorPrimaryDark</item>
+        <item name="android:titleTextColor">@color/colorPrimary</item>
     </style>
 
 </resources>

@@ -21,11 +21,12 @@ import com.idevicesinc.sweetblue.ManagerStateListener;
 import com.idevicesinc.sweetblue.ScanOptions;
 import com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner;
 import com.idevicesinc.sweetblue.toolbox.view.ScanAdapter;
+import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 
 import java.util.ArrayList;
 
 
-public class MainActivity extends Activity
+public class MainActivity extends BaseActivity
 {
 
     private BleManager m_manager;
@@ -129,18 +130,18 @@ public class MainActivity extends Activity
             {
             }
         });
-    }
+        m_startScan.setEnabled(false);
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    <T extends View> T find(int id)
-    {
-        return (T) findViewById(id);
+        BluetoothEnabler.start(this, new BluetoothEnabler.DefaultBluetoothEnablerFilter() {
+            @Override public Please onEvent(BluetoothEnablerEvent e)
+            {
+                if (e.isDone())
+                {
+                    m_startScan.setEnabled(true);
+                }
+                return super.onEvent(e);
+            }
+        });
     }
 
     @Override protected void onDestroy()
