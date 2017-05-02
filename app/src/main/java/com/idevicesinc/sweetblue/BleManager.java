@@ -3029,7 +3029,7 @@ public final class BleManager
 
     	if ( device_sweetblue == null )
     	{
-			final String name_native = rawDeviceName;//device_native.getName();
+			final String name_native = rawDeviceName;
 
     		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
     		device_sweetblue = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
