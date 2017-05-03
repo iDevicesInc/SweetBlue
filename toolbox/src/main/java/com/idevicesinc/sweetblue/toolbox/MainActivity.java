@@ -50,6 +50,7 @@ public class MainActivity extends BaseActivity
         m_config = new BleManagerConfig();
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
+        m_config.connectFailRetryConnectingOverall = true;
 
         m_manager = BleManager.get(this, m_config);
 

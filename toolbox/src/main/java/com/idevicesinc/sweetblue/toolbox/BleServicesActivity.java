@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue.toolbox;
 
 
 import android.bluetooth.BluetoothGattService;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
@@ -44,6 +45,17 @@ public class BleServicesActivity extends BaseActivity
 
         m_status.setText(m_device.printState());
         m_serviceListView.setAdapter(m_adapter);
+        m_serviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                final BluetoothGattService service = m_serviceList.get(position);
+                Intent intent = new Intent(BleServicesActivity.this, BleCharacteristicsActivity.class);
+                intent.putExtra("mac", m_device.getMacAddress());
+                intent.putExtra("uuid", service.getUuid().toString());
+                startActivity(intent);
+            }
+        });
         m_connectSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
         {
             @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id)

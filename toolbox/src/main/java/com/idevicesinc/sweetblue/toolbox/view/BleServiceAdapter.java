@@ -10,22 +10,13 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.toolbox.R;
-import com.idevicesinc.sweetblue.utils.Utils_Byte;
-import com.idevicesinc.sweetblue.utils.Uuids;
-import java.lang.reflect.Field;
+import com.idevicesinc.sweetblue.toolbox.UuidUtil;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 
 public class BleServiceAdapter extends ArrayAdapter<BluetoothGattService>
 {
 
-    private static final String CUSTOM = "CUSTOM SERVICE";
-
-
-    private Map<UUID, Field> uuidFields;
     private ArrayList<BluetoothGattService> m_serviceList;
 
 
@@ -54,10 +45,10 @@ public class BleServiceAdapter extends ArrayAdapter<BluetoothGattService>
         }
         final BluetoothGattService service = m_serviceList.get(position);
 
-        final String serviceName = getServiceName(service);
+        final String serviceName = UuidUtil.getServiceName(service);
         h.name.setText(serviceName);
 
-        final String uuid = serviceName.equals(CUSTOM) ? service.getUuid().toString() : getShortUuid(service.getUuid());
+        final String uuid = serviceName.equals(UuidUtil.CUSTOM_SERVICE) ? service.getUuid().toString() : UuidUtil.getShortUuid(service.getUuid());
 
         h.uuid.setText(uuid);
 
@@ -65,54 +56,6 @@ public class BleServiceAdapter extends ArrayAdapter<BluetoothGattService>
         h.type.setText(type);
 
         return convertView;
-    }
-
-    private String getShortUuid(UUID uuid)
-    {
-        long msb = uuid.getMostSignificantBits();
-        byte[] msbBytes = Utils_Byte.longToBytes(msb);
-        String hex = Utils_Byte.bytesToHexString(msbBytes);
-        hex = "0x" + hex.substring(4, 8);
-        return hex;
-    }
-
-    private String getServiceName(BluetoothGattService service)
-    {
-        if (uuidFields == null)
-        {
-            uuidFields = getUuidFields();
-        }
-        Field field = uuidFields.get(service.getUuid());
-        if (field == null)
-        {
-            return CUSTOM;
-        }
-        else
-        {
-            return field.getName().replace("_UUID", "").replace("_", " ");
-        }
-    }
-
-    private Map<UUID, Field> getUuidFields()
-    {
-        try
-        {
-            Field[] fields = Uuids.class.getDeclaredFields();
-            Map<UUID, Field> map = new HashMap<>(fields.length);
-            for (Field f : fields)
-            {
-                if (f.getType() == UUID.class)
-                {
-                    map.put((UUID) f.get(f), f);
-                }
-            }
-            return map;
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            return new HashMap<>();
-        }
     }
 
 
