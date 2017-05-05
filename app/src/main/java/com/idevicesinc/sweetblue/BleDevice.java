@@ -1,6 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -81,7 +80,6 @@ import static com.idevicesinc.sweetblue.BleDeviceState.UNDISCOVERED;
  * {@link BleManager#startScan()}) and sent to you through
  * {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)}.
  */
-@SuppressLint("")
 public final class BleDevice extends BleNode
 {
     /**
