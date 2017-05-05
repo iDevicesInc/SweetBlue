@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue.toolbox;
 
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
@@ -17,6 +18,7 @@ public final class UuidUtil
 
     public static final String CUSTOM_SERVICE = "CUSTOM SERVICE";
     public static final String CUSTOM_CHARACTERISTIC = "CUSTOM CHARACTERISTIC";
+    public static final String CUSTOM_DESCRIPTOR = "CUSTOM DESCRIPTOR";
 
     private static Map<UUID, Field> uuidFields;
 
@@ -48,6 +50,23 @@ public final class UuidUtil
         if (field == null)
         {
             return CUSTOM_CHARACTERISTIC;
+        }
+        else
+        {
+            return field.getName().replace("_UUID", "").replace("_", " ");
+        }
+    }
+
+    public static String getDescriptorName(BluetoothGattDescriptor descriptor)
+    {
+        if (uuidFields == null)
+        {
+            uuidFields = getUuidFields();
+        }
+        Field field = uuidFields.get(descriptor.getUuid());
+        if (field == null)
+        {
+            return CUSTOM_DESCRIPTOR;
         }
         else
         {
