@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -84,6 +85,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.UNDISCOVERED;
  * {@link BleManager#startScan()}) and sent to you through
  * {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)}.
  */
+@SuppressLint("")
 public final class BleDevice extends BleNode
 {
     /**
@@ -211,7 +213,7 @@ public final class BleDevice extends BleNode
 
     /**
      * Wrapper for {@link BluetoothGatt#beginReliableWrite()} - will return an event such that {@link ReadWriteEvent#isNull()} will
-     * return <code>false</code> if there are no problems. After calling this you should do a few {@link BleDevice#write(UUID, byte[])}
+     * return <code>false</code> if there are no problems. After calling this you should do your {@link BleDevice#write(UUID, byte[])}
      * calls then call {@link #reliableWrite_execute()}.
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteEvent reliableWrite_begin(final ReadWriteListener listener)
@@ -480,8 +482,6 @@ public final class BleDevice extends BleNode
     /**
      * Sets a default backup {@link ReadWriteListener} that will be called for all calls to {@link #read(UUID, ReadWriteListener)},
      * {@link #write(UUID, byte[], ReadWriteListener)}, {@link #enableNotify(UUID, ReadWriteListener)}, etc.
-     * <br><br>
-     * NOTE: This will be called after the {@link ReadWriteListener} provided directly through the method params.
      */
     public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final ReadWriteListener listener_nullable)
     {
@@ -666,7 +666,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Returns the advertising flags, if any, parse from {@link #getScanRecord()}.
+     * Returns the advertising flags, if any, parsed from {@link #getScanRecord()}.
      */
     public final int getAdvertisingFlags()
     {
@@ -831,7 +831,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Returns the cached data from the lastest successful read or notify received for a given uuid.
+     * Returns the cached data from the latest successful read or notify received for a given uuid.
      * Basically if you receive a {@link ReadWriteListener.ReadWriteEvent} for which {@link ReadWriteListener.ReadWriteEvent#isRead()}
      * and {@link ReadWriteListener.ReadWriteEvent#wasSuccess()} both return <code>true</code> then {@link ReadWriteListener.ReadWriteEvent#data()},
      * will be cached and is retrievable by this method.
@@ -1470,7 +1470,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #bond()} but you can pass a listener to be notified of the details behind success or failure.
      *
-     * @return (same as {@link #bond()}).
+     * @return same as {@link #bond()}.
      */
     public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond(BondListener listener)
     {
@@ -1520,7 +1520,7 @@ public final class BleDevice extends BleNode
      * BLE so take it with a grain of salt because it has been directly observed
      * by us to degrade stability in some cases as well.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)} ).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #unbond()
      */
     public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond()
@@ -1548,7 +1548,7 @@ public final class BleDevice extends BleNode
      * Use {@link #setListener_ConnectionFail(DeviceConnectionFailListener)} and {@link #setListener_State(DeviceStateListener)} to receive callbacks for
      * progress and errors.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect()
     {
@@ -1558,7 +1558,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #connect()} but calls {@link #setListener_State(DeviceStateListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(DeviceStateListener stateListener)
     {
@@ -1568,7 +1568,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #connect()} but calls {@link #setListener_ConnectionFail(DeviceConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(DeviceConnectionFailListener failListener)
     {
@@ -1579,7 +1579,7 @@ public final class BleDevice extends BleNode
      * Same as {@link #connect()} but calls {@link #setListener_State(DeviceStateListener)} and
      * {@link #setListener_ConnectionFail(DeviceConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
     {
@@ -1601,7 +1601,7 @@ public final class BleDevice extends BleNode
      * for your device than you ;-). Usually the characteristics read/written inside this transaction are encrypted and so one way or another will require
      * the device to become {@link BleDeviceState#BONDED}. This should happen automatically for you, i.e you shouldn't need to call {@link #bond()} yourself.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #connect()
      * @see BleDeviceState#AUTHENTICATING
      * @see BleDeviceState#AUTHENTICATED
@@ -1614,7 +1614,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #connect(BleTransaction.Auth)} but calls {@link #setListener_State(DeviceStateListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, DeviceStateListener stateListener)
     {
@@ -1626,7 +1626,7 @@ public final class BleDevice extends BleNode
      * {@link #setListener_State(DeviceStateListener)} and
      * {@link #setListener_ConnectionFail(DeviceConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
     {
@@ -1638,7 +1638,7 @@ public final class BleDevice extends BleNode
      * {@link BleDeviceState#INITIALIZED}. For example if you had a BLE-enabled thermometer you could use this transaction to attempt an initial
      * temperature read before updating your UI to indicate "full" connection success, even though BLE connection itself already succeeded.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #connect()
      * @see BleDeviceState#INITIALIZING
      * @see BleDeviceState#INITIALIZED
@@ -1651,7 +1651,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(DeviceStateListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, DeviceStateListener stateListener)
     {
@@ -1659,9 +1659,9 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Yet another overload.
+     * Same as {@link #connect(BleTransaction.Auth)} but calls {@link #setListener_ConnectionFail(DeviceConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authTxn, DeviceConnectionFailListener connectionFailListener)
     {
@@ -1672,7 +1672,7 @@ public final class BleDevice extends BleNode
      * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(DeviceStateListener)} and
      * {@link #setListener_ConnectionFail(DeviceConnectionFailListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Init initTxn, DeviceStateListener stateListener, DeviceConnectionFailListener failListener)
     {
@@ -1682,7 +1682,7 @@ public final class BleDevice extends BleNode
     /**
      * Combination of {@link #connect(BleTransaction.Auth)} and {@link #connect(BleTransaction.Init)}. See those two methods for explanation.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #connect()
      * @see #connect(BleTransaction.Auth)
      * @see #connect(BleTransaction.Init)
@@ -1695,7 +1695,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls {@link #setListener_State(DeviceStateListener)} for you.
      *
-     * @return (same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final @Nullable(Prevalence.NEVER) DeviceConnectionFailListener.ConnectionFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, DeviceStateListener stateListener)
     {
@@ -1706,7 +1706,7 @@ public final class BleDevice extends BleNode
      * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls {@link #setListener_State(DeviceStateListener)} and
      * {@link #setListener_ConnectionFail(DeviceConnectionFailListener)} for you.
      *
-     * @return If the attempt could not even "leave the gate" for some resaon, a valid {@link DeviceConnectionFailListener.ConnectionFailEvent} is returned telling you why. Otherwise
+     * @return If the attempt could not even "leave the gate" for some reason, a valid {@link DeviceConnectionFailListener.ConnectionFailEvent} is returned telling you why. Otherwise
      * this method will still return a non-null instance but {@link DeviceConnectionFailListener.ConnectionFailEvent#isNull()} will be <code>true</code>.
      * <br><br>
      * NOTE: your {@link DeviceConnectionFailListener} will still be called even if this method early-outs.
@@ -2206,7 +2206,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device without a callback.
      *
-     * @return (same as {@link #write(UUID, UUID, byte[])}).
+     * @return same as {@link #write(UUID, UUID, byte[])}.
      * @see #write(UUID, UUID, byte[])
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder)
@@ -2217,7 +2217,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return (same as {@link #write(UUID, UUID, byte[], ReadWriteListener)}).
+     * @return same as {@link #write(UUID, UUID, byte[], ReadWriteListener)}.
      * @see #write(UUID, UUID, byte[], ReadWriteListener)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder, ReadWriteListener listener)
@@ -2228,7 +2228,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device without a callback.
      *
-     * @return (same as {@link #write(UUID, byte[], ReadWriteListener)}).
+     * @return same as {@link #write(UUID, byte[], ReadWriteListener)}.
      * @see #write(UUID, byte[], ReadWriteListener)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data)
@@ -2239,7 +2239,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device without a callback.
      *
-     * @return (same as {@link #write(UUID, byte[], ReadWriteListener)}).
+     * @return same as {@link #write(UUID, byte[], ReadWriteListener)}.
      * @see #write(UUID, byte[], ReadWriteListener)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final byte[] data)
@@ -2250,7 +2250,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #write(UUID, byte[])
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
@@ -2263,7 +2263,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #write(UUID, byte[])
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
@@ -2308,7 +2308,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device without a callback.
      *
-     * @return (same as {@link #write(UUID, FutureData, ReadWriteListener)}).
+     * @return same as {@link #write(UUID, FutureData, ReadWriteListener)}.
      * @see #write(UUID, FutureData, ReadWriteListener)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData)
@@ -2319,7 +2319,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #write(UUID, FutureData)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
@@ -2332,7 +2332,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #write(UUID, FutureData)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
@@ -2381,7 +2381,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device descriptor without a callback.
      *
-     * @return (same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}).
+     * @return same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}.
      * @see #writeDescriptor(UUID, byte[], ReadWriteListener)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data)
@@ -2392,7 +2392,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device descriptor with a callback.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #writeDescriptor(UUID, byte[])
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
@@ -2431,7 +2431,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device descriptor without a callback.
      *
-     * @return (same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}).
+     * @return same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}.
      * @see #writeDescriptor(UUID, byte[], ReadWriteListener)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData)
@@ -2442,7 +2442,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #writeDescriptor(UUID, byte[])
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
@@ -2482,7 +2482,7 @@ public final class BleDevice extends BleNode
      * Reads from the device without a callback - the callback will still be sent through any listeners provided
      * to either {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} or {@link BleManager#setListener_Read_Write(ReadWriteListener)}.
      *
-     * @return (same as {@link #readDescriptor(UUID, ReadWriteListener)}).
+     * @return same as {@link #readDescriptor(UUID, ReadWriteListener)}.
      * @see #readDescriptor(UUID, ReadWriteListener)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid)
@@ -2493,7 +2493,7 @@ public final class BleDevice extends BleNode
     /**
      * Reads from the device with a callback.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #readDescriptor(UUID)
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid, final ReadWriteListener listener)
@@ -2538,7 +2538,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #readRssi(ReadWriteListener)} but use this method when you don't much care when/if the RSSI is actually updated.
      *
-     * @return (same as {@link #readRssi(ReadWriteListener)}).
+     * @return same as {@link #readRssi(ReadWriteListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent readRssi()
     {
@@ -2551,7 +2551,7 @@ public final class BleDevice extends BleNode
      * this call to succeed. When the device is not {@link BleDeviceState#CONNECTED} then the value returned by
      * {@link #getRssi()} will be automatically updated every time this device is discovered (or rediscovered) by a scan operation.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
     {
@@ -2572,7 +2572,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #setConnectionPriority(BleConnectionPriority, ReadWriteListener)} but use this method when you don't much care when/if the connection priority is updated.
      *
-     * @return (same as {@link #setConnectionPriority(BleConnectionPriority, ReadWriteListener)}).
+     * @return same as {@link #setConnectionPriority(BleConnectionPriority, ReadWriteListener)}.
      */
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setConnectionPriority(final BleConnectionPriority connectionPriority)
@@ -2586,7 +2586,7 @@ public final class BleDevice extends BleNode
      * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
      * this call to succeed.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      * @see #setConnectionPriority(BleConnectionPriority, ReadWriteListener)
      * @see #getConnectionPriority()
      */
@@ -2648,7 +2648,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #setMtuToDefault(ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
      *
-     * @return (same as {@link #setMtu(int, ReadWriteListener)}).
+     * @return same as {@link #setMtu(int, ReadWriteListener)}.
      */
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault()
@@ -2661,7 +2661,7 @@ public final class BleDevice extends BleNode
      * Unlike {@link #setMtu(int)}, this can be called when the device is {@link BleDeviceState#DISCONNECTED} in the event that you don't want the
      * MTU to be auto-set upon next reconnection.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault(final ReadWriteListener listener)
@@ -2685,7 +2685,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #setMtu(int, ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
      *
-     * @return (same as {@link #setMtu(int, ReadWriteListener)}).
+     * @return same as {@link #setMtu(int, ReadWriteListener)}.
      */
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu)
@@ -2699,16 +2699,12 @@ public final class BleDevice extends BleNode
      * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
      * this call to succeed.
      *
-<<<<<<< HEAD:library/src/main/java/com/idevicesinc/sweetblue/BleDevice.java
      * <b>NOTE 1:</b> This will only work on devices running Android Lollipop (5.0) or higher. Otherwise it will be ignored.
      * <b>NOTE 2:</b> Some phones will request an MTU, and accept a higher number, but will fail (time out) when writing a characteristic with a large
      * payload. Namely, we've found the Moto Pure X, and the OnePlus OnePlus2 to have this behavior. For those phones any MTU above
      * 50 failed.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
-=======
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
->>>>>>> refactor Node, and Device ConnectionFailListeners to their own class files, and updated relevant javadocs:app/src/main/java/com/idevicesinc/sweetblue/BleDevice.java
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
@@ -3109,7 +3105,7 @@ public final class BleDevice extends BleNode
     /**
      * Reads a characteristic from the device.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final ReadWriteListener listener)
     {
@@ -3122,7 +3118,7 @@ public final class BleDevice extends BleNode
      * Reads a characteristic from the device. The provided {@link DescriptorFilter} will grab the correct {@link BluetoothGattCharacteristic} in the case there are
      * more than one with the same {@link UUID} in the same {@link BluetoothGattService}.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
@@ -3298,7 +3294,7 @@ public final class BleDevice extends BleNode
      * registration for the notification. <code>switch</code> on {@link Type#ENABLING_NOTIFICATION}
      * and {@link Type#NOTIFICATION} (or {@link Type#INDICATION}) in your listener to distinguish between these.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, ReadWriteListener listener)
     {
@@ -3321,7 +3317,7 @@ public final class BleDevice extends BleNode
      * {@link Type#ENABLING_NOTIFICATION} but haven't received an actual notification in some time it may be a sign that notifications have broken
      * in the underlying stack.
      *
-     * @return (same as {@link #enableNotify(UUID, ReadWriteListener)}).
+     * @return same as {@link #enableNotify(UUID, ReadWriteListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
@@ -3434,7 +3430,7 @@ public final class BleDevice extends BleNode
      * provided should be the same one that you passed to {@link #enableNotify(UUID, ReadWriteListener)}. Listen for
      * {@link Type#DISABLING_NOTIFICATION} in your listener to know when the remote device actually confirmed.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final ReadWriteListener listener)
     {
@@ -3446,7 +3442,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #disableNotify(UUID, ReadWriteListener)} but filters on the given {@link Interval}.
      *
-     * @return (same as {@link #disableNotify(UUID, ReadWriteListener)}).
+     * @return same as {@link #disableNotify(UUID, ReadWriteListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
@@ -3471,7 +3467,7 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #disableNotify(UUID, ReadWriteListener)} but filters on the given {@link Interval} without a listener.
      *
-     * @return (same as {@link #disableNotify(UUID, ReadWriteListener)}).
+     * @return same as {@link #disableNotify(UUID, ReadWriteListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
     {
