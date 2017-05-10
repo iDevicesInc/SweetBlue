@@ -195,6 +195,7 @@ final class P_ReconnectManager
 			else
 			{
 				m_device.stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, RECONNECTING_LONG_TERM, false);
+				m_device.onLongTermReconnectTimeOut();
 			}
 		}
 	}

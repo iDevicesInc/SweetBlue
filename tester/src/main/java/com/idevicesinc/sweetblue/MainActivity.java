@@ -109,12 +109,13 @@ public class MainActivity extends Activity
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
         config.saveNameChangesToDisk = false;
         config.runOnMainThread = false;
+        config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
         config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
-                return Please.acknowledgeIf(e.name_normalized().contains("sc") || e.name_normalized().contains("smartcap"));
+                return Please.acknowledgeIf(e.name_normalized().contains("tag") || e.name_normalized().contains("smartcap"));
             }
         };
 
