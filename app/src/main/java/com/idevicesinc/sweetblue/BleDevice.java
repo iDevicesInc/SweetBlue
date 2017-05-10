@@ -5547,6 +5547,11 @@ public final class BleDevice extends BleNode
         return m_pollMngr;
     }
 
+    final void onLongTermReconnectTimeOut()
+    {
+        m_connectionFailMngr.onLongTermTimedOut();
+    }
+
     final void onNewlyDiscovered(final P_NativeDeviceLayer device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
