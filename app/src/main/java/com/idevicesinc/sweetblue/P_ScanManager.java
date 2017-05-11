@@ -499,7 +499,7 @@ final class P_ScanManager
         {
             if( m_manager.doAutoScan() )
             {
-                m_manager.startScan_private(new ScanOptions().scanFor(m_manager.m_config.autoScanActiveTime).asPoll(true));
+                m_manager.startScan_private(new ScanOptions().scanPeriodically(m_manager.m_config.autoScanActiveTime, m_manager.m_config.autoScanPauseInterval).asPoll(true));
             }
         }
 

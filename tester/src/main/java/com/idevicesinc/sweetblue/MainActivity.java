@@ -92,7 +92,7 @@ public class MainActivity extends Activity
         {
             @Override public void onClick(View v)
             {
-                mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.ONE_SEC);
+                mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
             }
         });
         mStopScan = (Button) findViewById(R.id.stopScan);
