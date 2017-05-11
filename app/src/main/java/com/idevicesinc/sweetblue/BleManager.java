@@ -1454,12 +1454,9 @@ public final class BleManager
 		m_config.autoScanActiveTime = scanActiveTime;
 		m_config.autoScanPauseInterval = scanPauseTime;
 
-		if( Interval.isEnabled(m_config.autoScanActiveTime) )
+		if( doAutoScan() )
 		{
-			if( doAutoScan() )
-			{
-				startScan_private(new ScanOptions().scanFor(m_config.autoScanActiveTime).asPoll(true));
-			}
+			startScan_private(new ScanOptions().scanPeriodically(m_config.autoScanActiveTime, m_config.autoScanPauseInterval).asPoll(true));
 		}
 	}
 
@@ -1685,7 +1682,7 @@ public final class BleManager
 
 			if (options.m_isPeriodic)
 			{
-				if (!Interval.isEnabled(m_config.autoScanActiveTime) && !doAutoScan() )
+				if (!doAutoScan() )
 				{
 					startScan = false;
 				}
@@ -3244,7 +3241,7 @@ public final class BleManager
 
 	final boolean doAutoScan()
 	{
-		return is(ON) && (m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA));
+		return is(ON) && Interval.isEnabled(m_config.autoScanActiveTime) && (m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA));
 	}
 
 	final void setBleScanReady()
