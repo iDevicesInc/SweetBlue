@@ -12,6 +12,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -116,6 +117,15 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Boolean tryBondingWhileDisconnected_manageOnDisk		= true;
+
+	/**
+	 * Default is <code>false</code> - Controls whether SweetBlue will automatically bond when connecting to a peripheral (rather than letting Android do it itself).
+	 * If the device is already bonded, this will do nothing. In most cases, it's best to bond <i>before</i> connecting, but there are rare devices which work better
+	 * to bond <i>after</i> becoming connected. To adjust this behavior, adjust {@link #tryBondingWhileDisconnected} (if it's <code>true</code>, then the bond will happen
+	 * before connecting, otherwise it will happen after).
+	 */
+	@Advanced
+	public boolean alwaysBondOnConnect							= false;
 
 	/**
 	 * Default is <code>true</code> - controls whether changes to a device's name through {@link BleDevice#setName(String)} are remembered on disk through
@@ -316,7 +326,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Interval rssiAutoPollRate							= Interval.secs(DEFAULT_RSSI_AUTO_POLL_RATE);
-	
+
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
 	 * 

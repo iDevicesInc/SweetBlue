@@ -196,8 +196,14 @@ public class Utils
 	}
 
 	/**
-	 * Returns true for certain Sony and Motorola products, which may have problems managing bonding state
-	 * and so this method is used in {@link com.idevicesinc.sweetblue.BleDeviceConfig.DefaultBondFilter}. 
+	 * Returns true for certain products, which may have problems managing bonding state
+	 * and so this method is used in {@link com.idevicesinc.sweetblue.BleDeviceConfig.DefaultBondFilter}.
+	 *
+	 * So far this method includes these products:<br></br>
+	 * All sony devices<br></br>
+	 * Motorola ("ghost", and "victara" products)
+	 * Samsung ("degaswifiue" product - Tab 4)
+	 * AMobile IOT-500 ("full_amobile2601)wp_l" product)
 	 */ 
 	public static boolean phoneHasBondingIssues()
 	{
@@ -205,7 +211,8 @@ public class Utils
 //			Utils.isManufacturer("lge")																			||
 			Utils.isManufacturer("sony")																		||
 			Utils.isManufacturer("motorola") && (Utils.isProduct("ghost") || Utils.isProduct("victara"))		||
-			Utils.isManufacturer("samsung") && (Utils.isProduct("degaswifiue"))									 ;
+			Utils.isManufacturer("samsung") && (Utils.isProduct("degaswifiue"))									||
+			Utils.isManufacturer("amobile") && Utils.isProduct("full_amobile2601_wp_l")							;
 	}
 	
 	public static boolean isManufacturer(String manufacturer)

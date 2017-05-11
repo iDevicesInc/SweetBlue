@@ -605,7 +605,13 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			m_queue.fail(P_Task_Unbond.class, m_device);
 
-			if( false == m_queue.succeed(P_Task_Bond.class, m_device) )
+			final P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
+
+			if (task != null)
+			{
+				task.onNativeSuccess();
+			}
+			else
 			{
 				m_device.m_bondMngr.onNativeBond(E_Intent.UNINTENTIONAL);
 			}
