@@ -265,8 +265,8 @@ final class P_TaskQueue
 			{
 				m_queue.remove(i);
 				m_current.set(newPotentialCurrent);
-				m_current.get().arm();
-				if (!m_current.get().tryExecuting())
+				newPotentialCurrent.arm();
+				if (!newPotentialCurrent.tryExecuting())
 				{
 					print();
 				}
