@@ -3,6 +3,8 @@ package com.idevicesinc.sweetblue;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import com.idevicesinc.sweetblue.tester.R;
+import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 
@@ -92,7 +96,7 @@ public class MainActivity extends Activity
         {
             @Override public void onClick(View v)
             {
-                mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.FIVE_SECS);
+                mgr.startPeriodicScan(Interval.TEN_SECS, Interval.ONE_SEC);
             }
         });
         mStopScan = (Button) findViewById(R.id.stopScan);
@@ -104,18 +108,26 @@ public class MainActivity extends Activity
             }
         });
 
+        mLogger = new DebugLogger(250);
+
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
+        config.logger = mLogger;
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
-        config.saveNameChangesToDisk = false;
         config.runOnMainThread = false;
+        if (Utils.isManufacturer("amobile") && Utils.isProduct("full_amobile2601_wp_l"))
+        {
+            config.tryBondingWhileDisconnected = false;
+            config.alwaysBondOnConnect = true;
+        }
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
+
         config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
-                return Please.acknowledgeIf(e.name_normalized().contains("tag") || e.name_normalized().contains("smartcap"));
+                return Please.acknowledgeIf(e.name_normalized().contains("sc") || e.name_normalized().contains("smartcap"));
             }
         };
 
