@@ -1634,33 +1634,17 @@ public final class BleManager
 //    {
 	final boolean startScan_private(ScanOptions options)
 	{
-		m_scanManager.resetTimeNotScanning();
-		options.m_scanTime = options.m_scanTime.secs() < 0.0 ? Interval.INFINITE : options.m_scanTime;
+		if (m_taskQueue.isInQueue(P_Task_Scan.class, this))
+		{
+			getLogger().w("A startScan method was called when there's already a scan task in the queue!");
+			return false;
+		}
 
 		if( false == isBluetoothEnabled() )
 		{
 			m_logger.e(BleManager.class.getSimpleName() + " is not " + ON + "! Please use the turnOn() method first.");
 
 			return false;
-		}
-
-		m_scanManager.setInfiniteScan(options.m_scanTime.equals(Interval.INFINITE));
-
-		if( options.m_discoveryListener != null )
-		{
-			setListener_Discovery(options.m_discoveryListener);
-		}
-
-
-		if (options.m_scanFilter != null)
-		{
-			m_filterMngr.add(options.m_scanFilter);
-		}
-
-		if (options.m_isPeriodic)
-		{
-			m_config.autoScanActiveTime = options.m_scanTime;
-			m_config.autoScanPauseInterval = options.m_pauseTime;
 		}
 
 		final P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
@@ -1674,6 +1658,27 @@ public final class BleManager
 			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
 
 			m_stateTracker.append(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+			m_scanManager.resetTimeNotScanning();
+			options.m_scanTime = options.m_scanTime.secs() < 0.0 ? Interval.INFINITE : options.m_scanTime;
+			m_scanManager.setInfiniteScan(options.m_scanTime.equals(Interval.INFINITE));
+
+			if( options.m_discoveryListener != null )
+			{
+				setListener_Discovery(options.m_discoveryListener);
+			}
+
+
+			if (options.m_scanFilter != null)
+			{
+				m_filterMngr.add(options.m_scanFilter);
+			}
+
+			if (options.m_isPeriodic)
+			{
+				m_config.autoScanActiveTime = options.m_scanTime;
+				m_config.autoScanPauseInterval = options.m_pauseTime;
+			}
 
             PE_TaskPriority pri = options.m_isPriorityScan ? PE_TaskPriority.CRITICAL : null;
 

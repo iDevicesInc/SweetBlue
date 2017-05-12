@@ -3,6 +3,8 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.util.Log;
+
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
@@ -268,7 +270,7 @@ final class P_ScanManager
                 {
                     m_triedToStartScanAfterTurnedOn = true;
 
-                    if (!m_manager.is(SCANNING))
+                    if (!m_manager.isAny(SCANNING, STARTING_SCAN))
                     {
                         startScan = true;
                     }
@@ -277,13 +279,13 @@ final class P_ScanManager
                 {
                     m_triedToStartScanAfterResume = true;
 
-                    if (!m_manager.is(SCANNING))
+                    if (!m_manager.isAny(SCANNING, STARTING_SCAN))
                     {
                         startScan = true;
                     }
                 }
             }
-            if( !m_manager.is(SCANNING) )
+            if( !m_manager.isAny(SCANNING, STARTING_SCAN) )
             {
                 double scanInterval = Interval.secs(m_manager.isForegrounded() ? m_manager.m_config.autoScanPauseInterval : m_manager.m_config.autoScanPauseTimeWhileAppIsBackgrounded);
 

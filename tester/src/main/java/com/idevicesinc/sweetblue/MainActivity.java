@@ -113,7 +113,7 @@ public class MainActivity extends Activity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.logger = mLogger;
-        config.scanApi = BleScanApi.PRE_LOLLIPOP;
+        config.scanApi = BleScanApi.POST_LOLLIPOP;
         config.runOnMainThread = false;
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);

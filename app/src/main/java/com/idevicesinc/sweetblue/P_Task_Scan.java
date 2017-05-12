@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.util.Log;
+
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -20,6 +22,9 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
         m_priority = priority == null ? PE_TaskPriority.TRIVIAL : priority;
 
         m_scanTime = scanTime;
+
+        Log.e("ScanTask", "Task created");
+        new Exception().printStackTrace();
     }
 
     public E_Intent getIntent()
