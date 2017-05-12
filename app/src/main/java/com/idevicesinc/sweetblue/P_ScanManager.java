@@ -65,7 +65,7 @@ final class P_ScanManager
         return startClassicBoost();
     }
 
-    public final boolean startScan(PA_StateTracker.E_Intent intent, double scanTime, boolean m_isPoll)
+    public final boolean startScan(PA_StateTracker.E_Intent intent, double scanTime)
     {
         switch (m_manager.m_config.scanApi)
         {
@@ -78,7 +78,7 @@ final class P_ScanManager
                     if (Utils.isLollipop())
                     {
                         mCurrentApi.set(BleScanApi.POST_LOLLIPOP);
-                        return startScanPostLollipop(scanTime, m_isPoll);
+                        return startScanPostLollipop(scanTime);
                     }
                     else
                     {
@@ -347,7 +347,7 @@ final class P_ScanManager
         m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, true, SCANNING_PAUSED, false, STARTING_SCAN, false, BOOST_SCANNING, false);
     }
 
-    private boolean startScanPostLollipop(double scanTime, boolean m_isPoll)
+    private boolean startScanPostLollipop(double scanTime)
     {
         int nativePowerMode;
         BleScanPower power = m_manager.m_config.scanPower;
@@ -355,7 +355,7 @@ final class P_ScanManager
         {
             if (m_manager.isForegrounded())
             {
-                if (m_isPoll || scanTime == Double.POSITIVE_INFINITY)
+                if (scanTime == Double.POSITIVE_INFINITY)
                 {
                     power = BleScanPower.MEDIUM_POWER;
                     nativePowerMode = BleScanPower.MEDIUM_POWER.getNativeMode();
@@ -499,7 +499,7 @@ final class P_ScanManager
         {
             if( m_manager.doAutoScan() )
             {
-                m_manager.startScan_private(new ScanOptions().scanPeriodically(m_manager.m_config.autoScanActiveTime, m_manager.m_config.autoScanPauseInterval).asPoll(true));
+                m_manager.startScan_private(new ScanOptions().scanPeriodically(m_manager.m_config.autoScanActiveTime, m_manager.m_config.autoScanPauseInterval));
             }
         }
 

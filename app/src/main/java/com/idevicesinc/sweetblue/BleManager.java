@@ -1456,7 +1456,7 @@ public final class BleManager
 
 		if( doAutoScan() )
 		{
-			startScan_private(new ScanOptions().scanPeriodically(m_config.autoScanActiveTime, m_config.autoScanPauseInterval).asPoll(true));
+			startScan_private(new ScanOptions().scanPeriodically(m_config.autoScanActiveTime, m_config.autoScanPauseInterval));
 		}
 	}
 
@@ -1591,7 +1591,7 @@ public final class BleManager
 	{
 		showScanWarningIfNeeded();
 
-		return startScan_private(new ScanOptions().scanFor(scanTime).withScanFilter(filter).withDiscoveryListener(discoveryListener).asPoll(false));
+		return startScan_private(new ScanOptions().scanFor(scanTime).withScanFilter(filter).withDiscoveryListener(discoveryListener));
 	}
 
 	public final boolean startScan(ScanOptions options)
@@ -1690,7 +1690,7 @@ public final class BleManager
 
 			if (startScan)
 			{
-				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), options.m_isPoll, pri));
+				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), pri));
 			}
 		}
 
