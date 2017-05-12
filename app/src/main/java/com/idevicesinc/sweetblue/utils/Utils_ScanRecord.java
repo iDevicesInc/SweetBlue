@@ -105,7 +105,7 @@ public final class Utils_ScanRecord extends Utils
 
 		if(scanRecord == null)
 		{
-			return null;
+			return BleScanInfo.NULL;
 		}
 
 		int currentPos = 0;

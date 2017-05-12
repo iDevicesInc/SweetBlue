@@ -115,11 +115,6 @@ public class MainActivity extends Activity
         config.logger = mLogger;
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
         config.runOnMainThread = false;
-        if (Utils.isManufacturer("amobile") && Utils.isProduct("full_amobile2601_wp_l"))
-        {
-            config.tryBondingWhileDisconnected = false;
-            config.alwaysBondOnConnect = true;
-        }
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
 
@@ -127,7 +122,7 @@ public class MainActivity extends Activity
         {
             @Override public Please onEvent(ScanEvent e)
             {
-                return Please.acknowledgeIf(e.name_normalized().contains("sc") || e.name_normalized().contains("smartcap"));
+                return Please.acknowledgeIf(e.name_normalized().contains("tag"));
             }
         };
 
