@@ -353,7 +353,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		final BleDevice.ReadWriteListener.Status status = Utils.isSuccess(gattStatus) ? BleDevice.ReadWriteListener.Status.SUCCESS : BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE;
 
 		final UUID serviceUuid			= characteristic_nullable != null	? characteristic_nullable.getService().getUuid()	: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
-		final UUID characteristicUuid	= characteristic_nullable != null	? characteristic_nullable.getUuid()					: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;;
+		final UUID characteristicUuid	= characteristic_nullable != null	? characteristic_nullable.getUuid()					: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
 		final UUID descriptorUuid		= descriptor_nullable != null		? descriptor_nullable.getUuid()						: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
 
 		final double time = Interval.DISABLED.secs();
@@ -605,7 +605,13 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			m_queue.fail(P_Task_Unbond.class, m_device);
 
-			if( false == m_queue.succeed(P_Task_Bond.class, m_device) )
+			final P_Task_Bond task = m_queue.getCurrent(P_Task_Bond.class, m_device);
+
+			if (task != null)
+			{
+				task.onNativeSuccess();
+			}
+			else
 			{
 				m_device.m_bondMngr.onNativeBond(E_Intent.UNINTENTIONAL);
 			}

@@ -118,7 +118,7 @@ final class P_BleManager_Listeners
                 }
                 else if (action.equals(BluetoothDevice.ACTION_UUID))
                 {
-                    m_mngr.getLogger().e("");
+                    m_mngr.getLogger().d("");
                 }
 
                 BleDevice device = m_mngr.getDevice(device_native.getAddress());

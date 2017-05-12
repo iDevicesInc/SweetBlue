@@ -265,8 +265,8 @@ final class P_TaskQueue
 			{
 				m_queue.remove(i);
 				m_current.set(newPotentialCurrent);
-				m_current.get().arm();
-				if (!m_current.get().tryExecuting())
+				newPotentialCurrent.arm();
+				if (!newPotentialCurrent.tryExecuting())
 				{
 					print();
 				}
@@ -612,7 +612,7 @@ final class P_TaskQueue
 
 	@Override public String toString()
 	{
-		final String current = m_current.get() != null ? m_current.toString() : "no current task";
+		final String current = m_current.get() != null ? m_current.get().toString() : "no current task";
 //		if( m_pendingEndingStateForCurrentTask != null)
 //		{
 //			current += "(" + m_pendingEndingStateForCurrentTask.name() +")";
