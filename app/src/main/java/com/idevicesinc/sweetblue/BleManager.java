@@ -775,7 +775,6 @@ public final class BleManager
 	private long m_timeTurnedOn = 0;
 	private long m_lastTaskExecution;
 	private long m_currentTick;
-	private boolean m_doingInfiniteScan = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
 	private boolean m_unitTestCheckDone = false;
@@ -1479,7 +1478,7 @@ public final class BleManager
 	{
 		m_config.autoScanActiveTime = Interval.DISABLED;
 
-		if( false == m_doingInfiniteScan )
+		if( false == m_scanManager.isInfiniteScan() )
 		{
 			this.stopScan();
 		}
@@ -1645,7 +1644,7 @@ public final class BleManager
 			return false;
 		}
 
-		m_doingInfiniteScan = options.m_scanTime.equals(Interval.INFINITE);
+		m_scanManager.setInfiniteScan(options.m_scanTime.equals(Interval.INFINITE));
 
 		if( options.m_discoveryListener != null )
 		{
@@ -2193,7 +2192,7 @@ public final class BleManager
 	 */
 	public final void stopScan()
 	{
-		m_doingInfiniteScan = false;
+		m_scanManager.setInfiniteScan(false);
 
 		stopScan_private(E_Intent.INTENTIONAL);
 	}
