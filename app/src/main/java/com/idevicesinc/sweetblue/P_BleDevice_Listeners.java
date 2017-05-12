@@ -353,7 +353,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		final BleDevice.ReadWriteListener.Status status = Utils.isSuccess(gattStatus) ? BleDevice.ReadWriteListener.Status.SUCCESS : BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE;
 
 		final UUID serviceUuid			= characteristic_nullable != null	? characteristic_nullable.getService().getUuid()	: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
-		final UUID characteristicUuid	= characteristic_nullable != null	? characteristic_nullable.getUuid()					: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;;
+		final UUID characteristicUuid	= characteristic_nullable != null	? characteristic_nullable.getUuid()					: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
 		final UUID descriptorUuid		= descriptor_nullable != null		? descriptor_nullable.getUuid()						: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
 
 		final double time = Interval.DISABLED.secs();
