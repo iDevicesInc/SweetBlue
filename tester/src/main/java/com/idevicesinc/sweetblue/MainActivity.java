@@ -96,7 +96,15 @@ public class MainActivity extends Activity
         {
             @Override public void onClick(View v)
             {
-                mgr.startPeriodicScan(Interval.TEN_SECS, Interval.ONE_SEC);
+
+                ScanOptions options = new ScanOptions().scanPeriodically(Interval.TEN_SECS, Interval.ONE_SEC).withScanFilter(new BleManagerConfig.ScanFilter()
+                {
+                    @Override public Please onEvent(ScanEvent e)
+                    {
+                        return Please.acknowledgeIf(e.name_normalized().contains("tag"));
+                    }
+                });
+                mgr.startScan(options);
             }
         });
         mStopScan = (Button) findViewById(R.id.stopScan);
