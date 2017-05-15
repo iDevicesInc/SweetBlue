@@ -22,9 +22,6 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
         m_priority = priority == null ? PE_TaskPriority.TRIVIAL : priority;
 
         m_scanTime = scanTime;
-
-        Log.e("ScanTask", "Task created");
-        new Exception().printStackTrace();
     }
 
     public E_Intent getIntent()
