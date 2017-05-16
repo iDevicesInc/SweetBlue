@@ -385,9 +385,11 @@ public final class BleManager
 			 */
 			WRITE_TIMED_OUT,
 
+
 			/**
 			 * When the underlying stack meets a race condition where {@link android.bluetooth.BluetoothAdapter#getState()} does not
 			 * match the value provided through {@link android.bluetooth.BluetoothAdapter#ACTION_STATE_CHANGED} with {@link android.bluetooth.BluetoothAdapter#EXTRA_STATE}.
+			 *
 			 */
 			INCONSISTENT_NATIVE_BLE_STATE,
 
@@ -470,6 +472,14 @@ public final class BleManager
 			 * We always end up back at {@link android.bluetooth.BluetoothAdapter#STATE_OFF}. Opposite problem of {@link #CANNOT_DISABLE_BLUETOOTH}
 			 */
 			CANNOT_ENABLE_BLUETOOTH,
+
+			/**
+			 * This can be thrown when the underlying state from {@link BluetoothManager#getConnectionState(BluetoothDevice, int)} does not match
+			 * the apparent condition of the device (for instance, you perform a scan, then try to connect to a device, but it reports as being connected...in this case, it cannot
+			 * be connected, AND advertising). It seems the values from this method are cached, so sometimes this cache gets "stuck" in the connected state. In this case, it may
+			 * be best to clear cache of the Bluetooth app (Sometimes called Bluetooth Cache).
+			 */
+			INCONSISTENT_NATIVE_DEVICE_STATE,
 
 			/**
 			 * Just a blanket case for when the library has to completely shrug its shoulders.
