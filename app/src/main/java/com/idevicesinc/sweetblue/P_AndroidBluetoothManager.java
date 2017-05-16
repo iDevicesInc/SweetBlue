@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -9,15 +8,19 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
+import android.os.DeadObjectException;
+
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.Utils;
+
 import java.lang.reflect.Method;
 import java.util.Set;
+
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
-
 
 
 public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
@@ -29,8 +32,6 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
     private static Method m_getLeState_marshmallow;
     private static Integer m_refState;
     private static Integer m_state;
-
-
 
 
     public void setBleManager(BleManager mgr)
@@ -108,9 +109,18 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
             {
                 return m_state;
             }
+            else
+            {
+                m_refState = BleStatuses.STATE_OFF;
+            }
             return m_refState;
         } catch (Exception e)
         {
+            if (e instanceof DeadObjectException)
+            {
+                BleManager.UhOhListener.UhOh uhoh = BleManager.UhOhListener.UhOh.DEAD_OBJECT_EXCEPTION;
+                m_bleManager.uhOh(uhoh);
+            }
             return m_adaptor.getState();
         }
     }
@@ -151,12 +161,14 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
     }
 
     @Override
-    public BluetoothAdapter getNativeAdaptor() {
+    public BluetoothAdapter getNativeAdaptor()
+    {
         return m_adaptor;
     }
 
     @Override
-    public BluetoothManager getNativeManager() {
+    public BluetoothManager getNativeManager()
+    {
         return m_manager;
     }
 
@@ -177,7 +189,14 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
 
     @Override public boolean isBluetoothEnabled()
     {
-        return m_bleManager.is(ON);
+        if (m_adaptor != null)
+        {
+            return m_adaptor.isEnabled();
+        }
+        else
+        {
+            return m_bleManager.is(ON);
+        }
     }
 
     @Override public void startLScan(int scanMode, Interval delay, L_Util.ScanCallback callback)

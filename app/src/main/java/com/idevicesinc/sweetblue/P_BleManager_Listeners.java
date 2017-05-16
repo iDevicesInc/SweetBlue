@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.IDLE;
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
+import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
@@ -117,7 +118,7 @@ final class P_BleManager_Listeners
                 }
                 else if (action.equals(BluetoothDevice.ACTION_UUID))
                 {
-                    m_mngr.getLogger().e("");
+                    m_mngr.getLogger().d("");
                 }
 
                 BleDevice device = m_mngr.getDevice(device_native.getAddress());
@@ -192,7 +193,10 @@ final class P_BleManager_Listeners
         // If this was discovered via the hack to show the bond popup, then do not propogate this
         // any further, as this scan is JUST to get the dialog to pop up (rather than show in the notification area)
         P_Task_BondPopupHack hack = m_mngr.getTaskQueue().getCurrent(P_Task_BondPopupHack.class, m_mngr);
-        if (hack == null)
+
+        // Only pipe discovery event if the scan task is running, and the manager says we're doing a classic scan
+        P_Task_Scan scan = m_mngr.getTaskQueue().getCurrent(P_Task_Scan.class, m_mngr);
+        if (hack == null && scan != null && m_mngr.m_config.scanApi == BleScanApi.CLASSIC)
         {
             final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
@@ -227,32 +231,39 @@ final class P_BleManager_Listeners
 
         if (Utils.isMarshmallow())
         {
+            //--- > RB Commenting all this logic out. It's my opinion that we should never ignore native callbacks. Granted, we also poll the native
+            //---       state on devices running Marshmallow or higher, but there are times when polling is insufficient (we could potentially get several
+            //---       broadcasts between update ticks). So we'll just check if we're already checking the state, if not, we filter this broadcast through
+            //---       to the system.
             // If in the IDLE state, we will pass the state change through as if pre 6.0, and bump out of the IDLE state
             // to catch any other changes that may happen in polling.
-            if (m_mngr.is(IDLE))
-            {
+//            if (m_mngr.is(IDLE))
+//            {
                 // If we're checking the state in the update method, don't bother posting this here. We'll fall out of IDLE state, so any further changes
                 // will be caught soon in polling.
                 if (!m_checkingState)
                 {
                     onNativeBleStateChange(previousNativeState, newNativeState);
                 }
-                m_mngr.m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
-                m_mngr.checkIdleStatus();
-            }
-            else if (previousNativeState == BleStatuses.STATE_ON && newNativeState == BleStatuses.STATE_TURNING_OFF)
-            {
-                if (m_nativeState == BleStatuses.STATE_ON)
-                {
-                    m_nativeState = BleStatuses.STATE_TURNING_OFF;
+//                m_mngr.m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, IDLE, false);
+//                m_mngr.checkIdleStatus();
+//            }
 
-                    //--- DRK > We allow this code path in this particular case in marshmallow because STATE_TURNING_OFF is only active
-                    //---		for a very short time, so polling might miss it. If polling detects it before this, fine, because we
-                    //---		early-out above and never call this method. If afterwards, it skips it because m_nativeState is identical
-                    //---		to what's reported from the native stack.
-                    onNativeBleStateChange(previousNativeState, newNativeState);
-                }
-            }
+            //--- > RB The below is commented out because above we are handling all states from the native callback, unless polling is currently checking
+            //---       the state.
+//            /*else*/ if (previousNativeState == BleStatuses.STATE_ON && newNativeState == BleStatuses.STATE_TURNING_OFF)
+//            {
+//                if (m_nativeState == BleStatuses.STATE_ON)
+//                {
+//                    m_nativeState = BleStatuses.STATE_TURNING_OFF;
+//
+//                    //--- DRK > We allow this code path in this particular case in marshmallow because STATE_TURNING_OFF is only active
+//                    //---		for a very short time, so polling might miss it. If polling detects it before this, fine, because we
+//                    //---		early-out above and never call this method. If afterwards, it skips it because m_nativeState is identical
+//                    //---		to what's reported from the native stack.
+//                    onNativeBleStateChange(previousNativeState, newNativeState);
+//                }
+//            }
         }
         else
         {

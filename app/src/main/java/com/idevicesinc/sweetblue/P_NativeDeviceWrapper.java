@@ -9,6 +9,8 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.idevicesinc.sweetblue.BleManagerState.ON;
+
 
 final class P_NativeDeviceWrapper
 {
@@ -20,6 +22,8 @@ final class P_NativeDeviceWrapper
 	private String m_name_normalized;
 	private String m_name_debug;
 	private String m_name_override;
+
+	private int m_bondState_cached = BluetoothDevice.BOND_NONE;
 	
 	//--- DRK > We have to track connection state ourselves because using
 	//---		BluetoothManager.getConnectionState() is slightly out of date
@@ -76,9 +80,18 @@ final class P_NativeDeviceWrapper
 		return m_device.getManager().getLogger();
 	}
 
-	void updateNativeDevice(final P_NativeDeviceLayer device_native)
+	void updateNativeDevice(final P_NativeDeviceLayer device_native, final byte[] scanRecord_nullable)
 	{
-		final String name_native = device_native.getName();
+		String name_native;
+		try
+		{
+			name_native = getManager().getDeviceName(device_native, scanRecord_nullable);
+		}
+		catch (Exception e)
+		{
+			getLogger().e("Failed to parse name, returning what BluetoothDevice returns.");
+			name_native = device_native.getName();
+		}
 
 		updateNativeName(name_native);
 
@@ -220,7 +233,18 @@ final class P_NativeDeviceWrapper
 	
 	public int getNativeBondState()
 	{
-		final int bondState_native = m_device_native != null ? m_device_native.getBondState() : BluetoothDevice.BOND_NONE;
+		int bondState_native;
+		//--- > RB  If Bluetooth is not on, then we can't get the current bond state. This is here to catch the times when the system
+		// 			decides to turn BT off/on. This prevents spamming the logs with a bunch of messages about not being able to get the
+		// 			bond state
+		if (m_device_native != null && getManager().is(ON))
+		{
+			bondState_native = m_device_native.getBondState();
+			m_bondState_cached = bondState_native;
+		}
+		else
+		{
+			bondState_native = m_bondState_cached;		}
 		
 		return bondState_native;
 	}
@@ -260,7 +284,16 @@ final class P_NativeDeviceWrapper
 	
 	public int getNativeConnectionState()
 	{
-		return m_device.layerManager().getManagerLayer().getConnectionState(m_device_native, BluetoothGatt.GATT_SERVER);
+		//--- > RB If BT has been turned off quickly (for instance, there are many devices connected, then you go into BT settings and run a scan), then
+		// 			we obviously won't be able to get a state. We return DISCONNECTED here for obvious reasons.
+		if (getManager().m_config.nativeManagerLayer.isBluetoothEnabled())
+		{
+			return m_device.layerManager().getManagerLayer().getConnectionState(m_device_native, BluetoothGatt.GATT_SERVER);
+		}
+		else
+		{
+			return BluetoothGatt.STATE_DISCONNECTED;
+		}
 	}
 	
 	public int getConnectionState()

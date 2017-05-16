@@ -310,22 +310,54 @@ final class P_DeviceManager
         return m_map.get(uniqueId);
     }
 
-    void add(BleDevice device)
+    void add(final BleDevice device)
     {
-        if (m_map.containsKey(device.getMacAddress()))
+        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
         {
-            m_logger.e("Already registered device " + device.getMacAddress());
+            @Override public void run()
+            {
+                if (m_map.containsKey(device.getMacAddress()))
+                {
+                    m_logger.e("Already registered device " + device.getMacAddress());
+                    return;
+                }
 
-            return;
-        }
-
-        m_list.add(device);
-        m_map.put(device.getMacAddress(), device);
+                m_list.add(device);
+                m_map.put(device.getMacAddress(), device);
+            }
+        });
     }
 
-    void remove(BleDevice device, P_DeviceManager cache)
+    void remove(final BleDevice device, final P_DeviceManager cache)
     {
-        m_mngr.ASSERT(!m_updating, "Removing device while updating!");
+        // Seeing as this is being posted to the update thread, this check is now unnecessary
+        // m_mngr.ASSERT(!m_updating, "Removing device while updating!");
+        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
+        {
+            @Override public void run()
+            {
+                doRemoval(device, cache);
+            }
+        });
+    }
+
+    void removeAll(final P_DeviceManager cache)
+    {
+        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
+        {
+            @Override public void run()
+            {
+                final List<BleDevice> list = new ArrayList<>(m_list);
+                for (BleDevice d : list)
+                {
+                    remove(d, cache);
+                }
+            }
+        });
+    }
+
+    private void doRemoval(BleDevice device, P_DeviceManager cache)
+    {
         m_mngr.ASSERT(m_map.containsKey(device.getMacAddress()));
 
         m_list.remove(device);
@@ -394,9 +426,10 @@ final class P_DeviceManager
 
     void disconnectAll()
     {
-        for (int i = m_list.size() - 1; i >= 0; i--)
+        final ArrayList<BleDevice> list = new ArrayList<>(m_list);
+        for (int i = list.size() - 1; i >= 0; i--)
         {
-            final BleDevice device = get(i);
+            final BleDevice device = list.get(i);
 
             device.disconnect();
         }
@@ -471,6 +504,7 @@ final class P_DeviceManager
             if (device_ith.is(BleDeviceState.CONNECTED))
             {
                 device_ith.m_nativeWrapper.updateNativeConnectionState(device_ith.getNativeGatt());
+                device_ith.onNativeDisconnect(false, BleStatuses.GATT_STATUS_NOT_APPLICABLE, false, true);
             }
 
             final boolean retainDeviceWhenBleTurnsOff = BleDeviceConfig.bool(device_ith.conf_device().retainDeviceWhenBleTurnsOff, device_ith.conf_mngr().retainDeviceWhenBleTurnsOff);

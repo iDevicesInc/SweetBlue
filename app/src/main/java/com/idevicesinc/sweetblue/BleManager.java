@@ -46,6 +46,7 @@ import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Percent;
@@ -148,7 +149,7 @@ public final class BleManager
 	 * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface DiscoveryListener
+	public static interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<DiscoveryListener.DiscoveryEvent>
 	{
 		/**
 		 * Enumerates changes in the "discovered" state of a device.
@@ -184,8 +185,8 @@ public final class BleManager
 		/**
 		 * Struct passed to {@link BleManager.DiscoveryListener#onEvent(BleManager.DiscoveryListener.DiscoveryEvent)}.
 		 */
-		@Immutable
-		public static class DiscoveryEvent extends Event
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class DiscoveryEvent extends com.idevicesinc.sweetblue.utils.Event
 		{
 			/**
 			 * The {@link BleManager} which is currently {@link BleManagerState#SCANNING}.
@@ -344,7 +345,7 @@ public final class BleManager
 	 * @see BleManager.UhOhListener.UhOh
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface UhOhListener
+	public static interface UhOhListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<UhOhListener.UhOhEvent>
 	{
 		/**
 		 * An UhOh is a warning about an exceptional (in the bad sense) and unfixable problem with the underlying stack that
@@ -522,8 +523,8 @@ public final class BleManager
 		/**
 		 * Struct passed to {@link BleManager.UhOhListener#onEvent(BleManager.UhOhListener.UhOhEvent)}.
 		 */
-		@Immutable
-		public static class UhOhEvent extends Event
+		@com.idevicesinc.sweetblue.annotations.Immutable
+		public static class UhOhEvent extends com.idevicesinc.sweetblue.utils.Event
 		{
 			/**
 			 * The manager associated with the {@link BleManager.UhOhListener.UhOhEvent}
@@ -739,6 +740,8 @@ public final class BleManager
 //		}
 	}
 
+	private final static long UPDATE_LOOP_WARNING_DELAY = 10000;
+
 	private final Context m_context;
 	private UpdateRunnable m_updateRunnable;
 	private final P_ScanFilterManager m_filterMngr;
@@ -772,10 +775,10 @@ public final class BleManager
 	private long m_timeTurnedOn = 0;
 	private long m_lastTaskExecution;
 	private long m_currentTick;
-	private boolean m_doingInfiniteScan = false;
 	private boolean m_isForegrounded = false;
 	private boolean m_ready = false;
 	private boolean m_unitTestCheckDone = false;
+    private long m_lastUpdateLoopWarning = 0;
 
     BleServer.StateListener m_defaultServerStateListener;
 	BleServer.OutgoingListener m_defaultServerOutgoingListener;
@@ -807,10 +810,9 @@ public final class BleManager
 		m_currentTick = System.currentTimeMillis();
 
 		addLifecycleCallbacks();
-
 		m_config = config.clone();
+		initLogger(this);
 		m_scanManager = new P_ScanManager(this);
-		initLogger(null);
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
 		m_filterMngr = new P_ScanFilterManager(this, m_config.defaultScanFilter);
@@ -961,18 +963,21 @@ public final class BleManager
 		{
 			ui = new P_SweetUIHandler(this);
 			update = new P_SweetBlueThread();
-//			if (m_config.updateLooper == null)
-//			{
-//				m_updateThread = new P_SweetBlueHandlerThread(this);
-//				m_updateThread.start();
-//				update = m_updateThread.prepareHandler();
-//
-//			}
-//			else
-//			{
-//				update = new Handler(m_config.updateLooper);
-//			}
+			update.post(new Runnable()
+			{
+				@Override public void run()
+				{
+					m_logger.setUpdateThread(android.os.Process.myTid());
+				}
+			});
 		}
+		ui.post(new Runnable()
+		{
+			@Override public void run()
+			{
+				m_logger.setMainThread(android.os.Process.myTid());
+			}
+		});
 		m_postManager = new P_PostManager(this, ui, update);
 	}
 
@@ -1448,12 +1453,9 @@ public final class BleManager
 		m_config.autoScanActiveTime = scanActiveTime;
 		m_config.autoScanPauseInterval = scanPauseTime;
 
-		if( Interval.isEnabled(m_config.autoScanActiveTime) )
+		if( doAutoScan() )
 		{
-			if( doAutoScan() )
-			{
-				startScan_private(new ScanOptions().scanFor(m_config.autoScanActiveTime).asPoll(true));
-			}
+			startScan_private(new ScanOptions().scanPeriodically(m_config.autoScanActiveTime, m_config.autoScanPauseInterval));
 		}
 	}
 
@@ -1476,7 +1478,7 @@ public final class BleManager
 	{
 		m_config.autoScanActiveTime = Interval.DISABLED;
 
-		if( false == m_doingInfiniteScan )
+		if( false == m_scanManager.isInfiniteScan() )
 		{
 			this.stopScan();
 		}
@@ -1588,7 +1590,7 @@ public final class BleManager
 	{
 		showScanWarningIfNeeded();
 
-		return startScan_private(new ScanOptions().scanFor(scanTime).withScanFilter(filter).withDiscoveryListener(discoveryListener).asPoll(false));
+		return startScan_private(new ScanOptions().scanFor(scanTime).withScanFilter(filter).withDiscoveryListener(discoveryListener));
 	}
 
 	public final boolean startScan(ScanOptions options)
@@ -1632,33 +1634,17 @@ public final class BleManager
 //    {
 	final boolean startScan_private(ScanOptions options)
 	{
-		m_scanManager.resetTimeNotScanning();
-		options.m_scanTime = options.m_scanTime.secs() < 0.0 ? Interval.INFINITE : options.m_scanTime;
+		if (m_taskQueue.isInQueue(P_Task_Scan.class, this))
+		{
+			getLogger().w("A startScan method was called when there's already a scan task in the queue!");
+			return false;
+		}
 
 		if( false == isBluetoothEnabled() )
 		{
 			m_logger.e(BleManager.class.getSimpleName() + " is not " + ON + "! Please use the turnOn() method first.");
 
 			return false;
-		}
-
-		m_doingInfiniteScan = options.m_scanTime.equals(Interval.INFINITE);
-
-		if( options.m_discoveryListener != null )
-		{
-			setListener_Discovery(options.m_discoveryListener);
-		}
-
-
-		if (options.m_scanFilter != null)
-		{
-			m_filterMngr.add(options.m_scanFilter);
-		}
-
-		if (options.m_isPeriodic)
-		{
-			m_config.autoScanActiveTime = options.m_scanTime;
-			m_config.autoScanPauseInterval = options.m_pauseTime;
 		}
 
 		final P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
@@ -1673,13 +1659,34 @@ public final class BleManager
 
 			m_stateTracker.append(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
+			m_scanManager.resetTimeNotScanning();
+			options.m_scanTime = options.m_scanTime.secs() < 0.0 ? Interval.INFINITE : options.m_scanTime;
+			m_scanManager.setInfiniteScan(options.m_scanTime.equals(Interval.INFINITE));
+
+			if( options.m_discoveryListener != null )
+			{
+				setListener_Discovery(options.m_discoveryListener);
+			}
+
+
+			if (options.m_scanFilter != null)
+			{
+				m_filterMngr.add(options.m_scanFilter);
+			}
+
+			if (options.m_isPeriodic)
+			{
+				m_config.autoScanActiveTime = options.m_scanTime;
+				m_config.autoScanPauseInterval = options.m_pauseTime;
+			}
+
             PE_TaskPriority pri = options.m_isPriorityScan ? PE_TaskPriority.CRITICAL : null;
 
 			boolean startScan = true;
 
 			if (options.m_isPeriodic)
 			{
-				if (!Interval.isEnabled(m_config.autoScanActiveTime) && !doAutoScan() )
+				if (!doAutoScan() )
 				{
 					startScan = false;
 				}
@@ -1687,7 +1694,7 @@ public final class BleManager
 
 			if (startScan)
 			{
-				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), options.m_isPoll, pri));
+				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), pri));
 			}
 		}
 
@@ -2190,7 +2197,7 @@ public final class BleManager
 	 */
 	public final void stopScan()
 	{
-		m_doingInfiniteScan = false;
+		m_scanManager.setInfiniteScan(false);
 
 		stopScan_private(E_Intent.INTENTIONAL);
 	}
@@ -2640,6 +2647,16 @@ public final class BleManager
 	}
 
 	/**
+	 * Removes all {@link BleDevice}s from SweetBlue's internal device cache list. You should never have to call this
+	 * yourself (and probably shouldn't), but it's here for flexibility.
+	 */
+	@Advanced
+	public final void removeAllDevicesFromCache()
+	{
+		m_deviceMngr.removeAll(m_deviceMngr_cache);
+	}
+
+	/**
 	 * Returns a new {@link HistoricalData} instance using
 	 * {@link BleDeviceConfig#historicalDataFactory} if available.
 	 */
@@ -2909,7 +2926,7 @@ public final class BleManager
 		m_taskQueue.add(task);
 	}
 
-	private String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
+	String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
 	{
 		final String nameFromDevice;
 		final String nameFromRecord;
@@ -3023,7 +3040,7 @@ public final class BleManager
 
     	if ( device_sweetblue == null )
     	{
-			final String name_native = rawDeviceName;//device_native.getName();
+			final String name_native = rawDeviceName;
 
     		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
     		device_sweetblue = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
@@ -3076,6 +3093,20 @@ public final class BleManager
 		onDiscovered_wrapItUp(device, device.layerManager().getDeviceLayer(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
 	}
 
+	void postEvent(final GenericListener_Void listener, final Event event)
+	{
+		m_postManager.postCallback(new Runnable()
+		{
+			@Override public void run()
+			{
+				if (listener != null)
+				{
+					listener.onEvent(event);
+				}
+			}
+		});
+	}
+
     private void onDiscovered_wrapItUp(final BleDevice device, final P_NativeDeviceLayer device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
     {
     	if( newlyDiscovered )
@@ -3084,14 +3115,8 @@ public final class BleManager
 
     		if( m_discoveryListener != null )
     		{
-				m_postManager.postCallback(new Runnable()
-				{
-					@Override public void run()
-					{
-						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
-						m_discoveryListener.onEvent(event);
-					}
-				});
+				final DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
+				postEvent(m_discoveryListener, event);
     		}
     	}
     	else
@@ -3100,14 +3125,8 @@ public final class BleManager
 
     		if( m_discoveryListener != null )
     		{
-				m_postManager.postCallback(new Runnable()
-				{
-					@Override public void run()
-					{
-						DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
-						m_discoveryListener.onEvent(event);
-					}
-				});
+				final DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.REDISCOVERED);
+				postEvent(m_discoveryListener, event);
     		}
     	}
     }
@@ -3213,8 +3232,9 @@ public final class BleManager
 			m_config.updateLoopCallback.onUpdate(timeStep_seconds);
 		}
 
-		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick))
+		if (!is(IDLE) && m_config.autoUpdateRate.millis() < (System.currentTimeMillis() - m_currentTick) && (m_lastUpdateLoopWarning + UPDATE_LOOP_WARNING_DELAY <= m_currentTick))
 		{
+            m_lastUpdateLoopWarning = m_currentTick;
 			getLogger().w("BleManager", String.format("Update loop took longer to run than the current interval of %dms", m_config.autoUpdateRate.millis()));
 		}
 	}
@@ -3235,7 +3255,7 @@ public final class BleManager
 
 	final boolean doAutoScan()
 	{
-		return is(ON) && (m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA));
+		return is(ON) && Interval.isEnabled(m_config.autoScanActiveTime) && (m_config.autoScanDuringOta || !m_deviceMngr.hasDevice(BleDeviceState.PERFORMING_OTA));
 	}
 
 	final void setBleScanReady()

@@ -536,14 +536,7 @@ final class P_HistoricalDataManager
 		final BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent event = event_nullable != null ? event_nullable : new BleDevice.HistoricalDataLoadListener.HistoricalDataLoadEvent(m_endPoint, m_macAddress, uuid, range, status);
 		if( listener_nullable != null )
 		{
-			m_endPoint.getManager().getPostManager().postCallback(new Runnable()
-			{
-				@Override public void run()
-				{
-
-					listener_nullable.onEvent(event);
-				}
-			});
+			m_endPoint.getManager().postEvent(listener_nullable, event);
 		}
 
 		return event;

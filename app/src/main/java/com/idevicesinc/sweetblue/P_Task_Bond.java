@@ -1,8 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import android.annotation.SuppressLint;
-
 import com.idevicesinc.sweetblue.utils.Utils;
+
 
 final class P_Task_Bond extends PA_Task_RequiresBleOn
 {
@@ -141,6 +141,11 @@ final class P_Task_Bond extends PA_Task_RequiresBleOn
         }
 
         return super.isMoreImportantThan(task);
+    }
+
+    public void onNativeSuccess()
+    {
+        succeed();
     }
 
     public void onNativeFail(int failReason)

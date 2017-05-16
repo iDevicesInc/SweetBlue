@@ -25,6 +25,9 @@ final class P_ConnectionFailManager
 	private Long m_timeOfLastConnectFail = null;
 	private Integer m_pendingConnectionRetry = null;
 
+	// This boolean is here to prevent trying to reconnect when we've fallen out of reconnecting long term
+	private boolean m_triedReconnectingLongTerm = false;
+
 	private final ArrayList<ConnectionFailEvent> m_history = new ArrayList<ConnectionFailEvent>();
 	
 	P_ConnectionFailManager(BleDevice device)
@@ -32,6 +35,11 @@ final class P_ConnectionFailManager
 		m_device = device;
 		
 		resetFailCount();
+	}
+
+	void onLongTermTimedOut()
+	{
+		m_triedReconnectingLongTerm = true;
 	}
 	
 	void onExplicitDisconnect()
@@ -76,6 +84,7 @@ final class P_ConnectionFailManager
 				m_highestStateReached_total = null;
 				m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
 				m_history.clear();
+				m_triedReconnectingLongTerm = false;
 			}
 		});
 	}
@@ -160,6 +169,7 @@ final class P_ConnectionFailManager
 				{
 					//--- DRK > State change may be redundant.
 					m_device.stateTracker_main().update(E_Intent.UNINTENTIONAL, gattStatus, RECONNECTING_LONG_TERM, false);
+					m_triedReconnectingLongTerm = true;
 				}
 				else if( m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) )
 				{
@@ -169,7 +179,7 @@ final class P_ConnectionFailManager
 			}
 		}
 		
-		if( retryChoice__PE_Please != Please.PE_Please_NULL && Please.isRetry(retryChoice__PE_Please) && !m_device.is(CONNECTED))
+		if( !m_triedReconnectingLongTerm && retryChoice__PE_Please != Please.PE_Please_NULL && Please.isRetry(retryChoice__PE_Please) && !m_device.is(CONNECTED))
 		{
 			m_device.attemptReconnect();
 		}

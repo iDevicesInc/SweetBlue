@@ -18,6 +18,7 @@ import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataColumn;
 import com.idevicesinc.sweetblue.utils.HistoricalDataQuery;
@@ -231,7 +232,7 @@ public abstract class BleNode implements UsesCustomNull
 	 * and {@link BleManager#setListener_HistoricalDataLoad(BleNode.HistoricalDataLoadListener)}.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface HistoricalDataLoadListener
+	public static interface HistoricalDataLoadListener extends GenericListener_Void<HistoricalDataLoadListener.HistoricalDataLoadEvent>
 	{
 		/**
 		 * Enumerates the status codes for operations kicked off from {@link BleDevice#loadHistoricalData()} (or overloads).
@@ -356,7 +357,7 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	@com.idevicesinc.sweetblue.annotations.Alpha
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface HistoricalDataQueryListener
+	public static interface HistoricalDataQueryListener extends GenericListener_Void<HistoricalDataQueryListener.HistoricalDataQueryEvent>
 	{
 		/**
 		 * Enumerates the status codes for operations kicked off from {@link BleDevice#select()}.
@@ -893,13 +894,7 @@ public abstract class BleNode implements UsesCustomNull
 				{
 					final BleDevice.HistoricalDataQueryListener.HistoricalDataQueryEvent e = queryHistoricalData(query);
 
-					getManager().getPostManager().postCallback(new Runnable()
-					{
-						@Override public void run()
-						{
-							listener.onEvent(e);
-						}
-					});
+					getManager().postEvent(listener, e);
 				}
 			});
 		}

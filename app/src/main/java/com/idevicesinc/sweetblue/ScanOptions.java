@@ -14,7 +14,6 @@ public final class ScanOptions
     Interval m_pauseTime;
     BleManagerConfig.ScanFilter m_scanFilter;
     BleManager.DiscoveryListener m_discoveryListener;
-    boolean m_isPoll;
     boolean m_isPeriodic;
     boolean m_isPriorityScan;
 
@@ -68,12 +67,6 @@ public final class ScanOptions
     public final ScanOptions asHighPriority(boolean highPriority)
     {
         m_isPriorityScan = true;
-        return this;
-    }
-
-    final ScanOptions asPoll(boolean isPoll)
-    {
-        m_isPoll = isPoll;
         return this;
     }
 

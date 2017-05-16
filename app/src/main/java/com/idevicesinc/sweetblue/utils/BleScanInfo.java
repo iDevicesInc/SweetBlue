@@ -7,8 +7,11 @@ import java.util.Map;
 import java.util.UUID;
 
 
-public final class BleScanInfo
+public final class BleScanInfo implements UsesCustomNull
 {
+
+    public final static BleScanInfo NULL = new BleScanInfo();
+
     private int m_manufactuerId;
     private byte[] m_manufacturerData;
     private final Pointer<Integer> m_advFlags;
@@ -102,5 +105,10 @@ public final class BleScanInfo
     public String getName()
     {
         return m_localName;
+    }
+
+    @Override public boolean isNull()
+    {
+        return this == NULL;
     }
 }
