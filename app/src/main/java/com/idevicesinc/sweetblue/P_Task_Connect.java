@@ -27,7 +27,9 @@ final class P_Task_Connect extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		if (getDevice().is(BleDeviceState.CONNECTED))
+		//--- RB > Have to check if reconnecting short term, as we leave the device in the CONNECTING state when doing a short term
+		// 			reconnect.
+		if (getDevice().is(BleDeviceState.CONNECTED) && !getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM))
 		{
 			getLogger().w("Already connected!");
 
