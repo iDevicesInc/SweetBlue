@@ -4978,9 +4978,9 @@ public final class BleDevice extends BleNode
             return earlyOutResult;
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
+        final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
 
-        final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
+        final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.m_characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
 
         queue().add(new P_Task_BatteryLevel(this, valueToMatch, descriptorUuid, listener, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
@@ -5185,7 +5185,7 @@ public final class BleDevice extends BleNode
             }
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+        final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
         final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
         final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
@@ -5200,7 +5200,7 @@ public final class BleDevice extends BleNode
 
             if (descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, characteristic.m_characteristic, /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
             }
             else
             {
@@ -5216,7 +5216,7 @@ public final class BleDevice extends BleNode
         {
             if (listener != null && isConnected)
             {
-                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, serviceUuid, characteristicUuid);
+                result = m_pollMngr.newAlreadyEnabledEvent(characteristic.m_characteristic, serviceUuid, characteristicUuid);
 
                 invokeReadWriteCallback(listener, result);
             }
@@ -6470,7 +6470,7 @@ public final class BleDevice extends BleNode
 
         if (descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID))
         {
-            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+            final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristicUuid, BondFilter.CharacteristicEventType.READ);
 
             final P_Task_Read task;
@@ -6478,11 +6478,11 @@ public final class BleDevice extends BleNode
             if (descriptorFilter == null)
             {
 
-                task = new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, characteristic.m_characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
             else
             {
-                task = new P_Task_Read(this, characteristic.getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, characteristic.m_characteristic.getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
 
             queue().add(task);
@@ -6511,11 +6511,11 @@ public final class BleDevice extends BleNode
 
         if (descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID))
         {
-            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+            final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 
-            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
+            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.m_characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
-            addWriteTasks(characteristic, data, requiresBonding, descriptorFilterer, listener);
+            addWriteTasks(characteristic.m_characteristic, data, requiresBonding, descriptorFilterer, listener);
         }
         else
         {
@@ -6582,14 +6582,14 @@ public final class BleDevice extends BleNode
             return earlyOutResult;
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+        final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 
         if (characteristic != null && is(CONNECTED))
         {
             final P_Task_ToggleNotify task;
             if (descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic, /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, characteristic.m_characteristic, /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
             }
             else
             {

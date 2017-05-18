@@ -144,7 +144,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		return 0x0;
 	}
 
-	@Override public final WrappedNativeGattService getServiceDirectlyFromNativeNode(UUID serviceUuid)
+	@Override public final NativeBleGattService getServiceDirectlyFromNativeNode(UUID serviceUuid)
 	{
 		return m_device.layerManager().getService(serviceUuid);
 	}

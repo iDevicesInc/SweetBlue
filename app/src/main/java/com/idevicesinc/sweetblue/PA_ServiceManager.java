@@ -3,15 +3,14 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
 
 abstract class PA_ServiceManager
 {
@@ -35,12 +34,12 @@ abstract class PA_ServiceManager
 	{
 	}
 
-	public abstract WrappedNativeGattService getServiceDirectlyFromNativeNode(final UUID uuid);
+	public abstract NativeBleGattService getServiceDirectlyFromNativeNode(final UUID uuid);
 
 	protected abstract List<BluetoothGattService> getNativeServiceList_original();
 
 
-	public BluetoothGattCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid)
+	public NativeBleCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid)
 	{
 		if( serviceUuid_nullable == null )
 		{
@@ -48,33 +47,25 @@ abstract class PA_ServiceManager
 
 			for( int i = 0; i < serviceList_native.size(); i++ )
 			{
-				final BluetoothGattService service_ith = serviceList_native.get(i);
-				final BluetoothGattCharacteristic characteristic = getCharacteristic(service_ith, charUuid);
+				final NativeBleGattService service_ith = new NativeBleGattService(serviceList_native.get(i));
+				final NativeBleCharacteristic characteristic = getCharacteristic(service_ith, charUuid);
 
-				if( characteristic != null)
+				if( !characteristic.isNull())
 				{
 					return characteristic;
 				}
 			}
 
-			return null;
+			return new NativeBleCharacteristic();
 		}
 		else
 		{
-			final WrappedNativeGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
-
-			if( service_nullable != null && service_nullable.m_service != null)
-			{
-				return getCharacteristic(service_nullable.m_service, charUuid);
-			}
-			else
-			{
-				return null;
-			}
+			final NativeBleGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+			return getCharacteristic(service_nullable, charUuid);
 		}
 	}
 
-	public BluetoothGattCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid, final DescriptorFilter filter)
+	public NativeBleCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid, final DescriptorFilter filter)
 	{
 		if( serviceUuid_nullable == null )
 		{
@@ -82,108 +73,131 @@ abstract class PA_ServiceManager
 
 			for( int i = 0; i < serviceList_native.size(); i++ )
 			{
-				final BluetoothGattService service_ith = serviceList_native.get(i);
-				final BluetoothGattCharacteristic characteristic = getCharacteristic(service_ith, charUuid, filter);
+				final NativeBleGattService service_ith = new NativeBleGattService(serviceList_native.get(i));
+				final NativeBleCharacteristic characteristic = getCharacteristic(service_ith, charUuid, filter);
 
-				if( characteristic != null)
+				if( !characteristic.isNull())
 				{
 					return characteristic;
 				}
 			}
 
-			return null;
+			return new NativeBleCharacteristic();
 		}
 		else
 		{
-			final WrappedNativeGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+			final NativeBleGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
 
-			if( service_nullable != null && service_nullable.m_service != null )
-			{
-				return getCharacteristic(service_nullable, charUuid, filter);
-			}
-			else
-			{
-				return null;
-			}
+			return getCharacteristic(service_nullable, charUuid, filter);
 		}
 	}
 
-	private BluetoothGattCharacteristic getCharacteristic(final BluetoothGattService service, final UUID charUuid)
+	private NativeBleCharacteristic getCharacteristic(final NativeBleGattService service, final UUID charUuid)
 	{
-		final List<BluetoothGattCharacteristic> charList_native = getNativeCharacteristicList_original(service);
-
-		for( int j = 0; j < charList_native.size(); j++ )
+		if (!service.isNull())
 		{
-			final BluetoothGattCharacteristic char_jth = charList_native.get(j);
+			final List<BluetoothGattCharacteristic> charList_native = getNativeCharacteristicList_original(service);
 
-			if( char_jth.getUuid().equals(charUuid) )
+			for (int j = 0; j < charList_native.size(); j++)
 			{
-				return char_jth;
-			}
-		}
+				final BluetoothGattCharacteristic char_jth = charList_native.get(j);
 
-		return null;
-	}
-
-	private BluetoothGattCharacteristic getCharacteristic(final BluetoothGattService service, final UUID charUuid, DescriptorFilter filter)
-	{
-		final List<BluetoothGattCharacteristic> charList_native = getNativeCharacteristicList_original(service);
-
-		for( int j = 0; j < charList_native.size(); j++ )
-		{
-			final BluetoothGattCharacteristic char_jth = charList_native.get(j);
-
-			if( char_jth.getUuid().equals(charUuid) )
-			{
-				final BluetoothGattDescriptor desc = char_jth.getDescriptor(filter.descriptorUuid());
-				if (desc != null)
+				if (char_jth.getUuid().equals(charUuid))
 				{
-					final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(service, char_jth, desc, new PresentData(desc.getValue()));
-					final DescriptorFilter.Please please = filter.onEvent(event);
-					if (please.isAccepted())
+					return new NativeBleCharacteristic(char_jth);
+				}
+			}
+		}
+
+		return new NativeBleCharacteristic();
+	}
+
+	private NativeBleCharacteristic getCharacteristic(final NativeBleGattService service, final UUID charUuid, DescriptorFilter filter)
+	{
+		if (!service.isNull())
+		{
+			final List<BluetoothGattCharacteristic> charList_native = getNativeCharacteristicList_original(service);
+
+			for (int j = 0; j < charList_native.size(); j++)
+			{
+				final BluetoothGattCharacteristic char_jth = charList_native.get(j);
+
+				if (char_jth.getUuid().equals(charUuid))
+				{
+					final BluetoothGattDescriptor desc = char_jth.getDescriptor(filter.descriptorUuid());
+					if (desc != null)
 					{
-						return char_jth;
+						final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(service.m_service, char_jth, desc, new PresentData(desc.getValue()));
+						final DescriptorFilter.Please please = filter.onEvent(event);
+						if (please.isAccepted())
+						{
+							return new NativeBleCharacteristic(char_jth);
+						}
 					}
 				}
 			}
+			return new NativeBleCharacteristic();
 		}
-
-		return null;
+		else
+		{
+			return new NativeBleCharacteristic();
+		}
 	}
 
 	private List<BluetoothGattService> getNativeServiceList_cloned()
 	{
 		final List<BluetoothGattService> list_native = getNativeServiceList_original();
 
-		return list_native == EMPTY_SERVICE_LIST ? list_native : new ArrayList<BluetoothGattService>(list_native);
+		return list_native == EMPTY_SERVICE_LIST ? list_native : new ArrayList<>(list_native);
 	}
 
-	private List<BluetoothGattCharacteristic> getNativeCharacteristicList_original(final BluetoothGattService service)
+	private List<BluetoothGattCharacteristic> getNativeCharacteristicList_original(final NativeBleGattService service)
 	{
-		final List<BluetoothGattCharacteristic> list_native = service.getCharacteristics();
+		if (!service.isNull())
+		{
+			final List<BluetoothGattCharacteristic> list_native = service.m_service.getCharacteristics();
 
-		return list_native == null ? EMPTY_CHARACTERISTIC_LIST : list_native;
+			return list_native == null ? EMPTY_CHARACTERISTIC_LIST : list_native;
+		}
+		else
+		{
+			return EMPTY_CHARACTERISTIC_LIST;
+		}
 	}
 
-	private List<BluetoothGattCharacteristic> getNativeCharacteristicList_cloned(final BluetoothGattService service)
+	private List<BluetoothGattCharacteristic> getNativeCharacteristicList_cloned(final NativeBleGattService service)
 	{
 		final List<BluetoothGattCharacteristic> list_native = getNativeCharacteristicList_original(service);
 
-		return list_native == EMPTY_CHARACTERISTIC_LIST ? list_native : new ArrayList<BluetoothGattCharacteristic>(list_native);
+		return list_native == EMPTY_CHARACTERISTIC_LIST ? list_native : new ArrayList<>(list_native);
 	}
 
-	private List<BluetoothGattDescriptor> getNativeDescriptorList_original(final BluetoothGattCharacteristic characteristic)
+	private List<BluetoothGattDescriptor> getNativeDescriptorList_original(final NativeBleCharacteristic characteristic)
 	{
-		final List<BluetoothGattDescriptor> list_native = characteristic.getDescriptors();
+		if (!characteristic.isNull())
+		{
+			final List<BluetoothGattDescriptor> list_native = characteristic.m_characteristic.getDescriptors();
 
-		return list_native == null ? EMPTY_DESCRIPTOR_LIST : list_native;
+			return list_native == null ? EMPTY_DESCRIPTOR_LIST : list_native;
+		}
+		else
+		{
+			return EMPTY_DESCRIPTOR_LIST;
+		}
 	}
 
-	private List<BluetoothGattDescriptor> getNativeDescriptorList_cloned(final BluetoothGattCharacteristic characteristic)
+	private List<BluetoothGattDescriptor> getNativeDescriptorList_cloned(final NativeBleCharacteristic characteristic)
 	{
-		final List<BluetoothGattDescriptor> list_native = getNativeDescriptorList_original(characteristic);
+		if (!characteristic.isNull())
+		{
+			final List<BluetoothGattDescriptor> list_native = getNativeDescriptorList_original(characteristic);
 
-		return list_native == EMPTY_DESCRIPTOR_LIST ? list_native : new ArrayList<BluetoothGattDescriptor>(list_native);
+			return list_native == EMPTY_DESCRIPTOR_LIST ? list_native : new ArrayList<>(list_native);
+		}
+		else
+		{
+			return EMPTY_DESCRIPTOR_LIST;
+		}
 	}
 
 	private List<BluetoothGattCharacteristic> collectAllNativeCharacteristics(final UUID serviceUuid_nullable, final Object forEach_nullable)
@@ -193,9 +207,9 @@ abstract class PA_ServiceManager
 
 		for( int i = 0; i < serviceList_native.size(); i++ )
 		{
-			final BluetoothGattService service_ith = serviceList_native.get(i);
+			final NativeBleGattService service_ith = new NativeBleGattService(serviceList_native.get(i));
 
-			if( serviceUuid_nullable == null || serviceUuid_nullable != null && serviceUuid_nullable.equals(service_ith.getUuid()) )
+			if( serviceUuid_nullable == null || !service_ith.isNull() && serviceUuid_nullable.equals(service_ith.m_service.getUuid()) )
 			{
 				final List<BluetoothGattCharacteristic> nativeChars = getNativeCharacteristicList_original(service_ith);
 
@@ -203,7 +217,7 @@ abstract class PA_ServiceManager
 				{
 					if( Utils.doForEach_break(forEach_nullable, nativeChars))
 					{
-						return null;
+						return EMPTY_CHARACTERISTIC_LIST;
 					}
 				}
 				else
@@ -223,17 +237,17 @@ abstract class PA_ServiceManager
 
 		for( int i = 0; i < serviceList_native.size(); i++ )
 		{
-			final BluetoothGattService service_ith = serviceList_native.get(i);
+			final NativeBleGattService service_ith = new NativeBleGattService(serviceList_native.get(i));
 
-			if( serviceUuid_nullable == null || serviceUuid_nullable != null && serviceUuid_nullable.equals(service_ith.getUuid()) )
+			if( serviceUuid_nullable == null || !service_ith.isNull() && serviceUuid_nullable.equals(service_ith.m_service.getUuid()) )
 			{
 				final List<BluetoothGattCharacteristic> charList_native = getNativeCharacteristicList_original(service_ith);
 
 				for( int j = 0; j < charList_native.size(); j++ )
 				{
-					final BluetoothGattCharacteristic char_jth = charList_native.get(j);
+					final NativeBleCharacteristic char_jth = new NativeBleCharacteristic(charList_native.get(j));
 
-					if( charUuid_nullable == null || charUuid_nullable != null && charUuid_nullable.equals(char_jth.getUuid()) )
+					if( charUuid_nullable == null || !char_jth.isNull() && charUuid_nullable.equals(char_jth.m_characteristic.getUuid()) )
 					{
 						final List<BluetoothGattDescriptor> descriptors = getNativeDescriptorList_original(char_jth);
 
@@ -241,7 +255,7 @@ abstract class PA_ServiceManager
 						{
 							if( Utils.doForEach_break(forEach_nullable, descriptors) )
 							{
-								return null;
+								return EMPTY_DESCRIPTOR_LIST;
 							}
 						}
 						else
@@ -276,43 +290,46 @@ abstract class PA_ServiceManager
 		return collectAllNativeCharacteristics(serviceUuid_nullable, /*forEach=*/null);
 	}
 
-	private BluetoothGattDescriptor getDescriptor(final BluetoothGattCharacteristic characteristic, final UUID descUuid)
+	private NativeBleDescriptor getDescriptor(final NativeBleCharacteristic characteristic, final UUID descUuid)
 	{
-		final List<BluetoothGattDescriptor> list_native = getNativeDescriptorList_original(characteristic);
-
-		for( int i = 0; i < list_native.size(); i++ )
+		if (!characteristic.isNull())
 		{
-			final BluetoothGattDescriptor ith = list_native.get(i);
+			final List<BluetoothGattDescriptor> list_native = getNativeDescriptorList_original(characteristic);
 
-			if( ith.getUuid().equals(descUuid) )
+			for (int i = 0; i < list_native.size(); i++)
 			{
-				return ith;
+				final BluetoothGattDescriptor ith = list_native.get(i);
+
+				if (ith.getUuid().equals(descUuid))
+				{
+					return new NativeBleDescriptor(ith);
+				}
 			}
 		}
 
-		return null;
+		return new NativeBleDescriptor();
 	}
 
-	private BluetoothGattDescriptor getDescriptor(final BluetoothGattService service, final UUID charUuid_nullable, final UUID descUuid)
+	private NativeBleDescriptor getDescriptor(final NativeBleGattService service, final UUID charUuid_nullable, final UUID descUuid)
 	{
-		final List<BluetoothGattCharacteristic> charList = getNativeCharacteristicList_original(service);
-
-		for( int j = 0; j < charList.size(); j++ )
+		if (!service.isNull())
 		{
-			final BluetoothGattCharacteristic char_jth = charList.get(j);
+			final List<BluetoothGattCharacteristic> charList = getNativeCharacteristicList_original(service);
 
-			if( charUuid_nullable == null || charUuid_nullable != null && charUuid_nullable.equals(char_jth.getUuid()) )
+			for (int j = 0; j < charList.size(); j++)
 			{
-				final BluetoothGattDescriptor descriptor = getDescriptor(char_jth, descUuid);
+				final NativeBleCharacteristic char_jth = new NativeBleCharacteristic(charList.get(j));
 
-				if( descriptor != null )
+				if (charUuid_nullable == null || !char_jth.isNull() && charUuid_nullable.equals(char_jth.m_characteristic.getUuid()))
 				{
+					final NativeBleDescriptor descriptor = getDescriptor(char_jth, descUuid);
+
 					return descriptor;
 				}
 			}
 		}
 
-		return null;
+		return new NativeBleDescriptor();
 	}
 
 	public Iterator<BluetoothGattDescriptor> getDescriptors(final UUID serviceUuid_nullable, final UUID charUuid_nullable)
@@ -325,7 +342,7 @@ abstract class PA_ServiceManager
 		return collectAllNativeDescriptors(serviceUuid_nullable, charUuid_nullable, null);
 	}
 
-	public BluetoothGattDescriptor getDescriptor(final UUID serviceUuid_nullable, final UUID charUuid_nullable, final UUID descUuid)
+	public NativeBleDescriptor getDescriptor(final UUID serviceUuid_nullable, final UUID charUuid_nullable, final UUID descUuid)
 	{
 		if( serviceUuid_nullable == null )
 		{
@@ -333,30 +350,20 @@ abstract class PA_ServiceManager
 
 			for( int i = 0; i < serviceList.size(); i++ )
 			{
-				final BluetoothGattService service_ith = serviceList.get(i);
-				final BluetoothGattDescriptor descriptor = getDescriptor(service_ith, charUuid_nullable, descUuid);
+				final NativeBleGattService service_ith = new NativeBleGattService(serviceList.get(i));
+				final NativeBleDescriptor descriptor = getDescriptor(service_ith, charUuid_nullable, descUuid);
 
-				if( descriptor != null )
-				{
-					return descriptor;
-				}
+				return descriptor;
 			}
 		}
 		else
 		{
-			final BluetoothGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+			final NativeBleGattService service = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
 
-			if( service_nullable == null )
-			{
-				return null;
-			}
-			else
-			{
-				return getDescriptor(service_nullable, charUuid_nullable, descUuid);
-			}
+			return getDescriptor(service, charUuid_nullable, descUuid);
 		}
 
-		return null;
+		return new NativeBleDescriptor();
 	}
 
 	public void getServices(final Object forEach)
@@ -386,15 +393,4 @@ abstract class PA_ServiceManager
 		}
 	}
 
-	static class WrappedNativeGattService
-    {
-        BluetoothGattService m_service;
-        BleManager.UhOhListener.UhOh m_uhOh;
-    }
-
-    static class WrappedNativeCharacteristic
-	{
-		BluetoothGattCharacteristic m_characteristic;
-		BleManager.UhOhListener.UhOh m_uhOh;
-	}
 }

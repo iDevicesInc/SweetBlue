@@ -202,9 +202,9 @@ final class P_AndroidGatt implements P_GattLayer
         return list_native;
     }
 
-    @Override public PA_ServiceManager.WrappedNativeGattService getService(UUID serviceUuid, P_Logger logger)
+    @Override public NativeBleGattService getService(UUID serviceUuid, P_Logger logger)
     {
-        PA_ServiceManager.WrappedNativeGattService wService = new PA_ServiceManager.WrappedNativeGattService();
+        NativeBleGattService wService = new NativeBleGattService();
         BluetoothGattService service = null;
         try
         {
