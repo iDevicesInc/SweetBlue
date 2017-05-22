@@ -25,19 +25,19 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		m_listener = listener;
 	}
 
-	@Override public BluetoothGattService getServiceDirectlyFromNativeNode(final UUID uuid)
+	@Override public NativeBleGattService getServiceDirectlyFromNativeNode(final UUID uuid)
 	{
 		final BluetoothGattServer server_native = m_server.getNative();
 
 		if( server_native == null )
 		{
-			return null;
+			return NativeBleGattService.NULL;
 		}
 		else
 		{
 			final BluetoothGattService service = server_native.getService(uuid);
 
-			return service;
+			return new NativeBleGattService(service);
 		}
 	}
 
@@ -97,9 +97,9 @@ final class P_ServerServiceManager extends PA_ServiceManager
 
 	private boolean alreadyAddingOrAdded(final BluetoothGattService serviceToBeAdded)
 	{
-		final BluetoothGattService existingServiceFromServer = getServiceDirectlyFromNativeNode(serviceToBeAdded.getUuid());
+		final NativeBleGattService existingServiceFromServer = getServiceDirectlyFromNativeNode(serviceToBeAdded.getUuid());
 
-		if( equals(existingServiceFromServer, serviceToBeAdded) )
+		if( !existingServiceFromServer.isNull() && equals(existingServiceFromServer.getService(), serviceToBeAdded) )
 		{
 			return true;
 		}
@@ -194,9 +194,9 @@ final class P_ServerServiceManager extends PA_ServiceManager
 
 	public BluetoothGattService remove(final UUID serviceUuid)
 	{
-		final BluetoothGattService service = getServiceDirectlyFromNativeNode(serviceUuid);
+		final NativeBleGattService service = getServiceDirectlyFromNativeNode(serviceUuid);
 
-		if( service == null )
+		if( service.isNull() )
 		{
 			final Pointer<BluetoothGattService> pointer = new Pointer<BluetoothGattService>();
 
@@ -233,9 +233,9 @@ final class P_ServerServiceManager extends PA_ServiceManager
 			}
 			else
 			{
-				server_native.removeService(service);
+				server_native.removeService(service.getService());
 
-				return service;
+				return service.getService();
 			}
 		}
 	}

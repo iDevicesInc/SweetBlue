@@ -50,7 +50,7 @@ final class P_BleDeviceLayerManager
 
     public final NativeBleGattService getService(UUID serviceUuid)
     {
-        return m_gattLayer.getService(serviceUuid, m_device.logger());
+        return m_gattLayer.getBleService(serviceUuid, m_device.logger());
     }
 
     public final boolean isGattNull()

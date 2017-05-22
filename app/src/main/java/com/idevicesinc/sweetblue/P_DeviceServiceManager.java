@@ -28,6 +28,24 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		
 		return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, type, target, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0, /*solicited=*/true);
 	}
+
+	private BleDevice.ReadWriteListener.ReadWriteEvent newExceptionEvent(Type type, Target target, byte[] data, UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, BleManager.UhOhListener.UhOh uhoh)
+	{
+		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
+
+		final Status status;
+
+		if (uhoh == BleManager.UhOhListener.UhOh.CONCURRENT_EXCEPTION)
+		{
+			status = Status.GATT_CONCURRENT_EXCEPTION;
+		}
+		else
+		{
+			status = Status.GATT_RANDOM_EXCEPTION;
+		}
+
+		return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, type, target, data, status, gattStatus, 0.0, 0.0, /*solicited=*/true);
+	}
 	
 	final BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, FutureData futureData, BleDevice.ReadWriteListener.Type type, final Target target)
 	{
@@ -52,12 +70,28 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		
 		if( target == Target.RSSI || target == Target.MTU || target == Target.CONNECTION_PRIORITY )  return null;
 		
-		final BluetoothGattCharacteristic characteristic = m_device.getNativeCharacteristic(serviceUuid, characteristicUuid);
-		final BluetoothGattDescriptor descriptor = m_device.getNativeDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
+		final NativeBleCharacteristic characteristic = m_device.getNativeBleCharacteristic(serviceUuid, characteristicUuid);
+		final NativeBleDescriptor descriptor = m_device.getNativeBleDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
 		
-		if( target == Target.CHARACTERISTIC && characteristic == null || target == Target.DESCRIPTOR && descriptor == null)
+		if( target == Target.CHARACTERISTIC && characteristic.isNull() || target == Target.DESCRIPTOR && descriptor.isNull())
 		{
-			return newNoMatchingTargetEvent(type, target, futureData.getData(), serviceUuid, characteristicUuid, descriptorUuid);
+			if (characteristic.hasUhOh() || descriptor.hasUhOh())
+			{
+				BleManager.UhOhListener.UhOh uhoh;
+				if (characteristic.hasUhOh())
+				{
+					uhoh = characteristic.getUhOh();
+				}
+				else
+				{
+					uhoh = descriptor.getUhOh();
+				}
+				return newExceptionEvent(type, target, futureData.getData(), serviceUuid, characteristicUuid, descriptorUuid, uhoh);
+			}
+			else
+			{
+				return newNoMatchingTargetEvent(type, target, futureData.getData(), serviceUuid, characteristicUuid, descriptorUuid);
+			}
 		}
 
 		if( target == Target.CHARACTERISTIC )
@@ -77,7 +111,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		{
 			int property = getProperty(type);
 
-			if( (characteristic.getProperties() & property) == 0x0 )
+			if( (characteristic.getCharacteristic().getProperties() & property) == 0x0 )
 			{
 				//TODO: Use correct gatt status even though we never reach gatt layer?
 				ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, futureData.getData(), Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0, /*solicited=*/true);
@@ -89,15 +123,15 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		return null;
 	}
 	
-	static BleDevice.ReadWriteListener.Type modifyResultType(BluetoothGattCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
+	static BleDevice.ReadWriteListener.Type modifyResultType(NativeBleCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
 	{
-		if( char_native != null )
+		if( !char_native.isNull())
 		{
 			if( type == Type.NOTIFICATION )
 			{
-				if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0x0 )
+				if( (char_native.getCharacteristic().getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0x0 )
 				{
-					if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0x0 )
+					if( (char_native.getCharacteristic().getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0x0 )
 					{
 						type = Type.INDICATION;
 					}
@@ -105,13 +139,13 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 			}
 			else if( type == Type.WRITE )
 			{
-				if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) == 0x0 )
+				if( (char_native.getCharacteristic().getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) == 0x0 )
 				{
-					if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0x0 )
+					if( (char_native.getCharacteristic().getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0x0 )
 					{
 						type = Type.WRITE_NO_RESPONSE;
 					}
-					else if( (char_native.getProperties() & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) != 0x0 )
+					else if( (char_native.getCharacteristic().getProperties() & BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE) != 0x0 )
 					{
 						type = Type.WRITE_SIGNED;
 					}

@@ -19,12 +19,22 @@ public class UnitTestGatt implements P_GattLayer {
     private final BleDevice m_device;
     private boolean m_explicitDisconnect = false;
 
+    private List<BluetoothGattService> m_services;
+
 
     public UnitTestGatt(BleDevice device)
     {
         m_device = device;
     }
 
+
+    public void setDatabase(GattDatabase database)
+    {
+        if (database != null)
+        {
+            m_services = database.getServiceList();
+        }
+    }
 
     @Override
     public void setGatt(BluetoothGatt gatt) {
@@ -53,12 +63,28 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public List<BluetoothGattService> getNativeServiceList(P_Logger logger) {
-        return null;
+        return m_services == null ? PA_ServiceManager.EMPTY_SERVICE_LIST : m_services;
     }
 
     @Override
     public BluetoothGattService getService(UUID serviceUuid, P_Logger logger) {
-        return null;
+        return getBleService(serviceUuid, logger).getService();
+    }
+
+    @Override
+    public NativeBleGattService getBleService(UUID serviceUuid, P_Logger logger)
+    {
+        if (m_services != null && m_services.size() > 0)
+        {
+            for (BluetoothGattService service : m_services)
+            {
+                if (service.getUuid().equals(serviceUuid))
+                {
+                    return new NativeBleGattService(service);
+                }
+            }
+        }
+        return NativeBleGattService.NULL;
     }
 
     @Override

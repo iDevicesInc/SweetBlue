@@ -262,33 +262,33 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 		}
 	}
 
-	void onDescriptorReadCallback(BluetoothGatt gatt, BluetoothGattDescriptor desc, byte[] value, int gattStatus)
+	void onDescriptorReadCallback(BluetoothGatt gatt, NativeBleDescriptor desc, byte[] value, int gattStatus)
 	{
 		if (m_descriptorFilter == null)
 		{
-			onDescriptorRead(gatt, desc.getUuid(), value, gattStatus);
+			onDescriptorRead(gatt, desc.getDescriptor().getUuid(), value, gattStatus);
 		}
 		else
 		{
-			if (!m_characteristicList.contains(desc.getCharacteristic()))
+			if (!m_characteristicList.contains(desc.getDescriptor().getCharacteristic()))
 			{
 				return;
 			}
 			if( Utils.isSuccess(gattStatus))
 			{
-				final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(desc.getCharacteristic().getService(), desc.getCharacteristic(), desc, new PresentData(value));
+				final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(desc.getDescriptor().getCharacteristic().getService(), desc.getDescriptor().getCharacteristic(), desc.getDescriptor(), new PresentData(value));
 				final DescriptorFilter.Please please = m_descriptorFilter.onEvent(event);
 				if (please.isAccepted())
 				{
-					m_filteredCharacteristic = desc.getCharacteristic();
+					m_filteredCharacteristic = desc.getDescriptor().getCharacteristic();
 					executeReadOrWrite();
 				}
 				else
 				{
-					m_characteristicList.remove(desc.getCharacteristic());
+					m_characteristicList.remove(desc.getDescriptor().getCharacteristic());
 					if (m_characteristicList.size() == 0)
 					{
-						fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, desc.getCharacteristic().getUuid(), desc.getUuid());
+						fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, desc.getDescriptor().getCharacteristic().getUuid(), desc.getDescriptor().getUuid());
 					}
 					else
 					{

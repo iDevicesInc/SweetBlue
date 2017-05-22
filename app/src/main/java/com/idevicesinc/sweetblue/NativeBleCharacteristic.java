@@ -1,38 +1,32 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothGattCharacteristic;
-import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 
 /**
  * Wrapper class which holds an instance of {@link BluetoothGattCharacteristic}. You should always check {@link #isNull()} before
  * doing anything with the {@link BluetoothGattCharacteristic} returned from {@link #getCharacteristic()}.
  */
-final class NativeBleCharacteristic implements UsesCustomNull
+public final class NativeBleCharacteristic extends P_NativeGattObject<BluetoothGattCharacteristic>
 {
 
-    final BluetoothGattCharacteristic m_characteristic;
-    final BleManager.UhOhListener.UhOh m_uhOh;
-
-
-    NativeBleCharacteristic()
+    private NativeBleCharacteristic()
     {
-        this(null, null);
+        super();
     }
 
     NativeBleCharacteristic(BluetoothGattCharacteristic characteristic)
     {
-        this(characteristic, null);
+        super(characteristic);
     }
 
     NativeBleCharacteristic(BleManager.UhOhListener.UhOh uhoh)
     {
-        this(null, uhoh);
+        super(uhoh);
     }
 
     NativeBleCharacteristic(BluetoothGattCharacteristic characteristic, BleManager.UhOhListener.UhOh uhoh)
     {
-        m_characteristic = characteristic;
-        m_uhOh = uhoh;
+        super(characteristic, uhoh);
     }
 
     /**
@@ -40,24 +34,9 @@ final class NativeBleCharacteristic implements UsesCustomNull
      */
     public BluetoothGattCharacteristic getCharacteristic()
     {
-        return m_characteristic;
+        return getGattObject();
     }
 
-    /**
-     * Mostly used internally, but if there was a particular issue when retrieving a characteristic, it will have an {@link com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh}
-     * with a status of what went wrong.
-     */
-    public BleManager.UhOhListener.UhOh getUhOh()
-    {
-        return m_uhOh;
-    }
+    public final static NativeBleCharacteristic NULL = new NativeBleCharacteristic();
 
-    /**
-     * Returns <code>true</code> if the {@link BluetoothGattCharacteristic} held in this class is <code>null</code> or not.
-     */
-    @Override
-    public boolean isNull()
-    {
-        return m_characteristic == null;
-    }
 }

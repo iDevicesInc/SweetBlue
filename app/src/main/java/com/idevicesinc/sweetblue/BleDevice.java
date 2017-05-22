@@ -156,6 +156,18 @@ public final class BleDevice extends BleNode
             NO_MATCHING_TARGET,
 
             /**
+             * Sometimes android can throw a {@link java.util.ConcurrentModificationException} when we try to retrieve a {@link BluetoothGattService},
+             * {@link BluetoothGattCharacteristic}, or {@link BluetoothGattDescriptor}. In this case, it's best to just try your operation again.
+             */
+            GATT_CONCURRENT_EXCEPTION,
+
+            /**
+             * Sometimes android can throw an {@link Exception} when we try to retrieve a {@link BluetoothGattService},
+             * {@link BluetoothGattCharacteristic}, or {@link BluetoothGattDescriptor}.
+             */
+            GATT_RANDOM_EXCEPTION,
+
+            /**
              * Specific to {@link Target#RELIABLE_WRITE}, this means the underlying call to {@link BluetoothGatt#beginReliableWrite()}
              * returned <code>false</code>.
              */
@@ -678,12 +690,25 @@ public final class BleDevice extends BleNode
 
             private final BleConnectionPriority m_connectionPriority;
 
-            ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
+            /**
+             * This is the {@link DescriptorFilter} that was used for this read/write. This will be <code>null</code> if none were set.
+             */
+            public final @Nullable(Prevalence.NORMAL) DescriptorFilter descriptorFilter()
+            {
+                return m_descriptorFilter;
+            }
+
+            private final DescriptorFilter m_descriptorFilter;
+
+
+
+            ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, DescriptorFilter descriptorFilter, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
             {
                 this.m_device = device;
                 this.m_serviceUuid = serviceUuid != null ? serviceUuid : NON_APPLICABLE_UUID;
                 this.m_charUuid = charUuid != null ? charUuid : NON_APPLICABLE_UUID;
                 this.m_descUuid = descUuid != null ? descUuid : NON_APPLICABLE_UUID;
+                this.m_descriptorFilter = descriptorFilter;
                 this.m_type = type;
                 this.m_target = target;
                 this.m_status = status;
@@ -703,6 +728,7 @@ public final class BleDevice extends BleNode
                 this.m_charUuid = NON_APPLICABLE_UUID;
                 this.m_descUuid = NON_APPLICABLE_UUID;
                 this.m_serviceUuid = NON_APPLICABLE_UUID;
+                this.m_descriptorFilter = null;
                 this.m_type = type;
                 this.m_target = Target.RSSI;
                 this.m_status = status;
@@ -722,6 +748,7 @@ public final class BleDevice extends BleNode
                 this.m_charUuid = NON_APPLICABLE_UUID;
                 this.m_descUuid = NON_APPLICABLE_UUID;
                 this.m_serviceUuid = NON_APPLICABLE_UUID;
+                this.m_descriptorFilter = null;
                 this.m_type = Type.WRITE;
                 this.m_target = Target.MTU;
                 this.m_status = status;
@@ -741,6 +768,7 @@ public final class BleDevice extends BleNode
                 this.m_charUuid = NON_APPLICABLE_UUID;
                 this.m_descUuid = NON_APPLICABLE_UUID;
                 this.m_serviceUuid = NON_APPLICABLE_UUID;
+                this.m_descriptorFilter = null;
                 this.m_type = Type.WRITE;
                 this.m_target = Target.CONNECTION_PRIORITY;
                 this.m_status = status;
@@ -756,7 +784,7 @@ public final class BleDevice extends BleNode
 
             static ReadWriteEvent NULL(BleDevice device)
             {
-                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
+                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, null, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
             }
 
             /**
@@ -4980,7 +5008,7 @@ public final class BleDevice extends BleNode
 
         final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
 
-        final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.m_characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
+        final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.READ);
 
         queue().add(new P_Task_BatteryLevel(this, valueToMatch, descriptorUuid, listener, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
@@ -5200,7 +5228,7 @@ public final class BleDevice extends BleNode
 
             if (descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic.m_characteristic, /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, characteristic.getCharacteristic(), /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
             }
             else
             {
@@ -5216,7 +5244,7 @@ public final class BleDevice extends BleNode
         {
             if (listener != null && isConnected)
             {
-                result = m_pollMngr.newAlreadyEnabledEvent(characteristic.m_characteristic, serviceUuid, characteristicUuid);
+                result = m_pollMngr.newAlreadyEnabledEvent(characteristic.getCharacteristic(), serviceUuid, characteristicUuid);
 
                 invokeReadWriteCallback(listener, result);
             }
@@ -6478,11 +6506,11 @@ public final class BleDevice extends BleNode
             if (descriptorFilter == null)
             {
 
-                task = new P_Task_Read(this, characteristic.m_characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, characteristic.getCharacteristic(), type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
             else
             {
-                task = new P_Task_Read(this, characteristic.m_characteristic.getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, characteristic.getCharacteristic().getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
 
             queue().add(task);
@@ -6513,9 +6541,9 @@ public final class BleDevice extends BleNode
         {
             final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 
-            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.m_characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
+            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
-            addWriteTasks(characteristic.m_characteristic, data, requiresBonding, descriptorFilterer, listener);
+            addWriteTasks(characteristic.getCharacteristic(), data, requiresBonding, descriptorFilterer, listener);
         }
         else
         {
@@ -6589,7 +6617,7 @@ public final class BleDevice extends BleNode
             final P_Task_ToggleNotify task;
             if (descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic.m_characteristic, /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, characteristic.getCharacteristic(), /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
             }
             else
             {
