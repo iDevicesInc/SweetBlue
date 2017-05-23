@@ -51,7 +51,7 @@ public final class DebugLogger implements SweetLogger
     }
 
     /**
-     * Return a {@link List} with the last @param count of log statements. If there haven't been any yet, and empty list is returned.
+     * Return a {@link List} with the last @param count of log statements. If there haven't been any yet, an empty list is returned.
      */
     public final List<String> getLastLogs(int count)
     {

@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import static com.idevicesinc.sweetblue.BleManagerState.BOOST_SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.IDLE;
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
@@ -43,7 +44,7 @@ final class P_BleManager_Listeners
 
             //--- DRK > Got this assert to trip by putting a breakpoint in constructor of NativeDeviceWrapper
             //---		and waiting, but now can't reproduce.
-            if (!m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && m_mngr.isAny(SCANNING, STARTING_SCAN)))
+            if (!m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && m_mngr.isAny(SCANNING, BOOST_SCANNING, STARTING_SCAN)))
                 return;
 
             if (state.isEndingState())
