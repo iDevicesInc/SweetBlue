@@ -76,6 +76,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
 import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_SHORT_TERM;
+import static com.idevicesinc.sweetblue.BleDeviceState.RETRYING_BLE_CONNECTION;
 import static com.idevicesinc.sweetblue.BleDeviceState.SERVICES_DISCOVERED;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNDISCOVERED;
@@ -5969,17 +5970,14 @@ public final class BleDevice extends BleNode
         final boolean wasConnecting = is_internal(CONNECTING_OVERALL);
         final ConnectionFailListener.Status connectionFailStatus = ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
 
-        if (isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
-        {
-            setStateToDisconnected(attemptingReconnect, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
-        }
-
         m_txnMngr.cancelAllTransactions();
 
         if (Utils.phoneHasBondingIssues())
         {
             getTaskQueue().clearQueueOf(P_Task_Bond.class, this, getTaskQueue().getSize());
         }
+
+        boolean retryingConnection = false;
 
         if (wasConnecting)
         {
@@ -6003,6 +6001,16 @@ public final class BleDevice extends BleNode
             else
             {
                 m_useAutoConnect = m_alwaysUseAutoConnect;
+            }
+        }
+        else
+        {
+            // This was moved into the onConnectionFailed method of the connectionfaillistener, so we can add the RETRYING_BLE_CONNECTION state while
+            // setting the state to disconnected. This way, both states are set at the same time, eliminating any race conditions between those 2
+            // states. This is here now in the case the connectionfaillistener doesn't get called, but the device is still in any connected/ing state
+            if (isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+            {
+                setStateToDisconnected(attemptingReconnect, retryingConnection, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
             }
         }
     }
@@ -6040,12 +6048,15 @@ public final class BleDevice extends BleNode
         final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
         getManager().m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 
-        stateTracker().update(lastConnectDisconnectIntent(), gattStatus, extraFlags, RECONNECTING_LONG_TERM, false, CONNECTING_OVERALL, false, AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true);
+        stateTracker().update(lastConnectDisconnectIntent(), gattStatus, extraFlags,
+                RECONNECTING_LONG_TERM, false, CONNECTING_OVERALL, false,
+                AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false,
+                INITIALIZED, true, RETRYING_BLE_CONNECTION, false);
 
         stateTracker_main().remove(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
     }
 
-    private void setStateToDisconnected(final boolean attemptingReconnect_longTerm, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker, final Object[] overrideBondingStates)
+    final void setStateToDisconnected(final boolean attemptingReconnect_longTerm, final boolean retryingConnection, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker, final Object[] overrideBondingStates)
     {
         //--- DRK > Device probably wasn't advertising while connected so here we reset the timer to keep
         //--- it from being immediately undiscovered after disconnection.
@@ -6066,6 +6077,7 @@ public final class BleDevice extends BleNode
 			            BONDING, m_nativeWrapper.isNativelyBonding(),
 			            BONDED, m_nativeWrapper.isNativelyBonded(),
 			            UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+                        RETRYING_BLE_CONNECTION, retryingConnection,
                         RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
                         ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY
 
@@ -6272,7 +6284,7 @@ public final class BleDevice extends BleNode
             }
         }
 
-        final boolean isDisconnectedAfterReconnectingShortTermStateCallback = is(DISCONNECTED);
+        final boolean isDisconnectedAfterReconnectingShortTermStateCallback = is(DISCONNECTED) && is(RECONNECTING_SHORT_TERM);
         final boolean isConnectingBle = is(CONNECTING);
         final boolean ignoreKindOf = isConnectingBle && wasExplicit;
         final boolean cancelTasks;
@@ -6318,7 +6330,7 @@ public final class BleDevice extends BleNode
 
             // We want to make sure that we update the state here. If you call disconnect() when currently connecting, the state won't get update, unless this is here
             final E_Intent intent = wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
-            setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
+            setStateToDisconnected(isAttemptingReconnect_longTerm, false, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
 
             return;
         }
@@ -6326,7 +6338,7 @@ public final class BleDevice extends BleNode
         // BEGIN CALLBACKS TO USER
 
         final E_Intent intent = wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
-        setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
+        setStateToDisconnected(isAttemptingReconnect_longTerm, false, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
 
         //--- DRK > Technically user could have called connect() in callbacks above....bad form but we need to account for it.
         final boolean isConnectingOverall_1 = is_internal(CONNECTING_OVERALL);
