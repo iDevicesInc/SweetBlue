@@ -2,10 +2,14 @@ package com.idevicesinc.sweetblue.utils;
 
 import android.util.Log;
 import com.idevicesinc.sweetblue.SweetLogger;
+
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Deque;
 import java.util.List;
+import java.util.Stack;
 
 
 /**
@@ -20,6 +24,7 @@ public final class DebugLogger implements SweetLogger
 
     private final int maxLogSize;
     private final List<String> logList;
+    private final boolean unitTest;
 
 
     /**
@@ -37,12 +42,26 @@ public final class DebugLogger implements SweetLogger
     {
         this.maxLogSize = maxLogSize;
         logList = Collections.synchronizedList(new ArrayList<String>(maxLogSize));
+        unitTest = false;
     }
 
+    DebugLogger(boolean unitTest, int maxLogSize)
+    {
+        this.maxLogSize = maxLogSize;
+        logList = Collections.synchronizedList(new ArrayList<String>(maxLogSize));
+        this.unitTest = unitTest;
+    }
 
     @Override public final void onLogEntry(int level, String tag, String msg)
     {
-        Log.println(level, tag, msg);
+        if (unitTest)
+        {
+            System.out.print(Utils_String.makeString(new Date(), " ", level(level), "/", tag, ": ", msg));
+        }
+        else
+        {
+            Log.println(level, tag, msg);
+        }
         if (logList.size() == maxLogSize)
         {
             logList.remove(0);
@@ -51,7 +70,7 @@ public final class DebugLogger implements SweetLogger
     }
 
     /**
-     * Return a {@link List} with the last @param count of log statements. If there haven't been any yet, an empty list is returned.
+     * Return a {@link List} with the last count of log statements. If there haven't been any yet, an empty list is returned.
      */
     public final List<String> getLastLogs(int count)
     {
@@ -65,13 +84,16 @@ public final class DebugLogger implements SweetLogger
         }
         else
         {
-            final ArrayList<String> list = new ArrayList<>(count);
+            final ArrayDeque<String> list = new ArrayDeque<>(count);
             count--;
-            for (int i = 0; i < count; i++)
+            int start = logList.size() - 1;
+            int end = start - count;
+            for (int i = start; i >= end; i--)
             {
-                list.add(logList.get(i));
+
+                list.push(logList.get(i));
             }
-            return list;
+            return new ArrayList<>(list);
         }
     }
 
