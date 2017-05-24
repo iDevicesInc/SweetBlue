@@ -23,7 +23,7 @@ final class P_ReliableWriteManager
 
 	BleDevice.ReadWriteListener.ReadWriteEvent newEvent(final BleDevice.ReadWriteListener.Status status, final int gattStatus, final boolean solicited)
 	{
-		return new BleDevice.ReadWriteListener.ReadWriteEvent(m_device, Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.RELIABLE_WRITE, BleDevice.EMPTY_BYTE_ARRAY, status, gattStatus, 0.0, 0.0, solicited);
+		return new BleDevice.ReadWriteListener.ReadWriteEvent(m_device, Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.RELIABLE_WRITE, BleDevice.EMPTY_BYTE_ARRAY, status, gattStatus, 0.0, 0.0, solicited);
 	}
 
 	private BleDevice.ReadWriteListener.ReadWriteEvent getGeneralEarlyOutEvent()

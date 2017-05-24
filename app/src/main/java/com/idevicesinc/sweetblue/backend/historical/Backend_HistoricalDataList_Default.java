@@ -27,8 +27,9 @@ public class Backend_HistoricalDataList_Default implements Backend_HistoricalDat
 	private String m_macAddress;
 	private Backend_HistoricalDatabase m_database;
 
-	private boolean m_hasShownWarning_read = false;
-	private boolean m_hasShownWarning_write = false;
+	//--- RB > Shut off the historical data warnings, as we aren't really offering the support for it at this time.
+	private boolean m_hasShownWarning_read = true;
+	private boolean m_hasShownWarning_write = true;
 
 	public Backend_HistoricalDataList_Default()
 	{

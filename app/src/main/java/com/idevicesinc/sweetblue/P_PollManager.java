@@ -98,16 +98,18 @@ final class P_PollManager
 		private double m_interval;
 		private final UUID m_charUuid;
 		private final UUID m_serviceUuid;
+		private final DescriptorFilter m_descriptorFilter;
 		private final boolean m_usingNotify;
 		private int/*_E_NotifyState*/ m_notifyState;
 		
 		private double m_timeTracker;
 		private boolean m_waitingForResponse;
 		
-		public CallbackEntry(BleDevice device, final UUID serviceUuid, UUID charUuid, double interval, ReadWriteListener readWriteListener, boolean trackChanges, boolean usingNotify)
+		public CallbackEntry(BleDevice device, final UUID serviceUuid, UUID charUuid, DescriptorFilter descriptorFilter, double interval, ReadWriteListener readWriteListener, boolean trackChanges, boolean usingNotify)
 		{
 			m_serviceUuid = serviceUuid;
 			m_charUuid = charUuid;
+			m_descriptorFilter = descriptorFilter;
 			m_interval = interval;
 			m_device = device;
 			m_usingNotify = usingNotify;
@@ -137,14 +139,39 @@ final class P_PollManager
 			return m_usingNotify;
 		}
 		
-		boolean isFor(final UUID serviceUuid, final UUID charUuid, Double interval_nullable, ReadWriteListener readWriteListener_nullable, boolean usingNotify)
+		boolean isFor(final UUID serviceUuid, final UUID charUuid, DescriptorFilter descriptorFilter, Double interval_nullable, ReadWriteListener readWriteListener_nullable, boolean usingNotify)
 		{
 			return
 				usingNotify == m_usingNotify																			&&
 				(m_serviceUuid == null || serviceUuid == null || m_serviceUuid.equals(serviceUuid))						&&
+				descriptorMatches(m_descriptorFilter, descriptorFilter)													&&
 				charUuid.equals(m_charUuid)																				&&
 				(Interval.isDisabled(interval_nullable) || interval_nullable == m_interval)								&&
 				(readWriteListener_nullable == null || m_pollingReadListener.hasListener(readWriteListener_nullable))	 ;
+		}
+
+		boolean descriptorMatches(DescriptorFilter curfilter, DescriptorFilter newFilter)
+		{
+			if (curfilter == null)
+			{
+				if (newFilter == null)
+				{
+					return true;
+				}
+				return false;
+			}
+			else
+			{
+				if (newFilter == null)
+				{
+					return false;
+				}
+				if (curfilter.equals(newFilter))
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 		
 		boolean isFor(final UUID serviceUuid, final UUID charUuid)
@@ -176,7 +203,7 @@ final class P_PollManager
 			
 			if( value == null )
 			{
-				ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0, /*solicited=*/true);
+				ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, m_descriptorFilter, type, Target.CHARACTERISTIC, value, Status.NULL_DATA, gattStatus, 0.0, 0.0, /*solicited=*/true);
 
 				m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 			}
@@ -184,12 +211,12 @@ final class P_PollManager
 			{
 				if( value.length == 0 )
 				{
-					ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0, /*solicited=*/true);
+					ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, m_descriptorFilter, type, Target.CHARACTERISTIC, value, Status.EMPTY_DATA, gattStatus, 0.0, 0.0, /*solicited=*/true);
 					m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 				}
 				else
 				{
-					ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0, /*solicited=*/true);
+					ReadWriteEvent result = new ReadWriteEvent(m_device, m_serviceUuid, m_charUuid, null, m_descriptorFilter, type, Target.CHARACTERISTIC, value, Status.SUCCESS, gattStatus, 0.0, 0.0, /*solicited=*/true);
 					m_device.invokeReadWriteCallback(m_pollingReadListener, result);
 				}
 			}
@@ -241,7 +268,7 @@ final class P_PollManager
 		m_entries.clear();
 	}
 	
-	void startPoll(final UUID serviceUuid, final UUID charUuid, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
+	void startPoll(final UUID serviceUuid, final UUID charUuid, final DescriptorFilter decriptorFilter, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
 	{
 		if( m_device.isNull() )  return;
 		
@@ -258,7 +285,7 @@ final class P_PollManager
 					ithEntry.m_interval = interval;
 				}
 				
-				if( ithEntry.isFor(serviceUuid, charUuid, interval, /*listener=*/null, usingNotify) )
+				if( ithEntry.isFor(serviceUuid, charUuid, decriptorFilter, interval, /*listener=*/null, usingNotify) )
 				{
 					if( ithEntry.trackingChanges() == trackChanges)
 					{
@@ -270,7 +297,7 @@ final class P_PollManager
 			}
 		}
 		
-		CallbackEntry newEntry = new CallbackEntry(m_device, serviceUuid, charUuid, interval, listener, trackChanges, usingNotify);
+		CallbackEntry newEntry = new CallbackEntry(m_device, serviceUuid, charUuid, decriptorFilter, interval, listener, trackChanges, usingNotify);
 		
 		if( usingNotify )
 		{
@@ -281,7 +308,7 @@ final class P_PollManager
 		m_entries.add(newEntry);
 	}
 	
-	void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, Double interval_nullable, ReadWriteListener listener, boolean usingNotify)
+	void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, DescriptorFilter descriptorFilter, Double interval_nullable, ReadWriteListener listener, boolean usingNotify)
 	{
 		if( m_device.isNull() )  return;
 		
@@ -289,7 +316,7 @@ final class P_PollManager
 		{
 			CallbackEntry ithEntry = m_entries.get(i);
 			
-			if( ithEntry.isFor(serviceUuid, characteristicUuid, interval_nullable, listener, usingNotify) )
+			if( ithEntry.isFor(serviceUuid, characteristicUuid, descriptorFilter, interval_nullable, listener, usingNotify) )
 			{
 				m_entries.remove(i);
 			}
@@ -384,7 +411,7 @@ final class P_PollManager
 				
 				if( notifyState == E_NotifyState__NOT_ENABLED )
 				{
-					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.serviceMngr_device().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, Uuids.INVALID, BleDevice.EMPTY_FUTURE_DATA, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
+					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.serviceMngr_device().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, Uuids.INVALID, ithEntry.m_descriptorFilter, BleDevice.EMPTY_FUTURE_DATA, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
 					
 					if( earlyOutResult != null )
 					{
@@ -405,7 +432,7 @@ final class P_PollManager
 				
 				if( notifyState == E_NotifyState__ENABLED && ithEntry.m_notifyState != E_NotifyState__ENABLED )
 				{
-					ReadWriteEvent result = newAlreadyEnabledEvent(characteristic, ithEntry.m_serviceUuid, ithEntry.m_charUuid);
+					ReadWriteEvent result = newAlreadyEnabledEvent(characteristic, ithEntry.m_serviceUuid, ithEntry.m_charUuid, ithEntry.m_descriptorFilter);
 					ithEntry.m_pollingReadListener.onEvent(result);
 				}
 				
@@ -414,12 +441,12 @@ final class P_PollManager
 		}
 	}
 	
-	ReadWriteEvent newAlreadyEnabledEvent(BluetoothGattCharacteristic characteristic, final UUID serviceUuid, final UUID characteristicUuid)
+	ReadWriteEvent newAlreadyEnabledEvent(BluetoothGattCharacteristic characteristic, final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter)
 	{
 		//--- DRK > Just being anal with the null check here.
 		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic, /*enable=*/true) : BleDevice.EMPTY_BYTE_ARRAY;
 		int gattStatus = BluetoothGatt.GATT_SUCCESS;
-		ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0, /*solicited=*/true);
+		ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, descriptorFilter, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0, /*solicited=*/true);
 		
 		return result;
 	}

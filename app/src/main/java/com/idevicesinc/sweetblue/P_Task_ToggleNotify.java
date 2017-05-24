@@ -211,7 +211,7 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 
 	@Override protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
 	{
-		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, getReadWriteType(), target, getWriteValue(), status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
+		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, m_descriptorFilter, getReadWriteType(), target, getWriteValue(), status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 	
 	@Override protected BleTask getTaskType()

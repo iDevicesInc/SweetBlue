@@ -365,7 +365,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			e = new BleDevice.ReadWriteListener.ReadWriteEvent
 			(
-				m_device, serviceUuid, characteristicUuid, descriptorUuid, type_modified,
+				m_device, serviceUuid, characteristicUuid, descriptorUuid, null, type_modified,
 				target, data, status, gattStatus, time, time, solicited
 			);
 		}

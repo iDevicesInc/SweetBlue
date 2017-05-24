@@ -31,7 +31,7 @@ final class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 	
 	@Override protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
 	{
-		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, Type.WRITE, target, m_data, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
+		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, null, Type.WRITE, target, m_data, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
 	@Override protected UUID getDescUuid()
