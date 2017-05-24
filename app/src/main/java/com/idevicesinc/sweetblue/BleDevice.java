@@ -679,7 +679,19 @@ public final class BleDevice extends BleNode
 
             private final BleConnectionPriority m_connectionPriority;
 
-            ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
+
+            /**
+             * This is the {@link DescriptorFilter} that was used for this read/write operation, if any.
+             */
+            public final @Nullable(Prevalence.NORMAL) DescriptorFilter descriptorFilter()
+            {
+                return m_descriptorFilter;
+            }
+
+            private final DescriptorFilter m_descriptorFilter;
+
+
+            ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, DescriptorFilter descFilter, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
             {
                 this.m_device = device;
                 this.m_serviceUuid = serviceUuid != null ? serviceUuid : NON_APPLICABLE_UUID;
@@ -696,7 +708,9 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
+                this.m_descriptorFilter = descFilter;
             }
+
 
             ReadWriteEvent(BleDevice device, Type type, int rssi, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
             {
@@ -715,6 +729,7 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
+                this.m_descriptorFilter = null;
             }
 
             ReadWriteEvent(BleDevice device, int mtu, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
@@ -734,6 +749,7 @@ public final class BleDevice extends BleNode
                 this.m_mtu = status == Status.SUCCESS ? mtu : device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
+                this.m_descriptorFilter = null;
             }
 
             ReadWriteEvent(BleDevice device, BleConnectionPriority connectionPriority, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
@@ -753,11 +769,12 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = connectionPriority;
+                this.m_descriptorFilter = null;
             }
 
             static ReadWriteEvent NULL(BleDevice device)
             {
-                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
+                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, null, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
             }
 
             /**
@@ -775,7 +792,7 @@ public final class BleDevice extends BleNode
              */
             public final @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
             {
-                return device().getNativeCharacteristic(serviceUuid(), charUuid());
+                return device().getNativeCharacteristic(serviceUuid(), charUuid(), descriptorFilter());
             }
 
             /**
@@ -3676,7 +3693,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, null, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
     }
 
     /**
@@ -3694,7 +3711,15 @@ public final class BleDevice extends BleNode
      */
     public final void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, null, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+    }
+
+    /**
+     * Overload of {@link #startPoll(UUID, UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Interval interval, final ReadWriteListener listener)
+    {
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, descriptorFilter, Interval.secs(interval), listener, false, false);
     }
 
     /**
@@ -3813,7 +3838,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, null, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
     }
 
     /**
@@ -3821,7 +3846,15 @@ public final class BleDevice extends BleNode
      */
     public final void startChangeTrackingPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, null, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+    }
+
+    /**
+     * Overload of {@link #startChangeTrackingPoll(UUID, UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final void startChangeTrackingPoll(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Interval interval, final ReadWriteListener listener)
+    {
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, descriptorFilter, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
     }
 
     /**
@@ -3835,7 +3868,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        stopPoll_private(serviceUuid, characteristicUuid, null, listener);
+        stopPoll_private(serviceUuid, characteristicUuid, null, null, listener);
     }
 
     /**
@@ -3853,7 +3886,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, listener);
+        stopPoll_private(serviceUuid, characteristicUuid, null, interval != null ? interval.secs() : null, listener);
     }
 
     /**
@@ -3863,7 +3896,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, null);
+        stopPoll_private(serviceUuid, characteristicUuid, null, interval != null ? interval.secs() : null, null);
     }
 
     /**
@@ -3871,7 +3904,7 @@ public final class BleDevice extends BleNode
      */
     public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
-        stopPoll_private(serviceUuid, characteristicUuid, null, listener);
+        stopPoll_private(serviceUuid, characteristicUuid, null, null, listener);
     }
 
     /**
@@ -3887,7 +3920,15 @@ public final class BleDevice extends BleNode
      */
     public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
-        stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, listener);
+        stopPoll_private(serviceUuid, characteristicUuid, null, interval != null ? interval.secs() : null, listener);
+    }
+
+    /**
+     * Overload of {@link #stopPoll(UUID, UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Interval interval, final ReadWriteListener listener)
+    {
+        stopPoll_private(serviceUuid, characteristicUuid, descriptorFilter, interval != null ? interval.secs() : null, listener);
     }
 
     /**
@@ -3895,7 +3936,7 @@ public final class BleDevice extends BleNode
      */
     public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval)
     {
-        stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, null);
+        stopPoll_private(serviceUuid, characteristicUuid, null, interval != null ? interval.secs() : null, null);
     }
 
     /**
@@ -4331,7 +4372,7 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
 
         if (earlyOutResult != null)
         {
@@ -4384,7 +4425,7 @@ public final class BleDevice extends BleNode
         }
         else
         {
-            final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
+            final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
 
             if (earlyOutResult != null)
             {
@@ -4510,7 +4551,7 @@ public final class BleDevice extends BleNode
             }
             else
             {
-                final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
+                final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
 
                 if (earlyOutResult != null)
                 {
@@ -4970,7 +5011,7 @@ public final class BleDevice extends BleNode
     @Advanced
     public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -5172,7 +5213,7 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -5217,7 +5258,7 @@ public final class BleDevice extends BleNode
         {
             if (listener != null && isConnected)
             {
-                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, serviceUuid, characteristicUuid);
+                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, serviceUuid, characteristicUuid, descriptorFilter);
 
                 invokeReadWriteCallback(listener, result);
             }
@@ -5236,10 +5277,12 @@ public final class BleDevice extends BleNode
             result = NULL_READWRITE_EVENT();
         }
 
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, descriptorFilter, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
 
         return result;
     }
+
+
 
     /**
      * Disables all notifications enabled by {@link #enableNotify(UUID, ReadWriteListener)} or
@@ -6463,15 +6506,15 @@ public final class BleDevice extends BleNode
         queue().clearQueueOf(PA_Task_RequiresConnection.class, this, overrideOrdinal);
     }
 
-    private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final Double interval, final ReadWriteListener listener)
+    private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Double interval, final ReadWriteListener listener)
     {
-        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, interval, listener, /* usingNotify= */false);
+        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, descriptorFilter, interval, listener, /* usingNotify= */false);
     }
 
     final ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -6512,7 +6555,7 @@ public final class BleDevice extends BleNode
 
     final ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final DescriptorFilter descriptorFilterer, final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, descriptorUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, descriptorUuid, descriptorFilterer, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -6585,7 +6628,7 @@ public final class BleDevice extends BleNode
     private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, DescriptorFilter descriptorFilter, ReadWriteListener listener)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -6610,7 +6653,7 @@ public final class BleDevice extends BleNode
             queue().add(task);
         }
 
-        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, forceReadTimeout, listener, /* usingNotify= */true);
+        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, descriptorFilter, forceReadTimeout, listener, /* usingNotify= */true);
 
         return NULL_READWRITE_EVENT();
     }

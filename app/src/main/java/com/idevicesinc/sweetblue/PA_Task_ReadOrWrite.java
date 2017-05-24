@@ -351,16 +351,16 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 		}
 	}
 
-	private ReadWriteEvent newSuccessReadWriteEvent(byte[] data, Target target, ReadWriteListener.Type type, UUID charUuid, UUID descUuid)
+	private ReadWriteEvent newSuccessReadWriteEvent(byte[] data, Target target, ReadWriteListener.Type type, UUID charUuid, UUID descUuid, DescriptorFilter descriptorFilter)
 	{
-		return new ReadWriteEvent(getDevice(), getServiceUuid(), charUuid, descUuid, type, target, data, Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
+		return new ReadWriteEvent(getDevice(), getServiceUuid(), charUuid, descUuid, descriptorFilter, type, target, data, Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
 	private void succeedRead(byte[] value, Target target, ReadWriteListener.Type type)
 	{
 		super.succeed();
 
-		final ReadWriteEvent event = newSuccessReadWriteEvent(value, target, type, getCharUuid(), getDescUuid());
+		final ReadWriteEvent event = newSuccessReadWriteEvent(value, target, type, getCharUuid(), getDescUuid(), m_descriptorFilter);
 		getDevice().addReadTime(event.time_total().secs());
 
 		getDevice().invokeReadWriteCallback(m_readWriteListener, event);

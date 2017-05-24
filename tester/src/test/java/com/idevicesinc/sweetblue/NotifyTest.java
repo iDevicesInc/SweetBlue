@@ -552,34 +552,12 @@ public class NotifyTest extends BaseBleUnitTest
     private class IndicateGattWithNoDescLayer extends UnitTestGatt
     {
 
-        private final List<BluetoothGattService> mServices;
-
-
         public IndicateGattWithNoDescLayer(BleDevice device)
         {
             super(device);
-            mServices = new ArrayList<>();
-            BluetoothGattService service = new BluetoothGattService(mTestService, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_INDICATE, BluetoothGattCharacteristic.PERMISSION_READ);
-            service.addCharacteristic(characteristic);
-            mServices.add(service);
-        }
-
-        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
-        {
-            return mServices;
-        }
-
-        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
-        {
-            if (serviceUuid.equals(mTestService))
-            {
-                return mServices.get(0);
-            }
-            else
-            {
-                return null;
-            }
+            GattDatabase db = new GattDatabase().addService(mTestService)
+                    .addCharacteristic(mTestChar).setProperties().readWriteIndicate().setPermissions().read().completeService();
+            setDabatase(db);
         }
 
         @Override public boolean writeDescriptor(final BluetoothGattDescriptor descriptor)

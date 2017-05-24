@@ -209,41 +209,15 @@ public class DuplicateCharTest extends BaseBleUnitTest
     private class MultipleCharGatt extends UnitTestGatt
     {
 
-        private final List<BluetoothGattService> mServices;
-
         public MultipleCharGatt(BleDevice device)
         {
             super(device);
-            mServices = new ArrayList<>();
-            BluetoothGattService service = new BluetoothGattService(mTestService, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic char1 = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_WRITE | BluetoothGattCharacteristic.PERMISSION_READ);
-            BluetoothGattCharacteristic char2 = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_WRITE | BluetoothGattCharacteristic.PERMISSION_READ);
-            BluetoothGattDescriptor desc1 = new BluetoothGattDescriptor(mTestDesc, BluetoothGattDescriptor.PERMISSION_READ);
-            desc1.setValue(new byte[] { 0x1 });
-            BluetoothGattDescriptor desc2 = new BluetoothGattDescriptor(mTestDesc, BluetoothGattDescriptor.PERMISSION_READ);
-            desc1.setValue(new byte[] { 0x2 });
-            char1.addDescriptor(desc1);
-            char2.addDescriptor(desc2);
-            service.addCharacteristic(char1);
-            service.addCharacteristic(char2);
-            mServices.add(service);
-        }
-
-        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
-        {
-            return mServices;
-        }
-
-        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
-        {
-            if (serviceUuid.equals(mTestService))
-            {
-                return mServices.get(0);
-            }
-            else
-            {
-                return null;
-            }
+            GattDatabase db = new GattDatabase().addService(mTestService)
+                    .addCharacteristic(mTestChar).setProperties().readWriteNotify().setPermissions().readWrite().build()
+                        .addDescriptor(mTestDesc).setValue(new byte[] { 0x1 }).setPermissions().read().completeChar()
+                    .addCharacteristic(mTestChar).setProperties().readWriteNotify().setPermissions().readWrite().build()
+                        .addDescriptor(mTestDesc).setValue(new byte[] { 0x2 }).setPermissions().read().completeService();
+            setDabatase(db);
         }
 
         @Override public boolean readDescriptor(final BluetoothGattDescriptor descriptor)
