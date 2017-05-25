@@ -113,7 +113,8 @@ public class MainActivity extends Activity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.logger = mLogger;
-        config.scanApi = BleScanApi.POST_LOLLIPOP;
+        config.maxDirectBondRetries = 5;
+        config.scanApi = BleScanApi.PRE_LOLLIPOP;
         config.runOnMainThread = false;
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
@@ -242,7 +243,14 @@ public class MainActivity extends Activity
         }
         else if (item.getItemId() == 1)
         {
-            mDevices.get(info.position).bond();
+            mDevices.get(info.position).bond(new BleDevice.BondListener()
+            {
+                @Override
+                public void onEvent(BondEvent e)
+                {
+                    Log.e("Bonding Event", e.toString());
+                }
+            });
             return true;
         }
         else if (item.getItemId() == 2)

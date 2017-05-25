@@ -21,6 +21,10 @@ public class UnitTestDevice implements P_NativeDeviceLayer
     public UnitTestDevice(BleDevice device)
     {
         m_device = device;
+        if (!device.isNull())
+        {
+            m_address = device.getMacAddress();
+        }
     }
 
 
@@ -51,7 +55,7 @@ public class UnitTestDevice implements P_NativeDeviceLayer
 
     @Override
     public boolean createBond() {
-        return false;
+        return true;
     }
 
     @Override public boolean isDeviceNull()

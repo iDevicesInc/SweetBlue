@@ -415,12 +415,16 @@ final class P_BleManager_Listeners
             failReason = BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE;
         }
 
+        final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer(BleDevice.NULL);
+
         final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-        onNativeBondStateChanged(device_native, previousState, newState, failReason);
+        layer.setNativeDevice(device_native);
+
+        onNativeBondStateChanged(layer, previousState, newState, failReason);
     }
 
-    private BleDevice getDeviceFromNativeDevice(final BluetoothDevice device_native)
+    private BleDevice getDeviceFromNativeDevice(final P_NativeDeviceLayer device_native)
     {
         BleDevice device = m_mngr.getDevice(device_native.getAddress());
 
@@ -453,7 +457,7 @@ final class P_BleManager_Listeners
         return device;
     }
 
-    private void onNativeBondStateChanged(final BluetoothDevice device_native, final int previousState, final int newState, final int failReason)
+    void onNativeBondStateChanged(final P_NativeDeviceLayer device_native, final int previousState, final int newState, final int failReason)
     {
         m_mngr.getPostManager().postToUpdateThread(new Runnable()
         {
@@ -466,7 +470,7 @@ final class P_BleManager_Listeners
                     //--- DRK > Got an NPE here when restarting the app through the debugger. Pretty sure it's an impossible case
                     //---		for actual app usage cause the listeners member of the device is final. So some memory corruption issue
                     //---		associated with debugging most likely...still gating it for the hell of it.
-                    if (device.getListeners() != null)
+                    if (device.getListeners() != null || m_mngr.m_config.unitTest)
                     {
                         device.getListeners().onNativeBondStateChanged_updateThread(previousState, newState, failReason);
                     }
@@ -476,7 +480,7 @@ final class P_BleManager_Listeners
 //		{
 //			m_mngr.uhOh(UhOh.WENT_FROM_BONDING_TO_UNBONDED);
 //		}
-            }
+             }
         });
     }
 

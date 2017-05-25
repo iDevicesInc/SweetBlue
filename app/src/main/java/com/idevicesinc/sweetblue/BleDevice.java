@@ -3278,6 +3278,11 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond(BondListener listener)
     {
+        return bond_private(/*isDirect=*/true, listener);
+    }
+
+    final BondEvent bond_private(boolean isDirect, BondListener listener)
+    {
         if (listener != null)
         {
             setListener_Bond(listener);
@@ -3297,7 +3302,9 @@ public final class BleDevice extends BleNode
             return event;
         }
 
-        bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
+        m_bondMngr.resetBondRetryCount();
+
+        bond_justAddTheTask(E_TransactionLockBehavior.PASSES, isDirect);
 
         stateTracker_updateBoth(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, true, UNBONDED, false);
 
@@ -5715,13 +5722,13 @@ public final class BleDevice extends BleNode
         m_rssiPollMngr.update(timeStep);
     }
 
-    final void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior)
+    final void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior, boolean isDirect)
     {
         if (conf_device().forceBondDialog)
         {
             queue().add(new P_Task_BondPopupHack(this, null));
         }
-        queue().add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
+        queue().add(new P_Task_Bond(this, /*isExplicit=*/true, isDirect, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
     }
 
     final void unbond_justAddTheTask()
@@ -5839,7 +5846,7 @@ public final class BleDevice extends BleNode
             if (doPreBond && tryBondingWhileDisconnected)
             {
                 needsBond = false;
-                bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
+                bond_justAddTheTask(E_TransactionLockBehavior.PASSES, /*isDirect=*/false);
 
                 extraBondingStates = P_BondManager.OVERRIDE_BONDING_STATES;
             }
@@ -5865,7 +5872,7 @@ public final class BleDevice extends BleNode
 
         if (needsBond)
         {
-            bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
+            bond_justAddTheTask(E_TransactionLockBehavior.PASSES, /*isDirect=*/false);
         }
 
 
