@@ -470,7 +470,7 @@ final class P_BleManager_Listeners
                     //--- DRK > Got an NPE here when restarting the app through the debugger. Pretty sure it's an impossible case
                     //---		for actual app usage cause the listeners member of the device is final. So some memory corruption issue
                     //---		associated with debugging most likely...still gating it for the hell of it.
-                    if (device.getListeners() != null || m_mngr.m_config.unitTest)
+                    if (device.getListeners() != null)
                     {
                         device.getListeners().onNativeBondStateChanged_updateThread(previousState, newState, failReason);
                     }
