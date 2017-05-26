@@ -3,8 +3,6 @@ package com.idevicesinc.sweetblue;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -24,8 +22,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import com.idevicesinc.sweetblue.tester.R;
-import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 
