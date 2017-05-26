@@ -348,7 +348,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.RARE)
-	public Interval scanReportDelay							= Interval.secs(DEFAULT_SCAN_REPORT_DELAY);
+	public Interval scanReportDelay							= Interval.DISABLED; // Interval.secs(DEFAULT_SCAN_REPORT_DELAY);
 
 	/**
 	 * Default is <code>null</code>, meaning no filtering - all discovered devices will

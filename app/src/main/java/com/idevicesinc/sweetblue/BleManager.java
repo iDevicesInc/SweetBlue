@@ -3375,7 +3375,9 @@ public final class BleManager
 			double timeStep = ((double) currentTime - m_lastAutoUpdateTime)/1000.0;
 
 			timeStep = timeStep <= 0.0 ? .00001 : timeStep;
-			timeStep = timeStep > 1.0 ? 1.0 : timeStep;
+			//--- RB > Not sure why this was put here. If the tick is over a second, we still want to know that, otherwise tasks will end up running longer
+			// 			than expected.
+//			timeStep = timeStep > 1.0 ? 1.0 : timeStep;
 
 			update(timeStep, currentTime);
 
