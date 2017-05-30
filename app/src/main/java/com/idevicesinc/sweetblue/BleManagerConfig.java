@@ -237,7 +237,15 @@ public class BleManagerConfig extends BleDeviceConfig
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
 	public Interval	uhOhCallbackThrottle					= Interval.secs(DEFAULT_UH_OH_CALLBACK_THROTTLE);
-	
+
+	/**
+	 * Default is <code>true</code> - This allows SweetBlue to store the last Uh Oh time to disk. This makes it so that even if you shutdown, and restart
+	 * {@link BleManager}, SweetBlue will still respect the {@link #uhOhCallbackThrottle}. Otherwise, if you restart the manager, and get an {@link com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh}
+	 * it will be dispatched immediately.
+	 */
+	@com.idevicesinc.sweetblue.annotations.Advanced
+	public boolean manageLastUhOhOnDisk						= true;
+
 	/**
 	 * Default is {@value #DEFAULT_AUTO_SCAN_DELAY_AFTER_RESUME} seconds - Unless {@link Interval#DISABLED},
 	 * this option will kick off a scan for {@link #autoScanActiveTime} seconds
