@@ -556,6 +556,14 @@ public abstract class BleNode implements UsesCustomNull
 	}
 
 	/**
+	 * Overload of {@link #getNativeCharacteristic(UUID, UUID)} for when you have characteristics with identical uuids within the same service.
+	 */
+	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID charUuid, final DescriptorFilter descriptorFilter)
+	{
+		return m_serviceMngr.getCharacteristic(serviceUuid, charUuid, descriptorFilter);
+	}
+
+	/**
 	 * Returns the native service for the given UUID in case you need lower-level access.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced

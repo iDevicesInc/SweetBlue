@@ -910,6 +910,7 @@ public final class BleManager
 
 		if (m_updateRunnable != null)
 		{
+			m_updateRunnable.m_shutdown = false;
 			m_postManager.removeUpdateCallbacks(m_updateRunnable);
 		}
 		else
@@ -2174,6 +2175,7 @@ public final class BleManager
 	public final void shutdown()
 	{
 		disconnectAll();
+		m_uhOhThrottler.shutdown();
 		m_updateRunnable.m_shutdown = true;
 		m_postManager.removeUpdateCallbacks(m_updateRunnable);
 		m_postManager.quit();
@@ -3355,7 +3357,7 @@ public final class BleManager
 	private final class UpdateRunnable implements Runnable
 	{
 
-		private long m_lastAutoUpdateTime = 0;
+		private Long m_lastAutoUpdateTime;
 		private long m_autoUpdateRate = -1;
 		private boolean m_shutdown = false;
 
@@ -3382,10 +3384,16 @@ public final class BleManager
 		@Override public void run()
 		{
 			long currentTime = System.currentTimeMillis();
+			if (m_lastAutoUpdateTime == null)
+			{
+				m_lastAutoUpdateTime = currentTime;
+			}
 			double timeStep = ((double) currentTime - m_lastAutoUpdateTime)/1000.0;
 
 			timeStep = timeStep <= 0.0 ? .00001 : timeStep;
-			timeStep = timeStep > 1.0 ? 1.0 : timeStep;
+			//--- RB > Not sure why this was put here. If the tick is over a second, we still want to know that, otherwise tasks will end up running longer
+			// 			than expected.
+//			timeStep = timeStep > 1.0 ? 1.0 : timeStep;
 
 			update(timeStep, currentTime);
 

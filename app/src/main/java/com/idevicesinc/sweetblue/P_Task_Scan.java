@@ -1,8 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.util.Log;
-
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -31,6 +29,11 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
 
     @Override protected double getInitialTimeout()
     {
+        // Account for the classic scan boost here, we don't want to count the time doing the classic boost towards the timeout of the BLE scan
+        if (isClassicBoosted())
+        {
+            return m_scanTime + getManager().m_config.scanClassicBoostLength.secs();
+        }
         return m_scanTime;
     }
 
@@ -46,8 +49,8 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
         }
         else
         {
-            boolean isClassicScan = getManager().m_config.scanApi == BleScanApi.CLASSIC || getManager().m_config.scanMode == BleScanMode.CLASSIC;
-            if (Interval.isEnabled(getManager().m_config.scanClassicBoostLength) && !isClassicScan)
+
+            if (isClassicBoosted())
             {
                 if (!getManager().getScanManager().classicBoost(getManager().m_config.scanClassicBoostLength.secs()))
                 {

@@ -1,19 +1,16 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.support.test.filters.FlakyTest;
 import android.util.Log;
-
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ScanClassicTest extends BaseTester<MainActivity>
+
+public class ScanClassicBoostTest extends BaseTester<MainActivity>
 {
     @Override Class getActivityClass()
     {

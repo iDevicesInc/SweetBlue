@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
+import static org.junit.Assert.assertFalse;
+
 
 @Config(manifest = Config.NONE, sdk = 24)
 @RunWith(RobolectricTestRunner.class)
@@ -49,7 +51,14 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
-                                succeed();
+                                if (e.wasSuccess())
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    assertFalse(e.status().toString(), true);
+                                }
                             }
                         });
                     }
@@ -92,7 +101,14 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
-                                succeed();
+                                if (e.wasSuccess())
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    assertFalse(e.status().toString(), true);
+                                }
                             }
                         });
                     }
@@ -135,7 +151,14 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
-                                succeed();
+                                if (e.wasSuccess())
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    assertFalse(e.status().toString(), true);
+                                }
                             }
                         });
                     }
@@ -154,7 +177,14 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
-                                succeed();
+                                if (e.wasSuccess())
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    assertFalse(e.status().toString(), true);
+                                }
                             }
                         });
                     }
@@ -224,50 +254,38 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         s.acquire();
     }
 
+    @Override
+    public BleManagerConfig getConfig()
+    {
+        BleManagerConfig config = super.getConfig();
+        config.gattLayerFactory = new P_GattLayerFactory()
+        {
+            @Override
+            public P_GattLayer newInstance(BleDevice device)
+            {
+                return new TransactionGattLayer(device);
+            }
+        };
+        return config;
+    }
+
     private class TransactionGattLayer extends UnitTestGatt
     {
-
-        private final List<BluetoothGattService> mServices;
-
 
         public TransactionGattLayer(BleDevice device)
         {
             super(device);
 
-            mServices = new ArrayList<>();
-
-            BluetoothGattService authService = new BluetoothGattService(mAuthServiceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic authChar = new BluetoothGattCharacteristic(mAuthCharUuid, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
-            authService.addCharacteristic(authChar);
-
-            BluetoothGattService initService = new BluetoothGattService(mInitServiceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic initChar = new BluetoothGattCharacteristic(mInitCharUuid, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
-            initService.addCharacteristic(initChar);
-
-            mServices.add(authService);
-            mServices.add(initService);
-        }
-
-        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
-        {
-            return mServices;
-        }
-
-        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
-        {
-            for (BluetoothGattService s : mServices)
-            {
-                if (s.getUuid().equals(serviceUuid))
-                {
-                    return s;
-                }
-            }
-            return null;
+            GattDatabase db = new GattDatabase().addService(mAuthServiceUuid)
+                    .addCharacteristic(mAuthCharUuid).setValue(new byte[] { 0x2, 0x4 }).setProperties().read().setPermissions().read().completeService()
+                    .addService(mInitServiceUuid)
+                    .addCharacteristic(mInitCharUuid).setValue(new byte[] { 0x8, 0xA }).setProperties().read().setPermissions().read().completeService();
+            setDabatase(db);
         }
 
         @Override public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
         {
-            UnitTestUtils.readSuccess(getBleDevice(), characteristic, new byte[0]);
+            UnitTestUtils.readSuccess(getBleDevice(), characteristic, characteristic.getValue());
             return super.readCharacteristic(characteristic);
         }
     }

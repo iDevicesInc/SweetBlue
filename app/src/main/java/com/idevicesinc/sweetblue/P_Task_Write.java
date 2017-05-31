@@ -42,7 +42,7 @@ final class P_Task_Write extends PA_Task_ReadOrWrite
 		final Type type = P_DeviceServiceManager.modifyResultType(char_native, Type.WRITE);
 		final UUID actualDescUuid = getActualDescUuid(descUuid);
 		
-		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, actualDescUuid, type, target, m_data, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
+		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, actualDescUuid, m_descriptorFilter, type, target, m_data, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
 	@Override protected void executeReadOrWrite()

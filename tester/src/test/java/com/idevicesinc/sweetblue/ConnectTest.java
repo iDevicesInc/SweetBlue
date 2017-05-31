@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 @Config(manifest = Config.NONE, sdk = 24)
@@ -73,6 +74,54 @@ public class ConnectTest extends BaseBleUnitTest
         });
 
         m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+
+        s.acquire();
+    }
+
+    @Test(timeout = 18000)
+    public void retryConnectionTest() throws Exception
+    {
+        m_device = null;
+
+        final Semaphore s = new Semaphore(0);
+
+        m_config.runOnMainThread = false;
+        m_config.loggingEnabled = true;
+        m_config.gattLayerFactory = new P_GattLayerFactory()
+        {
+            @Override
+            public P_GattLayer newInstance(BleDevice device)
+            {
+                return new ConnectFailGattLayer(device);
+            }
+        };
+
+        m_mgr.setConfig(m_config);
+
+        m_device = m_mgr.newDevice(UnitTestUtils.randomMacAddress());
+
+        m_device.connect(new BleDevice.StateListener() {
+
+            int timesTried = 0;
+
+            @Override
+            public void onEvent(BleDevice.StateListener.StateEvent e)
+            {
+                if (e.didEnter(BleDeviceState.DISCONNECTED))
+                {
+                    if (timesTried < 3)
+                    {
+                        timesTried++;
+                        assertTrue(e.device().is(BleDeviceState.RETRYING_BLE_CONNECTION));
+                    }
+                    else
+                    {
+                        assertFalse(e.device().is(BleDeviceState.RETRYING_BLE_CONNECTION));
+                        s.release();
+                    }
+                }
+            }
+        }, new BleDevice.DefaultConnectionFailListener(3, 3));
 
         s.acquire();
     }
@@ -570,7 +619,7 @@ public class ConnectTest extends BaseBleUnitTest
         s.acquire();
     }
 
-    @Test(timeout = 14000)
+    @Test(timeout = 18000)
     public void connectThenFailInitTxnTest() throws Exception
     {
         m_device = null;
@@ -895,30 +944,9 @@ public class ConnectTest extends BaseBleUnitTest
         public TimeOutGattLayer(BleDevice device)
         {
             super(device);
-        }
-
-        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
-        {
-            List<BluetoothGattService> list = new ArrayList<>();
-            BluetoothGattService service = new BluetoothGattService(Uuids.BATTERY_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic ch = new BluetoothGattCharacteristic(Uuids.BATTERY_LEVEL, BleCharacteristicProperty.READ.bit(), BleCharacteristicPermission.READ.bit());
-            service.addCharacteristic(ch);
-            return list;
-        }
-
-        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
-        {
-            if (serviceUuid.equals(Uuids.BATTERY_SERVICE_UUID))
-            {
-                BluetoothGattService service = new BluetoothGattService(Uuids.BATTERY_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-                BluetoothGattCharacteristic ch = new BluetoothGattCharacteristic(Uuids.BATTERY_LEVEL, BleCharacteristicProperty.READ.bit(), BleCharacteristicPermission.READ.bit());
-                service.addCharacteristic(ch);
-                return service;
-            }
-            else
-            {
-                return null;
-            }
+            GattDatabase db = new GattDatabase().addService(Uuids.BATTERY_SERVICE_UUID)
+                    .addCharacteristic(Uuids.BATTERY_LEVEL).setProperties().read().setPermissions().read().completeService();
+            setDabatase(db);
         }
 
         @Override public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic)
@@ -934,30 +962,9 @@ public class ConnectTest extends BaseBleUnitTest
         public ReadFailGattLayer(BleDevice device)
         {
             super(device);
-        }
-
-        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
-        {
-            List<BluetoothGattService> list = new ArrayList<>();
-            BluetoothGattService service = new BluetoothGattService(Uuids.BATTERY_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic ch = new BluetoothGattCharacteristic(Uuids.BATTERY_LEVEL, BleCharacteristicProperty.READ.bit(), BleCharacteristicPermission.READ.bit());
-            service.addCharacteristic(ch);
-            return list;
-        }
-
-        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
-        {
-            if (serviceUuid.equals(Uuids.BATTERY_SERVICE_UUID))
-            {
-                BluetoothGattService service = new BluetoothGattService(Uuids.BATTERY_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-                BluetoothGattCharacteristic ch = new BluetoothGattCharacteristic(Uuids.BATTERY_LEVEL, BleCharacteristicProperty.READ.bit(), BleCharacteristicPermission.READ.bit());
-                service.addCharacteristic(ch);
-                return service;
-            }
-            else
-            {
-                return null;
-            }
+            GattDatabase db = new GattDatabase().addService(Uuids.BATTERY_SERVICE_UUID)
+                    .addCharacteristic(Uuids.BATTERY_LEVEL).setProperties().read().setPermissions().read().completeService();
+            setDabatase(db);
         }
 
         @Override public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic)

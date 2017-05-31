@@ -365,7 +365,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			e = new BleDevice.ReadWriteListener.ReadWriteEvent
 			(
-				m_device, serviceUuid, characteristicUuid, descriptorUuid, type_modified,
+				m_device, serviceUuid, characteristicUuid, descriptorUuid, null, type_modified,
 				target, data, status, gattStatus, time, time, solicited
 			);
 		}
@@ -579,7 +579,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			{
 				if( previousState == BluetoothDevice.BOND_BONDING || previousState == BluetoothDevice.BOND_NONE )
 				{
-					m_device.m_bondMngr.onNativeBondFailed(E_Intent.UNINTENTIONAL, Status.FAILED_EVENTUALLY, failReason);
+					m_device.m_bondMngr.onNativeBondFailed(E_Intent.UNINTENTIONAL, Status.FAILED_EVENTUALLY, failReason, false);
 				}
 				else
 				{
@@ -596,7 +596,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 			if ( !isCurrent )
 			{
-				m_queue.add(new P_Task_Bond(m_device, /*explicit=*/false, /*partOfConnection=*/false, m_taskStateListener, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING, E_TransactionLockBehavior.PASSES));
+				m_queue.add(new P_Task_Bond(m_device, /*explicit=*/false, /*isDirect=*/false, /*partOfConnection=*/false, m_taskStateListener, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING, E_TransactionLockBehavior.PASSES));
 			}
 
 			m_queue.fail(P_Task_Unbond.class, m_device);

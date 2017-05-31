@@ -22,25 +22,25 @@ public enum BleScanPower
 
     /**
      * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_OPPORTUNISTIC}.
-     * For phones lower than Lollipop, this will be used ignored.
+     * For phones lower than Lollipop, this will be ignored.
      */
     VERY_LOW_POWER(ScanSettings.SCAN_MODE_OPPORTUNISTIC),
 
     /**
      * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_LOW_POWER}.
-     * For phones lower than Lollipop, this will be used ignored.
+     * For phones lower than Lollipop, this will be ignored.
      */
     LOW_POWER(ScanSettings.SCAN_MODE_LOW_POWER),
 
     /**
      * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_BALANCED}.
-     * For phones lower than Lollipop, this will be used ignored.
+     * For phones lower than Lollipop, this will be ignored.
      */
     MEDIUM_POWER(ScanSettings.SCAN_MODE_BALANCED),
 
     /**
      * Lollipop-and-up-relevant-only, this is strict typing for {@link ScanSettings#SCAN_MODE_LOW_LATENCY}.
-     * For phones lower than Lollipop, this will be used ignored.
+     * For phones lower than Lollipop, this will be ignored.
      */
     HIGH_POWER(ScanSettings.SCAN_MODE_LOW_LATENCY);
 

@@ -3,8 +3,6 @@ package com.idevicesinc.sweetblue;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -24,8 +22,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import com.idevicesinc.sweetblue.tester.R;
-import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
 
@@ -113,7 +109,8 @@ public class MainActivity extends Activity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.logger = mLogger;
-        config.scanApi = BleScanApi.POST_LOLLIPOP;
+        config.maxDirectBondRetries = 5;
+        config.scanApi = BleScanApi.PRE_LOLLIPOP;
         config.runOnMainThread = false;
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
@@ -242,7 +239,14 @@ public class MainActivity extends Activity
         }
         else if (item.getItemId() == 1)
         {
-            mDevices.get(info.position).bond();
+            mDevices.get(info.position).bond(new BleDevice.BondListener()
+            {
+                @Override
+                public void onEvent(BondEvent e)
+                {
+                    Log.e("Bonding Event", e.toString());
+                }
+            });
             return true;
         }
         else if (item.getItemId() == 2)

@@ -2,6 +2,8 @@ package com.idevicesinc.sweetblue.utils;
 
 import android.util.Log;
 import com.idevicesinc.sweetblue.SweetLogger;
+import com.idevicesinc.sweetblue.BleManagerConfig;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -11,15 +13,17 @@ import java.util.List;
 /**
  * Logger class which prints SweetBlue logs to Android's logcat. This also tracks log statements. The internal list holds a specific amount of
  * statements. When that limit is reached, the oldest statement gets dropped from the list.
- * See {@link #DebugLogger()} and {@link #DebugLogger(int)}.
+ * See {@link #DebugLogger()}, {@link #DebugLogger(int)}, and {@link #DebugLogger(int, boolean)}.
  */
 public final class DebugLogger implements SweetLogger
 {
 
     public final static int DEFAULT_MAX_SIZE = 50;
 
-    private final int maxLogSize;
-    private final List<String> logList;
+    private final int m_maxLogSize;
+    private final List<String> m_logList;
+    private final boolean m_unitTest;
+    private final boolean m_printToLogCat;
 
 
     /**
@@ -35,43 +39,78 @@ public final class DebugLogger implements SweetLogger
      */
     public DebugLogger(int maxLogSize)
     {
-        this.maxLogSize = maxLogSize;
-        logList = Collections.synchronizedList(new ArrayList<String>(maxLogSize));
-    }
-
-
-    @Override public final void onLogEntry(int level, String tag, String msg)
-    {
-        Log.println(level, tag, msg);
-        if (logList.size() == maxLogSize)
-        {
-            logList.remove(0);
-        }
-        logList.add(Utils_String.makeString(new Date(), " ", level(level), "/", tag, ": ", msg));
+        this(maxLogSize, true);
     }
 
     /**
-     * Return a {@link List} with the last @param count of log statements. If there haven't been any yet, and empty list is returned.
+     * Constructor which allows you to set a custom max log count size, and whether or not you want the logger to print to log cat.
+     * A good case where you <i>wouldn't</i> want to print to log cat, is for production builds. This way you can still get access to
+     * SweetBlue logs (so if there's an issue, you can send those logs to us for debugging). Please be aware that in this case, you still
+     * need to have {@link BleManagerConfig#loggingEnabled} set to <code>true</code>.
+     */
+    public DebugLogger(int maxLogSize, boolean printToLogCat)
+    {
+        this(false, maxLogSize, printToLogCat);
+    }
+
+    DebugLogger(boolean unitTest, int maxLogSize)
+    {
+        this(unitTest, maxLogSize, true);
+    }
+
+    DebugLogger(boolean unitTest, int maxLogSize, boolean printToLogCat)
+    {
+        this.m_maxLogSize = maxLogSize;
+        m_logList = Collections.synchronizedList(new ArrayList<String>(maxLogSize));
+        this.m_unitTest = unitTest;
+        m_printToLogCat = printToLogCat;
+    }
+
+    @Override public final void onLogEntry(int level, String tag, String msg)
+    {
+        if (m_printToLogCat)
+        {
+            if (m_unitTest)
+            {
+                System.out.print(Utils_String.makeString(new Date(), " ", level(level), "/", tag, ": ", msg));
+            }
+            else
+            {
+                Log.println(level, tag, msg);
+            }
+        }
+        if (m_logList.size() == m_maxLogSize)
+        {
+            m_logList.remove(0);
+        }
+        m_logList.add(Utils_String.makeString(new Date(), " ", level(level), "/", tag, ": ", msg));
+    }
+
+    /**
+     * Return a {@link List} with the last count of log statements. If there haven't been any yet, an empty list is returned.
      */
     public final List<String> getLastLogs(int count)
     {
-        if (count > logList.size())
+        if (count > m_logList.size())
         {
-            count = logList.size();
+            count = m_logList.size();
         }
-        if (logList.size() == 0)
+        if (m_logList.size() == 0)
         {
             return new ArrayList<>(0);
         }
         else
         {
-            final ArrayList<String> list = new ArrayList<>(count);
+            final ArrayDeque<String> list = new ArrayDeque<>(count);
             count--;
-            for (int i = 0; i < count; i++)
+            int start = m_logList.size() - 1;
+            int end = start - count;
+            for (int i = start; i >= end; i--)
             {
-                list.add(logList.get(i));
+
+                list.push(m_logList.get(i));
             }
-            return list;
+            return new ArrayList<>(list);
         }
     }
 
@@ -80,9 +119,9 @@ public final class DebugLogger implements SweetLogger
      */
     public final String getLastLog()
     {
-        if (logList.size() > 0)
+        if (m_logList.size() > 0)
         {
-            return logList.get(logList.size() - 1);
+            return m_logList.get(m_logList.size() - 1);
         }
         return "";
     }
@@ -93,7 +132,7 @@ public final class DebugLogger implements SweetLogger
      */
     public final List<String> getLogList()
     {
-        return new ArrayList<>(logList);
+        return new ArrayList<>(m_logList);
     }
 
     /**

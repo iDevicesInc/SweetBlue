@@ -6,12 +6,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
 import com.idevicesinc.sweetblue.utils.State;
+
 
 final class P_DiskOptionsManager
 {
@@ -45,7 +44,7 @@ final class P_DiskOptionsManager
 	private final HashMap<String, String> m_inMemoryDb_name = new HashMap<String, String>();
 
 	private final HashMap[] m_inMemoryDbs = new HashMap[E_Namespace.values().length];
-	
+
 	public P_DiskOptionsManager(Context context)
 	{
 		m_context = context;
@@ -73,6 +72,7 @@ final class P_DiskOptionsManager
 		
 		return prefs;
 	}
+
 	
 	public void saveLastDisconnect(final String mac, final State.ChangeIntent changeIntent, final boolean hitDisk)
 	{

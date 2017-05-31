@@ -23,6 +23,8 @@ final class P_BondManager
 	static final Object[] OVERRIDE_EMPTY_STATES = {};
 	
 	private final BleDevice m_device;
+
+	private int m_bondRetries = 0;
 	
 	private BleDevice.BondListener m_listener;
 	
@@ -34,6 +36,11 @@ final class P_BondManager
 	public void setListener(BleDevice.BondListener listener_nullable)
 	{
 		m_listener = listener_nullable;
+	}
+
+	public void resetBondRetryCount()
+	{
+		m_bondRetries = 0;
 	}
 	
 	void onBondTaskStateChange(final PA_Task task, final PE_TaskState state)
@@ -57,6 +64,7 @@ final class P_BondManager
 				else
 				{
 					final int failReason = bondTask.getFailReason();
+					final boolean wasDirect = bondTask.isDirect();
 					final BondListener.Status status;
 					
 					if( state == PE_TaskState.TIMED_OUT )
@@ -72,7 +80,7 @@ final class P_BondManager
 						status = Status.FAILED_EVENTUALLY;
 					}
 					
-					this.onNativeBondFailed(intent, status, failReason);
+					this.onNativeBondFailed(intent, status, failReason, wasDirect);
 				}
 			}
 		}
@@ -145,14 +153,30 @@ final class P_BondManager
 		return overrideBondingStates;
 	}
 	
-	void onNativeBondFailed(final E_Intent intent, final BondListener.Status status, final int failReason)
-	{ 
+	void onNativeBondFailed(final E_Intent intent, final BondListener.Status status, final int failReason, final boolean wasDirect)
+	{
 		if( isNativelyBondingOrBonded() )
 		{
 			//--- DRK > This is for cases where the bond task has timed out,
 			//--- or otherwise failed without actually resetting internal bond state.
 			m_device.unbond_justAddTheTask();
 		}
+
+		// Determine if we need to retry the bond.
+		if (wasDirect && status != Status.TIMED_OUT)
+		{
+			int maxRetries = BleDeviceConfig.integer(m_device.conf_device().maxDirectBondRetries, m_device.conf_mngr().maxDirectBondRetries);
+			if (m_bondRetries < maxRetries && failReason != BleStatuses.UNBOND_REASON_AUTH_FAILED && failReason != BleStatuses.UNBOND_REASON_REPEATED_ATTEMPTS)
+			{
+				m_device.getManager().getLogger().w("Bond failed with failReason of " + m_device.getManager().getLogger().gattUnbondReason(failReason) + ". Retrying bond...");
+				m_bondRetries++;
+				m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, false, UNBONDED, true);
+				m_device.bond_private(true, m_listener);
+				return;
+			}
+		}
+		m_bondRetries = 0;
+
 		
 		if( m_device.is_internal(BleDeviceState.CONNECTED) || m_device.is_internal(BleDeviceState.CONNECTING) )
 		{
@@ -229,7 +253,7 @@ final class P_BondManager
 		
 		if( bond )
 		{
-			m_device.bond(please_nullable.listener());
+			m_device.bond_private(/*isDirect=*/false, please_nullable.listener());
 		}
 		else
 		{
