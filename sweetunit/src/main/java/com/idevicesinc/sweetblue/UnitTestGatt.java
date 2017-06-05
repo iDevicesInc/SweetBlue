@@ -157,7 +157,22 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public boolean readCharacteristic(BluetoothGattCharacteristic characteristic) {
+        int size;
+        if (characteristic.getValue() != null)
+        {
+            size = characteristic.getValue().length;
+        }
+        else
+        {
+            size = 10;
+        }
+        sendReadResponse(characteristic, UnitTestUtils.randomBytes(size));
         return true;
+    }
+
+    public void sendReadResponse(BluetoothGattCharacteristic characteristic, byte[] data)
+    {
+        UnitTestUtils.readSuccess(getBleDevice(), characteristic, data, 150);
     }
 
     @Override
@@ -167,12 +182,24 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+        sendWriteResponse(characteristic);
         return true;
+    }
+
+    public void sendWriteResponse(BluetoothGattCharacteristic characteristic)
+    {
+        UnitTestUtils.writeSuccess(getBleDevice(), characteristic, 150);
     }
 
     @Override public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)
     {
+        sendToggleNotifyResponse(characteristic, enable);
         return true;
+    }
+
+    public void sendToggleNotifyResponse(BluetoothGattCharacteristic characteristic, boolean enable)
+    {
+        // TODO - Implement this
     }
 
     @Override

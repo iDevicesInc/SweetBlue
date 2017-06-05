@@ -116,6 +116,16 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 						type = Type.WRITE_SIGNED;
 					}
 				}
+				//--- RB > Check the write type on the characteristic, in case this char has multiple write types
+				int writeType = char_native.getWriteType();
+				if (writeType == BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
+				{
+					type = Type.WRITE_NO_RESPONSE;
+				}
+				else if (writeType == BluetoothGattCharacteristic.WRITE_TYPE_SIGNED)
+				{
+					type = Type.WRITE_SIGNED;
+				}
 			}
 		}
 		
