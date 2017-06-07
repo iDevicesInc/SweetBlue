@@ -1,15 +1,16 @@
 package com.idevicesinc.sweetblue.toolbox;
 
-import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.Menu;
-import android.view.MotionEvent;
+import android.text.Html;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.Spinner;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
@@ -24,7 +25,7 @@ import com.idevicesinc.sweetblue.toolbox.view.ScanAdapter;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 
 import java.util.ArrayList;
-
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MainActivity extends BaseActivity
 {
@@ -40,7 +41,6 @@ public class MainActivity extends BaseActivity
     private ScanAdapter m_adapter;
     private ArrayList<BleDevice> m_deviceList;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -51,6 +51,7 @@ public class MainActivity extends BaseActivity
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
         m_config.connectFailRetryConnectingOverall = true;
+        //m_config.updateLoopCallback = UpdateManager.getInstance();
 
         m_manager = BleManager.get(this, m_config);
 
@@ -143,6 +144,8 @@ public class MainActivity extends BaseActivity
                 return super.onEvent(e);
             }
         });
+
+        setupNavDrawer();
     }
 
     @Override protected void onDestroy()
@@ -154,26 +157,121 @@ public class MainActivity extends BaseActivity
         super.onDestroy();
     }
 
-    private final class DeviceDiscovery implements BleManager.DiscoveryListener
+    private final class DeviceDiscovery implements BleManager.DiscoveryListener, UpdateManager.UpdateListener
     {
+        ConcurrentHashMap<String, DiscoveryEvent> m_rediscoverMap = new ConcurrentHashMap<>();
 
-        @Override public void onEvent(DiscoveryEvent e)
+        DeviceDiscovery()
         {
-            if (e.was(LifeCycle.DISCOVERED))
+            // Register for updates every 3 seconds
+            UpdateManager.getInstance().subscribe(this, 3.0);
+        }
+
+        @Override public void onEvent(DiscoveryEvent de)
+        {
+            if (!processEvent(de, false))
+                m_rediscoverMap.put(de.macAddress(), de);
+        }
+
+        @Override
+        public void onUpdate()
+        {
+            // Burn through the rediscovery events
+            Log.d("upd", "Processing " + m_rediscoverMap.size() + " events");
+            /*for (String key : m_rediscoverMap.keySet())
             {
-                m_deviceList.add(e.device());
-                m_adapter.notifyItemInserted(m_deviceList.size() - 1);
+                DiscoveryEvent de = m_rediscoverMap.get(key);
+                if (de == null)
+                    continue;
+
+                processEvent(de, true);
+                m_rediscoverMap.remove(key);
+            }*/
+            if (m_rediscoverMap.size() > 0)
+            {
+                m_rediscoverMap.clear();
+                m_adapter.notifyDataSetChanged();
             }
-            else if (e.was(LifeCycle.REDISCOVERED))
+            Log.d("upd", "Done processing events");
+        }
+
+        boolean processEvent(DiscoveryEvent de, boolean processRediscovers)
+        {
+            if (de.was(LifeCycle.DISCOVERED))
             {
+                m_deviceList.add(de.device());
+                m_adapter.notifyItemInserted(m_deviceList.size() - 1);
+
+                Log.d("evt", "Discover event for " + de.device().getMacAddress());
+            }
+            else if (de.was(LifeCycle.REDISCOVERED))
+            {
+                if (!processRediscovers)
+                    return false;
+
                 // If the device was rediscovered, then we have an updated rssi value, so inform the adapter that the data has changed
                 // for this device
-                int index = m_deviceList.indexOf(e.device());
+                int index = m_deviceList.indexOf(de.device());
                 if (index != -1)
                 {
                     m_adapter.notifyItemChanged(index);
                 }
+
+                Log.d("evt", "Rediscover event for " + de.device().getMacAddress());
             }
+
+            // True because we processed the event
+            return true;
         }
+    }
+
+    private void setupNavDrawer()
+    {
+        LinearLayout ll = null;
+
+        ll = find(R.id.websiteLinearLayout);
+        ll.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                launchWebsite();
+            }
+        });
+
+        ll = find(R.id.sendFeedbackLinearLayout);
+        ll.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                sendFeedbackEmail();
+            }
+        });
+    }
+
+    private void launchWebsite()
+    {
+        // Launch a web view
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.visite_website_url)));
+
+        startActivity(browserIntent);
+    }
+
+    private void sendFeedbackEmail()
+    {
+        final Intent emailIntent = new Intent(Intent.ACTION_SEND);
+
+        emailIntent.setData(Uri.parse("mailto:"));
+
+        emailIntent.setType("message/rfc822");
+
+        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] { getString(R.string.send_feedback_email_address) });
+
+        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.send_feedback_email_subject));
+
+        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.send_feedback_email_body));
+
+        startActivity(Intent.createChooser(emailIntent, getString(R.string.send_feedback_send_mail)));
     }
 }

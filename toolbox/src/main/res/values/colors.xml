@@ -3,4 +3,38 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#000000</color>
+
+    <!--Main app colors-->
+    <color name="transparent">#00000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="light_gray">#FFEBEBEB</color>
+    <color name="medium_light_gray">#FFC6C1BE</color>
+    <color name="gray">#FFA0A0A0</color>
+    <color name="medium_dark_gray">#FF666666</color>
+    <color name="dark_gray">#FF323232</color>
+    <color name="darkest_gray">#FF1E1E1E</color>
+    <color name="primary_background">#FF161616</color>
+    <color name="primary_background_with_transparency">#AF161616</color>
+    <color name="window_background">#FF0F0F0F</color>
+    <color name="light_blue">#FF5FA3D0</color>
+    <color name="medium_light_blue">#FF5E8097</color>
+    <color name="medium_blue">#FF3695F9</color>
+    <color name="medium_red">#FFAC162C</color>
+    <color name="purple">#FF644D78</color>
+    <color name="purple_with_transparency">#4C644D78</color>
+    <color name="weber_igrill_red">#FFD22E27</color>
+    <color name="battery_icon_red">#FFFF0000</color>
+    <color name="battery_icon_green">#FF00BA1F</color>
+
+    <!--Colors of the rainbow-->
+    <color name="red">#FFFF0000</color>
+    <color name="orange">#FFFFA500</color>
+    <color name="yellow">#FFFFFF00</color>
+    <color name="green">#FF008000</color>
+    <color name="blue">#FF0000FF</color>
+    <color name="indigo">#FF4B0082</color>
+    <color name="violet">#FFEE82EE</color>
+
+
 </resources>
