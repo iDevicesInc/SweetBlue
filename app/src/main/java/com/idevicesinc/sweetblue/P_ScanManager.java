@@ -6,10 +6,13 @@ import android.bluetooth.BluetoothDevice;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.compat.L_Util;
+import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
@@ -33,6 +36,8 @@ final class P_ScanManager
     private PostLollipopScanCallback m_postLollipopScanCallback;
     private AtomicReference<BleScanApi> mCurrentApi;
     private AtomicReference<BleScanPower> mCurrentPower;
+    private List<ScanInfo> m_scanEntries;
+
     private final int m_retryCountMax = 3;
     private boolean m_triedToStartScanAfterTurnedOn;
     private boolean m_doingInfiniteScan;
@@ -44,12 +49,15 @@ final class P_ScanManager
 
     private int m_mode;
 
+    private final Object entryLock = new Object();
+
 
     public P_ScanManager(BleManager mgr)
     {
         m_manager = mgr;
         mCurrentApi = new AtomicReference<>(mgr.m_config.scanApi);
         mCurrentPower = new AtomicReference<>(BleScanPower.AUTO);
+        m_scanEntries = new ArrayList<>();
         m_preLollipopScanCallback = new PreLollipopScanCallback();
         if(Utils.isLollipop())
         {
@@ -188,47 +196,62 @@ final class P_ScanManager
 
     final void postScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord)
     {
-        final Pointer<String> name = new Pointer<>(device != null ? device.getName() : null);
-        m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
+        final ScanInfo info = new ScanInfo(device, rssi, scanRecord);
+        synchronized (entryLock)
         {
-            @Override public void run()
-            {
-                final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
-                layer.setNativeDevice(device);
+            m_scanEntries.add(info);
+        }
 
-                //--- > RB This is here because it has been observed that on Samsung devices, the BluetoothDevice getName() method can return a different name
-                //          here, versus before posting this Runnable. This hack prevents bad discoveries from getting piped up to app-level.
-
-                final String name2 = device != null ? device.getName() : null;
-
-                if (name.value != null && name2 != null && !name.value.equals(name2))
-                {
-                    return;
-                }
-
-                m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
-
-                m_manager.onDiscoveredFromNativeStack(layer, rssi, scanRecord);
-            }
-        });
+//        final Pointer<String> name = new Pointer<>(device != null ? device.getName() : null);
+//        m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
+//        {
+//            @Override public void run()
+//            {
+//                final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
+//                layer.setNativeDevice(device);
+//
+//                //--- > RB This is here because it has been observed that on Samsung devices, the BluetoothDevice getName() method can return a different name
+//                //          here, versus before posting this Runnable. This hack prevents bad discoveries from getting piped up to app-level.
+//
+//                final String name2 = device != null ? device.getName() : null;
+//
+//                if (name.value != null && name2 != null && !name.value.equals(name2))
+//                {
+//                    return;
+//                }
+//
+//                m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
+//
+//                m_manager.onDiscoveredFromNativeStack(layer, rssi, scanRecord);
+//            }
+//        });
     }
 
     final void postBatchScanResult(final List<L_Util.ScanResult> devices)
     {
-        m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
+        for (L_Util.ScanResult res : devices)
         {
-            @Override public void run()
+            final ScanInfo info = new ScanInfo(res.getDevice(), res.getRssi(), res.getRecord());
+            synchronized (m_scanEntries)
             {
-                for (L_Util.ScanResult res : devices)
-                {
-                    P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
-                    layer.setNativeDevice(res.getDevice());
-                    m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
-
-                    m_manager.onDiscoveredFromNativeStack(layer, res.getRssi(), res.getRecord());
-                }
+                m_scanEntries.add(info);
             }
-        });
+        }
+        Log.w("SCANMANAGER", "Added " + devices.size() + " batch results");
+//        m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
+//        {
+//            @Override public void run()
+//            {
+//                for (L_Util.ScanResult res : devices)
+//                {
+//                    P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
+//                    layer.setNativeDevice(res.getDevice());
+//                    m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
+//
+//                    m_manager.onDiscoveredFromNativeStack(layer, res.getRssi(), res.getRecord());
+//                }
+//            }
+//        });
     }
 
     final int getCurrentMode()
@@ -244,6 +267,38 @@ final class P_ScanManager
     // Returns if the startScan boolean is true or not.
     final boolean update(double timeStep, long currentTime)
     {
+        if (m_manager.is(SCANNING))
+        {
+            if ( m_scanEntries.size() > 0 )
+            {
+                final List<ScanInfo> infos;
+                synchronized (entryLock)
+                {
+                    infos = new ArrayList<>(m_scanEntries);
+                    m_scanEntries.clear();
+                }
+                for (ScanInfo info : infos)
+                {
+                    final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
+                    layer.setNativeDevice(info.m_device);
+
+                    //--- > RB This is here because it has been observed that on Samsung devices, the BluetoothDevice getName() method can return a different name
+                    //          here, versus before posting this Runnable. This hack prevents bad discoveries from getting piped up to app-level.
+
+//                    final String name2 = info.m_device != null ? info.m_device.getName() : null;
+
+//                    if (name.value != null && name2 != null && !name.value.equals(name2))
+//                    {
+//                        return;
+//                    }
+
+                    m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
+
+                    m_manager.onDiscoveredFromNativeStack(layer, info.m_rssi, info.m_record);
+                }
+            }
+        }
+
         if( !m_manager.isAny(SCANNING, STARTING_SCAN) )
         {
             m_timeNotScanning += timeStep;
@@ -637,6 +692,20 @@ final class P_ScanManager
 
 
 
+
+    private final static class ScanInfo
+    {
+        private final BluetoothDevice m_device;
+        private final int m_rssi;
+        private final byte[] m_record;
+
+        ScanInfo(BluetoothDevice device, int rssi, byte[] record)
+        {
+            m_device = device;
+            m_rssi = rssi;
+            m_record = record;
+        }
+    }
 
     private final class PreLollipopScanCallback implements BluetoothAdapter.LeScanCallback
     {
