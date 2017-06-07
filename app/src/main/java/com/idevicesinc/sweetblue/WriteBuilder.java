@@ -1,9 +1,13 @@
 package com.idevicesinc.sweetblue;
 
+import android.util.Log;
+
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import java.io.UnsupportedEncodingException;
+import java.net.Proxy;
 import java.util.UUID;
 
 /**
@@ -15,9 +19,14 @@ import java.util.UUID;
 public final class WriteBuilder
 {
 
-    UUID serviceUUID = null;
-    UUID charUUID = null;
+    private final static String TAG = WriteBuilder.class.getSimpleName();
+
+    UUID serviceUuid = null;
+    UUID charUuid = null;
+    UUID descriptorUuid = null;
     FutureData data = null;
+    BleDevice.ReadWriteListener.Type writeType = BleDevice.ReadWriteListener.Type.WRITE;
+    BleDevice.ReadWriteListener readWriteListener = null;
     DescriptorFilter descriptorFilter = null;
     boolean bigEndian = true;
 
@@ -33,7 +42,7 @@ public final class WriteBuilder
     }
 
     /**
-     * Overload of {@link WriteBuilder#WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}. If @param isBigEndian is true,
+     * Overload of {@link WriteBuilder#WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}.
      *
      * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
      *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
@@ -44,7 +53,7 @@ public final class WriteBuilder
     }
 
     /**
-     * Overload of {@link  WriteBuilder#WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}. If @param isBigEndian is true,
+     * Overload of {@link  WriteBuilder#WriteBuilder(boolean, UUID, UUID, DescriptorFilter)}.
      *
      * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
      *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
@@ -79,8 +88,8 @@ public final class WriteBuilder
     public WriteBuilder(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID, DescriptorFilter descriptorFilter)
     {
         bigEndian = isBigEndian;
-        this.serviceUUID = serviceUUID;
-        charUUID = characteristicUUID;
+        this.serviceUuid = serviceUUID;
+        charUuid = characteristicUUID;
         this.descriptorFilter = descriptorFilter;
     }
 
@@ -90,7 +99,7 @@ public final class WriteBuilder
      */
     public final WriteBuilder setServiceUUID(UUID uuid)
     {
-        serviceUUID = uuid;
+        serviceUuid = uuid;
         return this;
     }
 
@@ -99,7 +108,64 @@ public final class WriteBuilder
      */
     public final WriteBuilder setCharacteristicUUID(UUID uuid)
     {
-        charUUID = uuid;
+        charUuid = uuid;
+        return this;
+    }
+
+    /**
+     * Set the descriptor UUID to write to (if writing to a descriptor).
+     */
+    public final WriteBuilder setDescriptorUUID(UUID uuid)
+    {
+        descriptorUuid = uuid;
+        return this;
+    }
+
+    /**
+     * Set the {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type} of the write to perform. This is here in the case that the
+     * characteristic you are writing to has more than one write type associated with it eg. {@link android.bluetooth.BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE},
+     * {@link android.bluetooth.BluetoothGattCharacteristic#WRITE_TYPE_SIGNED} along with standard writes.
+     */
+    @Advanced
+    public final WriteBuilder setWriteType(BleDevice.ReadWriteListener.Type writeType)
+    {
+        this.writeType = writeType;
+        if (writeType != BleDevice.ReadWriteListener.Type.WRITE && writeType != BleDevice.ReadWriteListener.Type.WRITE_NO_RESPONSE && writeType != BleDevice.ReadWriteListener.Type.WRITE_SIGNED)
+        {
+            Log.e(TAG, "Tried to set a write type of " + writeType.toString() + ". Only " + BleDevice.ReadWriteListener.Type.WRITE + ", " + BleDevice.ReadWriteListener.Type.WRITE_NO_RESPONSE +
+            ", or " + BleDevice.ReadWriteListener.Type.WRITE_SIGNED + " is allowed here. " + BleDevice.ReadWriteListener.Type.WRITE + " will be used by default.");
+        }
+        return this;
+    }
+
+    /**
+     * Set the {@link ReadWriteListener} for listening to the callback of the write you wish to perform.
+     */
+    public final WriteBuilder setReadWriteListener(final ReadWriteListener listener)
+    {
+        readWriteListener = new BleDevice.ReadWriteListener()
+        {
+            @Override
+            public void onEvent(ReadWriteEvent e)
+            {
+                if (listener != null)
+                {
+                    listener.onEvent(e);
+                }
+            }
+        };
+        return this;
+    }
+
+    /**
+     * Set the {@link com.idevicesinc.sweetblue.BleDevice.ReadWriteListener} for listening to the callback of the write.
+     *
+     * @deprecated This will be removed in v3. It's safe, and ok to use this method until then.
+     */
+    @Deprecated
+    public final WriteBuilder setReadWriteListener_dep(final BleDevice.ReadWriteListener listener)
+    {
+        readWriteListener = listener;
         return this;
     }
 
@@ -119,6 +185,15 @@ public final class WriteBuilder
     public final WriteBuilder setBytes(byte[] data)
     {
         this.data = new PresentData(data);
+        return this;
+    }
+
+    /**
+     * Set the {@link FutureData} to write.
+     */
+    public final WriteBuilder setData(FutureData data)
+    {
+        this.data = data;
         return this;
     }
 
@@ -203,9 +278,9 @@ public final class WriteBuilder
     {
         WriteBuilder wbuilder = new WriteBuilder();
         wbuilder.bigEndian = builder.bigEndian;
-        wbuilder.charUUID = builder.charUUID;
+        wbuilder.charUuid = builder.charUUID;
         wbuilder.data = builder.data;
-        wbuilder.serviceUUID = builder.serviceUUID;
+        wbuilder.serviceUuid = builder.serviceUUID;
         return wbuilder;
     }
 

@@ -50,6 +50,13 @@ public final class UnitTestUtils
         return Utils_String.bytesToMacAddress(add);
     }
 
+    public static byte[] randomBytes(int size)
+    {
+        byte[] bytes = new byte[size];
+        new Random().nextBytes(bytes);
+        return bytes;
+    }
+
     public static void sendBluetoothStateBroadcast(Context context, int previousState, int newState)
     {
         Intent intent = new Intent(BluetoothAdapter.ACTION_STATE_CHANGED);

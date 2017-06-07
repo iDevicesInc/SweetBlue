@@ -286,7 +286,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         @Override public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
         {
             UnitTestUtils.readSuccess(getBleDevice(), characteristic, characteristic.getValue());
-            return super.readCharacteristic(characteristic);
+            return true;
         }
     }
 

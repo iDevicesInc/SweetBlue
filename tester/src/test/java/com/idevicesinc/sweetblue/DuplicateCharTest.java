@@ -241,7 +241,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                     getBleDevice().m_listeners.onCharacteristicWrite(null, characteristic, BluetoothGatt.GATT_SUCCESS);
                 }
             }, 150);
-            return super.writeCharacteristic(characteristic);
+            return true;
         }
 
         @Override public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic)
@@ -254,7 +254,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                     getBleDevice().m_listeners.onCharacteristicRead(null, characteristic, BluetoothGatt.GATT_SUCCESS);
                 }
             }, 150);
-            return super.readCharacteristic(characteristic);
+            return true;
         }
     }
 
