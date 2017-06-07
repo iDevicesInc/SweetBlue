@@ -3,9 +3,9 @@ package com.idevicesinc.sweetblue.toolbox;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -40,6 +40,9 @@ public class MainActivity extends BaseActivity
     private RecyclerView m_deviceRecycler;
     private ScanAdapter m_adapter;
     private ArrayList<BleDevice> m_deviceList;
+
+    private DrawerLayout m_drawerLayout;
+    private View m_navDrawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -225,9 +228,57 @@ public class MainActivity extends BaseActivity
         }
     }
 
+    private void closeNavDrawer()
+    {
+        m_drawerLayout.closeDrawer(m_navDrawerLayout, true);
+    }
+
     private void setupNavDrawer()
     {
+        // Grab the drawer
+        m_drawerLayout = find(R.id.drawerLayout);
+        m_navDrawerLayout = find(R.id.navigationDrawer);
+
         LinearLayout ll = null;
+
+        ll = find(R.id.loggerLinearLayout);
+        ll.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                closeNavDrawer();
+
+                Intent intent = new Intent(MainActivity.this, LoggerActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        ll = find(R.id.deviceInformationLinearLayout);
+        ll.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                closeNavDrawer();
+
+                Intent intent = new Intent(MainActivity.this, DeviceInformationActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        ll = find(R.id.settingsLinearLayout);
+        ll.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                closeNavDrawer();
+
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            }
+        });
 
         ll = find(R.id.websiteLinearLayout);
         ll.setOnClickListener(new View.OnClickListener()
@@ -235,6 +286,8 @@ public class MainActivity extends BaseActivity
             @Override
             public void onClick(View v)
             {
+                closeNavDrawer();
+
                 launchWebsite();
             }
         });
@@ -245,6 +298,8 @@ public class MainActivity extends BaseActivity
             @Override
             public void onClick(View v)
             {
+                closeNavDrawer();
+
                 sendFeedbackEmail();
             }
         });

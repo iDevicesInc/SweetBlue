@@ -23,6 +23,15 @@
         <item>@string/unbond</item>
     </array>
 
+    <!-- Logger -->
+    <string name="logger_title">Logger</string>
+
+    <!-- Device Information -->
+    <string name="device_information_title">Device Information</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+
     <!-- Nav drawer -->
     <string name="nav_drawer_logger">Logger</string>
     <string name="nav_drawer_device_information">Device Information</string>
