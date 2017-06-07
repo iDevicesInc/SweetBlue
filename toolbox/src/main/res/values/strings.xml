@@ -22,4 +22,30 @@
         <item>@string/bond</item>
         <item>@string/unbond</item>
     </array>
+
+    <!-- Logger -->
+    <string name="logger_title">Logger</string>
+
+    <!-- Device Information -->
+    <string name="device_information_title">Device Information</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+
+    <!-- Nav drawer -->
+    <string name="nav_drawer_logger">Logger</string>
+    <string name="nav_drawer_device_information">Device Information</string>
+    <string name="nav_drawer_settings">Settings</string>
+    <string name="nav_drawer_website">Website</string>
+    <string name="nav_drawer_send_feedback">Send Feedback</string>
+
+    <!-- Website -->
+    <string name="visite_website_url">http://idevicesinc.com</string>
+
+    <!-- Feedback -->
+    <string name="send_feedback_email_address">ryanbis@idevicesinc.com</string>
+    <string name="send_feedback_email_subject">Please take my money!</string>
+    <string name="send_feedback_email_body">Sweetblue toolbox feedback.\n\nGive me sweet blue!  Do it now!</string>
+    <string name="send_feedback_send_mail">Send Mail</string>
+
 </resources>

@@ -17,6 +17,21 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".LoggerActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="MainActivity" />
+            </activity>
+        <activity android:name=".DeviceInformationActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="MainActivity" />
+        </activity>
+        <activity android:name=".SettingsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="MainActivity" />
+        </activity>
         <activity android:name=".BleServicesActivity" />
         <activity android:name=".BleCharacteristicsActivity" />
     </application>
