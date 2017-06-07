@@ -201,30 +201,6 @@ final class P_ScanManager
         {
             m_scanEntries.add(info);
         }
-
-//        final Pointer<String> name = new Pointer<>(device != null ? device.getName() : null);
-//        m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
-//        {
-//            @Override public void run()
-//            {
-//                final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
-//                layer.setNativeDevice(device);
-//
-//                //--- > RB This is here because it has been observed that on Samsung devices, the BluetoothDevice getName() method can return a different name
-//                //          here, versus before posting this Runnable. This hack prevents bad discoveries from getting piped up to app-level.
-//
-//                final String name2 = device != null ? device.getName() : null;
-//
-//                if (name.value != null && name2 != null && !name.value.equals(name2))
-//                {
-//                    return;
-//                }
-//
-//                m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
-//
-//                m_manager.onDiscoveredFromNativeStack(layer, rssi, scanRecord);
-//            }
-//        });
     }
 
     final void postBatchScanResult(final List<L_Util.ScanResult> devices)
@@ -238,20 +214,6 @@ final class P_ScanManager
             }
         }
         Log.w("SCANMANAGER", "Added " + devices.size() + " batch results");
-//        m_manager.getPostManager().runOrPostToUpdateThread(new Runnable()
-//        {
-//            @Override public void run()
-//            {
-//                for (L_Util.ScanResult res : devices)
-//                {
-//                    P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
-//                    layer.setNativeDevice(res.getDevice());
-//                    m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
-//
-//                    m_manager.onDiscoveredFromNativeStack(layer, res.getRssi(), res.getRecord());
-//                }
-//            }
-//        });
     }
 
     final int getCurrentMode()
