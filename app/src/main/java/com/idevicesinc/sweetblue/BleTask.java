@@ -129,7 +129,12 @@ public enum BleTask
 	/**
 	 * Associated with {@link BleServer#startAdvertising(BleAdvertisingPacket)}, {@link BleServer#startAdvertising(BleAdvertisingPacket, BleServer.AdvertisingListener)}
 	 */
-	START_ADVERTISING;
+	START_ADVERTISING,
+
+	/**
+	 * This is used to add a delay between tasks. Right now, this is not currently used.
+	 */
+	DELAY;
 
 	/**
 	 * Returns whether <code>this</code> is associated with a {@link BleDevice}.

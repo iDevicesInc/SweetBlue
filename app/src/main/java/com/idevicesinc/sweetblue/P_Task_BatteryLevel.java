@@ -37,7 +37,7 @@ final class P_Task_BatteryLevel extends PA_Task_ReadOrWrite
     @Override protected BleDevice.ReadWriteListener.ReadWriteEvent newReadWriteEvent(BleDevice.ReadWriteListener.Status status, int gattStatus, BleDevice.ReadWriteListener.Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
     {
         final UUID actualDescUuid = getActualDescUuid(descUuid);
-        return new BleDevice.ReadWriteListener.ReadWriteEvent(getDevice(), serviceUuid, charUuid, actualDescUuid, BleDevice.ReadWriteListener.Type.READ, target, BleDevice.EMPTY_BYTE_ARRAY, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), true);
+        return new BleDevice.ReadWriteListener.ReadWriteEvent(getDevice(), serviceUuid, charUuid, actualDescUuid, m_descriptorFilter, BleDevice.ReadWriteListener.Type.READ, target, BleDevice.EMPTY_BYTE_ARRAY, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), true);
     }
 
     @Override protected BleTask getTaskType()

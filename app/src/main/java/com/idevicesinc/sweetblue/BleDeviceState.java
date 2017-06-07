@@ -55,6 +55,14 @@ public enum BleDeviceState implements State
 	 */
 	@Advanced
 	RECONNECTING_SHORT_TERM,
+
+	/**
+	 * This state indicates that a connect has failed, but SweetBlue will be retrying the connection again. This is useful for determining if you need
+	 * to retry connecting app-side or not. In this case, the device will be {@link #DISCONNECTED}, and look like it's not doing anything, unless it's
+	 * also in this state. This is not to be confused with {@link #RECONNECTING_SHORT_TERM} or {@link #RECONNECTING_LONG_TERM}, which only go into those
+	 * states once the {@link BleDevice} gets into the {@link #INITIALIZED} state.
+	 */
+	RETRYING_BLE_CONNECTION,
 	
 	/**
 	 * The device will always be in this state unless it becomes {@link #UNDISCOVERED}.

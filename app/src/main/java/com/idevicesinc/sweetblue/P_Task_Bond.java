@@ -1,8 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import android.annotation.SuppressLint;
-
 import com.idevicesinc.sweetblue.utils.Utils;
+
 
 final class P_Task_Bond extends PA_Task_RequiresBleOn
 {
@@ -20,11 +20,12 @@ final class P_Task_Bond extends PA_Task_RequiresBleOn
     private final PE_TaskPriority m_priority;
     private final boolean m_explicit;
     private final boolean m_partOfConnection;
+    private final boolean m_direct;
     private final E_TransactionLockBehavior m_lockBehavior;
 
     private int m_failReason = BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE;
 
-    public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener, PE_TaskPriority priority, E_TransactionLockBehavior lockBehavior)
+    public P_Task_Bond(BleDevice device, boolean explicit, boolean direct, boolean partOfConnection, I_StateListener listener, PE_TaskPriority priority, E_TransactionLockBehavior lockBehavior)
     {
         super(device, listener);
 
@@ -32,20 +33,26 @@ final class P_Task_Bond extends PA_Task_RequiresBleOn
         m_explicit = explicit;
         m_partOfConnection = partOfConnection;
         m_lockBehavior = lockBehavior;
+        m_direct = direct;
     }
 
-    public P_Task_Bond(BleDevice device, boolean explicit, boolean partOfConnection, I_StateListener listener, E_TransactionLockBehavior lockBehavior)
+    public P_Task_Bond(BleDevice device, boolean explicit, boolean direct, boolean partOfConnection, I_StateListener listener, E_TransactionLockBehavior lockBehavior)
     {
-        this(device, explicit, partOfConnection, listener, null, lockBehavior);
+        this(device, explicit, direct, partOfConnection, listener, null, lockBehavior);
     }
 
-    @Override public boolean isExplicit()
+    public final boolean isDirect()
+    {
+        return m_direct;
+    }
+
+    @Override public final boolean isExplicit()
     {
         return m_explicit;
     }
 
     @SuppressLint("NewApi")
-    @Override public void execute()
+    @Override public final void execute()
     {
         //--- DRK > Commenting out this block for now because Android can lie and tell us we're bonded when we're actually not,
         //---		so therefore we always try to force a bond regardless. Not sure if that actually forces
@@ -125,7 +132,7 @@ final class P_Task_Bond extends PA_Task_RequiresBleOn
         }
     }
 
-    @Override public boolean isMoreImportantThan(PA_Task task)
+    @Override public final boolean isMoreImportantThan(PA_Task task)
     {
         if (task instanceof P_Task_TxnLock)
         {
@@ -143,24 +150,29 @@ final class P_Task_Bond extends PA_Task_RequiresBleOn
         return super.isMoreImportantThan(task);
     }
 
-    public void onNativeFail(int failReason)
+    public final void onNativeSuccess()
+    {
+        succeed();
+    }
+
+    public final void onNativeFail(int failReason)
     {
         m_failReason = failReason;
 
         fail();
     }
 
-    public int getFailReason()
+    public final int getFailReason()
     {
         return m_failReason;
     }
 
-    @Override public PE_TaskPriority getPriority()
+    @Override public final PE_TaskPriority getPriority()
     {
         return m_priority;
     }
 
-    @Override protected boolean isSoftlyCancellableBy(PA_Task task)
+    @Override protected final boolean isSoftlyCancellableBy(PA_Task task)
     {
         if (this.getDevice().equals(task.getDevice()))
         {
@@ -180,7 +192,7 @@ final class P_Task_Bond extends PA_Task_RequiresBleOn
         return super.isSoftlyCancellableBy(task);
     }
 
-    @Override protected BleTask getTaskType()
+    @Override protected final BleTask getTaskType()
     {
         return BleTask.BOND;
     }

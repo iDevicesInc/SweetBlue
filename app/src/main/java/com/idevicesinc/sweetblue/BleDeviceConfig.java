@@ -12,6 +12,7 @@ import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.BleManager.DiscoveryListener.LifeCycle;
+import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -85,6 +86,15 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static final int DEFAULT_GATT_REFRESH_DELAY		= 500;
 
 	/**
+	 * The default value of {@link #maxDirectBondRetries}. Bond retries only apply when calling {@link BleDevice#bond()}, or {@link BleDevice#bond(BondListener)}.
+	 * Like connecting, sometimes in order to get bonding to work, you just have to try multiple times. If you require bonding for the device you're connecting
+	 * to, it's recommended to use one of the bond methods.
+	 */
+	public static final int DEFAULT_MAX_DIRECT_BOND_RETRIES 	= 3;
+
+
+
+	/**
 	 * Default is <code>false</code>. If the bluetooth device you are trying to connect to requires a pairing dialog to show up, you should
 	 * set this to <code>true</code>. Android will do one of two things when you try to pair to the device. It will either A) show the pairing dialog, or
 	 * B) show a notification in the notification area. When B happens, most people probably won't notice it, and think your app can't connect to the device.
@@ -116,6 +126,15 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Boolean tryBondingWhileDisconnected_manageOnDisk		= true;
+
+	/**
+	 * Default is <code>false</code> - Controls whether SweetBlue will automatically bond when connecting to a peripheral (rather than letting Android do it itself).
+	 * If the device is already bonded, this will do nothing. In most cases, it's best to bond <i>before</i> connecting, but there are rare devices which work better
+	 * to bond <i>after</i> becoming connected. To adjust this behavior, adjust {@link #tryBondingWhileDisconnected} (if it's <code>true</code>, then the bond will happen
+	 * before connecting, otherwise it will happen after).
+	 */
+	@Advanced
+	public boolean alwaysBondOnConnect							= false;
 
 	/**
 	 * Default is <code>true</code> - controls whether changes to a device's name through {@link BleDevice#setName(String)} are remembered on disk through
@@ -279,6 +298,18 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
 	public Boolean useLeTransportForBonding						= false;
+
+	/**
+	 * Default is {@link #DEFAULT_MAX_DIRECT_BOND_RETRIES} - This setting only applies if you tried to bond a device using {@link BleDevice#bond()},
+	 * or {@link BleDevice#bond(BondListener)}. It's recommended to use one of those 2 methods if the device you are trying to connect to requires
+	 * bonding. This setting allows you to adjust the amount of times SweetBlue will retry before giving up.
+	 *
+	 * SweetBlue will also NOT retry if the failure code that comes back is {@link BleStatuses#UNBOND_REASON_AUTH_FAILED},
+	 * {@link BleStatuses#UNBOND_REASON_REPEATED_ATTEMPTS}, or if the {@link com.idevicesinc.sweetblue.BleDevice.BondListener.Status} is
+	 * {@link com.idevicesinc.sweetblue.BleDevice.BondListener.Status#TIMED_OUT}.
+	 */
+	@Advanced
+	public int maxDirectBondRetries								= DEFAULT_MAX_DIRECT_BOND_RETRIES;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
@@ -316,7 +347,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Interval rssiAutoPollRate							= Interval.secs(DEFAULT_RSSI_AUTO_POLL_RATE);
-	
+
 	/**
 	 * Default is {@link #DEFAULT_RUNNING_AVERAGE_N} - The number of historical write times that the library should keep track of when calculating average time.
 	 * 

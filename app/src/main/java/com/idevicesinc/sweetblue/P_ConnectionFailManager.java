@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTED;
+import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTING;
+import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTING_OVERALL;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 
 import java.util.ArrayList;
@@ -25,6 +27,9 @@ final class P_ConnectionFailManager
 	private Long m_timeOfLastConnectFail = null;
 	private Integer m_pendingConnectionRetry = null;
 
+	// This boolean is here to prevent trying to reconnect when we've fallen out of reconnecting long term
+	private boolean m_triedReconnectingLongTerm = false;
+
 	private final ArrayList<ConnectionFailEvent> m_history = new ArrayList<ConnectionFailEvent>();
 	
 	P_ConnectionFailManager(BleDevice device)
@@ -32,6 +37,11 @@ final class P_ConnectionFailManager
 		m_device = device;
 		
 		resetFailCount();
+	}
+
+	void onLongTermTimedOut()
+	{
+		m_triedReconnectingLongTerm = true;
 	}
 	
 	void onExplicitDisconnect()
@@ -76,6 +86,7 @@ final class P_ConnectionFailManager
 				m_highestStateReached_total = null;
 				m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
 				m_history.clear();
+				m_triedReconnectingLongTerm = false;
 			}
 		});
 	}
@@ -160,6 +171,7 @@ final class P_ConnectionFailManager
 				{
 					//--- DRK > State change may be redundant.
 					m_device.stateTracker_main().update(E_Intent.UNINTENTIONAL, gattStatus, RECONNECTING_LONG_TERM, false);
+					m_triedReconnectingLongTerm = true;
 				}
 				else if( m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) )
 				{
@@ -168,9 +180,15 @@ final class P_ConnectionFailManager
 				}
 			}
 		}
-		
-		if( retryChoice__PE_Please != Please.PE_Please_NULL && Please.isRetry(retryChoice__PE_Please) && !m_device.is(CONNECTED))
+
+		final boolean retryConnectOverall = BleDeviceConfig.bool(m_device.conf_device().connectFailRetryConnectingOverall, m_device.conf_mngr().connectFailRetryConnectingOverall);
+
+		if( !m_triedReconnectingLongTerm && retryChoice__PE_Please != Please.PE_Please_NULL && Please.isRetry(retryChoice__PE_Please) && !m_device.is(CONNECTED))
 		{
+			if (m_device.isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+			{
+				m_device.setStateToDisconnected(isAttemptingReconnect_longTerm, true, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
+			}
 			m_device.attemptReconnect();
 		}
 		else
@@ -182,6 +200,11 @@ final class P_ConnectionFailManager
 			else
 			{
 				m_pendingConnectionRetry = retryChoice__PE_Please;
+			}
+			if (m_device.isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+			{
+				boolean isretryConnectOverall = Please.isRetry(retryChoice__PE_Please) && retryConnectOverall;
+				m_device.setStateToDisconnected(isAttemptingReconnect_longTerm, isretryConnectOverall, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
 			}
 		}
 

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
+import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -135,14 +136,21 @@ abstract class PA_ServiceManager
 
 			if( char_jth.getUuid().equals(charUuid) )
 			{
-				final BluetoothGattDescriptor desc = char_jth.getDescriptor(filter.descriptorUuid());
-				if (desc != null)
+				if (filter == null)
 				{
-					final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(service, char_jth, desc, new PresentData(desc.getValue()));
-					final DescriptorFilter.Please please = filter.onEvent(event);
-					if (please.isAccepted())
+					return char_jth;
+				}
+				else
+				{
+					final BluetoothGattDescriptor desc = char_jth.getDescriptor(filter.descriptorUuid());
+					if (desc != null)
 					{
-						return char_jth;
+						final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(service, char_jth, desc, new PresentData(desc.getValue()));
+						final DescriptorFilter.Please please = filter.onEvent(event);
+						if (please.isAccepted())
+						{
+							return char_jth;
+						}
 					}
 				}
 			}

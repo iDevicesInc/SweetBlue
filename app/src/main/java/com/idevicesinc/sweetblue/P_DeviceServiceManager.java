@@ -22,27 +22,27 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		m_device = device;
 	}
 	
-	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetEvent(Type type, Target target, byte[] data, UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid)
+	private BleDevice.ReadWriteListener.ReadWriteEvent newNoMatchingTargetEvent(Type type, Target target, byte[] data, UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, DescriptorFilter descriptorFilter)
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
-		return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, type, target, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0, /*solicited=*/true);
+		return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, descriptorFilter, type, target, data, Status.NO_MATCHING_TARGET, gattStatus, 0.0, 0.0, /*solicited=*/true);
 	}
 	
-	final BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, FutureData futureData, BleDevice.ReadWriteListener.Type type, final Target target)
+	final BleDevice.ReadWriteListener.ReadWriteEvent getEarlyOutEvent(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, DescriptorFilter descriptorFilter, FutureData futureData, BleDevice.ReadWriteListener.Type type, final Target target)
 	{
 		final int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 		
 		if( m_device.isNull() )
 		{
-			return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, type, target, futureData.getData(), Status.NULL_DEVICE, gattStatus, 0.0, 0.0, /*solicited=*/true);
+			return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, descriptorFilter, type, target, futureData.getData(), Status.NULL_DEVICE, gattStatus, 0.0, 0.0, /*solicited=*/true);
 		}
 		
 		if( false == m_device.is(BleDeviceState.CONNECTED) )
 		{
 			if( type != BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION && type != BleDevice.ReadWriteListener.Type.DISABLING_NOTIFICATION)
 			{				
-				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, type, target, futureData.getData(), Status.NOT_CONNECTED, gattStatus, 0.0, 0.0, /*solicited=*/true);
+				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, descriptorUuid, descriptorFilter, type, target, futureData.getData(), Status.NOT_CONNECTED, gattStatus, 0.0, 0.0, /*solicited=*/true);
 			}
 			else
 			{
@@ -57,7 +57,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		
 		if( target == Target.CHARACTERISTIC && characteristic == null || target == Target.DESCRIPTOR && descriptor == null)
 		{
-			return newNoMatchingTargetEvent(type, target, futureData.getData(), serviceUuid, characteristicUuid, descriptorUuid);
+			return newNoMatchingTargetEvent(type, target, futureData.getData(), serviceUuid, characteristicUuid, descriptorUuid, descriptorFilter);
 		}
 
 		if( target == Target.CHARACTERISTIC )
@@ -69,7 +69,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		{
 			if( futureData == null )
 			{
-				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, (byte[]) null, Status.NULL_DATA, gattStatus, 0.0, 0.0, /*solicited=*/true);
+				return new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, descriptorFilter, type, target, (byte[]) null, Status.NULL_DATA, gattStatus, 0.0, 0.0, /*solicited=*/true);
 			}
 		}
 
@@ -80,7 +80,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 			if( (characteristic.getProperties() & property) == 0x0 )
 			{
 				//TODO: Use correct gatt status even though we never reach gatt layer?
-				ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, type, target, futureData.getData(), Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0, /*solicited=*/true);
+				ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, null, descriptorFilter, type, target, futureData.getData(), Status.OPERATION_NOT_SUPPORTED, gattStatus, 0.0, 0.0, /*solicited=*/true);
 
 				return result;
 			}
@@ -115,6 +115,16 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 					{
 						type = Type.WRITE_SIGNED;
 					}
+				}
+				//--- RB > Check the write type on the characteristic, in case this char has multiple write types
+				int writeType = char_native.getWriteType();
+				if (writeType == BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
+				{
+					type = Type.WRITE_NO_RESPONSE;
+				}
+				else if (writeType == BluetoothGattCharacteristic.WRITE_TYPE_SIGNED)
+				{
+					type = Type.WRITE_SIGNED;
 				}
 			}
 		}

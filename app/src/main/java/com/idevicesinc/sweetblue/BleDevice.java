@@ -76,6 +76,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.INITIALIZING;
 import static com.idevicesinc.sweetblue.BleDeviceState.PERFORMING_OTA;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_SHORT_TERM;
+import static com.idevicesinc.sweetblue.BleDeviceState.RETRYING_BLE_CONNECTION;
 import static com.idevicesinc.sweetblue.BleDeviceState.SERVICES_DISCOVERED;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNDISCOVERED;
@@ -678,7 +679,19 @@ public final class BleDevice extends BleNode
 
             private final BleConnectionPriority m_connectionPriority;
 
-            ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
+
+            /**
+             * This is the {@link DescriptorFilter} that was used for this read/write operation, if any.
+             */
+            public final @Nullable(Prevalence.NORMAL) DescriptorFilter descriptorFilter()
+            {
+                return m_descriptorFilter;
+            }
+
+            private final DescriptorFilter m_descriptorFilter;
+
+
+            ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, DescriptorFilter descFilter, Type type, Target target, byte[] data, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
             {
                 this.m_device = device;
                 this.m_serviceUuid = serviceUuid != null ? serviceUuid : NON_APPLICABLE_UUID;
@@ -695,7 +708,9 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
+                this.m_descriptorFilter = descFilter;
             }
+
 
             ReadWriteEvent(BleDevice device, Type type, int rssi, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
             {
@@ -714,6 +729,7 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
+                this.m_descriptorFilter = null;
             }
 
             ReadWriteEvent(BleDevice device, int mtu, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
@@ -733,6 +749,7 @@ public final class BleDevice extends BleNode
                 this.m_mtu = status == Status.SUCCESS ? mtu : device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
+                this.m_descriptorFilter = null;
             }
 
             ReadWriteEvent(BleDevice device, BleConnectionPriority connectionPriority, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
@@ -752,11 +769,12 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = connectionPriority;
+                this.m_descriptorFilter = null;
             }
 
             static ReadWriteEvent NULL(BleDevice device)
             {
-                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
+                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, null, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
             }
 
             /**
@@ -774,7 +792,7 @@ public final class BleDevice extends BleNode
              */
             public final @Nullable(Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
             {
-                return device().getNativeCharacteristic(serviceUuid(), charUuid());
+                return device().getNativeCharacteristic(serviceUuid(), charUuid(), descriptorFilter());
             }
 
             /**
@@ -3268,6 +3286,11 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond(BondListener listener)
     {
+        return bond_private(/*isDirect=*/true, listener);
+    }
+
+    final BondEvent bond_private(boolean isDirect, BondListener listener)
+    {
         if (listener != null)
         {
             setListener_Bond(listener);
@@ -3287,7 +3310,9 @@ public final class BleDevice extends BleNode
             return event;
         }
 
-        bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
+        m_bondMngr.resetBondRetryCount();
+
+        bond_justAddTheTask(E_TransactionLockBehavior.PASSES, isDirect);
 
         stateTracker_updateBoth(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, true, UNBONDED, false);
 
@@ -3683,7 +3708,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, null, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
     }
 
     /**
@@ -3701,7 +3726,15 @@ public final class BleDevice extends BleNode
      */
     public final void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, null, Interval.secs(interval), listener, /*trackChanges=*/false, /*usingNotify=*/false);
+    }
+
+    /**
+     * Overload of {@link #startPoll(UUID, UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final void startPoll(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Interval interval, final ReadWriteListener listener)
+    {
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, descriptorFilter, Interval.secs(interval), listener, false, false);
     }
 
     /**
@@ -3820,7 +3853,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, null, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
     }
 
     /**
@@ -3828,7 +3861,15 @@ public final class BleDevice extends BleNode
      */
     public final void startChangeTrackingPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, null, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
+    }
+
+    /**
+     * Overload of {@link #startChangeTrackingPoll(UUID, UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final void startChangeTrackingPoll(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Interval interval, final ReadWriteListener listener)
+    {
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, descriptorFilter, Interval.secs(interval), listener, /*trackChanges=*/true, /*usingNotify=*/false);
     }
 
     /**
@@ -3842,7 +3883,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        stopPoll_private(serviceUuid, characteristicUuid, null, listener);
+        stopPoll_private(serviceUuid, characteristicUuid, null, null, listener);
     }
 
     /**
@@ -3860,7 +3901,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, listener);
+        stopPoll_private(serviceUuid, characteristicUuid, null, interval != null ? interval.secs() : null, listener);
     }
 
     /**
@@ -3870,7 +3911,7 @@ public final class BleDevice extends BleNode
     {
         final UUID serviceUuid = null;
 
-        stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, null);
+        stopPoll_private(serviceUuid, characteristicUuid, null, interval != null ? interval.secs() : null, null);
     }
 
     /**
@@ -3878,7 +3919,7 @@ public final class BleDevice extends BleNode
      */
     public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
-        stopPoll_private(serviceUuid, characteristicUuid, null, listener);
+        stopPoll_private(serviceUuid, characteristicUuid, null, null, listener);
     }
 
     /**
@@ -3894,7 +3935,15 @@ public final class BleDevice extends BleNode
      */
     public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval, final ReadWriteListener listener)
     {
-        stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, listener);
+        stopPoll_private(serviceUuid, characteristicUuid, null, interval != null ? interval.secs() : null, listener);
+    }
+
+    /**
+     * Overload of {@link #stopPoll(UUID, UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     */
+    public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Interval interval, final ReadWriteListener listener)
+    {
+        stopPoll_private(serviceUuid, characteristicUuid, descriptorFilter, interval != null ? interval.secs() : null, listener);
     }
 
     /**
@@ -3902,7 +3951,7 @@ public final class BleDevice extends BleNode
      */
     public final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, final Interval interval)
     {
-        stopPoll_private(serviceUuid, characteristicUuid, interval != null ? interval.secs() : null, null);
+        stopPoll_private(serviceUuid, characteristicUuid, null, interval != null ? interval.secs() : null, null);
     }
 
     /**
@@ -3999,7 +4048,7 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(com.idevicesinc.sweetblue.WriteBuilder writeBuilder)
     {
-        return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data, writeBuilder.descriptorFilter);
+        return write_internal(writeBuilder);
     }
 
     /**
@@ -4010,7 +4059,7 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(com.idevicesinc.sweetblue.WriteBuilder writeBuilder, ReadWriteListener listener)
     {
-        return write(writeBuilder.serviceUUID, writeBuilder.charUUID, writeBuilder.data, listener);
+        return write_internal(writeBuilder.setReadWriteListener_dep(listener));
     }
 
     /**
@@ -4152,7 +4201,9 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
     {
-        return write_internal(serviceUuid, characteristicUuid, Uuids.INVALID, futureData, null, listener);
+        final com.idevicesinc.sweetblue.WriteBuilder write = new com.idevicesinc.sweetblue.WriteBuilder(serviceUuid, characteristicUuid)
+                .setData(futureData).setReadWriteListener_dep(listener);
+        return write_internal(write);
     }
 
     /**
@@ -4160,7 +4211,9 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
-        return write_internal(serviceUuid, characteristicUuid, Uuids.INVALID, futureData, descriptorFilter, listener);
+        final com.idevicesinc.sweetblue.WriteBuilder builder = new com.idevicesinc.sweetblue.WriteBuilder(serviceUuid, characteristicUuid)
+                .setDescriptorFilter(descriptorFilter).setReadWriteListener_dep(listener).setData(futureData);
+        return write_internal(builder);
     }
 
     /**
@@ -4258,7 +4311,9 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
-        return write_internal(serviceUuid, characteristicUuid, descriptorUuid, futureData, null, listener);
+        final com.idevicesinc.sweetblue.WriteBuilder builder = new com.idevicesinc.sweetblue.WriteBuilder(serviceUuid, characteristicUuid);
+        builder.setDescriptorUUID(descriptorUuid).setData(futureData).setReadWriteListener_dep(listener);
+        return write_internal(builder);
     }
 
     /**
@@ -4338,7 +4393,7 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
 
         if (earlyOutResult != null)
         {
@@ -4391,7 +4446,7 @@ public final class BleDevice extends BleNode
         }
         else
         {
-            final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
+            final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
 
             if (earlyOutResult != null)
             {
@@ -4517,7 +4572,7 @@ public final class BleDevice extends BleNode
             }
             else
             {
-                final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
+                final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
 
                 if (earlyOutResult != null)
                 {
@@ -4977,7 +5032,7 @@ public final class BleDevice extends BleNode
     @Advanced
     public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -5179,7 +5234,7 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -5224,7 +5279,7 @@ public final class BleDevice extends BleNode
         {
             if (listener != null && isConnected)
             {
-                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, serviceUuid, characteristicUuid);
+                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, serviceUuid, characteristicUuid, descriptorFilter);
 
                 invokeReadWriteCallback(listener, result);
             }
@@ -5243,10 +5298,12 @@ public final class BleDevice extends BleNode
             result = NULL_READWRITE_EVENT();
         }
 
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
+        m_pollMngr.startPoll(serviceUuid, characteristicUuid, descriptorFilter, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
 
         return result;
     }
+
+
 
     /**
      * Disables all notifications enabled by {@link #enableNotify(UUID, ReadWriteListener)} or
@@ -5555,6 +5612,11 @@ public final class BleDevice extends BleNode
         return m_pollMngr;
     }
 
+    final void onLongTermReconnectTimeOut()
+    {
+        m_connectionFailMngr.onLongTermTimedOut();
+    }
+
     final void onNewlyDiscovered(final P_NativeDeviceLayer device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
@@ -5674,13 +5736,13 @@ public final class BleDevice extends BleNode
         m_rssiPollMngr.update(timeStep);
     }
 
-    final void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior)
+    final void bond_justAddTheTask(E_TransactionLockBehavior lockBehavior, boolean isDirect)
     {
         if (conf_device().forceBondDialog)
         {
             queue().add(new P_Task_BondPopupHack(this, null));
         }
-        queue().add(new P_Task_Bond(this, /*explicit=*/true, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
+        queue().add(new P_Task_Bond(this, /*isExplicit=*/true, isDirect, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
     }
 
     final void unbond_justAddTheTask()
@@ -5786,15 +5848,19 @@ public final class BleDevice extends BleNode
 
         final Object[] extraBondingStates;
 
+        boolean needsBond = false;
+
         if (is(UNBONDED) && Utils.isKitKat())
         {
             final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
             final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
-            final boolean doPreBond = getManager().m_diskOptionsMngr.loadNeedsBonding(getMacAddress(), tryBondingWhileDisconnected_manageOnDisk);
+            needsBond = Utils.phoneHasBondingIssues() && BleDeviceConfig.bool(conf_device().alwaysBondOnConnect, conf_mngr().alwaysBondOnConnect);
+            final boolean doPreBond = getManager().m_diskOptionsMngr.loadNeedsBonding(getMacAddress(), tryBondingWhileDisconnected_manageOnDisk) || needsBond;
 
             if (doPreBond && tryBondingWhileDisconnected)
             {
-                bond_justAddTheTask(E_TransactionLockBehavior.PASSES);
+                needsBond = false;
+                bond_justAddTheTask(E_TransactionLockBehavior.PASSES, /*isDirect=*/false);
 
                 extraBondingStates = P_BondManager.OVERRIDE_BONDING_STATES;
             }
@@ -5817,6 +5883,12 @@ public final class BleDevice extends BleNode
         }
 
         queue().add(new P_Task_Connect(this, m_taskStateListener));
+
+        if (needsBond)
+        {
+            bond_justAddTheTask(E_TransactionLockBehavior.PASSES, /*isDirect=*/false);
+        }
+
 
         onConnecting(/* definitelyExplicit= */true, isReconnect, extraBondingStates, /*bleConnect=*/true);
     }
@@ -5962,12 +6034,14 @@ public final class BleDevice extends BleNode
         final boolean wasConnecting = is_internal(CONNECTING_OVERALL);
         final ConnectionFailListener.Status connectionFailStatus = ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED;
 
-        if (isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+        m_txnMngr.cancelAllTransactions();
+
+        if (Utils.phoneHasBondingIssues())
         {
-            setStateToDisconnected(attemptingReconnect, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
+            getTaskQueue().clearQueueOf(P_Task_Bond.class, this, getTaskQueue().getSize());
         }
 
-        m_txnMngr.cancelAllTransactions();
+        boolean retryingConnection = false;
 
         if (wasConnecting)
         {
@@ -5991,6 +6065,16 @@ public final class BleDevice extends BleNode
             else
             {
                 m_useAutoConnect = m_alwaysUseAutoConnect;
+            }
+        }
+        else
+        {
+            // This was moved into the onConnectionFailed method of the connectionfaillistener, so we can add the RETRYING_BLE_CONNECTION state while
+            // setting the state to disconnected. This way, both states are set at the same time, eliminating any race conditions between those 2
+            // states. This is here now in the case the connectionfaillistener doesn't get called, but the device is still in any connected/ing state
+            if (isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
+            {
+                setStateToDisconnected(attemptingReconnect, retryingConnection, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
             }
         }
     }
@@ -6028,12 +6112,15 @@ public final class BleDevice extends BleNode
         final boolean hitDisk = BleDeviceConfig.bool(conf_device().manageLastDisconnectOnDisk, conf_mngr().manageLastDisconnectOnDisk);
         getManager().m_diskOptionsMngr.saveLastDisconnect(getMacAddress(), State.ChangeIntent.UNINTENTIONAL, hitDisk);
 
-        stateTracker().update(lastConnectDisconnectIntent(), gattStatus, extraFlags, RECONNECTING_LONG_TERM, false, CONNECTING_OVERALL, false, AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false, INITIALIZED, true);
+        stateTracker().update(lastConnectDisconnectIntent(), gattStatus, extraFlags,
+                RECONNECTING_LONG_TERM, false, CONNECTING_OVERALL, false,
+                AUTHENTICATING, false, AUTHENTICATED, true, INITIALIZING, false,
+                INITIALIZED, true, RETRYING_BLE_CONNECTION, false);
 
         stateTracker_main().remove(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
     }
 
-    private void setStateToDisconnected(final boolean attemptingReconnect_longTerm, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker, final Object[] overrideBondingStates)
+    final void setStateToDisconnected(final boolean attemptingReconnect_longTerm, final boolean retryingConnection, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker, final Object[] overrideBondingStates)
     {
         //--- DRK > Device probably wasn't advertising while connected so here we reset the timer to keep
         //--- it from being immediately undiscovered after disconnection.
@@ -6054,6 +6141,7 @@ public final class BleDevice extends BleNode
 			            BONDING, m_nativeWrapper.isNativelyBonding(),
 			            BONDED, m_nativeWrapper.isNativelyBonded(),
 			            UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+                        RETRYING_BLE_CONNECTION, retryingConnection,
                         RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
                         ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY
 
@@ -6260,7 +6348,7 @@ public final class BleDevice extends BleNode
             }
         }
 
-        final boolean isDisconnectedAfterReconnectingShortTermStateCallback = is(DISCONNECTED);
+        final boolean isDisconnectedAfterReconnectingShortTermStateCallback = is(DISCONNECTED) && is(RECONNECTING_SHORT_TERM);
         final boolean isConnectingBle = is(CONNECTING);
         final boolean ignoreKindOf = isConnectingBle && wasExplicit;
         final boolean cancelTasks;
@@ -6306,7 +6394,7 @@ public final class BleDevice extends BleNode
 
             // We want to make sure that we update the state here. If you call disconnect() when currently connecting, the state won't get update, unless this is here
             final E_Intent intent = wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
-            setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
+            setStateToDisconnected(isAttemptingReconnect_longTerm, false, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
 
             return;
         }
@@ -6314,7 +6402,7 @@ public final class BleDevice extends BleNode
         // BEGIN CALLBACKS TO USER
 
         final E_Intent intent = wasExplicit ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
-        setStateToDisconnected(isAttemptingReconnect_longTerm, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
+        setStateToDisconnected(isAttemptingReconnect_longTerm, false, intent, gattStatus, /*forceMainStateTracker=*/attemptShortTermReconnect == false, P_BondManager.OVERRIDE_EMPTY_STATES);
 
         //--- DRK > Technically user could have called connect() in callbacks above....bad form but we need to account for it.
         final boolean isConnectingOverall_1 = is_internal(CONNECTING_OVERALL);
@@ -6439,15 +6527,15 @@ public final class BleDevice extends BleNode
         queue().clearQueueOf(PA_Task_RequiresConnection.class, this, overrideOrdinal);
     }
 
-    private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final Double interval, final ReadWriteListener listener)
+    private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Double interval, final ReadWriteListener listener)
     {
-        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, interval, listener, /* usingNotify= */false);
+        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, descriptorFilter, interval, listener, /* usingNotify= */false);
     }
 
     final ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -6486,31 +6574,31 @@ public final class BleDevice extends BleNode
         return NULL_READWRITE_EVENT();
     }
 
-    final ReadWriteListener.ReadWriteEvent write_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData data, final DescriptorFilter descriptorFilterer, final ReadWriteListener listener)
+    final ReadWriteListener.ReadWriteEvent write_internal(final com.idevicesinc.sweetblue.WriteBuilder wb)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, descriptorUuid, data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(wb.serviceUuid, wb.charUuid, wb.descriptorUuid, wb.descriptorFilter, wb.data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(wb.readWriteListener, earlyOutResult);
 
             return earlyOutResult;
         }
 
-        if (descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID))
+        if (wb.descriptorUuid == null || wb.descriptorUuid.equals(Uuids.INVALID))
         {
-            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(wb.serviceUuid, wb.charUuid);
 
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
-            addWriteTasks(characteristic, data, requiresBonding, descriptorFilterer, listener);
+            addWriteTasks(characteristic, wb.data, requiresBonding, wb.writeType, wb.descriptorFilter, wb.readWriteListener);
         }
         else
         {
             final boolean requiresBonding = false;
-            final BluetoothGattDescriptor descriptor = getNativeDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
+            final BluetoothGattDescriptor descriptor = getNativeDescriptor(wb.serviceUuid, wb.charUuid, wb.descriptorUuid);
 
-            addWriteDescriptorTasks(descriptor, data, requiresBonding, listener);
+            addWriteDescriptorTasks(descriptor, wb.data, requiresBonding, wb.readWriteListener);
         }
 
         return NULL_READWRITE_EVENT();
@@ -6535,7 +6623,7 @@ public final class BleDevice extends BleNode
         }
     }
 
-    private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, DescriptorFilter filter, ReadWriteListener listener)
+    private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, Type writeType, DescriptorFilter filter, ReadWriteListener listener)
     {
         int mtuSize = getEffectiveWriteMtuSize();
         if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
@@ -6543,17 +6631,17 @@ public final class BleDevice extends BleNode
             final P_Task_Write task_write;
             if (filter == null)
             {
-                task_write = new P_Task_Write(this, characteristic, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task_write = new P_Task_Write(this, characteristic, data, requiresBonding, writeType, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
             else
             {
-                task_write = new P_Task_Write(this, characteristic.getService().getUuid(), characteristic.getUuid(), filter, data, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task_write = new P_Task_Write(this, characteristic.getService().getUuid(), characteristic.getUuid(), filter, data, requiresBonding, writeType, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
             queue().add(task_write);
         }
         else
         {
-            P_StripedWriteTransaction stripedTxn = new P_StripedWriteTransaction(data, characteristic, requiresBonding, filter, listener);
+            P_StripedWriteTransaction stripedTxn = new P_StripedWriteTransaction(data, characteristic, requiresBonding, filter, writeType, listener);
             performTransaction(stripedTxn);
         }
     }
@@ -6561,7 +6649,7 @@ public final class BleDevice extends BleNode
     private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, DescriptorFilter descriptorFilter, ReadWriteListener listener)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -6586,7 +6674,7 @@ public final class BleDevice extends BleNode
             queue().add(task);
         }
 
-        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, forceReadTimeout, listener, /* usingNotify= */true);
+        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, descriptorFilter, forceReadTimeout, listener, /* usingNotify= */true);
 
         return NULL_READWRITE_EVENT();
     }

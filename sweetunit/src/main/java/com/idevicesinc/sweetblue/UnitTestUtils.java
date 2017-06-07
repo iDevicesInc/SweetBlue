@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
@@ -49,12 +50,79 @@ public final class UnitTestUtils
         return Utils_String.bytesToMacAddress(add);
     }
 
+    public static byte[] randomBytes(int size)
+    {
+        byte[] bytes = new byte[size];
+        new Random().nextBytes(bytes);
+        return bytes;
+    }
+
     public static void sendBluetoothStateBroadcast(Context context, int previousState, int newState)
     {
         Intent intent = new Intent(BluetoothAdapter.ACTION_STATE_CHANGED);
         intent.putExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE, previousState);
         intent.putExtra(BluetoothAdapter.EXTRA_STATE, newState);
         context.sendBroadcast(intent);
+    }
+
+    public static void bondSuccess(BleDevice device)
+    {
+        int oldState;
+        if (device.is(BleDeviceState.UNBONDED))
+        {
+            oldState = BluetoothDevice.BOND_NONE;
+        }
+        else if (device.is(BleDeviceState.BONDING))
+        {
+            oldState = BluetoothDevice.BOND_BONDING;
+        }
+        else
+        {
+            oldState = BluetoothDevice.BOND_BONDED;
+        }
+        device.getManager().m_listeners.onNativeBondStateChanged(device.getManager().m_config.newDeviceLayer(device), oldState, BluetoothDevice.BOND_BONDED, 0);
+    }
+
+    public static void bondSuccess(final BleDevice device, long delay)
+    {
+        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                bondSuccess(device);
+            }
+        }, delay);
+    }
+
+    public static void bondFail(BleDevice device, int failReason)
+    {
+        int oldState;
+        if (device.is(BleDeviceState.UNBONDED))
+        {
+            oldState = BluetoothDevice.BOND_NONE;
+        }
+        else if (device.is(BleDeviceState.BONDING))
+        {
+            oldState = BluetoothDevice.BOND_BONDING;
+        }
+        else
+        {
+            oldState = BluetoothDevice.BOND_BONDED;
+        }
+        device.getManager().m_listeners.onNativeBondStateChanged(device.getManager().m_config.newDeviceLayer(device), oldState, BluetoothDevice.BOND_NONE, failReason);
+    }
+
+    public static void bondFail(final BleDevice device, final int failReason, long delay)
+    {
+        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                bondFail(device, failReason);
+            }
+        }, delay);
     }
 
     public static void readError(BleDevice device, BluetoothGattCharacteristic characteristic, int gattStatus)

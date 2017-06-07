@@ -27,13 +27,25 @@ final class P_Task_Connect extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		if( getDevice().m_nativeWrapper.isNativelyConnected() )
+		//--- RB > Have to check if reconnecting short term, as we leave the device in the CONNECTING state when doing a short term
+		// 			reconnect.
+		if (getDevice().is(BleDeviceState.CONNECTED) && !getDevice().is(BleDeviceState.RECONNECTING_SHORT_TERM))
 		{
 			getLogger().w("Already connected!");
-			
+
 			redundant();
-			
+
 			return;
+		}
+
+		//--- RB > We used to determine if we're connected already from the native state, but it appears this is a cached value, and that cache can sometimes
+		//			get corrupted, or stuck in the connected state - even if it is not connected. This will NOT cancel the connect call (as more than likely, it will work).
+		if( getDevice().m_nativeWrapper.isNativelyConnected() )
+		{
+			getLogger().w("Native stack is reporting already connected!");
+
+			BleManager.UhOhListener.UhOh uhoh = BleManager.UhOhListener.UhOh.INCONSISTENT_NATIVE_DEVICE_STATE;
+			getManager().uhOh(uhoh);
 		}
 		
 		if( getDevice().m_nativeWrapper./*already*/isNativelyConnecting() )

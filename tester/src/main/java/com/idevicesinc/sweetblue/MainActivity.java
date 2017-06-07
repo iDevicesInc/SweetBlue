@@ -92,7 +92,7 @@ public class MainActivity extends Activity
         {
             @Override public void onClick(View v)
             {
-                mgr.startPeriodicScan(Interval.FIVE_SECS, Interval.ONE_SEC);
+                mgr.startPeriodicScan(Interval.TEN_SECS, Interval.ONE_SEC);
             }
         });
         mStopScan = (Button) findViewById(R.id.stopScan);
@@ -104,17 +104,22 @@ public class MainActivity extends Activity
             }
         });
 
+        mLogger = new DebugLogger(250);
+
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
+        config.logger = mLogger;
+        config.maxDirectBondRetries = 5;
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
-        config.saveNameChangesToDisk = false;
         config.runOnMainThread = false;
+        config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
+
         config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
-                return Please.acknowledgeIf(e.name_normalized().contains("sc") || e.name_normalized().contains("smartcap"));
+                return Please.acknowledgeIf(e.name_normalized().contains("tag"));
             }
         };
 
@@ -234,7 +239,14 @@ public class MainActivity extends Activity
         }
         else if (item.getItemId() == 1)
         {
-            mDevices.get(info.position).bond();
+            mDevices.get(info.position).bond(new BleDevice.BondListener()
+            {
+                @Override
+                public void onEvent(BondEvent e)
+                {
+                    Log.e("Bonding Event", e.toString());
+                }
+            });
             return true;
         }
         else if (item.getItemId() == 2)

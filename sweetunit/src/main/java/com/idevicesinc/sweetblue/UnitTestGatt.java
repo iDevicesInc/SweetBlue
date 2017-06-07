@@ -18,6 +18,7 @@ public class UnitTestGatt implements P_GattLayer {
     private boolean m_gattIsNull = true;
     private final BleDevice m_device;
     private boolean m_explicitDisconnect = false;
+    private List<BluetoothGattService> m_services;
 
 
     public UnitTestGatt(BleDevice device)
@@ -25,6 +26,11 @@ public class UnitTestGatt implements P_GattLayer {
         m_device = device;
     }
 
+
+    public void setDabatase(GattDatabase db)
+    {
+        m_services = db.getServiceList();
+    }
 
     @Override
     public void setGatt(BluetoothGatt gatt) {
@@ -53,11 +59,21 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public List<BluetoothGattService> getNativeServiceList(P_Logger logger) {
-        return null;
+        return m_services == null ? PA_ServiceManager.EMPTY_SERVICE_LIST : m_services;
     }
 
     @Override
     public BluetoothGattService getService(UUID serviceUuid, P_Logger logger) {
+        if (m_services != null)
+        {
+            for (BluetoothGattService service : m_services)
+            {
+                if (service.getUuid().equals(serviceUuid))
+                {
+                    return service;
+                }
+            }
+        }
         return null;
     }
 
@@ -141,7 +157,22 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public boolean readCharacteristic(BluetoothGattCharacteristic characteristic) {
+        int size;
+        if (characteristic.getValue() != null)
+        {
+            size = characteristic.getValue().length;
+        }
+        else
+        {
+            size = 10;
+        }
+        sendReadResponse(characteristic, UnitTestUtils.randomBytes(size));
         return true;
+    }
+
+    public void sendReadResponse(BluetoothGattCharacteristic characteristic, byte[] data)
+    {
+        UnitTestUtils.readSuccess(getBleDevice(), characteristic, data, 150);
     }
 
     @Override
@@ -151,12 +182,24 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+        sendWriteResponse(characteristic);
         return true;
+    }
+
+    public void sendWriteResponse(BluetoothGattCharacteristic characteristic)
+    {
+        UnitTestUtils.writeSuccess(getBleDevice(), characteristic, 150);
     }
 
     @Override public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)
     {
+        sendToggleNotifyResponse(characteristic, enable);
         return true;
+    }
+
+    public void sendToggleNotifyResponse(BluetoothGattCharacteristic characteristic, boolean enable)
+    {
+        // TODO - Implement this
     }
 
     @Override
