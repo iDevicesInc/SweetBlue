@@ -213,7 +213,6 @@ final class P_ScanManager
                 m_scanEntries.add(info);
             }
         }
-        Log.w("SCANMANAGER", "Added " + devices.size() + " batch results");
     }
 
     final int getCurrentMode()
