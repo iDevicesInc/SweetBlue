@@ -42,7 +42,7 @@ public class GattDatabase
 
 
 
-    final void addService(BluetoothGattService service)
+    private void addService(BluetoothGattService service)
     {
         m_services.add(service);
     }
@@ -63,7 +63,7 @@ public class GattDatabase
         private boolean m_isPrimary = true;
 
 
-        ServiceBuilder(GattDatabase database, UUID serviceUuid)
+        private ServiceBuilder(GattDatabase database, UUID serviceUuid)
         {
             m_database = database;
             m_serviceUuid = serviceUuid;
@@ -121,17 +121,15 @@ public class GattDatabase
         }
 
 
-        final GattDatabase getDatabase()
+        private GattDatabase getDatabase()
         {
             return m_database;
         }
 
-        final void addCharacteristic(BluetoothGattCharacteristic characteristic)
+        private void addCharacteristic(BluetoothGattCharacteristic characteristic)
         {
             m_characteristics.add(characteristic);
         }
-
-
     }
 
 
@@ -152,7 +150,7 @@ public class GattDatabase
         private int m_permissions;
 
 
-        CharacteristicBuilder(ServiceBuilder serviceBuilder, UUID charUuid)
+        private CharacteristicBuilder(ServiceBuilder serviceBuilder, UUID charUuid)
         {
             m_serviceBuilder = serviceBuilder;
             m_charUuid = charUuid;
@@ -280,7 +278,7 @@ public class GattDatabase
 
 
 
-        final void addDescriptor(BluetoothGattDescriptor descriptor)
+        private void addDescriptor(BluetoothGattDescriptor descriptor)
         {
             m_descriptors.add(descriptor);
         }
@@ -301,7 +299,7 @@ public class GattDatabase
         private byte[] m_value;
 
 
-        DescriptorBuilder(CharacteristicBuilder charBuilder, UUID descUuid)
+        private DescriptorBuilder(CharacteristicBuilder charBuilder, UUID descUuid)
         {
             m_descUuid = descUuid;
             m_charBuilder = charBuilder;
@@ -394,7 +392,7 @@ public class GattDatabase
         private int m_properties;
 
 
-        Properties(CharacteristicBuilder builder)
+        private Properties(CharacteristicBuilder builder)
         {
             m_charBuilder = builder;
         }
@@ -549,7 +547,7 @@ public class GattDatabase
         private final CharacteristicBuilder m_charBuilder;
 
 
-        CharacteristicPermissions(CharacteristicBuilder builder)
+        private CharacteristicPermissions(CharacteristicBuilder builder)
         {
             m_charBuilder = builder;
         }
@@ -582,7 +580,7 @@ public class GattDatabase
         private final DescriptorBuilder m_descBuilder;
 
 
-        DescriptorPermissions(DescriptorBuilder builder)
+        private DescriptorPermissions(DescriptorBuilder builder)
         {
             m_descBuilder = builder;
         }

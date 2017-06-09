@@ -8,6 +8,9 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+
+import com.idevicesinc.sweetblue.utils.Interval;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +27,12 @@ public class UnitTestGatt implements P_GattLayer {
     public UnitTestGatt(BleDevice device)
     {
         m_device = device;
+    }
+
+    public UnitTestGatt(BleDevice device, GattDatabase gattDb)
+    {
+        this(device);
+        m_services = gattDb.getServiceList();
     }
 
 
@@ -122,8 +131,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void setToConnected()
     {
-        ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTED);
-        m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_CONNECTED);
+        UnitTestUtils.setToConnected(m_device, BleStatuses.GATT_SUCCESS, Interval.millis(0));
     }
 
     @Override
@@ -135,14 +143,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     private void preDisconnect()
     {
-        m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_DISCONNECTED);
-                m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
-            }
-        }, 50);
+        UnitTestUtils.setToDisconnected(m_device, BleStatuses.GATT_SUCCESS);
     }
 
     @Override
@@ -172,7 +173,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void sendReadResponse(BluetoothGattCharacteristic characteristic, byte[] data)
     {
-        UnitTestUtils.readSuccess(getBleDevice(), characteristic, data, 150);
+        UnitTestUtils.readSuccess(getBleDevice(), characteristic, data, Interval.millis(150));
     }
 
     @Override
@@ -188,7 +189,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void sendWriteResponse(BluetoothGattCharacteristic characteristic)
     {
-        UnitTestUtils.writeSuccess(getBleDevice(), characteristic, 150);
+        UnitTestUtils.writeSuccess(getBleDevice(), characteristic, Interval.millis(150));
     }
 
     @Override public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)

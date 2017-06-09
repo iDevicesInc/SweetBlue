@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -304,7 +306,7 @@ public class NotifyTest extends BaseBleUnitTest
                                     {
                                         assertTrue(e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
-                                        UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, 250);
+                                        UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(250));
                                     }
                                     else if (e.type() == Type.NOTIFICATION)
                                     {
@@ -361,7 +363,7 @@ public class NotifyTest extends BaseBleUnitTest
                             {
                                 assertTrue(e.wasSuccess());
                                 assertTrue(m_device.isNotifyEnabled(mTestChar));
-                                UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, 250);
+                                UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(250));
                             }
                             else if (e.type() == Type.NOTIFICATION)
                             {
@@ -427,7 +429,7 @@ public class NotifyTest extends BaseBleUnitTest
                                     {
                                         assertTrue(e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
-                                        UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, 250);
+                                        UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(250));
                                     }
                                     else if (e.type() == Type.INDICATION)
                                     {

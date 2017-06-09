@@ -41,9 +41,7 @@ public class UnitTestDevice implements P_NativeDeviceLayer
     public String getAddress() {
         if (TextUtils.isEmpty(m_address))
         {
-            byte[] add = new byte[6];
-            new Random().nextBytes(add);
-            m_address = Utils_String.bytesToMacAddress(add);
+            m_address = UnitTestUtils.randomMacAddress();
         }
         return m_address;
     }

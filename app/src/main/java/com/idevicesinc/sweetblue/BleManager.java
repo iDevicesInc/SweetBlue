@@ -3252,8 +3252,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Returns this manager's knowledge of the app's foreground state, which must be
-	 * controlled manually from appland through {@link #onResume()} and {@link #onPause()}.
+	 * Returns this manager's knowledge of the app's foreground state.
 	 */
 	public final boolean isForegrounded()
 	{
