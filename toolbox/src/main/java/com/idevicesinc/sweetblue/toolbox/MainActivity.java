@@ -4,9 +4,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -43,6 +45,7 @@ public class MainActivity extends BaseActivity
 
     private DrawerLayout m_drawerLayout;
     private View m_navDrawerLayout;
+    private ActionBarDrawerToggle m_drawerToggler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -179,23 +182,11 @@ public class MainActivity extends BaseActivity
         @Override
         public void onUpdate()
         {
-            // Burn through the rediscovery events
-            Log.d("upd", "Processing " + m_rediscoverMap.size() + " events");
-            /*for (String key : m_rediscoverMap.keySet())
-            {
-                DiscoveryEvent de = m_rediscoverMap.get(key);
-                if (de == null)
-                    continue;
-
-                processEvent(de, true);
-                m_rediscoverMap.remove(key);
-            }*/
             if (m_rediscoverMap.size() > 0)
             {
                 m_rediscoverMap.clear();
                 m_adapter.notifyDataSetChanged();
             }
-            Log.d("upd", "Done processing events");
         }
 
         boolean processEvent(DiscoveryEvent de, boolean processRediscovers)
@@ -204,8 +195,6 @@ public class MainActivity extends BaseActivity
             {
                 m_deviceList.add(de.device());
                 m_adapter.notifyItemInserted(m_deviceList.size() - 1);
-
-                Log.d("evt", "Discover event for " + de.device().getMacAddress());
             }
             else if (de.was(LifeCycle.REDISCOVERED))
             {
@@ -219,8 +208,6 @@ public class MainActivity extends BaseActivity
                 {
                     m_adapter.notifyItemChanged(index);
                 }
-
-                Log.d("evt", "Rediscover event for " + de.device().getMacAddress());
             }
 
             // True because we processed the event
@@ -238,6 +225,60 @@ public class MainActivity extends BaseActivity
         // Grab the drawer
         m_drawerLayout = find(R.id.drawerLayout);
         m_navDrawerLayout = find(R.id.navigationDrawer);
+
+        m_drawerToggler = new ActionBarDrawerToggle(this, m_drawerLayout, R.string.drawer_open, R.string.drawer_close)
+        {
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView)
+            {
+                int i;
+            }
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view)
+            {
+                int i;
+            }
+        };
+
+        m_drawerLayout.addDrawerListener(m_drawerToggler);
+
+        m_drawerLayout.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                m_drawerToggler.syncState();
+            }
+        });
+
+        m_drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener()
+        {
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset)
+            {
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView)
+            {
+                m_drawerToggler.syncState();
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView)
+            {
+                m_drawerToggler.syncState();
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState)
+            {
+            }
+        });
+
+        // For hamburger menu
+        getActionBar().setDisplayHomeAsUpEnabled(true);
 
         LinearLayout ll = null;
 
@@ -328,5 +369,13 @@ public class MainActivity extends BaseActivity
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.send_feedback_email_body));
 
         startActivity(Intent.createChooser(emailIntent, getString(R.string.send_feedback_send_mail)));
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if (m_drawerToggler.onOptionsItemSelected(item))
+            return true;
+        return super.onOptionsItemSelected(item);
     }
 }

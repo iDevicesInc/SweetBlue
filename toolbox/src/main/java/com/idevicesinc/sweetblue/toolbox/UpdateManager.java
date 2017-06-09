@@ -106,7 +106,7 @@ public class UpdateManager implements PI_UpdateLoop.Callback
     {
         Handler handler = new android.os.Handler(Looper.getMainLooper());
 
-        Log.d("upd", "update manger starting");
+        //Log.d("upd", "update manger starting");
         synchronized (m_updateListenerList)
         {
             Iterator<ListenerInfo> it = m_updateListenerList.iterator();
@@ -126,7 +126,7 @@ public class UpdateManager implements PI_UpdateLoop.Callback
                 li.update(dt, handler);
             }
         }
-        Log.d("upd", "update manger done");
+        //Log.d("upd", "update manger done");
     }
 
     public void subscribe(UpdateListener listener, double updateFrequency)

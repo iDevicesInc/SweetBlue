@@ -23,6 +23,10 @@
         <item>@string/unbond</item>
     </array>
 
+    <!-- Main Activity -->
+    <string name="drawer_open">Open Drawer</string>
+    <string name="drawer_close">Close Drawer</string>
+
     <!-- Logger -->
     <string name="logger_title">Logger</string>
 
