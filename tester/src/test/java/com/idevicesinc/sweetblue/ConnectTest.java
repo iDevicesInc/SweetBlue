@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
@@ -951,7 +953,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         @Override public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic)
         {
-            UnitTestUtils.disconnectDevice(getBleDevice(), BleStatuses.GATT_ERROR, 14500);
+            UnitTestUtils.setToDisconnected(getBleDevice(), BleStatuses.GATT_ERROR, Interval.millis(14500));
             return true;
         }
     }
@@ -969,7 +971,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         @Override public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic)
         {
-            UnitTestUtils.readError(getBleDevice(), characteristic, BleStatuses.GATT_ERROR, 150);
+            UnitTestUtils.readError(getBleDevice(), characteristic, BleStatuses.GATT_ERROR, Interval.millis(150));
             return true;
         }
     }
@@ -985,7 +987,7 @@ public class ConnectTest extends BaseBleUnitTest
         @Override public void setToConnecting()
         {
             super.setToConnecting();
-            UnitTestUtils.disconnectDevice(getBleDevice(), BleStatuses.GATT_ERROR, 50);
+            UnitTestUtils.setToDisconnected(getBleDevice(), BleStatuses.GATT_ERROR);
         }
 
         @Override public void setToConnected()
@@ -1003,7 +1005,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         @Override public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
         {
-            UnitTestUtils.disconnectDevice(getBleDevice(), BleStatuses.GATT_ERROR, false, 175);
+            UnitTestUtils.setToDisconnected(getBleDevice(), BleStatuses.GATT_ERROR, false, Interval.millis(175));
             return super.connect(device, context, useAutoConnect, callback);
         }
     }

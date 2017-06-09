@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Interval;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -140,14 +142,14 @@ public class BondTest extends BaseBleUnitTest
         @Override
         public boolean createBond()
         {
-            UnitTestUtils.bondSuccess(getBleDevice(), 250);
+            UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
             return true;
         }
 
         @Override
         public boolean createBondSneaky(String methodName, boolean loggingEnabled)
         {
-            UnitTestUtils.bondSuccess(getBleDevice(), 250);
+            UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
             return true;
         }
     }
@@ -170,12 +172,12 @@ public class BondTest extends BaseBleUnitTest
         {
             if (m_failsSoFar >= m_maxFails)
             {
-                UnitTestUtils.bondSuccess(getBleDevice(), 250);
+                UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
             }
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, 250);
+                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, Interval.millis(250));
                 System.out.println("Failing bond request. Fails so far: " + m_failsSoFar);
             }
             return true;
@@ -186,12 +188,12 @@ public class BondTest extends BaseBleUnitTest
         {
             if (m_failsSoFar >= 2)
             {
-                UnitTestUtils.bondSuccess(getBleDevice(), 250);
+                UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
             }
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, 250);
+                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, Interval.millis(250));
             }
             return true;
         }
