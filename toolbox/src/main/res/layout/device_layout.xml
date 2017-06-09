@@ -42,7 +42,8 @@
         android:layout_alignBaseline="@+id/rssiLabel"
         android:text="-50dBm"/>
 
-    <com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner
+    <!--com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner-->
+    <Spinner
         android:id="@+id/deviceSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
