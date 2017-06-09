@@ -4,11 +4,9 @@ import android.app.ActionBar;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
-import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
@@ -18,6 +16,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 
+import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -28,21 +27,21 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 public class SettingsActivity extends PreferenceActivity
 {
-    public static class Prefs1Fragment extends PreferenceFragment
+    protected Object mSettingsObject = null;
+
+    public static class PrefsFragment extends PreferenceFragment
     {
-        Context mContext;
+        protected Context mContext;
+        protected Object mSettingsObject = null;
 
         @Override
         public void onCreate(Bundle savedInstanceState)
         {
             super.onCreate(savedInstanceState);
-
-            //initPreferences();
         }
 
         @Override
@@ -53,42 +52,22 @@ public class SettingsActivity extends PreferenceActivity
             initPreferences();
         }
 
-        public void setContext(Context c)
+        public void setConfig(Context c, Object settingsObject)
         {
             mContext = c;
+            mSettingsObject = settingsObject;
         }
 
         void initPreferences()
         {
-            PreferenceScreen screen = getPreferenceManager().createPreferenceScreen(mContext);
-            setPreferenceScreen(screen);
-
-            PreferenceCategory category = new PreferenceCategory(mContext);
-            category.setTitle("category name");
-
-            screen.addPreference(category);
-
-            for (int i = 0; i < 15; ++i)
-            {
-                CheckBoxPreference checkBoxPref = new CheckBoxPreference(mContext);
-                checkBoxPref.setTitle("title" + i);
-                checkBoxPref.setSummary("summary");
-                checkBoxPref.setChecked(true);
-
-                category.addPreference(checkBoxPref);
-            }
-
-            BleManagerConfig cfg = new BleManagerConfig();
-
             try
             {
-                buildSettingsForObject(cfg);
+                buildSettingsForObject(mSettingsObject);
             }
             catch (IllegalAccessException e)
             {
 
             }
-            Log.d("done", "done");
         }
 
         private Preference createPreferenceForField(final Object o, final Field f)
@@ -188,9 +167,9 @@ public class SettingsActivity extends PreferenceActivity
                     Interval i = (Interval)f.get(o);
                     Double val = new Double(i.secs());
                     final EditTextPreference etp = new EditTextPreference(mContext);
-                    etp.getEditText().setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    etp.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
                     etp.setDefaultValue(val.toString());
-                    etp.setSummary(val.toString());
+                    etp.setSummary(val.toString() + " seconds");
                     etp.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
                     {
                         @Override
@@ -203,7 +182,7 @@ public class SettingsActivity extends PreferenceActivity
                                 Interval i = Interval.secs(d);
                                 f.set(o, i);
 
-                                etp.setSummary(d.toString());
+                                etp.setSummary(d.toString() + " seconds");
                             }
                             catch (Exception e)
                             {
@@ -250,7 +229,7 @@ public class SettingsActivity extends PreferenceActivity
             }
 
             // JSON sample code
-            try
+            /*try
             {
                 JSONObject jo = JSONUtil.settingsObjectToJSON(o);
                 String s = jo.toString();
@@ -263,7 +242,7 @@ public class SettingsActivity extends PreferenceActivity
             catch (Exception e)
             {
 
-            }
+            }*/
         }
 
         private static String unHumpCamelCase(String camelCaseString)
@@ -304,11 +283,13 @@ public class SettingsActivity extends PreferenceActivity
 
         //init();
 
+        BleManager manager = BleManager.get(this);
+        mSettingsObject = manager.getConfigClone();
 
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        Prefs1Fragment f = new Prefs1Fragment();
-        f.setContext(this);
+        PrefsFragment f = new PrefsFragment();
+        f.setConfig(this, mSettingsObject);
         fragmentTransaction.add(R.id.fragment_container, f, "HELLO");
         fragmentTransaction.commit();
 
@@ -317,6 +298,12 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     public boolean onNavigateUp()
     {
+        //TODO:  Confirm save?  For now just do it!
+
+        // Update the ble manager config
+        BleManagerConfig cfg = (BleManagerConfig)mSettingsObject;
+        BleManager.get(this, cfg);
+
         finish();
         return true;
     }

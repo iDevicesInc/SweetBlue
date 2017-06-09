@@ -4,18 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/red"
     tools:menu="@menu/logger"
     tools:context="com.idevicesinc.sweetblue.toolbox.LoggerActivity">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:background="@color/gray"
         android:fillViewport="true"
         android:layout_height="match_parent">
 
         <LinearLayout
-            android:background="@color/green"
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
