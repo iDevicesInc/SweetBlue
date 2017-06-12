@@ -28,6 +28,7 @@ final class P_AndroidGatt implements P_GattLayer
 {
 
     private static final String FIELD_NAME_AUTH_RETRY = "mAuthRetry";
+    private static final String FIELD_NAME_NOUGAT_AUTH_RETRY_STATE = "mAuthRetryState";
 
     private BluetoothGatt m_gatt;
 
@@ -59,20 +60,31 @@ final class P_AndroidGatt implements P_GattLayer
     public Boolean getAuthRetryValue() {
         if( m_gatt != null )
         {
+            final String fieldName = Utils.isNougat() ? FIELD_NAME_NOUGAT_AUTH_RETRY_STATE : FIELD_NAME_AUTH_RETRY;
             try
             {
-//                final Field[] fields = m_gatt.getClass().getDeclaredFields();
-                Field field = m_gatt.getClass().getDeclaredField(FIELD_NAME_AUTH_RETRY);
+                final Boolean result;
+                final Field field = m_gatt.getClass().getDeclaredField(fieldName);
                 final boolean isAccessible_saved = field.isAccessible();
                 field.setAccessible(true);
-                Boolean result = field.getBoolean(m_gatt);
+                if (Utils.isNougat())
+                {
+                    int state = field.getInt(m_gatt);
+
+                    // TODO - Refactor this to pass along with auth retry state it is, so we know how better to deal with it. (Is simply bonding enough?).
+                    result = state != BleStatuses.AUTH_RETRY_STATE_IDLE;
+                }
+                else
+                {
+                    result = field.getBoolean(m_gatt);
+                }
                 field.setAccessible(isAccessible_saved);
 
                 return result;
             }
             catch (Exception e)
             {
-                getManager().ASSERT(false, "Problem getting value of " + m_gatt.getClass().getSimpleName() + "." + FIELD_NAME_AUTH_RETRY);
+                getManager().ASSERT(false, "Problem getting value of " + m_gatt.getClass().getSimpleName() + "." + fieldName);
             }
         }
         else

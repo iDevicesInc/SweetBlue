@@ -21,7 +21,7 @@ public class Backend_HistoricalDatabase_Default implements Backend_HistoricalDat
 {
 	private static final HistoricalDataCursor EMPTY_CURSOR = new P_HistoricalDataCursor_Empty();
 
-	private boolean m_hasShownWarning = false;
+	private boolean m_hasShownWarning = true;
 
 	public Backend_HistoricalDatabase_Default(final Context context)
 	{
