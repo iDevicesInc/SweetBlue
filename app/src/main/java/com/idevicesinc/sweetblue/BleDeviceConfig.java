@@ -301,6 +301,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * Default is {@link BondRetryFilter.DefaultBondRetryFilter} - This allows to you implement your own logic on whether or not SweetBlue should
 	 * retry a failed bond.
 	 */
+	@Advanced
 	public BondRetryFilter bondRetryFilter						= new BondRetryFilter.DefaultBondRetryFilter();
 	
 	/**
