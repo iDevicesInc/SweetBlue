@@ -1,12 +1,10 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
-
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
@@ -86,11 +84,11 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static final int DEFAULT_GATT_REFRESH_DELAY		= 500;
 
 	/**
-	 * The default value of {@link #maxDirectBondRetries}. Bond retries only apply when calling {@link BleDevice#bond()}, or {@link BleDevice#bond(BondListener)}.
+	 * The default value used for {@link BondRetryFilter.DefaultBondRetryFilter}. Bond retries only apply when calling {@link BleDevice#bond()}, or {@link BleDevice#bond(BondListener)}.
 	 * Like connecting, sometimes in order to get bonding to work, you just have to try multiple times. If you require bonding for the device you're connecting
 	 * to, it's recommended to use one of the bond methods.
 	 */
-	public static final int DEFAULT_MAX_DIRECT_BOND_RETRIES 	= 3;
+	public static final int DEFAULT_MAX_BOND_RETRIES = 3;
 
 
 

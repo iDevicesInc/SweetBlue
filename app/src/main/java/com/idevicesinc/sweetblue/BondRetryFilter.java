@@ -256,11 +256,11 @@ public interface BondRetryFilter extends GenericListener_T<BondRetryFilter.Retry
         }
 
         /**
-         * Constructor which sets the max bond retries to {@link BleDeviceConfig#DEFAULT_MAX_DIRECT_BOND_RETRIES} before giving up.
+         * Constructor which sets the max bond retries to {@link BleDeviceConfig#DEFAULT_MAX_BOND_RETRIES} before giving up.
          */
         public DefaultBondRetryFilter()
         {
-            this(BleDeviceConfig.DEFAULT_MAX_DIRECT_BOND_RETRIES);
+            this(BleDeviceConfig.DEFAULT_MAX_BOND_RETRIES);
         }
 
         @Override
