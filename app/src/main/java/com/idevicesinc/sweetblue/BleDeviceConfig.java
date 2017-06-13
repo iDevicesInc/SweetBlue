@@ -271,11 +271,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Boolean useGattRefresh								= false;
 
 	/**
-	 * Default is <code>false</code> - whether SweetBlue should retry a connect <i>after</i> successfully connecting via
+	 * Default is <code>null</code> - whether SweetBlue should retry a connect <i>after</i> successfully connecting via
 	 * BLE. This means that if discovering services, or {@link com.idevicesinc.sweetblue.BleTransaction.Init}, or {@link com.idevicesinc.sweetblue.BleTransaction.Auth}
 	 * fail for any reason, SweetBlue will disconnect, then retry the connection.
+	 * The default is <code>null</code> so that it pulls the default from {@link BleManagerConfig}, unless you need to specify a particular
+	 * device which should behave differently.
 	 */
-	public boolean connectFailRetryConnectingOverall			= false;
+	public Boolean connectFailRetryConnectingOverall			= null;
 
 
 	/**
