@@ -164,7 +164,7 @@ final class P_BondManager
 		}
 
 		// Determine if we need to retry the bond.
-		if (m_device.getManager().m_config.bondRetryFilter != null)
+		if (getFilter() != null)
 		{
 			final BondRetryFilter.RetryEvent event = new BondRetryFilter.RetryEvent(m_device, failReason, m_bondRetries, wasDirect);
 			final BondRetryFilter.Please please = m_device.getManager().m_config.bondRetryFilter.onEvent(event);
@@ -201,6 +201,18 @@ final class P_BondManager
 		if( status == Status.TIMED_OUT )
 		{
 			m_device.getManager().uhOh(UhOh.BOND_TIMED_OUT);
+		}
+	}
+
+	private BondRetryFilter getFilter()
+	{
+		if (m_device.conf_device().bondRetryFilter != null)
+		{
+			return m_device.conf_device().bondRetryFilter;
+		}
+		else
+		{
+			return m_device.conf_mngr().bondRetryFilter;
 		}
 	}
 
