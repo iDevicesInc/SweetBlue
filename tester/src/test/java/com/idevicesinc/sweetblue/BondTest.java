@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -177,7 +176,7 @@ public class BondTest extends BaseBleUnitTest
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, Interval.millis(250));
+                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
                 System.out.println("Failing bond request. Fails so far: " + m_failsSoFar);
             }
             return true;
@@ -193,7 +192,7 @@ public class BondTest extends BaseBleUnitTest
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, Interval.millis(250));
+                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
             }
             return true;
         }

@@ -163,7 +163,9 @@ final class P_BondManager
 		}
 
 		// Determine if we need to retry the bond.
-		if (wasDirect && status != Status.TIMED_OUT)
+		// TODO - This is deprecated now. This should be removed in v3
+		// @deprecated - adding fake annotation here to make it easier to find when removing all deprecated items for V3.
+		if (wasDirect && status != Status.TIMED_OUT && !isMaxRetriesNull())
 		{
 			int maxRetries = BleDeviceConfig.integer(m_device.conf_device().maxDirectBondRetries, m_device.conf_mngr().maxDirectBondRetries);
 			if (m_bondRetries < maxRetries && failReason != BleStatuses.UNBOND_REASON_AUTH_FAILED && failReason != BleStatuses.UNBOND_REASON_REPEATED_ATTEMPTS)
@@ -172,6 +174,21 @@ final class P_BondManager
 				m_bondRetries++;
 				m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, false, UNBONDED, true);
 				m_device.bond_private(true, m_listener);
+				return;
+			}
+		}
+
+		// New check for bond retry logic.
+		if (m_device.getManager().m_config.bondRetryFilter != null)
+		{
+			final BondRetryFilter.RetryEvent event = new BondRetryFilter.RetryEvent(m_device, failReason, m_bondRetries, wasDirect);
+			final BondRetryFilter.Please please = m_device.getManager().m_config.bondRetryFilter.onEvent(event);
+			if (please.shouldRetry())
+			{
+				m_device.getManager().getLogger().w("Bond failed with failReason of " + m_device.getManager().getLogger().gattUnbondReason(failReason) + ". Retrying bond...");
+				m_bondRetries++;
+				m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, false, UNBONDED, true);
+				m_device.bond_private(wasDirect, m_listener);
 				return;
 			}
 		}
@@ -200,6 +217,11 @@ final class P_BondManager
 		{
 			m_device.getManager().uhOh(UhOh.BOND_TIMED_OUT);
 		}
+	}
+
+	boolean isMaxRetriesNull()
+	{
+		return m_device.conf_device().maxDirectBondRetries == null && m_device.conf_mngr().maxDirectBondRetries == null;
 	}
 	
 	void saveNeedsBondingIfDesired()
