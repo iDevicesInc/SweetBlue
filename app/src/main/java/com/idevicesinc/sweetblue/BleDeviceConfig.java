@@ -300,21 +300,6 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Boolean useLeTransportForBonding						= false;
 
 	/**
-	 * Default is <code>null</code> - This setting only applies if you tried to bond a device using {@link BleDevice#bond()},
-	 * or {@link BleDevice#bond(BondListener)}. It's recommended to use one of those 2 methods if the device you are trying to connect to requires
-	 * bonding. This setting allows you to adjust the amount of times SweetBlue will retry before giving up.
-	 *
-	 * SweetBlue will also NOT retry if the failure code that comes back is {@link BleStatuses#UNBOND_REASON_AUTH_FAILED},
-	 * {@link BleStatuses#UNBOND_REASON_REPEATED_ATTEMPTS}, or if the {@link com.idevicesinc.sweetblue.BleDevice.BondListener.Status} is
-	 * {@link com.idevicesinc.sweetblue.BleDevice.BondListener.Status#TIMED_OUT}.
-	 *
-	 * @deprecated Use {@link #bondRetryFilter} instead, as it allows for more control over the logic.
-	 */
-	@Advanced
-	@Deprecated
-	public Integer maxDirectBondRetries								= null;
-
-	/**
 	 * Default is {@link BondRetryFilter.DefaultBondRetryFilter} - This allows to you implement your own logic on whether or not SweetBlue should
 	 * retry a failed bond.
 	 */
