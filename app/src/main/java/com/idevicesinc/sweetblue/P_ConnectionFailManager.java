@@ -132,12 +132,11 @@ final class P_ConnectionFailManager
 				m_highestStateReached_total = highestStateReached;
 			}
 		}
-		
+
 		final ConnectionFailEvent moreInfo = new ConnectionFailEvent
 		(
 			m_device, reason_nullable, timing, m_failCount, attemptTime_latest, attemptTime_total, gattStatus,
-			highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason, txnFailReason,
-			m_history
+			highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason, txnFailReason
 		);
 
 		addToHistory(moreInfo);
@@ -209,6 +208,11 @@ final class P_ConnectionFailManager
 		}
 
 		return retryChoice__PE_Please;
+	}
+
+	ArrayList<ConnectionFailEvent> getHistory()
+	{
+		return new ArrayList<>(m_history);
 	}
 
 	private void addToHistory(ConnectionFailEvent event)

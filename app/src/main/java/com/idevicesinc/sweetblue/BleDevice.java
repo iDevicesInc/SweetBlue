@@ -1371,12 +1371,30 @@ public final class BleDevice extends BleNode
              */
             public final ConnectionFailEvent[] history()
             {
-                return m_history;
+                if (isNull())
+                {
+                    return new ConnectionFailEvent[0];
+                }
+                // We want to clear out any event after this one to prevent memory leaks from occurring. This doesn't affect the "main"
+                // history, which is stored in P_ConnectionFailManager, so it's safe to do whatever we want to this list.
+                ArrayList<ConnectionFailEvent> history = m_device.m_connectionFailMngr.getHistory();
+                int position = history.indexOf(this);
+                if (position != -1)
+                {
+                    ConnectionFailEvent[] h = new ConnectionFailEvent[position + 1];
+                    for (int i = 0; i <= position; i++)
+                    {
+                        h[i] = history.get(i);
+                    }
+                    return h;
+                }
+                // If this event is not in the list, then this event must have been cached app-side. So, we simply return an array with this
+                // event in it to prevent memory leaks.
+                ConnectionFailEvent[] h = { this };
+                return h;
             }
 
-            private final ConnectionFailEvent[] m_history;
-
-            ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason, ArrayList<ConnectionFailEvent> history)
+            ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
             {
                 super(failureCountSoFar, latestAttemptTime, totalAttemptTime, gattStatus, autoConnectUsage);
 
@@ -1388,42 +1406,18 @@ public final class BleDevice extends BleNode
                 this.m_bondFailReason = bondFailReason;
                 this.m_txnFailReason = txnFailReason;
 
-                if (history == null)
-                {
-                    this.m_history = EMPTY_HISTORY();
-                }
-                else
-                {
-                    this.m_history = new ConnectionFailEvent[history.size() + 1];
-                    for (int i = 0; i < history.size(); i++)
-                    {
-                        this.m_history[i] = history.get(i);
-                    }
-
-                    this.m_history[this.m_history.length - 1] = this;
-                }
-
                 m_device.getManager().ASSERT(highestStateReached != null, "highestState_latest shouldn't be null.");
                 m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
             }
 
-            private static ConnectionFailEvent[] s_emptyHistory = null;
-
-            static ConnectionFailEvent[] EMPTY_HISTORY()
-            {
-                s_emptyHistory = s_emptyHistory != null ? s_emptyHistory : new ConnectionFailEvent[]{};
-
-                return s_emptyHistory;
-            }
-
             static ConnectionFailEvent NULL(BleDevice device)
             {
-                return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
+                return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
             }
 
             static ConnectionFailEvent EARLY_OUT(BleDevice device, Status reason)
             {
-                return new ConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT(), null);
+                return new ConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
             }
 
             /**
@@ -1441,6 +1435,19 @@ public final class BleDevice extends BleNode
             public final boolean shouldBeReportedToUser()
             {
                 return status().shouldBeReportedToUser();
+            }
+
+            @Override
+            public boolean equals(Object obj)
+            {
+                if (obj != null && obj instanceof ConnectionFailEvent)
+                {
+                    ConnectionFailEvent other = (ConnectionFailEvent) obj;
+                    return m_device.equals(other.m_device) && m_status == other.m_status && m_timing == other.m_timing && m_highestStateReached_latest == other.m_highestStateReached_latest
+                            && m_highestStateReached_total == other.m_highestStateReached_total && m_bondFailReason == other.m_bondFailReason && m_txnFailReason == other.m_txnFailReason
+                            && failureCountSoFar() == other.failureCountSoFar();
+                }
+                return false;
             }
 
             @Override public final String toString()

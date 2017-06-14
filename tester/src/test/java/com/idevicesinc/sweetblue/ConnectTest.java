@@ -612,7 +612,7 @@ public class ConnectTest extends BaseBleUnitTest
         s.acquire();
     }
 
-    @Test(timeout = 18000)
+    @Test(timeout = 40000)
     public void connectThenFailInitTxnTest() throws Exception
     {
         m_device = null;
