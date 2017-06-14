@@ -95,7 +95,18 @@ public final class BleStatuses
      */
     public static final int UNBOND_REASON_REMOTE_AUTH_CANCELED = 8;
 
+	/**
+	 * An existing bond was explicitly revoked.
+	 */
+	public static final int UNBOND_REASON_REMOVED = 9;
 
+	// In Nougat, mAuthRetry changed from a boolean, to a state. These are the values for the states.
+
+	public static final int AUTH_RETRY_STATE_IDLE = 0;
+
+	public static final int AUTH_RETRY_STATE_NO_MITM = 1;
+
+	public static final int AUTH_RETRY_STATE_MITM = 2;
 
 
 	/**

@@ -1,12 +1,10 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
-
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-
 import com.idevicesinc.sweetblue.BleDevice.BondListener;
 import com.idevicesinc.sweetblue.BleDevice.ConnectionFailListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
@@ -86,11 +84,11 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public static final int DEFAULT_GATT_REFRESH_DELAY		= 500;
 
 	/**
-	 * The default value of {@link #maxDirectBondRetries}. Bond retries only apply when calling {@link BleDevice#bond()}, or {@link BleDevice#bond(BondListener)}.
+	 * The default value used for {@link BondRetryFilter.DefaultBondRetryFilter}. Bond retries only apply when calling {@link BleDevice#bond()}, or {@link BleDevice#bond(BondListener)}.
 	 * Like connecting, sometimes in order to get bonding to work, you just have to try multiple times. If you require bonding for the device you're connecting
 	 * to, it's recommended to use one of the bond methods.
 	 */
-	public static final int DEFAULT_MAX_DIRECT_BOND_RETRIES 	= 3;
+	public static final int DEFAULT_MAX_BOND_RETRIES = 3;
 
 
 
@@ -273,11 +271,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Boolean useGattRefresh								= false;
 
 	/**
-	 * Default is <code>false</code> - whether SweetBlue should retry a connect <i>after</i> successfully connecting via
+	 * Default is <code>null</code> - whether SweetBlue should retry a connect <i>after</i> successfully connecting via
 	 * BLE. This means that if discovering services, or {@link com.idevicesinc.sweetblue.BleTransaction.Init}, or {@link com.idevicesinc.sweetblue.BleTransaction.Auth}
 	 * fail for any reason, SweetBlue will disconnect, then retry the connection.
+	 * The default is <code>null</code> so that it pulls the default from {@link BleManagerConfig}, unless you need to specify a particular
+	 * device which should behave differently.
 	 */
-	public boolean connectFailRetryConnectingOverall			= false;
+	public Boolean connectFailRetryConnectingOverall			= null;
 
 
 	/**
@@ -300,16 +300,11 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Boolean useLeTransportForBonding						= false;
 
 	/**
-	 * Default is {@link #DEFAULT_MAX_DIRECT_BOND_RETRIES} - This setting only applies if you tried to bond a device using {@link BleDevice#bond()},
-	 * or {@link BleDevice#bond(BondListener)}. It's recommended to use one of those 2 methods if the device you are trying to connect to requires
-	 * bonding. This setting allows you to adjust the amount of times SweetBlue will retry before giving up.
-	 *
-	 * SweetBlue will also NOT retry if the failure code that comes back is {@link BleStatuses#UNBOND_REASON_AUTH_FAILED},
-	 * {@link BleStatuses#UNBOND_REASON_REPEATED_ATTEMPTS}, or if the {@link com.idevicesinc.sweetblue.BleDevice.BondListener.Status} is
-	 * {@link com.idevicesinc.sweetblue.BleDevice.BondListener.Status#TIMED_OUT}.
+	 * Default is {@link BondRetryFilter.DefaultBondRetryFilter} - This allows to you implement your own logic on whether or not SweetBlue should
+	 * retry a failed bond.
 	 */
 	@Advanced
-	public int maxDirectBondRetries								= DEFAULT_MAX_DIRECT_BOND_RETRIES;
+	public BondRetryFilter bondRetryFilter						= new BondRetryFilter.DefaultBondRetryFilter();
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be
