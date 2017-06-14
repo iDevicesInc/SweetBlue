@@ -117,41 +117,18 @@ public class BondTest extends BaseBleUnitTest
     public BleManagerConfig getConfig()
     {
         BleManagerConfig config = super.getConfig();
-        config.nativeDeviceFactory = new P_NativeDeviceLayerFactory<BondDeviceLayer>()
+        config.nativeDeviceFactory = new P_NativeDeviceLayerFactory<UnitTestDevice>()
         {
             @Override
-            public BondDeviceLayer newInstance(BleDevice device)
+            public UnitTestDevice newInstance(BleDevice device)
             {
-                return new BondDeviceLayer(device);
+                return new UnitTestDevice(device);
             }
         };
         config.loggingEnabled = true;
         return config;
     }
 
-
-    private final class BondDeviceLayer extends UnitTestDevice
-    {
-
-        public BondDeviceLayer(BleDevice device)
-        {
-            super(device);
-        }
-
-        @Override
-        public boolean createBond()
-        {
-            UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
-            return true;
-        }
-
-        @Override
-        public boolean createBondSneaky(String methodName, boolean loggingEnabled)
-        {
-            UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
-            return true;
-        }
-    }
 
     private final class BondFailACoupleTimesLayer extends UnitTestDevice
     {
