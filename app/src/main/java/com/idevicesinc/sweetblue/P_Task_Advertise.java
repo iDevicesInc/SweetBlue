@@ -14,11 +14,13 @@ import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower;
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 final class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
+
     private final BleAdvertisingPacket m_packet;
     private final BleServer.AdvertisingListener m_listener;
     private final BleAdvertisingMode m_mode;
     private final BleTransmissionPower m_power;
     private final Interval m_timeOut;
+
 
     private final AdvertiseCallback adCallback = new AdvertiseCallback()
     {
@@ -61,19 +63,20 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
         m_timeOut = settings.getTimeout();
     }
 
-    /*package*/ BleAdvertisingPacket getPacket()
+
+    /*package*/ final BleAdvertisingPacket getPacket()
     {
         return m_packet;
     }
 
     @Override
-    protected BleTask getTaskType()
+    protected final BleTask getTaskType()
     {
         return BleTask.START_ADVERTISING;
     }
 
     @Override
-    void execute()
+    final void execute()
     {
         if (Utils.isLollipop())
         {
@@ -85,29 +88,21 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
         }
     }
 
-    /*package*/ void stopAdvertising()
+    /*package*/ final void stopAdvertising()
     {
-        BluetoothLeAdvertiser ad = getManager().managerLayer().getBluetoothLeAdvertiser();
-        if (ad != null)
-        {
-            ad.stopAdvertising(adCallback);
-        }
+        getManager().managerLayer().stopAdvertising(adCallback);
     }
 
     @Override
-    public PE_TaskPriority getPriority()
+    public final PE_TaskPriority getPriority()
     {
         return PE_TaskPriority.TRIVIAL;
     }
 
     private void invokeStartAdvertising()
     {
-        BluetoothLeAdvertiser advert = getManager().managerLayer().getBluetoothLeAdvertiser();
-        if (advert != null)
-        {
-            BleAdvertisingMode mode = determineMode(m_mode, m_timeOut, getManager().isForegrounded());
-            advert.startAdvertising(m_packet.getNativeSettings(mode, m_power, m_timeOut), m_packet.getNativeData(), adCallback);
-        }
+        final BleAdvertisingMode mode = determineMode(m_mode, m_timeOut, getManager().isForegrounded());
+        getManager().managerLayer().startAdvertising(m_packet.getNativeSettings(mode, m_power, m_timeOut), m_packet.getNativeData(), adCallback);
     }
 
     private static BleAdvertisingMode determineMode(BleAdvertisingMode curMode, Interval timeout, boolean foregrounded)

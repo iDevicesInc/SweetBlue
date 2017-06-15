@@ -1389,7 +1389,7 @@ public final class BleDevice extends BleNode
                     return h;
                 }
                 // If this event is not in the list, then this event must have been cached app-side. So, we simply return an array with this
-                // event in it to prevent memory leaks.
+                // event in it.
                 ConnectionFailEvent[] h = { this };
                 return h;
             }

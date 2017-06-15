@@ -5,13 +5,14 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
-
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import java.util.Set;
+
 
 interface P_NativeManagerLayer {
 
@@ -30,7 +31,8 @@ interface P_NativeManagerLayer {
     BluetoothAdapter getNativeAdaptor();
     BluetoothManager getNativeManager();
     BluetoothGattServer openGattServer(Context context, P_BleServer_Listeners listeners);
-    BluetoothLeAdvertiser getBluetoothLeAdvertiser();
+    void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, AdvertiseCallback callback);
+    void stopAdvertising(AdvertiseCallback callback);
     boolean isLocationEnabledForScanning_byOsServices();
     boolean isLocationEnabledForScanning_byRuntimePermissions();
     boolean isLocationEnabledForScanning();

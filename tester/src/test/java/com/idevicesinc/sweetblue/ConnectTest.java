@@ -189,7 +189,7 @@ public class ConnectTest extends BaseBleUnitTest
         s.acquire();
     }
 
-    @Test(timeout = 16000)
+    @Test(timeout = 30000)
     public void connectDiscoveredMultipleDeviceTest() throws Exception
     {
         m_device = null;

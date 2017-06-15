@@ -4,6 +4,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
 import android.text.TextUtils;
@@ -150,9 +153,14 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
         return null;
     }
 
-    @Override public BluetoothLeAdvertiser getBluetoothLeAdvertiser()
+    @Override
+    public void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, AdvertiseCallback callback)
     {
-        return null;
+    }
+
+    @Override
+    public void stopAdvertising(AdvertiseCallback callback)
+    {
     }
 
     @Override public boolean isLocationEnabledForScanning_byOsServices()

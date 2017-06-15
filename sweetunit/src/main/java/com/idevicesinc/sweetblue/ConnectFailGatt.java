@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
-public class ConnectFailGatt extends BaseFailGatt
+public class ConnectFailGatt extends UnitTestGatt
 {
 
     private final FailurePoint m_failPoint;

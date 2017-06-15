@@ -117,14 +117,6 @@ public class BondTest extends BaseBleUnitTest
     public BleManagerConfig getConfig()
     {
         BleManagerConfig config = super.getConfig();
-        config.nativeDeviceFactory = new P_NativeDeviceLayerFactory<UnitTestDevice>()
-        {
-            @Override
-            public UnitTestDevice newInstance(BleDevice device)
-            {
-                return new UnitTestDevice(device);
-            }
-        };
         config.loggingEnabled = true;
         return config;
     }
@@ -148,7 +140,7 @@ public class BondTest extends BaseBleUnitTest
         {
             if (m_failsSoFar >= m_maxFails)
             {
-                UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
+                return super.createBond();
             }
             else
             {
@@ -164,7 +156,7 @@ public class BondTest extends BaseBleUnitTest
         {
             if (m_failsSoFar >= 2)
             {
-                UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
+                return super.createBondSneaky(methodName, loggingEnabled);
             }
             else
             {

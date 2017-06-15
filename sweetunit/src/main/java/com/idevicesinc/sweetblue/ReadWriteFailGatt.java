@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
-public class ReadWriteFailGatt extends BaseFailGatt
+public class ReadWriteFailGatt extends UnitTestGatt
 {
 
     private final FailType m_failType;
