@@ -38,12 +38,11 @@ Features
 *	Rich, queryable state tracking that makes UI integration a breeze.
 *	Automatic service discovery.
 *	Full support for server role including advertising.
-*	Built-in time series database for easily storing and querying historical data from past reads and notifications.
 *	Easy RSSI tracking with built-in polling and caching, including distance and friendly signal strength calculations.
 *	Highly configurable scanning with min/max time limits, periodic bursts, advanced filtering, and more.
 *	Continuous scanning mode that saves battery and defers to more important operations by stopping and starting as needed under the hood.
 *	Atomic transactions for easily coordinating authentication handshakes, initialization, and firmware updates.
-* 	Automatic striping of characteristic writes greater than [MTU](http://en.wikipedia.org/wiki/Maximum_transmission_unit) size of 20 bytes. (Coming in a future version).
+* 	Automatic striping of characteristic writes greater than [MTU](http://en.wikipedia.org/wiki/Maximum_transmission_unit) size of 20 bytes.
 *	Undiscovery based on last time seen.
 *	Clean leakage of underlying native stack objects in case of emergency.
 *	Wraps Android API level checks that gate certain methods.
