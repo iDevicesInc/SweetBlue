@@ -12,7 +12,7 @@ version = "${SEMVER}".replace("_", ".")
 
 android {
     compileSdkVersion 25
-    buildToolsVersion = '25.0.2'
+    buildToolsVersion = '25.0.3'
 
     defaultConfig {
         minSdkVersion 18
@@ -347,7 +347,7 @@ def buildAliases = [
         'fullBuild'  : ['copyAndRenameJars', 'bumpVersion', 'verifyNoCheckstyleWarnings', 'zipJar', 'cleanFolders']
 ]
 
-task fullBuild(dependsOn: [copyAndRenameJars, bumpVersion, check, verifyNoCheckstyleWarnings, zipJar]) {
+task fullBuild(dependsOn: [copyAndRenameJars, check, verifyNoCheckstyleWarnings, zipJar]) {
     group = "sweetblue"
     description = "Perform full build, and zip up all files for release."
 }

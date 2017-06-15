@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.android.tools.build:gradle:2.3.3'
         classpath 'commons-codec:commons-codec:1.8'
         //classpath 'org.apache.ant:ant-jsch:1.7.1', 'jsch:jsch:0.1.29'
 
