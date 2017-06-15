@@ -27,6 +27,6 @@ dependencies {
     // TODO - Create script to turn the below on/off for releasing. Release needs to point to SB's maven repo
 //    debugCompile project(':app')
 //    releaseCompile "com.idevicesinc:sweetblue:${version}"
-    compile project(':app')
+    compile project(':library')
     testCompile 'junit:junit:4.12'
 }
