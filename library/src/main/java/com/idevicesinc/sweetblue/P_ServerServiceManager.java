@@ -30,7 +30,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 	{
 		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
-		if( server_native == null )
+		if( server_native.isServerNull() )
 		{
 			return null;
 		}
@@ -46,7 +46,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 	{
 		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
-		if( server_native == null )
+		if( server_native.isServerNull() )
 		{
 			return P_Const.EMPTY_SERVICE_LIST;
 		}
@@ -177,7 +177,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 	{
 		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
-		if( server_native != null )
+		if( !server_native.isServerNull() )
 		{
 			server_native.clearServices();
 		}
@@ -226,7 +226,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		{
 			final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
-			if( server_native == null )
+			if( server_native.isServerNull() )
 			{
 				m_server.getManager().ASSERT(false, "Didn't expect native server to be null when removing characteristic.");
 

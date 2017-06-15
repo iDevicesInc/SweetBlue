@@ -1874,7 +1874,7 @@ public final class BleServer extends BleNode
     }
 
 	/**
-	 * Provides just-in-case lower-level access to the native server instance.
+	 * Provides just-in-case access to the abstracted server instance.
 	 * See similar warning for {@link BleDevice#getNative()}.
 	 */
 	@Advanced
@@ -2176,7 +2176,7 @@ public final class BleServer extends BleNode
 	{
 		if (server_nullable == null)												return false;
 		if (server_nullable == this)												return true;
-		if (server_nullable.getNativeLayer() == null || this.getNativeLayer() == null)		return false;
+		if (server_nullable.getNativeLayer().isServerNull() || this.getNativeLayer().isServerNull() )		return false;
 		if( this.isNull() && server_nullable.isNull() )								return true;
 
 		return server_nullable == this;
