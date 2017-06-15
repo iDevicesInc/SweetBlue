@@ -122,7 +122,7 @@ public final class ByteBuffer
     {
         if (length < 1 || start >= this.length)
         {
-            return new byte[0];
+            return P_Const.EMPTY_BYTE_ARRAY;
         }
         length = Math.min(length, this.length - start);
         byte[] subdata = newArray(length);

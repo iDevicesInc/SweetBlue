@@ -132,9 +132,9 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
         return m_adaptor.getAddress();
     }
 
-    @Override public final BluetoothGattServer openGattServer(Context context, P_BleServer_Listeners listeners)
+    @Override public final P_NativeServerLayer openGattServer(Context context, P_BleServer_Listeners listeners)
     {
-        return m_manager.openGattServer(context, listeners);
+        return new P_AndroidBleServer(m_manager.openGattServer(context, listeners));
     }
 
     @Override

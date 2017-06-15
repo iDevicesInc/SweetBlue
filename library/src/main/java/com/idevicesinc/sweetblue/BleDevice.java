@@ -37,6 +37,7 @@ import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
@@ -703,7 +704,7 @@ public final class BleDevice extends BleNode
                 this.m_gattStatus = gattStatus;
                 this.m_totalTime = Interval.secs(totalTime);
                 this.m_transitTime = Interval.secs(transitTime);
-                this.m_data = data != null ? data : EMPTY_BYTE_ARRAY;
+                this.m_data = data != null ? data : P_Const.EMPTY_BYTE_ARRAY;
                 this.m_rssi = device.getRssi();
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
@@ -724,7 +725,7 @@ public final class BleDevice extends BleNode
                 this.m_gattStatus = gattStatus;
                 this.m_totalTime = Interval.secs(totalTime);
                 this.m_transitTime = Interval.secs(transitTime);
-                this.m_data = EMPTY_BYTE_ARRAY;
+                this.m_data = P_Const.EMPTY_BYTE_ARRAY;
                 this.m_rssi = status == Status.SUCCESS ? rssi : device.getRssi();
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
@@ -744,7 +745,7 @@ public final class BleDevice extends BleNode
                 this.m_gattStatus = gattStatus;
                 this.m_totalTime = Interval.secs(totalTime);
                 this.m_transitTime = Interval.secs(transitTime);
-                this.m_data = EMPTY_BYTE_ARRAY;
+                this.m_data = P_Const.EMPTY_BYTE_ARRAY;
                 this.m_rssi = device.getRssi();
                 this.m_mtu = status == Status.SUCCESS ? mtu : device.getMtu();
                 this.m_solicited = solicited;
@@ -764,7 +765,7 @@ public final class BleDevice extends BleNode
                 this.m_gattStatus = gattStatus;
                 this.m_totalTime = Interval.secs(totalTime);
                 this.m_transitTime = Interval.secs(transitTime);
-                this.m_data = EMPTY_BYTE_ARRAY;
+                this.m_data = P_Const.EMPTY_BYTE_ARRAY;
                 this.m_rssi = device.getRssi();
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
@@ -774,7 +775,7 @@ public final class BleDevice extends BleNode
 
             static ReadWriteEvent NULL(BleDevice device)
             {
-                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, null, Type.NULL, Target.NULL, EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
+                return new ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, null, Type.NULL, Target.NULL, P_Const.EMPTY_BYTE_ARRAY, Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
             }
 
             /**
@@ -1882,7 +1883,7 @@ public final class BleDevice extends BleNode
     private int m_rssi = 0;
     private int m_advertisingFlags = 0x0;
     private Integer m_knownTxPower = null;
-    private byte[] m_scanRecord = EMPTY_BYTE_ARRAY;
+    private byte[] m_scanRecord = P_Const.EMPTY_BYTE_ARRAY;
 
     private BleScanInfo m_scanInfo = new BleScanInfo();
 
@@ -2489,7 +2490,7 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) UUID[] getAdvertisedServices()
     {
-        final UUID[] toReturn = m_scanInfo.getServiceUUIDS().size() > 0 ? new UUID[m_scanInfo.getServiceUUIDS().size()] : EMPTY_UUID_ARRAY;
+        final UUID[] toReturn = m_scanInfo.getServiceUUIDS().size() > 0 ? new UUID[m_scanInfo.getServiceUUIDS().size()] : P_Const.EMPTY_UUID_ARRAY;
         return m_scanInfo.getServiceUUIDS().toArray(toReturn);
     }
 
@@ -2498,7 +2499,7 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) byte[] getManufacturerData()
     {
-        final byte[] toReturn = m_scanInfo.getManufacturerData() != null ? m_scanInfo.getManufacturerData().clone() : new byte[0];
+        final byte[] toReturn = m_scanInfo.getManufacturerData() != null ? m_scanInfo.getManufacturerData().clone() : P_Const.EMPTY_BYTE_ARRAY;
 
         return toReturn;
     }
@@ -4392,7 +4393,7 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
 
         if (earlyOutResult != null)
         {
@@ -4445,7 +4446,7 @@ public final class BleDevice extends BleNode
         }
         else
         {
-            final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
+            final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
 
             if (earlyOutResult != null)
             {
@@ -4571,7 +4572,7 @@ public final class BleDevice extends BleNode
             }
             else
             {
-                final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
+                final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
 
                 if (earlyOutResult != null)
                 {
@@ -5031,7 +5032,7 @@ public final class BleDevice extends BleNode
     @Advanced
     public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, null, EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -5233,7 +5234,7 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -6534,7 +6535,7 @@ public final class BleDevice extends BleNode
     final ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
@@ -6648,7 +6649,7 @@ public final class BleDevice extends BleNode
     private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, DescriptorFilter descriptorFilter, ReadWriteListener listener)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {

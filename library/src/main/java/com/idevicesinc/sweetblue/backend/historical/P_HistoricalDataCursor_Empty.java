@@ -1,14 +1,14 @@
 package com.idevicesinc.sweetblue.backend.historical;
 
-import android.database.Cursor;
-
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
+import com.idevicesinc.sweetblue.utils.P_Const;
+
 
 class P_HistoricalDataCursor_Empty implements HistoricalDataCursor
 {
-	private static final byte[] EMPTY_BLOB = new byte[0];
+	private static final byte[] EMPTY_BLOB = P_Const.EMPTY_BYTE_ARRAY;
 
 	@Override public int getCount()
 	{

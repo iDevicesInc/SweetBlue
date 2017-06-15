@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.PA_Task.I_StateListener;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.util.UUID;
@@ -68,7 +69,7 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 			}
 			else
 			{
-				if( !getServer().getNative().notifyCharacteristicChanged(m_nativeDevice, characteristic, m_confirm) )
+				if( !getServer().getNativeLayer().notifyCharacteristicChanged(m_nativeDevice, characteristic, m_confirm) )
 				{
 					fail(BleServer.OutgoingListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 				}
@@ -102,7 +103,7 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
 		(
 			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
-			BleServer.ExchangeListener.Target.CHARACTERISTIC, BleServer.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
+			BleServer.ExchangeListener.Target.CHARACTERISTIC, P_Const.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
 			/*offset=*/0, /*responseNeeded=*/false, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, gattStatus_received, /*solicited=*/true
 		);
 
@@ -116,7 +117,7 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
 		(
 			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
-			BleServer.ExchangeListener.Target.CHARACTERISTIC, BleServer.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
+			BleServer.ExchangeListener.Target.CHARACTERISTIC, P_Const.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
 			/*offset=*/0, /*responseNeeded=*/false, BleServer.OutgoingListener.Status.SUCCESS, BleStatuses.GATT_STATUS_NOT_APPLICABLE, gattStatus, /*solicited=*/true
 		);
 

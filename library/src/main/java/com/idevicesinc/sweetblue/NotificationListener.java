@@ -9,6 +9,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -369,14 +370,14 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
             this.m_gattStatus = gattStatus;
             this.m_totalTime = Interval.secs(totalTime);
             this.m_transitTime = Interval.secs(transitTime);
-            this.m_data = data != null ? data : BleDevice.EMPTY_BYTE_ARRAY;
+            this.m_data = data != null ? data : P_Const.EMPTY_BYTE_ARRAY;
             this.m_solicited = solicited;
         }
 
 
         static NotificationEvent NULL(BleDevice device)
         {
-            return new NotificationEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NotificationListener.Type.NULL, BleDevice.EMPTY_BYTE_ARRAY, NotificationListener.Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
+            return new NotificationEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NotificationListener.Type.NULL, P_Const.EMPTY_BYTE_ARRAY, NotificationListener.Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
         }
 
         /**

@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_Const;
 
 import java.util.List;
 import java.util.Random;
@@ -70,7 +71,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public List<BluetoothGattService> getNativeServiceList(P_Logger logger) {
-        return m_services == null ? PA_ServiceManager.EMPTY_SERVICE_LIST : m_services;
+        return m_services == null ? P_Const.EMPTY_SERVICE_LIST : m_services;
     }
 
     @Override

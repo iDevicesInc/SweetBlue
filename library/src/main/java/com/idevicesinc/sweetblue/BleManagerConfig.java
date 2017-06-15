@@ -21,6 +21,7 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
@@ -619,12 +620,12 @@ public class BleManagerConfig extends BleDeviceConfig
 				this.m_advertisedServices = scanInfo != null ? scanInfo.getServiceUUIDS() : new ArrayList<UUID>(0);
 				this.m_rawDeviceName = rawDeviceName != null ? rawDeviceName : "";
 				this.m_normalizedDeviceName = normalizedDeviceName;
-				this.m_scanRecord = scanRecord != null ? scanRecord : BleDevice.EMPTY_BYTE_ARRAY;
+				this.m_scanRecord = scanRecord != null ? scanRecord : P_Const.EMPTY_BYTE_ARRAY;
 				this.m_rssi = rssi;
 				this.m_lastDisconnectIntent = lastDisconnectIntent;
 				this.m_txPower = scanInfo != null ? scanInfo.getTxPower().value : 0;
 				this.m_advertisingFlags = scanInfo != null ? scanInfo.getAdvFlags().value : 0;
-				this.m_manufacturerData = scanInfo != null ? scanInfo.getManufacturerData() : BleDevice.EMPTY_BYTE_ARRAY;
+				this.m_manufacturerData = scanInfo != null ? scanInfo.getManufacturerData() : P_Const.EMPTY_BYTE_ARRAY;
 				this.m_manufacturerId = scanInfo != null ? scanInfo.getManufacturerId() : 0;
 				this.m_serviceData = scanInfo != null ? scanInfo.getServiceData() : new HashMap<UUID, byte[]>(0);
 

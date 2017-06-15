@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
@@ -41,7 +42,7 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 	
 	private byte[] getWriteValue()
 	{
-		return m_writeValue != null ? m_writeValue : BleDevice.EMPTY_BYTE_ARRAY;
+		return m_writeValue != null ? m_writeValue : P_Const.EMPTY_BYTE_ARRAY;
 	}
 	
 	static byte[] getWriteValue(BluetoothGattCharacteristic char_native, boolean enable)

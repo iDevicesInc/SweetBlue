@@ -13,14 +13,15 @@ public interface FutureData
 {
 	/**
 	 * Convenience constant implementation that just returns an empty byte array.
+	 *
+	 * @deprecated
 	 */
+	@Deprecated
 	public static FutureData EMPTY = new FutureData()
 	{
-		private final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-
 		@Override public byte[] getData()
 		{
-			return EMPTY_BYTE_ARRAY;
+			return P_Const.EMPTY_BYTE_ARRAY;
 		}
 	};
 

@@ -108,7 +108,7 @@ public class EmptyCursor implements Cursor
 
 	@Override public byte[] getBlob(int columnIndex)
 	{
-		return new byte[0];
+		return P_Const.EMPTY_BYTE_ARRAY;
 	}
 
 	@Override public String getString(int columnIndex)

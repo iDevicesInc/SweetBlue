@@ -20,7 +20,7 @@ public final class HistoricalData implements UsesCustomNull
 	 * Special value that replaces Java's built-int <code>null</code> and
 	 * is used everywhere Java's would otherwise be used.
 	 */
-	public static HistoricalData NULL = new HistoricalData(new byte[0], 0);
+	public static HistoricalData NULL = new HistoricalData(P_Const.EMPTY_BYTE_ARRAY, 0);
 
 
 	public static @Nullable(Nullable.Prevalence.NEVER) HistoricalData denull(@Nullable(Nullable.Prevalence.NORMAL) final HistoricalData historicalData_nullable)
@@ -48,7 +48,7 @@ public final class HistoricalData implements UsesCustomNull
 
 	public HistoricalData(final byte[] blob, final EpochTime epochTime)
 	{
-		m_blob = blob != null ? blob : new byte[0];
+		m_blob = blob != null ? blob : P_Const.EMPTY_BYTE_ARRAY;
 		m_epochTime = epochTime != null ? epochTime : new EpochTime();
 	}
 

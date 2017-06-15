@@ -12,9 +12,9 @@ final class P_Task_DisconnectServer extends PA_Task_ConnectOrDisconnectServer
 
 	@Override void execute()
 	{
-		final BluetoothGattServer server_native = getServer().getNative();
+		final P_NativeServerLayer server_native = getServer().getNativeLayer();
 
-		if( server_native == null )
+		if( server_native.isServerNull() )
 		{
 			failImmediately();
 

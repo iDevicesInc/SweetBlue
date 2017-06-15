@@ -10,7 +10,7 @@ final class PS_BtSnippets
 //	{
 //		if( isInAnyState(BONDED, BONDING) )  return;
 //		
-//		BluetoothGattCharacteristic characteristic_native = characteristic.getNative();
+//		BluetoothGattCharacteristic characteristic_native = characteristic.getNativeLayer();
 //		
 //		if( U_Bt.requiresBonding(characteristic_native) )
 //		{

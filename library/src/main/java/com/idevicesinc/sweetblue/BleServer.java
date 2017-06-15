@@ -27,6 +27,7 @@ import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
@@ -242,7 +243,7 @@ public final class BleServer extends BleNode
 				m_offset = offset;
 				m_responseNeeded = responseNeeded;
 
-				m_data_received = data_in != null ? data_in : EMPTY_BYTE_ARRAY;
+				m_data_received = data_in != null ? data_in : P_Const.EMPTY_BYTE_ARRAY;
 			}
 
 			public boolean isFor(final String macAddress)  {  return macAddress().equals(macAddress);  }
@@ -316,7 +317,7 @@ public final class BleServer extends BleNode
 			{
 				m_respond = true;
 
-				m_futureData = futureData != null ? futureData : BleDevice.EMPTY_FUTURE_DATA;
+				m_futureData = futureData != null ? futureData : P_Const.EMPTY_FUTURE_DATA;
 				m_gattStatus = gattStatus;
 				m_offset = offset;
 				m_outgoingListener = outgoingListener != null ? outgoingListener : NULL_OUTGOING_LISTENER;
@@ -328,7 +329,7 @@ public final class BleServer extends BleNode
 
 				m_gattStatus = 0;
 				m_offset = 0;
-				m_futureData = BleDevice.EMPTY_FUTURE_DATA;
+				m_futureData = P_Const.EMPTY_FUTURE_DATA;
 				m_outgoingListener = outgoingListener != null ? outgoingListener : NULL_OUTGOING_LISTENER;
 			}
 
@@ -406,7 +407,7 @@ public final class BleServer extends BleNode
 			 */
 			public static Please respondWithSuccess(final OutgoingListener listener)
 			{
-				return new Please(BleDevice.EMPTY_FUTURE_DATA, BleStatuses.GATT_SUCCESS, /*offset=*/0, listener);
+				return new Please(P_Const.EMPTY_FUTURE_DATA, BleStatuses.GATT_SUCCESS, /*offset=*/0, listener);
 			}
 
 			/**
@@ -425,7 +426,7 @@ public final class BleServer extends BleNode
 			 */
 			public static Please respondWithError(final int gattStatus, final OutgoingListener listener)
 			{
-				return new Please(BleDevice.EMPTY_FUTURE_DATA, gattStatus, /*offset=*/0, listener);
+				return new Please(P_Const.EMPTY_FUTURE_DATA, gattStatus, /*offset=*/0, listener);
 			}
 		}
 		
@@ -481,7 +482,7 @@ public final class BleServer extends BleNode
 			/**
 			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
 			 * {@link BleServer#sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}. It will return <code>false</code> otherwise,
-			 * which can happen if for example you use {@link BleServer#getNative()} to bypass SweetBlue for whatever reason.
+			 * which can happen if for example you use {@link BleServer#getNativeLayer()} to bypass SweetBlue for whatever reason.
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.OutgoingListener.Status#TIMED_OUT},
 			 * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
 			 */
@@ -515,14 +516,14 @@ public final class BleServer extends BleNode
 				return new OutgoingEvent
 				(
 					server, nativeDevice, serviceUuid, charUuid, NON_APPLICABLE_UUID, Type.NOTIFICATION, Target.CHARACTERISTIC,
-					EMPTY_BYTE_ARRAY, data.getData(), NON_APPLICABLE_REQUEST_ID, 0, false, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE,
+                        P_Const.EMPTY_BYTE_ARRAY, data.getData(), NON_APPLICABLE_REQUEST_ID, 0, false, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE,
 					BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true
 				);
 			}
 
 			static OutgoingEvent NULL__NOTIFICATION(final BleServer server, final BluetoothDevice nativeDevice, final UUID serviceUuid, final UUID charUuid)
 			{
-				return EARLY_OUT__NOTIFICATION(server, nativeDevice, serviceUuid, charUuid, BleServer.EMPTY_FUTURE_DATA, Status.NULL);
+				return EARLY_OUT__NOTIFICATION(server, nativeDevice, serviceUuid, charUuid, P_Const.EMPTY_FUTURE_DATA, Status.NULL);
 			}
 
 			/**
@@ -1295,7 +1296,7 @@ public final class BleServer extends BleNode
 			/**
 			 * This returns <code>true</code> if this event was the result of an explicit call through SweetBlue, e.g. through
 			 * {@link BleServer#addService(BleService, ServiceAddListener)}. It will return <code>false</code> otherwise,
-			 * which can happen if for example you use {@link BleServer#getNative()} to bypass SweetBlue for whatever reason.
+			 * which can happen if for example you use {@link BleServer#getNativeLayer()} to bypass SweetBlue for whatever reason.
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener.Status#TIMED_OUT},
 			 * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
 			 */
@@ -1862,12 +1863,22 @@ public final class BleServer extends BleNode
 		}
 	}
 
+    /**
+     * Provides just-in-case lower-level access to the native server instance.
+     * See similar warning for {@link BleDevice#getNative()}.
+     */
+    @Advanced
+    public @Nullable(Nullable.Prevalence.RARE) BluetoothGattServer getNative()
+    {
+        return m_nativeWrapper.getNative().getNativeServer();
+    }
+
 	/**
 	 * Provides just-in-case lower-level access to the native server instance.
 	 * See similar warning for {@link BleDevice#getNative()}.
 	 */
 	@Advanced
-	public @Nullable(Nullable.Prevalence.RARE) BluetoothGattServer getNative()
+	public @Nullable(Nullable.Prevalence.RARE) P_NativeServerLayer getNativeLayer()
 	{
 		return m_nativeWrapper.getNative();
 	}
@@ -2165,7 +2176,7 @@ public final class BleServer extends BleNode
 	{
 		if (server_nullable == null)												return false;
 		if (server_nullable == this)												return true;
-		if (server_nullable.getNative() == null || this.getNative() == null)		return false;
+		if (server_nullable.getNativeLayer() == null || this.getNativeLayer() == null)		return false;
 		if( this.isNull() && server_nullable.isNull() )								return true;
 
 		return server_nullable == this;

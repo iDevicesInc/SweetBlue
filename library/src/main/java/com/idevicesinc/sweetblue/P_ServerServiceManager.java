@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Pointer;
 
 import java.util.List;
@@ -27,7 +28,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 
 	@Override public BluetoothGattService getServiceDirectlyFromNativeNode(final UUID uuid)
 	{
-		final BluetoothGattServer server_native = m_server.getNative();
+		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
 		if( server_native == null )
 		{
@@ -43,17 +44,17 @@ final class P_ServerServiceManager extends PA_ServiceManager
 
 	@Override protected List<BluetoothGattService> getNativeServiceList_original()
 	{
-		final BluetoothGattServer server_native = m_server.getNative();
+		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
 		if( server_native == null )
 		{
-			return EMPTY_SERVICE_LIST;
+			return P_Const.EMPTY_SERVICE_LIST;
 		}
 		else
 		{
 			final List<BluetoothGattService> list_native = server_native.getServices();
 
-			return list_native == null ? EMPTY_SERVICE_LIST : list_native;
+			return list_native == null ? P_Const.EMPTY_SERVICE_LIST : list_native;
 		}
 	}
 
@@ -174,7 +175,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 
 	public void removeAll(final BleServer.ServiceAddListener.Status status)
 	{
-		final BluetoothGattServer server_native = m_server.getNative();
+		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
 		if( server_native != null )
 		{
@@ -223,7 +224,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 		else
 		{
-			final BluetoothGattServer server_native = m_server.getNative();
+			final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
 			if( server_native == null )
 			{
