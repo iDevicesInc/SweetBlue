@@ -10,6 +10,12 @@
     <string name="disconnect">Disconnect</string>
     <string name="bond">Bond</string>
     <string name="unbond">Unbond</string>
+    <string name="verbose">Verbose</string>
+    <string name="debug">Debug</string>
+    <string name="info">Info</string>
+    <string name="warn">Warn</string>
+    <string name="error">Error</string>
+
     <array name="scan_apis">
         <item>@string/auto</item>
         <item>@string/classic</item>
@@ -21,6 +27,13 @@
         <item>@string/disconnect</item>
         <item>@string/bond</item>
         <item>@string/unbond</item>
+    </array>
+    <array name="debug_levels">
+        <item>@string/verbose</item>
+        <item>@string/debug</item>
+        <item>@string/info</item>
+        <item>@string/warn</item>
+        <item>@string/error</item>
     </array>
 
     <!-- Logger -->
@@ -47,5 +60,7 @@
     <string name="send_feedback_email_subject">Please take my money!</string>
     <string name="send_feedback_email_body">Sweetblue toolbox feedback.\n\nGive me sweet blue!  Do it now!</string>
     <string name="send_feedback_send_mail">Send Mail</string>
+    <string name="debug_level">Level:</string>
+	<string name="filter">Filter...</string>
 
 </resources>
