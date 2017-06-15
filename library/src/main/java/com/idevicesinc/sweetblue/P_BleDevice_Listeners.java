@@ -15,6 +15,7 @@ import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 final class P_BleDevice_Listeners extends BluetoothGattCallback
@@ -444,7 +445,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.RSSI, BleDevice.EMPTY_BYTE_ARRAY, gattStatus);
+			fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.RSSI, P_Const.EMPTY_BYTE_ARRAY, gattStatus);
 		}
 	}
 	
@@ -644,7 +645,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.MTU, BleDevice.EMPTY_BYTE_ARRAY, gattStatus);
+			fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.MTU, P_Const.EMPTY_BYTE_ARRAY, gattStatus);
 		}
 	}
 }

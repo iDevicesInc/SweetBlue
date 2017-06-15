@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -16,21 +17,6 @@ import java.util.UUID;
 
 abstract class PA_ServiceManager
 {
-	private static final Iterator<BluetoothGattService> EMPTY_SERVICE_ITERATOR = new EmptyIterator<BluetoothGattService>();
-
-	protected static final List<BluetoothGattService> EMPTY_SERVICE_LIST = new ArrayList<BluetoothGattService>()
-	{
-		@Override public Iterator<BluetoothGattService> iterator()
-		{
-			return EMPTY_SERVICE_ITERATOR;
-		}
-	};
-
-	private static final List<BluetoothGattCharacteristic> EMPTY_CHARACTERISTIC_LIST = new ArrayList<BluetoothGattCharacteristic>();
-	private static final Iterator<BluetoothGattCharacteristic> EMPTY_CHARACTERISTIC_ITERATOR = new EmptyIterator<BluetoothGattCharacteristic>();
-
-	private static final List<BluetoothGattDescriptor> EMPTY_DESCRIPTOR_LIST = new ArrayList<BluetoothGattDescriptor>();
-
 
 	PA_ServiceManager()
 	{
@@ -163,35 +149,35 @@ abstract class PA_ServiceManager
 	{
 		final List<BluetoothGattService> list_native = getNativeServiceList_original();
 
-		return list_native == EMPTY_SERVICE_LIST ? list_native : new ArrayList<BluetoothGattService>(list_native);
+		return list_native == P_Const.EMPTY_SERVICE_LIST ? list_native : new ArrayList<BluetoothGattService>(list_native);
 	}
 
 	private List<BluetoothGattCharacteristic> getNativeCharacteristicList_original(final BluetoothGattService service)
 	{
 		final List<BluetoothGattCharacteristic> list_native = service.getCharacteristics();
 
-		return list_native == null ? EMPTY_CHARACTERISTIC_LIST : list_native;
+		return list_native == null ? P_Const.EMPTY_CHARACTERISTIC_LIST : list_native;
 	}
 
 	private List<BluetoothGattCharacteristic> getNativeCharacteristicList_cloned(final BluetoothGattService service)
 	{
 		final List<BluetoothGattCharacteristic> list_native = getNativeCharacteristicList_original(service);
 
-		return list_native == EMPTY_CHARACTERISTIC_LIST ? list_native : new ArrayList<BluetoothGattCharacteristic>(list_native);
+		return list_native == P_Const.EMPTY_CHARACTERISTIC_LIST ? list_native : new ArrayList<>(list_native);
 	}
 
 	private List<BluetoothGattDescriptor> getNativeDescriptorList_original(final BluetoothGattCharacteristic characteristic)
 	{
 		final List<BluetoothGattDescriptor> list_native = characteristic.getDescriptors();
 
-		return list_native == null ? EMPTY_DESCRIPTOR_LIST : list_native;
+		return list_native == null ? P_Const.EMPTY_DESCRIPTOR_LIST : list_native;
 	}
 
 	private List<BluetoothGattDescriptor> getNativeDescriptorList_cloned(final BluetoothGattCharacteristic characteristic)
 	{
 		final List<BluetoothGattDescriptor> list_native = getNativeDescriptorList_original(characteristic);
 
-		return list_native == EMPTY_DESCRIPTOR_LIST ? list_native : new ArrayList<BluetoothGattDescriptor>(list_native);
+		return list_native == P_Const.EMPTY_DESCRIPTOR_LIST ? list_native : new ArrayList<>(list_native);
 	}
 
 	private List<BluetoothGattCharacteristic> collectAllNativeCharacteristics(final UUID serviceUuid_nullable, final Object forEach_nullable)

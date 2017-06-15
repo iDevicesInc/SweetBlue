@@ -10,6 +10,7 @@ import com.idevicesinc.sweetblue.utils.EpochTimeRange;
 import com.idevicesinc.sweetblue.utils.ForEach_Returning;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataCursor;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.UpdateLoop;
 
 import java.util.HashMap;
@@ -18,7 +19,6 @@ import java.util.UUID;
 
 final class P_HistoricalDataManager
 {
-	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	private static final EmptyIterator<HistoricalData> EMPTY_ITERATOR = new EmptyIterator<HistoricalData>();
 
 	private final Object LIST_CREATE_MUTEX = new Object();
@@ -156,7 +156,7 @@ final class P_HistoricalDataManager
 	{
 		final Backend_HistoricalDataList list = getList_createIfNotExists(uuid);
 
-		final Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, EMPTY_BYTE_ARRAY, EpochTime.NULL, Source.MULTIPLE_MANUAL_ADDITIONS);
+		final Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, P_Const.EMPTY_BYTE_ARRAY, EpochTime.NULL, Source.MULTIPLE_MANUAL_ADDITIONS);
 
 		if( PU_HistoricalData.add_earlyOut(list, please) )  return;
 
@@ -170,7 +170,7 @@ final class P_HistoricalDataManager
 	{
 		final Backend_HistoricalDataList list = getList_createIfNotExists(uuid);
 
-		final Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, EMPTY_BYTE_ARRAY, EpochTime.NULL, Source.MULTIPLE_MANUAL_ADDITIONS);
+		final Please please = PU_HistoricalData.getPlease(m_endPoint, m_macAddress, uuid, P_Const.EMPTY_BYTE_ARRAY, EpochTime.NULL, Source.MULTIPLE_MANUAL_ADDITIONS);
 
 		if( PU_HistoricalData.add_earlyOut(list, please) )  return;
 

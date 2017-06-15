@@ -12,11 +12,12 @@ final class P_NativeServerWrapper
 	private final BleServer m_server;
 	private final BleManager m_mngr;
 
-	private BluetoothGattServer m_native;
+	private P_NativeServerLayer m_nativeLayer;
 	private String m_name = "";
 
 	private final HashMap<String, Integer> m_nativeConnectionStates = new HashMap<String, Integer>();
 	private final HashSet<String> m_ignoredDisconnects = new HashSet<String>();
+
 	
 	public P_NativeServerWrapper(BleServer server )
 	{
@@ -26,7 +27,7 @@ final class P_NativeServerWrapper
 		if( server.isNull() )
 		{
 			m_name = BleDevice.NULL_STRING();
-			m_native = null;
+			m_nativeLayer = null;
 		}
 		else
 		{
@@ -34,12 +35,12 @@ final class P_NativeServerWrapper
 		}
 	}
 
-	public void ignoreNextImplicitDisconnect(final String macAddress)
+	public final void ignoreNextImplicitDisconnect(final String macAddress)
 	{
 		m_ignoredDisconnects.add(macAddress);
 	}
 
-	public boolean shouldIgnoreImplicitDisconnect(final String macAddress)
+	public final boolean shouldIgnoreImplicitDisconnect(final String macAddress)
 	{
 		final boolean toReturn = m_ignoredDisconnects.contains(macAddress);
 
@@ -48,32 +49,30 @@ final class P_NativeServerWrapper
 		return toReturn;
 	}
 
-	public void clearImplicitDisconnectIgnoring(final String macAddress)
+	public final void clearImplicitDisconnectIgnoring(final String macAddress)
 	{
 		m_ignoredDisconnects.remove(macAddress);
 	}
 
-
-
-	public void closeServer()
+	public final void closeServer()
 	{
-		if( m_native == null )
+		if( m_nativeLayer.isServerNull() )
 		{
 			m_mngr.ASSERT(false, "Native server is already closed and nulled out.");
 		}
 		else
 		{
-			final BluetoothGattServer native_local = m_native;
+			final P_NativeServerLayer native_local = m_nativeLayer;
 
-			m_native = null;
+			m_nativeLayer = null;
 
 			native_local.close();
 		}
 	}
 
-	public boolean openServer()
+	public final boolean openServer()
 	{
-		if( m_native != null )
+		if( !m_nativeLayer.isServerNull() )
 		{
 			m_mngr.ASSERT(false, "Native server is already not null!");
 
@@ -85,9 +84,9 @@ final class P_NativeServerWrapper
 
 			clearAllConnectionStates();
 
-			m_native = m_mngr.managerLayer().openGattServer(m_mngr.getApplicationContext(), m_server.m_listeners);
+			m_nativeLayer = m_mngr.managerLayer().openGattServer(m_mngr.getApplicationContext(), m_server.m_listeners);
 
-			if( m_native == null )
+			if( m_nativeLayer.isServerNull() )
 			{
 				return false;
 			}
@@ -115,34 +114,34 @@ final class P_NativeServerWrapper
 		}
 	}
 
-	public boolean isDisconnecting(final String macAddress)
+	public final boolean isDisconnecting(final String macAddress)
 	{
 		return getNativeState(macAddress) == BluetoothGattServer.STATE_DISCONNECTING;
 	}
 
-	public boolean isDisconnected(final String macAddress)
+	public final boolean isDisconnected(final String macAddress)
 	{
 		return getNativeState(macAddress) == BluetoothGattServer.STATE_DISCONNECTED;
 	}
 
-	public boolean isConnected(final String macAddress)
+	public final boolean isConnected(final String macAddress)
 	{
 		return getNativeState(macAddress) == BluetoothGattServer.STATE_CONNECTED;
 	}
 
-	public boolean isConnecting(final String macAddress)
+	public final boolean isConnecting(final String macAddress)
 	{
 		return getNativeState(macAddress) == BluetoothGattServer.STATE_CONNECTING;
 	}
 
-	public boolean isConnectingOrConnected(final String macAddress)
+	public final boolean isConnectingOrConnected(final String macAddress)
 	{
 		final int  nativeState = getNativeState(macAddress);
 
 		return nativeState == BluetoothGattServer.STATE_CONNECTING || nativeState == BluetoothGattServer.STATE_CONNECTED;
 	}
 
-	public boolean isDisconnectingOrDisconnected(final String macAddress)
+	public final boolean isDisconnectingOrDisconnected(final String macAddress)
 	{
 		final int  nativeState = getNativeState(macAddress);
 
@@ -154,7 +153,7 @@ final class P_NativeServerWrapper
 		m_nativeConnectionStates.clear();
 	}
 
-	public int getNativeState(final String macAddress)
+	public final int getNativeState(final String macAddress)
 	{
 		if( m_nativeConnectionStates.containsKey(macAddress) )
 		{
@@ -166,19 +165,23 @@ final class P_NativeServerWrapper
 		}
 	}
 
-	BluetoothGattServer getNative()
+	final P_NativeServerLayer getNative()
 	{
-		return m_native;
+		if (m_nativeLayer == null)
+		{
+			return P_AndroidBleServer.NULL;
+		}
+		return m_nativeLayer;
 	}
 
-	void updateNativeConnectionState(final String macAddress, final int state)
+	final void updateNativeConnectionState(final String macAddress, final int state)
 	{
 		m_nativeConnectionStates.put(macAddress, state);
 	}
 
-	void updateNativeConnectionState(final BluetoothDevice device)
+	final void updateNativeConnectionState(final BluetoothDevice device)
 	{
-		if( m_native == null )
+		if( m_nativeLayer.isServerNull() )
 		{
 			m_mngr.ASSERT(false, "Did not expect native server to be null when implicitly refreshing state.");
 		}

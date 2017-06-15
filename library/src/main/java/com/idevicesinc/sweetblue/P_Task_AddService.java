@@ -2,8 +2,8 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
-
 import com.idevicesinc.sweetblue.utils.Utils;
+
 
 final class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I_StateListener
 {
@@ -11,6 +11,7 @@ final class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I
 	private final BleServer.ServiceAddListener m_addListener;
 
 	private boolean m_cancelledInTheMiddleOfExecuting = false;
+
 
 	public P_Task_AddService(BleServer server, final BluetoothGattService service, final BleServer.ServiceAddListener addListener)
 	{
@@ -22,9 +23,9 @@ final class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I
 
 	@Override void execute()
 	{
-		final BluetoothGattServer server_native_nullable = getServer().getNative();
+		final P_NativeServerLayer server_native_nullable = getServer().getNativeLayer();
 
-		if( server_native_nullable == null )
+		if( server_native_nullable.isServerNull() )
 		{
 			if( !getServer().m_nativeWrapper.openServer() )
 			{
@@ -34,9 +35,9 @@ final class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I
 			}
 		}
 
-		final BluetoothGattServer server_native = getServer().getNative();
+		final P_NativeServerLayer server_native = getServer().getNativeLayer();
 
-		if( server_native /*still*/ == null )
+		if( server_native.isServerNull() )
 		{
 			failImmediately(BleServer.ServiceAddListener.Status.SERVER_OPENING_FAILED);
 
@@ -114,9 +115,9 @@ final class P_Task_AddService extends PA_Task_RequiresBleOn implements PA_Task.I
 	{
 		if( m_cancelledInTheMiddleOfExecuting )
 		{
-			final BluetoothGattServer server_native_nullable = getServer().getNative();
+			final P_NativeServerLayer server_native_nullable = getServer().getNativeLayer();
 
-			if( server_native_nullable != null )
+			if( !server_native_nullable.isServerNull() )
 			{
 				server_native_nullable.removeService(service);
 			}

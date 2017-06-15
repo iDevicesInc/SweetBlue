@@ -19,9 +19,9 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 
 	@Override public void execute()
 	{
-		final BluetoothGattServer server_native_nullable = getServer().getNative();
+		final P_NativeServerLayer server_native_nullable = getServer().getNativeLayer();
 
-		if( server_native_nullable == null )
+		if( server_native_nullable.isServerNull() )
 		{
 			if( !getServer().m_nativeWrapper.openServer() )
 			{
@@ -33,9 +33,9 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 			}
 		}
 
-		final BluetoothGattServer server_native = getServer().getNative();
+		final P_NativeServerLayer server_native = getServer().getNativeLayer();
 
-		if( server_native /*still*/ == null )
+		if( server_native.isServerNull() )
 		{
 			m_status = BleServer.ConnectionFailListener.Status.SERVER_OPENING_FAILED;
 

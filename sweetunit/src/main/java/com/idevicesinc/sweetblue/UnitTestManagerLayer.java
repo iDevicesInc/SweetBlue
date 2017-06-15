@@ -148,9 +148,9 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
         return null;
     }
 
-    @Override public BluetoothGattServer openGattServer(Context context, P_BleServer_Listeners listeners)
+    @Override public P_NativeServerLayer openGattServer(Context context, P_BleServer_Listeners listeners)
     {
-        return null;
+        return new UnitTestServerLayer();
     }
 
     @Override

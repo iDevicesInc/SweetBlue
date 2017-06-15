@@ -11,6 +11,7 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.P_Const;
 
 
 final class P_DeviceServiceManager extends PA_ServiceManager
@@ -162,7 +163,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 	@Override protected final List<BluetoothGattService> getNativeServiceList_original()
 	{
 		List<BluetoothGattService> list_native = m_device.layerManager().getNativeServiceList();
-		return list_native == null ? EMPTY_SERVICE_LIST : list_native;
+		return list_native == null ? P_Const.EMPTY_SERVICE_LIST : list_native;
 	}
 }
 

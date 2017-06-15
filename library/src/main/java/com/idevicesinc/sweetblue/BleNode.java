@@ -466,12 +466,6 @@ public abstract class BleNode implements UsesCustomNull
 		void onEvent(final HistoricalDataQueryEvent e);
 	}
 
-	//--- DRK > Some reusable empty-array-type instances so we don't have to create them from scratch over and over on demand.
-	protected static final UUID[] EMPTY_UUID_ARRAY			= new UUID[0];
-	protected static final ArrayList<UUID> EMPTY_LIST		= new ArrayList<UUID>();
-
-	/*package*/ static final byte[] EMPTY_BYTE_ARRAY		= new byte[0];
-	/*package*/ static final FutureData EMPTY_FUTURE_DATA	= new PresentData(EMPTY_BYTE_ARRAY);
 
 	/**
 	 * Field for app to associate any data it wants with instances of this class

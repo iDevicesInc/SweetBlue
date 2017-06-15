@@ -30,7 +30,7 @@ interface P_NativeManagerLayer {
     Set<BluetoothDevice> getBondedDevices();
     BluetoothAdapter getNativeAdaptor();
     BluetoothManager getNativeManager();
-    BluetoothGattServer openGattServer(Context context, P_BleServer_Listeners listeners);
+    P_NativeServerLayer openGattServer(Context context, P_BleServer_Listeners listeners);
     void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, AdvertiseCallback callback);
     void stopAdvertising(AdvertiseCallback callback);
     boolean isLocationEnabledForScanning_byOsServices();
