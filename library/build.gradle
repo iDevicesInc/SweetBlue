@@ -12,7 +12,7 @@ version = "${SEMVER}".replace("_", ".")
 
 android {
     compileSdkVersion 25
-    buildToolsVersion = '25.0.3'
+    buildToolsVersion '25.0.3'
 
     defaultConfig {
         minSdkVersion 18
@@ -332,35 +332,49 @@ task bumpBuildToolsVersion {
     group = "sweetblue"
     description = "Updates Build Tools Version in all inner project's build.gradle"
     doLast {
-        def filelist = Set()
-        filelist.add file(rootDir.getAbsolutePath() + "/integration/build.gradle")
-        filelist.add file(rootDir.absolutePath + "/library/build.gradle")
-        filelist.add file(rootDir.absolutePath + "/seetunit/build.gradle")
-        filelist.add file(rootDir.absolutePath + "/tester/build.gradle")
+        def fileList = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
+        + files(rootDir.absolutePath + "/library/build.gradle") \
+        + files(rootDir.absolutePath + "/sweetunit/build.gradle") \
+        + files(rootDir.absolutePath + "/tester/build.gradle")
 
         File samplesDir = file(rootDir.absolutePath + "/app/script_output/samples/samples")
-        def samples = files { samplesDir.listFiles() }.each { String f
+        def samples = files { samplesDir.listFiles() }
+        samples.each {File sample ->
+            fileList.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
+        println fileList.asFileTree.files
+
+        fileList.each { File f ->
+            String contents = f.getText('UTF-8')
+            println contents.find("buildToolsVersion (\"\\d|'\\d).*(\"|')")
+            contents = contents.replaceAll("buildToolsVersion (\"\\d|'\\d).*(\"|')", "buildToolsVersion '" + buildToolsVersion + "'")
+            f.write(contents, 'UTF-8')
+            println contents.find("buildToolsVersion (\"\\d|'\\d).*(\"|')")
         }
+    }
+}
 
+task bumpCompileSDKVersion {
+    group = "sweetblue"
+    description = "Updates Build Tools Version in all inner project's build.gradle"
+    doLast {
+        def fileList = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
+        + files(rootDir.absolutePath + "/library/build.gradle") \
+        + files(rootDir.absolutePath + "/sweetunit/build.gradle") \
+        + files(rootDir.absolutePath + "/tester/build.gradle")
 
+        File samplesDir = file(rootDir.absolutePath + "/app/script_output/samples/samples")
+        def samples = files { samplesDir.listFiles() }
+        samples.each {File sample ->
+            fileList.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
+        println fileList.asFileTree.files
 
-
-
-
-
-        /*
-        MessageDigest md = MessageDigest.getInstance("SHA1")
-
-        byte[] res = md.digest(version.getBytes())
-        String hash = getHexString(res)
-        String contents = uuids.getText('UTF-8')
-        contents = contents.replaceAll("BLUETOOTH_CONNECTED_HASH = \".*\"", "BLUETOOTH_CONNECTED_HASH = \"${hash}\"")
-        uuids.write(contents, 'UTF-8')
-        File readme = new File(rootDir.absolutePath + "/README.md")
-        contents = readme.getText('UTF-8')
-        contents = contents.replaceAll("version-.*-blue", "version-${version}-blue")
-        contents = contents.replaceAll("sweetblue:.*'", "sweetblue:${version}'")
-        readme.write(contents, 'UTF-8') */
+        fileList.each { File f ->
+            String contents = f.getText('UTF-8')
+            println contents.find("compileSdkVersion \\d+")
+            contents = contents.replaceAll("compileSdkVersion \\d+", "compileSdkVersion " + compileSdkVersion)
+            f.write(contents, 'UTF-8')
+            println contents.find("buildToolsVersion (\"\\d|'\\d).*(\"|')")
+        }
     }
 }
 
