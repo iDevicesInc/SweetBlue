@@ -2,6 +2,8 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.BluetoothGattCharacteristic;
+
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
@@ -33,7 +35,7 @@ public class ReadWriteFailGatt extends UnitTestGatt
     {
         if (m_failType == FailType.GATT_ERROR)
         {
-            UnitTestUtils.readError(getBleDevice(), characteristic, BleStatuses.GATT_ERROR, getDelayTime());
+            NativeUtil.readError(getBleDevice(), characteristic, BleStatuses.GATT_ERROR, getDelayTime());
         }
         else
         {

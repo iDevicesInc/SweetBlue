@@ -5687,13 +5687,13 @@ public final class BleDevice extends BleNode
             m_advertisingFlags = scanEvent_nullable.advertisingFlags();
 
             m_scanInfo.clearServiceUUIDs();
-            m_scanInfo.populateServiceUUIDs(scanEvent_nullable.advertisedServices());
+            m_scanInfo.addServiceUUIDs(scanEvent_nullable.advertisedServices());
 
-            m_scanInfo.setManufacturerId(scanEvent_nullable.manufacturerId());
+            m_scanInfo.setManufacturerId((short) scanEvent_nullable.manufacturerId());
             m_scanInfo.setManufacturerData(scanEvent_nullable.manufacturerData());
 
             m_scanInfo.clearServiceData();
-            m_scanInfo.populateServiceData(scanEvent_nullable.serviceData());
+            m_scanInfo.addServiceData(scanEvent_nullable.serviceData());
         }
         else if (scanRecord_nullable != null)
         {

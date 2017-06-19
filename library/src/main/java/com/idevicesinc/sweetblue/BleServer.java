@@ -1,13 +1,9 @@
-/**
- * 
- */
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -17,7 +13,6 @@ import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.le.AdvertiseCallback;
 import android.content.Context;
-
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
@@ -36,7 +31,6 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleTransmissionPower;
 import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode;
-
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleServerState.*;
 
@@ -110,7 +104,7 @@ public final class BleServer extends BleNode
 			/**
 			 * Shorthand for checking if this equals {@link #READ}.
 			 */
-			public boolean isRead()
+			public final boolean isRead()
 			{
 				return this == READ;
 			}
@@ -118,7 +112,7 @@ public final class BleServer extends BleNode
 			/**
 			 * Shorthand for checking if this equals {@link #NOTIFICATION} or {@link #INDICATION}.
 			 */
-			public boolean isNotificationOrIndication()
+			public final boolean isNotificationOrIndication()
 			{
 				return this == NOTIFICATION || this == INDICATION;
 			}
@@ -126,7 +120,7 @@ public final class BleServer extends BleNode
 			/**
 			 * Shorthand for checking if this equals {@link #WRITE} or {@link #PREPARED_WRITE}.
 			 */
-			public boolean isWrite()
+			public final boolean isWrite()
 			{
 				return this == WRITE || this == PREPARED_WRITE;
 			}
@@ -153,43 +147,43 @@ public final class BleServer extends BleNode
 			/**
 			 * The {@link BleServer} this {@link ExchangeEvent} is for.
 			 */
-			public BleServer server() {  return m_server;  }
+			public final BleServer server() {  return m_server;  }
 			private final BleServer m_server;
 
 			/**
 			 * Returns the mac address of the client peripheral that we are exchanging data with.
 			 */
-			public String macAddress()  {  return m_nativeDevice.getAddress(); }
+			public final String macAddress()  {  return m_nativeDevice.getAddress(); }
 
 			/**
 			 * Returns the native bluetooth device object representing the client making the request.
 			 */
-			public BluetoothDevice nativeDevice()  {  return m_nativeDevice;  };
+			public final BluetoothDevice nativeDevice()  {  return m_nativeDevice;  };
 			private final BluetoothDevice m_nativeDevice;
 
 			/**
 			 * The type of operation, read or write.
 			 */
-			public Type type() {  return m_type;  }
+			public final Type type() {  return m_type;  }
 			private final Type m_type;
 
 			/**
 			 * The type of GATT object this {@link ExchangeEvent} is for, characteristic or descriptor.
 			 */
-			public Target target() {  return m_target; }
+			public final Target target() {  return m_target; }
 			private final Target m_target;
 
 			/**
 			 * The {@link UUID} of the service associated with this {@link ExchangeEvent}.
 			 */
-			public UUID serviceUuid() {  return m_serviceUuid; }
+			public final UUID serviceUuid() {  return m_serviceUuid; }
 			private final UUID m_serviceUuid;
 
 			/**
 			 * The {@link UUID} of the characteristic associated with this {@link ExchangeEvent}. This will always be
 			 * a valid {@link UUID}, even if {@link #target()} is {@link Target#DESCRIPTOR}.
 			 */
-			public @Nullable(Nullable.Prevalence.NEVER) UUID charUuid() {  return m_charUuid; }
+			public final @Nullable(Nullable.Prevalence.NEVER) UUID charUuid() {  return m_charUuid; }
 			private final UUID m_charUuid;
 
 			/**
@@ -197,7 +191,7 @@ public final class BleServer extends BleNode
 			 * {@link Target#CHARACTERISTIC} then this will be referentially equal (i.e. you can use == to compare)
 			 * to {@link #NON_APPLICABLE_UUID}.
 			 */
-			public @Nullable(Nullable.Prevalence.NEVER) UUID descUuid() {  return m_descUuid; }
+			public final @Nullable(Nullable.Prevalence.NEVER) UUID descUuid() {  return m_descUuid; }
 			private final UUID m_descUuid;
 
 			/**
@@ -206,28 +200,28 @@ public final class BleServer extends BleNode
 			 * {@link #type()} is {@link Type#isRead()}.
 			 *
 			 */
-			public @Nullable(Nullable.Prevalence.NEVER) byte[] data_received() {  return m_data_received; }
+			public final @Nullable(Nullable.Prevalence.NEVER) byte[] data_received() {  return m_data_received; }
 			private final byte[] m_data_received;
 
 			/**
 			 * The request id forwarded from the native stack. See various methods of {@link android.bluetooth.BluetoothGattServerCallback} for explanation.
 			 * Not relevant if {@link #type()} {@link Type#isNotificationOrIndication()} is <code>true</code>.
 			 */
-			public int requestId()  {  return m_requestId;  }
+			public final int requestId()  {  return m_requestId;  }
 			private final int m_requestId;
 
 			/**
 			 * The offset forwarded from the native stack. See various methods of {@link android.bluetooth.BluetoothGattServerCallback} for explanation.
 			 * Not relevant if {@link #type()} {@link Type#isNotificationOrIndication()} is <code>true</code>.
 			 */
-			public int offset()  {  return m_offset;  }
+			public final int offset()  {  return m_offset;  }
 			private final int m_offset;
 
 			/**
 			 * Dictates whether a response is needed.
 			 * Not relevant if {@link #type()} {@link Type#isNotificationOrIndication()} is <code>true</code>.
 			 */
-			public boolean responseNeeded()  {  return m_responseNeeded;  }
+			public final boolean responseNeeded()  {  return m_responseNeeded;  }
 			private final boolean m_responseNeeded;
 
 			ExchangeEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_in, int requestId, int offset, final boolean responseNeeded)
@@ -246,8 +240,8 @@ public final class BleServer extends BleNode
 				m_data_received = data_in != null ? data_in : P_Const.EMPTY_BYTE_ARRAY;
 			}
 
-			public boolean isFor(final String macAddress)  {  return macAddress().equals(macAddress);  }
-			public boolean isFor(final UUID uuid)  {  return uuid.equals(serviceUuid()) || uuid.equals(charUuid()) || uuid.equals(descUuid());  }
+			public final boolean isFor(final String macAddress)  {  return macAddress().equals(macAddress);  }
+			public final boolean isFor(final UUID uuid)  {  return uuid.equals(serviceUuid()) || uuid.equals(charUuid()) || uuid.equals(descUuid());  }
 		}
 	}
 
@@ -269,7 +263,7 @@ public final class BleServer extends BleNode
 				super(server, nativeDevice, serviceUuid_in, charUuid_in, descUuid_in, type_in, target_in, data_in, requestId, offset, responseNeeded);
 			}
 
-			@Override public String toString()
+			@Override public final String toString()
 			{
 				if( type().isRead() )
 				{
@@ -456,27 +450,27 @@ public final class BleServer extends BleNode
 			 * Returns the result of the response, or {@link BleServer.OutgoingListener.Status#NO_RESPONSE_ATTEMPTED} if
 			 * for example {@link BleServer.IncomingListener.Please#doNotRespond(BleServer.OutgoingListener)} was used.
 			 */
-			public Status status()  {  return m_status;  }
+			public final Status status()  {  return m_status;  }
 			private final Status m_status;
 
 			/**
 			 * The data that was attempted to be sent back to the client if {@link #type()} {@link Type#isRead()} is <code>true</code>.
 			 */
-			public byte[] data_sent()  {  return m_data_sent;  }
+			public final byte[] data_sent()  {  return m_data_sent;  }
 			private final byte[] m_data_sent;
 
 			/**
 			 * The gattStatus sent to the client, provided to static methods of {@link BleServer.IncomingListener.Please}
 			 * if {@link #type()} is {@link Type#READ} or {@link Type#WRITE} - otherwise this will equal {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 */
-			public int gattStatus_sent()  {  return m_gattStatus_sent;  }
+			public final int gattStatus_sent()  {  return m_gattStatus_sent;  }
 			private final int m_gattStatus_sent;
 
 			/**
 			 * The gattStatus received from an attempted communication with the client. For now this is only relevant if {@link #type()}
 			 * {@link Type#isNotificationOrIndication()} is <code>true</code> - otherwise this will equal {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
 			 */
-			public int gattStatus_received()  {  return m_gattStatus_received;  }
+			public final int gattStatus_received()  {  return m_gattStatus_received;  }
 			private final int m_gattStatus_received;
 
 			/**
@@ -486,7 +480,7 @@ public final class BleServer extends BleNode
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.OutgoingListener.Status#TIMED_OUT},
 			 * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
 			 */
-			public boolean solicited()  {  return m_solicited;  }
+			public final boolean solicited()  {  return m_solicited;  }
 			private final boolean m_solicited;
 
 			OutgoingEvent(BleServer server, BluetoothDevice nativeDevice, UUID serviceUuid_in, UUID charUuid_in, UUID descUuid_in, Type type_in, Target target_in, byte[] data_received, byte[] data_sent, int requestId, int offset, final boolean responseNeeded, final Status status, final int gattStatus_sent, final int gattStatus_received, final boolean solicited)
@@ -529,7 +523,7 @@ public final class BleServer extends BleNode
 			/**
 			 * Checks if {@link #status()} is {@link Status#SUCCESS}.
 			 */
-			public boolean wasSuccess()
+			public final boolean wasSuccess()
 			{
 				return status() == Status.SUCCESS;
 			}
@@ -538,12 +532,12 @@ public final class BleServer extends BleNode
 			 * Will return true in certain early-out cases when there is no issue and the response can continue.
 			 * See {@link BleServer#sendNotification(String, UUID, UUID, byte[], OutgoingListener)} for more information.
 			 */
-			@Override public boolean isNull()
+			@Override public final boolean isNull()
 			{
 				return status().isNull();
 			}
 
-			@Override public String toString()
+			@Override public final String toString()
 			{
 				if( type().isRead() )
 				{
@@ -665,7 +659,7 @@ public final class BleServer extends BleNode
 			/**
 			 * Returns true if <code>this==</code> {@link #NULL}.
 			 */
-			@Override public boolean isNull()
+			@Override public final boolean isNull()
 			{
 				return this == NULL;
 			}
@@ -708,7 +702,7 @@ public final class BleServer extends BleNode
 				m_nativeStatus = nativeStatus;
 			}
 
-			public int getNativeStatus()
+			public final int getNativeStatus()
 			{
 				return m_nativeStatus;
 			}
@@ -726,7 +720,7 @@ public final class BleServer extends BleNode
 			}
 
 			@Override
-			public boolean isNull() {
+			public final boolean isNull() {
 				return this == NULL;
 			}
 		}
@@ -748,7 +742,7 @@ public final class BleServer extends BleNode
 			/**
 			 * The backing {@link BleManager} which is attempting to start advertising.
 			 */
-			public BleServer server()
+			public final BleServer server()
 			{
 				return m_server;
 			}
@@ -757,7 +751,7 @@ public final class BleServer extends BleNode
 			 * Whether or not {@link #startAdvertising(BleAdvertisingPacket)} was successful or not. If false,
 			 * then call {@link #m_status} to get the error code.
 			 */
-			public boolean wasSuccess()
+			public final boolean wasSuccess()
 			{
 				return m_status == Status.SUCCESS;
 			}
@@ -766,18 +760,18 @@ public final class BleServer extends BleNode
 			 * Returns {@link Status} describing
 			 * the m_status of calling {@link #startAdvertising(BleAdvertisingPacket)}
 			 */
-			public Status status()
+			public final Status status()
 			{
 				return m_status;
 			}
 
 			@Override
-			public boolean isNull() {
+			public final boolean isNull() {
 				return status() == Status.NULL;
 			}
 
 			@Override
-			public String toString() {
+			public final String toString() {
 				return Utils_String.toString(this.getClass(),
 						"server", server().getClass().getSimpleName(),
 						"status", status());
@@ -810,13 +804,13 @@ public final class BleServer extends BleNode
 			/**
 			 * The server undergoing the state change.
 			 */
-			public BleServer server() {  return m_server;  }
+			public final BleServer server() {  return m_server;  }
 			private final BleServer m_server;
 
 			/**
 			 * Returns the mac address of the client that's undergoing the state change with this {@link #server()}.
 			 */
-			public String macAddress()  {  return m_macAddress;  }
+			public final String macAddress()  {  return m_macAddress;  }
 			private final String m_macAddress;
 
 			/**
@@ -825,7 +819,7 @@ public final class BleServer extends BleNode
 			 * {@link #didExit(State)} with {@link BleServerState#CONNECTING} is also <code>true</code> then {@link #gattStatus()} may be greater
 			 * than zero and give some further hint as to why the connection failed.
 			 */
-			public int gattStatus() {  return m_gattStatus;  }
+			public final int gattStatus() {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
 			/*package*/ StateEvent(BleServer server, String macAddress, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
@@ -837,7 +831,7 @@ public final class BleServer extends BleNode
 				m_macAddress = macAddress;
 			}
 
-			@Override public String toString()
+			@Override public final String toString()
 			{
 				return Utils_String.toString
 				(
@@ -932,7 +926,7 @@ public final class BleServer extends BleNode
 			/**
 			 * Returns true for {@link #CANCELLED_FROM_DISCONNECT} or {@link #CANCELLED_FROM_BLE_TURNING_OFF}.
 			 */
-			public boolean wasCancelled()
+			public final boolean wasCancelled()
 			{
 				return this == CANCELLED_FROM_DISCONNECT || this == CANCELLED_FROM_BLE_TURNING_OFF;
 			}
@@ -940,7 +934,7 @@ public final class BleServer extends BleNode
 			/**
 			 * Same as {@link #wasCancelled()}, at least for now, but just being more "explicit", no pun intended.
 			 */
-			boolean wasExplicit()
+			final boolean wasExplicit()
 			{
 				return wasCancelled();
 			}
@@ -949,12 +943,12 @@ public final class BleServer extends BleNode
 			 * Whether this reason honors a {@link BleNode.ConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
 			 * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
 			 */
-			public boolean allowsRetry()
+			public final boolean allowsRetry()
 			{
 				return !this.wasCancelled() && this != ALREADY_CONNECTING_OR_CONNECTED;
 			}
 
-			@Override public boolean isNull()
+			@Override public final boolean isNull()
 			{
 				return this == NULL;
 			}
@@ -963,7 +957,7 @@ public final class BleServer extends BleNode
 			 * Convenience method that returns whether this status is something that your app user would usually care about.
 			 * If this returns <code>true</code> then perhaps you should pop up a {@link android.widget.Toast} or something of that nature.
 			 */
-			public boolean shouldBeReportedToUser()
+			public final boolean shouldBeReportedToUser()
 			{
 				return	this == SERVER_OPENING_FAILED					||
 						this == NATIVE_CONNECTION_FAILED_IMMEDIATELY	||
@@ -981,24 +975,24 @@ public final class BleServer extends BleNode
 			/**
 			 * The {@link BleServer} this {@link ConnectionFailEvent} is for.
 			 */
-			public BleServer server() {  return m_server;  }
+			public final BleServer server() {  return m_server;  }
 			private final BleServer m_server;
 
 			/**
 			 * The native {@link BluetoothDevice} client this {@link ConnectionFailEvent} is for.
 			 */
-			public BluetoothDevice nativeDevice() {  return m_nativeDevice;  }
+			public final BluetoothDevice nativeDevice() {  return m_nativeDevice;  }
 			private final BluetoothDevice m_nativeDevice;
 
 			/**
 			 * Returns the mac address of the client that's undergoing the state change with this {@link #server()}.
 			 */
-			public String macAddress()  {  return m_nativeDevice.getAddress();  }
+			public final String macAddress()  {  return m_nativeDevice.getAddress();  }
 
 			/**
 			 * General reason why the connection failed.
 			 */
-			public Status status() {  return m_status;  }
+			public final Status status() {  return m_status;  }
 			private final Status m_status;
 
 			/**
@@ -1008,7 +1002,7 @@ public final class BleServer extends BleNode
 			 * The list length is "reset" back to one whenever a {@link BleDeviceState#CONNECTING_OVERALL} operation completes, either
 			 * through becoming {@link BleDeviceState#INITIALIZED}, or {@link BleDeviceState#DISCONNECTED} for good.
 			 */
-			public ConnectionFailEvent[] history()  {  return m_history;  }
+			public final ConnectionFailEvent[] history()  {  return m_history;  }
 			private final ConnectionFailEvent[] m_history;
 
 			ConnectionFailEvent(BleServer server, final BluetoothDevice nativeDevice, Status status, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, AutoConnectUsage autoConnectUsage, ArrayList<ConnectionFailEvent> history)
@@ -1057,7 +1051,7 @@ public final class BleServer extends BleNode
 			 * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
 			 * {@link BleNodeConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
 			 */
-			@Override public boolean isNull()
+			@Override public final boolean isNull()
 			{
 				return status().isNull();
 			}
@@ -1066,12 +1060,12 @@ public final class BleServer extends BleNode
 			 * Forwards {@link BleDevice.ConnectionFailListener.Status#shouldBeReportedToUser()}
 			 * using {@link #status()}.
 			 */
-			public boolean shouldBeReportedToUser()
+			public final boolean shouldBeReportedToUser()
 			{
 				return status().shouldBeReportedToUser();
 			}
 
-			@Override public String toString()
+			@Override public final String toString()
 			{
 				if (isNull())
 				{
@@ -1139,12 +1133,12 @@ public final class BleServer extends BleNode
 			m_failCountBeforeUsingAutoConnect = failCountBeforeUsingAutoConnect;
 		}
 
-		public int getRetryCount()
+		public final int getRetryCount()
 		{
 			return m_retryCount;
 		}
 
-		@Override public Please onEvent(ConnectionFailEvent e)
+		@Override public final Please onEvent(ConnectionFailEvent e)
 		{
 			//--- DRK > Not necessary to check this ourselves, just being explicit.
 			if (!e.status().allowsRetry() )
@@ -1246,12 +1240,12 @@ public final class BleServer extends BleNode
 			/**
 			 * Returns true if <code>this</code> equals {@link #SUCCESS}.
 			 */
-			public boolean wasSuccess()
+			public final boolean wasSuccess()
 			{
 				return this == Status.SUCCESS;
 			}
 
-			@Override public boolean isNull()
+			@Override public final boolean isNull()
 			{
 				return this == NULL;
 			}
@@ -1267,30 +1261,30 @@ public final class BleServer extends BleNode
 			/**
 			 * The server to which the service is being added.
 			 */
-			public BleServer server()  {  return m_server;  }
+			public final BleServer server()  {  return m_server;  }
 			private final BleServer m_server;
 
 			/**
 			 * The service being added to {@link #server()}.
 			 */
-			public BluetoothGattService service()  {  return m_service;  }
+			public final BluetoothGattService service()  {  return m_service;  }
 			private final BluetoothGattService m_service;
 
 			/**
 			 * Convenience to return the {@link UUID} of {@link #service()}.
 			 */
-			public UUID serviceUuid() {  return service().getUuid();  }
+			public final UUID serviceUuid() {  return service().getUuid();  }
 
 			/**
 			 * Should only be relevant if {@link #status()} is {@link BleServer.ServiceAddListener.Status#FAILED_EVENTUALLY}.
 			 */
-			public int gattStatus()  {  return m_gattStatus;  }
+			public final int gattStatus()  {  return m_gattStatus;  }
 			private final int m_gattStatus;
 
 			/**
 			 * Indicates the success or reason for failure for adding the service.
 			 */
-			public Status status()  {  return m_status;  }
+			public final Status status()  {  return m_status;  }
 			private final Status m_status;
 
 			/**
@@ -1300,7 +1294,7 @@ public final class BleServer extends BleNode
 			 * Another theoretical case is if you make an explicit call through SweetBlue, then you get {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener.Status#TIMED_OUT},
 			 * but then the native stack eventually *does* come back with something - this has never been observed, but it is possible.
 			 */
-			public boolean solicited()  {  return m_solicited;  }
+			public final boolean solicited()  {  return m_solicited;  }
 			private final boolean m_solicited;
 
 			/*package*/ ServiceAddEvent(final BleServer server, final BluetoothGattService service, final Status status, final int gattStatus, final boolean solicited)
@@ -1315,7 +1309,7 @@ public final class BleServer extends BleNode
 			/**
 			 * Convenience forwarding of {@link BleServer.ServiceAddListener.Status#wasSuccess()}.
 			 */
-			public boolean wasSuccess()
+			public final boolean wasSuccess()
 			{
 				return status().wasSuccess();
 			}
@@ -1330,7 +1324,7 @@ public final class BleServer extends BleNode
 				return new ServiceAddEvent(server, service, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, /*solicited=*/true);
 			}
 
-			public String toString()
+			public final String toString()
 			{
 				return Utils_String.toString
 				(
@@ -1390,7 +1384,7 @@ public final class BleServer extends BleNode
 		}
 	}
 
-	@Override protected PA_ServiceManager newServiceManager()
+	@Override protected final PA_ServiceManager newServiceManager()
 	{
 		return new P_ServerServiceManager(this);
 	}
@@ -1399,12 +1393,12 @@ public final class BleServer extends BleNode
 	 * Optionally sets overrides for any custom options given to {@link BleManager#get(android.content.Context, BleManagerConfig)}
 	 * for this individual server.
 	 */
-	public void setConfig(final BleNodeConfig config_nullable)
+	public final void setConfig(final BleNodeConfig config_nullable)
 	{
 		m_config = config_nullable;
 	}
 
-	@Override /*package*/ BleNodeConfig conf_node()
+	@Override /*package*/ final BleNodeConfig conf_node()
 	{
 		return m_config != null ? m_config : conf_mngr();
 	}
@@ -1412,7 +1406,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Set a listener here to be notified whenever this server's state changes in relation to a specific client.
 	 */
-	public void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.StateListener listener_nullable)
+	public final void setListener_State(@Nullable(Nullable.Prevalence.NORMAL) final BleServer.StateListener listener_nullable)
 	{
 		m_stateTracker.setListener(listener_nullable);
 	}
@@ -1420,7 +1414,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Set a listener here to override any listener provided previously.
 	 */
-	public void setListener_Incoming(@Nullable(Nullable.Prevalence.NORMAL) final IncomingListener listener_nullable)
+	public final void setListener_Incoming(@Nullable(Nullable.Prevalence.NORMAL) final IncomingListener listener_nullable)
 	{
 		m_incomingListener = listener_nullable;
 	}
@@ -1429,17 +1423,17 @@ public final class BleServer extends BleNode
 	 * Set a listener here to override any listener provided previously and provide a default backup that will be called
 	 * after any listener provided to {@link #addService(BleService, ServiceAddListener)}.
 	 */
-	public void setListener_ServiceAdd(@Nullable(Nullable.Prevalence.NORMAL) final ServiceAddListener listener_nullable)
+	public final void setListener_ServiceAdd(@Nullable(Nullable.Prevalence.NORMAL) final ServiceAddListener listener_nullable)
 	{
 		serviceMngr_server().setListener(listener_nullable);
 	}
 
-	public void setListener_Advertising(@Nullable(Nullable.Prevalence.NORMAL) final AdvertisingListener listener_nullable)
+	public final void setListener_Advertising(@Nullable(Nullable.Prevalence.NORMAL) final AdvertisingListener listener_nullable)
 	{
 		m_advertisingListener = listener_nullable;
 	}
 
-	public @Nullable(Nullable.Prevalence.RARE)
+	public final @Nullable(Nullable.Prevalence.RARE)
 	AdvertisingListener getListener_Advertise()
 	{
 		return m_advertisingListener;
@@ -1448,7 +1442,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns the listener provided to {@link #setListener_Incoming(IncomingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.RARE) IncomingListener getListener_Incoming()
+	public final @Nullable(Nullable.Prevalence.RARE) IncomingListener getListener_Incoming()
 	{
 		return m_incomingListener;
 	}
@@ -1459,7 +1453,7 @@ public final class BleServer extends BleNode
 	 *
 	 * @see BleManager#setListener_Outgoing(BleServer.OutgoingListener)
 	 */
-	public void setListener_Outgoing(final OutgoingListener listener)
+	public final void setListener_Outgoing(final OutgoingListener listener)
 	{
 		m_outgoingListener_default = listener;
 	}
@@ -1467,7 +1461,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Set a listener here to override any listener provided previously.
 	 */
-	public void setListener_ConnectionFail(final ConnectionFailListener listener)
+	public final void setListener_ConnectionFail(final ConnectionFailListener listener)
 	{
 		m_connectionFailMngr.setListener(listener);
 	}
@@ -1475,7 +1469,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID charUuid, byte[] data)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID charUuid, byte[] data)
 	{
 		return sendIndication(macAddress, null, charUuid, data, (OutgoingListener) null);
 	}
@@ -1483,7 +1477,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
 		return sendIndication(macAddress, (UUID) null, charUuid, data, listener);
 	}
@@ -1491,7 +1485,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data)
 	{
 		return sendIndication(macAddress, serviceUuid, charUuid, data, (OutgoingListener) null);
 	}
@@ -1499,7 +1493,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
 		return sendIndication(macAddress, serviceUuid, charUuid, new PresentData(data), listener);
 	}
@@ -1507,7 +1501,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID charUuid, final FutureData futureData)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID charUuid, final FutureData futureData)
 	{
 		return sendIndication(macAddress, null, charUuid, futureData, (OutgoingListener) null);
 	}
@@ -1515,7 +1509,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
 		return sendIndication(macAddress, (UUID) null, charUuid, futureData, listener);
 	}
@@ -1523,7 +1517,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendIndication(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData)
 	{
 		return sendIndication(macAddress, serviceUuid, charUuid, futureData, (OutgoingListener) null);
 	}
@@ -1531,7 +1525,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Same as {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)} but sends an indication instead.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendIndication(final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
 		return sendNotification_private(macAddress, serviceUuid, charUuid, futureData, listener, /*isIndication=*/true);
 	}
@@ -1539,7 +1533,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID charUuid, byte[] data)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID charUuid, byte[] data)
 	{
 		return sendNotification(macAddress, null, charUuid, data, (OutgoingListener) null);
 	}
@@ -1547,7 +1541,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
 		return sendNotification(macAddress, (UUID) null, charUuid, data, listener);
 	}
@@ -1555,7 +1549,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data)
 	{
 		return sendNotification(macAddress, serviceUuid, charUuid, data, (OutgoingListener) null);
 	}
@@ -1563,7 +1557,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, byte[] data, OutgoingListener listener)
 	{
 		return sendNotification(macAddress, serviceUuid, charUuid, new PresentData(data), listener);
 	}
@@ -1571,7 +1565,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID charUuid, final FutureData futureData)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID charUuid, final FutureData futureData)
 	{
 		return sendNotification(macAddress, null, charUuid, futureData, (OutgoingListener) null);
 	}
@@ -1579,7 +1573,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
 		return sendNotification(macAddress, (UUID) null, charUuid, futureData, listener);
 	}
@@ -1587,7 +1581,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #sendNotification(String, UUID, UUID, FutureData, OutgoingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, final UUID serviceUuid, final UUID charUuid, final FutureData futureData)
 	{
 		return sendNotification(macAddress, serviceUuid, charUuid, futureData, (OutgoingListener) null);
 	}
@@ -1598,7 +1592,7 @@ public final class BleServer extends BleNode
 	 * to passing it through the listener. Otherwise this method will return an instance with {@link OutgoingListener.OutgoingEvent#isNull()} being
 	 * <code>true</code>.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) OutgoingListener.OutgoingEvent sendNotification(final String macAddress, UUID serviceUuid, UUID charUuid, final FutureData futureData, OutgoingListener listener)
 	{
 		return sendNotification_private(macAddress, serviceUuid, charUuid, futureData, listener, /*isIndication=*/false);
 	}
@@ -1649,7 +1643,7 @@ public final class BleServer extends BleNode
 	 * Checks to see if the device is running an Android OS which supports
 	 * advertising. This is forwarded from {@link BleManager#isAdvertisingSupportedByAndroidVersion()}.
 	 */
-	public boolean isAdvertisingSupportedByAndroidVersion()
+	public final boolean isAdvertisingSupportedByAndroidVersion()
 	{
 		return getManager().isAdvertisingSupportedByAndroidVersion();
 	}
@@ -1657,7 +1651,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Checks to see if the device supports advertising. This is forwarded from {@link BleManager#isAdvertisingSupportedByChipset()}.
 	 */
-	public boolean isAdvertisingSupportedByChipset()
+	public final boolean isAdvertisingSupportedByChipset()
 	{
 		return getManager().isAdvertisingSupportedByChipset();
 	}
@@ -1665,7 +1659,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Checks to see if the device supports advertising BLE services. This is forwarded from {@link BleManager#isAdvertisingSupported()}.
 	 */
-	public boolean isAdvertisingSupported()
+	public final boolean isAdvertisingSupported()
 	{
 		return getManager().isAdvertisingSupported();
 	}
@@ -1673,7 +1667,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Checks to see if the device is currently advertising.
 	 */
-	public boolean isAdvertising()
+	public final boolean isAdvertising()
 	{
 		return getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager());
 	}
@@ -1681,7 +1675,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Checks to see if the device is currently advertising the given {@link UUID}.
 	 */
-	public boolean isAdvertising(UUID serviceUuid)
+	public final boolean isAdvertising(UUID serviceUuid)
 	{
 		if (Utils.isLollipop())
 		{
@@ -1697,7 +1691,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid));
 	}
@@ -1705,7 +1699,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, AdvertisingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, AdvertisingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, AdvertisingListener listener)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid), listener);
 	}
@@ -1713,7 +1707,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuids));
 	}
@@ -1721,7 +1715,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, AdvertisingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, AdvertisingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, AdvertisingListener listener)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuids), listener);
 	}
@@ -1729,7 +1723,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid, serviceData));
 	}
@@ -1737,7 +1731,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData, BleAdvertisingPacket.Option... options)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, byte[] serviceData, BleAdvertisingPacket.Option... options)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid, serviceData, options));
 	}
@@ -1745,7 +1739,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingPacket.Option... options)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingPacket.Option... options)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid, options));
 	}
@@ -1753,7 +1747,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, BleAdvertisingPacket.Option... options)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, BleAdvertisingPacket.Option... options)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuids, options));
 	}
@@ -1761,7 +1755,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingSettings, AdvertisingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingSettings settings, AdvertisingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID serviceUuid, BleAdvertisingSettings settings, AdvertisingListener listener)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuid), settings, listener);
 	}
@@ -1769,7 +1763,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #startAdvertising(BleAdvertisingPacket, BleAdvertisingSettings, AdvertisingListener)}.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, BleAdvertisingSettings settings, AdvertisingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(UUID[] serviceUuids, BleAdvertisingSettings settings, AdvertisingListener listener)
 	{
 		return startAdvertising(new BleAdvertisingPacket(serviceUuids), settings, listener);
 	}
@@ -1779,7 +1773,7 @@ public final class BleServer extends BleNode
 	 * the {@link BleAdvertisingMode} to {@link BleAdvertisingMode#AUTO}, and {@link BleTransmissionPower} to {@link BleTransmissionPower#MEDIUM}, and
 	 * no timeout for the advertisement.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket)
 	{
 		return startAdvertising(advPacket, null);
 	}
@@ -1789,7 +1783,7 @@ public final class BleServer extends BleNode
 	 * the {@link BleAdvertisingMode} to {@link BleAdvertisingMode#AUTO}, and {@link BleTransmissionPower} to {@link BleTransmissionPower#MEDIUM}, and
 	 * no timeout for the advertisement.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket, AdvertisingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advPacket, AdvertisingListener listener)
 	{
 		return startAdvertising(advPacket, new BleAdvertisingSettings(BleAdvertisingMode.AUTO, BleTransmissionPower.MEDIUM, Interval.ZERO), listener);
 	}
@@ -1799,7 +1793,7 @@ public final class BleServer extends BleNode
 	 * only work for devices on Lollipop, or above. Even then, not every device supports advertising. Use
 	 * {@link BleManager#isAdvertisingSupported()} to check to see if the phone supports it.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingSettings settings, AdvertisingListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingSettings settings, AdvertisingListener listener)
 	{
 		if (isNull())
 		{
@@ -1848,7 +1842,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Stops the server from advertising.
 	 */
-	public void stopAdvertising()
+	public final void stopAdvertising()
 	{
 		if (Utils.isLollipop())
 		{
@@ -1868,7 +1862,7 @@ public final class BleServer extends BleNode
      * See similar warning for {@link BleDevice#getNative()}.
      */
     @Advanced
-    public @Nullable(Nullable.Prevalence.RARE) BluetoothGattServer getNative()
+    public final @Nullable(Nullable.Prevalence.RARE) BluetoothGattServer getNative()
     {
         return m_nativeWrapper.getNative().getNativeServer();
     }
@@ -1878,7 +1872,7 @@ public final class BleServer extends BleNode
 	 * See similar warning for {@link BleDevice#getNative()}.
 	 */
 	@Advanced
-	public @Nullable(Nullable.Prevalence.RARE) P_NativeServerLayer getNativeLayer()
+	public final @Nullable(Nullable.Prevalence.RARE) P_NativeServerLayer getNativeLayer()
 	{
 		return m_nativeWrapper.getNative();
 	}
@@ -1889,7 +1883,7 @@ public final class BleServer extends BleNode
 	 * @see BleServerState
 	 */
 	@Advanced
-	public int getStateMask(final String macAddress)
+	public final int getStateMask(final String macAddress)
 	{
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
@@ -1901,7 +1895,7 @@ public final class BleServer extends BleNode
 	 *
 	 * @see #isAll(String, int)
 	 */
-	public boolean isAny(final String macAddress, final int mask_BleServerState)
+	public final boolean isAny(final String macAddress, final int mask_BleServerState)
 	{
 		return (getStateMask(macAddress) & mask_BleServerState) != 0x0;
 	}
@@ -1912,7 +1906,7 @@ public final class BleServer extends BleNode
 	 * @see #isAny(String, int)
 	 *
 	 */
-	public boolean isAll(final String macAddress, final int mask_BleServerState)
+	public final boolean isAll(final String macAddress, final int mask_BleServerState)
 	{
 		return (getStateMask(macAddress) & mask_BleServerState) == mask_BleServerState;
 	}
@@ -1920,7 +1914,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns true if the given client is in the state provided.
 	 */
-	public boolean is(final String macAddress, final BleServerState state)
+	public final boolean is(final String macAddress, final BleServerState state)
 	{
 		return state.overlaps(getStateMask(macAddress));
 	}
@@ -1928,7 +1922,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns true if the given client is in any of the states provided.
 	 */
-	public boolean isAny(final String macAddress, final BleServerState ... states )
+	public final boolean isAny(final String macAddress, final BleServerState ... states )
 	{
 		final int stateMask = getStateMask(macAddress);
 
@@ -1943,7 +1937,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with no listeners.
 	 */
-	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
+	public final ConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
 	{
 		return connect(macAddress, null, null);
 	}
@@ -1951,7 +1945,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with only one listener.
 	 */
-	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener)
+	public final ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener)
 	{
 		return connect(macAddress, stateListener, null);
 	}
@@ -1959,7 +1953,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #connect(String, StateListener, ConnectionFailListener)} with only one listener.
 	 */
-	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ConnectionFailListener connectionFailListener)
+	public final ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ConnectionFailListener connectionFailListener)
 	{
 		return connect(macAddress, null, connectionFailListener);
 	}
@@ -1968,19 +1962,19 @@ public final class BleServer extends BleNode
 	 * Connect to the given client mac address and provided listeners that are shorthand for calling {@link #setListener_State(StateListener)}
 	 * {@link #setListener_ConnectionFail(ConnectionFailListener)}.
 	 */
-	public ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
+	public final ConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
 		return connect_internal(newNativeDevice(macAddress_normalized).getNativeDevice(), stateListener, connectionFailListener);
 	}
 
-	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice)
+	/*package*/ final ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice)
 	{
 		return connect_internal(nativeDevice, null, null);
 	}
 
-	/*package*/ ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
+	/*package*/ final ConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final StateListener stateListener, final ConnectionFailListener connectionFailListener)
 	{
 		m_nativeWrapper.clearImplicitDisconnectIgnoring(nativeDevice.getAddress());
 
@@ -2031,7 +2025,7 @@ public final class BleServer extends BleNode
 		return mngr == null ? null : mngr.newNativeDevice(macAddress);
 	}
 
-	public boolean disconnect(final String macAddress)
+	public final boolean disconnect(final String macAddress)
 	{
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
@@ -2068,7 +2062,7 @@ public final class BleServer extends BleNode
 		return true;
 	}
 
-	/*package*/ void disconnect_internal(final ServiceAddListener.Status status_serviceAdd, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
+	/*package*/ final void disconnect_internal(final ServiceAddListener.Status status_serviceAdd, final ConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
 	{
 		stopAdvertising();
 
@@ -2092,24 +2086,24 @@ public final class BleServer extends BleNode
 	 * Disconnects this server completely, disconnecting all connected clients and shutting things down.
 	 * To disconnect individual clients use {@link #disconnect(String)}.
 	 */
-	public void disconnect()
+	public final void disconnect()
 	{
 		disconnect_internal(ServiceAddListener.Status.CANCELLED_FROM_DISCONNECT, ConnectionFailListener.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
 	}
 
-	@Override public boolean isNull()
+	@Override public final boolean isNull()
 	{
 		return m_isNull;
 	}
 
-	/*package*/ void onNativeConnecting_implicit(final String macAddress)
+	/*package*/ final void onNativeConnecting_implicit(final String macAddress)
 	{
 		m_clientMngr.onConnecting(macAddress);
 
 		m_stateTracker.doStateTransition(macAddress, BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	/*package*/ void onNativeConnect(final String macAddress, final boolean explicit)
+	/*package*/ final void onNativeConnect(final String macAddress, final boolean explicit)
 	{
 		m_clientMngr.onConnected(macAddress);
 
@@ -2125,7 +2119,7 @@ public final class BleServer extends BleNode
 		m_stateTracker.doStateTransition(macAddress, previousState /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	/*package*/ void onNativeConnectFail(final BluetoothDevice nativeDevice, final ConnectionFailListener.Status status, final int gattStatus)
+	/*package*/ final void onNativeConnectFail(final BluetoothDevice nativeDevice, final ConnectionFailListener.Status status, final int gattStatus)
 	{
 		if( status == ConnectionFailListener.Status.TIMED_OUT )
 		{
@@ -2138,7 +2132,7 @@ public final class BleServer extends BleNode
 		m_connectionFailMngr.onNativeConnectFail(nativeDevice, status, gattStatus);
 	}
 
-	/*package*/ void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)
+	/*package*/ final void onNativeDisconnect( final String macAddress, final boolean explicit, final int gattStatus)
 	{
 		final boolean ignore = m_nativeWrapper.shouldIgnoreImplicitDisconnect(macAddress);
 
@@ -2152,7 +2146,7 @@ public final class BleServer extends BleNode
 		}
 	}
 
-	void invokeAdvertiseListeners(AdvertisingListener.Status result, AdvertisingListener listener)
+	final void invokeAdvertiseListeners(AdvertisingListener.Status result, AdvertisingListener listener)
 	{
 		final AdvertisingListener.AdvertisingEvent event = new AdvertisingListener.AdvertisingEvent(this, result);
 		if (listener != null)
@@ -2172,7 +2166,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Does a referential equality check on the two servers.
 	 */
-	public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final BleServer server_nullable)
+	public final boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final BleServer server_nullable)
 	{
 		if (server_nullable == null)												return false;
 		if (server_nullable == this)												return true;
@@ -2187,7 +2181,7 @@ public final class BleServer extends BleNode
 	 *
 	 * @see BleServer#equals(BleServer)
 	 */
-	@Override public boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final Object object_nullable)
+	@Override public final boolean equals(@Nullable(Nullable.Prevalence.NORMAL) final Object object_nullable)
 	{
 		if( object_nullable == null )  return false;
 
@@ -2201,7 +2195,7 @@ public final class BleServer extends BleNode
 		return false;
 	}
 
-	/*package*/ void invokeOutgoingListeners(final OutgoingListener.OutgoingEvent e, final OutgoingListener listener_specific_nullable)
+	/*package*/ final void invokeOutgoingListeners(final OutgoingListener.OutgoingEvent e, final OutgoingListener listener_specific_nullable)
 	{
 		if( listener_specific_nullable != null )
 		{
@@ -2249,7 +2243,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #addService(BleService, ServiceAddListener)} without the listener.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service)
+	public final @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service)
 	{
 		return this.addService(service, null);
 	}
@@ -2257,7 +2251,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Starts the process of adding a service to this server. The provided listener will be called when the service is added or there is a problem.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
+	public final @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
 	{
 		return serviceMngr_server().addService(service, listener);
 	}
@@ -2267,7 +2261,7 @@ public final class BleServer extends BleNode
 	 * even if the call to {@link #addService(BleService, ServiceAddListener)} hasn't resulted in a callback to the provided listener yet, in which
 	 * case it will be called with {@link BleServer.ServiceAddListener.Status#CANCELLED_FROM_REMOVAL}.
 	 */
-	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService removeService(final UUID serviceUuid)
+	public final @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService removeService(final UUID serviceUuid)
 	{
 		return serviceMngr_server().remove(serviceUuid);
 	}
@@ -2275,7 +2269,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Convenience to remove all services previously added with {@link #addService(BleService, ServiceAddListener)} (or overloads). This is slightly more performant too.
 	 */
-	public void removeAllServices()
+	public final void removeAllServices()
 	{
 		serviceMngr_server().removeAll(ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
 	}
@@ -2284,7 +2278,7 @@ public final class BleServer extends BleNode
 	 * Offers a more "functional" means of iterating through the internal list of clients instead of
 	 * using {@link #getClients()} or {@link #getClients_List()}.
 	 */
-	public void getClients(final ForEach_Void<String> forEach)
+	public final void getClients(final ForEach_Void<String> forEach)
 	{
 		m_clientMngr.getClients(forEach, 0x0);
 	}
@@ -2293,7 +2287,7 @@ public final class BleServer extends BleNode
 	 * Same as {@link #getClients(ForEach_Void)} but will only return clients
 	 * in the given state provided.
 	 */
-	public void getClients(final ForEach_Void<String> forEach, final BleServerState state)
+	public final void getClients(final ForEach_Void<String> forEach, final BleServerState state)
 	{
 		m_clientMngr.getClients(forEach, state.bit());
 	}
@@ -2302,7 +2296,7 @@ public final class BleServer extends BleNode
 	 * Same as {@link #getClients(ForEach_Void)} but will only return clients
 	 * in any of the given states provided.
 	 */
-	public void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
+	public final void getClients(final ForEach_Void<String> forEach, final BleServerState ... states)
 	{
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
@@ -2311,7 +2305,7 @@ public final class BleServer extends BleNode
 	 * Overload of {@link #getClients(ForEach_Void)}
 	 * if you need to break out of the iteration at any point.
 	 */
-	public void getClients(final ForEach_Breakable<String> forEach)
+	public final void getClients(final ForEach_Breakable<String> forEach)
 	{
 		m_clientMngr.getClients(forEach, 0x0);
 	}
@@ -2320,7 +2314,7 @@ public final class BleServer extends BleNode
 	 * Overload of {@link #getClients(ForEach_Void, BleServerState)}
 	 * if you need to break out of the iteration at any point.
 	 */
-	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
+	public final void getClients(final ForEach_Breakable<String> forEach, final BleServerState state)
 	{
 		m_clientMngr.getClients(forEach, state.bit());
 	}
@@ -2329,7 +2323,7 @@ public final class BleServer extends BleNode
 	 * Same as {@link #getClients(ForEach_Breakable)} but will only return clients
 	 * in any of the given states provided.
 	 */
-	public void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)
+	public final void getClients(final ForEach_Breakable<String> forEach, final BleServerState ... states)
 	{
 		m_clientMngr.getClients(forEach, BleServerState.toBits(states));
 	}
@@ -2337,7 +2331,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns all the clients connected or connecting (or previously so) to this server.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients()
+	public final @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients()
 	{
 		return m_clientMngr.getClients(0x0);
 	}
@@ -2345,7 +2339,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns all the clients connected or connecting (or previously so) to this server.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
+	public final @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState state)
 	{
 		return m_clientMngr.getClients(state.bit());
 	}
@@ -2353,7 +2347,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns all the clients connected or connecting (or previously so) to this server.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState ... states)
+	public final @Nullable(Nullable.Prevalence.NEVER) Iterator<String> getClients(final BleServerState ... states)
 	{
 		return m_clientMngr.getClients(BleServerState.toBits(states));
 	}
@@ -2361,7 +2355,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #getClients()} that returns a {@link java.util.List} for you.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List()
+	public final @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List()
 	{
 		return m_clientMngr.getClients_List(0x0);
 	}
@@ -2369,7 +2363,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #getClients(BleServerState)} that returns a {@link java.util.List} for you.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState state)
+	public final @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState state)
 	{
 		return m_clientMngr.getClients_List(state.bit());
 	}
@@ -2377,7 +2371,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Overload of {@link #getClients(BleServerState[])} that returns a {@link java.util.List} for you.
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState ... states)
+	public final @Nullable(Nullable.Prevalence.NEVER) List<String> getClients_List(final BleServerState ... states)
 	{
 		return m_clientMngr.getClients_List(BleServerState.toBits(states));
 	}
@@ -2385,7 +2379,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns the total number of clients this server is connecting or connected to (or previously so).
 	 */
-	public int getClientCount()
+	public final int getClientCount()
 	{
 		return m_clientMngr.getClientCount();
 	}
@@ -2393,7 +2387,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns the number of clients that are in the current state.
 	 */
-	public int getClientCount(final BleServerState state)
+	public final int getClientCount(final BleServerState state)
 	{
 		return m_clientMngr.getClientCount(state.bit());
 	}
@@ -2401,7 +2395,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns the number of clients that are in any of the given states.
 	 */
-	public int getClientCount(final BleServerState ... states)
+	public final int getClientCount(final BleServerState ... states)
 	{
 		return m_clientMngr.getClientCount(BleServerState.toBits(states));
 	}
@@ -2409,7 +2403,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns <code>true</code> if this server has any connected or connecting clients (or previously so).
 	 */
-	public boolean hasClients()
+	public final boolean hasClients()
 	{
 		return getClientCount() > 0;
 	}
@@ -2417,7 +2411,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns <code>true</code> if this server has any clients in the given state.
 	 */
-	public boolean hasClient(final BleServerState state)
+	public final boolean hasClient(final BleServerState state)
 	{
 		return getClientCount(state) > 0;
 	}
@@ -2425,12 +2419,12 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns <code>true</code> if this server has any clients in any of the given states.
 	 */
-	public boolean hasClient(final BleServerState ... states)
+	public final boolean hasClient(final BleServerState ... states)
 	{
 		return getClientCount(states) > 0;
 	}
 
-	P_ServerServiceManager serviceMngr_server()
+	final P_ServerServiceManager serviceMngr_server()
 	{
 		return getServiceManager();
 	}
@@ -2438,7 +2432,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Pretty-prints the list of connecting or connected clients.
 	 */
-	public String toString()
+	public final String toString()
 	{
 		return this.getClass().getSimpleName() + " with " + m_clientMngr.getClientCount(BleServerState.toBits(CONNECTING, CONNECTED)) + " connected/ing clients.";
 	}
@@ -2446,7 +2440,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Returns the local mac address provided by {@link BluetoothAdapter#getAddress()}.
 	 */
-	@Override public @Nullable(Nullable.Prevalence.NEVER) String getMacAddress()
+	@Override public final @Nullable(Nullable.Prevalence.NEVER) String getMacAddress()
 	{
 		return getManager().managerLayer().getAddress();
 	}

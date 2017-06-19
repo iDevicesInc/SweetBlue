@@ -2,6 +2,8 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Util;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -22,7 +24,7 @@ public class BondTest extends BaseBleUnitTest
     {
         final Semaphore s = new Semaphore(0);
 
-        BleDevice device = m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test device #1");
+        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #1");
         device.bond(new BleDevice.BondListener()
         {
             @Override
@@ -52,7 +54,7 @@ public class BondTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        BleDevice device = m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test device #2");
+        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #2");
         device.bond(new BleDevice.BondListener()
         {
             @Override
@@ -107,7 +109,7 @@ public class BondTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test device #3");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test device #3");
 
         s.acquire();
     }
@@ -145,7 +147,7 @@ public class BondTest extends BaseBleUnitTest
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
+                NativeUtil.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
                 System.out.println("Failing bond request. Fails so far: " + m_failsSoFar);
             }
             return true;
@@ -161,7 +163,7 @@ public class BondTest extends BaseBleUnitTest
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
+                NativeUtil.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
             }
             return true;
         }

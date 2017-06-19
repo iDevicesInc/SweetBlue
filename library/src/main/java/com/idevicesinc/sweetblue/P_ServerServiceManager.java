@@ -1,14 +1,13 @@
 package com.idevicesinc.sweetblue;
 
-import android.bluetooth.BluetoothGattServer;
-import android.bluetooth.BluetoothGattService;
 
+import android.bluetooth.BluetoothGattService;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Pointer;
-
 import java.util.List;
 import java.util.UUID;
+
 
 final class P_ServerServiceManager extends PA_ServiceManager
 {
@@ -21,12 +20,12 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		m_server = server;
 	}
 
-	public void setListener(BleServer.ServiceAddListener listener)
+	public final void setListener(BleServer.ServiceAddListener listener)
 	{
 		m_listener = listener;
 	}
 
-	@Override public BluetoothGattService getServiceDirectlyFromNativeNode(final UUID uuid)
+	@Override public final BluetoothGattService getServiceDirectlyFromNativeNode(final UUID uuid)
 	{
 		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
@@ -42,7 +41,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 	}
 
-	@Override protected List<BluetoothGattService> getNativeServiceList_original()
+	@Override protected final List<BluetoothGattService> getNativeServiceList_original()
 	{
 		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
@@ -131,14 +130,14 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 	}
 
-	public BleServer.ServiceAddListener.ServiceAddEvent addService(final BleService service, final BleServer.ServiceAddListener listener_specific_nullable)
+	public final BleServer.ServiceAddListener.ServiceAddEvent addService(final BleService service, final BleServer.ServiceAddListener listener_specific_nullable)
 	{
 		service.init();
 
 		return addService_native(service.m_native, listener_specific_nullable);
 	}
 
-	public BleServer.ServiceAddListener.ServiceAddEvent addService_native(final BluetoothGattService service, final BleServer.ServiceAddListener listener_specific_nullable)
+	public final BleServer.ServiceAddListener.ServiceAddEvent addService_native(final BluetoothGattService service, final BleServer.ServiceAddListener listener_specific_nullable)
 	{
 		if( m_server.isNull() )
 		{
@@ -173,7 +172,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 	}
 
-	public void removeAll(final BleServer.ServiceAddListener.Status status)
+	public final void removeAll(final BleServer.ServiceAddListener.Status status)
 	{
 		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
@@ -193,7 +192,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		});
 	}
 
-	public BluetoothGattService remove(final UUID serviceUuid)
+	public final BluetoothGattService remove(final UUID serviceUuid)
 	{
 		final BluetoothGattService service = getServiceDirectlyFromNativeNode(serviceUuid);
 
@@ -241,7 +240,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 	}
 
-	public void invokeListeners(final BleServer.ServiceAddListener.ServiceAddEvent e, final BleServer.ServiceAddListener listener_specific_nullable)
+	public final void invokeListeners(final BleServer.ServiceAddListener.ServiceAddEvent e, final BleServer.ServiceAddListener listener_specific_nullable)
 	{
 		if( listener_specific_nullable != null )
 		{

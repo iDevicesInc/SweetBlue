@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -252,9 +253,9 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -45, "Test Device #1");
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -35, "Test Device #2");
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -60, "Test Device #3");
+                    NativeUtil.advertiseNewDevice(m_mgr, -45, "Test Device #1");
+                    NativeUtil.advertiseNewDevice(m_mgr, -35, "Test Device #2");
+                    NativeUtil.advertiseNewDevice(m_mgr, -60, "Test Device #3");
                 }
             }
         });

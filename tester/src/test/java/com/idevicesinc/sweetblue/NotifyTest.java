@@ -1,19 +1,15 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Util;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -90,7 +86,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -144,7 +140,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -207,7 +203,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -270,7 +266,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -317,7 +313,7 @@ public class NotifyTest extends BaseBleUnitTest
                                         assertTrue("Enabling notification failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
                                         succeed();
-                                        UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
+                                        NativeUtil.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
                                     }
                                     else if (e.type() == Type.NOTIFICATION)
                                     {
@@ -332,7 +328,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -374,7 +370,7 @@ public class NotifyTest extends BaseBleUnitTest
                             {
                                 if (e.wasSuccess())
                                 {
-                                    UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
+                                    NativeUtil.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
                                 }
                             }
                             else if (e.type() == Type.NOTIFICATION)
@@ -407,7 +403,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -454,7 +450,7 @@ public class NotifyTest extends BaseBleUnitTest
                                         assertTrue("Enabling indication failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
                                         succeed();
-                                        UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
+                                        NativeUtil.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
                                     }
                                     else if (e.type() == Type.INDICATION)
                                     {
@@ -469,7 +465,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }

@@ -2,6 +2,8 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Pointer;
+import com.idevicesinc.sweetblue.utils.Util;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -56,7 +58,7 @@ public class GattRefreshTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
 
