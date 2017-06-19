@@ -196,7 +196,14 @@ public final class BleScanInfo implements UsesCustomNull
      */
     public final BleScanInfo setAdvFlags(byte mask)
     {
-        m_advFlags.value = (int) mask;
+        if (m_advFlags == null)
+        {
+            m_advFlags = new Pointer<>((int) mask);
+        }
+        else
+        {
+            m_advFlags.value = (int) mask;
+        }
         return this;
     }
 
@@ -209,6 +216,10 @@ public final class BleScanInfo implements UsesCustomNull
         if (flags == null || flags.length == 0)
         {
             return this;
+        }
+        if (m_advFlags == null)
+        {
+            m_advFlags = new Pointer<>(0);
         }
         for (byte b : flags)
         {
@@ -234,7 +245,14 @@ public final class BleScanInfo implements UsesCustomNull
      */
     public final BleScanInfo setTxPower(byte power)
     {
-        m_txPower.value = (int) power;
+        if (m_txPower == null)
+        {
+            m_txPower = new Pointer<>((int) power);
+        }
+        else
+        {
+            m_txPower.value = (int) power;
+        }
         return this;
     }
 
