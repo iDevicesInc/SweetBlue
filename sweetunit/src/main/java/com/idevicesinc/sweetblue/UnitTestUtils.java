@@ -439,6 +439,18 @@ public final class UnitTestUtils
         device.m_listeners.onServicesDiscovered(null, gattStatus);
     }
 
+    public static void failDiscoverServices(final BleDevice device, final int gattStatus, Interval delay)
+    {
+        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                device.m_listeners.onServicesDiscovered(null, gattStatus);
+            }
+        }, delay.millis());
+    }
+
     /**
      * Overload of {@link #setToConnecting(BleDevice, int)} which sets the gattStatus to {@link BleStatuses#GATT_SUCCESS}.
      */

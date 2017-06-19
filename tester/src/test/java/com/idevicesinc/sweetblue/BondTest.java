@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -118,41 +117,10 @@ public class BondTest extends BaseBleUnitTest
     public BleManagerConfig getConfig()
     {
         BleManagerConfig config = super.getConfig();
-        config.nativeDeviceFactory = new P_NativeDeviceLayerFactory<BondDeviceLayer>()
-        {
-            @Override
-            public BondDeviceLayer newInstance(BleDevice device)
-            {
-                return new BondDeviceLayer(device);
-            }
-        };
         config.loggingEnabled = true;
         return config;
     }
 
-
-    private final class BondDeviceLayer extends UnitTestDevice
-    {
-
-        public BondDeviceLayer(BleDevice device)
-        {
-            super(device);
-        }
-
-        @Override
-        public boolean createBond()
-        {
-            UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
-            return true;
-        }
-
-        @Override
-        public boolean createBondSneaky(String methodName, boolean loggingEnabled)
-        {
-            UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
-            return true;
-        }
-    }
 
     private final class BondFailACoupleTimesLayer extends UnitTestDevice
     {
@@ -172,12 +140,12 @@ public class BondTest extends BaseBleUnitTest
         {
             if (m_failsSoFar >= m_maxFails)
             {
-                UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
+                return super.createBond();
             }
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, Interval.millis(250));
+                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
                 System.out.println("Failing bond request. Fails so far: " + m_failsSoFar);
             }
             return true;
@@ -188,12 +156,12 @@ public class BondTest extends BaseBleUnitTest
         {
             if (m_failsSoFar >= 2)
             {
-                UnitTestUtils.bondSuccess(getBleDevice(), Interval.millis(250));
+                return super.createBondSneaky(methodName, loggingEnabled);
             }
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, Interval.millis(250));
+                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
             }
             return true;
         }

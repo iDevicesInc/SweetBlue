@@ -20,6 +20,9 @@ public class WriteTypeTest extends BaseBleUnitTest
     private final static UUID m_WriteChar = UUID.randomUUID();
 
 
+    private GattDatabase db = new GattDatabase().addService(m_WriteService)
+            .addCharacteristic(m_WriteChar).setProperties().write().write_no_response().signed_write().setPermissions().write().signed_write().completeService();
+
     @Test
     public void writeNoResponseTest() throws Exception
     {
@@ -94,22 +97,10 @@ public class WriteTypeTest extends BaseBleUnitTest
             @Override
             public P_GattLayer newInstance(BleDevice device)
             {
-                return new WriteTypeGatt(device);
+                return new UnitTestGatt(device, db);
             }
         };
         return config;
-    }
-
-    private final class WriteTypeGatt extends UnitTestGatt
-    {
-
-        public WriteTypeGatt(BleDevice device)
-        {
-            super(device);
-            GattDatabase db = new GattDatabase().addService(m_WriteService)
-                    .addCharacteristic(m_WriteChar).setProperties().write().write_no_response().signed_write().setPermissions().write().signed_write().completeService();
-            setDabatase(db);
-        }
     }
 
 }

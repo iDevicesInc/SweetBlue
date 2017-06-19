@@ -19,6 +19,8 @@ public class OtaTest extends BaseBleUnitTest
     private final static UUID m_serviceUuid = UUID.randomUUID();
     private final static UUID m_charUuid = UUID.randomUUID();
 
+    private GattDatabase db = new GattDatabase().addService(m_serviceUuid)
+            .addCharacteristic(m_charUuid).setValue(new byte[]{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}).setProperties().write().setPermissions().write().completeService();
 
     @Test
     public void otaTest() throws Exception
@@ -86,21 +88,10 @@ public class OtaTest extends BaseBleUnitTest
             @Override
             public P_GattLayer newInstance(BleDevice device)
             {
-                return new OtaGatt(device);
+                return new UnitTestGatt(device, db);
             }
         };
         return config;
     }
 
-    private final class OtaGatt extends UnitTestGatt
-    {
-
-        public OtaGatt(BleDevice device)
-        {
-            super(device);
-            GattDatabase db = new GattDatabase().addService(m_serviceUuid)
-                    .addCharacteristic(m_charUuid).setValue(new byte[]{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}).setProperties().write().setPermissions().write().completeService();
-            setDabatase(db);
-        }
-    }
 }
