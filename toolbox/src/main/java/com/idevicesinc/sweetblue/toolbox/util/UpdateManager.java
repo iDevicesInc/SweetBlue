@@ -1,4 +1,4 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.util;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -67,7 +67,7 @@ public class UpdateManager implements PI_UpdateLoop.Callback
     private static UpdateManager s_instance;
 
     // Static getter/creator
-    static UpdateManager getInstance()
+    public static UpdateManager getInstance()
     {
         if (s_instance == null)
             s_instance = new UpdateManager();

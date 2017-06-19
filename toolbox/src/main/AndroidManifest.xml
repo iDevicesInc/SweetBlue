@@ -9,7 +9,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.idevicesinc.sweetblue.toolbox.MainActivity" android:screenOrientation="sensorPortrait" android:configChanges="orientation">
+        <activity
+            android:name="com.idevicesinc.sweetblue.toolbox.activity.MainActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="sensorPortrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -17,23 +20,31 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".LoggerActivity">
+        <activity android:name=".activity.LoggerActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="MainActivity" />
-            </activity>
-        <activity android:name=".DeviceInformationActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="MainActivity" />
+                android:value="com.idevicesinc.sweetblue.toolbox.activity.MainActivity"/>
         </activity>
-        <activity android:name=".SettingsActivity">
+        <activity android:name=".activity.DeviceInformationActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="MainActivity" />
+                android:value="com.idevicesinc.sweetblue.toolbox.activity.MainActivity"/>
         </activity>
-        <activity android:name=".BleServicesActivity" />
-        <activity android:name=".BleCharacteristicsActivity" />
+        <activity android:name=".activity.SettingsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.idevicesinc.sweetblue.toolbox.activity.MainActivity"/>
+        </activity>
+        <activity android:name=".activity.BleServicesActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.idevicesinc.sweetblue.toolbox.activity.MainActivity"/>
+        </activity>
+        <activity android:name=".activity.BleCharacteristicsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.idevicesinc.sweetblue.toolbox.activity.BleServicesActivity"/>
+        </activity>
     </application>
 
 </manifest>

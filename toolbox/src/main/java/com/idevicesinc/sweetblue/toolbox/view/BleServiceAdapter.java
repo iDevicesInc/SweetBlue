@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.toolbox.R;
-import com.idevicesinc.sweetblue.toolbox.UuidUtil;
+import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import java.util.ArrayList;
 
 
