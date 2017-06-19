@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Util;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -27,7 +29,7 @@ public class DeviceManagerTest extends BaseBleUnitTest
             {
                 while (m_timeStarted + 10000 > System.currentTimeMillis())
                 {
-                    m_mgr.newDevice(UnitTestUtils.randomMacAddress());
+                    m_mgr.newDevice(Util.randomMacAddress());
                     try
                     {
                         Thread.sleep(25);

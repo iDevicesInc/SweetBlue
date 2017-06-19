@@ -6,7 +6,10 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.content.Context;
 import android.text.TextUtils;
-import com.idevicesinc.sweetblue.utils.Utils_String;
+
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Util;
+
 import java.util.Random;
 
 
@@ -21,6 +24,10 @@ public class UnitTestDevice implements P_NativeDeviceLayer
     public UnitTestDevice(BleDevice device)
     {
         m_device = device;
+        if (!device.isNull())
+        {
+            m_address = device.getMacAddress();
+        }
     }
 
 
@@ -37,9 +44,7 @@ public class UnitTestDevice implements P_NativeDeviceLayer
     public String getAddress() {
         if (TextUtils.isEmpty(m_address))
         {
-            byte[] add = new byte[6];
-            new Random().nextBytes(add);
-            m_address = Utils_String.bytesToMacAddress(add);
+            m_address = Util.randomMacAddress();
         }
         return m_address;
     }
@@ -51,7 +56,8 @@ public class UnitTestDevice implements P_NativeDeviceLayer
 
     @Override
     public boolean createBond() {
-        return false;
+        NativeUtil.bondSuccess(getBleDevice(), getRandomTime());
+        return true;
     }
 
     @Override public boolean isDeviceNull()
@@ -76,6 +82,7 @@ public class UnitTestDevice implements P_NativeDeviceLayer
 
     @Override
     public boolean createBondSneaky(String methodName, boolean loggingEnabled) {
+        NativeUtil.bondSuccess(getBleDevice(), getRandomTime());
         return true;
     }
 
@@ -97,5 +104,12 @@ public class UnitTestDevice implements P_NativeDeviceLayer
     @Override public BleDevice getBleDevice()
     {
         return m_device;
+    }
+
+    private Interval getRandomTime()
+    {
+        Random r = new Random();
+        int ms = r.nextInt(450) + 50;
+        return Interval.millis(ms);
     }
 }

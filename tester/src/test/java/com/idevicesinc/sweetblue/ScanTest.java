@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
+import com.idevicesinc.sweetblue.utils.Util;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -315,8 +316,8 @@ public class ScanTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
-        device2 = m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device 2");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        device2 = m_mgr.newDevice(Util.randomMacAddress(), "Test Device 2");
 
         m_mgr.setListener_State(new ManagerStateListener()
         {
@@ -359,7 +360,12 @@ public class ScanTest extends BaseBleUnitTest
                                 // 3x the scan amount (2 scans, 1 pause). We may need to add a bit
                                 // to LEEWAY here, as it's going through 3 iterations, but for now
                                 // it seems to be ok for the test
-                                long targetTime = scanTime * 3;
+
+                                // We also need to account for boost scan time here
+
+                                long boostTime = m_mgr.m_config.scanClassicBoostLength.millis() * 2;
+
+                                long targetTime = (scanTime * 3) + boostTime;
                                 assertTrue("Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
                                 semaphore.release();
                             }
@@ -397,8 +403,15 @@ public class ScanTest extends BaseBleUnitTest
                                 // 3x the scan amount (2 scans, 1 pause). We may need to add a bit
                                 // to LEEWAY here, as it's going through 3 iterations, but for now
                                 // it seems to be ok for the test
-                                long targetTime = scanTime * 3;
-                                assertTrue("Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
+
+                                // We also need to account for boost scan time here
+
+                                long boostTime = m_mgr.m_config.scanClassicBoostLength.millis() * 2;
+
+                                long targetTime = (scanTime * 3) + boostTime;
+
+
+                                assertTrue("Target time: " + targetTime + " Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
                                 semaphore.release();
                             }
                             else
@@ -426,16 +439,19 @@ public class ScanTest extends BaseBleUnitTest
                 {
                     @Override public void onEvent(StateEvent e)
                     {
+                        if (e.didEnter(BleManagerState.SCANNING))
+                        {
+                            time.value = System.currentTimeMillis();
+                        }
                         if (e.didExit(BleManagerState.SCANNING))
                         {
                             // Make sure our scan time is approximately correct
                             long diff = System.currentTimeMillis() - time.value;
-                            assertTrue(((diff - LEEWAY) < scanTime && scanTime < (diff + LEEWAY)));
+                            assertTrue("Scan didn't run the appropriate amount of time. Requested time = " + scanTime +  " Diff = " + diff, ((diff - LEEWAY) < scanTime && scanTime < (diff + LEEWAY)));
                             semaphore.release();
                         }
                     }
                 });
-                time.value = System.currentTimeMillis();
                 m_mgr.startScan(Interval.millis(scanTime));
             }
         });
