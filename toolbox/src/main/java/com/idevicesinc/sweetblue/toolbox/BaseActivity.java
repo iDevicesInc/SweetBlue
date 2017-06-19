@@ -1,11 +1,12 @@
 package com.idevicesinc.sweetblue.toolbox;
 
-import android.app.Activity;
+
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.View;
 
 
-public class BaseActivity extends Activity
+public class BaseActivity extends AppCompatActivity
 {
 
     <T extends View> T find(int id)
