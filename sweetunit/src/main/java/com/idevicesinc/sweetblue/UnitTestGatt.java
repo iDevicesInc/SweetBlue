@@ -8,16 +8,23 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_Const;
+
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 
 public class UnitTestGatt implements P_GattLayer {
 
 
+    private Interval m_delayTime;
     private boolean m_gattIsNull = true;
     private final BleDevice m_device;
     private boolean m_explicitDisconnect = false;
+    private List<BluetoothGattService> m_services;
 
 
     public UnitTestGatt(BleDevice device)
@@ -25,6 +32,17 @@ public class UnitTestGatt implements P_GattLayer {
         m_device = device;
     }
 
+    public UnitTestGatt(BleDevice device, GattDatabase gattDb)
+    {
+        this(device);
+        m_services = gattDb.getServiceList();
+    }
+
+
+    public void setDabatase(GattDatabase db)
+    {
+        m_services = db.getServiceList();
+    }
 
     @Override
     public void setGatt(BluetoothGatt gatt) {
@@ -53,11 +71,21 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public List<BluetoothGattService> getNativeServiceList(P_Logger logger) {
-        return null;
+        return m_services == null ? P_Const.EMPTY_SERVICE_LIST : m_services;
     }
 
     @Override
     public BluetoothGattService getService(UUID serviceUuid, P_Logger logger) {
+        if (m_services != null)
+        {
+            for (BluetoothGattService service : m_services)
+            {
+                if (service.getUuid().equals(serviceUuid))
+                {
+                    return service;
+                }
+            }
+        }
         return null;
     }
 
@@ -80,7 +108,7 @@ public class UnitTestGatt implements P_GattLayer {
                     setToConnecting();
                 }
             }
-        }, 50);
+        }, 100);
         m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
             @Override public void run()
@@ -90,7 +118,7 @@ public class UnitTestGatt implements P_GattLayer {
                     setToConnected();
                 }
             }
-        }, 150);
+        }, 250);
         return device.connect(context, useAutoConnect, callback);
     }
 
@@ -106,8 +134,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void setToConnected()
     {
-        ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTED);
-        m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_CONNECTED);
+        UnitTestUtils.setToConnected(m_device, BleStatuses.GATT_SUCCESS, Interval.millis(0));
     }
 
     @Override
@@ -119,14 +146,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     private void preDisconnect()
     {
-        m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_DISCONNECTED);
-                m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
-            }
-        }, 50);
+        UnitTestUtils.setToDisconnected(m_device, BleStatuses.GATT_SUCCESS);
     }
 
     @Override
@@ -141,17 +161,30 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public boolean readCharacteristic(BluetoothGattCharacteristic characteristic) {
+        sendReadResponse(characteristic, characteristic.getValue());
         return true;
+    }
+
+    public void sendReadResponse(BluetoothGattCharacteristic characteristic, byte[] data)
+    {
+        UnitTestUtils.readSuccess(getBleDevice(), characteristic, data, getDelayTime());
     }
 
     @Override
     public boolean setCharValue(BluetoothGattCharacteristic characteristic, byte[] data) {
+        characteristic.setValue(data);
         return true;
     }
 
     @Override
     public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+        sendWriteResponse(characteristic);
         return true;
+    }
+
+    public void sendWriteResponse(BluetoothGattCharacteristic characteristic)
+    {
+        UnitTestUtils.writeSuccess(getBleDevice(), characteristic, getDelayTime());
     }
 
     @Override public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)
@@ -161,17 +194,30 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public boolean readDescriptor(BluetoothGattDescriptor descriptor) {
+        sendReadDescriptorResponse(descriptor, descriptor.getValue());
         return true;
+    }
+
+    public void sendReadDescriptorResponse(BluetoothGattDescriptor descriptor, byte[] data)
+    {
+        UnitTestUtils.readDescSuccess(getBleDevice(), descriptor, data, getDelayTime());
     }
 
     @Override
     public boolean setDescValue(BluetoothGattDescriptor descriptor, byte[] data) {
+        descriptor.setValue(data);
         return true;
     }
 
     @Override
     public boolean writeDescriptor(BluetoothGattDescriptor descriptor) {
+        sendWriteDescResponse(descriptor);
         return true;
+    }
+
+    private void sendWriteDescResponse(BluetoothGattDescriptor descriptor)
+    {
+        UnitTestUtils.writeDescSuccess(getBleDevice(), descriptor, getDelayTime());
     }
 
     @Override
@@ -190,7 +236,7 @@ public class UnitTestGatt implements P_GattLayer {
                     setServicesDiscovered();
                 }
             }
-        }, 250);
+        }, getDelayTime().millis());
         return true;
     }
 
@@ -222,5 +268,24 @@ public class UnitTestGatt implements P_GattLayer {
     @Override public BleDevice getBleDevice()
     {
         return m_device;
+    }
+
+
+    public void setDelayTime(Interval delay)
+    {
+        m_delayTime = delay;
+    }
+
+    public Interval getDelayTime()
+    {
+        if (Interval.isDisabled(m_delayTime))
+        {
+            Random r = new Random();
+            return Interval.millis(r.nextInt(2999) + 1);
+        }
+        else
+        {
+            return m_delayTime;
+        }
     }
 }

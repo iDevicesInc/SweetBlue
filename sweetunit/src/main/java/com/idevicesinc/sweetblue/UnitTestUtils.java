@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
@@ -9,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.idevicesinc.sweetblue.utils.ByteBuffer;
+import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.Random;
@@ -16,8 +18,8 @@ import java.util.UUID;
 
 /**
  * Utility class for simulating Bluetooth operations (read/writes, notifications, etc). When unit testing, you will need to use this class
- * to simulate bluetooth operations. For instance, in your test, you try to read a characteristic, then you'll have to call {@link #readSuccess(BleDevice, BluetoothGattCharacteristic, byte[])},
- * or {@link #readSuccess(BleDevice, BluetoothGattCharacteristic, byte[], long)} to simulate getting the data back from the "connected" device.
+ * to simulate bluetooth operations. {@link UnitTestGatt}, {@link UnitTestDevice}, and {@link UnitTestManagerLayer} use this class. If you are implementing your own
+ * version of those classes, you will need to use this class to simulate the native callbacks.
  */
 public final class UnitTestUtils
 {
@@ -49,6 +51,19 @@ public final class UnitTestUtils
         return Utils_String.bytesToMacAddress(add);
     }
 
+    /**
+     * Returns a random byte array of the given size
+     */
+    public static byte[] randomBytes(int size)
+    {
+        byte[] bytes = new byte[size];
+        new Random().nextBytes(bytes);
+        return bytes;
+    }
+
+    /**
+     * Sends a broadcast for a bluetooth state change, such as {@link BluetoothAdapter#STATE_ON}, {@link BluetoothAdapter#STATE_OFF}, etc.
+     */
     public static void sendBluetoothStateBroadcast(Context context, int previousState, int newState)
     {
         Intent intent = new Intent(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -57,12 +72,91 @@ public final class UnitTestUtils
         context.sendBroadcast(intent);
     }
 
-    public static void readError(BleDevice device, BluetoothGattCharacteristic characteristic, int gattStatus)
+    /**
+     * Overload of {@link #bondSuccess(BleDevice, Interval)} which delays the callback by 50ms.
+     */
+    public static void bondSuccess(BleDevice device)
     {
-        readError(device, characteristic, gattStatus, 50);
+        bondSuccess(device, Interval.millis(50));
     }
 
-    public static void readError(final BleDevice device, final BluetoothGattCharacteristic characteristic, final int gattStatus, long delay)
+    /**
+     * Send the callback that a bond was successful, and delays the callback by the amount of time specified
+     */
+    public static void bondSuccess(final BleDevice device, Interval delay)
+    {
+        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                int oldState;
+                if (device.is(BleDeviceState.UNBONDED))
+                {
+                    oldState = BluetoothDevice.BOND_NONE;
+                }
+                else if (device.is(BleDeviceState.BONDING))
+                {
+                    oldState = BluetoothDevice.BOND_BONDING;
+                }
+                else
+                {
+                    oldState = BluetoothDevice.BOND_BONDED;
+                }
+                device.getManager().m_listeners.onNativeBondStateChanged(device.getManager().m_config.newDeviceLayer(device), oldState, BluetoothDevice.BOND_BONDED, 0);
+            }
+        }, delay.millis());
+    }
+
+    /**
+     * Overload of {@link #bondFail(BleDevice, int, Interval)} which delays the callback by 50ms.
+     */
+    public static void bondFail(BleDevice device, int failReason)
+    {
+        bondFail(device, failReason, Interval.millis(50));
+    }
+
+    /**
+     * Send a callback that a bond has failed with the provided reason..something like {@link BleStatuses#UNBOND_REASON_AUTH_FAILED}, or {@link BleStatuses#UNBOND_REASON_REMOTE_DEVICE_DOWN}, and
+     * delays the callback by the amount specified.
+     */
+    public static void bondFail(final BleDevice device, final int failReason, Interval delay)
+    {
+        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                int oldState;
+                if (device.is(BleDeviceState.UNBONDED))
+                {
+                    oldState = BluetoothDevice.BOND_NONE;
+                }
+                else if (device.is(BleDeviceState.BONDING))
+                {
+                    oldState = BluetoothDevice.BOND_BONDING;
+                }
+                else
+                {
+                    oldState = BluetoothDevice.BOND_BONDED;
+                }
+                device.getManager().m_listeners.onNativeBondStateChanged(device.getManager().m_config.newDeviceLayer(device), oldState, BluetoothDevice.BOND_NONE, failReason);
+            }
+        }, delay.millis());
+    }
+
+    /**
+     * Overload of {@link #readError(BleDevice, BluetoothGattCharacteristic, int, Interval)} which delays the callback by 50ms.
+     */
+    public static void readError(BleDevice device, BluetoothGattCharacteristic characteristic, int gattStatus)
+    {
+        readError(device, characteristic, gattStatus, Interval.millis(50));
+    }
+
+    /**
+     * Send a callback that a read has failed, with the gattStatus provided, for instance {@link BleStatuses#GATT_ERROR}, which delays the callback by the amount specified.
+     */
+    public static void readError(final BleDevice device, final BluetoothGattCharacteristic characteristic, final int gattStatus, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -70,15 +164,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onCharacteristicRead(null, characteristic, gattStatus);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #readSuccess(BleDevice, BluetoothGattCharacteristic, byte[], Interval)} which delays the callback by 50ms.
+     */
     public static void readSuccess(final BleDevice device, final BluetoothGattCharacteristic characteristic, final byte[] data)
     {
-        readSuccess(device, characteristic, data, 50);
+        readSuccess(device, characteristic, data, Interval.millis(50));
     }
 
-    public static void readSuccess(final BleDevice device, final BluetoothGattCharacteristic characteristic, final byte[] data, long delay)
+    /**
+     * Send a callback that a read was successful, with the data to send back from the read, and delays the callback by the amount specified.
+     */
+    public static void readSuccess(final BleDevice device, final BluetoothGattCharacteristic characteristic, final byte[] data, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -87,15 +187,21 @@ public final class UnitTestUtils
                 characteristic.setValue(data);
                 device.m_listeners.onCharacteristicRead(null, characteristic, BleStatuses.GATT_SUCCESS);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #readDescSuccess(BleDevice, BluetoothGattDescriptor, byte[], Interval)} which delays the callback by 50ms.
+     */
     public static void readDescSuccess(final BleDevice device, final BluetoothGattDescriptor descriptor, final byte[] data)
     {
-        readDescSuccess(device, descriptor, data, 50);
+        readDescSuccess(device, descriptor, data, Interval.millis(50));
     }
 
-    public static void readDescSuccess(final BleDevice device, final BluetoothGattDescriptor descriptor, final byte[] data, long delay)
+    /**
+     * Send a callback that a descriptor read was successful, with the data to return, and delays the callback by the amount specified.
+     */
+    public static void readDescSuccess(final BleDevice device, final BluetoothGattDescriptor descriptor, final byte[] data, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -104,14 +210,20 @@ public final class UnitTestUtils
                 descriptor.setValue(data);
                 device.m_listeners.onDescriptorRead(null, descriptor, BleStatuses.GATT_SUCCESS);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #readDescError(BleDevice, BluetoothGattDescriptor, int, long)} which delays the callback by 50ms.
+     */
     public static void readDescError(final BleDevice device, final BluetoothGattDescriptor descriptor, final int gattStatus)
     {
         readDescError(device, descriptor, gattStatus, 50);
     }
 
+    /**
+     * Send a callback that a descriptor read failed with the given gattStatus, and delays the callback by the amount specified.
+     */
     public static void readDescError(final BleDevice device, final BluetoothGattDescriptor descriptor, final int gattStatus, long delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
@@ -123,12 +235,18 @@ public final class UnitTestUtils
         }, delay);
     }
 
+    /**
+     * Overload of {@link #writeDescSuccess(BleDevice, BluetoothGattDescriptor, Interval)} which delays the callback by 50ms.
+     */
     public static void writeDescSuccess(final BleDevice device, final BluetoothGattDescriptor descriptor)
     {
-        writeDescSuccess(device, descriptor, 50);
+        writeDescSuccess(device, descriptor, Interval.millis(50));
     }
 
-    public static void writeDescSuccess(final BleDevice device, final BluetoothGattDescriptor descriptor, long delay)
+    /**
+     * Send a callback that a descriptor write suceeded, and delay the callback by the amount specified.
+     */
+    public static void writeDescSuccess(final BleDevice device, final BluetoothGattDescriptor descriptor, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -136,15 +254,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onDescriptorWrite(null, descriptor, BleStatuses.GATT_SUCCESS);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #writeDescError(BleDevice, BluetoothGattDescriptor, int, Interval)} which delays the callback by 50ms.
+     */
     public static void writeDescError(final BleDevice device, final BluetoothGattDescriptor descriptor, final int gattStatus)
     {
-        writeDescError(device, descriptor, gattStatus, 50);
+        writeDescError(device, descriptor, gattStatus, Interval.millis(50));
     }
 
-    public static void writeDescError(final BleDevice device, final BluetoothGattDescriptor descriptor, final int gattStatus, long delay)
+    /**
+     * Send a callback that a descriptor write failed, with the given gattStatus, and delay the callback by the amount specified.
+     */
+    public static void writeDescError(final BleDevice device, final BluetoothGattDescriptor descriptor, final int gattStatus, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -152,15 +276,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onDescriptorWrite(null, descriptor, gattStatus);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #writeSuccess(BleDevice, BluetoothGattCharacteristic, Interval)} which delays the callback by 50ms.
+     */
     public static void writeSuccess(final BleDevice device, final BluetoothGattCharacteristic characteristic)
     {
-        writeSuccess(device, characteristic, 50);
+        writeSuccess(device, characteristic, Interval.millis(50));
     }
 
-    public static void writeSuccess(final BleDevice device, final BluetoothGattCharacteristic characteristic, long delay)
+    /**
+     * Send a callback that a write succeeded, and delay the callback by the amount specified.
+     */
+    public static void writeSuccess(final BleDevice device, final BluetoothGattCharacteristic characteristic, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -168,15 +298,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onCharacteristicWrite(null, characteristic, BleStatuses.GATT_SUCCESS);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #writeError(BleDevice, BluetoothGattCharacteristic, int, Interval)} which delays the callback by 50ms.
+     */
     public static void writeError(final BleDevice device, final BluetoothGattCharacteristic characteristic, final int gattStatus)
     {
-        writeError(device, characteristic, gattStatus, 50);
+        writeError(device, characteristic, gattStatus, Interval.millis(50));
     }
 
-    public static void writeError(final BleDevice device, final BluetoothGattCharacteristic characteristic, final int gattStatus, long delay)
+    /**
+     * Send a callback that a write failed, with the given gattStatus, and delay the callback by the amount specified.
+     */
+    public static void writeError(final BleDevice device, final BluetoothGattCharacteristic characteristic, final int gattStatus, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -184,15 +320,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onCharacteristicWrite(null, characteristic, gattStatus);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #requestMTUSuccess(BleDevice, int, Interval)} which delays the callback by 50ms.
+     */
     public static void requestMTUSuccess(final BleDevice device, final int mtu)
     {
-        requestMTUSuccess(device, mtu, 50);
+        requestMTUSuccess(device, mtu, Interval.millis(50));
     }
 
-    public static void requestMTUSuccess(final BleDevice device, final int mtu, long delay)
+    /**
+     * Send a callback that says an MTU request was successful, with the newly negotiated mtu size, and delay the callback by the amount specified.
+     */
+    public static void requestMTUSuccess(final BleDevice device, final int mtu, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -200,15 +342,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onMtuChanged(null, mtu, BleStatuses.GATT_SUCCESS);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #requestMTUError(BleDevice, int, int, Interval)} which delays the callback by 50ms.
+     */
     public static void requestMTUError(final BleDevice device, final int mtu, final int gattStatus)
     {
-        requestMTUError(device, mtu, gattStatus, 50);
+        requestMTUError(device, mtu, gattStatus, Interval.millis(50));
     }
 
-    public static void requestMTUError(final BleDevice device, final int mtu, final int gattStatus, long delay)
+    /**
+     * Send a callback that says an MTU request failed, with the given gattStatus, and delay the callback by the amount specified.
+     */
+    public static void requestMTUError(final BleDevice device, final int mtu, final int gattStatus, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -216,15 +364,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onMtuChanged(null, mtu, gattStatus);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #remoteRssiSuccess(BleDevice, int, Interval)} which delays the callback by 50ms.
+     */
     public static void remoteRssiSuccess(final BleDevice device, final int rssi)
     {
-        remoteRssiSuccess(device, rssi, 50);
+        remoteRssiSuccess(device, rssi, Interval.millis(50));
     }
 
-    public static void remoteRssiSuccess(final BleDevice device, final int rssi, long delay)
+    /**
+     * Send a callback that a read remote rssi succeeded with the given rssi value, and delay the callback by the amount specified.
+     */
+    public static void remoteRssiSuccess(final BleDevice device, final int rssi, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -232,15 +386,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onReadRemoteRssi(null, rssi, BleStatuses.GATT_SUCCESS);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #remoteRssiError(BleDevice, int, Interval)} which delays the callback by 50ms.
+     */
     public static void remoteRssiError(final BleDevice device, final int gattStatus)
     {
-        remoteRssiError(device, gattStatus, 50);
+        remoteRssiError(device, gattStatus, Interval.millis(50));
     }
 
-    public static void remoteRssiError(final BleDevice device, final int gattStatus, long delay)
+    /**
+     * Send a callback that a remote rssi read has failed with the given gattStatus, and delay the callback by the amount specified.
+     */
+    public static void remoteRssiError(final BleDevice device, final int gattStatus, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -248,15 +408,21 @@ public final class UnitTestUtils
             {
                 device.m_listeners.onReadRemoteRssi(null, device.getRssi(), gattStatus);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Overload of {@link #sendNotification(BleDevice, BluetoothGattCharacteristic, byte[], Interval)} which delays the callback by 50ms.
+     */
     public static void sendNotification(final BleDevice device, final BluetoothGattCharacteristic characteristic, final byte[] data)
     {
-        sendNotification(device, characteristic, data, 50);
+        sendNotification(device, characteristic, data, Interval.millis(50));
     }
 
-    public static void sendNotification(final BleDevice device, final BluetoothGattCharacteristic characteristic, final byte[] data, long delay)
+    /**
+     * Simulate a notification being received with the given data, and delay the callback by the amount specified.
+     */
+    public static void sendNotification(final BleDevice device, final BluetoothGattCharacteristic characteristic, final byte[] data, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -265,7 +431,7 @@ public final class UnitTestUtils
                 characteristic.setValue(data);
                 device.m_listeners.onCharacteristicChanged(null, characteristic);
             }
-        }, delay);
+        }, delay.millis());
     }
 
     public static void failDiscoverServices(BleDevice device, int gattStatus)
@@ -273,17 +439,135 @@ public final class UnitTestUtils
         device.m_listeners.onServicesDiscovered(null, gattStatus);
     }
 
-    public static void disconnectDevice(BleDevice device, int gattStatus)
+    public static void failDiscoverServices(final BleDevice device, final int gattStatus, Interval delay)
     {
-        disconnectDevice(device, gattStatus, true, 50);
+        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                device.m_listeners.onServicesDiscovered(null, gattStatus);
+            }
+        }, delay.millis());
     }
 
-    public static void disconnectDevice(BleDevice device, int gattStatus, long delay)
+    /**
+     * Overload of {@link #setToConnecting(BleDevice, int)} which sets the gattStatus to {@link BleStatuses#GATT_SUCCESS}.
+     */
+    public static void setToConnecting(final BleDevice device)
     {
-        disconnectDevice(device, gattStatus, true, delay);
+        setToConnecting(device, BleStatuses.GATT_SUCCESS);
     }
 
-    public static void disconnectDevice(final BleDevice device, final int gattStatus, final boolean updateDeviceState, long delay)
+    /**
+     * Overload of {@link #setToConnecting(BleDevice, int, Interval)} which delays the callback by 50ms.
+     */
+    public static void setToConnecting(final BleDevice device, int gattStatus)
+    {
+        setToConnecting(device, gattStatus, Interval.millis(50));
+    }
+
+    /**
+     * Overload of {@link #setToConnecting(BleDevice, int, boolean, Interval)} which updates the internal state as well.
+     */
+    public static void setToConnecting(final BleDevice device, int gattStatus, Interval delay)
+    {
+        setToConnecting(device, gattStatus, true, delay);
+    }
+
+    /**
+     * Send a callback to set a device's state to {@link BluetoothGatt#STATE_CONNECTING}, with the given gattStatus, whether or not to update the internal state, and delay
+     * the callback by the amount specified.
+     */
+    public static void setToConnecting(final BleDevice device, final int gattStatus, final boolean updateDeviceState, Interval delay)
+    {
+        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (updateDeviceState)
+                {
+                    ((UnitTestManagerLayer) device.layerManager().getManagerLayer()).updateDeviceState(device, BluetoothGatt.STATE_CONNECTING);
+                }
+                device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_CONNECTING);
+            }
+        }, delay.millis());
+    }
+
+    /**
+     * Overload of {@link #setToConnected(BleDevice, int)} which sets the gattStatus to {@link BleStatuses#GATT_SUCCESS}.
+     */
+    public static void setToConnected(final BleDevice device)
+    {
+        setToConnected(device, BleStatuses.GATT_SUCCESS);
+    }
+
+    /**
+     * Overload of {@link #setToConnected(BleDevice, int, Interval)}, which delays the callback by 50ms.
+     */
+    public static void setToConnected(final BleDevice device, int gattStatus)
+    {
+        setToConnected(device, gattStatus, Interval.millis(50));
+    }
+
+    /**
+     * Overload of {@link #setToConnected(BleDevice, int, boolean, Interval)} which updates the internal state as well.
+     */
+    public static void setToConnected(final BleDevice device, int gattStatus, Interval delay)
+    {
+        setToConnected(device, gattStatus, true, delay);
+    }
+
+    /**
+     * Send a callback to set a device's state to {@link BluetoothGatt#STATE_CONNECTED}, with the given gattStatus, whether or not to update the internal state, and delay
+     * the callback by the amount specified.
+     */
+    public static void setToConnected(final BleDevice device, final int gattStatus, final boolean updateDeviceState, Interval delay)
+    {
+        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (updateDeviceState)
+                {
+                    ((UnitTestManagerLayer) device.layerManager().getManagerLayer()).updateDeviceState(device, BluetoothGatt.STATE_CONNECTED);
+                }
+                device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_CONNECTED);
+            }
+        }, delay.millis());
+    }
+
+    /**
+     * Overload of {@link #setToDisconnected(BleDevice, int)} with sets the gattStatus to {@link BleStatuses#GATT_SUCCESS}.
+     */
+    public static void setToDisconnected(BleDevice device)
+    {
+        setToDisconnected(device, BleStatuses.GATT_SUCCESS);
+    }
+
+    /**
+     * Overload of {@link #setToDisconnected(BleDevice, int, Interval)} which delays the callback by 50ms.
+     */
+    public static void setToDisconnected(BleDevice device, int gattStatus)
+    {
+        setToDisconnected(device, gattStatus, Interval.millis(50));
+    }
+
+    /**
+     * Overload of {@link #setToDisconnected(BleDevice, int, boolean, Interval)} which sets the device's internal state.
+     */
+    public static void setToDisconnected(BleDevice device, int gattStatus, Interval delay)
+    {
+        setToDisconnected(device, gattStatus, true, delay);
+    }
+
+    /**
+     * Send a callback to set a device's state to {@link BluetoothGatt#STATE_DISCONNECTED}, with the given gattStatus, whether or not to update the internal state, and delay
+     * the callback by the amount specified.
+     */
+    public static void setToDisconnected(final BleDevice device, final int gattStatus, final boolean updateDeviceState, Interval delay)
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
@@ -295,9 +579,13 @@ public final class UnitTestUtils
                 }
                 device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_DISCONNECTED);
             }
-        }, delay);
+        }, delay.millis());
     }
 
+    /**
+     * Simulate a device that is advertising, so SweetBlue picks up on it (as long as scanning is occurring at the time you call this method).
+     * Use one of the methods {@link #newScanRecord(String)}, {@link #newScanRecord(String, UUID)}, etc to get the byte[] of the scan record easily.
+     */
     public static void advertiseNewDevice(BleManager mgr, int rssi, byte[] scanRecord)
     {
         if (mgr.is(BleManagerState.SCANNING))
@@ -310,31 +598,49 @@ public final class UnitTestUtils
         }
     }
 
+    /**
+     * Overload of {@link #advertiseNewDevice(BleManager, int, byte[])}, which creates the byte[] scanRecord from the name you provide.
+     */
     public static void advertiseNewDevice(BleManager mgr, int rssi, String deviceName)
     {
         advertiseNewDevice(mgr, rssi, newScanRecord(deviceName));
     }
 
+    /**
+     * Create the byte[] scanRecord from the given name (the record will only contain the name you provide here).
+     */
     public static byte[] newScanRecord(String name)
     {
         return newScanRecord(null, null, null, name, null, null, null);
     }
 
+    /**
+     * Create the byte[] scanRecord from the given name, serviceUuid, and serviceData.
+     */
     public static byte[] newScanRecord(String name, UUID serviceUuid, byte[] serviceData)
     {
         return newScanRecord(null, serviceUuid, serviceData, name, null, null, null);
     }
 
+    /**
+     * Create the byte[] scanRecord from the given name, and serviceUuid.
+     */
     public static byte[] newScanRecord(String name, UUID serviceUuid)
     {
         return newScanRecord(null, serviceUuid, null, name, null, null, null);
     }
 
+    /**
+     * Create the byte[] scanRecord from the given name, serviceUuid, serviceData, manufacturerId, and manufacturerData
+     */
     public static byte[] newScanRecord(String name, UUID serviceUuid, byte[] serviceData, short manufacturerId, byte[] manufacturerData)
     {
         return newScanRecord(null, serviceUuid, serviceData, name, null, manufacturerId, manufacturerData);
     }
 
+    /**
+     * Create the byte[] scanRecord from the given advertising flags, serviceUuid, serviceData, device name, txPower level, manufacturerID, and manufacturerData
+     */
     public static byte[] newScanRecord(Byte advFlags, UUID serviceUuid, byte[] serviceData, String name, Byte txPowerLevel, Short manufacturerId, byte[] manufacturerData)
     {
         final ByteBuffer buff = new ByteBuffer();
