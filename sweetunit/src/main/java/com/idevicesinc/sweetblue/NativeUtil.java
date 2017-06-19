@@ -8,58 +8,25 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
 import android.content.Intent;
-
-import com.idevicesinc.sweetblue.utils.ByteBuffer;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Utils_Byte;
-import com.idevicesinc.sweetblue.utils.Utils_String;
-import java.util.Random;
+import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
+
 import java.util.UUID;
 
 /**
  * Utility class for simulating Bluetooth operations (read/writes, notifications, etc). When unit testing, you will need to use this class
  * to simulate bluetooth operations. {@link UnitTestGatt}, {@link UnitTestDevice}, and {@link UnitTestManagerLayer} use this class. If you are implementing your own
  * version of those classes, you will need to use this class to simulate the native callbacks.
+ *
+ * This is not in the utils package as it accesses several package private methods.
  */
-public final class UnitTestUtils
+public final class NativeUtil
 {
 
-    private UnitTestUtils() {}
+    private NativeUtil() {}
 
 
-    private static final byte DATA_TYPE_FLAGS = 0x01;
-    private static final byte DATA_TYPE_SERVICE_UUIDS_16_BIT_PARTIAL = 0x02;
-    private static final byte DATA_TYPE_SERVICE_UUIDS_16_BIT_COMPLETE = 0x03;
-    private static final byte DATA_TYPE_SERVICE_UUIDS_32_BIT_PARTIAL = 0x04;
-    private static final byte DATA_TYPE_SERVICE_UUIDS_32_BIT_COMPLETE = 0x05;
-    private static final byte DATA_TYPE_SERVICE_UUIDS_128_BIT_PARTIAL = 0x06;
-    private static final byte DATA_TYPE_SERVICE_UUIDS_128_BIT_COMPLETE = 0x07;
-    private static final byte DATA_TYPE_LOCAL_NAME_SHORT = 0x08;
-    private static final byte DATA_TYPE_LOCAL_NAME_COMPLETE = 0x09;
-    private static final byte DATA_TYPE_TX_POWER_LEVEL = 0x0A;
-    private static final byte DATA_TYPE_SERVICE_DATA = 0x16;
-    private static final byte DATA_TYPE_MANUFACTURER_SPECIFIC_DATA = (byte) 0xFF;
-
-
-    /**
-     * Returns a random mac address
-     */
-    public static String randomMacAddress()
-    {
-        byte[] add = new byte[6];
-        new Random().nextBytes(add);
-        return Utils_String.bytesToMacAddress(add);
-    }
-
-    /**
-     * Returns a random byte array of the given size
-     */
-    public static byte[] randomBytes(int size)
-    {
-        byte[] bytes = new byte[size];
-        new Random().nextBytes(bytes);
-        return bytes;
-    }
 
     /**
      * Sends a broadcast for a bluetooth state change, such as {@link BluetoothAdapter#STATE_ON}, {@link BluetoothAdapter#STATE_OFF}, etc.
@@ -584,7 +551,7 @@ public final class UnitTestUtils
 
     /**
      * Simulate a device that is advertising, so SweetBlue picks up on it (as long as scanning is occurring at the time you call this method).
-     * Use one of the methods {@link #newScanRecord(String)}, {@link #newScanRecord(String, UUID)}, etc to get the byte[] of the scan record easily.
+     * Use one of the methods {@link Utils_ScanRecord#newScanRecord(String)}, {@link Utils_ScanRecord#newScanRecord(String, UUID)}, etc to get the byte[] of the scan record easily.
      */
     public static void advertiseNewDevice(BleManager mgr, int rssi, byte[] scanRecord)
     {
@@ -603,114 +570,7 @@ public final class UnitTestUtils
      */
     public static void advertiseNewDevice(BleManager mgr, int rssi, String deviceName)
     {
-        advertiseNewDevice(mgr, rssi, newScanRecord(deviceName));
-    }
-
-    /**
-     * Create the byte[] scanRecord from the given name (the record will only contain the name you provide here).
-     */
-    public static byte[] newScanRecord(String name)
-    {
-        return newScanRecord(null, null, null, name, null, null, null);
-    }
-
-    /**
-     * Create the byte[] scanRecord from the given name, serviceUuid, and serviceData.
-     */
-    public static byte[] newScanRecord(String name, UUID serviceUuid, byte[] serviceData)
-    {
-        return newScanRecord(null, serviceUuid, serviceData, name, null, null, null);
-    }
-
-    /**
-     * Create the byte[] scanRecord from the given name, and serviceUuid.
-     */
-    public static byte[] newScanRecord(String name, UUID serviceUuid)
-    {
-        return newScanRecord(null, serviceUuid, null, name, null, null, null);
-    }
-
-    /**
-     * Create the byte[] scanRecord from the given name, serviceUuid, serviceData, manufacturerId, and manufacturerData
-     */
-    public static byte[] newScanRecord(String name, UUID serviceUuid, byte[] serviceData, short manufacturerId, byte[] manufacturerData)
-    {
-        return newScanRecord(null, serviceUuid, serviceData, name, null, manufacturerId, manufacturerData);
-    }
-
-    /**
-     * Create the byte[] scanRecord from the given advertising flags, serviceUuid, serviceData, device name, txPower level, manufacturerID, and manufacturerData
-     */
-    public static byte[] newScanRecord(Byte advFlags, UUID serviceUuid, byte[] serviceData, String name, Byte txPowerLevel, Short manufacturerId, byte[] manufacturerData)
-    {
-        final ByteBuffer buff = new ByteBuffer();
-        if (advFlags != null)
-        {
-            buff.append((byte) 2);
-            buff.append(DATA_TYPE_FLAGS);
-            buff.append(advFlags);
-        }
-        if (serviceUuid != null)
-        {
-            if (serviceData != null && serviceData.length > 0)
-            {
-                buff.append((byte) (3 + serviceData.length));
-                buff.append(DATA_TYPE_SERVICE_DATA);
-                long msb = serviceUuid.getMostSignificantBits();
-                short m = (short) (msb << 48);
-                buff.append(Utils_Byte.shortToBytes(m));
-                buff.append(serviceData);
-            }
-            else
-            {
-                long lsb = serviceUuid.getLeastSignificantBits();
-                long msb = serviceUuid.getMostSignificantBits();
-                buff.append((byte) 17);
-                buff.append(Utils_Byte.longToBytes(lsb));
-                buff.append(Utils_Byte.longToBytes(msb));
-            }
-        }
-        else if (serviceData != null && serviceData.length > 0)
-        {
-            buff.append((byte) (1 + serviceData.length));
-            buff.append(DATA_TYPE_SERVICE_DATA);
-            buff.append(serviceData);
-        }
-        if (name != null && name.length() > 0)
-        {
-            buff.append((byte) (name.length() + 1));
-            buff.append(DATA_TYPE_LOCAL_NAME_COMPLETE);
-            buff.append(name.getBytes());
-        }
-        if (txPowerLevel != null)
-        {
-            buff.append((byte) 2);
-            buff.append(DATA_TYPE_TX_POWER_LEVEL);
-            buff.append(txPowerLevel);
-        }
-        if (manufacturerId != null)
-        {
-            if (manufacturerData != null && manufacturerData.length > 0)
-            {
-                buff.append((byte) (3 + manufacturerData.length));
-                buff.append(DATA_TYPE_MANUFACTURER_SPECIFIC_DATA);
-                buff.append(Utils_Byte.shortToBytes(manufacturerId));
-                buff.append(manufacturerData);
-            }
-            else
-            {
-                buff.append((byte) 3);
-                buff.append(DATA_TYPE_MANUFACTURER_SPECIFIC_DATA);
-                buff.append(Utils_Byte.shortToBytes(manufacturerId));
-            }
-        }
-        else if (manufacturerData != null && manufacturerData.length > 0)
-        {
-            buff.append((byte) (1 + manufacturerData.length));
-            buff.append(DATA_TYPE_MANUFACTURER_SPECIFIC_DATA);
-            buff.append(manufacturerData);
-        }
-        return buff.bytesAndClear();
+        advertiseNewDevice(mgr, rssi, Utils_ScanRecord.newScanRecord(deviceName));
     }
 
 }

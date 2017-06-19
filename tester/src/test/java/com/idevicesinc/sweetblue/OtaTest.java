@@ -1,5 +1,8 @@
 package com.idevicesinc.sweetblue;
 
+import com.idevicesinc.sweetblue.utils.GattDatabase;
+import com.idevicesinc.sweetblue.utils.Util;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -27,7 +30,7 @@ public class OtaTest extends BaseBleUnitTest
     {
         final Semaphore s = new Semaphore(0);
 
-        BleDevice device = m_mgr.newDevice(UnitTestUtils.randomMacAddress());
+        BleDevice device = m_mgr.newDevice(Util.randomMacAddress());
 
         device.connect(new BleDevice.StateListener()
         {
@@ -57,13 +60,13 @@ public class OtaTest extends BaseBleUnitTest
         @Override
         protected void start(BleDevice device)
         {
-            device.write(m_serviceUuid, m_charUuid, UnitTestUtils.randomBytes(10), new BleDevice.ReadWriteListener()
+            device.write(m_serviceUuid, m_charUuid, Util.randomBytes(10), new BleDevice.ReadWriteListener()
             {
                 @Override
                 public void onEvent(ReadWriteEvent e)
                 {
                     assertTrue(e.wasSuccess());
-                    e.device().write(m_serviceUuid, m_charUuid, UnitTestUtils.randomBytes(10), new BleDevice.ReadWriteListener()
+                    e.device().write(m_serviceUuid, m_charUuid, Util.randomBytes(10), new BleDevice.ReadWriteListener()
                     {
                         @Override
                         public void onEvent(ReadWriteEvent e)

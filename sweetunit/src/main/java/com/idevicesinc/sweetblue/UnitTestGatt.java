@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.P_Const;
 
@@ -134,7 +135,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void setToConnected()
     {
-        UnitTestUtils.setToConnected(m_device, BleStatuses.GATT_SUCCESS, Interval.millis(0));
+        NativeUtil.setToConnected(m_device, BleStatuses.GATT_SUCCESS, Interval.millis(0));
     }
 
     @Override
@@ -146,7 +147,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     private void preDisconnect()
     {
-        UnitTestUtils.setToDisconnected(m_device, BleStatuses.GATT_SUCCESS);
+        NativeUtil.setToDisconnected(m_device, BleStatuses.GATT_SUCCESS);
     }
 
     @Override
@@ -167,7 +168,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void sendReadResponse(BluetoothGattCharacteristic characteristic, byte[] data)
     {
-        UnitTestUtils.readSuccess(getBleDevice(), characteristic, data, getDelayTime());
+        NativeUtil.readSuccess(getBleDevice(), characteristic, data, getDelayTime());
     }
 
     @Override
@@ -184,7 +185,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void sendWriteResponse(BluetoothGattCharacteristic characteristic)
     {
-        UnitTestUtils.writeSuccess(getBleDevice(), characteristic, getDelayTime());
+        NativeUtil.writeSuccess(getBleDevice(), characteristic, getDelayTime());
     }
 
     @Override public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)
@@ -200,7 +201,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void sendReadDescriptorResponse(BluetoothGattDescriptor descriptor, byte[] data)
     {
-        UnitTestUtils.readDescSuccess(getBleDevice(), descriptor, data, getDelayTime());
+        NativeUtil.readDescSuccess(getBleDevice(), descriptor, data, getDelayTime());
     }
 
     @Override
@@ -217,7 +218,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     private void sendWriteDescResponse(BluetoothGattDescriptor descriptor)
     {
-        UnitTestUtils.writeDescSuccess(getBleDevice(), descriptor, getDelayTime());
+        NativeUtil.writeDescSuccess(getBleDevice(), descriptor, getDelayTime());
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.idevicesinc.sweetblue;
+package com.idevicesinc.sweetblue.utils;
 
 
 import android.bluetooth.BluetoothGattCharacteristic;

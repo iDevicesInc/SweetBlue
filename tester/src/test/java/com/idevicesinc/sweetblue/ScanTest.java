@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
+import com.idevicesinc.sweetblue.utils.Util;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -315,8 +316,8 @@ public class ScanTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
-        device2 = m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device 2");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        device2 = m_mgr.newDevice(Util.randomMacAddress(), "Test Device 2");
 
         m_mgr.setListener_State(new ManagerStateListener()
         {
