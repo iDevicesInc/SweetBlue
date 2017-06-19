@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp">
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="6dp"
+        android:layout_marginTop="6dp"
+        android:layout_toLeftOf="@+id/deviceSpinner"
+        android:maxLines="1"
+        android:text="Device name"/>
+
+    <TextView
+        android:id="@+id/deviceStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/name"
+        android:layout_toLeftOf="@+id/deviceSpinner"
+        android:maxLines="5"
+        android:text="DISCONNECTED"/>
+
+    <TextView
+        android:id="@+id/rssiLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/deviceStatus"
+        android:layout_marginTop="6dp"
+        android:text="Rssi: "/>
+
+    <TextView
+        android:id="@+id/rssi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/rssiLabel"
+        android:layout_alignBaseline="@+id/rssiLabel"
+        android:text="-50dBm"/>
+
+    <com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner
+        android:id="@+id/deviceSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerInParent="true"
+        android:entries="@array/device_connect_array"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_below="@+id/rssiLabel"
+        android:layout_marginTop="12dp"
+        android:background="#666666"
+        />
+
+</RelativeLayout>

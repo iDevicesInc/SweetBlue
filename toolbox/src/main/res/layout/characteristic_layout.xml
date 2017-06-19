@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp">
+
+    <TextView
+        android:id="@+id/characteristicName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:text="Custom Characteristic"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/uuidLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginLeft="24dp"
+        android:layout_below="@+id/characteristicName"
+        android:text="UUID: "/>
+
+    <TextView
+        android:id="@+id/uuid"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_below="@+id/characteristicName"
+        android:layout_toRightOf="@+id/uuidLabel"
+        android:layout_height="wrap_content"
+        android:text="0x2902"/>
+
+    <TextView
+        android:id="@+id/propLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:layout_marginTop="2dp"
+        android:layout_below="@+id/uuidLabel"
+        android:text="Properties: "/>
+
+    <TextView
+        android:id="@+id/properties"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_below="@+id/uuidLabel"
+        android:layout_toRightOf="@+id/propLabel"
+        android:text="Read"/>
+
+</RelativeLayout>
