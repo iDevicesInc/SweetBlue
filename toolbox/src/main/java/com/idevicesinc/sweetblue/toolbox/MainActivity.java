@@ -54,6 +54,7 @@ public class MainActivity extends BaseActivity
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
         m_config.connectFailRetryConnectingOverall = true;
+        m_config.logger = DebugLog.getDebugger();
         //m_config.updateLoopCallback = UpdateManager.getInstance();
 
         m_manager = BleManager.get(this, m_config);
