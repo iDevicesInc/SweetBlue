@@ -1,16 +1,13 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
+import com.idevicesinc.sweetblue.utils.GattDatabase;
+import com.idevicesinc.sweetblue.utils.Util;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -22,11 +19,16 @@ import static org.junit.Assert.assertTrue;
 public class WriteStripeTest extends BaseBleUnitTest
 {
 
-    private BleDevice m_device;
-
     private final static UUID tempServiceUuid = UUID.fromString("1234666a-1000-2000-8000-001199334455");
     private final static UUID tempUuid = UUID.fromString("1234666b-1000-2000-8000-001199334455");
     private final static UUID tempDescUuid = UUID.fromString("1234666d-1000-2000-8000-001199334455");
+
+
+    private BleDevice m_device;
+
+    private GattDatabase db = new GattDatabase().addService(tempServiceUuid)
+            .addCharacteristic(tempUuid).setProperties().write().setPermissions().write().build()
+            .addDescriptor(tempDescUuid).setPermissions().write().completeService();
 
 
     @Test
@@ -67,7 +69,7 @@ public class WriteStripeTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -110,70 +112,13 @@ public class WriteStripeTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
 
-
-
     @Override public P_GattLayer getGattLayer(BleDevice device)
     {
-        return new StripedWriteGattLayer(device);
-    }
-
-    private class StripedWriteGattLayer extends UnitTestGatt
-    {
-
-        private BluetoothGattService mService;
-        private BluetoothGattCharacteristic mChar;
-        private BluetoothGattDescriptor mDesc;
-
-
-        public StripedWriteGattLayer(BleDevice device)
-        {
-            super(device);
-            mService = new BluetoothGattService(tempServiceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            mChar = new BluetoothGattCharacteristic(tempUuid, BluetoothGattCharacteristic.PROPERTY_WRITE, BluetoothGattCharacteristic.PERMISSION_WRITE);
-            mDesc = new BluetoothGattDescriptor(tempDescUuid, BluetoothGattDescriptor.PERMISSION_WRITE);
-            mChar.addDescriptor(mDesc);
-            mService.addCharacteristic(mChar);
-        }
-
-        @Override public boolean writeCharacteristic(final BluetoothGattCharacteristic characteristic)
-        {
-            m_mgr.getPostManager().postToUpdateThreadDelayed(new Runnable()
-            {
-                @Override public void run()
-                {
-                    getBleDevice().m_listeners.onCharacteristicWrite(null, characteristic, BluetoothGatt.GATT_SUCCESS);
-                }
-            }, 150);
-            return super.writeCharacteristic(characteristic);
-        }
-
-        @Override public boolean writeDescriptor(final BluetoothGattDescriptor descriptor)
-        {
-            m_mgr.getPostManager().postToUpdateThreadDelayed(new Runnable()
-            {
-                @Override public void run()
-                {
-                    getBleDevice().m_listeners.onDescriptorWrite(null, descriptor, BluetoothGatt.GATT_SUCCESS);
-                }
-            }, 150);
-            return super.writeDescriptor(descriptor);
-        }
-
-        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
-        {
-            return mService;
-        }
-
-        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
-        {
-            List<BluetoothGattService> services = new ArrayList<>();
-            services.add(mService);
-            return services;
-        }
+        return new UnitTestGatt(device, db);
     }
 }

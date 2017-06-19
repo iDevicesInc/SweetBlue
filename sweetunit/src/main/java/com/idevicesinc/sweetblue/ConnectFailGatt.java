@@ -1,10 +1,11 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
-public class ConnectFailGatt extends BaseFailGatt
+public class ConnectFailGatt extends UnitTestGatt
 {
 
     private final FailurePoint m_failPoint;
@@ -47,7 +48,7 @@ public class ConnectFailGatt extends BaseFailGatt
     {
         if (m_failPoint == FailurePoint.PRE_CONNECTING_BLE)
         {
-            UnitTestUtils.setToDisconnected(getBleDevice(), getStatus(), getDelayTime());
+            NativeUtil.setToDisconnected(getBleDevice(), getStatus(), getDelayTime());
         }
         else
         {
@@ -60,7 +61,7 @@ public class ConnectFailGatt extends BaseFailGatt
     {
         if (m_failPoint == FailurePoint.POST_CONNECTING_BLE)
         {
-            UnitTestUtils.setToDisconnected(getBleDevice(), getStatus(), getDelayTime());
+            NativeUtil.setToDisconnected(getBleDevice(), getStatus(), getDelayTime());
         }
         else
         {
@@ -75,11 +76,11 @@ public class ConnectFailGatt extends BaseFailGatt
         {
             if (m_failType == FailureType.SERVICE_DISCOVERY_FAILED)
             {
-                UnitTestUtils.failDiscoverServices(getBleDevice(), getStatus(), getDelayTime());
+                NativeUtil.failDiscoverServices(getBleDevice(), getStatus(), getDelayTime());
             }
             else
             {
-                UnitTestUtils.setToDisconnected(getBleDevice(), getStatus(), getDelayTime());
+                NativeUtil.setToDisconnected(getBleDevice(), getStatus(), getDelayTime());
             }
         }
     }

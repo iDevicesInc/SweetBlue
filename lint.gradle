@@ -4,13 +4,13 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.android.tools.build:gradle:2.3.3'
     }
 }
 apply plugin: 'com.android.library'
 
 android {
-    buildToolsVersion '25.0.2'
+    buildToolsVersion '25.0.3'
 	compileSdkVersion 25
     
 	defaultConfig {
@@ -20,11 +20,11 @@ android {
 
     sourceSets {
     	main {
-    		manifest.srcFile 'app/src/main/AndroidManifest.xml'
+    		manifest.srcFile 'library/src/main/AndroidManifest.xml'
     		java.srcDir '../src'
     	}
     	release {
-    		manifest.srcFile 'app/src/main/AndroidManifest.xml'
+    		manifest.srcFile 'library/src/main/AndroidManifest.xml'
     		java.srcDir '../src'
     	}
     	test.java.srcDir '../test'
