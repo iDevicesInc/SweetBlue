@@ -1,9 +1,11 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.activity;
 
-import android.app.ActionBar;
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -11,6 +13,9 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.idevicesinc.sweetblue.toolbox.util.DebugLog;
+import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner;
 import com.idevicesinc.sweetblue.utils.DebugLogger;
 import java.util.List;
@@ -37,7 +42,10 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_logger);
 
-        ActionBar actionBar = getActionBar();
+        Toolbar toolbar = find(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         setTitle(getString(R.string.logger_title));

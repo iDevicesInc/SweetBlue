@@ -1,7 +1,11 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.activity;
 
-import android.app.ActionBar;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
+
+import com.idevicesinc.sweetblue.toolbox.R;
+
 
 public class SettingsActivity extends BaseActivity
 {
@@ -11,7 +15,10 @@ public class SettingsActivity extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_logger);
 
-        ActionBar actionBar = getActionBar();
+        Toolbar toolbar = find(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         setTitle(getString(R.string.settings_title));

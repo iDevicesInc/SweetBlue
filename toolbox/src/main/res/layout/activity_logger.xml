@@ -6,7 +6,9 @@
     android:layout_height="match_parent"
 	android:orientation="vertical"
     tools:menu="@menu/logger"
-    tools:context="com.idevicesinc.sweetblue.toolbox.LoggerActivity">
+    tools:context="com.idevicesinc.sweetblue.toolbox.activity.LoggerActivity">
+
+	<include layout="@layout/toolbar" />
 
 	<LinearLayout
 		android:layout_width="match_parent"

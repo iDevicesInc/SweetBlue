@@ -1,4 +1,4 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.util;
 
 import com.idevicesinc.sweetblue.utils.DebugLogger;
 

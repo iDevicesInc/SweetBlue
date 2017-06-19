@@ -1,4 +1,4 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.activity;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -6,13 +6,13 @@ import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
@@ -20,12 +20,15 @@ import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.BleScanApi;
 import com.idevicesinc.sweetblue.ManagerStateListener;
 import com.idevicesinc.sweetblue.ScanOptions;
+import com.idevicesinc.sweetblue.toolbox.util.DebugLog;
+import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.util.UpdateManager;
 import com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner;
 import com.idevicesinc.sweetblue.toolbox.view.ScanAdapter;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
-
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 public class MainActivity extends BaseActivity
 {
@@ -49,6 +52,9 @@ public class MainActivity extends BaseActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Toolbar toolbar = find(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         m_config = new BleManagerConfig();
         m_config.runOnMainThread = false;
