@@ -77,7 +77,8 @@ public interface BondRetryFilter extends GenericListener_T<BondRetryFilter.Retry
 
         /**
          * This is a best guess on our part. Basically, this will return <code>true</code> if the {@link Status} does not equal
-         * {@link Status#AUTH_FAILED}, {@link Status#AUTH_REJECTED}, or {@link Status#REPEATED_ATTEMPTS}.
+         * {@link Status#AUTH_FAILED}, {@link Status#AUTH_REJECTED}, {@link Status#REPEATED_ATTEMPTS}, or {@link Status#SUCCESS} (which should never happen here, but it's left just in
+         * case).
          */
         public final boolean possibleRetry()
         {
@@ -86,6 +87,7 @@ public interface BondRetryFilter extends GenericListener_T<BondRetryFilter.Retry
                 case AUTH_FAILED:
                 case REPEATED_ATTEMPTS:
                 case AUTH_REJECTED:
+                case SUCCESS:
                     return false;
                 default:
                     return true;

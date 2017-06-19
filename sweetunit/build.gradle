@@ -23,6 +23,13 @@ android {
     }
 }
 
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://maven.google.com'
+    }
+}
+
 dependencies {
     // TODO - Create script to turn the below on/off for releasing. Release needs to point to SB's maven repo
 //    debugCompile project(':app')
