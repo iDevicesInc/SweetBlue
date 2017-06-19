@@ -328,6 +328,42 @@ task bumpVersion {
     }
 }
 
+task bumpBuildToolsVersion {
+    group = "sweetblue"
+    description = "Updates Build Tools Version in all inner project's build.gradle"
+    doLast {
+        def filelist = Set()
+        filelist.add file(rootDir.getAbsolutePath() + "/integration/build.gradle")
+        filelist.add file(rootDir.absolutePath + "/library/build.gradle")
+        filelist.add file(rootDir.absolutePath + "/seetunit/build.gradle")
+        filelist.add file(rootDir.absolutePath + "/tester/build.gradle")
+
+        File samplesDir = file(rootDir.absolutePath + "/app/script_output/samples/samples")
+        def samples = files { samplesDir.listFiles() }.each { String f
+        }
+
+
+
+
+
+
+
+        /*
+        MessageDigest md = MessageDigest.getInstance("SHA1")
+
+        byte[] res = md.digest(version.getBytes())
+        String hash = getHexString(res)
+        String contents = uuids.getText('UTF-8')
+        contents = contents.replaceAll("BLUETOOTH_CONNECTED_HASH = \".*\"", "BLUETOOTH_CONNECTED_HASH = \"${hash}\"")
+        uuids.write(contents, 'UTF-8')
+        File readme = new File(rootDir.absolutePath + "/README.md")
+        contents = readme.getText('UTF-8')
+        contents = contents.replaceAll("version-.*-blue", "version-${version}-blue")
+        contents = contents.replaceAll("sweetblue:.*'", "sweetblue:${version}'")
+        readme.write(contents, 'UTF-8') */
+    }
+}
+
 task cleanFolders << {
     delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
 }
