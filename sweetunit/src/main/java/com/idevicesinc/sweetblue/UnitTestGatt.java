@@ -263,6 +263,14 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public boolean readRemoteRssi() {
+        m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                m_device.m_listeners.onReadRemoteRssi(null, getRssiValue(), BleStatuses.GATT_SUCCESS);
+            }
+        }, getDelayTime().millis());
         return true;
     }
 
@@ -288,5 +296,13 @@ public class UnitTestGatt implements P_GattLayer {
         {
             return m_delayTime;
         }
+    }
+
+
+    public int getRssiValue()
+    {
+        int diff = Math.abs(m_device.conf_mngr().rssi_min) - Math.abs(m_device.conf_mngr().rssi_max);
+        Random r = new Random();
+        return -(r.nextInt(diff) + Math.abs(m_device.conf_mngr().rssi_max));
     }
 }

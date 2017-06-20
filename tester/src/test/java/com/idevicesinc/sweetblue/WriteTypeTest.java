@@ -15,7 +15,7 @@ import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class WriteTypeTest extends BaseBleUnitTest
 {
