@@ -388,7 +388,7 @@ public class SettingsActivity extends BaseActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         getMenuInflater().inflate(R.menu.settings, menu);
-        return super.onCreateOptionsMenu(menu);
+        return true;
     }
 
     public boolean onOptionsItemSelected(MenuItem item)
