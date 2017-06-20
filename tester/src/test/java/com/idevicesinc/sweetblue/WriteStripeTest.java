@@ -48,8 +48,6 @@ public class WriteStripeTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final Semaphore s = new Semaphore(0);
-
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
@@ -71,7 +69,7 @@ public class WriteStripeTest extends BaseBleUnitTest
                                     {
                                         assertTrue(e.wasSuccess());
                                         assertArrayEquals(data, m_buffer.bytesAndClear());
-                                        s.release();
+                                        succeed();
                                     }
                                 });
                             }
@@ -83,7 +81,7 @@ public class WriteStripeTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Test
@@ -94,8 +92,6 @@ public class WriteStripeTest extends BaseBleUnitTest
         m_buffer = new ByteBuffer();
 
         m_mgr.setConfig(m_config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -118,7 +114,7 @@ public class WriteStripeTest extends BaseBleUnitTest
                                     {
                                         assertTrue(e.wasSuccess());
                                         assertArrayEquals(data, m_buffer.bytesAndClear());
-                                        s.release();
+                                        succeed();
                                     }
                                 });
                             }
@@ -130,7 +126,7 @@ public class WriteStripeTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Override public P_GattLayer getGattLayer(BleDevice device)

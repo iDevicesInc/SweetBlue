@@ -25,8 +25,6 @@ public class GattRefreshTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final Semaphore s = new Semaphore(0);
-
         final Pointer<Boolean> refreshingGatt = new Pointer<>(false);
 
 
@@ -44,7 +42,7 @@ public class GattRefreshTest extends BaseBleUnitTest
                             {
                                 if (refreshingGatt.value)
                                 {
-                                    s.release();
+                                    succeed();
                                 }
                             }
                             if (e.didEnter(BleDeviceState.INITIALIZED))
@@ -60,7 +58,7 @@ public class GattRefreshTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
 
     }
 

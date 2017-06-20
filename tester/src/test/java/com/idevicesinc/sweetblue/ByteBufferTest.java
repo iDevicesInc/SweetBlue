@@ -7,7 +7,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 
-public class ByteBufferTest
+public class ByteBufferTest extends BaseTest
 {
 
     private final static byte[] array1 = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05 };
@@ -17,6 +17,7 @@ public class ByteBufferTest
     @Test
     public void appendBytesTest() throws Exception
     {
+        startTest(false);
         ByteBuffer buff = new ByteBuffer();
 
         buff.append(array1);
@@ -24,22 +25,26 @@ public class ByteBufferTest
         buff.append((byte) 0x0B);
 
         assertArrayEquals(buff.bytes(), new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B });
+        succeed();
     }
 
     @Test
     public void appendThenCheckLengthTest() throws Exception
     {
+        startTest(false);
         ByteBuffer buff = new ByteBuffer(array1);
 
         buff.append(array2);
 
         assertArrayEquals(buff.bytes(), new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A });
         assertTrue(buff.length() == 10);
+        succeed();
     }
 
     @Test
     public void bytesAndClearTest() throws Exception
     {
+        startTest(false);
         ByteBuffer buff = new ByteBuffer(2);
 
         buff.append(array1);
@@ -47,11 +52,13 @@ public class ByteBufferTest
 
         assertArrayEquals(buff.bytesAndClear(), new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A });
         assertTrue(buff.length() == 0);
+        succeed();
     }
 
     @Test
     public void subDataTest() throws Exception
     {
+        startTest(false);
         final byte[] empty = new byte[0];
 
         ByteBuffer buff = new ByteBuffer(2);
@@ -76,11 +83,13 @@ public class ByteBufferTest
         buff.setToSubData(11, 10);
 
         assertArrayEquals(sub, buff.bytes());
+        succeed();
     }
 
     @Test
     public void clearTest() throws Exception
     {
+        startTest(false);
         ByteBuffer buff = new ByteBuffer(array1);
 
         buff.append(array2);
@@ -88,6 +97,7 @@ public class ByteBufferTest
         buff.clear();
 
         assertTrue(buff.length() == 0);
+        succeed();
     }
 
 }

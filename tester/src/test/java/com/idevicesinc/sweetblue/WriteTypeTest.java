@@ -30,18 +30,21 @@ public class WriteTypeTest extends BaseBleUnitTest
     @Test
     public void writeNoResponseTest() throws Exception
     {
+        startTest(false);
         doWriteTest(BleDevice.ReadWriteListener.Type.WRITE_NO_RESPONSE, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
     }
 
     @Test
     public void writeSignedTest() throws Exception
     {
+        startTest(false);
         doWriteTest(BleDevice.ReadWriteListener.Type.WRITE_SIGNED, BluetoothGattCharacteristic.WRITE_TYPE_SIGNED);
     }
 
     @Test
     public void defaultWriteTest() throws Exception
     {
+        startTest(false);
         doWriteTest(BleDevice.ReadWriteListener.Type.WRITE, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
     }
 
@@ -49,8 +52,6 @@ public class WriteTypeTest extends BaseBleUnitTest
 
     private void doWriteTest(final BleDevice.ReadWriteListener.Type writeType, final int checkType) throws Exception
     {
-        final Semaphore s = new Semaphore(0);
-
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
             @Override
@@ -75,7 +76,7 @@ public class WriteTypeTest extends BaseBleUnitTest
                                                 assertTrue(e.wasSuccess());
                                                 BluetoothGattCharacteristic ch = e.characteristic();
                                                 assertTrue(ch.getWriteType() == checkType);
-                                                s.release();
+                                                succeed();
                                             }
                                         });
                                 e.device().write(write);
@@ -87,7 +88,7 @@ public class WriteTypeTest extends BaseBleUnitTest
         });
 
         m_mgr.newDevice(Util.randomMacAddress());
-        s.acquire();
+        reacquire();
     }
 
     @Override

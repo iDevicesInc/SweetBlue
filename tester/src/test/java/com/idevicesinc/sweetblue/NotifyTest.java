@@ -9,10 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -54,8 +52,6 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final Semaphore s = new Semaphore(0);
-
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
@@ -76,7 +72,7 @@ public class NotifyTest extends BaseBleUnitTest
                                         assertTrue("Enabling notification failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
                                         succeed();
-                                        s.release();
+                                        NotifyTest.this.succeed();
                                     }
                                 }
                             });
@@ -88,7 +84,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Test
@@ -108,8 +104,6 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final Semaphore s = new Semaphore(0);
-
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
@@ -130,7 +124,7 @@ public class NotifyTest extends BaseBleUnitTest
                                         assertTrue("Enabling notification failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
                                         succeed();
-                                        s.release();
+                                        NotifyTest.this.succeed();
                                     }
                                 }
                             });
@@ -142,7 +136,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Test
@@ -160,8 +154,6 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final Semaphore s = new Semaphore(0);
-
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
@@ -190,7 +182,7 @@ public class NotifyTest extends BaseBleUnitTest
                                                 {
                                                     assertTrue("Disabling notification failed with status " + e.status(), e.wasSuccess());
                                                     assertFalse(m_device.isNotifyEnabled(mTestChar));
-                                                    s.release();
+                                                    NotifyTest.this.succeed();
                                                 }
                                             }
                                         });
@@ -205,7 +197,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Test
@@ -223,8 +215,6 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final Semaphore s = new Semaphore(0);
-
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
             @Override public void onEvent(DiscoveryEvent e)
@@ -253,7 +243,7 @@ public class NotifyTest extends BaseBleUnitTest
                                                 {
                                                     assertTrue("Disabling notification failed with status " + e.status(), e.wasSuccess());
                                                     assertFalse(m_device.isNotifyEnabled(mTestChar));
-                                                    s.release();
+                                                    NotifyTest.this.succeed();
                                                 }
                                             }
                                         });
@@ -268,7 +258,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Test
@@ -287,8 +277,6 @@ public class NotifyTest extends BaseBleUnitTest
         m_config.loggingEnabled = true;
 
         m_mgr.setConfig(m_config);
-
-        final Semaphore s = new Semaphore(0);
 
         final byte[] notifyData = new byte[20];
         new Random().nextBytes(notifyData);
@@ -318,7 +306,7 @@ public class NotifyTest extends BaseBleUnitTest
                                     else if (e.type() == Type.NOTIFICATION)
                                     {
                                         assertArrayEquals(notifyData, e.data());
-                                        s.release();
+                                        NotifyTest.this.succeed();
                                     }
                                 }
                             });
@@ -330,7 +318,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Test
@@ -349,8 +337,6 @@ public class NotifyTest extends BaseBleUnitTest
         m_config.loggingEnabled = true;
 
         m_mgr.setConfig(m_config);
-
-        final Semaphore s = new Semaphore(0);
 
         final byte[] notifyData = new byte[20];
         new Random().nextBytes(notifyData);
@@ -376,7 +362,7 @@ public class NotifyTest extends BaseBleUnitTest
                             else if (e.type() == Type.NOTIFICATION)
                             {
                                 assertArrayEquals(notifyData, e.data());
-                                s.release();
+                                succeed();
                             }
                         }
                     });
@@ -405,7 +391,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Test
@@ -424,8 +410,6 @@ public class NotifyTest extends BaseBleUnitTest
         m_config.loggingEnabled = true;
 
         m_mgr.setConfig(m_config);
-
-        final Semaphore s = new Semaphore(0);
 
         final byte[] notifyData = new byte[20];
         new Random().nextBytes(notifyData);
@@ -455,7 +439,7 @@ public class NotifyTest extends BaseBleUnitTest
                                     else if (e.type() == Type.INDICATION)
                                     {
                                         assertArrayEquals(notifyData, e.data());
-                                        s.release();
+                                        NotifyTest.this.succeed();
                                     }
                                 }
                             });
@@ -467,7 +451,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
 }
