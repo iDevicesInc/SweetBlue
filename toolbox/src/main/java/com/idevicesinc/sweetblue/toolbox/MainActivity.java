@@ -33,7 +33,6 @@ public class MainActivity extends BaseActivity
 {
 
     private BleManager m_manager;
-    private BleManagerConfig m_config;
 
     private Button m_startScan;
     private Button m_stopScan;
@@ -47,19 +46,22 @@ public class MainActivity extends BaseActivity
     private View m_navDrawerLayout;
     private ActionBarDrawerToggle m_drawerToggler;
 
+    public static BleManagerConfig getDefaultConfig()
+    {
+        BleManagerConfig cfg = new BleManagerConfig();
+        cfg.runOnMainThread = false;
+        cfg.loggingEnabled = true;
+        cfg.connectFailRetryConnectingOverall = true;
+        return cfg;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        m_config = new BleManagerConfig();
-        m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
-        m_config.connectFailRetryConnectingOverall = true;
-        //m_config.updateLoopCallback = UpdateManager.getInstance();
-
-        m_manager = BleManager.get(this, m_config);
+        m_manager = BleManager.get(this, getDefaultConfig());
 
         m_manager.setListener_Discovery(new DeviceDiscovery());
 
@@ -115,23 +117,24 @@ public class MainActivity extends BaseActivity
         {
             @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
+                BleManagerConfig cfg = m_manager.getConfigClone();
                 String option = (String) parent.getItemAtPosition(position);
                 switch (option)
                 {
                     case "Classic":
-                        m_config.scanApi = BleScanApi.CLASSIC;
+                        cfg.scanApi = BleScanApi.CLASSIC;
                         break;
                     case "Pre-Lollipop":
-                        m_config.scanApi = BleScanApi.PRE_LOLLIPOP;
+                        cfg.scanApi = BleScanApi.PRE_LOLLIPOP;
                         break;
                     case "Post-Lollipop":
-                        m_config.scanApi = BleScanApi.POST_LOLLIPOP;
+                        cfg.scanApi = BleScanApi.POST_LOLLIPOP;
                         break;
                     default:
-                        m_config.scanApi = BleScanApi.AUTO;
+                        cfg.scanApi = BleScanApi.AUTO;
                         break;
                 }
-                m_manager.setConfig(m_config);
+                m_manager.setConfig(cfg);
             }
 
             @Override public void onNothingSelected(AdapterView<?> parent)

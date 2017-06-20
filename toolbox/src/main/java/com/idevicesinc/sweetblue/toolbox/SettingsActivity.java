@@ -1,10 +1,19 @@
 package com.idevicesinc.sweetblue.toolbox;
 
+import android.Manifest;
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -12,31 +21,51 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_JSONUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.HashSet;
-import java.util.Set;
 
 public class SettingsActivity extends PreferenceActivity
 {
+    private final int REQUEST_CODE_EXTERNAL_STORAGE = 101;
+
+    private final int REQUEST_CODE_IMPORT_SETTINGS = 102;
+
     protected Object mSettingsObject = null;
+
+    protected PrefsFragment mCurrentFragment = null;
 
     public static class PrefsFragment extends PreferenceFragment
     {
         protected Context mContext;
+
         protected Object mSettingsObject = null;
+
+        protected boolean mDirty = false;
 
         @Override
         public void onCreate(Bundle savedInstanceState)
@@ -100,7 +129,7 @@ public class SettingsActivity extends PreferenceActivity
                                     f.setBoolean(o, val);
                                 else
                                     f.set(o, val);
-
+                                mDirty = true;
                             }
                             catch (Exception e)
                             {
@@ -137,6 +166,8 @@ public class SettingsActivity extends PreferenceActivity
                                     f.set(o, i);
 
                                 etp.setSummary(i.toString());
+
+                                mDirty = true;
                             }
                             catch (Exception e)
                             {
@@ -183,6 +214,8 @@ public class SettingsActivity extends PreferenceActivity
                                 f.set(o, i);
 
                                 etp.setSummary(d.toString() + " seconds");
+
+                                mDirty = true;
                             }
                             catch (Exception e)
                             {
@@ -227,22 +260,6 @@ public class SettingsActivity extends PreferenceActivity
                 if (p != null)
                     category.addPreference(p);
             }
-
-            // JSON sample code
-            /*try
-            {
-                JSONObject jo = JSONUtil.settingsObjectToJSON(o);
-                String s = jo.toString();
-                Log.d("++JSON", "Object is " + s);
-
-                JSONUtil.applyJSONToSettingsObject(o, jo);
-
-                Log.d("++JSON", "applied options back");
-            }
-            catch (Exception e)
-            {
-
-            }*/
         }
 
         private static String unHumpCamelCase(String camelCaseString)
@@ -268,6 +285,16 @@ public class SettingsActivity extends PreferenceActivity
 
             return sb.toString();
         }
+
+        public boolean getIsDirty()
+        {
+            return mDirty;
+        }
+
+        public void clearDirty()
+        {
+            mDirty = false;
+        }
     }
 
     @Override
@@ -286,17 +313,94 @@ public class SettingsActivity extends PreferenceActivity
         BleManager manager = BleManager.get(this);
         mSettingsObject = manager.getConfigClone();
 
+        createUI();
+
+    }
+
+    protected void createUI()
+    {
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         PrefsFragment f = new PrefsFragment();
         f.setConfig(this, mSettingsObject);
-        fragmentTransaction.add(R.id.fragment_container, f, "HELLO");
+        fragmentTransaction.replace(R.id.fragment_container, f);
         fragmentTransaction.commit();
 
+        mCurrentFragment = f;
     }
 
     @Override
     public boolean onNavigateUp()
+    {
+
+
+        navigateBack();
+
+        return true;
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        navigateBack();
+    }
+
+    private void navigateBack()
+    {
+        if (mCurrentFragment != null && mCurrentFragment.getIsDirty())
+        {
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setTitle(getString(R.string.settings_save_dialog_title));
+            alertDialog.setMessage(getString(R.string.settings_save_dialog_message));
+            alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.cancel),
+                new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        dialog.dismiss();
+                        finish();
+                    }
+                });
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.ok),
+                new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        BleManager manager = BleManager.get(SettingsActivity.this);
+                        manager.setConfig((BleManagerConfig)mSettingsObject);
+                        dialog.dismiss();
+                        finish();
+                    }
+                });
+            alertDialog.show();
+        }
+        else
+        {
+            finish();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        getMenuInflater().inflate(R.menu.settings, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if (item.getItemId() == R.id.importSettings)
+            importSettings();
+        else if (item.getItemId() == R.id.exportSettingsEmail)
+            exportSettingsToEmail();
+        else if (item.getItemId() == R.id.exportSettings)
+            exportSettingsToDisk();
+        else if (item.getItemId() == R.id.resetSettings)
+            resetSettings();
+        return super.onOptionsItemSelected(item);
+    }
+
+    private String getSettingsJSON()
     {
         //TODO:  Confirm save?  For now just do it!
 
@@ -304,116 +408,211 @@ public class SettingsActivity extends PreferenceActivity
         BleManagerConfig cfg = (BleManagerConfig)mSettingsObject;
         BleManager.get(this, cfg);
 
-        finish();
-        return true;
+        // Build a JSON object of the differences in the config from a standard config
+        BleManagerConfig baseConfig = new BleManagerConfig();
+
+        JSONObject jo1 = baseConfig.writeJSON();
+        JSONObject jo2 = cfg.writeJSON();
+
+        try
+        {
+            //TODO:  Find a way to move this into the library (the diff)
+            JSONObject diff = P_JSONUtil.shallowDiffJSONObjects(jo1, jo2);
+            String diffString = diff.toString();
+            return diffString;
+        }
+        catch (Exception e)
+        {
+
+        }
+
+        return null;
     }
 
-    static final Class s_allowedClasses[] =
-        {
-            boolean.class,
-            Boolean.class,
-            short.class,
-            Short.class,
-            int.class,
-            Integer.class,
-            long.class,
-            Long.class,
-            float.class,
-            Float.class,
-            String.class,
-            Interval.class
-        };
-
-    public static class JSONUtil
+    private void importSettings()
     {
+        Intent intent = new Intent()
+                .setType("*/*")
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setAction(Intent.ACTION_GET_CONTENT);
 
-        public static Set<Class> getAllowedClassSet()
+        startActivityForResult(Intent.createChooser(intent, "Select a file"), REQUEST_CODE_IMPORT_SETTINGS);
+    }
+
+    private void importSettingsFromJSON(JSONObject jo)
+    {
+        if (jo == null)
+            return;
+
+        mSettingsObject = new BleManagerConfig(jo);
+
+        createUI();
+    }
+
+    private void exportSettingsToEmail()
+    {
+        final Intent emailIntent = new Intent(Intent.ACTION_SEND);
+
+        emailIntent.setData(Uri.parse("mailto:"));
+
+        emailIntent.setType("message/rfc822");
+
+        //emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] { getString(R.string.send_feedback_email_address) });
+
+        //emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.send_feedback_email_subject));
+
+        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, getSettingsJSON());
+
+        startActivity(Intent.createChooser(emailIntent, getString(R.string.send_feedback_send_mail)));
+    }
+
+    private void exportSettingsToDisk()
+    {
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED)
         {
-            Set<Class> s = new HashSet<>();
-
-            for (Class c : s_allowedClasses)
-                s.add(c);
-
-            return s;
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_CODE_EXTERNAL_STORAGE);
+            return;
         }
 
-        // Utility methods
-        public static JSONObject settingsObjectToJSON(Object settingsObject) throws IllegalAccessException, JSONException
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        Environment.getDownloadCacheDirectory();
+
+        // Look for a file name that isn't taken
+        String filenameFormat = "sweetblue%s.json";
+        String filename = String.format(filenameFormat, "");
+        File file = null;
+
+        int counter = 1;
+        do
         {
-            JSONObject jo = new JSONObject();
+            file = new File(path, filename);
+            if (!file.exists())
+                break;
+            file = null;
+            filename = String.format(filenameFormat, ++counter);
+        } while (true && counter < 100);  // Limit is just to avoid an insanely long loop if we somehow can't find an suitable file
 
-            Set<Class> allowedClasses = getAllowedClassSet();
+        if (file == null)
+        {
+            Toast.makeText(getApplicationContext(), getString(R.string.settings_toast_unable_to_save), Toast.LENGTH_LONG).show();
+            return;
+        }
 
-            Class c = settingsObject.getClass();
-            Field[] fields = c.getFields();
-            for (Field f : fields)
+        path.mkdirs();
+
+        try
+        {
+            OutputStream os = new FileOutputStream(file);
+            String JSONData = getSettingsJSON();
+            byte[] data = JSONData.getBytes("US-ASCII");
+            os.write(data);
+            os.close();
+        }
+        catch (Exception e)
+        {
+            Toast.makeText(getApplicationContext(), getString(R.string.settings_toast_unable_to_save), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Intent i = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        i.setData(Uri.fromFile(file));
+        sendBroadcast(i);
+
+        String toastMsg = String.format(getString(R.string.settings_toast_saved), filename);
+        Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case REQUEST_CODE_EXTERNAL_STORAGE:
             {
-                int modifiers = f.getModifiers();
-
-                // Skip anything static or final, we only care about mutable instance fields
-                if (Modifier.isFinal(modifiers) || Modifier.isStatic(modifiers))
-                    continue;
-
-                Type t = f.getGenericType();
-
-                // See if the type is supported?
-                if (!allowedClasses.contains(t))
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
-                    Log.d("++JSON", "Skippking unknown class " + t);
-                    continue;
+                    exportSettingsToDisk();
                 }
+                return;
+            }
+        }
+    }
 
-                if (t == Interval.class)
-                {  // Special handling of interval, save it as a double
-                    Interval i = (Interval)f.get(settingsObject);
-                    jo.put(f.getName(), i.secs());
+    private void resetSettings()
+    {
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle(getString(R.string.settings_reset_dialog_title));
+        alertDialog.setMessage(getString(R.string.settings_reset_dialog_message));
+        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.cancel),
+            new DialogInterface.OnClickListener()
+            {
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    dialog.dismiss();
                 }
-                else
-                    jo.put(f.getName(), f.get(settingsObject));
+            });
+        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.ok),
+            new DialogInterface.OnClickListener()
+            {
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    mSettingsObject = MainActivity.getDefaultConfig();
+
+                    createUI();
+
+                    dialog.dismiss();
+                }
+            });
+        alertDialog.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_IMPORT_SETTINGS && resultCode == RESULT_OK)
+        {
+            Uri selectedfile = data.getData(); //The uri with the location of the file
+
+            try
+            {
+                JSONObject jo = readJSONFromURI(selectedfile);
+                importSettingsFromJSON(jo);
+            }
+            catch (Exception e)
+            {
+                String messageString = String.format(getString(R.string.settings_toast_unable_to_load), selectedfile.getLastPathSegment());
+                Toast.makeText(getApplicationContext(), messageString, Toast.LENGTH_LONG).show();
+                return;
             }
 
-            return jo;
+            String messageString = String.format(getString(R.string.settings_toast_loaded), selectedfile.getLastPathSegment());
+            Toast.makeText(getApplicationContext(), messageString, Toast.LENGTH_LONG).show();
         }
+    }
 
-        public static void applyJSONToSettingsObject(Object settingsObject, JSONObject jo) throws IllegalAccessException, JSONException
+    private JSONObject readJSONFromURI(Uri uri) throws IOException, JSONException
+    {
+        ContentResolver cr = getContentResolver();
+        InputStream is = cr.openInputStream(uri);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        final int kBufferSize = 1024;
+        byte buf[] = new byte[kBufferSize];
+        int len;
+        while ((len = is.read(buf)) > 0)
         {
-            Set<Class> allowedClasses = getAllowedClassSet();
-
-            Class c = settingsObject.getClass();
-            Field[] fields = c.getFields();
-            for (Field f : fields)
-            {
-                int modifiers = f.getModifiers();
-
-                // Skip anything static or final, we only care about mutable instance fields
-                if (Modifier.isFinal(modifiers) || Modifier.isStatic(modifiers))
-                    continue;
-
-                Type t = f.getGenericType();
-
-                // See if the type is supported?
-                if (!allowedClasses.contains(t))
-                {
-                    Log.d("++JSON", "Skippking unknown class " + t);
-                    continue;
-                }
-
-                if (t == Interval.class)
-                {  // Special handling of interval, save it as a double
-                    Double val = jo.opt(f.getName()) != null ? jo.getDouble(f.getName()) : null;
-                    if (val != null)
-                    {
-                        Interval i = Interval.secs(val);
-                        f.set(settingsObject, i);
-                    }
-                }
-                else
-                {
-                    Object val = jo.opt(f.getName());
-                    if (val != null)
-                        f.set(settingsObject, val);
-                }
-            }
+            os.write(buf, 0, len);
         }
+
+        String JSONString = os.toString();
+        JSONObject jo = new JSONObject(JSONString);
+
+        return jo;
     }
 }

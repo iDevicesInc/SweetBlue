@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:titleCondensed="@string/settings_export_condensed"
+        android:id="@+id/exportSettings"
+        android:title="@string/settings_export"/>
+    <item
+        android:titleCondensed="@string/settings_export_email_condensed"
+        android:id="@+id/exportSettingsEmail"
+        android:title="@string/settings_export_email"/>
+    <item
+        android:titleCondensed="@string/settings_import_condensed"
+        android:id="@+id/importSettings"
+        android:title="@string/settings_import"/>
+    <item
+        android:titleCondensed="@string/settings_reset_condensed"
+        android:id="@+id/resetSettings"
+        android:title="@string/settings_reset_condensed"/>
+</menu>

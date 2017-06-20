@@ -30,6 +30,8 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
+import org.json.JSONObject;
+
 /**
  * Provides a number of options to pass to the {@link BleManager#get(Context, BleManagerConfig)}
  * singleton getter or {@link BleManager#setConfig(BleManagerConfig)}.
@@ -828,6 +830,17 @@ public class BleManagerConfig extends BleDeviceConfig
 	public BleManagerConfig()
 	{
 		this(false);
+	}
+
+	/**
+	 * Creates a {@link BleManagerConfig} with all default options set. Then, any configuration options
+	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig.writeJSON}
+	 * regarding the creation of the JSONObject
+	 */
+	public BleManagerConfig(JSONObject jo)
+	{
+		super();
+		readJSON(jo);
 	}
 	
 	/**
