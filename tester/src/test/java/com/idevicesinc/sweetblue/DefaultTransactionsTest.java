@@ -1,18 +1,14 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
-
 import static org.junit.Assert.assertFalse;
 
 
@@ -27,8 +23,13 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     private final static UUID mInitServiceUuid = UUID.randomUUID();
     private final static UUID mInitCharUuid = UUID.randomUUID();
 
+    private GattDatabase db = new GattDatabase().addService(mAuthServiceUuid)
+            .addCharacteristic(mAuthCharUuid).setValue(new byte[] { 0x2, 0x4 }).setProperties().read().setPermissions().read().completeService()
+            .addService(mInitServiceUuid)
+            .addCharacteristic(mInitCharUuid).setValue(new byte[] { 0x8, 0xA }).setProperties().read().setPermissions().read().completeService();
 
-    @Test(timeout = 10000)
+
+    @Test(timeout = 40000)
     public void defaultAuthTransactionTest() throws Exception
     {
         m_config.runOnMainThread = false;
@@ -76,9 +77,12 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         m_config.runOnMainThread = true;
 
         connectToMultipleDevices(m_config);
+
+        m_mgr.stopScan();
+        m_mgr.disconnectAll();
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = 40000)
     public void defaultInitTransactionTest() throws Exception
     {
         m_config.runOnMainThread = false;
@@ -126,9 +130,12 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         m_config.runOnMainThread = true;
 
         connectToMultipleDevices(m_config);
+
+        m_mgr.stopScan();
+        m_mgr.disconnectAll();
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = 40000)
     public void defaultAuthAndInitTransactionTest() throws Exception
     {
         m_config.runOnMainThread = false;
@@ -202,6 +209,9 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         m_config.runOnMainThread = true;
 
         connectToMultipleDevices(m_config);
+
+        m_mgr.stopScan();
+        m_mgr.disconnectAll();
     }
 
     private void connectToMultipleDevices(BleManagerConfig config) throws Exception
@@ -243,9 +253,9 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -45, "Test Device #1");
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -35, "Test Device #2");
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -60, "Test Device #3");
+                    NativeUtil.advertiseNewDevice(m_mgr, -45, "Test Device #1");
+                    NativeUtil.advertiseNewDevice(m_mgr, -35, "Test Device #2");
+                    NativeUtil.advertiseNewDevice(m_mgr, -60, "Test Device #3");
                 }
             }
         });
@@ -255,39 +265,9 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     }
 
     @Override
-    public BleManagerConfig getConfig()
+    public P_GattLayer getGattLayer(BleDevice device)
     {
-        BleManagerConfig config = super.getConfig();
-        config.gattLayerFactory = new P_GattLayerFactory()
-        {
-            @Override
-            public P_GattLayer newInstance(BleDevice device)
-            {
-                return new TransactionGattLayer(device);
-            }
-        };
-        return config;
-    }
-
-    private class TransactionGattLayer extends UnitTestGatt
-    {
-
-        public TransactionGattLayer(BleDevice device)
-        {
-            super(device);
-
-            GattDatabase db = new GattDatabase().addService(mAuthServiceUuid)
-                    .addCharacteristic(mAuthCharUuid).setValue(new byte[] { 0x2, 0x4 }).setProperties().read().setPermissions().read().completeService()
-                    .addService(mInitServiceUuid)
-                    .addCharacteristic(mInitCharUuid).setValue(new byte[] { 0x8, 0xA }).setProperties().read().setPermissions().read().completeService();
-            setDabatase(db);
-        }
-
-        @Override public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
-        {
-            UnitTestUtils.readSuccess(getBleDevice(), characteristic, characteristic.getValue());
-            return true;
-        }
+        return new UnitTestGatt(device, db);
     }
 
 }

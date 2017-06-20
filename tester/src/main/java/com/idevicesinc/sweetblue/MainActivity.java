@@ -23,6 +23,7 @@ import java.util.Random;
 import java.util.UUID;
 import com.idevicesinc.sweetblue.tester.R;
 import com.idevicesinc.sweetblue.utils.Utils_String;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 public class MainActivity extends Activity
@@ -61,9 +62,10 @@ public class MainActivity extends Activity
                     {
                         if (e.didEnter(BleDeviceState.INITIALIZED))
                         {
-                            byte[] fakeData = new byte[100];
-                            new Random().nextBytes(fakeData);
-                            device.write(tempUuid, fakeData, null);
+//                            byte[] fakeData = new byte[100];
+//                            new Random().nextBytes(fakeData);
+//                            device.write(tempUuid, fakeData, null);
+                            device.read(Uuids.BATTERY_LEVEL);
                         }
                         mAdaptor.notifyDataSetChanged();
                     }
@@ -109,7 +111,7 @@ public class MainActivity extends Activity
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
         config.logger = mLogger;
-        config.maxDirectBondRetries = 5;
+        config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
         config.scanApi = BleScanApi.PRE_LOLLIPOP;
         config.runOnMainThread = false;
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));

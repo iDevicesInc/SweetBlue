@@ -1,17 +1,15 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
+import com.idevicesinc.sweetblue.utils.GattDatabase;
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Util;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -31,7 +29,13 @@ public class NotifyTest extends BaseBleUnitTest
 
 
     private BleDevice m_device;
-
+    private GattDatabase dbNotifyWithDesc = new GattDatabase().addService(mTestService)
+            .addCharacteristic(mTestChar).setProperties().readWriteNotify().setPermissions().read().build()
+            .addDescriptor(mTestDesc).setPermissions().read().completeService();
+    private GattDatabase dbNotify = new GattDatabase().addService(mTestService)
+            .addCharacteristic(mTestChar).setProperties().readWriteNotify().setPermissions().read().completeService();
+    private GattDatabase dbIndicateNoDesc = new GattDatabase().addService(mTestService)
+            .addCharacteristic(mTestChar).setProperties().readWriteIndicate().setPermissions().read().completeService();
 
     @Test
     public void enableNotifyTest() throws Exception
@@ -42,7 +46,7 @@ public class NotifyTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new NotifyGattWithDescLayer(device);
+                return new UnitTestGatt(device, dbNotifyWithDesc);
             }
         };
 
@@ -69,8 +73,9 @@ public class NotifyTest extends BaseBleUnitTest
                                 {
                                     if (e.type() == Type.ENABLING_NOTIFICATION)
                                     {
-                                        assertTrue(e.wasSuccess());
+                                        assertTrue("Enabling notification failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
+                                        succeed();
                                         s.release();
                                     }
                                 }
@@ -81,7 +86,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -95,7 +100,7 @@ public class NotifyTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new NotifyGattWithNoDescLayer(device);
+                return new UnitTestGatt(device, dbNotify);
             }
         };
 
@@ -122,8 +127,9 @@ public class NotifyTest extends BaseBleUnitTest
                                 {
                                     if (e.type() == Type.ENABLING_NOTIFICATION)
                                     {
-                                        assertTrue(e.wasSuccess());
+                                        assertTrue("Enabling notification failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
+                                        succeed();
                                         s.release();
                                     }
                                 }
@@ -134,7 +140,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -148,7 +154,7 @@ public class NotifyTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new NotifyGattWithDescLayer(device);
+                return new UnitTestGatt(device, dbNotify);
             }
         };
 
@@ -173,15 +179,16 @@ public class NotifyTest extends BaseBleUnitTest
                                 {
                                     if (e.type() == Type.ENABLING_NOTIFICATION)
                                     {
-                                        assertTrue(e.wasSuccess());
+                                        assertTrue("Enabling notification failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
+                                        succeed();
                                         m_device.disableNotify(mTestChar, new BleDevice.ReadWriteListener()
                                         {
                                             @Override public void onEvent(ReadWriteEvent e)
                                             {
                                                 if (e.type() == Type.DISABLING_NOTIFICATION)
                                                 {
-                                                    assertTrue(e.wasSuccess());
+                                                    assertTrue("Disabling notification failed with status " + e.status(), e.wasSuccess());
                                                     assertFalse(m_device.isNotifyEnabled(mTestChar));
                                                     s.release();
                                                 }
@@ -196,7 +203,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -210,7 +217,7 @@ public class NotifyTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new NotifyGattWithNoDescLayer(device);
+                return new UnitTestGatt(device, dbNotify);
             }
         };
 
@@ -235,15 +242,16 @@ public class NotifyTest extends BaseBleUnitTest
                                 {
                                     if (e.type() == Type.ENABLING_NOTIFICATION)
                                     {
-                                        assertTrue(e.wasSuccess());
+                                        assertTrue("Enabling notification failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
+                                        succeed();
                                         m_device.disableNotify(mTestChar, new BleDevice.ReadWriteListener()
                                         {
                                             @Override public void onEvent(ReadWriteEvent e)
                                             {
                                                 if (e.type() == Type.DISABLING_NOTIFICATION)
                                                 {
-                                                    assertTrue(e.wasSuccess());
+                                                    assertTrue("Disabling notification failed with status " + e.status(), e.wasSuccess());
                                                     assertFalse(m_device.isNotifyEnabled(mTestChar));
                                                     s.release();
                                                 }
@@ -258,7 +266,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -272,7 +280,7 @@ public class NotifyTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new NotifyGattWithDescLayer(device);
+                return new UnitTestGatt(device, dbNotifyWithDesc);
             }
         };
 
@@ -302,9 +310,10 @@ public class NotifyTest extends BaseBleUnitTest
                                 {
                                     if (e.type() == Type.ENABLING_NOTIFICATION)
                                     {
-                                        assertTrue(e.wasSuccess());
+                                        assertTrue("Enabling notification failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
-                                        UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, 250);
+                                        succeed();
+                                        NativeUtil.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
                                     }
                                     else if (e.type() == Type.NOTIFICATION)
                                     {
@@ -319,7 +328,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -333,7 +342,7 @@ public class NotifyTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new NotifyGattWithDescLayer(device);
+                return new UnitTestGatt(device, dbNotifyWithDesc);
             }
         };
 
@@ -359,9 +368,10 @@ public class NotifyTest extends BaseBleUnitTest
                         {
                             if (e.type() == Type.ENABLING_NOTIFICATION)
                             {
-                                assertTrue(e.wasSuccess());
-                                assertTrue(m_device.isNotifyEnabled(mTestChar));
-                                UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, 250);
+                                if (e.wasSuccess())
+                                {
+                                    NativeUtil.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
+                                }
                             }
                             else if (e.type() == Type.NOTIFICATION)
                             {
@@ -374,14 +384,26 @@ public class NotifyTest extends BaseBleUnitTest
                     {
                         @Override protected void start(BleDevice device)
                         {
-                            m_device.enableNotify(mTestChar);
+                            m_device.enableNotify(mTestChar, new BleDevice.ReadWriteListener()
+                            {
+                                @Override
+                                public void onEvent(ReadWriteEvent e)
+                                {
+                                    if (e.type() == Type.ENABLING_NOTIFICATION)
+                                    {
+                                        assertTrue("Enabling failed with error " + e.status(), e.wasSuccess());
+                                        assertTrue(m_device.isNotifyEnabled(mTestChar));
+                                        succeed();
+                                    }
+                                }
+                            });
                         }
                     });
                 }
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
@@ -395,7 +417,7 @@ public class NotifyTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new IndicateGattWithNoDescLayer(device);
+                return new UnitTestGatt(device, dbIndicateNoDesc);
             }
         };
 
@@ -425,9 +447,10 @@ public class NotifyTest extends BaseBleUnitTest
                                 {
                                     if (e.type() == Type.ENABLING_NOTIFICATION)
                                     {
-                                        assertTrue(e.wasSuccess());
+                                        assertTrue("Enabling indication failed with status " + e.status(), e.wasSuccess());
                                         assertTrue(m_device.isNotifyEnabled(mTestChar));
-                                        UnitTestUtils.sendNotification(m_device, e.characteristic(), notifyData, 250);
+                                        succeed();
+                                        NativeUtil.sendNotification(m_device, e.characteristic(), notifyData, Interval.millis(500));
                                     }
                                     else if (e.type() == Type.INDICATION)
                                     {
@@ -442,140 +465,9 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
         s.acquire();
     }
-
-    private class NotifyGattWithDescLayer extends UnitTestGatt
-    {
-
-        private final List<BluetoothGattService> mServices;
-
-
-        public NotifyGattWithDescLayer(BleDevice device)
-        {
-            super(device);
-            mServices = new ArrayList<>();
-            BluetoothGattService service = new BluetoothGattService(mTestService, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_READ);
-            BluetoothGattDescriptor desc = new BluetoothGattDescriptor(mTestDesc, BluetoothGattDescriptor.PERMISSION_READ);
-            characteristic.addDescriptor(desc);
-            service.addCharacteristic(characteristic);
-            mServices.add(service);
-        }
-
-        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
-        {
-            return mServices;
-        }
-
-        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
-        {
-            if (serviceUuid.equals(mTestService))
-            {
-                return mServices.get(0);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        @Override public boolean writeDescriptor(final BluetoothGattDescriptor descriptor)
-        {
-            if (descriptor.getUuid().equals(mTestDesc))
-            {
-                m_mgr.getPostManager().postToUpdateThreadDelayed(new Runnable()
-                {
-                    @Override public void run()
-                    {
-                        getBleDevice().m_listeners.onDescriptorWrite(null, descriptor, BluetoothGatt.GATT_SUCCESS);
-                    }
-                }, 150);
-                return true;
-            }
-            return false;
-        }
-    }
-
-    private class NotifyGattWithNoDescLayer extends UnitTestGatt
-    {
-
-        private final List<BluetoothGattService> mServices;
-
-
-        public NotifyGattWithNoDescLayer(BleDevice device)
-        {
-            super(device);
-            mServices = new ArrayList<>();
-            BluetoothGattService service = new BluetoothGattService(mTestService, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-            BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(mTestChar, BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_READ);
-            service.addCharacteristic(characteristic);
-            mServices.add(service);
-        }
-
-        @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
-        {
-            return mServices;
-        }
-
-        @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
-        {
-            if (serviceUuid.equals(mTestService))
-            {
-                return mServices.get(0);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        @Override public boolean writeDescriptor(final BluetoothGattDescriptor descriptor)
-        {
-            if (descriptor.getUuid().equals(mTestDesc))
-            {
-                m_mgr.getPostManager().postToUpdateThreadDelayed(new Runnable()
-                {
-                    @Override public void run()
-                    {
-                        getBleDevice().m_listeners.onDescriptorWrite(null, descriptor, BluetoothGatt.GATT_SUCCESS);
-                    }
-                }, 150);
-                return true;
-            }
-            return false;
-        }
-    }
-
-    private class IndicateGattWithNoDescLayer extends UnitTestGatt
-    {
-
-        public IndicateGattWithNoDescLayer(BleDevice device)
-        {
-            super(device);
-            GattDatabase db = new GattDatabase().addService(mTestService)
-                    .addCharacteristic(mTestChar).setProperties().readWriteIndicate().setPermissions().read().completeService();
-            setDabatase(db);
-        }
-
-        @Override public boolean writeDescriptor(final BluetoothGattDescriptor descriptor)
-        {
-            if (descriptor.getUuid().equals(mTestDesc))
-            {
-                m_mgr.getPostManager().postToUpdateThreadDelayed(new Runnable()
-                {
-                    @Override public void run()
-                    {
-                        getBleDevice().m_listeners.onDescriptorWrite(null, descriptor, BluetoothGatt.GATT_SUCCESS);
-                    }
-                }, 150);
-                return true;
-            }
-            return false;
-        }
-    }
-
 
 }

@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:menu="@menu/logger"
-    tools:context="com.idevicesinc.sweetblue.toolbox.LoggerActivity">
+    tools:context="com.idevicesinc.sweetblue.toolbox.activity.SettingsActivity">
+
+    <include layout="@layout/toolbar"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -20,12 +23,12 @@
 
     </ScrollView>
 
-    <ListView
+    <!--ListView
         android:visibility="gone"
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    </ListView>
+    </ListView-->
 
-</RelativeLayout>
+</LinearLayout>

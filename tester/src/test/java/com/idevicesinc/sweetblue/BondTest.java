@@ -1,6 +1,9 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Util;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -21,7 +24,7 @@ public class BondTest extends BaseBleUnitTest
     {
         final Semaphore s = new Semaphore(0);
 
-        BleDevice device = m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test device #1");
+        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #1");
         device.bond(new BleDevice.BondListener()
         {
             @Override
@@ -51,7 +54,7 @@ public class BondTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        BleDevice device = m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test device #2");
+        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #2");
         device.bond(new BleDevice.BondListener()
         {
             @Override
@@ -106,7 +109,7 @@ public class BondTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test device #3");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test device #3");
 
         s.acquire();
     }
@@ -116,41 +119,10 @@ public class BondTest extends BaseBleUnitTest
     public BleManagerConfig getConfig()
     {
         BleManagerConfig config = super.getConfig();
-        config.nativeDeviceFactory = new P_NativeDeviceLayerFactory<BondDeviceLayer>()
-        {
-            @Override
-            public BondDeviceLayer newInstance(BleDevice device)
-            {
-                return new BondDeviceLayer(device);
-            }
-        };
         config.loggingEnabled = true;
         return config;
     }
 
-
-    private final class BondDeviceLayer extends UnitTestDevice
-    {
-
-        public BondDeviceLayer(BleDevice device)
-        {
-            super(device);
-        }
-
-        @Override
-        public boolean createBond()
-        {
-            UnitTestUtils.bondSuccess(getBleDevice(), 250);
-            return true;
-        }
-
-        @Override
-        public boolean createBondSneaky(String methodName, boolean loggingEnabled)
-        {
-            UnitTestUtils.bondSuccess(getBleDevice(), 250);
-            return true;
-        }
-    }
 
     private final class BondFailACoupleTimesLayer extends UnitTestDevice
     {
@@ -170,12 +142,12 @@ public class BondTest extends BaseBleUnitTest
         {
             if (m_failsSoFar >= m_maxFails)
             {
-                UnitTestUtils.bondSuccess(getBleDevice(), 250);
+                return super.createBond();
             }
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, 250);
+                NativeUtil.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
                 System.out.println("Failing bond request. Fails so far: " + m_failsSoFar);
             }
             return true;
@@ -186,12 +158,12 @@ public class BondTest extends BaseBleUnitTest
         {
             if (m_failsSoFar >= 2)
             {
-                UnitTestUtils.bondSuccess(getBleDevice(), 250);
+                return super.createBondSneaky(methodName, loggingEnabled);
             }
             else
             {
                 m_failsSoFar++;
-                UnitTestUtils.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_AUTH_REJECTED, 250);
+                NativeUtil.bondFail(getBleDevice(), BleStatuses.UNBOND_REASON_REMOTE_DEVICE_DOWN, Interval.millis(250));
             }
             return true;
         }

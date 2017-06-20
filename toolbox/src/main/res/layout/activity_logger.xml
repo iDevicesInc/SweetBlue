@@ -1,13 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/red"
+	android:orientation="vertical"
     tools:menu="@menu/logger"
-    tools:context="com.idevicesinc.sweetblue.toolbox.LoggerActivity">
+    tools:context="com.idevicesinc.sweetblue.toolbox.activity.LoggerActivity">
 
+	<include layout="@layout/toolbar" />
 
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="50dp"
+		android:orientation="horizontal"
+		android:gravity="center_vertical">
 
-</RelativeLayout>
+		<com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner
+			android:id="@+id/debugSpinner"
+			android:layout_width="wrap_content"
+			android:layout_height="match_parent"
+			android:entries="@array/debug_levels" />
+
+		<View
+			android:layout_width="1dp"
+			android:layout_height="30dp"
+			android:background="@android:color/black"/>
+
+		<RelativeLayout
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:focusableInTouchMode="true">
+
+			<EditText
+				android:id="@+id/filterEditText"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:layout_marginEnd="10dp"
+				android:layout_marginStart="10dp"
+				android:singleLine="true"
+				android:scrollHorizontally="true"
+				android:hint="@string/filter"/>
+
+		</RelativeLayout>
+
+		<Button
+			android:id="@+id/button"
+			android:layout_width="30dp"
+			android:layout_height="30dp"
+			android:paddingStart="5dp"
+			android:paddingEnd="5dp"
+			android:background="@color/light_gray"
+			android:textAlignment="center"
+			android:text="↺"
+			android:textSize="20dp" />
+
+	</LinearLayout>
+
+	<ScrollView
+		android:id="@+id/scrollView"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+
+		<TextView
+			android:id="@+id/logTextView"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:paddingLeft="10dp"
+			android:text="hello world" />
+
+	</ScrollView>
+
+</LinearLayout>
