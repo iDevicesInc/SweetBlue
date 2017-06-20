@@ -10,6 +10,8 @@
     <string name="disconnect">Disconnect</string>
     <string name="bond">Bond</string>
     <string name="unbond">Unbond</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
     <string name="verbose">Verbose</string>
     <string name="debug">Debug</string>
     <string name="info">Info</string>
@@ -36,6 +38,10 @@
         <item>@string/error</item>
     </array>
 
+    <!-- Main Activity -->
+    <string name="drawer_open">Open Drawer</string>
+    <string name="drawer_close">Close Drawer</string>
+
     <!-- Logger -->
     <string name="logger_title">Logger</string>
 
@@ -44,6 +50,22 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
+    <string name="settings_import">Import Settings</string>
+    <string name="settings_import_condensed">Import</string>
+    <string name="settings_export">Export Settings</string>
+    <string name="settings_export_condensed">Export</string>
+    <string name="settings_export_email">Export Settings (e-mail)</string>
+    <string name="settings_export_email_condensed">Export (e-mail)</string>
+    <string name="settings_reset">Reset Settings</string>
+    <string name="settings_reset_condensed">Reset</string>
+    <string name="settings_save_dialog_title">Save Changes</string>
+    <string name="settings_save_dialog_message">Do you want to save your changes?</string>
+    <string name="settings_reset_dialog_title">Reset Settings</string>
+    <string name="settings_reset_dialog_message">Are you sure you want to reset all settings to their default values?</string>
+    <string name="settings_toast_unable_to_save">Unable to save preferences.</string>
+    <string name="settings_toast_saved">Saved perferences to %1$s</string>
+    <string name="settings_toast_unable_to_load">Unable to load preferences from %1$s</string>
+    <string name="settings_toast_loaded">Loaded preferences from %1$s</string>
 
     <!-- Nav drawer -->
     <string name="nav_drawer_logger">Logger</string>

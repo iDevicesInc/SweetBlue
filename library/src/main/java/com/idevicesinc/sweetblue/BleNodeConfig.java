@@ -10,12 +10,16 @@ import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.P_JSONUtil;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.utils.WrongThreadError;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.UUID;
 
@@ -1138,6 +1142,16 @@ public class BleNodeConfig
 	}
 
 	/**
+	 * Creates a {@link BleNodeConfig} with all default options set. Then, any configuration options
+	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig.writeJSON}
+	 * regarding the creation of the JSONObject
+	 */
+	public BleNodeConfig(JSONObject jo)
+	{
+		readJSON(jo);
+	}
+
+	/**
 	 * Sets all {@link Nullable} options in {@link BleNodeConfig}, {@link BleDeviceConfig}, {@link BleManagerConfig} to <code>null</code>
 	 * so for example it's easier to cherry-pick just a few options to override from {@link BleManagerConfig} when using {@link BleDevice#setConfig(BleDeviceConfig)}.
 	 * <br><br>
@@ -1253,5 +1267,39 @@ public class BleNodeConfig
 		}
 
 		return null;
+	}
+
+	/**
+	 * Creates and returns a JSONObject that represents all of the mutable settings of this object.
+	 * Keys are variable names and objects are values represented in JSON form.  Only types that we
+	 * know how to convert to JSON will be included.
+	 */
+	public JSONObject writeJSON()
+	{
+		try
+		{
+			JSONObject jo = P_JSONUtil.objectToJSON(this);
+			return jo;
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Acceps a JSON object that represents a set of configuration options.  These options will be
+	 * applied to this object, overwriting any existing options.  Options not defined in the JSON
+	 * object will not be effected at all.
+	 */
+	public void readJSON(JSONObject jo)
+	{
+		try
+		{
+			P_JSONUtil.applyJSONToObject(this, jo);
+		}
+		catch (Exception e)
+		{
+		}
 	}
 }
