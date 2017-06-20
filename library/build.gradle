@@ -329,6 +329,7 @@ task bumpVersion {
 }
 
 task bumpBuildToolsVersion {
+    // Takes parameter buildToolsVersion
     group = "sweetblue"
     description = "Updates Build Tools Version in all inner project's build.gradle"
     doLast {
@@ -348,14 +349,14 @@ task bumpBuildToolsVersion {
             println contents.find("buildToolsVersion (\"\\d|'\\d).*(\"|')")
             contents = contents.replaceAll("buildToolsVersion (\"\\d|'\\d).*(\"|')", "buildToolsVersion '" + buildToolsVersion + "'")
             f.write(contents, 'UTF-8')
-            println contents.find("buildToolsVersion (\"\\d|'\\d).*(\"|')")
         }
     }
 }
 
 task bumpCompileSDKVersion {
+    // Takes parameter compileSDKVerion
     group = "sweetblue"
-    description = "Updates Build Tools Version in all inner project's build.gradle"
+    description = "Updates Compile SDK Version in all inner project's build.gradle"
     doLast {
         def fileList = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
         + files(rootDir.absolutePath + "/library/build.gradle") \
@@ -371,9 +372,8 @@ task bumpCompileSDKVersion {
         fileList.each { File f ->
             String contents = f.getText('UTF-8')
             println contents.find("compileSdkVersion \\d+")
-            contents = contents.replaceAll("compileSdkVersion \\d+", "compileSdkVersion " + compileSdkVersion)
+            contents = contents.replaceAll("compileSdkVersion \\d+", "compileSdkVersion " + compileSDKVersion)
             f.write(contents, 'UTF-8')
-            println contents.find("buildToolsVersion (\"\\d|'\\d).*(\"|')")
         }
     }
 }
