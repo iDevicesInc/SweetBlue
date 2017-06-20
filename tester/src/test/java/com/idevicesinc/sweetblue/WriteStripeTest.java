@@ -1,6 +1,10 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+
+import com.idevicesinc.sweetblue.utils.ByteBuffer;
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Util;
 
@@ -11,6 +15,8 @@ import org.robolectric.annotation.Config;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
+
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 
@@ -30,11 +36,16 @@ public class WriteStripeTest extends BaseBleUnitTest
             .addCharacteristic(tempUuid).setProperties().write().setPermissions().write().build()
             .addDescriptor(tempDescUuid).setPermissions().write().completeService();
 
+    private ByteBuffer m_buffer;
+
 
     @Test
     public void stripedWriteTest() throws Exception
     {
         m_config.loggingEnabled = true;
+
+        m_buffer = new ByteBuffer();
+
         m_mgr.setConfig(m_config);
 
         final Semaphore s = new Semaphore(0);
@@ -52,13 +63,14 @@ public class WriteStripeTest extends BaseBleUnitTest
                         {
                             if (e.didEnter(BleDeviceState.INITIALIZED))
                             {
-                                byte[] data = new byte[100];
+                                final byte[] data = new byte[100];
                                 new Random().nextBytes(data);
                                 m_device.write(tempUuid, data, new BleDevice.ReadWriteListener()
                                 {
                                     @Override public void onEvent(ReadWriteEvent e)
                                     {
                                         assertTrue(e.wasSuccess());
+                                        assertArrayEquals(data, m_buffer.bytesAndClear());
                                         s.release();
                                     }
                                 });
@@ -78,6 +90,9 @@ public class WriteStripeTest extends BaseBleUnitTest
     public void stripedWriteDescriptorTest() throws Exception
     {
         m_config.loggingEnabled = true;
+
+        m_buffer = new ByteBuffer();
+
         m_mgr.setConfig(m_config);
 
         final Semaphore s = new Semaphore(0);
@@ -95,13 +110,14 @@ public class WriteStripeTest extends BaseBleUnitTest
                         {
                             if (e.didEnter(BleDeviceState.INITIALIZED))
                             {
-                                byte[] data = new byte[100];
+                                final byte[] data = new byte[100];
                                 new Random().nextBytes(data);
                                 m_device.writeDescriptor(tempUuid, tempDescUuid, data, new BleDevice.ReadWriteListener()
                                 {
                                     @Override public void onEvent(ReadWriteEvent e)
                                     {
                                         assertTrue(e.wasSuccess());
+                                        assertArrayEquals(data, m_buffer.bytesAndClear());
                                         s.release();
                                     }
                                 });
@@ -119,6 +135,30 @@ public class WriteStripeTest extends BaseBleUnitTest
 
     @Override public P_GattLayer getGattLayer(BleDevice device)
     {
-        return new UnitTestGatt(device, db);
+        return new StripeGatt(device);
+    }
+
+    private final class StripeGatt extends UnitTestGatt
+    {
+
+
+        public StripeGatt(BleDevice device)
+        {
+            super(device, db);
+        }
+
+        @Override
+        public boolean setCharValue(BluetoothGattCharacteristic characteristic, byte[] data)
+        {
+            m_buffer.append(data);
+            return super.setCharValue(characteristic, data);
+        }
+
+        @Override
+        public boolean setDescValue(BluetoothGattDescriptor descriptor, byte[] data)
+        {
+            m_buffer.append(data);
+            return super.setDescValue(descriptor, data);
+        }
     }
 }

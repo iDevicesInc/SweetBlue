@@ -5528,6 +5528,16 @@ public final class BleDevice extends BleNode
         return true;
     }
 
+    /**
+     * Returns the effective MTU size for a write. BLE has an overhead when reading and writing, so that eats out of the MTU size.
+     * The write overhead is defined via {@link BleManagerConfig#GATT_WRITE_MTU_OVERHEAD}. The method simply returns the MTU size minus
+     * the overhead. This is just used internally, but is exposed in case it's needed for some other use app-side.
+     */
+    public final int getEffectiveWriteMtuSize()
+    {
+        return getMtu() - BleManagerConfig.GATT_WRITE_MTU_OVERHEAD;
+    }
+
     private boolean performTransaction_earlyOut(final BleTransaction txn)
     {
         if (txn == null) return true;
@@ -6602,11 +6612,6 @@ public final class BleDevice extends BleNode
         }
 
         return NULL_READWRITE_EVENT();
-    }
-
-    private int getEffectiveWriteMtuSize()
-    {
-        return getMtu() - BleManagerConfig.GATT_WRITE_MTU_OVERHEAD;
     }
 
     private void addWriteDescriptorTasks(BluetoothGattDescriptor descriptor, FutureData data, boolean requiresBonding, ReadWriteListener listener)
