@@ -6935,16 +6935,37 @@ public final class BleDevice extends BleNode
 
     void postEventAsCallback(final GenericListener_Void listener, final Event event)
     {
-        getManager().getPostManager().postCallback(new Runnable()
+        if (listener != null)
         {
-            @Override public void run()
+            if (listener instanceof PA_CallbackWrapper)
             {
-                if (listener != null)
+                getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
                 {
-                    listener.onEvent(event);
-                }
+                    @Override
+                    public void run()
+                    {
+                        if (listener != null)
+                        {
+                            listener.onEvent(event);
+                        }
+                    }
+                });
             }
-        });
+            else
+            {
+                getManager().getPostManager().postCallback(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        if (listener != null)
+                        {
+                            listener.onEvent(event);
+                        }
+                    }
+                });
+            }
+        }
     }
 
 

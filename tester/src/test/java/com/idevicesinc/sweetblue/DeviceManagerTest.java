@@ -10,7 +10,7 @@ import org.robolectric.annotation.Config;
 import java.util.concurrent.Semaphore;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class DeviceManagerTest extends BaseBleUnitTest
 {
