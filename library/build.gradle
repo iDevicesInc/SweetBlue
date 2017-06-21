@@ -328,7 +328,7 @@ task bumpVersion {
     }
 }
 
-task bumpBuildToolsVersion {
+task bumpBuildToolsVersion (dependsOn: getSamples) {
     // Takes parameter buildToolsVersion (e.g. 25.0.3)
     group = "sweetblue"
     description = "Updates Build Tools Version in all inner project's build.gradle"
@@ -355,7 +355,7 @@ task bumpBuildToolsVersion {
     }
 }
 
-task bumpCompileSdkVersion {
+task bumpCompileSdkVersion (dependsOn: getSamples) {
     // Takes parameter compileSdkVersion (e.g. 25)
     group = "sweetblue"
     description = "Updates CompileSdkVersion in all inner project's build.gradle"
@@ -382,7 +382,7 @@ task bumpCompileSdkVersion {
     }
 }
 
-task bumpGradleVersion {
+task bumpGradleVersion (dependsOn: getSamples) {
     // Takes parameter gradleVersion (e.g. 3.3)
     group = "sweetblue"
     description = "Updates the Gradle distrobution version in all inner project's build.gradle"
@@ -403,7 +403,7 @@ task bumpGradleVersion {
     }
 }
 
-task bumpGradlePluginVersion {
+task bumpGradlePluginVersion (dependsOn: getSamples) {
     // Takes parameter gradlePluginVersion (e.g. 2.3.3)
     group = "sweetblue"
     description = "Updates the Gradle plugin version in all inner project's build.gradle"
