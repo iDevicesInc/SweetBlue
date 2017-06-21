@@ -38,8 +38,8 @@ final class P_StripedWriteDescriptorTransaction extends BleTransaction
         FutureData curData;
         while (curIndex < allData.length)
         {
-            int end = Math.min(allData.length, curIndex + device.getMtu());
-            curData = new PresentData(Arrays.copyOfRange(allData, curIndex, Math.min(allData.length, curIndex + device.getMtu())));
+            int end = Math.min(allData.length, curIndex + device.getEffectiveWriteMtuSize());
+            curData = new PresentData(Arrays.copyOfRange(allData, curIndex, end));
             m_writeList.add(new P_Task_WriteDescriptor(device, m_descriptor, curData, m_requiresBonding, m_internalListener, device.m_txnMngr.getCurrent(), device.getOverrideReadWritePriority()));
             curIndex = end;
         }

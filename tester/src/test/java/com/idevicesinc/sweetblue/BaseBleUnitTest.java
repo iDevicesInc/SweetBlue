@@ -8,7 +8,7 @@ import org.robolectric.Robolectric;
 import java.util.concurrent.Semaphore;
 
 
-public abstract class BaseBleUnitTest
+public abstract class BaseBleUnitTest extends BaseTest
 {
 
     public BleManager m_mgr;
@@ -52,17 +52,15 @@ public abstract class BaseBleUnitTest
 
     public void doTestOperation(final TestOp action) throws Exception
     {
-        final Semaphore semaphore = new Semaphore(0);
-
         new Thread(new Runnable()
         {
             @Override public void run()
             {
-                action.run(semaphore);
+                action.run();
             }
         }).start();
 
-        semaphore.acquire();
+        reacquire();
     }
 
     public BleManagerConfig getConfig()
@@ -98,9 +96,15 @@ public abstract class BaseBleUnitTest
         return m_mgr.getScanManager().getCurrentPower();
     }
 
+    @Override
+    int getTraceIndex()
+    {
+        return 3;
+    }
+
     public interface TestOp
     {
-        void run(Semaphore semaphore);
+        void run();
     }
 
 }

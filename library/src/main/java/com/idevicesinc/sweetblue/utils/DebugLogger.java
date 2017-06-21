@@ -82,7 +82,7 @@ public final class DebugLogger implements SweetLogger
         {
             if (m_unitTest)
             {
-                System.out.print(entry);
+                System.out.print(Utils_String.makeString(new Date(), " ", level(level), "/", tag, ": ", msg + "\n"));
             }
             else
             {

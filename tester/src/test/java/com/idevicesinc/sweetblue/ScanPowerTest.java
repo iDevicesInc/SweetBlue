@@ -2,17 +2,14 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Interval;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class ScanPowerTest extends BaseBleUnitTest
 {
@@ -20,12 +17,13 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Test
     public void scanPowerVeryLow() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.VERY_LOW_POWER;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -35,7 +33,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.VERY_LOW_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -48,12 +46,13 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Deprecated
     public void scanPowerVeryLowBackwardCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.VERY_LOW_POWER;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -63,7 +62,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.VERY_LOW_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -75,12 +74,13 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Test
     public void scanPowerLow() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.LOW_POWER;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -90,7 +90,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -103,11 +103,12 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Deprecated
     public void scanPowerLowBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanMode = BleScanMode.LOW_POWER;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -117,7 +118,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -129,12 +130,13 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Test
     public void scanPowerMedium() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.MEDIUM_POWER;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -144,7 +146,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -157,11 +159,12 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Deprecated
     public void scanPowerMediumBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanMode = BleScanMode.MEDIUM_POWER;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -171,7 +174,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -183,12 +186,13 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Test
     public void scanPowerHigh() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.HIGH_POWER;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -198,7 +202,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -211,11 +215,12 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Deprecated
     public void scanPowerHighBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanMode = BleScanMode.HIGH_POWER;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -225,7 +230,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -237,13 +242,14 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Test
     public void scanPowerAutoForeground() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.AUTO;
         m_mgr.setConfig(m_config);
         m_mgr.onResume();
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -254,7 +260,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                             // We're in the foreground, and NOT running an infinite scan, so this should be High power here
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -267,13 +273,14 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Deprecated
     public void scanPowerAutoForegroundBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.AUTO;
         m_mgr.setConfig(m_config);
         m_mgr.onResume();
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -284,7 +291,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                             // We're in the foreground, and NOT running an infinite scan, so this should be High power here
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.HIGH_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -296,13 +303,14 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Test
     public void scanPowerAutoInfinite() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.AUTO;
         m_mgr.setConfig(m_config);
         m_mgr.onResume();
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -313,7 +321,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                             // We're in the foreground, and running an infinite scan, so this should be Medium power here
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -326,13 +334,14 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Deprecated
     public void scanPowerAutoInfiniteBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.AUTO;
         m_mgr.setConfig(m_config);
         m_mgr.onResume();
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -343,7 +352,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                             // We're in the foreground, and running an infinite scan, so this should be Medium power here
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.MEDIUM_POWER);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -355,13 +364,14 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Test
     public void scanPowerAutoBackground() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.AUTO;
         m_mgr.setConfig(m_config);
         m_mgr.onPause();
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -373,7 +383,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             m_mgr.onResume();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -386,13 +396,14 @@ public class ScanPowerTest extends BaseBleUnitTest
     @Deprecated
     public void scanPowerAutoBackgroundBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_config.scanPower = BleScanPower.AUTO;
         m_mgr.setConfig(m_config);
         m_mgr.onPause();
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -404,7 +415,7 @@ public class ScanPowerTest extends BaseBleUnitTest
                             assertTrue("Scan Power: " + getScanPower().name(), getScanPower() == BleScanPower.LOW_POWER);
                             m_mgr.stopScan();
                             m_mgr.onResume();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
