@@ -10,7 +10,7 @@ import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertFalse;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class UhOhThrottleTest extends BaseBleUnitTest
 {
@@ -18,8 +18,6 @@ public class UhOhThrottleTest extends BaseBleUnitTest
     @Test(timeout = 20000)
     public void uhOhThrottleTest() throws Exception
     {
-
-        final Semaphore s = new Semaphore(0);
         m_config.updateLoopCallback = new PI_UpdateLoop.Callback()
         {
             private double time;
@@ -30,7 +28,7 @@ public class UhOhThrottleTest extends BaseBleUnitTest
                 time += timestep_seconds;
                 if (time > 10)
                 {
-                    s.release();
+                    succeed();
                 }
             }
         };
@@ -56,14 +54,13 @@ public class UhOhThrottleTest extends BaseBleUnitTest
         });
         m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
         m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-        s.acquire();
+        startTest();
     }
 
     @Test(timeout = 20000)
     public void uhOhThrottleShutdownTest() throws Exception
     {
-        final Semaphore s = new Semaphore(0);
-        final UhOhCallback callback = new UhOhCallback(s);
+        final UhOhCallback callback = new UhOhCallback();
         m_config.updateLoopCallback = callback;
         m_config.uhOhCallbackThrottle = Interval.secs(20);
 
@@ -88,20 +85,15 @@ public class UhOhThrottleTest extends BaseBleUnitTest
         });
         m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
         m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-        s.acquire();
+        startTest();
     }
 
     private final class UhOhCallback implements PI_UpdateLoop.Callback
     {
 
-        private final Semaphore s;
         private double time;
         private boolean secondTime;
 
-        UhOhCallback(Semaphore sem)
-        {
-            s = sem;
-        }
 
         @Override
         public void onUpdate(double timestep_seconds)
@@ -129,7 +121,7 @@ public class UhOhThrottleTest extends BaseBleUnitTest
             else if (time >= 10d)
             {
                 System.out.println("Time steps at release: " + time);
-                s.release();
+                succeed();
             }
         }
     }

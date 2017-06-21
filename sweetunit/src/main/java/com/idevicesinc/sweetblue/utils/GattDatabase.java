@@ -471,6 +471,11 @@ public class GattDatabase
         {
             return new CharacteristicPermissions(build());
         }
+
+        public final GattDatabase completeService()
+        {
+            return build().completeService();
+        }
     }
 
 
