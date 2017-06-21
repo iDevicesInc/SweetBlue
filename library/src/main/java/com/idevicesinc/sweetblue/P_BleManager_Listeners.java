@@ -56,7 +56,7 @@ final class P_BleManager_Listeners
                 {
                     if (state == PE_TaskState.INTERRUPTED)
                     {
-                        m_mngr.getPostManager().postToUpdateThread(new Runnable()
+                        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
                         {
                             @Override public void run()
                             {
@@ -459,7 +459,7 @@ final class P_BleManager_Listeners
 
     void onNativeBondStateChanged(final P_NativeDeviceLayer device_native, final int previousState, final int newState, final int failReason)
     {
-        m_mngr.getPostManager().postToUpdateThread(new Runnable()
+        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
         {
             @Override public void run()
             {

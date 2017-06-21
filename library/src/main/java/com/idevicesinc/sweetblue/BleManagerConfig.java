@@ -79,10 +79,19 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 
-	public static final double DEFAULT_SCAN_INDEFINITE_INTERVAL_TIME	= 10;
+	/**
+	 * Default value for {@link #infiniteScanInterval}
+	 */
+	public static final double DEFAULT_SCAN_INFINITE_INTERVAL_TIME 		= 10;
 
-	public static final double DEFAULT_SCAN_INDEFINITE_PAUSE_TIME		= 0.5;
+	/**
+	 * Default value for {@link #infinitePauseInterval}
+	 */
+	public static final double DEFAULT_SCAN_INFINITE_PAUSE_TIME 		= 0.5;
 
+	/**
+	 * Default value for {@link #defaultStatePollRate}
+	 */
 	public static final double DEFAULT_MANAGER_STATE_POLL_RATE			= .1;
 	
 	static final BleManagerConfig NULL = new BleManagerConfigNull();
@@ -158,18 +167,18 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval scanClassicBoostLength						= Interval.secs(DEFAULT_CLASSIC_SCAN_BOOST_TIME);
 
 	/**
-	 * Default is {@link #DEFAULT_SCAN_INDEFINITE_INTERVAL_TIME} - When running an indefinite scan, SweetBlue will pause the scan, and restart it again a short
-	 * time later, defined by {@link #indefinitePauseInterval}. The android stack tends to find less and less devices the longer a scan runs. This helps to keep
-	 * scan results coming in when performing an indefinite scan, leading to better results.
+	 * Default is {@link #DEFAULT_SCAN_INFINITE_INTERVAL_TIME} - When running an infinite scan, SweetBlue will pause the scan, and restart it again a short
+	 * time later, defined by {@link #infinitePauseInterval}. The android stack tends to find less and less devices the longer a scan runs. This helps to keep
+	 * scan results coming in when performing an infinite scan, leading to better results.
 	 */
-	public Interval indefiniteScanInterval						= Interval.secs(DEFAULT_SCAN_INDEFINITE_INTERVAL_TIME);
+	public Interval infiniteScanInterval 						= Interval.secs(DEFAULT_SCAN_INFINITE_INTERVAL_TIME);
 
 	/**
-	 * Default is {@link #DEFAULT_SCAN_INDEFINITE_PAUSE_TIME} - This is the amount of time SweetBlue will wait before resuming a scan.
+	 * Default is {@link #DEFAULT_SCAN_INFINITE_PAUSE_TIME} - This is the amount of time SweetBlue will wait before resuming a scan.
 	 *
-	 * See {@link #indefiniteScanInterval}
+	 * See {@link #infiniteScanInterval}
 	 */
-	public Interval indefinitePauseInterval						= Interval.secs(DEFAULT_SCAN_INDEFINITE_PAUSE_TIME);
+	public Interval infinitePauseInterval 						= Interval.secs(DEFAULT_SCAN_INFINITE_PAUSE_TIME);
 
 	/**
 	 * Default is <code>false</code> - set this to allow or disallow autoscanning while any
@@ -375,7 +384,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.RARE)
-	public Interval scanReportDelay							= Interval.DISABLED; // Interval.secs(DEFAULT_SCAN_REPORT_DELAY);
+	public Interval scanReportDelay							= Interval.secs(DEFAULT_SCAN_REPORT_DELAY);
 
 	/**
 	 * Default is <code>null</code>, meaning no filtering - all discovered devices will

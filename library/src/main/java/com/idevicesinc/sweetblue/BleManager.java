@@ -1672,7 +1672,7 @@ public final class BleManager
 
 			m_scanManager.resetTimeNotScanning();
 			options.m_scanTime = options.m_scanTime.secs() < 0.0 ? Interval.INFINITE : options.m_scanTime;
-			m_scanManager.setInfiniteScan(options.m_scanTime.equals(Interval.INFINITE));
+			m_scanManager.setInfiniteScan(options.m_scanTime.equals(Interval.INFINITE), options.m_forceIndefinite);
 
 			if( options.m_discoveryListener != null )
 			{
@@ -2218,7 +2218,7 @@ public final class BleManager
 	 */
 	public final void stopScan()
 	{
-		m_scanManager.setInfiniteScan(false);
+		m_scanManager.setInfiniteScan(false, false);
 
 		stopScan_private(E_Intent.INTENTIONAL);
 	}

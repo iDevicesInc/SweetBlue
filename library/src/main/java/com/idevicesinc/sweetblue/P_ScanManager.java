@@ -3,12 +3,9 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.util.Log;
 
 import com.idevicesinc.sweetblue.compat.L_Util;
-import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 
@@ -41,8 +38,12 @@ final class P_ScanManager
     private final int m_retryCountMax = 3;
     private boolean m_triedToStartScanAfterTurnedOn;
     private boolean m_doingInfiniteScan;
+    private boolean m_forceActualInfinite;
     private boolean m_triedToStartScanAfterResume;
     private double m_timeNotScanning;
+    private double m_timePausedScan;
+    private double m_totalTimeScanning;
+    private double m_intervalTimeScanning;
 
     private double m_classicLength;
     private double m_timeClassicBoosting;
@@ -73,7 +74,10 @@ final class P_ScanManager
 
     public final boolean startScan(PA_StateTracker.E_Intent intent, double scanTime)
     {
-        switch (m_manager.m_config.scanApi)
+        m_timePausedScan = 0.0;
+        m_totalTimeScanning = 0.0;
+        BleScanApi scanApi = m_manager.m_config.scanApi == BleScanApi.AUTO ? determineAutoApi() : m_manager.m_config.scanApi;
+        switch (scanApi)
         {
             case CLASSIC:
                 mCurrentApi.set(BleScanApi.CLASSIC);
@@ -106,6 +110,15 @@ final class P_ScanManager
             default:
                 return false;
         }
+    }
+
+    private BleScanApi determineAutoApi()
+    {
+        if (m_mode != Mode_BLE_POST_LOLLIPOP)
+        {
+            return BleScanApi.POST_LOLLIPOP;
+        }
+        return BleScanApi.PRE_LOLLIPOP;
     }
 
     public final void stopScan()
@@ -162,9 +175,10 @@ final class P_ScanManager
         m_manager.getNativeStateTracker().remove(BleManagerState.SCANNING, scanTask.getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
     }
 
-    public final void setInfiniteScan(boolean infinite)
+    public final void setInfiniteScan(boolean infinite, boolean force)
     {
         m_doingInfiniteScan = infinite;
+        m_forceActualInfinite = force;
     }
 
     public final boolean isInfiniteScan()
@@ -230,6 +244,8 @@ final class P_ScanManager
     {
         if (m_manager.is(SCANNING))
         {
+            m_totalTimeScanning += timeStep;
+            m_intervalTimeScanning += timeStep;
             if ( m_scanEntries.size() > 0 )
             {
                 final List<ScanInfo> infos;
@@ -257,6 +273,21 @@ final class P_ScanManager
 
                     m_manager.onDiscoveredFromNativeStack(layer, info.m_rssi, info.m_record);
                 }
+            }
+            if (!m_forceActualInfinite && m_doingInfiniteScan && Interval.isEnabled(m_manager.m_config.infiniteScanInterval) && m_intervalTimeScanning >= m_manager.m_config.infiniteScanInterval.secs())
+            {
+                pauseScan();
+            }
+        }
+
+        if (m_manager.is(SCANNING_PAUSED))
+        {
+            m_timePausedScan += timeStep;
+
+            Interval pauseTime = Interval.isEnabled(m_manager.m_config.infinitePauseInterval) ? m_manager.m_config.infinitePauseInterval : Interval.secs(BleManagerConfig.DEFAULT_SCAN_INFINITE_PAUSE_TIME);
+            if (m_timePausedScan >= pauseTime.secs())
+            {
+                startScan(PA_StateTracker.E_Intent.INTENTIONAL, Interval.INFINITE.secs());
             }
         }
 
@@ -403,6 +434,7 @@ final class P_ScanManager
 
     private void stopScan_private(boolean stopping)
     {
+        m_intervalTimeScanning = 0.0;
         switch (mCurrentApi.get())
         {
             case CLASSIC:
