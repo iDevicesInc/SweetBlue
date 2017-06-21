@@ -869,9 +869,14 @@ public final class BleManager
 	 */
 	public final void setConfig(@Nullable(Prevalence.RARE) BleManagerConfig config_nullable)
 	{
-		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
-		this.initLogger(this);
-		this.initConfigDependentMembers();
+		m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
+		initLogger(this);
+		initConfigDependentMembers();
+	}
+
+	public final BleManagerConfig getConfigClone()
+	{
+		return m_config.clone();
 	}
 
 	private void initLogger(BleManager mgr)
