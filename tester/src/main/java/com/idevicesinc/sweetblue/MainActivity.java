@@ -112,7 +112,7 @@ public class MainActivity extends Activity
         config.loggingEnabled = true;
         config.logger = mLogger;
         config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
-        config.scanApi = BleScanApi.PRE_LOLLIPOP;
+        config.scanApi = BleScanApi.AUTO;
         config.runOnMainThread = false;
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
@@ -139,20 +139,9 @@ public class MainActivity extends Activity
         {
             @Override public void onEvent(StateEvent event)
             {
-                if (event.didEnter(BleManagerState.ON))
-                {
-                    mStartScan.setEnabled(true);
-                }
-                else if (event.didEnter(BleManagerState.SCANNING))
-                {
-                    mStartScan.setEnabled(false);
-                    mStopScan.setEnabled(true);
-                }
-                else if (event.didExit(BleManagerState.SCANNING))
-                {
-                    mStartScan.setEnabled(true);
-//                    mStopScan.setEnabled(false);
-                }
+                boolean scanning = mgr.isScanning();
+                mStartScan.setEnabled(!scanning);
+
             }
         });
         mgr.setListener_Discovery(new BleManager.DiscoveryListener()

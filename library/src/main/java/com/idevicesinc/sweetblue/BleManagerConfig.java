@@ -160,11 +160,16 @@ public class BleManagerConfig extends BleDeviceConfig
 
 
 	/**
-	 * Default is {@link #DEFAULT_CLASSIC_SCAN_BOOST_TIME} - This will run a short classic scan before a regular BLE scan. It has been observed that scans tend
-	 * to return more reliable results of multiple devices when a classic scan is performed first. Set this to <code>null</code>, or {@link Interval#DISABLED} to
-	 * disable this feature.
+	 * Default is {@link Interval#DISABLED} - This will run a short classic scan before a regular BLE scan. Sometimes, for whatever reason, the native
+	 * BLE stack will refuse to see a particular device. However, if you go into Bluetooth settings on the phone, it sees it (they do a classic scan
+	 * here), and suddenly it shows up in a BLE scan after that. So the idea with this feature is to do the same thing without having to go into
+	 * Bluetooth settings.
+	 *
+	 * This seems to affect the number of devices that are returned in total, and how quickly they are discovered, so this is disabled by default now.
+	 * If you decide that you need to use it, we recommend going with a time length of {@link #DEFAULT_CLASSIC_SCAN_BOOST_TIME}.
 	 */
-	public Interval scanClassicBoostLength						= Interval.secs(DEFAULT_CLASSIC_SCAN_BOOST_TIME);
+	@Nullable(Prevalence.NORMAL)
+	public Interval scanClassicBoostLength						= Interval.DISABLED;
 
 	/**
 	 * Default is {@link #DEFAULT_SCAN_INFINITE_INTERVAL_TIME} - When running an infinite scan, SweetBlue will pause the scan, and restart it again a short
