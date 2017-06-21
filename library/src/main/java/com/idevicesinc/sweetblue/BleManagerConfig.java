@@ -79,6 +79,10 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 
+	public static final double DEFAULT_SCAN_INDEFINITE_INTERVAL_TIME	= 10;
+
+	public static final double DEFAULT_SCAN_INDEFINITE_PAUSE_TIME		= 0.5;
+
 	public static final double DEFAULT_MANAGER_STATE_POLL_RATE			= .1;
 	
 	static final BleManagerConfig NULL = new BleManagerConfigNull();
@@ -152,7 +156,21 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * disable this feature.
 	 */
 	public Interval scanClassicBoostLength						= Interval.secs(DEFAULT_CLASSIC_SCAN_BOOST_TIME);
-	
+
+	/**
+	 * Default is {@link #DEFAULT_SCAN_INDEFINITE_INTERVAL_TIME} - When running an indefinite scan, SweetBlue will pause the scan, and restart it again a short
+	 * time later, defined by {@link #indefinitePauseInterval}. The android stack tends to find less and less devices the longer a scan runs. This helps to keep
+	 * scan results coming in when performing an indefinite scan, leading to better results.
+	 */
+	public Interval indefiniteScanInterval						= Interval.secs(DEFAULT_SCAN_INDEFINITE_INTERVAL_TIME);
+
+	/**
+	 * Default is {@link #DEFAULT_SCAN_INDEFINITE_PAUSE_TIME} - This is the amount of time SweetBlue will wait before resuming a scan.
+	 *
+	 * See {@link #indefiniteScanInterval}
+	 */
+	public Interval indefinitePauseInterval						= Interval.secs(DEFAULT_SCAN_INDEFINITE_PAUSE_TIME);
+
 	/**
 	 * Default is <code>false</code> - set this to allow or disallow autoscanning while any
 	 * {@link BleDevice} is {@link BleDeviceState#PERFORMING_OTA}. If false,

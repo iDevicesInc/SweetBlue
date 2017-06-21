@@ -2044,6 +2044,15 @@ public final class BleManager
 	}
 
 	/**
+	 * Convenience method which reports <code>true</code> if the {@link BleManager} is in any of the following states: <br></br>
+	 * {@link BleManagerState#SCANNING}, {@link BleManagerState#SCANNING_PAUSED}, {@link BleManagerState#BOOST_SCANNING}, or {@link BleManagerState#STARTING_SCAN}
+	 */
+	public final boolean isScanning()
+	{
+		return isAny(SCANNING, SCANNING_PAUSED, BOOST_SCANNING, STARTING_SCAN);
+	}
+
+	/**
 	 * Returns <code>true</code> if location is enabled to a degree that allows scanning on {@link android.os.Build.VERSION_CODES#M} and above.
 	 * If this returns <code>false</code> it means you're on Android M and you either (A) do not have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION}
 	 * (or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} in your AndroidManifest.xml, see {@link #isLocationEnabledForScanning_byManifestPermissions()}), or (B)
