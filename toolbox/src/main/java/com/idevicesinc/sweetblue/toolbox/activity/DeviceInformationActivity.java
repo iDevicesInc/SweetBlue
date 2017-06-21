@@ -1,11 +1,14 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.activity;
 
-import android.app.ActionBar;
+
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.BleManager;
+import com.idevicesinc.sweetblue.toolbox.R;
 import com.jaredrummler.android.device.DeviceName;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -38,9 +41,12 @@ public class DeviceInformationActivity extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_info);
 
+        Toolbar toolbar = find(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         bleManager = BleManager.get(this);
 
-        ActionBar actionBar = getActionBar();
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         setTitle(getString(R.string.device_information_title));

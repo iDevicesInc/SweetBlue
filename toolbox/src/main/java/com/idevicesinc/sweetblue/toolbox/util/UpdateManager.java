@@ -1,4 +1,4 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.util;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -67,7 +67,7 @@ public class UpdateManager implements PI_UpdateLoop.Callback
     private static UpdateManager s_instance;
 
     // Static getter/creator
-    static UpdateManager getInstance()
+    public static UpdateManager getInstance()
     {
         if (s_instance == null)
             s_instance = new UpdateManager();
@@ -106,7 +106,7 @@ public class UpdateManager implements PI_UpdateLoop.Callback
     {
         Handler handler = new android.os.Handler(Looper.getMainLooper());
 
-        Log.d("upd", "update manger starting");
+        //Log.d("upd", "update manger starting");
         synchronized (m_updateListenerList)
         {
             Iterator<ListenerInfo> it = m_updateListenerList.iterator();
@@ -126,7 +126,7 @@ public class UpdateManager implements PI_UpdateLoop.Callback
                 li.update(dt, handler);
             }
         }
-        Log.d("upd", "update manger done");
+        //Log.d("upd", "update manger done");
     }
 
     public void subscribe(UpdateListener listener, double updateFrequency)

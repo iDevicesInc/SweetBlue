@@ -1,10 +1,12 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.activity;
 
 
 import android.bluetooth.BluetoothGattService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -12,6 +14,7 @@ import android.widget.TextView;
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.DeviceStateListener;
+import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.view.BleServiceAdapter;
 import com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner;
 import java.util.ArrayList;
@@ -33,6 +36,12 @@ public class BleServicesActivity extends BaseActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bleservices);
+
+        Toolbar toolbar = find(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
 
         String mac = getIntent().getStringExtra("mac");
         m_device = BleManager.get(this).getDevice(mac);

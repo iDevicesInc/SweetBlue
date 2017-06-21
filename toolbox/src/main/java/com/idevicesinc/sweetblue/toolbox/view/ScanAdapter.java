@@ -6,7 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.toolbox.BleServicesActivity;
+import com.idevicesinc.sweetblue.toolbox.activity.BleServicesActivity;
 
 import java.util.List;
 

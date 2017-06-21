@@ -1,18 +1,20 @@
-package com.idevicesinc.sweetblue.toolbox;
+package com.idevicesinc.sweetblue.toolbox.activity;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
@@ -20,18 +22,20 @@ import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.BleScanApi;
 import com.idevicesinc.sweetblue.ManagerStateListener;
 import com.idevicesinc.sweetblue.ScanOptions;
+import com.idevicesinc.sweetblue.toolbox.util.DebugLog;
+import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.util.UpdateManager;
 import com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner;
 import com.idevicesinc.sweetblue.toolbox.view.ScanAdapter;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
-
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 public class MainActivity extends BaseActivity
 {
 
     private BleManager m_manager;
-    private BleManagerConfig m_config;
 
     private Button m_startScan;
     private Button m_stopScan;
@@ -43,6 +47,17 @@ public class MainActivity extends BaseActivity
 
     private DrawerLayout m_drawerLayout;
     private View m_navDrawerLayout;
+    private ActionBarDrawerToggle m_drawerToggler;
+
+    public static BleManagerConfig getDefaultConfig()
+    {
+        BleManagerConfig cfg = new BleManagerConfig();
+        cfg.runOnMainThread = false;
+        cfg.loggingEnabled = true;
+        cfg.connectFailRetryConnectingOverall = true;
+        cfg.logger = DebugLog.getDebugger();
+        return cfg;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -50,14 +65,10 @@ public class MainActivity extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        m_config = new BleManagerConfig();
-        m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
-        m_config.connectFailRetryConnectingOverall = true;
-        m_config.logger = DebugLog.getDebugger();
-        //m_config.updateLoopCallback = UpdateManager.getInstance();
+        Toolbar toolbar = find(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        m_manager = BleManager.get(this, m_config);
+        m_manager = BleManager.get(this, getDefaultConfig());
 
         m_manager.setListener_Discovery(new DeviceDiscovery());
 
@@ -113,23 +124,24 @@ public class MainActivity extends BaseActivity
         {
             @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
+                BleManagerConfig cfg = m_manager.getConfigClone();
                 String option = (String) parent.getItemAtPosition(position);
                 switch (option)
                 {
                     case "Classic":
-                        m_config.scanApi = BleScanApi.CLASSIC;
+                        cfg.scanApi = BleScanApi.CLASSIC;
                         break;
                     case "Pre-Lollipop":
-                        m_config.scanApi = BleScanApi.PRE_LOLLIPOP;
+                        cfg.scanApi = BleScanApi.PRE_LOLLIPOP;
                         break;
                     case "Post-Lollipop":
-                        m_config.scanApi = BleScanApi.POST_LOLLIPOP;
+                        cfg.scanApi = BleScanApi.POST_LOLLIPOP;
                         break;
                     default:
-                        m_config.scanApi = BleScanApi.AUTO;
+                        cfg.scanApi = BleScanApi.AUTO;
                         break;
                 }
-                m_manager.setConfig(m_config);
+                m_manager.setConfig(cfg);
             }
 
             @Override public void onNothingSelected(AdapterView<?> parent)
@@ -180,23 +192,11 @@ public class MainActivity extends BaseActivity
         @Override
         public void onUpdate()
         {
-            // Burn through the rediscovery events
-            Log.d("upd", "Processing " + m_rediscoverMap.size() + " events");
-            /*for (String key : m_rediscoverMap.keySet())
-            {
-                DiscoveryEvent de = m_rediscoverMap.get(key);
-                if (de == null)
-                    continue;
-
-                processEvent(de, true);
-                m_rediscoverMap.remove(key);
-            }*/
             if (m_rediscoverMap.size() > 0)
             {
                 m_rediscoverMap.clear();
                 m_adapter.notifyDataSetChanged();
             }
-            Log.d("upd", "Done processing events");
         }
 
         boolean processEvent(DiscoveryEvent de, boolean processRediscovers)
@@ -205,8 +205,6 @@ public class MainActivity extends BaseActivity
             {
                 m_deviceList.add(de.device());
                 m_adapter.notifyItemInserted(m_deviceList.size() - 1);
-
-                Log.d("evt", "Discover event for " + de.device().getMacAddress());
             }
             else if (de.was(LifeCycle.REDISCOVERED))
             {
@@ -220,8 +218,6 @@ public class MainActivity extends BaseActivity
                 {
                     m_adapter.notifyItemChanged(index);
                 }
-
-                Log.d("evt", "Rediscover event for " + de.device().getMacAddress());
             }
 
             // True because we processed the event
@@ -239,6 +235,60 @@ public class MainActivity extends BaseActivity
         // Grab the drawer
         m_drawerLayout = find(R.id.drawerLayout);
         m_navDrawerLayout = find(R.id.navigationDrawer);
+
+        m_drawerToggler = new ActionBarDrawerToggle(this, m_drawerLayout, R.string.drawer_open, R.string.drawer_close)
+        {
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView)
+            {
+                int i;
+            }
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view)
+            {
+                int i;
+            }
+        };
+
+        m_drawerLayout.addDrawerListener(m_drawerToggler);
+
+        m_drawerLayout.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                m_drawerToggler.syncState();
+            }
+        });
+
+        m_drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener()
+        {
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset)
+            {
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView)
+            {
+                m_drawerToggler.syncState();
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView)
+            {
+                m_drawerToggler.syncState();
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState)
+            {
+            }
+        });
+
+        // For hamburger menu
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         LinearLayout ll = null;
 
@@ -329,5 +379,13 @@ public class MainActivity extends BaseActivity
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.send_feedback_email_body));
 
         startActivity(Intent.createChooser(emailIntent, getString(R.string.send_feedback_send_mail)));
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if (m_drawerToggler.onOptionsItemSelected(item))
+            return true;
+        return super.onOptionsItemSelected(item);
     }
 }
