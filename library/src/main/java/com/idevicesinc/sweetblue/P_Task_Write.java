@@ -64,18 +64,21 @@ final class P_Task_Write extends PA_Task_ReadOrWrite
 			}
 			else
 			{
-				// Set the write type now.
-				if (m_writeType == Type.WRITE_NO_RESPONSE)
+				// Set the write type now, if it is no null
+				if (m_writeType != null)
 				{
-					char_native.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
-				}
-				else if (m_writeType == Type.WRITE_SIGNED)
-				{
-					char_native.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_SIGNED);
-				}
-				else if (char_native.getWriteType() != BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-				{
-					char_native.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+					if (m_writeType == Type.WRITE_NO_RESPONSE)
+					{
+						char_native.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+					}
+					else if (m_writeType == Type.WRITE_SIGNED)
+					{
+						char_native.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_SIGNED);
+					}
+					else if (char_native.getWriteType() != BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+					{
+						char_native.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+					}
 				}
 
 				if( false == getDevice().layerManager().setCharValue(char_native, m_data) )
