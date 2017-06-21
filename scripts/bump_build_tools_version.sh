@@ -1,5 +1,10 @@
 #!/bin/sh
 
-buildToolsVersion=$(echo $1 | sed -e "s/\'//g")
+if [ "$1" = "" ]
+then
+    echo "No version number provided"
+    exit
+fi
+v=$(echo $1 | sed -e "s/\'|\"//g")
 cd ..
-./gradlew bumpBuildToolsVersion -PbuildToolsVersion=${buildToolsVersion}
+./gradlew bumpBuildToolsVersion -PbuildToolsVersion=${v}
