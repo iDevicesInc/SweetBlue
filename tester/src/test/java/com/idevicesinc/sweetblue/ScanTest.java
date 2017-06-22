@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class ScanTest extends BaseBleUnitTest
 {
@@ -27,11 +27,12 @@ public class ScanTest extends BaseBleUnitTest
     @Test
     public void scanApiClassicTest() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.CLASSIC;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -41,7 +42,7 @@ public class ScanTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.CLASSIC);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -54,11 +55,12 @@ public class ScanTest extends BaseBleUnitTest
     @Deprecated
     public void scanApiClassicBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanMode = BleScanMode.CLASSIC;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -68,7 +70,7 @@ public class ScanTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.CLASSIC);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -80,11 +82,12 @@ public class ScanTest extends BaseBleUnitTest
     @Test
     public void scanApiPreLollipop() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.PRE_LOLLIPOP;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -94,7 +97,7 @@ public class ScanTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -107,11 +110,12 @@ public class ScanTest extends BaseBleUnitTest
     @Deprecated
     public void scanApiPreLollipopBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanMode = BleScanMode.PRE_LOLLIPOP;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -121,7 +125,7 @@ public class ScanTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -133,11 +137,12 @@ public class ScanTest extends BaseBleUnitTest
     @Test
     public void scanApiPostLollipop() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.POST_LOLLIPOP;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -147,7 +152,7 @@ public class ScanTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.POST_LOLLIPOP);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -160,11 +165,12 @@ public class ScanTest extends BaseBleUnitTest
     @Deprecated
     public void scanApiPostLollipopBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanMode = BleScanMode.POST_LOLLIPOP;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -174,7 +180,7 @@ public class ScanTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.POST_LOLLIPOP);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -186,11 +192,12 @@ public class ScanTest extends BaseBleUnitTest
     @Test
     public void scanApiAuto() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.AUTO;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -200,7 +207,7 @@ public class ScanTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -213,11 +220,12 @@ public class ScanTest extends BaseBleUnitTest
     @Deprecated
     public void scanApiAutoBackwardsCompatTest() throws Exception
     {
+        startTest(false);
         m_config.scanMode = BleScanMode.AUTO;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new BleManager.StateListener()
                 {
@@ -227,7 +235,7 @@ public class ScanTest extends BaseBleUnitTest
                         {
                             assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -239,11 +247,12 @@ public class ScanTest extends BaseBleUnitTest
     @Test
     public void scanClassicBoostTest() throws Exception
     {
+        startTest(false);
         m_config.scanApi = BleScanApi.AUTO;
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 m_mgr.setListener_State(new ManagerStateListener()
                 {
@@ -261,7 +270,7 @@ public class ScanTest extends BaseBleUnitTest
                             assertTrue(boosted);
                             assertFalse(m_mgr.is(BleManagerState.BOOST_SCANNING));
                             m_mgr.stopScan();
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });
@@ -276,26 +285,27 @@ public class ScanTest extends BaseBleUnitTest
     @Test(timeout = 4000)
     public void singleScanWithInterval() throws Exception
     {
+        startTest(false);
         doSingleScanTest(2000);
     }
 
     @Test(timeout = 7000)
     public void periodicScanTest() throws Exception
     {
+        startTest(false);
         doPeriodicScanTest(1000);
     }
 
     @Test(timeout = 7000)
     public void periodicScanWithOptionsTest() throws Exception
     {
+        startTest(false);
         doPeriodicScanOptionsTest(1000);
     }
 
     @Test(timeout = 14000)
     public void highPriorityScanTest() throws Exception
     {
-        final Semaphore s = new Semaphore(0);
-
         final Pointer<Integer> connected = new Pointer<>(0);
 
         final BleDevice device2;
@@ -328,11 +338,12 @@ public class ScanTest extends BaseBleUnitTest
                     P_TaskQueue queue = m_mgr.getTaskQueue();
                     assertTrue(queue.isInQueue(P_Task_Connect.class, device2));
                     int position = queue.positionInQueue(P_Task_Connect.class, device2);
-                    assertTrue(position == -1);
-                    s.release();
+                    assertTrue(position != -1);
+                    succeed();
                 }
             }
         });
+        startTest();
     }
 
 
@@ -344,7 +355,7 @@ public class ScanTest extends BaseBleUnitTest
         final AtomicBoolean didStop = new AtomicBoolean(false);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 final AtomicLong time = new AtomicLong();
                 m_mgr.setListener_State(new ManagerStateListener()
@@ -367,7 +378,7 @@ public class ScanTest extends BaseBleUnitTest
 
                                 long targetTime = (scanTime * 3) + boostTime;
                                 assertTrue("Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
-                                semaphore.release();
+                                succeed();
                             }
                             else
                             {
@@ -387,7 +398,7 @@ public class ScanTest extends BaseBleUnitTest
         final AtomicBoolean didStop = new AtomicBoolean(false);
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 final AtomicLong time = new AtomicLong();
                 m_mgr.setListener_State(new ManagerStateListener()
@@ -412,7 +423,7 @@ public class ScanTest extends BaseBleUnitTest
 
 
                                 assertTrue("Target time: " + targetTime + " Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
-                                semaphore.release();
+                                succeed();
                             }
                             else
                             {
@@ -432,7 +443,7 @@ public class ScanTest extends BaseBleUnitTest
     {
         doTestOperation(new TestOp()
         {
-            @Override public void run(final Semaphore semaphore)
+            @Override public void run()
             {
                 final Pointer<Long> time = new Pointer<Long>();
                 m_mgr.setListener_State(new BleManager.StateListener()
@@ -448,7 +459,7 @@ public class ScanTest extends BaseBleUnitTest
                             // Make sure our scan time is approximately correct
                             long diff = System.currentTimeMillis() - time.value;
                             assertTrue("Scan didn't run the appropriate amount of time. Requested time = " + scanTime +  " Diff = " + diff, ((diff - LEEWAY) < scanTime && scanTime < (diff + LEEWAY)));
-                            semaphore.release();
+                            succeed();
                         }
                     }
                 });

@@ -10,7 +10,7 @@ import org.robolectric.annotation.Config;
 import java.util.concurrent.Semaphore;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class DeviceManagerTest extends BaseBleUnitTest
 {
@@ -20,7 +20,6 @@ public class DeviceManagerTest extends BaseBleUnitTest
     public void removeDevicesFromCacheTest() throws Exception
     {
         final long m_timeStarted = System.currentTimeMillis();
-        final Semaphore s = new Semaphore(0);
         m_config.loggingEnabled = true;
         m_mgr.setConfig(m_config);
         new Thread(new Runnable()
@@ -53,10 +52,10 @@ public class DeviceManagerTest extends BaseBleUnitTest
                     }
                     m_mgr.removeAllDevicesFromCache();
                 }
-                s.release();
+                succeed();
             }
         }).start();
-        s.acquire();
+        startTest();
     }
 
 }

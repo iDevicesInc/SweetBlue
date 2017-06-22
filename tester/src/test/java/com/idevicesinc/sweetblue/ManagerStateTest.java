@@ -9,7 +9,7 @@ import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public final class ManagerStateTest extends BaseBleUnitTest
 {
@@ -23,8 +23,6 @@ public final class ManagerStateTest extends BaseBleUnitTest
 
         assertTrue(m_mgr.is(BleManagerState.ON));
 
-        final Semaphore s = new Semaphore(0);
-
         m_mgr.setListener_State(new ManagerStateListener()
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
@@ -35,14 +33,14 @@ public final class ManagerStateTest extends BaseBleUnitTest
                 }
                 else if (e.didEnter(BleManagerState.OFF))
                 {
-                    s.release();
+                    succeed();
                 }
             }
         });
 
         m_mgr.turnOff();
 
-        s.acquire();
+        startTest();
     }
 
     @Test
@@ -53,8 +51,6 @@ public final class ManagerStateTest extends BaseBleUnitTest
         m_mgr.setConfig(m_config);
 
         assertTrue(m_mgr.is(BleManagerState.ON));
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_State(new ManagerStateListener()
         {
@@ -74,14 +70,14 @@ public final class ManagerStateTest extends BaseBleUnitTest
                 }
                 else if (e.didEnter(BleManagerState.ON))
                 {
-                    s.release();
+                    succeed();
                 }
             }
         });
 
         m_mgr.turnOff();
 
-        s.acquire();
+        startTest();
     }
 
 //    @Test

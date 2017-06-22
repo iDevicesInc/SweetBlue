@@ -3112,16 +3112,37 @@ public final class BleManager
 
 	void postEvent(final GenericListener_Void listener, final Event event)
 	{
-		m_postManager.postCallback(new Runnable()
+		if (listener != null)
 		{
-			@Override public void run()
+			if (listener instanceof PA_CallbackWrapper)
 			{
-				if (listener != null)
+				m_postManager.runOrPostToUpdateThread(new Runnable()
 				{
-					listener.onEvent(event);
-				}
+					@Override
+					public void run()
+					{
+						if (listener != null)
+						{
+							listener.onEvent(event);
+						}
+					}
+				});
 			}
-		});
+			else
+			{
+				m_postManager.postCallback(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (listener != null)
+						{
+							listener.onEvent(event);
+						}
+					}
+				});
+			}
+		}
 	}
 
     private void onDiscovered_wrapItUp(final BleDevice device, final P_NativeDeviceLayer device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)

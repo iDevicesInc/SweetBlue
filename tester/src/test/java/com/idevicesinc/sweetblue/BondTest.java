@@ -13,7 +13,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class BondTest extends BaseBleUnitTest
 {
@@ -22,8 +22,6 @@ public class BondTest extends BaseBleUnitTest
     @Test(timeout = 20000)
     public void bondTest() throws Exception
     {
-        final Semaphore s = new Semaphore(0);
-
         BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #1");
         device.bond(new BleDevice.BondListener()
         {
@@ -31,18 +29,16 @@ public class BondTest extends BaseBleUnitTest
             public void onEvent(BondEvent e)
             {
                 assertTrue(e.wasSuccess());
-                s.release();
+                succeed();
             }
         });
 
-        s.acquire();
+        startTest();
     }
 
     @Test(timeout = 20000)
     public void bondRetryTest() throws Exception
     {
-        final Semaphore s = new Semaphore(0);
-
         m_config.nativeDeviceFactory = new P_NativeDeviceLayerFactory()
         {
             @Override
@@ -61,18 +57,16 @@ public class BondTest extends BaseBleUnitTest
             public void onEvent(BondEvent e)
             {
                 assertTrue(e.wasSuccess());
-                s.release();
+                succeed();
             }
         });
 
-        s.acquire();
+        startTest();
     }
 
     @Test(timeout = 20000)
     public void bondFilterTest() throws Exception
     {
-        final Semaphore s = new Semaphore(0);
-
         m_config.nativeDeviceFactory = new P_NativeDeviceLayerFactory()
         {
             @Override
@@ -105,13 +99,13 @@ public class BondTest extends BaseBleUnitTest
             public void onEvent(BondEvent e)
             {
                 assertFalse(e.wasSuccess());
-                s.release();
+                succeed();
             }
         });
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test device #3");
 
-        s.acquire();
+        startTest();
     }
 
 

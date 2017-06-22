@@ -15,7 +15,7 @@ import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class DuplicateCharTest extends BaseBleUnitTest
 {
@@ -37,8 +37,6 @@ public class DuplicateCharTest extends BaseBleUnitTest
     public void writeCharWhenMultipleExistTest() throws Exception
     {
         m_device = null;
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -70,7 +68,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                                     {
                                         assertTrue(e.status().name(), e.wasSuccess());
                                         assertTrue(e.characteristic().getDescriptor(mTestDesc).getValue()[0] == 2);
-                                        s.release();
+                                        succeed();
                                     }
                                 });
                             }
@@ -82,15 +80,13 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Test
     public void readCharWhenMultipleExistTest() throws Exception
     {
         m_device = null;
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -123,7 +119,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                                         assertTrue(e.status().name(), e.wasSuccess());
                                         assertTrue(e.characteristic().getDescriptor(mTestDesc).getValue()[0] == 2);
                                         assertTrue(Arrays.equals(e.data(), new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }));
-                                        s.release();
+                                        succeed();
                                     }
                                 });
                             }
@@ -135,7 +131,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
 
     }
 
@@ -143,8 +139,6 @@ public class DuplicateCharTest extends BaseBleUnitTest
     public void enableNotifyMultipleExistTest() throws Exception
     {
         m_device = null;
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -177,7 +171,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                                         if (e.type() == Type.ENABLING_NOTIFICATION)
                                         {
                                             assertTrue(e.wasSuccess());
-                                            s.release();
+                                            succeed();
                                         }
                                     }
                                 });
@@ -190,7 +184,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        startTest();
     }
 
     @Override public BleManagerConfig getConfig()

@@ -44,8 +44,8 @@ final class P_StripedWriteTransaction extends BleTransaction
         FutureData curData;
         while (curIndex < allData.length)
         {
-            int end = Math.min(allData.length, curIndex + device.getMtu());
-            curData = new PresentData(Arrays.copyOfRange(allData, curIndex, Math.min(allData.length, curIndex + device.getMtu())));
+            int end = Math.min(allData.length, curIndex + device.getEffectiveWriteMtuSize());
+            curData = new PresentData(Arrays.copyOfRange(allData, curIndex, end));
             final P_Task_Write task;
             if (m_descriptorFilter == null)
             {
