@@ -12,7 +12,7 @@
         android:layout_alignParentLeft="true"
         android:layout_marginBottom="6dp"
         android:layout_marginTop="6dp"
-        android:layout_toLeftOf="@+id/deviceSpinner"
+        android:layout_toLeftOf="@+id/buttonLayout"
         android:maxLines="1"
         android:text="Device name"/>
 
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/name"
-        android:layout_toLeftOf="@+id/deviceSpinner"
+        android:layout_toLeftOf="@+id/buttonLayout"
         android:maxLines="5"
         android:text="DISCONNECTED"/>
 
@@ -42,13 +42,39 @@
         android:layout_alignBaseline="@+id/rssiLabel"
         android:text="-50dBm"/>
 
-    <com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner
-        android:id="@+id/deviceSpinner"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:layout_alignParentRight="true"
-        android:layout_centerInParent="true"
-        android:entries="@array/device_connect_array"/>
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="5dp"
+        >
+
+        <TextView
+            android:id="@+id/connectTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/connect"
+            android:layout_margin="5dp"
+            android:gravity="center"
+            android:background="@color/gray"
+            android:padding="5dp"
+            />
+
+        <TextView
+            android:id="@+id/bondTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/bond"
+            android:layout_margin="5dp"
+            android:gravity="center"
+            android:background="@color/gray"
+            android:padding="5dp"
+            />
+
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"

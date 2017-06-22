@@ -31,8 +31,8 @@ public class DeviceRow extends FrameLayout
     private TextView m_status;
     private TextView m_rssi;
     private ReselectableSpinner m_spinner;
-
-
+    private TextView m_connectTextView;
+    private TextView m_bondTextView;
 
     public DeviceRow(Context context)
     {
@@ -79,42 +79,65 @@ public class DeviceRow extends FrameLayout
         return hasDevice() ? m_device.getMacAddress() : "00:00:00:00:00:00";
     }
 
+    private void refreshConnectTextView()
+    {
+        // Inspect device state and update labels accordingly
+        if (!hasDevice())
+            return;
+
+        if (m_device.is(BleDeviceState.DISCONNECTED))
+            m_connectTextView.setText(CONNECT);
+        else
+            m_connectTextView.setText(DISCONNECT);
+    }
+
+    private void refreshBondTextView()
+    {
+        // Inspect device state and update labels accordingly
+        if (!hasDevice())
+            return;
+
+        if (m_device.isAny(BleDeviceState.BONDED, BleDeviceState.BONDING))
+            m_bondTextView.setText(UNBOND);
+        else
+            m_bondTextView.setText(BOND);
+    }
+
     private void getViews()
     {
         m_name = (TextView) findViewById(R.id.name);
         m_status = (TextView) findViewById(R.id.deviceStatus);
         m_rssi = (TextView) findViewById(R.id.rssi);
-        m_spinner = (ReselectableSpinner) findViewById(R.id.deviceSpinner);
-        m_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-        {
-            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-            {
-                if (m_spinner.isTouched())
-                {
-                    final String selection = (String) parent.getItemAtPosition(position);
-                    if (selection.equals(CONNECT))
-                    {
-                        connectClicked();
-                    }
-                    else if (selection.equals(DISCONNECT))
-                    {
-                        disconnectClicked();
-                    }
-                    else if (selection.equals(BOND))
-                    {
-                        bondClicked();
-                    }
-                    else if (selection.equals(UNBOND))
-                    {
-                        unbondClicked();
-                    }
-                    m_spinner.unTouch();
-                }
-            }
 
-            @Override public void onNothingSelected(AdapterView<?> parent)
+        m_connectTextView = (TextView) findViewById(R.id.connectTextView);
+        m_connectTextView.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
             {
-                m_spinner.unTouch();
+                // Perform action depending on what our text says
+                if (m_connectTextView.getText().equals(CONNECT))
+                    connectClicked();
+                else if (m_connectTextView.getText().equals(DISCONNECT))
+                    disconnectClicked();
+
+                refreshConnectTextView();
+            }
+        });
+
+        m_bondTextView = (TextView) findViewById(R.id.bondTextView);
+        m_bondTextView.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                // Perform action depending on what our text says
+                if (m_bondTextView.getText().equals(BOND))
+                    bondClicked();
+                else if (m_bondTextView.getText().equals(UNBOND))
+                    unbondClicked();
+
+                refreshBondTextView();
             }
         });
     }
@@ -159,6 +182,12 @@ public class DeviceRow extends FrameLayout
             if (m_device != null)
             {
                 m_status.setText(m_device.printState());
+
+                m_content.setBackgroundColor(getResources().getColor(hasDevice() && isConnected() ? R.color.green : R.color.white));
+
+                refreshConnectTextView();
+
+                refreshBondTextView();
             }
         }
     }

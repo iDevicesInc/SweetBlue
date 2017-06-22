@@ -100,7 +100,6 @@ public class DeviceInformationActivity extends BaseActivity
             multiSupported = bleManager.getNativeAdapter().isMultipleAdvertisementSupported();
         }
         multiAdvSupported.setChecked(multiSupported);
-
     }
 
     static String getKernelVersion()

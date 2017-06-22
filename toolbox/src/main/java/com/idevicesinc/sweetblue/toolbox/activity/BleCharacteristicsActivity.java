@@ -42,11 +42,12 @@ public class BleCharacteristicsActivity extends BaseActivity
 
         final String mac = getIntent().getStringExtra("mac");
         final String uuid = getIntent().getStringExtra("uuid");
+
         m_device = BleManager.get(this).getDevice(mac);
         m_service = m_device.getNativeService(UUID.fromString(uuid));
         m_characteristicList = m_service.getCharacteristics();
 
-        m_adapter = new CharacteristicAdapter(m_characteristicList);
+        m_adapter = new CharacteristicAdapter(m_device, m_characteristicList);
 
         m_charListView = find(R.id.expandingListView);
 
