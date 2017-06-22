@@ -12,6 +12,7 @@ if [ "${p:(-7)}" = "scripts" ];
 then
     cd ..
 fi
-
 ./gradlew bumpBuildToolsVersion -PbuildToolsVersion=${v}
-./gradlew gitAddCommitPush -Pmessage="Bump Build Tools Version to $v"
+./gradlew gitAddCommitPush -Pmessage="Bump Build Tools Version to $v" # Push to SweetBlue repo
+cd library/script_output/samples/
+./gradlew gitAddCommitPush -Pmessage="Bump Build Tools Version to $v" # Push to samples repo

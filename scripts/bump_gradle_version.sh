@@ -13,4 +13,6 @@ then
     cd ..
 fi
 ./gradlew bumpGradleVersion -PgradleVersion=${v}
-./gradlew gitAddCommitPush -Pmessage="Bump Gradle Version to $v"
+./gradlew gitAddCommitPush -Pmessage="Bump Gradle Version to $v" # Push to SweetBlue repo
+cd library/script_output/samples/
+./gradlew gitAddCommitPush -Pmessage="Bump Gradle Version to $v" # Push to samples repo

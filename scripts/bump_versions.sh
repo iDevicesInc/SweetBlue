@@ -45,5 +45,8 @@ else
         ./gradlew bumpCompileSdkVersion -PcompileSdkVersion=${v4}
         message="$message Compile/Target Sdk Version to $v4,"
     fi
-    ./gradlew gitAddCommitPush -Pmessage="${message%?}"
+
+    ./gradlew gitAddCommitPush -Pmessage="${message%?}" # Push to SweetBlue repo
+    cd library/script_output/samples/
+    ./gradlew gitAddCommitPush -Pmessage="${message%?}" # Push to samples repo
 fi

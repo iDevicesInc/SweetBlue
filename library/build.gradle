@@ -359,8 +359,7 @@ task gitAddCommitPush {
             throw new RuntimeException(r2.errorStream.text)
         }
 
-        // git push origin $#Current bracnh
-        def r3 = ("git push origin HEAD").execute()
+        def r3 = ("git push origin HEAD").execute() // Push to current head
         r3.waitFor()
         String v3 = r3.exitValue()
         if(!v3.equals("0"))
