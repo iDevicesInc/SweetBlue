@@ -2,6 +2,7 @@
 
 if [ "$1" = "" ];
 then
+    echo
     echo "At least one parameter required. Enter 0 to leave parameter unchanged"
     echo
     echo "  #  | Parameter Description"
@@ -10,6 +11,9 @@ then
     echo "  2  | Gradle Plugin Version"
     echo "  3  | Gradle Version"
     echo "  4  | Compile/Target SDK Version"
+    echo
+    echo "EXAMPLE: bump_versions.sh '25.0.3' 0 '3.3'"
+    echo
     exit
 else
     v1=$(echo $1 | sed -e "s/\'|\"|\s//g")
@@ -23,7 +27,7 @@ else
        cd ..
     fi
 
-    message="Bump: "
+    message="Bump:"
     if [[ ( "$v1" != "" ) && ( "$v1" != "0" ) ]];
     then
         ./gradlew bumpBuildToolsVersion -PbuildToolsVersion=${v1}
@@ -46,7 +50,13 @@ else
         message="$message Compile/Target Sdk Version to $v4,"
     fi
 
-    ./gradlew gitAddCommitPush -Pmessage="${message%?}" # Push to SweetBlue repo
+    # Push to SweetBlue repo
+    git add -u
+    git commit -m "${message%?}"
+    git push origin HEAD
+    # Push to samples repo
     cd library/script_output/samples/
-    ./gradlew gitAddCommitPush -Pmessage="${message%?}" # Push to samples repo
+    git add -u
+    git commit -m "${message%?}"
+    git push origin HEAD
 fi

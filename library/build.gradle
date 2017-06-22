@@ -350,8 +350,9 @@ task gitAddCommitPush {
             throw new RuntimeException(r1.errorStream.text)
 
         // git commit -m "$message"
-        println("git commit -m \"" + message + "\"")
-        def r2 = ("git commit -m \"" + message + "\"").execute()
+        String commit = "git commit -m \"" + message + "\""
+        println(commit)
+        def r2 = (commit).execute()
         r2.waitFor()
         String v2 = r2.exitValue()
         if(!v2.equals("0"))
@@ -365,29 +366,6 @@ task gitAddCommitPush {
         if(!v3.equals("0"))
         {
             throw new RuntimeException(r3.errorStream.text)
-        }
-    }
-}
-task bumpBuildToolsVersion (dependsOn: getSamples) {
-    // Takes parameter buildToolsVersion (e.g. 25.0.3)
-    group = "sweetblue"
-    description = "Updates Build Tools Version in all inner project's build.gradle"
-    doLast {
-
-        def allFiles = moduleFiles
-
-        // Add samples to allFiles
-        File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
-        def samples = files { samplesDir.listFiles() }
-        samples.each {File sample ->
-            allFiles.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
-        println allFiles.asFileTree.files
-
-        allFiles.each { File f ->
-            String contents = f.getText('UTF-8')
-            println contents.find("buildToolsVersion (\"\\d|'\\d).*(\"|')")
-            contents = contents.replaceAll("buildToolsVersion (\"\\d|'\\d).*(\"|')", "buildToolsVersion '" + buildToolsVersion + "'")
-            f.write(contents, 'UTF-8')
         }
     }
 }
