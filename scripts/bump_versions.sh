@@ -17,8 +17,13 @@ else
     v3=$(echo $3 | sed -e "s/\'|\"|\s//g")
     v4=$(echo $4 | sed -e "s/\'|\"|\s//g")
 
+    p="$(pwd)"
+    if [ "${p:(-7)}" = "scripts" ];
+    then
+       cd ..
+    fi
+
     message="Bump: "
-    cd ..
     if [[ ( "$v1" != "" ) && ( "$v1" != "0" ) ]];
     then
         ./gradlew bumpBuildToolsVersion -PbuildToolsVersion=${v1}

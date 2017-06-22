@@ -349,7 +349,8 @@ task gitAddCommitPush {
         if(!v1.equals("0"))
             throw new RuntimeException(r1.errorStream.text)
 
-        // git commit -m "Bump version to "
+        // git commit -m "$message"
+        println("git commit -m \"" + message + "\"")
         def r2 = ("git commit -m \"" + message + "\"").execute()
         r2.waitFor()
         String v2 = r2.exitValue()
@@ -358,8 +359,8 @@ task gitAddCommitPush {
             throw new RuntimeException(r2.errorStream.text)
         }
 
-        // git push origin master
-        def r3 = "git push origin SWEET-361".execute()
+        // git push origin $#Current bracnh
+        def r3 = ("git push origin HEAD").execute()
         r3.waitFor()
         String v3 = r3.exitValue()
         if(!v3.equals("0"))

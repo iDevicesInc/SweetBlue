@@ -7,6 +7,11 @@ then
 fi
 
 v=$(echo $1 | sed -e "s/\'|\"//g")
-cd ..
+p="$(pwd)"
+if [ "${p:(-7)}" = "scripts" ];
+then
+    cd ..
+fi
+
 ./gradlew bumpBuildToolsVersion -PbuildToolsVersion=${v}
 ./gradlew gitAddCommitPush -Pmessage="Bump Build Tools Version to $v"
