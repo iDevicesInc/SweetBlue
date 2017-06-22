@@ -41,6 +41,14 @@ ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
+// List of all of the modules' build.gradle files
+def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
+        + files(rootDir.absolutePath + "/library/build.gradle") \
+        + files(rootDir.absolutePath + "/sweetunit/build.gradle") \
+        + files(rootDir.absolutePath + "/tester/build.gradle") \
+        + files(rootDir.absolutePath + "/toolbox/build.gradle") \
+        + files(rootDir.absolutePath + "/lint.gradle")
+
 repositories {
     mavenCentral()
     maven {
@@ -328,25 +336,54 @@ task bumpVersion {
     }
 }
 
+task gitAddCommitPush {
+    // Takes parameter "message" for git commit message
+    group = "sweetblue"
+    description = "Adds, commits with message, and pushes all tracked files to git"
+    doLast {
+        // git add -u
+        String gu = System.getenv("G_UNAME")
+        def r1 = "git add -u".execute()
+        r1.waitFor()
+        String v1 = r1.exitValue()
+        if(!v1.equals("0"))
+            throw new RuntimeException(r1.errorStream.text)
+
+        // git commit -m "Bump version to "
+        def r2 = ("git commit -m \"" + message + "\"").execute()
+        r2.waitFor()
+        String v2 = r2.exitValue()
+        if(!v2.equals("0"))
+        {
+            throw new RuntimeException(r2.errorStream.text)
+        }
+
+        // git push origin master
+        def r3 = "git push origin SWEET-361".execute()
+        r3.waitFor()
+        String v3 = r3.exitValue()
+        if(!v3.equals("0"))
+        {
+            throw new RuntimeException(r3.errorStream.text)
+        }
+    }
+}
 task bumpBuildToolsVersion (dependsOn: getSamples) {
     // Takes parameter buildToolsVersion (e.g. 25.0.3)
     group = "sweetblue"
     description = "Updates Build Tools Version in all inner project's build.gradle"
     doLast {
-        def fileList = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
-        + files(rootDir.absolutePath + "/library/build.gradle") \
-        + files(rootDir.absolutePath + "/sweetunit/build.gradle") \
-        + files(rootDir.absolutePath + "/tester/build.gradle") \
-        + files(rootDir.absolutePath + "/lint.gradle") \
-        + files(rootDir.absolutePath + "/toolbox/build.gradle")
 
+        def allFiles = moduleFiles
+
+        // Add samples to allFiles
         File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
         def samples = files { samplesDir.listFiles() }
         samples.each {File sample ->
-            fileList.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
-        println fileList.asFileTree.files
+            allFiles.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
+        println allFiles.asFileTree.files
 
-        fileList.each { File f ->
+        allFiles.each { File f ->
             String contents = f.getText('UTF-8')
             println contents.find("buildToolsVersion (\"\\d|'\\d).*(\"|')")
             contents = contents.replaceAll("buildToolsVersion (\"\\d|'\\d).*(\"|')", "buildToolsVersion '" + buildToolsVersion + "'")
@@ -358,22 +395,18 @@ task bumpBuildToolsVersion (dependsOn: getSamples) {
 task bumpCompileSdkVersion (dependsOn: getSamples) {
     // Takes parameter compileSdkVersion (e.g. 25)
     group = "sweetblue"
-    description = "Updates CompileSdkVersion in all inner project's build.gradle"
+    description = "Updates compileSdkVersion and targetSdkVersion in all inner project's build.gradle"
     doLast {
-        def fileList = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
-        + files(rootDir.absolutePath + "/library/build.gradle") \
-        + files(rootDir.absolutePath + "/sweetunit/build.gradle") \
-        + files(rootDir.absolutePath + "/tester/build.gradle") \
-        + files(rootDir.absolutePath + "/lint.gradle") \
-        + files(rootDir.absolutePath + "/toolbox/build.gradle")
+        def allFiles = moduleFiles
 
+        // Add samples to allFiles
         File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
         def samples = files { samplesDir.listFiles() }
         samples.each {File sample ->
-            fileList.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
-        println fileList.asFileTree.files
+            allFiles.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
+        println allFiles.asFileTree.files
 
-        fileList.each { File f ->
+        allFiles.each { File f ->
             String contents = f.getText('UTF-8')
             contents = contents.replaceAll("compileSdkVersion \\d+", "compileSdkVersion " + compileSdkVersion)  // Replace compileSdkVersion
             contents = contents.replaceAll("targetSdkVersion \\d+", "targetSdkVersion " + compileSdkVersion)  // Replace targetSdkVersion
@@ -385,17 +418,17 @@ task bumpCompileSdkVersion (dependsOn: getSamples) {
 task bumpGradleVersion (dependsOn: getSamples) {
     // Takes parameter gradleVersion (e.g. 3.3)
     group = "sweetblue"
-    description = "Updates the Gradle distrobution version in all inner project's build.gradle"
+    description = "Updates the Gradle distribution version in all inner project's build.gradle"
     doLast {
-        def fileList = files(rootDir.getAbsolutePath() + "/gradle/wrapper/gradle-wrapper.properties") + files()
+        def allFiles = files(rootDir.getAbsolutePath() + "/gradle/wrapper/gradle-wrapper.properties") + files()
 
         File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
         def samples = files { samplesDir.listFiles() }
         samples.each {File sample ->
-            fileList.add files(sample.absolutePath + "/android_studio/gradle/wrapper/gradle-wrapper.properties") }
-        println fileList.asFileTree.files
+            allFiles.add files(sample.absolutePath + "/android_studio/gradle/wrapper/gradle-wrapper.properties") }
+        println allFiles.asFileTree.files
 
-        fileList.each { File f ->
+        allFiles.each { File f ->
             String contents = f.getText('UTF-8')
             contents = contents.replaceAll("services.gradle.org/distributions/.*zip", "services.gradle.org/distributions/gradle-" + gradleVersion + "-all.zip")  // Replace the Gradle distro version
             f.write(contents, 'UTF-8')
@@ -408,16 +441,16 @@ task bumpGradlePluginVersion (dependsOn: getSamples) {
     group = "sweetblue"
     description = "Updates the Gradle plugin version in all inner project's build.gradle"
     doLast {
-        def fileList = files(rootDir.absolutePath + "/build.gradle") \
+        def allFiles = files(rootDir.absolutePath + "/build.gradle") \
         + files(rootDir.absolutePath + "/lint.gradle")
 
         File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
         def samples = files { samplesDir.listFiles() }
         samples.each {File sample ->
-            fileList.add files(sample.absolutePath + "/android_studio/build.gradle") }
-        println fileList.asFileTree.files
+            allFiles.add files(sample.absolutePath + "/android_studio/build.gradle") }
+        println allFiles.asFileTree.files
 
-        fileList.each { File f ->
+        allFiles.each { File f ->
             String contents = f.getText('UTF-8')
             contents = contents.replaceAll("'com.android.tools.build:gradle:.*'", "'com.android.tools.build:gradle:" + gradlePluginVersion + "'")  // Replace the Gradle plugin version
             f.write(contents, 'UTF-8')

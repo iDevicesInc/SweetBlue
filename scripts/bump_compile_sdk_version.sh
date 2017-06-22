@@ -9,3 +9,4 @@ fi
 v=$(echo $1 | sed -e "s/\'|\"//g")
 cd ..
 ./gradlew bumpCompileSdkVersion -PcompileSdkVersion=${v}
+./gradlew gitAddCommitPush -Pmessage="Bump Compile/Target Sdk Version to $v"
