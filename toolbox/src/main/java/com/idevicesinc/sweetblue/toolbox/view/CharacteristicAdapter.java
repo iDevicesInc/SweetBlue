@@ -4,13 +4,20 @@ package com.idevicesinc.sweetblue.toolbox.view;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
+
+import com.idevicesinc.sweetblue.BleDevice;
+import com.idevicesinc.sweetblue.ReadWriteListener;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,18 +35,30 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
     private final static String WRITE_NO_RESPONSE = "Write No Response";
     private final static String EXTENDED_PROPS = "Extended Properties";
 
-
+    private BleDevice m_device;
     private Map<BluetoothGattCharacteristic, List<BluetoothGattDescriptor>> m_charDescMap;
     private List<BluetoothGattCharacteristic> m_characteristicList;
 
-
-    public CharacteristicAdapter(@NonNull List<BluetoothGattCharacteristic> charList)
+    public CharacteristicAdapter(@NonNull BleDevice device, @NonNull List<BluetoothGattCharacteristic> charList)
     {
+        m_device = device;
         m_charDescMap = new HashMap<>(charList.size());
         m_characteristicList = charList;
+
         for (BluetoothGattCharacteristic ch : charList)
         {
             m_charDescMap.put(ch, ch.getDescriptors());
+
+            // Start updating each characteristic
+            m_device.read(ch.getUuid(), new BleDevice.ReadWriteListener()
+            {
+                @Override
+                public void onEvent(ReadWriteEvent e)
+                {
+                    // Refresh the UI
+                    notifyDataSetChanged();
+                }
+            });
         }
     }
 
@@ -92,6 +111,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             h.name = (TextView) convertView.findViewById(R.id.characteristicName);
             h.uuid = (TextView) convertView.findViewById(R.id.uuid);
             h.properties = (TextView) convertView.findViewById(R.id.properties);
+            h.valueLabel = (TextView) convertView.findViewById(R.id.valueLabel);
+            h.value = (TextView) convertView.findViewById(R.id.value);
 
             convertView.setTag(h);
         }
@@ -119,6 +140,40 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         final String properties = getPropertyString(characteristic);
 
         h.properties.setText(properties);
+
+        {  //TODO:  Make dynamic based on if we can read or not
+            if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0)
+            {
+                h.value.setVisibility(View.GONE);
+                h.valueLabel.setVisibility(View.GONE);
+            }
+            else
+            {
+                String valueString = "Loading...";
+                try
+                {
+                    // Look up the value type to use for this characteristic
+                    Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
+
+                    if (gc != null)
+                    {
+                        valueString = gc.getDisplayType().toString(characteristic.getValue());
+
+                    }
+                    else
+                        valueString = Uuids.GATTCharacteristicDisplayType.Hex.toString(characteristic.getValue());
+                }
+                catch (Exception e)
+                {
+                    Log.d("OhNoes", "something bad happened");
+                }
+                h.value.setText(valueString);
+
+                h.value.setVisibility(View.VISIBLE);
+                h.valueLabel.setVisibility(View.VISIBLE);
+            }
+        }
+
         return convertView;
     }
 
@@ -157,6 +212,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         }
 
         h.uuid.setText(uuid);
+
         return convertView;
     }
 
@@ -233,12 +289,24 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         return b.toString();
     }
 
+    private void readCharacteristic(BluetoothGattCharacteristic characteristic)
+    {
+        m_device.read(characteristic.getUuid(), new BleDevice.ReadWriteListener()
+        {
+            @Override
+            public void onEvent(ReadWriteEvent e)
+            {
+                // Update corresponding item here
+            }
+        });
+    }
 
     private static final class CharViewHolder
     {
         private TextView name;
         private TextView uuid;
         private TextView properties;
+        private TextView valueLabel;
         private TextView value;
     }
 

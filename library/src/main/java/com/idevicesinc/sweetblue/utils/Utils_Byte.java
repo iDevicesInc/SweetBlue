@@ -69,6 +69,54 @@ public final class Utils_Byte extends Utils
 		return new String(hexChars);
 	}
 
+	/**
+	 * Convert a byte array to a hex string
+	 */
+	public static String bytesToBinaryString(final byte[] bytes)
+	{
+		return bytesToBinaryString(bytes, -1);
+	}
+
+	/**
+	 * Convert a byte array to a hex string
+	 * Also inserts spaces between every count bytes (for legibility)
+	 */
+	public static String bytesToBinaryString(final byte[] bytes, int bytesBetweenSpaces)
+	{
+		StringBuilder sb = new StringBuilder();
+
+		int count = 0;
+
+		for (byte b : bytes)
+		{
+			for (int i = 0; i < 4; ++i)
+			{
+				int downShift = (3 - i) * 2;
+				int quarterByte = (b>>downShift) & 0x3;
+				switch (quarterByte)
+				{
+					case 0x0:
+						sb.append("00");
+						break;
+					case 0x1:
+						sb.append("01");
+						break;
+					case 0x2:
+						sb.append("10");
+						break;
+					case 0x3:
+						sb.append("11");
+						break;
+				}
+			}
+
+			if (++count >= bytesBetweenSpaces && bytesBetweenSpaces != -1)
+				sb.append(' ');
+		}
+
+		return sb.toString();
+	}
+
 
 	// Not sure what this was added for. It seems like it's for a pretty specific case. Marking as deprecated for now,
 	// and will remove in 3.0, unless we get complaints
