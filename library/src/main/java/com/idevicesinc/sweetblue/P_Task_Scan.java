@@ -11,15 +11,18 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
     private final boolean m_explicit = true;
     private final double m_scanTime;
     private final PE_TaskPriority m_priority;
+    private final boolean m_periodicScan;
 
 
-    public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, PE_TaskPriority priority)
+    public P_Task_Scan(BleManager manager, I_StateListener listener, double scanTime, boolean periodicScan, PE_TaskPriority priority)
     {
         super(manager, listener);
 
         m_priority = priority == null ? PE_TaskPriority.TRIVIAL : priority;
 
         m_scanTime = scanTime;
+
+        m_periodicScan = periodicScan;
     }
 
     public E_Intent getIntent()
@@ -61,7 +64,7 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
             }
             else
             {
-                if (!getManager().getScanManager().startScan(getIntent(), m_scanTime))
+                if (!getManager().getScanManager().startScan(getIntent(), m_scanTime, m_periodicScan))
                 {
                     fail();
 
@@ -83,7 +86,7 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
 
     void onClassicBoostFinished()
     {
-        if (!getManager().getScanManager().startScan(getIntent(), m_scanTime))
+        if (!getManager().getScanManager().startScan(getIntent(), m_scanTime, m_periodicScan))
         {
             fail();
 

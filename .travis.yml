@@ -5,10 +5,7 @@ android:
   - tools
   - tools
   - android-25
-#  - build-tools-25.0.3
   - doc
-#  - extra-android-support
-#  - extra-android-m2repository
   - platform-tools
 script:
   - ./gradlew tester:clean tester:testReleaseUnitTest fullBuild
