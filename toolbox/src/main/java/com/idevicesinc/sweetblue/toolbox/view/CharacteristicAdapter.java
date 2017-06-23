@@ -11,13 +11,11 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.ReadWriteListener;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
-import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-import java.lang.ref.WeakReference;
+import com.idevicesinc.sweetblue.utils.Uuids.GATTDisplayType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,7 +159,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
                     }
                     else
-                        valueString = Uuids.GATTCharacteristicDisplayType.Hex.toString(characteristic.getValue());
+                        valueString = GATTDisplayType.Hex.toString(characteristic.getValue());
                 }
                 catch (Exception e)
                 {

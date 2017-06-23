@@ -4,18 +4,18 @@ import android.util.Log;
 import com.gattspecparser.XMLRipper.onFinishListener;
 import com.idevicesinc.sweetblue.utils.Uuids.GATTDisplayType;
 import com.idevicesinc.sweetblue.utils.Uuids.GATTFormatType;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-public class BuildCharactersticsSource
+public class BuildDescriptorSource
 {
-    public BuildCharactersticsSource()
+    public BuildDescriptorSource()
     {
-        new XMLRipper("https://www.bluetooth.com/specifications/gatt/characteristics", Pattern.compile("org\\.bluetooth\\.characteristic\\..*xml"), "GATTCharactersitic", new onFinishListener()
+        new XMLRipper("https://www.bluetooth.com/specifications/gatt/characteristics", Pattern.compile("org\\.bluetooth\\.characteristic\\..*xml"), "GATTDescriptor", new onFinishListener()
         {
             @Override public void onFinish(List<Map<String, String>> l, StringBuilder sb)
             {
