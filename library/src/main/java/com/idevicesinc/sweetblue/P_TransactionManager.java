@@ -141,7 +141,7 @@ final class P_TransactionManager
 	
 	void clearQueueLock()
 	{
-		m_device.getManager().getPostManager().postToUpdateThread(new Runnable()
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{

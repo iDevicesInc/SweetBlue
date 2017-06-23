@@ -79,6 +79,19 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public static final double DEFAULT_SCAN_REPORT_DELAY				= .5;
 
+	/**
+	 * Default value for {@link #infiniteScanInterval}
+	 */
+	public static final double DEFAULT_SCAN_INFINITE_INTERVAL_TIME 		= 10;
+
+	/**
+	 * Default value for {@link #infinitePauseInterval}
+	 */
+	public static final double DEFAULT_SCAN_INFINITE_PAUSE_TIME 		= 0.5;
+
+	/**
+	 * Default value for {@link #defaultStatePollRate}
+	 */
 	public static final double DEFAULT_MANAGER_STATE_POLL_RATE			= .1;
 	
 	static final BleManagerConfig NULL = new BleManagerConfigNull();
@@ -147,12 +160,31 @@ public class BleManagerConfig extends BleDeviceConfig
 
 
 	/**
-	 * Default is {@link #DEFAULT_CLASSIC_SCAN_BOOST_TIME} - This will run a short classic scan before a regular BLE scan. It has been observed that scans tend
-	 * to return more reliable results of multiple devices when a classic scan is performed first. Set this to <code>null</code>, or {@link Interval#DISABLED} to
-	 * disable this feature.
+	 * Default is {@link Interval#DISABLED} - This will run a short classic scan before a regular BLE scan. Sometimes, for whatever reason, the native
+	 * BLE stack will refuse to see a particular device. However, if you go into Bluetooth settings on the phone, it sees it (they do a classic scan
+	 * here), and suddenly it shows up in a BLE scan after that. So the idea with this feature is to do the same thing without having to go into
+	 * Bluetooth settings.
+	 *
+	 * This seems to affect the number of devices that are returned in total, and how quickly they are discovered, so this is disabled by default now.
+	 * If you decide that you need to use it, we recommend going with a time length of {@link #DEFAULT_CLASSIC_SCAN_BOOST_TIME}.
 	 */
-	public Interval scanClassicBoostLength						= Interval.secs(DEFAULT_CLASSIC_SCAN_BOOST_TIME);
-	
+	@Nullable(Prevalence.NORMAL)
+	public Interval scanClassicBoostLength						= Interval.DISABLED;
+
+	/**
+	 * Default is {@link #DEFAULT_SCAN_INFINITE_INTERVAL_TIME} - When running an infinite scan, SweetBlue will pause the scan, and restart it again a short
+	 * time later, defined by {@link #infinitePauseInterval}. The android stack tends to find less and less devices the longer a scan runs. This helps to keep
+	 * scan results coming in when performing an infinite scan, leading to better results.
+	 */
+	public Interval infiniteScanInterval 						= Interval.secs(DEFAULT_SCAN_INFINITE_INTERVAL_TIME);
+
+	/**
+	 * Default is {@link #DEFAULT_SCAN_INFINITE_PAUSE_TIME} - This is the amount of time SweetBlue will wait before resuming a scan.
+	 *
+	 * See {@link #infiniteScanInterval}
+	 */
+	public Interval infinitePauseInterval 						= Interval.secs(DEFAULT_SCAN_INFINITE_PAUSE_TIME);
+
 	/**
 	 * Default is <code>false</code> - set this to allow or disallow autoscanning while any
 	 * {@link BleDevice} is {@link BleDeviceState#PERFORMING_OTA}. If false,
@@ -357,7 +389,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.RARE)
-	public Interval scanReportDelay							= Interval.DISABLED; // Interval.secs(DEFAULT_SCAN_REPORT_DELAY);
+	public Interval scanReportDelay							= Interval.secs(DEFAULT_SCAN_REPORT_DELAY);
 
 	/**
 	 * Default is <code>null</code>, meaning no filtering - all discovered devices will

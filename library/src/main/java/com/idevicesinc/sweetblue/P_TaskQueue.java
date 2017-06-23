@@ -387,7 +387,7 @@ final class P_TaskQueue
 	
 	void tryEndingTask(final PA_Task task, final PE_TaskState endingState)
 	{
-		m_mngr.getPostManager().postToUpdateThread(new Runnable()
+		m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
 			@Override public void run()
 			{

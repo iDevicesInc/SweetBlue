@@ -28,7 +28,7 @@
             android:id="@+id/stopScan"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:enabled="false"
+            android:enabled="true"
             android:layout_weight="1"
             android:text="Stop Scan"/>
     </LinearLayout>

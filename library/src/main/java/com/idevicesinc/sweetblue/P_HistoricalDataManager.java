@@ -411,7 +411,7 @@ final class P_HistoricalDataManager
 						@Override public void onDone()
 						{
 
-							m_endPoint.getManager().getPostManager().postToUpdateThread(new Runnable()
+							m_endPoint.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 							{
 								@Override public void run()
 								{
