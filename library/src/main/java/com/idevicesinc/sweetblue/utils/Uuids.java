@@ -611,8 +611,8 @@ public final class Uuids
 	};
 
 	public enum GATTCharacteristic
-	{
-		AerobicHeartRateLowerLimit("Aerobic Heart Rate Lower Limit", "2A7E", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
+ {
+	 	AerobicHeartRateLowerLimit("Aerobic Heart Rate Lower Limit", "2A7E", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
 		AerobicHeartRateUpperLimit("Aerobic Heart Rate Upper Limit", "2A84", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
 		AerobicThreshold("Aerobic Threshold", "2A7F", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
 		Age("Age", "2A80", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
@@ -809,51 +809,44 @@ public final class Uuids
 		WeightScaleFeature("Weight Scale Feature", "2A9E", GATTFormatType.GCFT_uint32, GATTDisplayType.Bitfield),
 		WindChill("Wind Chill", "2A79", GATTFormatType.GCFT_sint8, GATTDisplayType.SignedInteger);
 
-		private String mName;
-		private UUID mUUID;
-		private GATTFormatType mFormat;
-		private GATTDisplayType mDisplayType;
+	 	private String mName;
+	 	private UUID mUUID;
+	 	private GATTFormatType mFormat;
+	 	private GATTDisplayType mDisplayType;
+	 	private static Map<UUID, GATTCharacteristic> sUUIDMap = null;
 
-		private static Map<UUID, GATTCharacteristic> sUUIDMap = null;
-
-		GATTCharacteristic(String name, String uuidHex, GATTFormatType format, GATTDisplayType displayType)
-		{
-			mName = name;
-			mUUID = Uuids.fromShort(uuidHex);
-			mFormat = format;
-			mDisplayType = displayType;
-		}
-
-		public String getName()
-		{
-			return mName;
-		}
-
-		public UUID getUUID()
-		{
-			return mUUID;
-		}
-
-		public GATTFormatType getFormat()
-		{
-			return mFormat;
-		}
-
-		public GATTDisplayType getDisplayType()
-		{
-			return mDisplayType;
-		}
-
-		public static GATTCharacteristic getCharacteristicForUUID(UUID uuid)
-		{
-			if (sUUIDMap == null)
-			{
-				sUUIDMap = new HashMap<>();
-
-				for (GATTCharacteristic gc : GATTCharacteristic.values())
-					sUUIDMap.put(gc.getUUID(), gc);
-			}
-			return sUUIDMap.get(uuid);
-		}
-	}
+	 	GATTCharacteristic(String name, String uuidHex, GATTFormatType format, GATTDisplayType displayType)
+	 	{
+		 		mName = name;
+		 		mUUID = Uuids.fromShort(uuidHex);
+		 		mFormat = format;
+		 		mDisplayType = displayType;
+		 	}
+	 	public String getName()
+	 	{
+		 		return mName;
+		 	}
+	 	public UUID getUUID()
+	 	{
+		 		return mUUID;
+		 	}
+	 	public GATTFormatType getFormat()
+	 	{
+		 		return mFormat;
+		 	}
+	 	public GATTDisplayType getDisplayType()
+	 	{
+		 		return mDisplayType;
+		 	}
+	 	public static GATTCharacteristic getCharacteristicForUUID(UUID uuid)
+	 	{
+		 		if (sUUIDMap == null)
+			 		{
+			 			sUUIDMap = new HashMap<>();
+			 			for (GATTCharacteristic gc : GATTCharacteristic.values())
+				 				sUUIDMap.put(gc.getUUID(), gc);
+			 		}
+		 		return sUUIDMap.get(uuid);
+		 	}
+	 }
 }
