@@ -611,7 +611,7 @@ public final class Uuids
 	};
 
 	public enum GATTCharacteristic
- {
+ 	{
 	 	AerobicHeartRateLowerLimit("Aerobic Heart Rate Lower Limit", "2A7E", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
 		AerobicHeartRateUpperLimit("Aerobic Heart Rate Upper Limit", "2A84", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
 		AerobicThreshold("Aerobic Threshold", "2A7F", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
@@ -821,32 +821,89 @@ public final class Uuids
 		 		mUUID = Uuids.fromShort(uuidHex);
 		 		mFormat = format;
 		 		mDisplayType = displayType;
-		 	}
+		}
 	 	public String getName()
 	 	{
 		 		return mName;
-		 	}
+		}
 	 	public UUID getUUID()
 	 	{
 		 		return mUUID;
-		 	}
+		}
 	 	public GATTFormatType getFormat()
 	 	{
 		 		return mFormat;
-		 	}
+		}
 	 	public GATTDisplayType getDisplayType()
 	 	{
 		 		return mDisplayType;
-		 	}
+		}
 	 	public static GATTCharacteristic getCharacteristicForUUID(UUID uuid)
 	 	{
-		 		if (sUUIDMap == null)
-			 		{
-			 			sUUIDMap = new HashMap<>();
-			 			for (GATTCharacteristic gc : GATTCharacteristic.values())
-				 				sUUIDMap.put(gc.getUUID(), gc);
-			 		}
-		 		return sUUIDMap.get(uuid);
-		 	}
-	 }
+			if (sUUIDMap == null)
+			{
+				sUUIDMap = new HashMap<>();
+				for (GATTCharacteristic gc : GATTCharacteristic.values())
+						sUUIDMap.put(gc.getUUID(), gc);
+			}
+			return sUUIDMap.get(uuid);
+		}
+	}
+
+	public enum GATTDescriptor
+	{
+		CharacteristicAggregateFormat("Characteristic Aggregate Format", "2905", GATTFormatType.GCFT_uint16, GATTDisplayType.UnsignedInteger),
+		CharacteristicExtendedProperties("Characteristic Extended Properties", "2900", GATTFormatType.GCFT_uint16, GATTDisplayType.Bitfield),
+		CharacteristicPresentationFormat("Characteristic Presentation Format", "2904", GATTFormatType.GCFT_uint16, GATTDisplayType.Bitfield),
+		CharacteristicUserDescription("Characteristic User Description", "2901", GATTFormatType.GCFT_utf8s, GATTDisplayType.String),
+		ClientCharacteristicConfiguration("Client Characteristic Configuration", "2902", GATTFormatType.GCFT_uint16, GATTDisplayType.Bitfield),
+		EnvironmentalSensingConfiguration("Environmental Sensing Configuration", "290B", GATTFormatType.GCFT_struct, GATTDisplayType.Hex),
+		EnvironmentalSensingMeasurement("Environmental Sensing Measurement", "290C", GATTFormatType.GCFT_struct, GATTDisplayType.Hex),
+		EnvironmentalSensingTriggerSetting("Environmental Sensing Trigger Setting", "290D", GATTFormatType.GCFT_struct, GATTDisplayType.Hex),
+		ExternalReportReference("External Report Reference", "2907", GATTFormatType.GCFT_struct, GATTDisplayType.Hex),
+		NumberofDigitals("Number of Digitals", "2909", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
+		ReportReference("Report Reference", "2908", GATTFormatType.GCFT_uint8, GATTDisplayType.UnsignedInteger),
+		ServerCharacteristicConfiguration("Server Characteristic Configuration", "2903", GATTFormatType.GCFT_uint16, GATTDisplayType.UnsignedInteger),
+		TimeTriggerSetting("Time Trigger Setting", "290E", GATTFormatType.GCFT_uint16, GATTDisplayType.UnsignedInteger),
+		ValidRange("Valid Range", "2906", GATTFormatType.GCFT_struct, GATTDisplayType.Hex),
+		ValueTriggerSetting("Value Trigger Setting", "290A", GATTFormatType.GCFT_uint32, GATTDisplayType.UnsignedInteger);
+		private String mName;
+		private UUID mUUID;
+		private GATTFormatType mFormat;
+		private GATTDisplayType mDisplayType;
+		private static Map<UUID, GATTDescriptor> sUUIDMap = null;
+		GATTDescriptor(String name, String uuidHex, GATTFormatType format, GATTDisplayType displayType)
+		{
+			mName = name;
+			mUUID = Uuids.fromShort(uuidHex);
+			mFormat = format;
+			mDisplayType = displayType;
+		}
+		public String getName()
+		{
+			return mName;
+		}
+		public UUID getUUID()
+		{
+			return mUUID;
+		}
+		public GATTFormatType getFormat()
+		{
+			return mFormat;
+		}
+		public GATTDisplayType getDisplayType()
+		{
+			return mDisplayType;
+		}
+		public static GATTDescriptor getDescriptorForUUID(UUID uuid)
+		{
+			if (sUUIDMap == null)
+			{
+				sUUIDMap = new HashMap<>();
+				for (GATTDescriptor gc : GATTDescriptor.values())
+					sUUIDMap.put(gc.getUUID(), gc);
+			}
+			return sUUIDMap.get(uuid);
+		}
+	}
 }

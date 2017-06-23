@@ -15,7 +15,7 @@ public class BuildDescriptorSource
 {
     public BuildDescriptorSource()
     {
-        new XMLRipper("https://www.bluetooth.com/specifications/gatt/descriptors", Pattern.compile("org\\.bluetooth\\.descriptors\\..*xml"),  new onFinishListener()
+        new XMLRipper("https://www.bluetooth.com/specifications/gatt/descriptors", Pattern.compile("org\\.bluetooth\\.descriptor\\..*xml"),  new onFinishListener()
         {
             @Override public void onFinish(List<Map<String, String>> l)
             {
