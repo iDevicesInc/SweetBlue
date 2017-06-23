@@ -1705,7 +1705,7 @@ public final class BleManager
 
 			if (startScan)
 			{
-				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), pri));
+				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), options.m_isPeriodic, pri));
 			}
 		}
 
@@ -2247,8 +2247,10 @@ public final class BleManager
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
 
-		m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.remove(BleManagerState.STARTING_SCAN, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_stateTracker.remove(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.remove(BleManagerState.SCANNING_PAUSED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.remove(BleManagerState.BOOST_SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	/**

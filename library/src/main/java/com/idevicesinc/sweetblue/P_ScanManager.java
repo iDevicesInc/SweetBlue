@@ -40,6 +40,7 @@ final class P_ScanManager
     private boolean m_doingInfiniteScan;
     private boolean m_forceActualInfinite;
     private boolean m_triedToStartScanAfterResume;
+    private boolean m_periodicScan;
     private double m_timeNotScanning;
     private double m_timePausedScan;
     private double m_totalTimeScanning;
@@ -72,8 +73,9 @@ final class P_ScanManager
         return startClassicBoost();
     }
 
-    public final boolean startScan(PA_StateTracker.E_Intent intent, double scanTime)
+    public final boolean startScan(PA_StateTracker.E_Intent intent, double scanTime, boolean periodicScan)
     {
+        m_periodicScan = periodicScan;
         m_timePausedScan = 0.0;
         m_totalTimeScanning = 0.0;
         BleScanApi scanApi = m_manager.m_config.scanApi == BleScanApi.AUTO ? determineAutoApi() : m_manager.m_config.scanApi;
@@ -128,6 +130,11 @@ final class P_ScanManager
 
     public final void stopNativeScan(final P_Task_Scan scanTask)
     {
+        if (m_periodicScan)
+        {
+            pauseScan();
+            return;
+        }
         if( m_mode == Mode_BLE )
         {
             try
@@ -284,14 +291,17 @@ final class P_ScanManager
         {
             m_timePausedScan += timeStep;
 
-            Interval pauseTime = Interval.isEnabled(m_manager.m_config.infinitePauseInterval) ? m_manager.m_config.infinitePauseInterval : Interval.secs(BleManagerConfig.DEFAULT_SCAN_INFINITE_PAUSE_TIME);
-            if (m_timePausedScan >= pauseTime.secs())
+            if (m_doingInfiniteScan)
             {
-                startScan(PA_StateTracker.E_Intent.INTENTIONAL, Interval.INFINITE.secs());
+                Interval pauseTime = Interval.isEnabled(m_manager.m_config.infinitePauseInterval) ? m_manager.m_config.infinitePauseInterval : Interval.secs(BleManagerConfig.DEFAULT_SCAN_INFINITE_PAUSE_TIME);
+                if (m_timePausedScan >= pauseTime.secs())
+                {
+                    startScan(PA_StateTracker.E_Intent.INTENTIONAL, Interval.INFINITE.secs(), false);
+                }
             }
         }
 
-        if( !m_manager.isAny(SCANNING, STARTING_SCAN) )
+        if( !m_manager.isAny(SCANNING) )
         {
             m_timeNotScanning += timeStep;
         }
@@ -317,7 +327,7 @@ final class P_ScanManager
                 {
                     m_triedToStartScanAfterTurnedOn = true;
 
-                    if (!m_manager.isAny(SCANNING, STARTING_SCAN))
+                    if (!m_manager.isScanning())
                     {
                         startScan = true;
                     }
@@ -326,13 +336,13 @@ final class P_ScanManager
                 {
                     m_triedToStartScanAfterResume = true;
 
-                    if (!m_manager.isAny(SCANNING, STARTING_SCAN))
+                    if (!m_manager.isScanning())
                     {
                         startScan = true;
                     }
                 }
             }
-            if( !m_manager.isAny(SCANNING, STARTING_SCAN) )
+            if( m_periodicScan && !m_manager.isAny(SCANNING, STARTING_SCAN) )
             {
                 double scanInterval = Interval.secs(m_manager.isForegrounded() ? m_manager.m_config.autoScanPauseInterval : m_manager.m_config.autoScanPauseTimeWhileAppIsBackgrounded);
 
@@ -372,6 +382,11 @@ final class P_ScanManager
         }
 
         return startScan;
+    }
+
+    final boolean isPeriodicScan()
+    {
+        return m_periodicScan;
     }
 
     final void onResume()
@@ -456,7 +471,7 @@ final class P_ScanManager
         }
         if (stopping)
         {
-            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, BOOST_SCANNING, false);
+            m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, BOOST_SCANNING, false, SCANNING_PAUSED, false);
         }
         else
         {

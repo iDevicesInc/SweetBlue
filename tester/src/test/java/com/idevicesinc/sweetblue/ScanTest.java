@@ -373,6 +373,7 @@ public class ScanTest extends BaseBleUnitTest
     {
         startTest(false);
         m_config.scanApi = BleScanApi.AUTO;
+        m_config.scanClassicBoostLength = Interval.secs(BleManagerConfig.DEFAULT_CLASSIC_SCAN_BOOST_TIME);
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
@@ -498,7 +499,7 @@ public class ScanTest extends BaseBleUnitTest
 
                                 // We also need to account for boost scan time here
 
-                                long boostTime = m_mgr.m_config.scanClassicBoostLength.millis() * 2;
+                                long boostTime = getBoostTime();
 
                                 long targetTime = (scanTime * 3) + boostTime;
                                 assertTrue("Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
@@ -541,7 +542,7 @@ public class ScanTest extends BaseBleUnitTest
 
                                 // We also need to account for boost scan time here
 
-                                long boostTime = m_mgr.m_config.scanClassicBoostLength.millis() * 2;
+                                long boostTime = getBoostTime();
 
                                 long targetTime = (scanTime * 3) + boostTime;
 
@@ -561,6 +562,11 @@ public class ScanTest extends BaseBleUnitTest
                 m_mgr.startScan(options);
             }
         });
+    }
+
+    private long getBoostTime()
+    {
+        return Interval.isEnabled(m_mgr.m_config.scanClassicBoostLength.millis()) ? m_mgr.m_config.scanClassicBoostLength.millis() * 2 : 0;
     }
 
     private void doSingleScanTest(final long scanTime) throws Exception
