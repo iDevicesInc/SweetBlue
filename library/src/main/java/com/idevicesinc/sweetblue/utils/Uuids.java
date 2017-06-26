@@ -822,22 +822,27 @@ public final class Uuids
 		 		mFormat = format;
 		 		mDisplayType = displayType;
 		}
+
 	 	public String getName()
 	 	{
 		 		return mName;
 		}
+
 	 	public UUID getUUID()
 	 	{
 		 		return mUUID;
 		}
+
 	 	public GATTFormatType getFormat()
 	 	{
 		 		return mFormat;
 		}
+
 	 	public GATTDisplayType getDisplayType()
 	 	{
 		 		return mDisplayType;
 		}
+
 	 	public static GATTCharacteristic getCharacteristicForUUID(UUID uuid)
 	 	{
 			if (sUUIDMap == null)
@@ -867,11 +872,13 @@ public final class Uuids
 		TimeTriggerSetting("Time Trigger Setting", "290E", GATTFormatType.GCFT_uint16, GATTDisplayType.UnsignedInteger),
 		ValidRange("Valid Range", "2906", GATTFormatType.GCFT_struct, GATTDisplayType.Hex),
 		ValueTriggerSetting("Value Trigger Setting", "290A", GATTFormatType.GCFT_uint32, GATTDisplayType.UnsignedInteger);
+
 		private String mName;
 		private UUID mUUID;
 		private GATTFormatType mFormat;
 		private GATTDisplayType mDisplayType;
 		private static Map<UUID, GATTDescriptor> sUUIDMap = null;
+
 		GATTDescriptor(String name, String uuidHex, GATTFormatType format, GATTDisplayType displayType)
 		{
 			mName = name;
@@ -879,22 +886,27 @@ public final class Uuids
 			mFormat = format;
 			mDisplayType = displayType;
 		}
+
 		public String getName()
 		{
 			return mName;
 		}
+
 		public UUID getUUID()
 		{
 			return mUUID;
 		}
+
 		public GATTFormatType getFormat()
 		{
 			return mFormat;
 		}
+
 		public GATTDisplayType getDisplayType()
 		{
 			return mDisplayType;
 		}
+
 		public static GATTDescriptor getDescriptorForUUID(UUID uuid)
 		{
 			if (sUUIDMap == null)
