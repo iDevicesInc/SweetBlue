@@ -3310,7 +3310,7 @@ public final class BleDevice extends BleNode
             return event;
         }
 
-        if (!userCalled)
+        if (userCalled)
         {
             m_bondMngr.resetBondRetryCount();
         }
