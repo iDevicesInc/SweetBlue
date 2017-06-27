@@ -11,13 +11,12 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.ReadWriteListener;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
-import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +43,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         m_device = device;
         m_charDescMap = new HashMap<>(charList.size());
         m_characteristicList = charList;
+
+        Collections.sort(m_characteristicList, new CharacteristicComparator());
 
         for (BluetoothGattCharacteristic ch : charList)
         {
@@ -315,5 +316,28 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         private TextView name;
         private TextView uuid;
         private TextView value;
+    }
+
+    private static class CharacteristicComparator implements Comparator<BluetoothGattCharacteristic>
+    {
+        public int valueForCharacteristic(BluetoothGattCharacteristic bgc)
+        {
+            int value = 0;
+
+            int properties = bgc.getProperties();
+            if ((properties & BluetoothGattCharacteristic.PROPERTY_READ) != 0)
+                value = 3;
+            if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0)
+                value = value == 0 ? 1 : 2;
+
+            Log.d("++--", "char named " + bgc.getUuid() + " has sort key " + value);
+
+            return value;
+        }
+
+        public int compare(BluetoothGattCharacteristic bgc1, BluetoothGattCharacteristic bgc2)
+        {
+            return valueForCharacteristic(bgc2) - valueForCharacteristic(bgc1);
+        }
     }
 }

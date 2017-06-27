@@ -1,18 +1,16 @@
 package com.idevicesinc.sweetblue.toolbox.view;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.FrameLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
+
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.DeviceStateListener;
 import com.idevicesinc.sweetblue.toolbox.R;
-import com.idevicesinc.sweetblue.utils.Interval;
 
 
 public class DeviceRow extends FrameLayout
@@ -56,6 +54,9 @@ public class DeviceRow extends FrameLayout
         m_name.setText(m_device.getName_debug());
         m_status.setText(m_device.printState());
         m_rssi.setText(m_device.getRssiPercent().toString());
+        m_content.setBackgroundColor(getResources().getColor(hasDevice() && isConnected() ? R.color.green : R.color.white));
+        refreshConnectTextView();
+        refreshBondTextView();
     }
 
     public void clearDevice()
@@ -86,9 +87,15 @@ public class DeviceRow extends FrameLayout
             return;
 
         if (m_device.is(BleDeviceState.DISCONNECTED))
+        {
             m_connectTextView.setText(CONNECT);
+            Log.d("++--", "Device " + m_device.getName_normalized() + " is DISCONNECTED");
+        }
         else
+        {
             m_connectTextView.setText(DISCONNECT);
+            Log.d("++--", "Device " + m_device.getName_normalized() + " is NOT DISCONNECTED");
+        }
     }
 
     private void refreshBondTextView()

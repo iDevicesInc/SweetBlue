@@ -48,6 +48,9 @@
     <!-- Device Information -->
     <string name="device_information_title">Device Information</string>
 
+    <!-- Characteristics -->
+    <string name="characteristics_no_characteristics">No Characteristics</string>
+
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_import">Import Settings</string>
