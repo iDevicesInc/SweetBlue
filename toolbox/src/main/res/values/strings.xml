@@ -83,6 +83,6 @@
     <string name="send_feedback_email_body">Sweetblue toolbox feedback.\n\nGive me sweet blue!  Do it now!</string>
     <string name="send_feedback_send_mail">Send Mail</string>
     <string name="debug_level">Level:</string>
-	<string name="filter">Filter...</string>
+    <string name="filter">Filter...</string>
 
 </resources>
