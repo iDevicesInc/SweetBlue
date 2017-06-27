@@ -173,7 +173,7 @@ final class P_BondManager
 				m_device.getManager().getLogger().w("Bond failed with failReason of " + m_device.getManager().getLogger().gattUnbondReason(failReason) + ". Retrying bond...");
 				m_bondRetries++;
 				m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, false, UNBONDED, true);
-				m_device.bond_private(wasDirect, m_listener);
+				m_device.bond_private(wasDirect, false, m_listener);
 				return;
 			}
 		}
@@ -267,7 +267,7 @@ final class P_BondManager
 		
 		if( bond )
 		{
-			m_device.bond_private(/*isDirect=*/false, please_nullable.listener());
+			m_device.bond_private(/*isDirect=*/false, false, please_nullable.listener());
 		}
 		else
 		{
