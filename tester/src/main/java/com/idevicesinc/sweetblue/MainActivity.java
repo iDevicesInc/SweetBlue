@@ -29,6 +29,8 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 public class MainActivity extends Activity
 {
 
+    private final static int STATE_CHANGE_MIN_TIME = 50;
+
     BleManager mgr;
     private ListView mListView;
     private Button mStartScan;
@@ -36,6 +38,7 @@ public class MainActivity extends Activity
     private ScanAdaptor mAdaptor;
     private ArrayList<BleDevice> mDevices;
     private DebugLogger mLogger;
+    private long mLastStateChange;
 
 
     private final static UUID tempUuid = UUID.fromString("47495078-0002-491E-B9A4-F85CD01C3698");
@@ -143,6 +146,15 @@ public class MainActivity extends Activity
                 boolean scanning = mgr.isScanning();
                 mStartScan.setEnabled(!scanning);
 
+            }
+        });
+        mgr.setListener_DeviceState(new DeviceStateListener()
+        {
+            @Override
+            public void onEvent(BleDevice.StateListener.StateEvent e)
+            {
+                if (System.currentTimeMillis() - mLastStateChange > STATE_CHANGE_MIN_TIME)
+                    mAdaptor.notifyDataSetChanged();
             }
         });
         mgr.setListener_Discovery(new BleManager.DiscoveryListener()
