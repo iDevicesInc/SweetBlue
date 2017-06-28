@@ -165,7 +165,11 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         /**
          * Associated with {@link BleDevice#startChangeTrackingPoll(UUID, Interval, BleDevice.ReadWriteListener)}
          * or {@link BleDevice#enableNotify(UUID, Interval, BleDevice.ReadWriteListener)} where a force-read timeout is invoked.
+         *
+         * @deprecated - This is only marked as deprecated because it's misspelled. Rather than cause a breaking change to rename it, it's marked
+         * as deprecated, and will be renamed in v3.
          */
+        @Deprecated
         PSUEDO_NOTIFICATION,
 
         /**
