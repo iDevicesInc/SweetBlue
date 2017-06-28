@@ -70,7 +70,6 @@ public class MainActivity extends Activity
 //                            device.write(tempUuid, fakeData, null);
                             device.read(Uuids.BATTERY_LEVEL);
                         }
-                        mAdaptor.notifyDataSetChanged();
                     }
                 });
                 device.connect();
@@ -117,6 +116,35 @@ public class MainActivity extends Activity
         config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
         config.scanApi = BleScanApi.AUTO;
         config.runOnMainThread = false;
+        config.defaultInitFactory = new BleDeviceConfig.InitTransactionFactory()
+        {
+            @Override
+            public BleTransaction.Init newInitTxn()
+            {
+                return new BleTransaction.Init()
+                {
+                    @Override
+                    protected void start(BleDevice device)
+                    {
+                        device.read(Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+                        {
+                            @Override
+                            public void onEvent(ReadWriteEvent e)
+                            {
+                                if (e.wasSuccess())
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    fail();
+                                }
+                            }
+                        });
+                    }
+                };
+            }
+        };
         config.forceBondDialog = true;
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
