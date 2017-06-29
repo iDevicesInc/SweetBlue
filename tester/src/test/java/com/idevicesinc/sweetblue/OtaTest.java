@@ -14,7 +14,7 @@ import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class OtaTest extends BaseBleUnitTest
 {
@@ -28,8 +28,6 @@ public class OtaTest extends BaseBleUnitTest
     @Test
     public void otaTest() throws Exception
     {
-        final Semaphore s = new Semaphore(0);
-
         BleDevice device = m_mgr.newDevice(Util.randomMacAddress());
 
         device.connect(new BleDevice.StateListener()
@@ -39,23 +37,16 @@ public class OtaTest extends BaseBleUnitTest
             {
                 if (e.didEnter(BleDeviceState.INITIALIZED))
                 {
-                    e.device().performOta(new TestOta(s));
+                    e.device().performOta(new TestOta());
                 }
             }
         });
-        s.acquire();
+        startTest();
     }
 
 
     private final class TestOta extends BleTransaction.Ota
     {
-
-        private final Semaphore s;
-
-        public TestOta(Semaphore s)
-        {
-            this.s = s;
-        }
 
         @Override
         protected void start(BleDevice device)
@@ -72,7 +63,7 @@ public class OtaTest extends BaseBleUnitTest
                         public void onEvent(ReadWriteEvent e)
                         {
                             assertTrue(e.wasSuccess());
-                            s.release();
+                            OtaTest.this.succeed();
                         }
                     });
                 }

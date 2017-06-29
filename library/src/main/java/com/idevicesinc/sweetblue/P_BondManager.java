@@ -27,6 +27,8 @@ final class P_BondManager
 	
 	private BleDevice.BondListener m_listener;
 
+	private boolean m_bondRequested;
+
 	
 	P_BondManager(BleDevice device)
 	{
@@ -42,6 +44,7 @@ final class P_BondManager
 	public final void resetBondRetryCount()
 	{
 		m_bondRetries = 0;
+		m_bondRequested = false;
 	}
 
 	final void onBondTaskStateChange(final PA_Task task, final PE_TaskState state)
@@ -154,6 +157,11 @@ final class P_BondManager
 		return overrideBondingStates;
 	}
 
+	final void onNativeBondRequest()
+	{
+		m_bondRequested = true;
+	}
+
 	final void onNativeBondFailed(final E_Intent intent, final BondListener.Status status, final int failReason, final boolean wasDirect)
 	{
 		if( isNativelyBondingOrBonded() )
@@ -166,18 +174,18 @@ final class P_BondManager
 		// Determine if we need to retry the bond.
 		if (getFilter() != null)
 		{
-			final BondRetryFilter.RetryEvent event = new BondRetryFilter.RetryEvent(m_device, failReason, m_bondRetries, wasDirect);
+			final BondRetryFilter.RetryEvent event = new BondRetryFilter.RetryEvent(m_device, failReason, m_bondRetries, wasDirect, m_bondRequested);
 			final BondRetryFilter.Please please = m_device.getManager().m_config.bondRetryFilter.onEvent(event);
 			if (please.shouldRetry())
 			{
 				m_device.getManager().getLogger().w("Bond failed with failReason of " + m_device.getManager().getLogger().gattUnbondReason(failReason) + ". Retrying bond...");
 				m_bondRetries++;
 				m_device.stateTracker_updateBoth(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BONDING, false, UNBONDED, true);
-				m_device.bond_private(wasDirect, m_listener);
+				m_device.bond_private(wasDirect, false, m_listener);
 				return;
 			}
 		}
-		m_bondRetries = 0;
+		resetBondRetryCount();
 
 		
 		if( m_device.is_internal(BleDeviceState.CONNECTED) || m_device.is_internal(BleDeviceState.CONNECTING) )
@@ -267,7 +275,7 @@ final class P_BondManager
 		
 		if( bond )
 		{
-			m_device.bond_private(/*isDirect=*/false, please_nullable.listener());
+			m_device.bond_private(/*isDirect=*/false, false, please_nullable.listener());
 		}
 		else
 		{

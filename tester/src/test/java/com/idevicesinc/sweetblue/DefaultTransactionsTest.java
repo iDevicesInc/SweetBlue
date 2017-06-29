@@ -8,11 +8,10 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertFalse;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public final class DefaultTransactionsTest extends BaseBleUnitTest
 {
@@ -32,6 +31,8 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     @Test(timeout = 40000)
     public void defaultAuthTransactionTest() throws Exception
     {
+        startTest(false);
+
         m_config.runOnMainThread = false;
         m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
@@ -69,14 +70,14 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
 
         m_config.loggingEnabled = true;
 
-        connectToMultipleDevices(m_config);
+        connectToMultipleDevices(m_config, false);
 
         m_mgr.stopScan();
         m_mgr.disconnectAll();
 
         m_config.runOnMainThread = true;
 
-        connectToMultipleDevices(m_config);
+        connectToMultipleDevices(m_config, true);
 
         m_mgr.stopScan();
         m_mgr.disconnectAll();
@@ -85,6 +86,8 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     @Test(timeout = 40000)
     public void defaultInitTransactionTest() throws Exception
     {
+        startTest(false);
+
         m_config.runOnMainThread = false;
         m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
@@ -122,14 +125,14 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
 
         m_config.loggingEnabled = true;
 
-        connectToMultipleDevices(m_config);
+        connectToMultipleDevices(m_config, false);
 
         m_mgr.stopScan();
         m_mgr.disconnectAll();
 
         m_config.runOnMainThread = true;
 
-        connectToMultipleDevices(m_config);
+        connectToMultipleDevices(m_config, true);
 
         m_mgr.stopScan();
         m_mgr.disconnectAll();
@@ -138,6 +141,8 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     @Test(timeout = 40000)
     public void defaultAuthAndInitTransactionTest() throws Exception
     {
+        startTest(false);
+
         m_config.runOnMainThread = false;
         m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
         {
@@ -201,24 +206,22 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
 
         m_config.loggingEnabled = true;
 
-        connectToMultipleDevices(m_config);
+        connectToMultipleDevices(m_config, false);
 
         m_mgr.stopScan();
         m_mgr.disconnectAll();
 
         m_config.runOnMainThread = true;
 
-        connectToMultipleDevices(m_config);
+        connectToMultipleDevices(m_config, true);
 
-        m_mgr.stopScan();
         m_mgr.disconnectAll();
+        m_mgr.stopScan();
     }
 
-    private void connectToMultipleDevices(BleManagerConfig config) throws Exception
+    private void connectToMultipleDevices(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -238,7 +241,14 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                                 System.out.println(e.device().getName_override() + " connected. #" + connected.value);
                                 if (connected.value == 3)
                                 {
-                                    s.release();
+                                    if (completeTest)
+                                    {
+                                        succeed();
+                                    }
+                                    else
+                                    {
+                                        release();
+                                    }
                                 }
                             }
                         }
@@ -251,7 +261,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
-                if (e.didEnter(BleManagerState.SCANNING))
+                if (e.didExit(BleManagerState.STARTING_SCAN) && e.didEnter(BleManagerState.SCANNING))
                 {
                     NativeUtil.advertiseNewDevice(m_mgr, -45, "Test Device #1");
                     NativeUtil.advertiseNewDevice(m_mgr, -35, "Test Device #2");
@@ -261,7 +271,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         });
 
         m_mgr.startScan();
-        s.acquire();
+        reacquire();
     }
 
     @Override

@@ -1672,7 +1672,7 @@ public final class BleManager
 
 			m_scanManager.resetTimeNotScanning();
 			options.m_scanTime = options.m_scanTime.secs() < 0.0 ? Interval.INFINITE : options.m_scanTime;
-			m_scanManager.setInfiniteScan(options.m_scanTime.equals(Interval.INFINITE));
+			m_scanManager.setInfiniteScan(options.m_scanTime.equals(Interval.INFINITE), options.m_forceIndefinite);
 
 			if( options.m_discoveryListener != null )
 			{
@@ -1705,7 +1705,7 @@ public final class BleManager
 
 			if (startScan)
 			{
-				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), pri));
+				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), options.m_isPeriodic, pri));
 			}
 		}
 
@@ -2044,6 +2044,15 @@ public final class BleManager
 	}
 
 	/**
+	 * Convenience method which reports <code>true</code> if the {@link BleManager} is in any of the following states: <br></br>
+	 * {@link BleManagerState#SCANNING}, {@link BleManagerState#SCANNING_PAUSED}, {@link BleManagerState#BOOST_SCANNING}, or {@link BleManagerState#STARTING_SCAN}
+	 */
+	public final boolean isScanning()
+	{
+		return isAny(SCANNING, SCANNING_PAUSED, BOOST_SCANNING, STARTING_SCAN);
+	}
+
+	/**
 	 * Returns <code>true</code> if location is enabled to a degree that allows scanning on {@link android.os.Build.VERSION_CODES#M} and above.
 	 * If this returns <code>false</code> it means you're on Android M and you either (A) do not have {@link android.Manifest.permission#ACCESS_COARSE_LOCATION}
 	 * (or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} in your AndroidManifest.xml, see {@link #isLocationEnabledForScanning_byManifestPermissions()}), or (B)
@@ -2209,7 +2218,7 @@ public final class BleManager
 	 */
 	public final void stopScan()
 	{
-		m_scanManager.setInfiniteScan(false);
+		m_scanManager.setInfiniteScan(false, false);
 
 		stopScan_private(E_Intent.INTENTIONAL);
 	}
@@ -2238,8 +2247,10 @@ public final class BleManager
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
 		}
 
-		m_stateTracker.remove(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.remove(BleManagerState.STARTING_SCAN, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_stateTracker.remove(BleManagerState.SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.remove(BleManagerState.SCANNING_PAUSED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		m_stateTracker.remove(BleManagerState.BOOST_SCANNING, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
 	/**
@@ -3107,16 +3118,37 @@ public final class BleManager
 
 	void postEvent(final GenericListener_Void listener, final Event event)
 	{
-		m_postManager.postCallback(new Runnable()
+		if (listener != null)
 		{
-			@Override public void run()
+			if (listener instanceof PA_CallbackWrapper)
 			{
-				if (listener != null)
+				m_postManager.runOrPostToUpdateThread(new Runnable()
 				{
-					listener.onEvent(event);
-				}
+					@Override
+					public void run()
+					{
+						if (listener != null)
+						{
+							listener.onEvent(event);
+						}
+					}
+				});
 			}
-		});
+			else
+			{
+				m_postManager.postCallback(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (listener != null)
+						{
+							listener.onEvent(event);
+						}
+					}
+				});
+			}
+		}
 	}
 
     private void onDiscovered_wrapItUp(final BleDevice device, final P_NativeDeviceLayer device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)

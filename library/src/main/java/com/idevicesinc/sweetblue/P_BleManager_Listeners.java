@@ -5,6 +5,7 @@ import static com.idevicesinc.sweetblue.BleManagerState.IDLE;
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
+import static com.idevicesinc.sweetblue.BleManagerState.SCANNING_PAUSED;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -44,7 +45,7 @@ final class P_BleManager_Listeners
 
             //--- DRK > Got this assert to trip by putting a breakpoint in constructor of NativeDeviceWrapper
             //---		and waiting, but now can't reproduce.
-            if (!m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && m_mngr.isAny(SCANNING, BOOST_SCANNING, STARTING_SCAN)))
+            if (!m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && m_mngr.isAny(SCANNING, BOOST_SCANNING, STARTING_SCAN, SCANNING_PAUSED)))
                 return;
 
             if (state.isEndingState())
@@ -56,7 +57,7 @@ final class P_BleManager_Listeners
                 {
                     if (state == PE_TaskState.INTERRUPTED)
                     {
-                        m_mngr.getPostManager().postToUpdateThread(new Runnable()
+                        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
                         {
                             @Override public void run()
                             {
@@ -106,6 +107,10 @@ final class P_BleManager_Listeners
             {
                 onClassicDiscoveryFinished();
             }
+            else if (action.equals(BluetoothDevice.ACTION_PAIRING_REQUEST))
+            {
+                onBondRequest(intent);
+            }
 
             //--- DRK > This block doesn't do anything...just wrote it to see how these other events work and if they're useful.
             //---		They don't seem to be but leaving it here for the future if needed anyway.
@@ -136,6 +141,37 @@ final class P_BleManager_Listeners
         }
     };
 
+    private void onBondRequest(Intent intent)
+    {
+        final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer(BleDevice.NULL);
+
+        final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+        layer.setNativeDevice(device_native);
+
+        onNativeBondRequest(layer);
+    }
+
+    private void onNativeBondRequest(final P_NativeDeviceLayer device_native)
+    {
+        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                final BleDevice device = getDeviceFromNativeDevice(device_native);
+
+                if (device != null)
+                {
+                    if (device.getListeners() != null)
+                    {
+                        device.getListeners().onNativeBoneRequest_updateThread(device);
+                    }
+                }
+            }
+        });
+    }
+
     private final BleManager m_mngr;
 
     private int m_nativeState;
@@ -164,6 +200,8 @@ final class P_BleManager_Listeners
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
         intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+
+        intentFilter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
 
         intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
         intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
@@ -459,7 +497,7 @@ final class P_BleManager_Listeners
 
     void onNativeBondStateChanged(final P_NativeDeviceLayer device_native, final int previousState, final int newState, final int failReason)
     {
-        m_mngr.getPostManager().postToUpdateThread(new Runnable()
+        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
         {
             @Override public void run()
             {

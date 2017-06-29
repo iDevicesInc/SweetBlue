@@ -25,7 +25,7 @@ public final class WriteBuilder
     UUID charUuid = null;
     UUID descriptorUuid = null;
     FutureData data = null;
-    BleDevice.ReadWriteListener.Type writeType = BleDevice.ReadWriteListener.Type.WRITE;
+    BleDevice.ReadWriteListener.Type writeType = null;
     BleDevice.ReadWriteListener readWriteListener = null;
     DescriptorFilter descriptorFilter = null;
     boolean bigEndian = true;

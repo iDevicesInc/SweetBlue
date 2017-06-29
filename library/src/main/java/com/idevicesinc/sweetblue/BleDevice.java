@@ -3286,10 +3286,10 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond(BondListener listener)
     {
-        return bond_private(/*isDirect=*/true, listener);
+        return bond_private(/*isDirect=*/true, true, listener);
     }
 
-    final BondEvent bond_private(boolean isDirect, BondListener listener)
+    final BondEvent bond_private(boolean isDirect, boolean userCalled, BondListener listener)
     {
         if (listener != null)
         {
@@ -3310,7 +3310,10 @@ public final class BleDevice extends BleNode
             return event;
         }
 
-        m_bondMngr.resetBondRetryCount();
+        if (userCalled)
+        {
+            m_bondMngr.resetBondRetryCount();
+        }
 
         bond_justAddTheTask(E_TransactionLockBehavior.PASSES, isDirect);
 
@@ -5528,6 +5531,16 @@ public final class BleDevice extends BleNode
         return true;
     }
 
+    /**
+     * Returns the effective MTU size for a write. BLE has an overhead when reading and writing, so that eats out of the MTU size.
+     * The write overhead is defined via {@link BleManagerConfig#GATT_WRITE_MTU_OVERHEAD}. The method simply returns the MTU size minus
+     * the overhead. This is just used internally, but is exposed in case it's needed for some other use app-side.
+     */
+    public final int getEffectiveWriteMtuSize()
+    {
+        return getMtu() - BleManagerConfig.GATT_WRITE_MTU_OVERHEAD;
+    }
+
     private boolean performTransaction_earlyOut(final BleTransaction txn)
     {
         if (txn == null) return true;
@@ -6604,11 +6617,6 @@ public final class BleDevice extends BleNode
         return NULL_READWRITE_EVENT();
     }
 
-    private int getEffectiveWriteMtuSize()
-    {
-        return getMtu() - BleManagerConfig.GATT_WRITE_MTU_OVERHEAD;
-    }
-
     private void addWriteDescriptorTasks(BluetoothGattDescriptor descriptor, FutureData data, boolean requiresBonding, ReadWriteListener listener)
     {
         int mtuSize = getEffectiveWriteMtuSize();
@@ -6930,16 +6938,37 @@ public final class BleDevice extends BleNode
 
     void postEventAsCallback(final GenericListener_Void listener, final Event event)
     {
-        getManager().getPostManager().postCallback(new Runnable()
+        if (listener != null)
         {
-            @Override public void run()
+            if (listener instanceof PA_CallbackWrapper)
             {
-                if (listener != null)
+                getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
                 {
-                    listener.onEvent(event);
-                }
+                    @Override
+                    public void run()
+                    {
+                        if (listener != null)
+                        {
+                            listener.onEvent(event);
+                        }
+                    }
+                });
             }
-        });
+            else
+            {
+                getManager().getPostManager().postCallback(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        if (listener != null)
+                        {
+                            listener.onEvent(event);
+                        }
+                    }
+                });
+            }
+        }
     }
 
 
