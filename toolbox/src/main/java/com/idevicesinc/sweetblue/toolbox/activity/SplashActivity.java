@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue.toolbox.activity;
 
 import android.content.Intent;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -21,6 +22,7 @@ public class SplashActivity extends AppCompatActivity
 
     private ImageView mSweetLogo;
     private ImageView mBlueLogo;
+    private ImageView mSlogan;
     private ViewGroup mOuterLayout;
     private Handler mHandler;
     private boolean advanceCalled = false;
@@ -59,6 +61,7 @@ public class SplashActivity extends AppCompatActivity
         });
         mSweetLogo = (ImageView) findViewById(R.id.sweetLogo);
         mBlueLogo = (ImageView) findViewById(R.id.blueLogo);
+        mSlogan = (ImageView) findViewById(R.id.slogan);
 
         startAnimation();
 
@@ -79,6 +82,11 @@ public class SplashActivity extends AppCompatActivity
         anim2.setInterpolator(new BounceInterpolator());
         set2.addAnimation(anim2);
         mBlueLogo.startAnimation(set2);
+        TranslateAnimation anim3 = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0f, Animation.RELATIVE_TO_SELF, 0f, Animation.RELATIVE_TO_SELF, -3f, Animation.RELATIVE_TO_SELF, 0f);
+        anim3.setDuration(500);
+        anim3.setInterpolator(new DecelerateInterpolator());
+        anim3.setStartOffset(1200);
+        mSlogan.startAnimation(anim3);
     }
 
     private void advanceToMain()

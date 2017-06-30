@@ -4,6 +4,18 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:textColor">@color/colorPrimaryDark</item>
         <item name="android:fontFamily">sans-serif</item>
+        <item name="popupTheme">@style/TopOverflowMenuBackground</item>
+        <item name="android:actionBarStyle">@style/ToolbarStyle</item>
+
+    </style>
+
+    <style name="OverflowTextAppearance" parent="TextAppearance.AppCompat.Widget.ActionBar.Menu">
+        <item name="android:textColor">@color/red</item>
+    </style>
+
+    <!-- Overflow Menu background  -->
+    <style name="TopOverflowMenuBackground" parent="ThemeOverlay.AppCompat.Dark">
+        <item name="android:colorBackground">@color/black</item>
     </style>
 
     <style name="ToolbarStyle" parent="Widget.AppCompat.ActionBar">

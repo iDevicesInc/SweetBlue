@@ -1,40 +1,36 @@
 package com.idevicesinc.sweetblue.toolbox.activity;
 
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.Button;
-import android.widget.EditText;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
-
 import com.idevicesinc.sweetblue.toolbox.util.DebugLog;
 import com.idevicesinc.sweetblue.toolbox.R;
-import com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner;
 import com.idevicesinc.sweetblue.utils.DebugLogger;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-
 import static com.idevicesinc.sweetblue.utils.Utils.isOnMainThread;
+
 
 public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
 {
 
-    private ReselectableSpinner m_debugSpinner;
+    private SwipeRefreshLayout mSwipeLayout;
     private TextView m_logTextView;
-    private EditText m_filterEditText;
-    private Button m_button;
 
-    private int m_logLevel;
+    private int m_logLevel = 2;
     private String m_filter = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -50,35 +46,25 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
 
         setTitle(getString(R.string.logger_title));
 
+        mSwipeLayout = find(R.id.swipeLayout);
+
+        mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener()
+        {
+            @Override
+            public void onRefresh()
+            {
+                refreshLog();
+            }
+        });
+
         DebugLog.getDebugger().setLogListener(this);
 
         m_logTextView = find(R.id.logTextView);
-        m_debugSpinner = find(R.id.debugSpinner);
-        m_filterEditText = find(R.id.filterEditText);
-        m_button = find(R.id.button);
 
-        m_debugSpinner.setOnItemSelectedListener(new OnItemSelectedListener()
-        {
-            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-            {
-                m_logLevel = position + 2;
-                refreshLog();
-            }
+        refreshLog();
 
-            @Override public void onNothingSelected(AdapterView<?> parent)
-            {
-            }
-        });
-
-        m_button.setOnClickListener(new OnClickListener()
-        {
-            @Override public void onClick(View v)
-            {
-                m_filter = m_filterEditText.getText().toString();
-                refreshLog();
-            }
-        });
     }
+
 
     private void refreshLog(){
 
@@ -103,6 +89,8 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
             }
         }
         m_logTextView.setText(logString);
+
+        mSwipeLayout.setRefreshing(false);
     }
 
     private void writeNewLine(String entry){
@@ -125,6 +113,78 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
     }
 
     @Override
+    public boolean onCreateOptionsMenu(final Menu menu)
+    {
+        getMenuInflater().inflate(R.menu.logger, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.filter));
+        if (searchView != null)
+        {
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+            searchView.setIconifiedByDefault(true);
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+            {
+                @Override
+                public boolean onQueryTextSubmit(String query)
+                {
+                    m_filter = query;
+                    refreshLog();
+                    MenuItemCompat.collapseActionView(menu.findItem(R.id.filter));
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText)
+                {
+                    m_filter = newText;
+                    refreshLog();
+                    return true;
+                }
+            });
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if (item.getItemId() == R.id.filter)
+        {
+
+            return true;
+        }
+        else
+        {
+            switch (item.getItemId())
+            {
+                case R.id.verbose:
+                    m_logLevel = 2;
+                    break;
+                case R.id.debug:
+                    m_logLevel = 3;
+                    break;
+                case R.id.info:
+                    m_logLevel = 4;
+                    break;
+                case R.id.warn:
+                    m_logLevel = 5;
+                    break;
+                case R.id.error:
+                    m_logLevel = 6;
+                    break;
+                default:
+                    return super.onOptionsItemSelected(item);
+            }
+            refreshLog();
+            return true;
+        }
+    }
+
+    @Override
     public boolean onNavigateUp()
     {
         DebugLog.getDebugger().setLogListener(null);
@@ -137,7 +197,7 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
         if (isOnMainThread())
             writeNewLine(entry);
         else
-            new Handler(Looper.getMainLooper()).post(new Runnable()
+            runOnUiThread(new Runnable()
             {
                 @Override
                 public void run()

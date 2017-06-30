@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.BleDevice;
@@ -22,6 +23,7 @@ import com.idevicesinc.sweetblue.BleManagerState;
 import com.idevicesinc.sweetblue.BleScanApi;
 import com.idevicesinc.sweetblue.ManagerStateListener;
 import com.idevicesinc.sweetblue.ScanOptions;
+import com.idevicesinc.sweetblue.toolbox.BuildConfig;
 import com.idevicesinc.sweetblue.toolbox.util.DebugLog;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UpdateManager;
@@ -290,22 +292,29 @@ public class MainActivity extends BaseActivity
         // For hamburger menu
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        LinearLayout ll = null;
+        ImageView iv = find(R.id.closeButton);
+        iv.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                closeNavDrawer();
+            }
+        });
 
-        ll = find(R.id.loggerLinearLayout);
+        LinearLayout ll = find(R.id.logger);
         ll.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
                 closeNavDrawer();
-
                 Intent intent = new Intent(MainActivity.this, LoggerActivity.class);
                 startActivity(intent);
             }
         });
 
-        ll = find(R.id.deviceInformationLinearLayout);
+        ll = find(R.id.deviceInfo);
         ll.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -318,7 +327,19 @@ public class MainActivity extends BaseActivity
             }
         });
 
-        ll = find(R.id.settingsLinearLayout);
+        ll = find(R.id.about);
+        ll.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                closeNavDrawer();
+
+                launchWebsite();
+            }
+        });
+
+        ll = find(R.id.settings);
         ll.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -331,19 +352,7 @@ public class MainActivity extends BaseActivity
             }
         });
 
-        ll = find(R.id.websiteLinearLayout);
-        ll.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                closeNavDrawer();
-
-                launchWebsite();
-            }
-        });
-
-        ll = find(R.id.sendFeedbackLinearLayout);
+        ll = find(R.id.feedback);
         ll.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -354,6 +363,9 @@ public class MainActivity extends BaseActivity
                 sendFeedbackEmail();
             }
         });
+
+        TextView tv = find(R.id.appVersion);
+        tv.setText("App Version - " + BuildConfig.VERSION_NAME);
     }
 
     private void launchWebsite()
