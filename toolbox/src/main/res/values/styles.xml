@@ -22,17 +22,19 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:layout_marginStart">@dimen/margin_small</item>
+        <item name="android:paddingStart">@dimen/small</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textSize">21sp</item>
     </style>
 
     <style name="page_title_enabled" parent="page_title">
+        <item name="android:paddingStart">0dp</item>
         <item name="android:gravity">center</item>
     </style>
 
     <style name="page_title_disabled" parent="page_title">
+        <item name="android:paddingStart">0dp</item>
         <item name="android:textColor">@color/page_title_disabled</item>
         <item name="android:gravity">center</item>
     </style>
@@ -42,7 +44,7 @@
     <style name="item_container">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:padding">@dimen/margin_small</item>
+        <item name="android:padding">@dimen/small</item>
         <item name="android:layout_gravity">center_horizontal</item>
     </style>
 
@@ -56,7 +58,7 @@
     <style name="item_title">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginBottom">5dp</item>
+        <item name="android:layout_marginBottom">@dimen/tiny</item>
         <item name="android:textColor">@color/item_title_blue</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">16sp</item>
@@ -69,8 +71,8 @@
     <style name="item_heading">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">5dp</item>
-        <item name="android:layout_marginBottom">5dp</item>
+        <item name="android:layout_marginTop">@dimen/tiny</item>
+        <item name="android:layout_marginBottom">@dimen/tiniest</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">@color/header_gray</item>
     </style>
@@ -78,6 +80,7 @@
     <style name="item_text">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">@dimen/tiny</item>
         <item name="android:lineSpacingMultiplier">.9</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textColor">@color/primary_gray</item>
