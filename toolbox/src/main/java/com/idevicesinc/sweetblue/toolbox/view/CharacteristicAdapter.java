@@ -132,8 +132,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             h.name = (TextView) convertView.findViewById(R.id.characteristicName);
             h.uuid = (TextView) convertView.findViewById(R.id.uuid);
             h.properties = (TextView) convertView.findViewById(R.id.properties);
-            h.valueLabel = (TextView) convertView.findViewById(R.id.valueLabel);
-            h.value = (EditText) convertView.findViewById(R.id.value);
+            h.valueDisplayTypeLabel = (TextView) convertView.findViewById(R.id.valueDisplayTypeLabel);
+            h.value = (TextView) convertView.findViewById(R.id.value);
             h.displayType = dt;
 
             {
@@ -313,7 +313,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             cvh.value.setText(valueString);
 
             cvh.value.setVisibility(View.VISIBLE);
-            cvh.valueLabel.setVisibility(View.VISIBLE);
+            cvh.valueDisplayTypeLabel.setVisibility(View.VISIBLE);
         }
     }
 
@@ -447,8 +447,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         private TextView name;
         private TextView uuid;
         private TextView properties;
-        private TextView valueLabel;
-        private EditText value;
+        private TextView valueDisplayTypeLabel;
+        private TextView value;
         private Uuids.GATTCharacteristicDisplayType displayType;
     }
 

@@ -10,15 +10,25 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
         android:text="Custom Characteristic"
+        style="@style/item_title"
         android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/detailsHeading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/characteristicName"
+        android:layout_marginTop="10dp"
+        style="@style/item_heading"
+        android:text="Details"/>
 
     <TextView
         android:id="@+id/uuidLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:layout_marginLeft="24dp"
-        android:layout_below="@+id/characteristicName"
+        android:layout_below="@+id/detailsHeading"
+        style="@style/item_text"
         android:text="UUID: "/>
 
     <TextView
@@ -28,6 +38,7 @@
         android:layout_below="@+id/characteristicName"
         android:layout_toRightOf="@+id/uuidLabel"
         android:layout_height="wrap_content"
+        style="@style/item_text"
         android:text="0x2902"/>
 
     <TextView
@@ -37,6 +48,7 @@
         android:layout_marginLeft="24dp"
         android:layout_marginTop="2dp"
         android:layout_below="@+id/uuidLabel"
+        style="@style/item_text"
         android:text="Properties: "/>
 
     <TextView
@@ -46,16 +58,18 @@
         android:layout_marginTop="2dp"
         android:layout_below="@+id/uuidLabel"
         android:layout_toRightOf="@+id/propLabel"
+        style="@style/item_text"
         android:text="Read"/>
 
     <TextView
-        android:id="@+id/valueLabel"
+        android:id="@+id/valueDisplayTypeLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="10dp"
         android:layout_below="@+id/propLabel"
-        android:text="Value: "/>
+        style="@style/item_heading"
+        android:text="Integer"/>
 
     <EditText
         android:id="@+id/value"
