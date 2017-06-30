@@ -20,6 +20,15 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.idevicesinc.sweetblue.toolbox.activity.MainActivity"/>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchables"/>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
+                <action android:name="android.intent.action.VIEW"/>
+            </intent-filter>
+
         </activity>
         <activity android:name=".activity.DeviceInformationActivity">
             <meta-data
