@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/displayTypeBoolean"
+            android:title="@string/display_type_boolean"/>
+
+        <item
+            android:id="@+id/displayTypeBitfield"
+            android:title="@string/display_type_bitfield"/>
+
+        <item
+            android:id="@+id/displayTypeUnsignedInteger"
+            android:title="@string/display_type_unsigned_integer"/>
+
+        <item
+            android:id="@+id/displayTypeSignedInteger"
+            android:title="@string/display_type_signed_integer"/>
+
+        <item
+            android:id="@+id/displayTypeDecimal"
+            android:title="@string/display_type_decimal"/>
+
+        <item
+            android:id="@+id/displayTypeString"
+            android:title="@string/display_type_string"/>
+
+        <item
+            android:id="@+id/displayTypeHex"
+            android:title="@string/display_type_hex"/>
+
+    </group>
+
+</menu>

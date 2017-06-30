@@ -3,12 +3,25 @@ package com.idevicesinc.sweetblue.toolbox.view;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.content.DialogInterface;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.PopupMenu;
+import android.text.InputType;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.toolbox.R;
@@ -102,8 +115,15 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         return true;
     }
 
-    @Override public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent)
+    @Override public View getGroupView(int groupPosition, boolean isExpanded, View convertView, final ViewGroup parent)
     {
+        final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
+        final String name = UuidUtil.getCharacteristicName(characteristic);
+
+        // Figure out how we shuold format the characteristic
+        Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
+        Uuids.GATTCharacteristicDisplayType dt = gc != null ? gc.getDisplayType() : Uuids.GATTCharacteristicDisplayType.Hex;
+
         final CharViewHolder h;
         if (convertView == null)
         {
@@ -113,7 +133,129 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             h.uuid = (TextView) convertView.findViewById(R.id.uuid);
             h.properties = (TextView) convertView.findViewById(R.id.properties);
             h.valueLabel = (TextView) convertView.findViewById(R.id.valueLabel);
-            h.value = (TextView) convertView.findViewById(R.id.value);
+            h.value = (EditText) convertView.findViewById(R.id.value);
+            h.displayType = dt;
+
+            {
+                View v = convertView.findViewById(R.id.fakeOverflowMenu);
+
+                final View anchor = convertView.findViewById(R.id.fakeOverflowMenuAnchor);
+
+                v.setOnClickListener(new View.OnClickListener()
+                {
+                    @Override
+                    public void onClick(View v)
+                    {
+                        //Creating the instance of PopupMenu
+                        PopupMenu popup = new PopupMenu(parent.getContext(), anchor);
+                        //Inflating the Popup using xml file
+                        popup.getMenuInflater().inflate(R.menu.char_value_type_popup, popup.getMenu());
+
+                        popup.getMenu().getItem(h.displayType.ordinal()).setChecked(true);
+
+                        //registering popup with OnMenuItemClickListener
+                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener()
+                        {
+                            public boolean onMenuItemClick(MenuItem item)
+                            {
+                                switch (item.getItemId())
+                                {
+                                    case R.id.displayTypeBoolean:
+                                        h.displayType = Uuids.GATTCharacteristicDisplayType.Boolean;
+                                        break;
+
+                                    case R.id.displayTypeBitfield:
+                                        h.displayType = Uuids.GATTCharacteristicDisplayType.Bitfield;
+                                        break;
+
+                                    case R.id.displayTypeUnsignedInteger:
+                                        h.displayType = Uuids.GATTCharacteristicDisplayType.UnsignedInteger;
+                                        break;
+
+                                    case R.id.displayTypeSignedInteger:
+                                        h.displayType = Uuids.GATTCharacteristicDisplayType.SignedInteger;
+                                        break;
+
+                                    case R.id.displayTypeDecimal:
+                                        h.displayType = Uuids.GATTCharacteristicDisplayType.Decimal;
+                                        break;
+
+                                    case R.id.displayTypeString:
+                                        h.displayType = Uuids.GATTCharacteristicDisplayType.String;
+                                        break;
+
+                                    case R.id.displayTypeHex:
+                                        h.displayType = Uuids.GATTCharacteristicDisplayType.Hex;
+                                        break;
+                                }
+
+                                //TODO:  Refresh type label
+
+                                refreshValue(h, characteristic);
+                                return true;
+                            }
+                        });
+
+                        popup.show();
+                    }
+                });
+            }
+
+            // Make value editable or not depending on what's allowed
+            boolean writable = (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+            h.value.setEnabled(writable);
+            h.value.setOnEditorActionListener(new TextView.OnEditorActionListener()
+            {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
+                {
+                    if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE || event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)
+                    {
+                        if (!event.isShiftPressed())
+                        {
+                            String value = v.getText().toString();
+
+                            // Attempt to make the value into an object that we can write out
+                            Uuids.GATTCharacteristicDisplayType dt = Uuids.GATTCharacteristicDisplayType.values()[h.displayType.ordinal()];
+                            Object valObject = dt.stringToObject(value);
+
+                            Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
+                            Uuids.GATTCharacteristicFormatType ft = gc != null ? gc.getFormat() : Uuids.GATTCharacteristicFormatType.GCFT_struct;
+
+                            try
+                            {
+                                byte valRaw[] = ft.objectToByteArray(valObject);
+
+                                m_device.write(characteristic.getUuid(), valRaw, new BleDevice.ReadWriteListener()
+                                {
+                                    @Override
+                                    public void onEvent(ReadWriteEvent e)
+                                    {
+                                        if (e.wasSuccess())
+                                        {
+                                            // Do something successful
+                                        }
+                                        else
+                                        {
+                                            // Oh noes!
+                                        }
+                                    }
+                                });
+                            }
+                            catch (Uuids.GATTCharacteristicFormatTypeConversionException e)
+                            {
+                                //FIXME:  Add toast telling user the write failed
+                                e.printStackTrace();
+                            }
+
+                            // the user is done typing.
+
+                            return true; // consume.
+                        }
+                    }
+                    return false;
+                }
+            });
 
             convertView.setTag(h);
         }
@@ -122,8 +264,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             h = (CharViewHolder) convertView.getTag();
         }
 
-        final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
-        final String name = UuidUtil.getCharacteristicName(characteristic);
         h.name.setText(name);
 
         final String uuid;
@@ -142,41 +282,41 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
         h.properties.setText(properties);
 
-        {  //TODO:  Make dynamic based on if we can read or not
-            if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0)
-            {
-                h.value.setVisibility(View.GONE);
-                h.valueLabel.setVisibility(View.GONE);
-            }
-            else
-            {
-                String valueString = "Loading...";
-                try
-                {
-                    // Look up the value type to use for this characteristic
-                    Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
-
-                    if (gc != null)
-                    {
-                        valueString = gc.getDisplayType().toString(characteristic.getValue());
-
-                    }
-                    else
-                        valueString = Uuids.GATTCharacteristicDisplayType.Hex.toString(characteristic.getValue());
-                }
-                catch (Exception e)
-                {
-                    Log.d("OhNoes", "something bad happened");
-                }
-                h.value.setText(valueString);
-
-                h.value.setVisibility(View.VISIBLE);
-                h.valueLabel.setVisibility(View.VISIBLE);
-            }
-        }
+        refreshValue(h, characteristic);
 
         return convertView;
     }
+
+    private void refreshValue(CharViewHolder cvh, BluetoothGattCharacteristic bgc)
+    {
+        if ((bgc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0)
+        {
+            /*cvh.value.setVisibility(View.GONE);
+            cvh.valueLabel.setVisibility(View.GONE);*/
+        }
+        else
+        {
+            String valueString = "Loading...";
+            if (bgc.getValue() != null)
+            {
+                try
+                {
+                    Uuids.GATTCharacteristicDisplayType dt = Uuids.GATTCharacteristicDisplayType.values()[cvh.displayType.ordinal()];
+
+                    valueString = dt.toString(bgc.getValue());
+                }
+                catch (Exception e)
+                {
+                    valueString = "<Error>";
+                }
+            }
+            cvh.value.setText(valueString);
+
+            cvh.value.setVisibility(View.VISIBLE);
+            cvh.valueLabel.setVisibility(View.VISIBLE);
+        }
+    }
+
 
     @Override public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent)
     {
@@ -308,7 +448,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         private TextView uuid;
         private TextView properties;
         private TextView valueLabel;
-        private TextView value;
+        private EditText value;
+        private Uuids.GATTCharacteristicDisplayType displayType;
     }
 
     private static final class DescViewHolder

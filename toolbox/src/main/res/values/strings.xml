@@ -18,6 +18,14 @@
     <string name="warn">Warn</string>
     <string name="error">Error</string>
 
+    <string name="display_type_boolean">Boolean</string>
+    <string name="display_type_bitfield">Bitfield</string>
+    <string name="display_type_unsigned_integer">Unsigned Integer</string>
+    <string name="display_type_signed_integer">Signed Integer</string>
+    <string name="display_type_decimal">Decimal</string>
+    <string name="display_type_string">String</string>
+    <string name="display_type_hex">Hex</string>
+
     <array name="scan_apis">
         <item>@string/auto</item>
         <item>@string/classic</item>
@@ -36,6 +44,15 @@
         <item>@string/info</item>
         <item>@string/warn</item>
         <item>@string/error</item>
+    </array>
+    <array name="display_type_array">
+        <item>@string/display_type_boolean</item>
+        <item>@string/display_type_bitfield</item>
+        <item>@string/display_type_unsigned_integer</item>
+        <item>@string/display_type_signed_integer</item>
+        <item>@string/display_type_decimal</item>
+        <item>@string/display_type_string</item>
+        <item>@string/display_type_hex</item>
     </array>
 
     <!-- Main Activity -->
@@ -78,7 +95,7 @@
     <string name="nav_drawer_send_feedback">Send Feedback</string>
 
     <!-- Website -->
-    <string name="visite_website_url">http://idevicesinc.com/sweetblue</string>
+    <string name="visit_website_url">http://idevicesinc.com/sweetblue</string>
 
     <!-- Feedback -->
     <string name="send_feedback_email_address">ryanbis@idevicesinc.com</string>
@@ -87,5 +104,11 @@
     <string name="send_feedback_send_mail">Send Mail</string>
     <string name="debug_level">Level:</string>
     <string name="filter">Filter...</string>
+
+    <!-- Characteristic -->
+    <string name="service_characteristic_name">Characteristic Name</string>
+    <string name="characteristic_details">Details</string>
+    <string name="characteristic_uuid">UUID:</string>
+
 
 </resources>

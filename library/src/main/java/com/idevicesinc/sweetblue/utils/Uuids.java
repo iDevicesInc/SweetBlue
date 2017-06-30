@@ -1,5 +1,8 @@
 package com.idevicesinc.sweetblue.utils;
 
+import java.io.UnsupportedEncodingException;
+import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -507,48 +510,73 @@ public final class Uuids
 		return assignedNumber;
 	}
 
+	public static class GATTCharacteristicFormatTypeConversionException extends Exception
+	{
+		GATTCharacteristicFormatTypeConversionException()
+		{
+
+		}
+
+		GATTCharacteristicFormatTypeConversionException(String message)
+		{
+			super(message);
+		}
+
+		GATTCharacteristicFormatTypeConversionException(String message, Throwable cause)
+		{
+			super(message, cause);
+		}
+
+		GATTCharacteristicFormatTypeConversionException(Throwable cause)
+		{
+			super(cause);
+		}
+	}
+
 	public enum GATTCharacteristicFormatType
 	{
-		GCFT_rfu("rfu", "Reserved for future use", false),
-		GCFT_boolean("boolean", "unsigned 1-bit; 0=false, 1=true", false),
-		GCFT_2bit("2bit", "unsigned 2-bit integer", false),
-		GCFT_nibble("nibble", "unsigned 4-bit integer", false),
-		GCFT_uint8("uint8", "unsigned 8-bit integer", true),
-		GCFT_uint12("uint12", "unsigned 12-bit integer", true),
-		GCFT_uint16("uint16", "unsigned 16-bit integer", true),
-		GCFT_uint24("uint24", "unsigned 24-bit integer", true),
-		GCFT_uint32("uint32", "unsigned 32-bit integer", true),
-		GCFT_uint48("uint48", "unsigned 48-bit integer", true),
-		GCFT_uint64("uint64", "unsigned 64-bit integer", true),
-		GCFT_uint128("uint128", "unsigned 128-bit integer", true),
-		GCFT_sint8("sint8", "signed 8-bit integer", true),
-		GCFT_sint12("sint12", "signed 12-bit integer", true),
-		GCFT_sint16("sint16", "signed 16-bit integer", true),
-		GCFT_sint24("sint24", "signed 24-bit integer", true),
-		GCFT_sint32("sint32", "signed 32-bit integer", true),
-		GCFT_sint48("sint48", "signed 48-bit integer", true),
-		GCFT_sint64("sint64", "signed 64-bit integer", true),
-		GCFT_sint128("sint128", "signed 128-bit integer", true),
-		GCFT_float32("float32", "IEEE-754 32-bit floating point", false),
-		GCFT_float64("float64", "IEEE-754 64-bit floating point", false),
-		GCFT_SFLOAT("SFLOAT", "IEEE-11073 16-bit SFLOAT", false),
-		GCFT_FLOAT("FLOAT", "IEEE-11073 32-bit FLOAT", false),
-		GCFT_duint16("duint16", "IEEE-20601 format", false),
-		GCFT_utf8s("utf8s", "UTF-8 string", false),
-		GCFT_utf16s("utf16s", "UTF-16 string", false),
-		GCFT_struct("struct", "Opaque structure", false)
+		GCFT_rfu("rfu", "Reserved for future use", false, -1),
+		GCFT_boolean("boolean", "unsigned 1-bit; 0=false, 1=true", false, 1),
+		GCFT_2bit("2bit", "unsigned 2-bit integer", false, 2),
+		GCFT_nibble("nibble", "unsigned 4-bit integer", false, 4),
+		GCFT_uint8("uint8", "unsigned 8-bit integer", true, 8),
+		GCFT_uint12("uint12", "unsigned 12-bit integer", true, 12),
+		GCFT_uint16("uint16", "unsigned 16-bit integer", true, 16),
+		GCFT_uint24("uint24", "unsigned 24-bit integer", true, 24),
+		GCFT_uint32("uint32", "unsigned 32-bit integer", true, 32),
+		GCFT_uint48("uint48", "unsigned 48-bit integer", true, 48),
+		GCFT_uint64("uint64", "unsigned 64-bit integer", true, 64),
+		GCFT_uint128("uint128", "unsigned 128-bit integer", true, 128),
+		GCFT_sint8("sint8", "signed 8-bit integer", true, 8),
+		GCFT_sint12("sint12", "signed 12-bit integer", true, 12),
+		GCFT_sint16("sint16", "signed 16-bit integer", true, 16),
+		GCFT_sint24("sint24", "signed 24-bit integer", true, 24),
+		GCFT_sint32("sint32", "signed 32-bit integer", true, 32),
+		GCFT_sint48("sint48", "signed 48-bit integer", true, 48),
+		GCFT_sint64("sint64", "signed 64-bit integer", true, 64),
+		GCFT_sint128("sint128", "signed 128-bit integer", true, 128),
+		GCFT_float32("float32", "IEEE-754 32-bit floating point", false, 32),
+		GCFT_float64("float64", "IEEE-754 64-bit floating point", false, 64),
+		GCFT_SFLOAT("SFLOAT", "IEEE-11073 16-bit SFLOAT", false, 16),
+		GCFT_FLOAT("FLOAT", "IEEE-11073 32-bit FLOAT", false, 32),
+		GCFT_duint16("duint16", "IEEE-20601 format", false, 16),
+		GCFT_utf8s("utf8s", "UTF-8 string", false, -1),
+		GCFT_utf16s("utf16s", "UTF-16 string", false, -1),
+		GCFT_struct("struct", "Opaque structure", false, -1)
 		// Remaining values RFU
 		;
 
 		private String mShortName;
 		private String mDescription;
 		private boolean mExponentValue;
+		private int mSizeBits;
 
-		GATTCharacteristicFormatType(String shortName, String description, boolean exponentValue)
+		GATTCharacteristicFormatType(String shortName, String description, boolean exponentValue, int sizeBits)
 		{
 			mShortName = shortName;
 			mDescription = description;
 			mExponentValue = exponentValue;
+			mSizeBits = sizeBits;
 		}
 
 		public String getShortName()
@@ -564,6 +592,124 @@ public final class Uuids
 		public boolean getExponentValue()
 		{
 			return mExponentValue;
+		}
+
+		public int getSizeBits()
+		{
+			return mSizeBits;
+		}
+
+		public int getSizeBytes()
+		{
+			return (mSizeBits + 7) / 8;
+		}
+
+		public byte[] objectToByteArray(Object o) throws GATTCharacteristicFormatTypeConversionException
+		{
+			try
+			{
+				// See if the input is already in a byte format, and if so return it
+				if (o instanceof byte[])
+				{
+					//FIXME:  Trim this down if appropriate
+					return (byte[])o;
+				}
+
+				// To ease conversion later on, make Booleans into Integers (so they are Numbers)
+				if (o instanceof Boolean)
+				{
+					Boolean b = (Boolean)o;
+					o = new Integer(b ? 1 : 0);
+				}
+
+				Number n = (o instanceof Number) ? (Number)o : null;
+				String s = (o instanceof String) ? (String)o : null;
+
+				// If we don't have a numeric type but we have a string, attempt to convert
+				if (n == null && s != null)
+				{
+					try
+					{
+						n = NumberFormat.getInstance().parse(s);
+					}
+					catch (Exception e)
+					{
+						// Ignore conversion problems here
+					}
+				}
+
+				// Opposite case, same idea
+				if (n != null && s == null)
+				{
+					s = String.valueOf(n);
+				}
+
+				byte byteArr[] = null;
+
+				switch (this)
+				{
+					case GCFT_boolean:
+					case GCFT_2bit:
+					case GCFT_nibble:
+					case GCFT_uint8:
+					case GCFT_sint8:
+					{
+						byteArr = new byte[1];
+						byteArr[0] = (n.byteValue());
+						return byteArr;
+					}
+					case GCFT_uint12:
+					case GCFT_uint16:
+					case GCFT_sint12:
+					case GCFT_sint16:
+						return Utils_Byte.shortToBytes(n.shortValue());
+					case GCFT_uint24:
+					case GCFT_sint24:
+					{
+						byteArr = Utils_Byte.intToBytes(n.intValue());
+						return Arrays.copyOfRange(byteArr, 1, 4);
+					}
+					case GCFT_uint32:
+					case GCFT_sint32:
+						return Utils_Byte.intToBytes(n.intValue());
+					case GCFT_uint48:
+					case GCFT_sint48:
+					{
+						byteArr = Utils_Byte.longToBytes(n.longValue());
+						return Arrays.copyOfRange(byteArr, 3, 8);
+					}
+					case GCFT_uint64:
+					case GCFT_sint64:
+						return Utils_Byte.longToBytes(n.longValue());
+					case GCFT_uint128:
+					case GCFT_sint128:
+						//FIXME:  Implement
+						throw new GATTCharacteristicFormatTypeConversionException(this.toString() + " not currently supported");
+					case GCFT_float32:
+						return Utils_Byte.floatToBytes(n.floatValue());
+					case GCFT_float64:
+						return Utils_Byte.doubleToBytes(n.doubleValue());
+					case GCFT_SFLOAT:
+					case GCFT_FLOAT:
+					case GCFT_duint16:
+						//FIXME:  Implement
+						throw new GATTCharacteristicFormatTypeConversionException(this.toString() + " not currently supported");
+					case GCFT_utf8s:
+						return s.getBytes("UTF-8");
+					case GCFT_utf16s:
+						return s.getBytes("UTF-16");
+
+					// Not handled:
+					// GCFT_rfu
+					// GCFT_struct
+				}
+
+				throw new GATTCharacteristicFormatTypeConversionException(this.toString() + " not currently supported");
+			}
+			catch (Exception e)
+			{
+				throw new GATTCharacteristicFormatTypeConversionException(e);
+			}
 		}
 	}
 
@@ -608,7 +754,60 @@ public final class Uuids
 			}
 			return null;
 		};
-	};
+
+		public Object stringToObject(String s)
+		{
+			switch (this)
+			{
+				case Boolean:
+					return java.lang.Boolean.valueOf(s);
+				case Bitfield:
+					return Utils_Byte.binaryStringToBytes(s);
+				case UnsignedInteger:
+				case SignedInteger:
+					return Long.valueOf(s);
+				case Decimal:
+					return Double.valueOf(s);
+				case String:
+					return s;
+				case Hex:
+					//TODO:  remove 0x if present
+					return Utils_Byte.hexStringToBytes(s);
+			}
+
+			return null;
+		}
+
+		/*public byte[] stringToByteArray(String s)
+		{
+			byte result[] = null;
+
+			switch (this)
+			{
+				case Boolean:
+					Boolean b = java.lang.Boolean.valueOf(s);
+					result = new byte[1];
+					result[0] = (byte)(b ? 1 : 0);
+					break;
+				case Bitfield:
+					result = Utils_Byte.binaryStringToBytes(s);
+					break;
+				case UnsignedInteger:
+				case SignedInteger:
+					Long l = Long.valueOf(s);
+					result = Utils_Byte.longToBytes(l);
+					break;
+				case Decimal:
+					Double d = Double.valueOf(s);
+
+				case String:
+				case Hex:
+					break;
+			}
+
+			return result;
+		}*/
+	}
 
 	public enum GATTCharacteristic
 	{
