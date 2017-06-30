@@ -3,6 +3,12 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#000000</color>
+    
+    <color name="title_bar_blue">#55C2EA</color>
+	<color name="item_title_blue">#0092B8</color>
+    <color name="page_title_disabled">#0092B8</color>
+	<color name="primary_gray">#808083</color>
+	<color name="header_gray">#A0A0A0</color>
 
     <!--Main app colors-->
     <color name="transparent">#00000000</color>
@@ -14,8 +20,6 @@
     <color name="medium_dark_gray">#FF666666</color>
     <color name="dark_gray">#FF323232</color>
     <color name="darkest_gray">#FF1E1E1E</color>
-    <color name="primary_background">#FF161616</color>
-    <color name="primary_background_with_transparency">#AF161616</color>
     <color name="window_background">#FF0F0F0F</color>
     <color name="light_blue">#FF5FA3D0</color>
     <color name="medium_light_blue">#FF5E8097</color>
