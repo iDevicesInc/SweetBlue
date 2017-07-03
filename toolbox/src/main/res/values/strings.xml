@@ -41,6 +41,18 @@
     <!-- Main Activity -->
     <string name="drawer_open">Open Drawer</string>
     <string name="drawer_close">Close Drawer</string>
+    <string name="start_scan">Start Scan</string>
+    <string name="stop_scan">Stop Scan</string>
+    <string name="not_ready_to_scan">Not Ready To Scan</string>
+    <string name="sort_by">Sort By...</string>
+    <string name="name">Name</string>
+    <string name="signal_strength">Signal Strength</string>
+    <string name="select_scan_api">Select Scan Api</string>
+
+    <array name="sort_options">
+        <item>@string/name</item>
+        <item>@string/signal_strength</item>
+    </array>
 
     <!-- Logger -->
     <string name="logger_title">Logger</string>
@@ -76,6 +88,7 @@
     <string name="nav_drawer_settings">Settings</string>
     <string name="nav_drawer_website">Website</string>
     <string name="nav_drawer_send_feedback">Send Feedback</string>
+    <string name="app_version">App Version - %1$s</string>
 
     <!-- Website -->
     <string name="visite_website_url">http://idevicesinc.com/sweetblue</string>

@@ -9,4 +9,11 @@
                                    android:minHeight="?attr/actionBarSize"
                                    app:titleTextColor="@color/colorPrimary">
 
+    <ImageView
+        android:id="@+id/navBarLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/icon_navigation_sweetblue"
+        android:layout_gravity="center" />
+
 </android.support.v7.widget.Toolbar>
