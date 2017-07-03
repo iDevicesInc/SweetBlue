@@ -3,42 +3,36 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:orientation="vertical"
-              android:padding="8dp">
+              android:padding="@dimen/small"
+              android:paddingStart="@dimen/medium">
 
     <TextView
         android:id="@+id/serviceName"
+        style="@style/item_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="2dp"
-        android:layout_marginLeft="16dp"
-        android:text="Service Name"
-        android:textStyle="bold"/>
+        android:text="Service Name" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="2dp"
-        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="@dimen/tiniest"
         android:orientation="horizontal">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/item_text.no_spacing"
             android:text="UUID: "/>
 
         <TextView
             android:id="@+id/uuid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/item_text.no_spacing"
             android:text="0x1800"/>
 
     </LinearLayout>
 
     <TextView
         android:id="@+id/serviceType"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
+        style="@style/item_text"
         android:text="PRIMARY SERVICE"/>
 
 

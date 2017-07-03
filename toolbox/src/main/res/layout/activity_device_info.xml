@@ -8,7 +8,6 @@
     <include layout="@layout/toolbar"/>
 
 
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,169 +15,150 @@
 
         <TextView
             android:id="@+id/infoTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
+            style="@style/item_heading"
             android:text="Device Information"/>
 
         <TableLayout
             android:id="@+id/deviceTable"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="@dimen/medium"
             android:layout_below="@+id/infoTitle"
             android:stretchColumns="true">
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Android OS Version"/>
+                    android:text="Android OS Version" />
 
                 <TextView
                     android:id="@+id/osVersion"
-                    android:layout_width="wrap_content"
-                    android:gravity="right"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="6.0.0"/>
+                    android:gravity="end"
+                    android:text="6.0.0" />
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
                     android:text="OS API Level"/>
 
                 <TextView
                     android:id="@+id/apiVersion"
-                    android:layout_width="wrap_content"
-                    android:gravity="right"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
+                    android:gravity="end"
                     android:text="23"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
                     android:text="Linux Kernel Version"/>
 
                 <TextView
                     android:id="@+id/kernelVersion"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="right"
+                    style="@style/item_text"
                     android:layout_weight="1"
+                    android:gravity="end"
                     android:text="3.10.61"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
                     android:text="Device Name"/>
 
                 <TextView
                     android:id="@+id/deviceName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="right"
+                    style="@style/item_text"
                     android:layout_weight="1"
+                    android:gravity="end"
                     android:text="Some Name"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
                     android:text="Brand"/>
 
                 <TextView
                     android:id="@+id/brand"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="right"
+                    style="@style/item_text"
                     android:layout_weight="1"
+                    android:gravity="end"
                     android:text="Google"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
                     android:text="Manufacturer"/>
 
                 <TextView
                     android:id="@+id/manufacturer"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="right"
+                    style="@style/item_text"
                     android:layout_weight="1"
+                    android:gravity="end"
                     android:text="LG"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
                     android:text="Model"/>
 
                 <TextView
                     android:id="@+id/model"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="right"
+                    style="@style/item_text"
                     android:layout_weight="1"
+                    android:gravity="end"
                     android:text="msdgh83"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
                     android:text="Product"/>
 
                 <TextView
                     android:id="@+id/product"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="right"
+                    style="@style/item_text"
                     android:layout_weight="1"
+                    android:gravity="end"
                     android:text="someweirdname"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow >
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/item_text"
                     android:layout_weight="1"
                     android:text="Board"/>
 
                 <TextView
                     android:id="@+id/board"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="right"
+                    style="@style/item_text"
                     android:layout_weight="1"
+                    android:gravity="end"
                     android:text="someboardname"/>
             </TableRow>
 
@@ -186,24 +166,20 @@
 
         <TextView
             android:id="@+id/supportedTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            style="@style/item_heading"
+            android:layout_margin="0dp"
             android:layout_below="@+id/deviceTable"
             android:text="Supported Features"/>
 
         <TableLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:layout_below="@+id/supportedTitle">
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    style="@style/item_text.no_spacing"
                     android:text="Bluetooth LE Supported"/>
 
                 <FrameLayout android:layout_weight="1">
@@ -212,19 +188,17 @@
                         android:id="@+id/bleSupported"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="right"
+                        android:layout_gravity="end"
                         android:src="@drawable/icon_check"/>
 
                 </FrameLayout>
 
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    style="@style/item_text.no_spacing"
                     android:text="Lollipop Scan API Supported"/>
 
                 <FrameLayout android:layout_weight="1">
@@ -240,12 +214,10 @@
 
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    style="@style/item_text.no_spacing"
                     android:text="Scan batching supported"/>
 
                 <FrameLayout android:layout_weight="1">
@@ -261,12 +233,10 @@
 
             </TableRow>
 
-            <TableRow android:paddingBottom="8dp">
+            <TableRow>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    style="@style/item_text.no_spacing"
                     android:text="Multiple Advertisement supported"/>
 
                 <FrameLayout android:layout_weight="1">
