@@ -4,13 +4,17 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
+
 import com.idevicesinc.sweetblue.BleDevice;
+import com.idevicesinc.sweetblue.BleDeviceState;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.activity.BleCharacteristicsActivity;
 import com.idevicesinc.sweetblue.toolbox.activity.BleServicesActivity;
@@ -54,11 +58,18 @@ public class BleServicesFragment extends Fragment implements BleServicesActivity
         {
             @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                final BluetoothGattService service = m_serviceList.get(position);
-                Intent intent = new Intent(getActivity(), BleCharacteristicsActivity.class);
-                intent.putExtra("mac", m_device.getMacAddress());
-                intent.putExtra("uuid", service.getUuid().toString());
-                startActivity(intent);
+                if (!m_device.is(BleDeviceState.DISCONNECTED))
+                {
+                    final BluetoothGattService service = m_serviceList.get(position);
+                    Intent intent = new Intent(getActivity(), BleCharacteristicsActivity.class);
+                    intent.putExtra("mac", m_device.getMacAddress());
+                    intent.putExtra("uuid", service.getUuid().toString());
+                    startActivity(intent);
+                }
+                else
+                {
+                    Toast.makeText(getContext(), "You must be connected to view the characteristics.", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -82,5 +93,6 @@ public class BleServicesFragment extends Fragment implements BleServicesActivity
                 m_adapter.notifyDataSetChanged();
             }
         }
+
     }
 }
