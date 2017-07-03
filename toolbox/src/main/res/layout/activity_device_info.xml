@@ -7,19 +7,29 @@
 
     <include layout="@layout/toolbar"/>
 
+
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp">
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/infoTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:text="Device Information"/>
 
         <TableLayout
             android:id="@+id/deviceTable"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:layout_below="@+id/infoTitle"
             android:stretchColumns="true">
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -30,12 +40,13 @@
                 <TextView
                     android:id="@+id/osVersion"
                     android:layout_width="wrap_content"
+                    android:gravity="right"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="6.0.0"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -46,12 +57,13 @@
                 <TextView
                     android:id="@+id/apiVersion"
                     android:layout_width="wrap_content"
+                    android:gravity="right"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="23"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -63,11 +75,12 @@
                     android:id="@+id/kernelVersion"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="right"
                     android:layout_weight="1"
                     android:text="3.10.61"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -79,11 +92,12 @@
                     android:id="@+id/deviceName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="right"
                     android:layout_weight="1"
                     android:text="Some Name"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -95,11 +109,12 @@
                     android:id="@+id/brand"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="right"
                     android:layout_weight="1"
                     android:text="Google"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -111,11 +126,12 @@
                     android:id="@+id/manufacturer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="right"
                     android:layout_weight="1"
                     android:text="LG"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -127,11 +143,12 @@
                     android:id="@+id/model"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="right"
                     android:layout_weight="1"
                     android:text="msdgh83"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -143,11 +160,12 @@
                     android:id="@+id/product"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="right"
                     android:layout_weight="1"
                     android:text="someweirdname"/>
             </TableRow>
 
-            <TableRow android:paddingBottom="2dp">
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -159,18 +177,28 @@
                     android:id="@+id/board"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="right"
                     android:layout_weight="1"
                     android:text="someboardname"/>
             </TableRow>
 
         </TableLayout>
 
+        <TextView
+            android:id="@+id/supportedTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_below="@+id/deviceTable"
+            android:text="Supported Features"/>
+
         <TableLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/deviceTable">
+            android:layout_marginTop="4dp"
+            android:layout_below="@+id/supportedTitle">
 
-            <TableRow>
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -180,19 +208,18 @@
 
                 <FrameLayout android:layout_weight="1">
 
-                    <CheckBox
+                    <ImageView
                         android:id="@+id/bleSupported"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:checked="true"
-                        android:clickable="false"
-                        android:enabled="false"/>
+                        android:layout_gravity="right"
+                        android:src="@drawable/icon_check"/>
+
                 </FrameLayout>
 
             </TableRow>
 
-            <TableRow>
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -202,19 +229,18 @@
 
                 <FrameLayout android:layout_weight="1">
 
-                    <CheckBox
+                    <ImageView
                         android:id="@+id/lollipopScanSupported"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:checked="true"
-                        android:clickable="false"
-                        android:enabled="false"/>
+                        android:layout_gravity="right"
+                        android:src="@drawable/icon_x"/>
+
                 </FrameLayout>
 
             </TableRow>
 
-            <TableRow>
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -224,19 +250,18 @@
 
                 <FrameLayout android:layout_weight="1">
 
-                    <CheckBox
+                    <ImageView
                         android:id="@+id/scanBatchingSupported"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:checked="true"
-                        android:clickable="false"
-                        android:enabled="false"/>
+                        android:layout_gravity="right"
+                        android:src="@drawable/icon_check"/>
+
                 </FrameLayout>
 
             </TableRow>
 
-            <TableRow>
+            <TableRow android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -246,14 +271,13 @@
 
                 <FrameLayout android:layout_weight="1">
 
-                    <CheckBox
+                    <ImageView
                         android:id="@+id/multipleAdvertisementSupported"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:checked="true"
-                        android:clickable="false"
-                        android:enabled="false"/>
+                        android:layout_gravity="right"
+                        android:src="@drawable/icon_check"/>
+
                 </FrameLayout>
 
             </TableRow>

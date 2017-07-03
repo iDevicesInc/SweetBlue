@@ -59,6 +59,7 @@
 
     <!-- Device Information -->
     <string name="device_information_title">Device Information</string>
+    <string name="unknown_device">Unknown Device</string>
 
     <!-- Characteristics -->
     <string name="characteristics_no_characteristics">No Characteristics</string>
