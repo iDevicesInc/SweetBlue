@@ -14,7 +14,6 @@ import android.os.DeadObjectException;
 
 import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.compat.L_Util;
-import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.lang.reflect.Field;
@@ -30,8 +29,12 @@ final class P_AndroidGatt implements P_GattLayer
     private static final String FIELD_NAME_AUTH_RETRY = "mAuthRetry";
     private static final String FIELD_NAME_NOUGAT_AUTH_RETRY_STATE = "mAuthRetryState";
 
-    private BluetoothGatt m_gatt;
+    private static String s_authRetryFieldName;
+    private static boolean s_nougatMr2 = false;
 
+    private Field m_authRetryField = null;
+
+    private BluetoothGatt m_gatt;
     private final BleDevice m_device;
 
 
@@ -41,50 +44,70 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
 
-    @Override public BleDevice getBleDevice()
+    @Override
+    public BleDevice getBleDevice()
     {
         return m_device;
     }
 
     @Override
-    public void setGatt(BluetoothGatt gatt) {
+    public void setGatt(BluetoothGatt gatt)
+    {
         m_gatt = gatt;
     }
 
     @Override
-    public BluetoothGatt getGatt() {
+    public BluetoothGatt getGatt()
+    {
         return m_gatt;
     }
 
     @Override
-    public Boolean getAuthRetryValue() {
-        if( m_gatt != null )
+    public Boolean getAuthRetryValue()
+    {
+        if (m_gatt != null)
         {
-            final String fieldName = Utils.isNougat() ? FIELD_NAME_NOUGAT_AUTH_RETRY_STATE : FIELD_NAME_AUTH_RETRY;
+            final Boolean result;
+            if (m_authRetryField == null)
+            {
+                if (s_authRetryFieldName == null)
+                {
+                    s_authRetryFieldName = getAuthRetryName();
+                    if (s_authRetryFieldName == null)
+                    {
+                        getManager().ASSERT(false, "Unable to get auth retry field! Neither mAuthRetry, or mAuthRetryState exist! This shouldn't happen!");
+                        return null;
+                    }
+                }
+                try
+                {
+                    m_authRetryField = m_gatt.getClass().getDeclaredField(s_authRetryFieldName);
+                } catch (NoSuchFieldException e1)
+                {
+                    getManager().ASSERT(false, "Problem getting field " + m_gatt.getClass().getSimpleName() + "." + s_authRetryFieldName);
+                }
+            }
             try
             {
-                final Boolean result;
-                final Field field = m_gatt.getClass().getDeclaredField(fieldName);
-                final boolean isAccessible_saved = field.isAccessible();
-                field.setAccessible(true);
-                if (Utils.isNougat())
+                final boolean isAccessible_saved = m_authRetryField.isAccessible();
+                m_authRetryField.setAccessible(true);
+                if (s_nougatMr2)
                 {
-                    int state = field.getInt(m_gatt);
+                    int state = m_authRetryField.getInt(m_gatt);
 
                     // TODO - Refactor this to pass along with auth retry state it is, so we know how better to deal with it. (Is simply bonding enough?).
                     result = state != BleStatuses.AUTH_RETRY_STATE_IDLE;
                 }
                 else
                 {
-                    result = field.getBoolean(m_gatt);
+                    result = m_authRetryField.getBoolean(m_gatt);
                 }
-                field.setAccessible(isAccessible_saved);
+                m_authRetryField.setAccessible(isAccessible_saved);
 
                 return result;
-            }
-            catch (Exception e)
+            } catch (Exception e)
             {
-                getManager().ASSERT(false, "Problem getting value of " + m_gatt.getClass().getSimpleName() + "." + fieldName);
+                getManager().ASSERT(false, "Unable to get value of " + m_gatt.getClass().getSimpleName() + "." + m_authRetryField.getName());
             }
         }
         else
@@ -94,8 +117,27 @@ final class P_AndroidGatt implements P_GattLayer
         return null;
     }
 
+    private String getAuthRetryName()
+    {
+        Field[] fields = m_gatt.getClass().getDeclaredFields();
+        for (Field f : fields)
+        {
+            if (f.getName().equals(FIELD_NAME_AUTH_RETRY))
+            {
+                return FIELD_NAME_AUTH_RETRY;
+            }
+            else if (f.getName().equals(FIELD_NAME_NOUGAT_AUTH_RETRY_STATE))
+            {
+                s_nougatMr2 = true;
+                return FIELD_NAME_NOUGAT_AUTH_RETRY_STATE;
+            }
+        }
+        return null;
+    }
+
     @Override
-    public boolean equals(BluetoothGatt gatt) {
+    public boolean equals(BluetoothGatt gatt)
+    {
         return gatt == m_gatt;
     }
 
@@ -105,9 +147,10 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public BleManager.UhOhListener.UhOh closeGatt() {
+    public BleManager.UhOhListener.UhOh closeGatt()
+    {
         BleManager.UhOhListener.UhOh uhoh = null;
-        if( m_gatt == null )  return uhoh;
+        if (m_gatt == null) return uhoh;
 
         //--- DRK > Tried this to see if it would kill autoConnect, but alas it does not, at least on S5.
         //---		Don't want to keep it here because I'm afraid it has a better chance to do bad than good.
@@ -121,8 +164,7 @@ final class P_AndroidGatt implements P_GattLayer
         try
         {
             m_gatt.close();
-        }
-        catch(Exception e)
+        } catch (Exception e)
         {
             if (e instanceof DeadObjectException)
             {
@@ -186,7 +228,8 @@ final class P_AndroidGatt implements P_GattLayer
         return uhoh;
     }
 
-    @Override public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
+    @Override
+    public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
     {
         if (m_gatt == null)
         {
@@ -197,8 +240,7 @@ final class P_AndroidGatt implements P_GattLayer
         try
         {
             list_native = m_gatt.getServices();
-        }
-        catch (Exception e)
+        } catch (Exception e)
         {
             BleManager.UhOhListener.UhOh uhoh;
             if (e instanceof ConcurrentModificationException)
@@ -215,14 +257,14 @@ final class P_AndroidGatt implements P_GattLayer
         return list_native;
     }
 
-    @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
+    @Override
+    public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
     {
         BluetoothGattService service = null;
         try
         {
             service = m_gatt.getService(serviceUuid);
-        }
-        catch (Exception e)
+        } catch (Exception e)
         {
             BleManager.UhOhListener.UhOh uhoh;
             if (e instanceof ConcurrentModificationException)
@@ -239,19 +281,22 @@ final class P_AndroidGatt implements P_GattLayer
         return service;
     }
 
-    @Override public boolean isGattNull()
+    @Override
+    public boolean isGattNull()
     {
         return m_gatt == null;
     }
 
-    @Override public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
+    @Override
+    public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
     {
         m_gatt = device.connect(context, useAutoConnect, callback);
         return m_gatt;
     }
 
     @Override
-    public boolean requestMtu(int mtu) {
+    public boolean requestMtu(int mtu)
+    {
         if (m_gatt != null)
         {
             return L_Util.requestMtu(m_gatt, mtu);
@@ -260,7 +305,8 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean refreshGatt() {
+    public boolean refreshGatt()
+    {
         if (m_gatt != null)
         {
             Utils.refreshGatt(m_gatt);
@@ -278,7 +324,8 @@ final class P_AndroidGatt implements P_GattLayer
         return false;
     }
 
-    @Override public void disconnect()
+    @Override
+    public void disconnect()
     {
         if (m_gatt != null)
         {
@@ -286,7 +333,8 @@ final class P_AndroidGatt implements P_GattLayer
         }
     }
 
-    @Override public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
+    @Override
+    public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
     {
         if (m_gatt != null && characteristic != null)
         {
@@ -295,7 +343,8 @@ final class P_AndroidGatt implements P_GattLayer
         return false;
     }
 
-    @Override public boolean setCharValue(BluetoothGattCharacteristic characteristic, byte[] data)
+    @Override
+    public boolean setCharValue(BluetoothGattCharacteristic characteristic, byte[] data)
     {
         if (characteristic != null)
         {
@@ -304,7 +353,8 @@ final class P_AndroidGatt implements P_GattLayer
         return false;
     }
 
-    @Override public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic)
+    @Override
+    public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic)
     {
         if (m_gatt != null && characteristic != null)
         {
@@ -314,7 +364,8 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) {
+    public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)
+    {
         if (m_gatt != null && characteristic != null)
         {
             return m_gatt.setCharacteristicNotification(characteristic, enable);
@@ -322,7 +373,8 @@ final class P_AndroidGatt implements P_GattLayer
         return false;
     }
 
-    @Override public boolean readDescriptor(BluetoothGattDescriptor descriptor)
+    @Override
+    public boolean readDescriptor(BluetoothGattDescriptor descriptor)
     {
         if (m_gatt != null && descriptor != null)
         {
@@ -331,7 +383,8 @@ final class P_AndroidGatt implements P_GattLayer
         return false;
     }
 
-    @Override public boolean setDescValue(BluetoothGattDescriptor descriptor, byte[] data)
+    @Override
+    public boolean setDescValue(BluetoothGattDescriptor descriptor, byte[] data)
     {
         if (descriptor != null)
         {
@@ -340,7 +393,8 @@ final class P_AndroidGatt implements P_GattLayer
         return false;
     }
 
-    @Override public boolean writeDescriptor(BluetoothGattDescriptor descriptor)
+    @Override
+    public boolean writeDescriptor(BluetoothGattDescriptor descriptor)
     {
         if (m_gatt != null && descriptor != null)
         {
@@ -349,25 +403,28 @@ final class P_AndroidGatt implements P_GattLayer
         return false;
     }
 
-    @Override public boolean discoverServices()
+    @Override
+    public boolean discoverServices()
     {
         return m_gatt.discoverServices();
     }
 
-    @Override public boolean executeReliableWrite()
+    @Override
+    public boolean executeReliableWrite()
     {
         return m_gatt.executeReliableWrite();
     }
 
     @Override
-    public boolean beginReliableWrite() {
+    public boolean beginReliableWrite()
+    {
         return m_gatt.beginReliableWrite();
     }
 
     @Override
     public void abortReliableWrite(BluetoothDevice device)
     {
-        if( Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2 )
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2)
         {
             m_gatt.abortReliableWrite(device);
         }
@@ -377,7 +434,8 @@ final class P_AndroidGatt implements P_GattLayer
         }
     }
 
-    @Override public boolean readRemoteRssi()
+    @Override
+    public boolean readRemoteRssi()
     {
         return m_gatt.readRemoteRssi();
     }
