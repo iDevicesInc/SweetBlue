@@ -65,20 +65,22 @@ public class BleServicesFragment extends Fragment implements BleServicesActivity
         return layout;
     }
 
-    @Override
-    public void onResume()
+    public BleServicesFragment register(BleServicesActivity activity)
     {
-        ((BleServicesActivity) getActivity()).registerListener(this);
-        super.onResume();
+        activity.registerListener(this);
+        return this;
     }
 
     @Override
     public void onEvent(BleDevice.StateListener.StateEvent e)
     {
-        if (m_device.getNativeServices_List() != null && m_device.getNativeServices_List().size() > 0)
+        if (m_device != null && m_adapter != null)
         {
-            m_serviceList = new ArrayList<>(m_device.getNativeServices_List());
-            m_adapter.notifyDataSetChanged();
+            if (m_device.getNativeServices_List() != null && m_device.getNativeServices_List().size() > 0)
+            {
+                m_serviceList.addAll(m_device.getNativeServices_List());
+                m_adapter.notifyDataSetChanged();
+            }
         }
     }
 }
