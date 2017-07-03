@@ -61,6 +61,20 @@
     <string name="device_information_title">Device Information</string>
     <string name="unknown_device">Unknown Device</string>
 
+    <!--Device Detail/Services-->
+
+    <string name="services">Services</string>
+    <string name="details">Details</string>
+    <string name="native_name">Native Name</string>
+    <string name="mac_address">MAC Address</string>
+    <string name="status">Status</string>
+    <string name="service_uuids">Service UUIDs</string>
+    <string name="manufacturer_id">Manufacturer ID</string>
+    <string name="manufacturer_data">Manufacturer Data</string>
+    <string name="tx_power">Tx Power</string>
+    <string name="adv_flags">Advertising Flags</string>
+    <string name="adv_name">Advertised Name</string>
+
     <!-- Characteristics -->
     <string name="characteristics_no_characteristics">No Characteristics</string>
 

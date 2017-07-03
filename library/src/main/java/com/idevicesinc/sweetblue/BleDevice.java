@@ -2486,6 +2486,14 @@ public final class BleDevice extends BleNode
     }
 
     /**
+     * Returns the {@link BleScanInfo} instance held by this {@link BleDevice}.
+     */
+    public final @Nullable(Prevalence.NEVER) BleScanInfo getScanInfo()
+    {
+        return m_scanInfo;
+    }
+
+    /**
      * Returns the advertising flags, if any, parse from {@link #getScanRecord()}.
      */
     public final int getAdvertisingFlags()
