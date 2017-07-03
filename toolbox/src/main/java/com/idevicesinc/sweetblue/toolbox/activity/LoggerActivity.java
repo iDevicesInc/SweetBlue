@@ -159,11 +159,11 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
     {
         if (item.getItemId() == R.id.filter)
         {
-
             return true;
         }
         else
         {
+            item.setChecked(true);
             switch (item.getItemId())
             {
                 case R.id.verbose:

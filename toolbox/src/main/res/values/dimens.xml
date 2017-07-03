@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<!-- TEXT MARGINS -->
+	<dimen name="magin_bottom_title">5dp</dimen>
+
+	<dimen name="tiniest">3dp</dimen>
+	<dimen name="tiny">5dp</dimen>
+	<dimen name="small">10dp</dimen>
+	<dimen name="medium">20dp</dimen>
+	<dimen name="large">30dp</dimen>
+
+</resources>

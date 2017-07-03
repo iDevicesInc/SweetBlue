@@ -1,20 +1,23 @@
 <resources>
 
+
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:textColor">@color/colorPrimaryDark</item>
         <item name="android:fontFamily">sans-serif</item>
-        <item name="popupTheme">@style/TopOverflowMenuBackground</item>
-        <item name="android:actionBarStyle">@style/ToolbarStyle</item>
-
+        <item name="actionBarPopupTheme">@style/TopOverflowMenuBackground</item>
     </style>
 
     <style name="OverflowTextAppearance" parent="TextAppearance.AppCompat.Widget.ActionBar.Menu">
         <item name="android:textColor">@color/red</item>
     </style>
 
+
     <!-- Overflow Menu background  -->
     <style name="TopOverflowMenuBackground" parent="ThemeOverlay.AppCompat.Dark">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorSecondary">@color/primary_gray</item>
+        <item name="colorAccent">@color/overflow_enabled_blue</item>
         <item name="android:colorBackground">@color/black</item>
     </style>
 
@@ -23,36 +26,113 @@
     </style>
 
 
+    <!-- PAGE TITLE BAR -->
+    <style name="page_title_bar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">50dp</item> <!-- FIXME: Guess -->
+        <item name="android:background">@color/title_bar_blue</item>
+    </style>
+
+    <style name="page_title">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:paddingStart">@dimen/small</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">21sp</item>
+    </style>
+
+    <style name="page_title_enabled" parent="page_title">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="page_title_disabled" parent="page_title">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:textColor">@color/page_title_disabled</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+
+    <!-- ITEM -->
+    <style name="item_container">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/small</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <style name="item_divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/primary_gray</item>
+        <!-- TODO? Right and left padding?-->
+    </style>
+
+    <style name="item_title">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">@dimen/tiny</item>
+        <item name="android:textColor">@color/item_title_blue</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="item_title_large" parent="item_title">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="item_heading">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/tiny</item>
+        <item name="android:layout_marginBottom">@dimen/tiniest</item>
+        <item name="android:textColor">@color/header_gray</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="item_text">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">@dimen/tiny</item>
+        <item name="android:lineSpacingMultiplier">.9</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/primary_gray</item>
+    </style>
+
+
+    <!-- NAVBAR -->
+    <style name="nav_text">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:textColor">@color/nav_bar_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+
+    <!-- TABS -->
     <style name="TabLayout" parent="Base.Widget.Design.TabLayout">
-
         <item name="tabMode">fixed</item>
-
         <item name="tabGravity">fill</item>
-
         <item name="tabIndicatorColor">@color/blue</item>
-
         <item name="tabIndicatorHeight">4dp</item>
-
         <item name="android:background">#55c2ea</item>
-
         <item name="tabTextColor">@color/blue</item>
-
         <item name="tabSelectedTextColor">@color/white</item>
-
         <item name="tabTextAppearance">@style/TabText</item>
-
     </style>
 
     <style name="TabText" parent="TextAppearance.Design.Tab">
-
         <item name="android:textSize">18sp</item>
-
         <item name="android:textColor">@color/blue</item>
-
         <item name="android:textStyle">bold</item>
-
         <item name="textAllCaps">false</item>
-
     </style>
 
 </resources>
