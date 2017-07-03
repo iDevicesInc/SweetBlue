@@ -8,11 +8,8 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -27,10 +24,12 @@ import com.idevicesinc.sweetblue.toolbox.BuildConfig;
 import com.idevicesinc.sweetblue.toolbox.util.DebugLog;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UpdateManager;
-import com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner;
+import com.idevicesinc.sweetblue.toolbox.view.DialogHelper;
 import com.idevicesinc.sweetblue.toolbox.view.ScanAdapter;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -39,17 +38,22 @@ public class MainActivity extends BaseActivity
 
     private BleManager m_manager;
 
-    private Button m_startScan;
-    private Button m_stopScan;
-    private ReselectableSpinner m_apiSpinner;
-    private TextView m_scanStatus;
     private RecyclerView m_deviceRecycler;
     private ScanAdapter m_adapter;
     private ArrayList<BleDevice> m_deviceList;
 
+    private TextView m_scanTextView;
+    private ImageView m_scanImageView;
+
     private DrawerLayout m_drawerLayout;
     private View m_navDrawerLayout;
     private ActionBarDrawerToggle m_drawerToggler;
+
+    private RssiComparator rssiComparator = new RssiComparator();
+    private NameComparator nameComparator = new NameComparator();
+
+    private Comparator<BleDevice> m_currentComparator = rssiComparator;
+
 
     public static BleManagerConfig getDefaultConfig()
     {
@@ -70,6 +74,8 @@ public class MainActivity extends BaseActivity
         Toolbar toolbar = find(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        setTitle("");
+
         m_manager = BleManager.get(this, getDefaultConfig());
 
         m_manager.setListener_Discovery(new DeviceDiscovery());
@@ -80,36 +86,64 @@ public class MainActivity extends BaseActivity
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    m_scanStatus.setText(R.string.scanning);
+                    m_scanImageView.setImageResource(R.drawable.icon_cancel);
                 }
                 else if (e.didExit(BleManagerState.SCANNING))
                 {
-                    m_scanStatus.setText(R.string.not_scanning);
+                    m_scanImageView.setImageResource(R.drawable.icon_scan);
+                }
+                else
+                {
+                    if (!m_manager.isScanningReady())
+                    {
+                        m_scanImageView.setImageResource(R.drawable.icon_alert);
+                        m_scanTextView.setText(R.string.not_ready_to_scan);
+                    }
                 }
             }
         });
 
-        m_startScan = find(R.id.startScan);
-        m_startScan.setOnClickListener(new View.OnClickListener()
+        m_scanTextView = find(R.id.scanTextView);
+        m_scanImageView = find(R.id.scanImageView);
+
+        LinearLayout ll = find(R.id.scanLayout);
+        ll.setOnClickListener(new View.OnClickListener()
         {
-            @Override public void onClick(View v)
+            @Override
+            public void onClick(View v)
             {
-                ScanOptions options = new ScanOptions();
-                options.scanInfinitely();
-                m_manager.startScan(options);
+                if (m_manager.isScanning())
+                {
+                    m_manager.stopAllScanning();
+                    m_scanTextView.setText(R.string.start_scan);
+                    m_scanImageView.setImageResource(R.drawable.icon_scan);
+                }
+                else if (m_manager.isScanningReady())
+                {
+                    ScanOptions options = new ScanOptions();
+                    options.scanInfinitely();
+                    m_manager.startScan(options);
+                    m_scanTextView.setText(R.string.scanning);
+                    m_scanImageView.setImageResource(R.drawable.icon_cancel);
+                }
+                else
+                {
+                    BluetoothEnabler.start(MainActivity.this, new BluetoothEnabler.DefaultBluetoothEnablerFilter() {
+                        @Override
+                        public Please onEvent(BluetoothEnablerEvent e)
+                        {
+                            if (e.isDone())
+                            {
+                                m_scanTextView.setText(R.string.start_scan);
+                                m_scanImageView.setImageResource(R.drawable.icon_scan);
+                            }
+                            return super.onEvent(e);
+                        }
+                    });
+                }
             }
         });
 
-        m_stopScan = find(R.id.stopScan);
-        m_stopScan.setOnClickListener(new View.OnClickListener()
-        {
-            @Override public void onClick(View v)
-            {
-                m_manager.stopAllScanning();
-            }
-        });
-        m_apiSpinner = find(R.id.apiSpinner);
-        m_scanStatus = find(R.id.scanStatus);
 
         m_deviceList = new ArrayList<>();
 
@@ -122,42 +156,14 @@ public class MainActivity extends BaseActivity
         m_deviceRecycler.setAdapter(m_adapter);
         m_deviceRecycler.setLayoutManager(layoutManager);
 
-        m_apiSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-        {
-            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-            {
-                BleManagerConfig cfg = m_manager.getConfigClone();
-                String option = (String) parent.getItemAtPosition(position);
-                switch (option)
-                {
-                    case "Classic":
-                        cfg.scanApi = BleScanApi.CLASSIC;
-                        break;
-                    case "Pre-Lollipop":
-                        cfg.scanApi = BleScanApi.PRE_LOLLIPOP;
-                        break;
-                    case "Post-Lollipop":
-                        cfg.scanApi = BleScanApi.POST_LOLLIPOP;
-                        break;
-                    default:
-                        cfg.scanApi = BleScanApi.AUTO;
-                        break;
-                }
-                m_manager.setConfig(cfg);
-            }
-
-            @Override public void onNothingSelected(AdapterView<?> parent)
-            {
-            }
-        });
-        m_startScan.setEnabled(false);
 
         BluetoothEnabler.start(this, new BluetoothEnabler.DefaultBluetoothEnablerFilter() {
             @Override public Please onEvent(BluetoothEnablerEvent e)
             {
                 if (e.isDone())
                 {
-                    m_startScan.setEnabled(true);
+                    m_scanTextView.setText(R.string.start_scan);
+                    m_scanImageView.setImageResource(R.drawable.icon_scan);
                 }
                 return super.onEvent(e);
             }
@@ -206,6 +212,7 @@ public class MainActivity extends BaseActivity
             if (de.was(LifeCycle.DISCOVERED))
             {
                 m_deviceList.add(de.device());
+                Collections.sort(m_deviceList, m_currentComparator);
                 m_adapter.notifyItemInserted(m_deviceList.size() - 1);
             }
             else if (de.was(LifeCycle.REDISCOVERED))
@@ -218,6 +225,7 @@ public class MainActivity extends BaseActivity
                 int index = m_deviceList.indexOf(de.device());
                 if (index != -1)
                 {
+                    Collections.sort(m_deviceList, m_currentComparator);
                     m_adapter.notifyItemChanged(index);
                 }
             }
@@ -365,7 +373,7 @@ public class MainActivity extends BaseActivity
         });
 
         TextView tv = find(R.id.appVersion);
-        tv.setText("App Version - " + BuildConfig.VERSION_NAME);
+        tv.setText(getString(R.string.app_version, BuildConfig.VERSION_NAME));
     }
 
     private void launchWebsite()
@@ -398,6 +406,113 @@ public class MainActivity extends BaseActivity
     {
         if (m_drawerToggler.onOptionsItemSelected(item))
             return true;
+        switch (item.getItemId())
+        {
+            case R.id.scanOptions:
+                openScanOptionsDialog();
+                return true;
+            case R.id.sortOptions:
+                openSortOptionsDialog();
+                return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void openSortOptionsDialog()
+    {
+        final String[] choices = getResources().getStringArray(R.array.sort_options);
+        int current = (m_currentComparator instanceof NameComparator) ? 0 : 1;
+        DialogHelper.showRadioGroupDialog(this, getString(R.string.sort_by), null, choices, current, new DialogHelper.RadioGroupListener()
+        {
+            @Override
+            public void onChoiceSelected(String choice)
+            {
+                if (choice.equals("Name"))
+                {
+                    m_currentComparator = nameComparator;
+                }
+                else
+                {
+                    m_currentComparator = rssiComparator;
+                }
+                Collections.sort(m_deviceList, m_currentComparator);
+                m_adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCanceled()
+            {
+            }
+        });
+    }
+
+    private void openScanOptionsDialog()
+    {
+        String[] choices = getResources().getStringArray(R.array.scan_apis);
+        int current;
+        switch (m_manager.getConfigClone().scanApi)
+        {
+            case CLASSIC:
+                current = 1;
+                break;
+            case PRE_LOLLIPOP:
+                current = 2;
+                break;
+            case POST_LOLLIPOP:
+                current = 3;
+                break;
+            default: // Auto
+                current = 0;
+        }
+        DialogHelper.showRadioGroupDialog(this, getString(R.string.select_scan_api), null, choices, current, new DialogHelper.RadioGroupListener()
+        {
+            @Override
+            public void onChoiceSelected(String choice)
+            {
+                BleManagerConfig cfg = m_manager.getConfigClone();
+                switch (choice)
+                {
+                    case "Classic":
+                        cfg.scanApi = BleScanApi.CLASSIC;
+                        break;
+                    case "Pre-Lollipop":
+                        cfg.scanApi = BleScanApi.PRE_LOLLIPOP;
+                        break;
+                    case "Post-Lollipop":
+                        cfg.scanApi = BleScanApi.POST_LOLLIPOP;
+                        break;
+                    default:
+                        cfg.scanApi = BleScanApi.AUTO;
+                        break;
+                }
+                m_manager.setConfig(cfg);
+            }
+
+            @Override
+            public void onCanceled()
+            {
+            }
+        });
+
+    }
+
+    private final static class RssiComparator implements Comparator<BleDevice>
+    {
+
+        @Override
+        public int compare(BleDevice o1, BleDevice o2)
+        {
+            return o2.getRssi() - o1.getRssi();
+        }
+    }
+
+    private final static class NameComparator implements Comparator<BleDevice>
+    {
+
+        @Override
+        public int compare(BleDevice o1, BleDevice o2)
+        {
+            return o1.getName_normalized().compareTo(o2.getName_normalized());
+        }
     }
 }
