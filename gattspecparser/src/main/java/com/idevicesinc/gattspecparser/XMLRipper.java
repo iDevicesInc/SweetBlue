@@ -1,13 +1,8 @@
-package com.gattspecparser;
+package com.idevicesinc.gattspecparser;
 
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.idevicesinc.sweetblue.utils.Uuids;
-
-import com.idevicesinc.sweetblue.utils.Uuids.GATTDisplayType;
-import com.idevicesinc.sweetblue.utils.Uuids.GATTFormatType;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.w3c.dom.Element;
@@ -24,11 +19,8 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 public class XMLRipper
 {

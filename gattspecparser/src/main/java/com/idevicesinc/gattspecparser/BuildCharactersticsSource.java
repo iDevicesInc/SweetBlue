@@ -1,14 +1,11 @@
-package com.gattspecparser;
+package com.idevicesinc.gattspecparser;
 
-import android.util.Log;
-import com.gattspecparser.XMLRipper.onFinishListener;
+import com.idevicesinc.gattspecparser.XMLRipper.onFinishListener;
 import com.idevicesinc.sweetblue.utils.Uuids.GATTDisplayType;
 import com.idevicesinc.sweetblue.utils.Uuids.GATTFormatType;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class BuildCharactersticsSource

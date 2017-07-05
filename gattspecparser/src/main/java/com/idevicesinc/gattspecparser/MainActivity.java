@@ -1,9 +1,8 @@
-package com.gattspecparser;
+package com.idevicesinc.gattspecparser;
 
 
 import android.app.Activity;
 import android.os.Bundle;
-import com.example.gattspecparser.R;
 
 public class MainActivity extends Activity
 {
