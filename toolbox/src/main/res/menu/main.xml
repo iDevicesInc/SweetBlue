@@ -2,6 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item
+        android:id="@+id/scanFilter"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="Filter by Name"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:showAsAction="always"/>
+
     <item android:id="@+id/scanOptions"
           android:title="Scan Options" />
 

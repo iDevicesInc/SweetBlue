@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue.toolbox.fragment;
 
-import android.content.Context;
+
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.DeviceStateListener;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.activity.BleServicesActivity;
 import com.idevicesinc.sweetblue.utils.AdvertisingFlag;
@@ -156,10 +155,18 @@ public class BleDetailsFragment extends Fragment implements BleServicesActivity.
         }
     }
 
+    public BleDetailsFragment register(BleServicesActivity activity)
+    {
+        activity.registerListener(this);
+        return this;
+    }
 
     @Override
     public void onEvent(BleDevice.StateListener.StateEvent e)
     {
-        m_status.setText(m_device.printState());
+        if (m_status != null && m_device != null)
+        {
+            m_status.setText(m_device.printState());
+        }
     }
 }
