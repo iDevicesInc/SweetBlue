@@ -24,6 +24,8 @@
     <color name="darkest_gray">#FF1E1E1E</color>
     <color name="primary_background">#FF161616</color>
     <color name="primary_background_with_transparency">#AF161616</color>
+    <color name="yellow_connecting">#FCD837</color>
+    <color name="green_connected">#4CAF50</color>
     <color name="window_background">#FF0F0F0F</color>
     <color name="light_blue">#FF5FA3D0</color>
     <color name="medium_light_blue">#FF5E8097</color>

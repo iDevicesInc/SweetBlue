@@ -7,6 +7,6 @@
 
     <size android:height="42dp" android:width="42dp" />
 
-    <solid android:color="@color/green" />
+    <solid android:color="@color/green_connected" />
 
 </shape>
