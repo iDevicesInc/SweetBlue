@@ -3,12 +3,10 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -422,7 +420,14 @@ final class P_ScanManager
                 final P_NativeDeviceLayer layer = m_manager.m_config.newDeviceLayer(BleDevice.NULL);
                 layer.setNativeDevice(info.m_device);
 
-                m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback);
+                if (m_mode == Mode_BLE)
+                {
+                    m_manager.getCrashResolver().notifyScannedDevice(layer, m_preLollipopScanCallback, null);
+                }
+                else
+                {
+                    m_manager.getCrashResolver().notifyScannedDevice(layer, null, L_Util.getNativeCallback());
+                }
 
                 entries.add(DiscoveryEntry.newEntry(layer, info.m_rssi, info.m_record));
             }

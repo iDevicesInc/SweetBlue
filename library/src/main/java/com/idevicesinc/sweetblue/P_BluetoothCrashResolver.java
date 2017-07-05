@@ -13,11 +13,13 @@ import java.util.Set;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanCallback;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 
 /**
@@ -173,8 +175,8 @@ final class P_BluetoothCrashResolver {
      *
      * @param device
      */
-    @TargetApi(18)
-    public void notifyScannedDevice(P_NativeDeviceLayer device, BluetoothAdapter.LeScanCallback scanner) {
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public void notifyScannedDevice(P_NativeDeviceLayer device, BluetoothAdapter.LeScanCallback scanner, ScanCallback callback) {
         int oldSize = 0, newSize = 0;
 
         if (isDebugEnabled()) oldSize = distinctBluetoothAddresses.size();
@@ -190,7 +192,14 @@ final class P_BluetoothCrashResolver {
             if (PREEMPTIVE_ACTION_ENABLED && !recoveryInProgress) {
                 Log.w(TAG, "Large number of bluetooth devices detected: "+distinctBluetoothAddresses.size()+" Proactively attempting to clear out address list to prevent a crash");
                 Log.w(TAG, "Stopping LE Scan");
-                BluetoothAdapter.getDefaultAdapter().stopLeScan(scanner);
+                if (scanner != null)
+                {
+                    BluetoothAdapter.getDefaultAdapter().stopLeScan(scanner);
+                }
+                else
+                {
+                    BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner().stopScan(callback);
+                }
                 startRecovery();
                 processStateChange();
             }
