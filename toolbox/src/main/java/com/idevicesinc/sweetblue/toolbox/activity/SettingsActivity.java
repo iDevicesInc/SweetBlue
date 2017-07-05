@@ -307,6 +307,8 @@ public class SettingsActivity extends BaseActivity
         Toolbar toolbar = find(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        toolbar.findViewById(R.id.navBarLogo).setVisibility(View.GONE);
+
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 

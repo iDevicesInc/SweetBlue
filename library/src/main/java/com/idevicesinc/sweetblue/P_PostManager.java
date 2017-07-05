@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Utils;
 
 final class P_PostManager
 {
@@ -19,18 +20,39 @@ final class P_PostManager
 
     public final void postToMain(Runnable action)
     {
-        m_uiHandler.post(action);
+        if (Utils.isOnMainThread())
+        {
+            action.run();
+        }
+        else
+        {
+            m_uiHandler.post(action);
+        }
     }
 
     public final void post(Runnable action)
     {
         if (m_manager.m_config.runOnMainThread)
         {
-            m_uiHandler.post(action);
+            if (Utils.isOnMainThread())
+            {
+                action.run();
+            }
+            else
+            {
+                m_uiHandler.post(action);
+            }
         }
         else
         {
-            m_updateHandler.post(action);
+            if (isOnSweetBlueThread())
+            {
+                action.run();
+            }
+            else
+            {
+                m_updateHandler.post(action);
+            }
         }
     }
 

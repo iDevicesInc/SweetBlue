@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertFalse;
 
 
@@ -216,8 +215,8 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
 
         connectToMultipleDevices(m_config, true);
 
-        m_mgr.stopScan();
         m_mgr.disconnectAll();
+        m_mgr.stopScan();
     }
 
     private void connectToMultipleDevices(BleManagerConfig config, final boolean completeTest) throws Exception
@@ -262,7 +261,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         {
             @Override public void onEvent(BleManager.StateListener.StateEvent e)
             {
-                if (e.didEnter(BleManagerState.SCANNING))
+                if (e.didExit(BleManagerState.STARTING_SCAN) && e.didEnter(BleManagerState.SCANNING))
                 {
                     NativeUtil.advertiseNewDevice(m_mgr, -45, "Test Device #1");
                     NativeUtil.advertiseNewDevice(m_mgr, -35, "Test Device #2");

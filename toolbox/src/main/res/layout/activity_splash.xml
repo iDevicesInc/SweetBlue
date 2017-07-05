@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/outerLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#55c2ea"
+    android:gravity="center"
+    tools:context="com.idevicesinc.sweetblue.toolbox.activity.SplashActivity">
+
+
+    <!-- This has to be above the logoContainer, so that when the animation runs, it's "behind" the
+      container, and is invisible  -->
+
+    <ImageView
+        android:id="@+id/slogan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/logoContainer"
+        android:layout_marginTop="8dp"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/logo_splash_slogan"/>
+
+
+    <RelativeLayout
+        android:id="@+id/logoContainer"
+        android:layout_width="match_parent"
+        android:gravity="center"
+        android:background="#55c2ea"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/blueLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="44dp"
+            android:layout_marginLeft="-10dp"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/sweetLogo"
+            android:src="@drawable/logo_splash_blue"/>
+
+        <ImageView
+            android:id="@+id/sweetLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/logo_splash_sweet"/>
+
+    </RelativeLayout>
+
+
+</RelativeLayout>

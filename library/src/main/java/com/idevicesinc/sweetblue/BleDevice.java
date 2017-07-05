@@ -2486,6 +2486,14 @@ public final class BleDevice extends BleNode
     }
 
     /**
+     * Returns the {@link BleScanInfo} instance held by this {@link BleDevice}.
+     */
+    public final @Nullable(Prevalence.NEVER) BleScanInfo getScanInfo()
+    {
+        return m_scanInfo;
+    }
+
+    /**
      * Returns the advertising flags, if any, parse from {@link #getScanRecord()}.
      */
     public final int getAdvertisingFlags()
@@ -3294,10 +3302,10 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond(BondListener listener)
     {
-        return bond_private(/*isDirect=*/true, listener);
+        return bond_private(/*isDirect=*/true, true, listener);
     }
 
-    final BondEvent bond_private(boolean isDirect, BondListener listener)
+    final BondEvent bond_private(boolean isDirect, boolean userCalled, BondListener listener)
     {
         if (listener != null)
         {
@@ -3318,7 +3326,10 @@ public final class BleDevice extends BleNode
             return event;
         }
 
-        m_bondMngr.resetBondRetryCount();
+        if (userCalled)
+        {
+            m_bondMngr.resetBondRetryCount();
+        }
 
         bond_justAddTheTask(E_TransactionLockBehavior.PASSES, isDirect);
 

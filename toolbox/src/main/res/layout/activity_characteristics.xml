@@ -7,8 +7,19 @@
     <include layout="@layout/toolbar"/>
 
     <ExpandableListView
+        android:visibility="gone"
         android:id="@+id/expandingListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
+    <TextView
+        android:id="@+id/noCharacteristicsTextView"
+        android:visibility="visible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="No Characteristics"
+        android:textSize="20dp"
+        android:layout_margin="20dp"/>
 
 </LinearLayout>

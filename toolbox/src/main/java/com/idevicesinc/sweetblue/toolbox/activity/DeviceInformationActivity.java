@@ -5,7 +5,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.widget.CheckBox;
+import android.view.Menu;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.toolbox.R;
@@ -27,10 +29,10 @@ public class DeviceInformationActivity extends BaseActivity
     private TextView model;
     private TextView product;
     private TextView board;
-    private CheckBox bleSupported;
-    private CheckBox lollipopScanSupported;
-    private CheckBox scanBatchSupported;
-    private CheckBox multiAdvSupported;
+    private ImageView bleSupported;
+    private ImageView lollipopScanSupported;
+    private ImageView scanBatchSupported;
+    private ImageView multiAdvSupported;
 
     private BleManager bleManager;
 
@@ -44,6 +46,8 @@ public class DeviceInformationActivity extends BaseActivity
         Toolbar toolbar = find(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        toolbar.findViewById(R.id.navBarLogo).setVisibility(View.GONE);
+
         bleManager = BleManager.get(this);
 
         ActionBar actionBar = getSupportActionBar();
@@ -55,7 +59,7 @@ public class DeviceInformationActivity extends BaseActivity
         kernelVersion.setText(getKernelVersion());
 
         deviceName = find(R.id.deviceName);
-        deviceName.setText(DeviceName.getDeviceName(Build.MODEL, "Unknown Device"));
+        deviceName.setText(DeviceName.getDeviceName(Build.MODEL, getString(R.string.unknown_device)));
 
         androidVer = find(R.id.osVersion);
         androidVer.setText(Build.VERSION.RELEASE);
@@ -78,11 +82,14 @@ public class DeviceInformationActivity extends BaseActivity
         board = find(R.id.board);
         board.setText(Build.BOARD);
 
+        int supported = R.drawable.icon_check;
+        int notsupported = R.drawable.icon_x;
+
         bleSupported = find(R.id.bleSupported);
-        bleSupported.setChecked(bleManager.isBleSupported());
+        bleSupported.setImageResource(bleManager.isBleSupported() ? supported : notsupported);
 
         lollipopScanSupported = find(R.id.lollipopScanSupported);
-        lollipopScanSupported.setChecked(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
+        lollipopScanSupported.setImageResource(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? supported : notsupported);
 
         scanBatchSupported = find(R.id.scanBatchingSupported);
         boolean scanSupported = false;
@@ -90,7 +97,7 @@ public class DeviceInformationActivity extends BaseActivity
         {
             scanSupported = bleManager.getNativeAdapter().isOffloadedScanBatchingSupported();
         }
-        scanBatchSupported.setChecked(scanSupported);
+        scanBatchSupported.setImageResource(scanSupported ? supported : notsupported);
 
         multiAdvSupported = find(R.id.multipleAdvertisementSupported);
 
@@ -99,7 +106,7 @@ public class DeviceInformationActivity extends BaseActivity
         {
             multiSupported = bleManager.getNativeAdapter().isMultipleAdvertisementSupported();
         }
-        multiAdvSupported.setChecked(multiSupported);
+        multiAdvSupported.setImageResource(multiSupported ? supported : notsupported);
     }
 
     static String getKernelVersion()
@@ -126,6 +133,12 @@ public class DeviceInformationActivity extends BaseActivity
             e.printStackTrace();
             return "Unknown";
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        return true;
     }
 
     @Override

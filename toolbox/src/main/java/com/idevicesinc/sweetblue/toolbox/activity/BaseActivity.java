@@ -20,8 +20,13 @@ public class BaseActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(getMenuResId(), menu);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    public int getMenuResId()
+    {
+        return R.menu.main;
     }
 
     @Override

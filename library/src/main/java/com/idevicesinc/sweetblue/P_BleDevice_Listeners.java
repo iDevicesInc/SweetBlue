@@ -26,7 +26,8 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 	final PA_Task.I_StateListener m_taskStateListener = new PA_Task.I_StateListener()
 	{
-		@Override public void onStateChange(PA_Task task, PE_TaskState state)
+		@Override
+		public void onStateChange(PA_Task task, PE_TaskState state)
 		{
 			if (task.getClass() == P_Task_Connect.class)
 			{
@@ -34,18 +35,18 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 				if (state.isEndingState())
 				{
-					if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
+					if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT)
 					{
-						if( state == PE_TaskState.SUCCEEDED )
+						if (state == PE_TaskState.SUCCEEDED)
 						{
 							m_device.setToAlwaysUseAutoConnectIfItWorked();
 						}
 
-						if( state == PE_TaskState.REDUNDANT )
+						if (state == PE_TaskState.REDUNDANT)
 						{
 //							Log.e("", "redundant");
 						}
-						
+
 						m_device.onNativeConnect(connectTask.isExplicit());
 					}
 					else
@@ -56,7 +57,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else if (task.getClass() == P_Task_Disconnect.class)
 			{
-				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT )
+				if (state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT)
 				{
 					P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 
@@ -74,8 +75,8 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 				else if (state == PE_TaskState.SUCCEEDED)
 				{
 					final boolean simulateServiceDiscoveryFailure = false;
-					
-					if( simulateServiceDiscoveryFailure && m_device.getConnectionRetryCount() == 0 )
+
+					if (simulateServiceDiscoveryFailure && m_device.getConnectionRetryCount() == 0)
 					{
 						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
@@ -84,17 +85,17 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 						m_device.onServicesDiscovered();
 					}
 				}
-				else if (state.isEndingState() )
+				else if (state.isEndingState())
 				{
-					if( state == PE_TaskState.SOFTLY_CANCELLED )
+					if (state == PE_TaskState.SOFTLY_CANCELLED)
 					{
 						// pretty sure doing nothing is correct.
 					}
-					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
+					else if (state == PE_TaskState.FAILED_IMMEDIATELY)
 					{
 						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.IMMEDIATELY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
-					else if( state == PE_TaskState.TIMED_OUT )
+					else if (state == PE_TaskState.TIMED_OUT)
 					{
 						m_device.disconnectWithReason(BleDevice.ConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, BleDevice.ConnectionFailListener.Timing.TIMED_OUT, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 					}
@@ -122,17 +123,19 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		m_queue = m_device.getTaskQueue();
 	}
 
-	@Override public void onConnectionStateChange(final BluetoothGatt gatt, final int gattStatus, final int newState)
+	@Override
+	public void onConnectionStateChange(final BluetoothGatt gatt, final int gattStatus, final int newState)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onConnectionStateChange_updateThread(gatt, gattStatus, newState);
 			}
 		});
 	}
-	
+
 	private void onConnectionStateChange_updateThread(final BluetoothGatt gatt, final int gattStatus, final int newState)
 	{
 		//--- DRK > NOTE: For some devices disconnecting by turning off the peripheral comes back with a status of 8, which is BluetoothGatt.GATT_SERVER.
@@ -140,13 +143,13 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		//---				between the two as far as user intent or something.
 		m_logger.log_status(gattStatus, m_logger.gattConn(newState));
 
-		if (newState == BluetoothProfile.STATE_DISCONNECTED )
+		if (newState == BluetoothProfile.STATE_DISCONNECTED)
 		{
 			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
-			
+
 			final P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
-			
-			if( connectTask != null )
+
+			if (connectTask != null)
 			{
 				connectTask.onNativeFail(gattStatus);
 			}
@@ -155,8 +158,8 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 				final P_Task_Disconnect disconnectTask = m_queue.getCurrent(P_Task_Disconnect.class, m_device);
 
 				m_device.m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/false);
-				
-				if( disconnectTask != null )
+
+				if (disconnectTask != null)
 				{
 					disconnectTask.onNativeSuccess(gattStatus);
 				}
@@ -174,7 +177,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 				m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 
 				m_device.onConnecting(/*definitelyExplicit=*/false, /*isReconnect=*/false, P_BondManager.OVERRIDE_EMPTY_STATES, /*bleConnect=*/true);
-				
+
 				if (!m_queue.isCurrent(P_Task_Connect.class, m_device))
 				{
 					P_Task_Connect task = new P_Task_Connect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING);
@@ -193,9 +196,9 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			if (Utils.isSuccess(gattStatus))
 			{
 				m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
-				
+
 				m_queue.fail(P_Task_Disconnect.class, m_device);
-				
+
 				if (!m_queue.succeed(P_Task_Connect.class, m_device))
 				{
 					m_device.onNativeConnect(/*explicit=*/false);
@@ -210,11 +213,11 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		else if (newState == BluetoothProfile.STATE_DISCONNECTING)
 		{
 			m_logger.e("Actually natively disconnecting!"); // DRK > error level just so it's noticeable...never seen this.
-			
+
 			m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
-			
+
 //			m_device.onDisconnecting();
-			
+
 			if (!m_queue.isCurrent(P_Task_Disconnect.class, m_device))
 			{
 				P_Task_Disconnect task = new P_Task_Disconnect(m_device, m_taskStateListener, /*explicit=*/false, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING, /*cancellable=*/true);
@@ -228,17 +231,17 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			m_device.m_nativeWrapper.updateNativeConnectionState(gatt);
 		}
 	}
-	
+
 	private void onNativeConnectFail(final BluetoothGatt gatt, final int gattStatus)
 	{
 		//--- DRK > NOTE: Making an assumption that the underlying stack agrees that the connection state is STATE_DISCONNECTED.
 		//---				This is backed up by basic testing, but even if the underlying stack uses a different value, it can probably
 		//---				be assumed that it will eventually go to STATE_DISCONNECTED, so SweetBlue library logic is sounder "living under the lie" for a bit regardless.
 		m_device.m_nativeWrapper.updateNativeConnectionState(gatt, BluetoothProfile.STATE_DISCONNECTED);
-		
+
 		final P_Task_Connect connectTask = m_queue.getCurrent(P_Task_Connect.class, m_device);
-		
-		if( connectTask != null )
+
+		if (connectTask != null)
 		{
 			connectTask.onNativeFail(gattStatus);
 		}
@@ -248,11 +251,13 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 	}
 
-	@Override public void onServicesDiscovered(final BluetoothGatt gatt, final int gattStatus)
+	@Override
+	public void onServicesDiscovered(final BluetoothGatt gatt, final int gattStatus)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onServicesDiscovered_updateThread(gatt, gattStatus);
 			}
@@ -263,7 +268,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		m_logger.log_status(gattStatus);
 
-		if( Utils.isSuccess(gattStatus) )
+		if (Utils.isSuccess(gattStatus))
 		{
 			m_queue.succeed(P_Task_DiscoverServices.class, m_device);
 		}
@@ -271,20 +276,22 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			final P_Task_DiscoverServices task = m_queue.getCurrent(P_Task_DiscoverServices.class, m_device);
 
-			if( task != null )
+			if (task != null)
 			{
 				task.onNativeFail(gattStatus);
 			}
 		}
 	}
-	
-	@Override public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
+
+	@Override
+	public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
 	{
 		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
 
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onCharacteristicRead_updateThread(gatt, characteristic, gattStatus, value);
 			}
@@ -299,7 +306,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		final P_Task_Read readTask = m_queue.getCurrent(P_Task_Read.class, m_device);
 
-		if( readTask != null && readTask.isFor(characteristic) )
+		if (readTask != null && readTask.isFor(characteristic))
 		{
 			readTask.onCharacteristicRead(gatt, characteristic.getUuid(), value, gattStatus);
 		}
@@ -317,13 +324,15 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 	}
 
-	@Override public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
+	@Override
+	public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
 	{
 		final byte[] data = characteristic.getValue();
 
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onCharacteristicWrite_updateThread(gatt, characteristic, data, gattStatus);
 			}
@@ -338,7 +347,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
 
-		if (task != null && task.isFor(characteristic) )
+		if (task != null && task.isFor(characteristic))
 		{
 			task.onCharacteristicWrite(gatt, characteristic.getUuid(), gattStatus);
 		}
@@ -353,36 +362,36 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		final BleDevice.ReadWriteListener.Type type_modified = characteristic_nullable != null ? P_DeviceServiceManager.modifyResultType(characteristic_nullable, type) : type;
 		final BleDevice.ReadWriteListener.Status status = Utils.isSuccess(gattStatus) ? BleDevice.ReadWriteListener.Status.SUCCESS : BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE;
 
-		final UUID serviceUuid			= characteristic_nullable != null	? characteristic_nullable.getService().getUuid()	: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
-		final UUID characteristicUuid	= characteristic_nullable != null	? characteristic_nullable.getUuid()					: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
-		final UUID descriptorUuid		= descriptor_nullable != null		? descriptor_nullable.getUuid()						: BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
+		final UUID serviceUuid = characteristic_nullable != null ? characteristic_nullable.getService().getUuid() : BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
+		final UUID characteristicUuid = characteristic_nullable != null ? characteristic_nullable.getUuid() : BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
+		final UUID descriptorUuid = descriptor_nullable != null ? descriptor_nullable.getUuid() : BleDevice.ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
 
 		final double time = Interval.DISABLED.secs();
 		final boolean solicited = false;
 
 		final BleDevice.ReadWriteListener.ReadWriteEvent e;
 
-		if( target == BleDevice.ReadWriteListener.Target.CHARACTERISTIC || target == BleDevice.ReadWriteListener.Target.DESCRIPTOR )
+		if (target == BleDevice.ReadWriteListener.Target.CHARACTERISTIC || target == BleDevice.ReadWriteListener.Target.DESCRIPTOR)
 		{
 			e = new BleDevice.ReadWriteListener.ReadWriteEvent
-			(
-				m_device, serviceUuid, characteristicUuid, descriptorUuid, null, type_modified,
-				target, data, status, gattStatus, time, time, solicited
-			);
+					(
+							m_device, serviceUuid, characteristicUuid, descriptorUuid, null, type_modified,
+							target, data, status, gattStatus, time, time, solicited
+					);
 		}
-		else if( target == BleDevice.ReadWriteListener.Target.RSSI )
+		else if (target == BleDevice.ReadWriteListener.Target.RSSI)
 		{
 			e = new BleDevice.ReadWriteListener.ReadWriteEvent
-			(
-				m_device, type, m_device.getRssi(), status, gattStatus, time, time, solicited
-			);
+					(
+							m_device, type, m_device.getRssi(), status, gattStatus, time, time, solicited
+					);
 		}
-		else if( target == BleDevice.ReadWriteListener.Target.MTU )
+		else if (target == BleDevice.ReadWriteListener.Target.MTU)
 		{
 			e = new BleDevice.ReadWriteListener.ReadWriteEvent
-			(
-				m_device, m_device.getMtu(), status, gattStatus, time, time, solicited
-			);
+					(
+							m_device, m_device.getMtu(), status, gattStatus, time, time, solicited
+					);
 		}
 		else
 		{
@@ -391,17 +400,19 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		m_device.invokeReadWriteCallback(null, e);
 	}
-	
-	@Override public void onReliableWriteCompleted(final BluetoothGatt gatt, final int gattStatus)
+
+	@Override
+	public void onReliableWriteCompleted(final BluetoothGatt gatt, final int gattStatus)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onReliableWriteCompleted_updateThread(gatt, gattStatus);
 			}
 		});
-    }
+	}
 
 	private void onReliableWriteCompleted_updateThread(final BluetoothGatt gatt, final int gattStatus)
 	{
@@ -409,7 +420,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		final P_Task_ExecuteReliableWrite task = m_queue.getCurrent(P_Task_ExecuteReliableWrite.class, m_device);
 
-		if( task != null )
+		if (task != null)
 		{
 			task.onReliableWriteCompleted(gatt, gattStatus);
 		}
@@ -418,12 +429,14 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			m_device.m_reliableWriteMngr.onReliableWriteCompleted_unsolicited(gatt, gattStatus);
 		}
 	}
-	
-	@Override public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
+
+	@Override
+	public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onReadRemoteRssi_updateThread(gatt, rssi, gattStatus);
 			}
@@ -432,14 +445,14 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 	private void onReadRemoteRssi_updateThread(final BluetoothGatt gatt, final int rssi, final int gattStatus)
 	{
-		if( Utils.isSuccess(gattStatus) )
+		if (Utils.isSuccess(gattStatus))
 		{
 			m_device.updateRssi(rssi);
 		}
 
 		final P_Task_ReadRssi task = m_queue.getCurrent(P_Task_ReadRssi.class, m_device);
 
-		if( task != null )
+		if (task != null)
 		{
 			task.onReadRemoteRssi(gatt, rssi, gattStatus);
 		}
@@ -448,14 +461,16 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.RSSI, P_Const.EMPTY_BYTE_ARRAY, gattStatus);
 		}
 	}
-	
-	@Override public void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
+
+	@Override
+	public void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
 	{
 		final byte[] data = descriptor.getValue();
 
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onDescriptorWrite_updateThread(gatt, descriptor, data, gattStatus);
 			}
@@ -470,7 +485,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		final P_Task_WriteDescriptor task_write = m_queue.getCurrent(P_Task_WriteDescriptor.class, m_device);
 
-		if( task_write != null && task_write.isFor(descriptor) )
+		if (task_write != null && task_write.isFor(descriptor))
 		{
 			task_write.onDescriptorWrite(gatt, descriptor.getUuid(), gattStatus);
 		}
@@ -478,7 +493,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		{
 			final P_Task_ToggleNotify task_toggleNotify = m_queue.getCurrent(P_Task_ToggleNotify.class, m_device);
 
-			if( task_toggleNotify != null && task_toggleNotify.isFor(descriptor) )
+			if (task_toggleNotify != null && task_toggleNotify.isFor(descriptor))
 			{
 				task_toggleNotify.onDescriptorWrite(gatt, uuid, gattStatus);
 			}
@@ -489,13 +504,15 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 	}
 
-	@Override public void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
+	@Override
+	public void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
 	{
 		final byte[] data = descriptor.getValue();
 
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onDescriptorRead_updateThread(gatt, descriptor, data, gattStatus);
 			}
@@ -534,14 +551,16 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 //			}
 //		}
 	}
-	
-	@Override public void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)
+
+	@Override
+	public void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)
 	{
 		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
 
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
-			@Override public void run()
+			@Override
+			public void run()
 			{
 				onCharacteristicChanged_updateThread(gatt, characteristic, value);
 			}
@@ -556,6 +575,12 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		m_logger.d("characteristic=" + characteristicUuid.toString());
 
 		m_device.getPollManager().onCharacteristicChangedFromNativeNotify(serviceUuid, characteristicUuid, value);
+	}
+
+	public void onNativeBoneRequest_updateThread(BleDevice device)
+	{
+		m_logger.i("Bond request served for device with mac " + device.getMacAddress());
+		device.m_bondMngr.onNativeBondRequest();
 	}
 
 	public void onNativeBondStateChanged_updateThread(int previousState, int newState, int failReason)

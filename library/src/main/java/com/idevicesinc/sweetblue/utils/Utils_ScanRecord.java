@@ -104,7 +104,7 @@ public final class Utils_ScanRecord extends Utils
 		boolean completeList = false;
 
 		int mfgId = -1;
-		byte[] mfgData = new byte[34];
+		byte[] mfgData = new byte[0];
 
 		if(scanRecord == null)
 		{

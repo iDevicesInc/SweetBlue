@@ -24,86 +24,34 @@
             <include layout="@layout/toolbar"/>
 
             <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp"
-                android:paddingTop="12dp">
-
+                style="@style/page_title_bar">
 
                 <TextView
-                    android:id="@+id/scanStatusTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Scan Status: "/>
-
-                <TextView
-                    android:id="@+id/scanStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toRightOf="@+id/scanStatusTitle"
-                    android:text="@string/not_scanning"/>
-
-                <LinearLayout
-                    android:id="@+id/optionsBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/scanStatusTitle"
-                    android:layout_marginBottom="12dp"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Scan API: "/>
-
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"/>
-
-                    <com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner
-                        android:id="@+id/apiSpinner"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:entries="@array/scan_apis">
-
-                    </com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner>
-
-                </LinearLayout>
+                    style="@style/page_title"
+                    android:id="@+id/scanTextView"
+                    android:text="Not Ready To Scan"/>
 
                 <LinearLayout
                     android:id="@+id/scanLayout"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/optionsBar">
+                    android:padding="18dp"
+                    android:layout_alignParentRight="true">
 
-                    <Button
-                        android:id="@+id/startScan"
-                        android:layout_width="match_parent"
+                    <ImageView
+                        android:id="@+id/scanImageView"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Start Scan"/>
-
-                    <Button
-                        android:id="@+id/stopScan"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Stop Scan"/>
+                        android:src="@drawable/icon_alert"/>
 
                 </LinearLayout>
 
-                <android.support.v7.widget.RecyclerView
-                    android:id="@+id/recyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_below="@+id/scanLayout"></android.support.v7.widget.RecyclerView>
-
             </RelativeLayout>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="705dp"/>
 
         </LinearLayout>
 

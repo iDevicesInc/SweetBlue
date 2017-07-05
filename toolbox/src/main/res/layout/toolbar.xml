@@ -4,9 +4,16 @@
                                    xmlns:app="http://schemas.android.com/apk/res-auto"
                                    android:layout_width="match_parent"
                                    android:layout_height="wrap_content"
-                                   android:background="#222222"
+                                   android:background="@color/primary_background"
                                    app:theme="@style/ToolbarStyle"
                                    android:minHeight="?attr/actionBarSize"
                                    app:titleTextColor="@color/colorPrimary">
+
+    <ImageView
+        android:id="@+id/navBarLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/icon_navigation_sweetblue"
+        android:layout_gravity="center" />
 
 </android.support.v7.widget.Toolbar>

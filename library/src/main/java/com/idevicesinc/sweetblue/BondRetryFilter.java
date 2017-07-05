@@ -21,15 +21,17 @@ public interface BondRetryFilter extends GenericListener_T<BondRetryFilter.Retry
         private final boolean m_direct;
         private final int m_retryAttempts;
         private final Status m_status;
+        private final boolean m_userPrompted;
 
 
-        RetryEvent(BleDevice device, int failCode, int retryAttempts, boolean direct)
+        RetryEvent(BleDevice device, int failCode, int retryAttempts, boolean direct, boolean userPrompted)
         {
             m_device = device;
             m_failCode = failCode;
             m_direct = direct;
             m_retryAttempts = retryAttempts;
             m_status = Status.fromNativeBit(failCode);
+            m_userPrompted = userPrompted;
         }
 
         /**
@@ -76,9 +78,19 @@ public interface BondRetryFilter extends GenericListener_T<BondRetryFilter.Retry
         }
 
         /**
-         * This is a best guess on our part. Basically, this will return <code>true</code> if the {@link Status} does not equal
-         * {@link Status#AUTH_FAILED}, {@link Status#AUTH_REJECTED}, {@link Status#REPEATED_ATTEMPTS}, or {@link Status#SUCCESS} (which should never happen here, but it's left just in
-         * case).
+         * Returns whether this bond request attempt prompted the user or not. NOTE: This only means the OS has "prompted" the user for bonding, in the case
+         * that the device requires a pin/password. This can either mean a notification was put into the drawer, OR the dialog was shown to the user. However, if you
+         * set {@link BleDeviceConfig#forceBondDialog}, then there's a very high chance that the dialog was shown.
+         */
+        public final boolean wasUserPrompted()
+        {
+            return m_userPrompted;
+        }
+
+        /**
+         * This is a best guess on our part. Basically, this will return <code>true</code> if {@link #wasUserPrompted()} returns <code>false</code>, or the {@link Status}
+         * does not equal {@link Status#AUTH_FAILED}, {@link Status#AUTH_REJECTED}, {@link Status#REPEATED_ATTEMPTS}, or {@link Status#SUCCESS} (which should never
+         * happen here, but it's left just in case).
          */
         public final boolean possibleRetry()
         {
@@ -90,7 +102,7 @@ public interface BondRetryFilter extends GenericListener_T<BondRetryFilter.Retry
                 case SUCCESS:
                     return false;
                 default:
-                    return true;
+                    return !wasUserPrompted();
             }
         }
 
@@ -239,8 +251,8 @@ public interface BondRetryFilter extends GenericListener_T<BondRetryFilter.Retry
 
     /**
      * The default {@link BondRetryFilter} that SweetBlue uses. Feel free to instantiate this with your own number of retry attempts,
-     * See {@link #DefaultBondRetryFilter(int)}, or to provide custom logic on when to retry the bond attempt, in which case you should override
-     * the {@link DefaultBondRetryFilter#onEvent(RetryEvent)} method. This will retry the bond only if the bond attempt was direct, in that
+     * See {@link BondRetryFilter.DefaultBondRetryFilter#DefaultBondRetryFilter(int)}, or to provide custom logic on when to retry the bond attempt, in which case you should override
+     * the {@link BondRetryFilter.DefaultBondRetryFilter#onEvent(RetryEvent)} method. This will retry the bond only if the bond attempt was direct, in that
      * {@link BleDevice#bond(BleDevice.BondListener)}, or {@link BleDevice#bond()} was called, and if we think it's a possible retry situation.
      * See {@link RetryEvent#possibleRetry()}.
      */

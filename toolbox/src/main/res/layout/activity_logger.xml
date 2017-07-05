@@ -10,65 +10,27 @@
 
 	<include layout="@layout/toolbar" />
 
-	<LinearLayout
-		android:layout_width="match_parent"
-		android:layout_height="50dp"
-		android:orientation="horizontal"
-		android:gravity="center_vertical">
-
-		<com.idevicesinc.sweetblue.toolbox.view.ReselectableSpinner
-			android:id="@+id/debugSpinner"
-			android:layout_width="wrap_content"
-			android:layout_height="match_parent"
-			android:entries="@array/debug_levels" />
-
-		<View
-			android:layout_width="1dp"
-			android:layout_height="30dp"
-			android:background="@android:color/black"/>
-
-		<RelativeLayout
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:focusableInTouchMode="true">
-
-			<EditText
-				android:id="@+id/filterEditText"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent"
-				android:layout_marginEnd="10dp"
-				android:layout_marginStart="10dp"
-				android:singleLine="true"
-				android:scrollHorizontally="true"
-				android:hint="@string/filter"/>
-
-		</RelativeLayout>
-
-		<Button
-			android:id="@+id/button"
-			android:layout_width="30dp"
-			android:layout_height="30dp"
-			android:paddingStart="5dp"
-			android:paddingEnd="5dp"
-			android:background="@color/light_gray"
-			android:textAlignment="center"
-			android:text="↺"
-			android:textSize="20dp" />
-
-	</LinearLayout>
-
-	<ScrollView
-		android:id="@+id/scrollView"
+	<android.support.v4.widget.SwipeRefreshLayout
+		android:id="@+id/swipeLayout"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">
 
-		<TextView
-			android:id="@+id/logTextView"
+		<ScrollView
+			android:id="@+id/scrollView"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:paddingLeft="10dp"
-			android:text="hello world" />
+			android:layout_height="match_parent">
 
-	</ScrollView>
+			<TextView
+				android:id="@+id/logTextView"
+				style="@style/item_text"
+				android:layout_gravity="top"
+				android:layout_marginStart="@dimen/medium"
+				android:layout_marginEnd="@dimen/small"
+				android:layout_marginTop="@dimen/small"
+				android:text="Log Text Here" />
+
+		</ScrollView>
+
+	</android.support.v4.widget.SwipeRefreshLayout>
 
 </LinearLayout>

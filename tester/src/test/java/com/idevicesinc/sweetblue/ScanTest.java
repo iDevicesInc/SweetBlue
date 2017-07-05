@@ -4,15 +4,12 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.Util;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -24,7 +21,7 @@ public class ScanTest extends BaseBleUnitTest
 
     private static final int LEEWAY = 500;
 
-    @Test
+    @Test(timeout = 10000)
     public void scanApiClassicTest() throws Exception
     {
         startTest(false);
@@ -51,7 +48,7 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
-    @Test
+    @Test(timeout = 10000)
     @Deprecated
     public void scanApiClassicBackwardsCompatTest() throws Exception
     {
@@ -79,7 +76,7 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void scanApiPreLollipop() throws Exception
     {
         startTest(false);
@@ -106,7 +103,7 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
-    @Test
+    @Test(timeout = 10000)
     @Deprecated
     public void scanApiPreLollipopBackwardsCompatTest() throws Exception
     {
@@ -134,7 +131,7 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void scanApiPostLollipop() throws Exception
     {
         startTest(false);
@@ -161,7 +158,93 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
+    public void inifiteScanWithPauseTest() throws Exception
+    {
+        startTest(false);
+        m_config.scanApi = BleScanApi.POST_LOLLIPOP;
+        m_mgr.setConfig(m_config);
+        doTestOperation(new TestOp()
+        {
+            @Override
+            public void run()
+            {
+                m_mgr.setListener_State(new ManagerStateListener()
+                {
+                    boolean scanStarted = false;
+                    boolean scanPaused = false;
+
+                    @Override
+                    public void onEvent(BleManager.StateListener.StateEvent e)
+                    {
+                        if (e.didEnter(BleManagerState.SCANNING))
+                        {
+                            if (!scanPaused)
+                            {
+                                scanStarted = true;
+                            }
+                            else
+                            {
+                                succeed();
+                            }
+                        }
+                        else if (e.didEnter(BleManagerState.SCANNING_PAUSED))
+                        {
+                            assertTrue(scanStarted);
+                            scanPaused = true;
+                        }
+                    }
+                });
+                m_mgr.startScan(Interval.INFINITE);
+            }
+        });
+    }
+
+    @Test(timeout = 30000)
+    public void inifiteScanForcedTest() throws Exception
+    {
+        startTest(false);
+        m_config.scanApi = BleScanApi.POST_LOLLIPOP;
+        m_config.updateLoopCallback = new PI_UpdateLoop.Callback()
+        {
+            @Override
+            public void onUpdate(double timestep_seconds)
+            {
+                double timeScanning = m_mgr.getTimeInState(BleManagerState.SCANNING).secs();
+                if (timeScanning >= 15.0)
+                {
+                    succeed();
+                }
+            }
+        };
+        m_mgr.setConfig(m_config);
+        doTestOperation(new TestOp()
+        {
+            @Override
+            public void run()
+            {
+                m_mgr.setListener_State(new ManagerStateListener()
+                {
+
+                    @Override
+                    public void onEvent(BleManager.StateListener.StateEvent e)
+                    {
+                        if (e.didEnter(BleManagerState.SCANNING))
+                        {
+                        }
+                        else if (e.didEnter(BleManagerState.SCANNING_PAUSED))
+                        {
+                            assertFalse("Scanning paused for a forced infinite scan!", true);
+                        }
+                    }
+                });
+
+                m_mgr.startScan(new ScanOptions().scanFor(Interval.INFINITE).forceIndefinite(true));
+            }
+        });
+    }
+
+    @Test(timeout = 10000)
     @Deprecated
     public void scanApiPostLollipopBackwardsCompatTest() throws Exception
     {
@@ -189,7 +272,7 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void scanApiAuto() throws Exception
     {
         startTest(false);
@@ -205,7 +288,7 @@ public class ScanTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.POST_LOLLIPOP);
                             m_mgr.stopScan();
                             succeed();
                         }
@@ -216,7 +299,48 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
-    @Test
+    @Test(timeout = 30000)
+    public void scanApiAutoSwitchApiTest() throws Exception
+    {
+        startTest(false);
+        m_config.scanApi = BleScanApi.AUTO;
+        m_mgr.setConfig(m_config);
+        doTestOperation(new TestOp()
+        {
+            @Override public void run()
+            {
+                m_mgr.setListener_State(new ManagerStateListener()
+                {
+                    boolean paused = false;
+
+                    @Override public void onEvent(BleManager.StateListener.StateEvent e)
+                    {
+                        if (e.didEnter(BleManagerState.SCANNING))
+                        {
+                            if (!paused)
+                            {
+                                assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.POST_LOLLIPOP);
+                            }
+                            else
+                            {
+                                paused = true;
+                                assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
+                                m_mgr.stopScan();
+                                succeed();
+                            }
+                        }
+                        else if (e.didEnter(BleManagerState.SCANNING_PAUSED))
+                        {
+                            paused = true;
+                        }
+                    }
+                });
+                m_mgr.startScan();
+            }
+        });
+    }
+
+    @Test(timeout = 10000)
     @Deprecated
     public void scanApiAutoBackwardsCompatTest() throws Exception
     {
@@ -233,7 +357,7 @@ public class ScanTest extends BaseBleUnitTest
                     {
                         if (e.didEnter(BleManagerState.SCANNING))
                         {
-                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.PRE_LOLLIPOP);
+                            assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.POST_LOLLIPOP);
                             m_mgr.stopScan();
                             succeed();
                         }
@@ -244,11 +368,12 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void scanClassicBoostTest() throws Exception
     {
         startTest(false);
         m_config.scanApi = BleScanApi.AUTO;
+        m_config.scanClassicBoostLength = Interval.secs(BleManagerConfig.DEFAULT_CLASSIC_SCAN_BOOST_TIME);
         m_mgr.setConfig(m_config);
         doTestOperation(new TestOp()
         {
@@ -374,7 +499,7 @@ public class ScanTest extends BaseBleUnitTest
 
                                 // We also need to account for boost scan time here
 
-                                long boostTime = m_mgr.m_config.scanClassicBoostLength.millis() * 2;
+                                long boostTime = getBoostTime();
 
                                 long targetTime = (scanTime * 3) + boostTime;
                                 assertTrue("Diff: " + diff, (diff - LEEWAY) < targetTime && targetTime < (diff + LEEWAY));
@@ -417,7 +542,7 @@ public class ScanTest extends BaseBleUnitTest
 
                                 // We also need to account for boost scan time here
 
-                                long boostTime = m_mgr.m_config.scanClassicBoostLength.millis() * 2;
+                                long boostTime = getBoostTime();
 
                                 long targetTime = (scanTime * 3) + boostTime;
 
@@ -437,6 +562,11 @@ public class ScanTest extends BaseBleUnitTest
                 m_mgr.startScan(options);
             }
         });
+    }
+
+    private long getBoostTime()
+    {
+        return Interval.isEnabled(m_mgr.m_config.scanClassicBoostLength.millis()) ? m_mgr.m_config.scanClassicBoostLength.millis() * 2 : 0;
     }
 
     private void doSingleScanTest(final long scanTime) throws Exception

@@ -4,6 +4,14 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#000000</color>
 
+	<color name="nav_bar_text">#0092B8</color>
+    <color name="title_bar_blue">#55C2EA</color>
+	<color name="item_title_blue">#0092B8</color>
+    <color name="page_title_disabled">#0092B8</color>
+	<color name="primary_gray">#808083</color>
+	<color name="header_gray">#A0A0A0</color>
+    <color name="overflow_enabled_blue">#0092B8</color>
+
     <!--Main app colors-->
     <color name="transparent">#00000000</color>
     <color name="white">#FFFFFFFF</color>

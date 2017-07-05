@@ -1,157 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/navigationDrawer"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/primary_background"
+    android:clickable="true"
     android:fillViewport="true"
-    android:background="@color/colorAccent"
-    android:paddingStart="12dp"
-    android:clickable="true">
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="21dp"
-        android:orientation="vertical"
+        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true">
+        android:layout_marginTop="21dp"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/closeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon_cancel"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="60dp"
+            android:layout_marginTop="50dp"
+            android:src="@drawable/logo_menu_sweetblue"/>
 
         <LinearLayout
-            android:id="@+id/loggerLinearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/ripple_black"
-            android:clickable="true"
-            android:padding="10dp"
-            android:orientation="horizontal">
-
-            <!--ImageView
-                android:id="@+id/addProductIcon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginLeft="20dp"/-->
+            android:id="@+id/logger"
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="30dp"
-                android:text="@string/nav_drawer_logger"
-                android:textColor="@color/white"
-                android:textSize="16dp"/>
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_logger"
+                android:text="Logger"/>
 
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/deviceInformationLinearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/ripple_black"
-            android:clickable="true"
-            android:padding="10dp"
-            android:orientation="horizontal">
-
-            <!--ImageView
-                android:id="@+id/addProductIcon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginLeft="20dp"/-->
+            android:id="@+id/deviceInfo"
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="30dp"
-                android:text="@string/nav_drawer_device_information"
-                android:textColor="@color/white"
-                android:textSize="16dp"/>
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_device"
+                android:text="Device Information"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/about"
+            style="@style/nav_layout">
+
+            <TextView
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_about"
+                android:text="About SweetBlue"/>
 
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/settingsLinearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/ripple_black"
-            android:clickable="true"
-            android:padding="10dp"
-            android:orientation="horizontal">
-
-            <!--ImageView
-                android:id="@+id/addProductIcon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginLeft="20dp"/-->
+            android:id="@+id/settings"
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="30dp"
-                android:text="@string/nav_drawer_settings"
-                android:textColor="@color/white"
-                android:textSize="16dp"/>
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_settings"
+                android:text="Settings"/>
 
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/websiteLinearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/ripple_black"
-            android:clickable="true"
-            android:padding="10dp"
-            android:orientation="horizontal">
-
-            <!--ImageView
-                android:id="@+id/addProductIcon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginLeft="20dp"/-->
+            android:id="@+id/feedback"
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="30dp"
-                android:text="@string/nav_drawer_website"
-                android:textColor="@color/white"
-                android:textSize="16dp"/>
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_feedback"
+                android:text="Feedback"/>
 
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/sendFeedbackLinearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/ripple_black"
-            android:clickable="true"
-            android:padding="10dp"
-            android:orientation="horizontal">
-
-            <!--ImageView
-                android:id="@+id/addProductIcon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginLeft="20dp"/-->
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="30dp"
-                android:text="@string/nav_drawer_send_feedback"
-                android:textColor="@color/white"
-                android:textSize="16dp"/>
-
-        </LinearLayout>
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/appVersion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="12dp"
+        android:textColor="@color/primary_gray"
+        android:text="App Version 1.0"/>
 
 </RelativeLayout>

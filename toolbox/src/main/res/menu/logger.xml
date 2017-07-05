@@ -1,7 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
-        android:titleCondensed="@string/classic"
-        android:id="@+id/settings"
-        android:title="Settings"/>
+        android:id="@+id/filter"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="Filter"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:showAsAction="always"/>
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/verbose"
+            android:title="Verbose"
+            android:checked="true" />
+
+        <item
+            android:id="@+id/debug"
+            android:title="Debug"/>
+
+        <item
+            android:id="@+id/info"
+            android:title="Info"/>
+
+        <item
+            android:id="@+id/warn"
+            android:title="Warn"/>
+
+        <item
+            android:id="@+id/error"
+            android:title="Error"/>
+
+    </group>
+
+
 </menu>
