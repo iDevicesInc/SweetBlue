@@ -149,13 +149,13 @@ public class MainActivity extends Activity
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
 
-        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
-        {
-            @Override public Please onEvent(ScanEvent e)
-            {
-                return Please.acknowledgeIf(e.name_normalized().contains("tag"));
-            }
-        };
+//        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+//        {
+//            @Override public Please onEvent(ScanEvent e)
+//            {
+//                return Please.acknowledgeIf(e.name_normalized().contains("tag"));
+//            }
+//        };
 
         mgr = BleManager.get(this, config);
 

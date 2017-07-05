@@ -14,7 +14,7 @@ import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.utils.Uuids;
-
+import com.idevicesinc.sweetblue.utils.Uuids.GATTDisplayType;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -162,7 +162,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
                     }
                     else
-                        valueString = Uuids.GATTCharacteristicDisplayType.Hex.toString(characteristic.getValue());
+                        valueString = GATTDisplayType.Hex.toString(characteristic.getValue());
                 }
                 catch (Exception e)
                 {

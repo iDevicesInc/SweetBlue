@@ -92,7 +92,7 @@ public class L_Util
         }
     };
 
-    static android.bluetooth.le.ScanCallback getNativeCallback() {
+    public static android.bluetooth.le.ScanCallback getNativeCallback() {
         return m_callback;
     }
 

@@ -149,6 +149,6 @@ public class ScanTest extends BaseTester<MainActivity>
         BleManagerConfig config = new BleManagerConfig();
         config.runOnMainThread = false;
         config.loggingEnabled = true;
-        return null;
+        return config;
     }
 }
