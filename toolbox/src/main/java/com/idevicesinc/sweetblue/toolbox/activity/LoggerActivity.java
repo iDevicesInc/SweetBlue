@@ -76,7 +76,7 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
         StringBuilder logString = new StringBuilder();
         List<String> log = DebugLog.getDebugger().getLogList();
         String level = DebugLogger.level(m_logLevel);
-        Pattern filterPattern = Pattern.compile(m_filter);
+        Pattern filterPattern = Pattern.compile("(?i)" + m_filter);
 
         for(int i=0; i<log.size(); i++){
             String entry = log.get(i).substring(11,20) + log.get(i).substring(29);
