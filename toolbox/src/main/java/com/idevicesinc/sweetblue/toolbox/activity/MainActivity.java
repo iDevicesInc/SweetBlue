@@ -175,7 +175,7 @@ public class MainActivity extends BaseActivity
         BluetoothEnabler.start(this, new BluetoothEnabler.DefaultBluetoothEnablerFilter() {
             @Override public Please onEvent(BluetoothEnablerEvent e)
             {
-                if (e.isDone())
+                if (e.isDone() && m_manager.isScanningReady())
                 {
                     m_scanTextView.setText(R.string.start_scan);
                     m_scanImageView.setImageResource(R.drawable.icon_scan);

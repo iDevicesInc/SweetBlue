@@ -330,7 +330,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0)
                 value = value == 0 ? 1 : 2;
 
-            Log.d("++--", "char named " + bgc.getUuid() + " has sort key " + value);
+//            Log.d("++--", "char named " + bgc.getUuid() + " has sort key " + value);
 
             return value;
         }
