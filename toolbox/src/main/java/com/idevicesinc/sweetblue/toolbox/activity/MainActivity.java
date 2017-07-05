@@ -528,7 +528,7 @@ public class MainActivity extends BaseActivity
     private void launchWebsite()
     {
         // Launch a web view
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.visite_website_url)));
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.visit_website_url)));
 
         startActivity(browserIntent);
     }
