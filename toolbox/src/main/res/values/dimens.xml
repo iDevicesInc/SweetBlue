@@ -8,6 +8,7 @@
 	<dimen name="tiny">5dp</dimen>
 	<dimen name="small">10dp</dimen>
 	<dimen name="medium">16dp</dimen>
+	<dimen name="medLarge">24dp</dimen>
 	<dimen name="large">50dp</dimen>
 
 </resources>
