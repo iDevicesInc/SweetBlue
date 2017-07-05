@@ -6,8 +6,7 @@
                                    android:layout_height="wrap_content"
                                    android:background="@color/primary_background"
                                    app:theme="@style/ToolbarStyle"
-                                   android:minHeight="?attr/actionBarSize"
-                                   app:titleTextColor="@color/colorPrimary">
+                                   android:minHeight="?attr/actionBarSize">
 
     <ImageView
         android:id="@+id/navBarLogo"

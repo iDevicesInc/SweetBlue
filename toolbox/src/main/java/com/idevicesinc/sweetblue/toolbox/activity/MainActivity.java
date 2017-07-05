@@ -416,6 +416,16 @@ public class MainActivity extends BaseActivity
             @Override
             public void onDrawerSlide(View drawerView, float slideOffset)
             {
+                View focusedView = getCurrentFocus();
+
+                if (focusedView != null)
+                {
+                    focusedView.clearFocus();
+
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                    imm.hideSoftInputFromWindow(focusedView.getWindowToken(), 0);
+                }
             }
 
             @Override
