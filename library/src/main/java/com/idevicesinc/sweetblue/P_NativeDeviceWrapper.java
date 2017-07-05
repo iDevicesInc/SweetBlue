@@ -138,7 +138,7 @@ final class P_NativeDeviceWrapper
 		String[] address_split = m_address.split(":");
 		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
 		String debugName = m_name_normalized.length() == 0 ? "<no_name>" : m_name_normalized;
-		m_name_debug = m_device_native != null ? debugName + "_" + lastFourOfMac : debugName;
+		m_name_debug = m_device_native != null ? String.format("%s%s%s", debugName, "_", lastFourOfMac) : debugName;
 	}
 	
 	public String getAddress()
