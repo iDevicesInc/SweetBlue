@@ -765,20 +765,11 @@ final class P_ScanManager
         @Override
         public int hashCode()
         {
-            return m_device.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            if (obj == null)
-                return false;
-            if (obj instanceof ScanInfo)
+            if (m_device != null)
             {
-                ScanInfo other = (ScanInfo) obj;
-                return m_device.equals(other.m_device);
+                return m_device.hashCode();
             }
-            return false;
+            return super.hashCode();
         }
     }
 
