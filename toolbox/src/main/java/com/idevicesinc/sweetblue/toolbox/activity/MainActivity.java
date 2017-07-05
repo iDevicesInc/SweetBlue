@@ -12,6 +12,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,6 +37,7 @@ import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -47,6 +49,7 @@ public class MainActivity extends BaseActivity
     private RecyclerView m_deviceRecycler;
     private ScanAdapter m_adapter;
     private ArrayList<BleDevice> m_deviceList;
+    private ArrayList<BleDevice> m_displayList;
 
     private TextView m_scanTextView;
     private ImageView m_scanImageView;
@@ -157,10 +160,11 @@ public class MainActivity extends BaseActivity
 
 
         m_deviceList = new ArrayList<>();
+        m_displayList = new ArrayList<>();
 
         m_deviceRecycler = find(R.id.recyclerView);
 
-        m_adapter = new ScanAdapter(this, m_deviceList);
+        m_adapter = new ScanAdapter(this, m_displayList);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
 
@@ -189,32 +193,94 @@ public class MainActivity extends BaseActivity
         super.onCreateOptionsMenu(menu);
 
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.scanFilter));
+        final MenuItem searchItem = menu.findItem(R.id.scanFilter);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnSearchClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (!TextUtils.isEmpty(m_nameScanFilter.query))
+                {
+                    searchView.setQuery(m_nameScanFilter.query, false);
+                }
+            }
+        });
         if (searchView != null)
         {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
             searchView.setIconifiedByDefault(true);
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
             {
+                boolean isClosing = false;
+
                 @Override
                 public boolean onQueryTextSubmit(String query)
                 {
-                    m_nameScanFilter.query = query;
-                    MenuItemCompat.collapseActionView(menu.findItem(R.id.scanFilter));
+                    isClosing = true;
+                    searchView.setQuery("", false);
+                    searchView.setIconified(true);
+                    MenuItemCompat.collapseActionView(searchItem);
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+                    updateList(query);
                     return true;
                 }
 
                 @Override
                 public boolean onQueryTextChange(String newText)
                 {
-                    m_nameScanFilter.query = newText;
+                    if (!isClosing)
+                    {
+                        updateList(newText);
+                    }
+                    isClosing = false;
                     return true;
                 }
             });
         }
         return true;
+    }
+
+    private void updateList(String query)
+    {
+        boolean changed = !m_nameScanFilter.query.equals(query);
+        boolean shorter = query.length() < m_nameScanFilter.query.length();
+        m_nameScanFilter.query = query;
+        if (changed && !shorter)
+        {
+            int size = m_deviceList.size();
+            Iterator<BleDevice> it = m_displayList.iterator();
+            while (it.hasNext())
+            {
+                final BleDevice device = it.next();
+                if (!device.getName_native().toLowerCase().contains(query))
+                {
+                    it.remove();
+                }
+            }
+            if (m_displayList.size() != size)
+            {
+                m_adapter.notifyDataSetChanged();
+            }
+        }
+        else
+        {
+            // Iterate through main device list to see if any new devices match the new query string
+            boolean anyAdded = false;
+            for (BleDevice device : m_deviceList)
+            {
+                if (device.getName_native().contains(query) && !m_displayList.contains(device))
+                {
+                    anyAdded = true;
+                    m_displayList.add(device);
+                }
+            }
+            if (anyAdded)
+            {
+                m_adapter.notifyDataSetChanged();
+            }
+        }
     }
 
     @Override
@@ -284,7 +350,8 @@ public class MainActivity extends BaseActivity
             if (de.was(LifeCycle.DISCOVERED))
             {
                 m_deviceList.add(de.device());
-                Collections.sort(m_deviceList, m_currentComparator);
+                m_displayList.add(de.device());
+                Collections.sort(m_displayList, m_currentComparator);
                 m_adapter.notifyDataSetChanged();
             }
             else if (de.was(LifeCycle.REDISCOVERED))
@@ -294,10 +361,10 @@ public class MainActivity extends BaseActivity
 
                 // If the device was rediscovered, then we have an updated rssi value, so inform the adapter that the data has changed
                 // for this device
-                int index = m_deviceList.indexOf(de.device());
+                int index = m_displayList.indexOf(de.device());
                 if (index != -1)
                 {
-                    Collections.sort(m_deviceList, m_currentComparator);
+                    Collections.sort(m_displayList, m_currentComparator);
                     m_adapter.notifyDataSetChanged();
                 }
             }
@@ -485,6 +552,10 @@ public class MainActivity extends BaseActivity
                 return true;
             case R.id.sortOptions:
                 openSortOptionsDialog();
+                return true;
+            case R.id.scanFilter:
+                int i = 0;
+                i++;
                 return true;
         }
         return super.onOptionsItemSelected(item);
