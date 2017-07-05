@@ -7,7 +7,8 @@
     android:background="@color/primary_background"
     android:clickable="true"
     android:fillViewport="true"
-    android:paddingStart="16dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,89 +34,54 @@
 
         <LinearLayout
             android:id="@+id/logger"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:paddingBottom="8dp"
-            android:paddingTop="8dp">
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:drawableLeft="@drawable/icon_menu_logger"
-                android:drawablePadding="16dp"
-                android:gravity="center_vertical"
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_logger"
                 android:text="Logger"/>
 
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/deviceInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:paddingBottom="8dp"
-            android:paddingTop="8dp">
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawableLeft="@drawable/icon_menu_device"
-                android:drawablePadding="16dp"
-                android:gravity="center"
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_device"
                 android:text="Device Information"/>
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/about"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:paddingBottom="8dp"
-            android:paddingTop="8dp">
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawableLeft="@drawable/icon_menu_about"
-                android:drawablePadding="16dp"
-                android:gravity="center"
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_about"
                 android:text="About SweetBlue"/>
 
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/settings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:paddingBottom="8dp"
-            android:paddingTop="8dp">
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawableLeft="@drawable/icon_menu_settings"
-                android:drawablePadding="16dp"
-                android:gravity="center"
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_settings"
                 android:text="Settings"/>
 
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/feedback"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:paddingBottom="8dp"
-            android:paddingTop="8dp">
+            style="@style/nav_layout">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawableLeft="@drawable/icon_menu_feedback"
-                android:drawablePadding="16dp"
-                android:gravity="center"
+                style="@style/nav_text"
+                android:drawableStart="@drawable/icon_menu_feedback"
                 android:text="Feedback"/>
 
         </LinearLayout>
@@ -130,6 +96,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="12dp"
-        android:text="App Version - 1.0"/>
+        android:textColor="@color/primary_gray"
+        android:text="App Version 1.0"/>
 
 </RelativeLayout>

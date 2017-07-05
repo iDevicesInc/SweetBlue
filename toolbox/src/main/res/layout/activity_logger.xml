@@ -13,8 +13,7 @@
 	<android.support.v4.widget.SwipeRefreshLayout
 		android:id="@+id/swipeLayout"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:paddingTop="4dp">
+		android:layout_height="match_parent">
 
 		<ScrollView
 			android:id="@+id/scrollView"
@@ -23,15 +22,15 @@
 
 			<TextView
 				android:id="@+id/logTextView"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:paddingLeft="10dp"
+				style="@style/item_text"
+				android:layout_gravity="top"
+				android:layout_marginStart="@dimen/medium"
+				android:layout_marginEnd="@dimen/small"
+				android:layout_marginTop="@dimen/small"
 				android:text="Log Text Here" />
 
 		</ScrollView>
 
 	</android.support.v4.widget.SwipeRefreshLayout>
-
-
 
 </LinearLayout>

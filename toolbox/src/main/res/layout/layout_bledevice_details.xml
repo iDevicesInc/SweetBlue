@@ -7,130 +7,103 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/medium">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="Native Name"/>
 
         <TextView
             android:id="@+id/nativeName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+            android:layout_marginBottom="@dimen/medium"
             android:text="Device's Native Name"/>
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="MAC Address"/>
 
 
         <TextView
             android:id="@+id/macAddress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+android:layout_marginBottom="@dimen/medium"
             android:text="00:00:00:00:00:00"/>
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="Status"/>
 
         <TextView
             android:id="@+id/status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+android:layout_marginBottom="@dimen/medium"
             android:text="Discovered, Advertising, Disconnected"/>
 
         <TextView
             android:id="@+id/advNameLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="@string/adv_name"/>
 
         <TextView
             android:id="@+id/advName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+android:layout_marginBottom="@dimen/medium"
             android:text="Name from Scan record"/>
 
         <TextView
             android:id="@+id/serviceUuidLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="@string/service_uuids"/>
 
         <TextView
             android:id="@+id/serviceUuids"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+android:layout_marginBottom="@dimen/medium"
             android:text="UUID: 0xFF1D\nData: AABBCCDD"/>
 
         <TextView
             android:id="@+id/manufacturerIdLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="@string/manufacturer_id"/>
 
         <TextView
             android:id="@+id/manufacturerId"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+android:layout_marginBottom="@dimen/medium"
             android:text="15"/>
 
         <TextView
             android:id="@+id/manufacturerDataLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="@string/manufacturer_data"/>
 
         <TextView
             android:id="@+id/manufacturerData"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+android:layout_marginBottom="@dimen/medium"
             android:text="90ABCDEF0326"/>
 
         <TextView
             android:id="@+id/advFlagsLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="@string/adv_flags"/>
 
         <TextView
             android:id="@+id/advFlags"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+android:layout_marginBottom="@dimen/medium"
             android:text="001101001"/>
 
         <TextView
             android:id="@+id/txPowerLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
+            style="@style/item_heading"
             android:text="@string/tx_power"/>
 
         <TextView
             android:id="@+id/txPower"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            style="@style/item_text"
+android:layout_marginBottom="@dimen/medium"
             android:text="45"/>
 
 

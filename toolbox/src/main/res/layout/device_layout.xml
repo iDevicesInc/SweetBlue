@@ -7,25 +7,18 @@
 
     <TextView
         android:id="@+id/name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_marginBottom="6dp"
-        android:layout_marginLeft="12dp"
+        style="@style/item_title_large"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="@dimen/medium"
         android:layout_marginTop="6dp"
-        android:textSize="16sp"
-        android:maxLines="1"
-        android:text="Device name"
-        android:textStyle="bold"/>
+        android:text="Device name"/>
 
     <TextView
         android:id="@+id/rssiStatusLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/item_text"
         android:layout_below="@+id/name"
-        android:layout_marginLeft="12dp"
-        android:text="Signal Strength: 50%"
-        android:textColor="@color/gray"/>
+        android:layout_marginStart="@dimen/medium"
+        android:text="Signal Strength: 50%"/>
 
 
     <LinearLayout
@@ -44,7 +37,7 @@
             android:scaleType="fitCenter"
             android:background="@drawable/grey_ring"
             android:src="@drawable/icon_connect"
-            android:tint="@color/gray"/>
+            android:tint="@color/primary_gray"/>
 
         <TextView
             android:id="@+id/connectTextView"
@@ -52,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="Connect"
-            android:textColor="@color/gray"/>
+            android:textColor="@color/primary_gray"/>
 
     </LinearLayout>
 
@@ -72,7 +65,7 @@
             android:background="@drawable/grey_ring"
             android:scaleType="fitCenter"
             android:src="@drawable/icon_bond"
-            android:tint="@color/gray"/>
+            android:tint="@color/primary_gray"/>
 
         <TextView
             android:id="@+id/bondTextView"
@@ -80,17 +73,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="Bond"
-            android:textColor="@color/gray"/>
+            android:textColor="@color/primary_gray"/>
 
     </LinearLayout>
 
-
     <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
+        style="@style/item_divider"
         android:layout_below="@+id/bondLayout"
-        android:layout_marginTop="12dp"
-        android:background="#666666"
-        />
+        android:layout_marginTop="12dp" />
 
 </RelativeLayout>

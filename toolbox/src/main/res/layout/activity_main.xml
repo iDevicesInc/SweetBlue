@@ -24,20 +24,12 @@
             <include layout="@layout/toolbar"/>
 
             <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#55c2ea">
+                style="@style/page_title_bar">
 
                 <TextView
+                    style="@style/page_title"
                     android:id="@+id/scanTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Not Ready To Scan"
-                    android:layout_centerVertical="true"
-                    android:layout_marginLeft="16dp"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"/>
+                    android:text="Not Ready To Scan"/>
 
                 <LinearLayout
                     android:id="@+id/scanLayout"
@@ -50,19 +42,16 @@
                         android:id="@+id/scanImageView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-
                         android:src="@drawable/icon_alert"/>
 
                 </LinearLayout>
-
-
 
             </RelativeLayout>
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="705dp"/>
 
         </LinearLayout>
 
