@@ -1,15 +1,21 @@
 package com.idevicesinc.sweetblue.toolbox.activity;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -53,6 +59,7 @@ public class MainActivity extends BaseActivity
     private NameComparator nameComparator = new NameComparator();
 
     private Comparator<BleDevice> m_currentComparator = rssiComparator;
+    private NameScanFilter m_nameScanFilter = new NameScanFilter("");
 
 
     public static BleManagerConfig getDefaultConfig()
@@ -76,7 +83,10 @@ public class MainActivity extends BaseActivity
 
         setTitle("");
 
-        m_manager = BleManager.get(this, getDefaultConfig());
+        BleManagerConfig config = getDefaultConfig();
+        config.defaultScanFilter = m_nameScanFilter;
+
+        m_manager = BleManager.get(this, config);
 
         m_manager.setListener_Discovery(new DeviceDiscovery());
 
@@ -115,6 +125,7 @@ public class MainActivity extends BaseActivity
                 if (m_manager.isScanning())
                 {
                     m_manager.stopAllScanning();
+                    m_adapter.notifyDataSetChanged();
                     m_scanTextView.setText(R.string.start_scan);
                     m_scanImageView.setImageResource(R.drawable.icon_scan);
                 }
@@ -172,6 +183,50 @@ public class MainActivity extends BaseActivity
         setupNavDrawer();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu)
+    {
+        super.onCreateOptionsMenu(menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.scanFilter));
+        if (searchView != null)
+        {
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+            searchView.setIconifiedByDefault(true);
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+            {
+                @Override
+                public boolean onQueryTextSubmit(String query)
+                {
+                    m_nameScanFilter.query = query;
+                    MenuItemCompat.collapseActionView(menu.findItem(R.id.scanFilter));
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText)
+                {
+                    m_nameScanFilter.query = newText;
+                    return true;
+                }
+            });
+        }
+        return true;
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        if (m_adapter != null)
+        {
+            m_adapter.notifyDataSetChanged();
+        }
+    }
+
     @Override protected void onDestroy()
     {
         if (isFinishing())
@@ -179,6 +234,23 @@ public class MainActivity extends BaseActivity
             m_manager.shutdown();
         }
         super.onDestroy();
+    }
+
+    private final class NameScanFilter implements BleManagerConfig.ScanFilter
+    {
+
+        private String query;
+
+        public NameScanFilter(String query)
+        {
+            this.query = query.toLowerCase();
+        }
+
+        @Override
+        public Please onEvent(ScanEvent e)
+        {
+            return Please.acknowledgeIf(e.name_native().toLowerCase().contains(query));
+        }
     }
 
     private final class DeviceDiscovery implements BleManager.DiscoveryListener, UpdateManager.UpdateListener
@@ -200,7 +272,7 @@ public class MainActivity extends BaseActivity
         @Override
         public void onUpdate()
         {
-            if (m_rediscoverMap.size() > 0)
+            if (m_rediscoverMap.size() > 0 && m_manager.isScanning())
             {
                 m_rediscoverMap.clear();
                 m_adapter.notifyDataSetChanged();
@@ -213,7 +285,7 @@ public class MainActivity extends BaseActivity
             {
                 m_deviceList.add(de.device());
                 Collections.sort(m_deviceList, m_currentComparator);
-                m_adapter.notifyItemInserted(m_deviceList.size() - 1);
+                m_adapter.notifyDataSetChanged();
             }
             else if (de.was(LifeCycle.REDISCOVERED))
             {
@@ -226,7 +298,7 @@ public class MainActivity extends BaseActivity
                 if (index != -1)
                 {
                     Collections.sort(m_deviceList, m_currentComparator);
-                    m_adapter.notifyItemChanged(index);
+                    m_adapter.notifyDataSetChanged();
                 }
             }
 

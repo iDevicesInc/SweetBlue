@@ -301,7 +301,7 @@ public final class Uuids
 	public static final UUID CURRENT_TIME_SERVICE__LOCAL_TIME_INFO = Uuids.fromShort(0x2a0f);
 
 
-	protected final static String BLUETOOTH_CONNECTED_HASH = "1654fee13cf1381a3153d2280d33a160d8a8911e";
+	protected final static String BLUETOOTH_CONNECTED_HASH = "c45075a2f7ca03b687bd062452513558183196bf";
 
 	
 	/**
