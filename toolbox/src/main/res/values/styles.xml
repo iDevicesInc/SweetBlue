@@ -22,4 +22,102 @@
         <item name="android:textColorSecondary">@color/white</item>
     </style>
 
+
+    <!-- PAGE TITLE BAR -->
+    <style name="page_title_bar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">50dp</item> <!-- FIXME: Guess -->
+        <item name="android:background">@color/title_bar_blue</item>
+    </style>
+
+    <style name="page_title">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:paddingStart">@dimen/small</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">21sp</item>
+    </style>
+
+    <style name="page_title_enabled" parent="page_title">
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="page_title_disabled" parent="page_title">
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:textColor">@color/page_title_disabled</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+
+    <!-- ITEM -->
+    <style name="item_container">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/small</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+    </style>
+
+    <style name="item_divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/primary_gray</item>
+        <!-- TODO? Right and left padding?-->
+    </style>
+
+    <style name="item_title">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">@dimen/tiny</item>
+        <item name="android:textColor">@color/item_title_blue</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="item_title_large" parent="item_title">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="item_heading">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/tiny</item>
+        <item name="android:layout_marginBottom">@dimen/tiniest</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/header_gray</item>
+    </style>
+
+    <style name="item_text">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">@dimen/tiny</item>
+        <item name="android:lineSpacingMultiplier">.9</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/primary_gray</item>
+    </style>
+
+    <!-- NAVBAR -->
+    <style name="nav_text">
+
+    </style>
+
+
+    <!-- OVERFLOW -->
+    <style name="overflow_option">
+
+    </style>
+
+    <style name="overflow_option_enabled">
+
+    </style>
+
+    <style name="overflow_option_disabled">
+
+    </style>
+
+
+
+
 </resources>
