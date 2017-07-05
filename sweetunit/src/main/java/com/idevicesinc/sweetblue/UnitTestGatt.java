@@ -290,7 +290,7 @@ public class UnitTestGatt implements P_GattLayer {
         if (Interval.isDisabled(m_delayTime))
         {
             Random r = new Random();
-            return Interval.millis(r.nextInt(2999) + 1);
+            return Interval.millis(r.nextInt(1999) + 1);
         }
         else
         {
