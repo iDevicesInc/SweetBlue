@@ -1,65 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:background="?attr/selectableItemBackground"
+                android:id="@+id/parentLayout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="@dimen/small">
+                android:layout_height="wrap_content"
+                android:padding="4dp">
 
-	<TextView
-		android:id="@+id/characteristicName"
-		style="@style/item_title"
-		android:layout_marginStart="@dimen/medium"
-		android:text="Characteristic Name"/>
+    <TextView
+        android:id="@+id/characteristicName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:text="Custom Characteristic"
+        style="@style/item_title"
+        android:textStyle="bold"/>
 
-	<TextView
-		android:id="@+id/detailsHeading"
-		style="@style/item_heading"
-		android:layout_marginStart="@dimen/medium"
-		android:layout_below="@+id/characteristicName"
-		android:text="Details" />
+    <TextView
+        android:id="@+id/detailsHeading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:layout_below="@+id/characteristicName"
+        style="@style/item_heading"
+        android:text="Details"/>
 
-	<TextView
-		android:id="@+id/uuidLabel"
-		style="@style/item_text"
-		android:layout_marginStart="@dimen/medium"
-		android:layout_marginBottom="@dimen/tiniest"
-		android:layout_below="@+id/detailsHeading"
-		android:text="UUID: "/>
+    <TextView
+        android:id="@+id/uuidLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:layout_below="@+id/detailsHeading"
+        style="@style/item_text"
+        android:text="UUID: "/>
 
-	<TextView
-		android:id="@+id/uuid"
-		style="@style/item_text"
-		android:layout_below="@+id/detailsHeading"
-		android:layout_toEndOf="@+id/uuidLabel"
-		android:text="0x2902"/>
+    <TextView
+        android:id="@+id/uuid"
+        android:layout_width="wrap_content"
+        android:layout_alignTop="@id/uuidLabel"
+        android:layout_toRightOf="@+id/uuidLabel"
+        android:layout_height="wrap_content"
+        style="@style/item_text"
+        android:text="0x2902"/>
 
-	<TextView
-		android:id="@+id/propLabel"
-		style="@style/item_text"
-		android:layout_marginBottom="@dimen/tiniest"
-		android:layout_marginStart="@dimen/medium"
-		android:layout_below="@+id/uuidLabel"
-		android:text="Properties: " />
+    <TextView
+        android:id="@+id/propLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:layout_below="@+id/uuidLabel"
+        style="@style/item_text"
+        android:text="Properties: "/>
 
-	<TextView
-		android:id="@+id/properties"
-		style="@style/item_text"
-		android:layout_below="@+id/uuidLabel"
-		android:layout_toEndOf="@+id/propLabel"
-		android:text="Read"/>
+    <TextView
+        android:id="@+id/properties"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/propLabel"
+        android:layout_toRightOf="@+id/propLabel"
+        style="@style/item_text"
+        android:text="Read"/>
 
-	<TextView
-		android:id="@+id/valueLabel"
-		style="@style/item_text"
-		android:layout_marginStart="@dimen/medium"
-		android:layout_below="@+id/propLabel"
-		android:text="Value: "/>
+    <TextView
+        android:id="@+id/valueDisplayTypeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:layout_below="@+id/propLabel"
+        style="@style/item_heading"
+        android:text="Integer"/>
 
-	<TextView
-		android:id="@+id/value"
-		style="@style/item_text"
-		android:layout_below="@+id/propLabel"
-		android:layout_toEndOf="@+id/valueLabel"
-		android:text="00 00" />
+    <EditText
+        android:id="@+id/value"
+        style="@style/AppTheme"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:text="Read"
+        android:background="@android:color/transparent"
+        android:layout_below="@+id/valueDisplayTypeLabel"/>
 
+    <ImageView
+        android:id="@+id/fakeOverflowMenu"
+        android:background="?attr/selectableItemBackground"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_more_vert_black_24dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginBottom="5dp"
+        android:padding="5dp"
+        />
+
+    <!--style="@android:style/Widget.Holo.ActionButton.Overflow"-->
+
+    <View
+        android:id="@+id/fakeOverflowMenuAnchor"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="invisible"
+        android:background="@color/red"
+        android:layout_alignTop="@id/fakeOverflowMenu"
+        android:layout_alignRight="@id/fakeOverflowMenu"/>
+
+    <ImageView
+        android:id="@+id/expandArrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_expand_more_black_24dp"
+        android:layout_centerVertical="true"/>
 
 </RelativeLayout>

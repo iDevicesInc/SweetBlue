@@ -279,6 +279,14 @@ public class DeviceRow extends FrameLayout
                 m_rssi.setText("Connected");
             }
         }
+        else
+        {
+            return;
+        }
+
+        // Update rest of the view
+        refreshConnectTextView();
+        refreshBondTextView();
     }
 
 

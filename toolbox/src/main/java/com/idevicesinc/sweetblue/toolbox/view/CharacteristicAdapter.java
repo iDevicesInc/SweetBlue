@@ -4,17 +4,25 @@ package com.idevicesinc.sweetblue.toolbox.view;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.PopupMenu;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.inputmethod.EditorInfo;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ExpandableListView;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.utils.Uuids;
-import com.idevicesinc.sweetblue.utils.Uuids.GATTDisplayType;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,7 +32,6 @@ import java.util.Map;
 
 public class CharacteristicAdapter extends BaseExpandableListAdapter
 {
-
     private final static String READ = "Read";
     private final static String WRITE = "Write";
     private final static String NOTIFY = "Notify";
@@ -72,7 +79,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
     {
         final BluetoothGattCharacteristic ch = m_characteristicList.get(groupPosition);
         final List<BluetoothGattDescriptor> dList = m_charDescMap.get(ch);
-        return dList != null ? dList.size() : 0;
+        int count = dList != null ? dList.size() : 0;
+        return count;
     }
 
     @Override public BluetoothGattCharacteristic getGroup(int groupPosition)
@@ -102,18 +110,186 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         return true;
     }
 
-    @Override public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent)
+    @Override public View getGroupView(final int groupPosition, boolean isExpanded, View convertView, final ViewGroup parent)
     {
+        final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
+        final String name = UuidUtil.getCharacteristicName(characteristic);
+        final ExpandableListView elv = (ExpandableListView)parent;
+
+        // Figure out how we shuold format the characteristic
+        Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
+        Uuids.GATTDisplayType dt = gc != null ? gc.getDisplayType() : Uuids.GATTDisplayType.Hex;
+
         final CharViewHolder h;
         if (convertView == null)
         {
             convertView = View.inflate(parent.getContext(), R.layout.characteristic_layout, null);
+
+            final View finalCV = convertView;
+
             h = new CharViewHolder();
+            h.parentLayout = (RelativeLayout) convertView.findViewById(R.id.parentLayout);
             h.name = (TextView) convertView.findViewById(R.id.characteristicName);
             h.uuid = (TextView) convertView.findViewById(R.id.uuid);
             h.properties = (TextView) convertView.findViewById(R.id.properties);
-            h.valueLabel = (TextView) convertView.findViewById(R.id.valueLabel);
+            h.valueDisplayTypeLabel = (TextView) convertView.findViewById(R.id.valueDisplayTypeLabel);
             h.value = (TextView) convertView.findViewById(R.id.value);
+            h.displayType = dt;
+            h.expandArrow = (ImageView) convertView.findViewById(R.id.expandArrow);
+
+            // Shrink text if too large...
+            //FIXME:  Find a less horrible way of doing this
+            final ViewTreeObserver viewTreeObserver = convertView.getViewTreeObserver();
+            if(viewTreeObserver.isAlive())
+            {
+                viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
+                {
+                    @Override public void onGlobalLayout()
+                    {
+                        if (h.uuid.getLineCount() > 1)
+                        {
+                            // Shrink the size so the text all fits
+                            h.uuid.setTextSize(TypedValue.COMPLEX_UNIT_PX, h.uuid.getTextSize() - 1);
+                        }
+                        else
+                            finalCV.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    }
+                });
+            }
+
+            // We have to do the following to 'fix' clicking on the cell itself
+            h.parentLayout.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    if (elv.isGroupExpanded(groupPosition))
+                        elv.collapseGroup(groupPosition);
+                    else
+                        elv.expandGroup(groupPosition);
+                }
+            });
+
+            {
+                View v = convertView.findViewById(R.id.fakeOverflowMenu);
+
+                final View anchor = convertView.findViewById(R.id.fakeOverflowMenuAnchor);
+
+                v.setOnClickListener(new View.OnClickListener()
+                {
+                    @Override
+                    public void onClick(View v)
+                    {
+                        //Creating the instance of PopupMenu
+                        PopupMenu popup = new PopupMenu(parent.getContext(), anchor);
+                        //Inflating the Popup using xml file
+                        popup.getMenuInflater().inflate(R.menu.char_value_type_popup, popup.getMenu());
+
+                        popup.getMenu().getItem(h.displayType.ordinal()).setChecked(true);
+
+                        //registering popup with OnMenuItemClickListener
+                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener()
+                        {
+                            public boolean onMenuItemClick(MenuItem item)
+                            {
+                                switch (item.getItemId())
+                                {
+                                    case R.id.displayTypeBoolean:
+                                        h.displayType = Uuids.GATTDisplayType.Boolean;
+                                        break;
+
+                                    case R.id.displayTypeBitfield:
+                                        h.displayType = Uuids.GATTDisplayType.Bitfield;
+                                        break;
+
+                                    case R.id.displayTypeUnsignedInteger:
+                                        h.displayType = Uuids.GATTDisplayType.UnsignedInteger;
+                                        break;
+
+                                    case R.id.displayTypeSignedInteger:
+                                        h.displayType = Uuids.GATTDisplayType.SignedInteger;
+                                        break;
+
+                                    case R.id.displayTypeDecimal:
+                                        h.displayType = Uuids.GATTDisplayType.Decimal;
+                                        break;
+
+                                    case R.id.displayTypeString:
+                                        h.displayType = Uuids.GATTDisplayType.String;
+                                        break;
+
+                                    case R.id.displayTypeHex:
+                                        h.displayType = Uuids.GATTDisplayType.Hex;
+                                        break;
+                                }
+
+                                //TODO:  Refresh type label
+
+                                refreshValue(h, characteristic);
+                                return true;
+                            }
+                        });
+
+                        popup.show();
+                    }
+                });
+            }
+
+            // Make value editable or not depending on what's allowed
+            boolean writable = (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+            h.value.setEnabled(writable);
+            h.value.setOnEditorActionListener(new TextView.OnEditorActionListener()
+            {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
+                {
+                    if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE || event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)
+                    {
+                        if (!event.isShiftPressed())
+                        {
+                            String value = v.getText().toString();
+
+                            // Attempt to make the value into an object that we can write out
+                            Uuids.GATTDisplayType dt = Uuids.GATTDisplayType.values()[h.displayType.ordinal()];
+                            Object valObject = dt.stringToObject(value);
+
+                            Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
+                            Uuids.GATTFormatType ft = gc != null ? gc.getFormat() : Uuids.GATTFormatType.GCFT_struct;
+
+                            try
+                            {
+                                byte valRaw[] = ft.objectToByteArray(valObject);
+
+                                m_device.write(characteristic.getUuid(), valRaw, new BleDevice.ReadWriteListener()
+                                {
+                                    @Override
+                                    public void onEvent(ReadWriteEvent e)
+                                    {
+                                        if (e.wasSuccess())
+                                        {
+                                            // Do something successful
+                                        }
+                                        else
+                                        {
+                                            // Oh noes!
+                                        }
+                                    }
+                                });
+                            }
+                            catch (Uuids.GATTCharacteristicFormatTypeConversionException e)
+                            {
+                                //FIXME:  Add toast telling user the write failed
+                                e.printStackTrace();
+                            }
+
+                            // the user is done typing.
+
+                            return true; // consume.
+                        }
+                    }
+                    return false;
+                }
+            });
 
             convertView.setTag(h);
         }
@@ -122,8 +298,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             h = (CharViewHolder) convertView.getTag();
         }
 
-        final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
-        final String name = UuidUtil.getCharacteristicName(characteristic);
         h.name.setText(name);
 
         final String uuid;
@@ -142,41 +316,58 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
         h.properties.setText(properties);
 
-        {  //TODO:  Make dynamic based on if we can read or not
-            if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0)
-            {
-                h.value.setVisibility(View.GONE);
-                h.valueLabel.setVisibility(View.GONE);
-            }
+        // Update expand arrow
+        {
+            if (getChildrenCount(groupPosition) < 1)
+                h.expandArrow.setVisibility(View.GONE);
             else
-            {
-                String valueString = "Loading...";
-                try
-                {
-                    // Look up the value type to use for this characteristic
-                    Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
+                h.expandArrow.setVisibility(View.VISIBLE);
 
-                    if (gc != null)
-                    {
-                        valueString = gc.getDisplayType().toString(characteristic.getValue());
-
-                    }
-                    else
-                        valueString = GATTDisplayType.Hex.toString(characteristic.getValue());
-                }
-                catch (Exception e)
-                {
-                    Log.d("OhNoes", "something bad happened");
-                }
-                h.value.setText(valueString);
-
-                h.value.setVisibility(View.VISIBLE);
-                h.valueLabel.setVisibility(View.VISIBLE);
-            }
+            boolean expanded = elv.isGroupExpanded(groupPosition);
+            h.expandArrow.setImageResource(expanded ? R.drawable.ic_expand_less_black_24dp : R.drawable.ic_expand_more_black_24dp);
         }
+
+        // Remove ripple if not clickable
+        {
+            if (getChildrenCount(groupPosition) < 1)
+                h.parentLayout.setBackground(null);
+        }
+
+        refreshValue(h, characteristic);
 
         return convertView;
     }
+
+    private void refreshValue(CharViewHolder cvh, BluetoothGattCharacteristic bgc)
+    {
+        if ((bgc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0)
+        {
+            /*cvh.value.setVisibility(View.GONE);
+            cvh.valueLabel.setVisibility(View.GONE);*/
+        }
+        else
+        {
+            String valueString = "Loading...";
+            if (bgc.getValue() != null)
+            {
+                try
+                {
+                    Uuids.GATTDisplayType dt = Uuids.GATTDisplayType.values()[cvh.displayType.ordinal()];
+
+                    valueString = dt.toString(bgc.getValue());
+                }
+                catch (Exception e)
+                {
+                    valueString = "<Error>";
+                }
+            }
+            cvh.value.setText(valueString);
+
+            cvh.value.setVisibility(View.VISIBLE);
+            cvh.valueDisplayTypeLabel.setVisibility(View.VISIBLE);
+        }
+    }
+
 
     @Override public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent)
     {
@@ -304,11 +495,14 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
     private static final class CharViewHolder
     {
+        private RelativeLayout parentLayout;
         private TextView name;
         private TextView uuid;
         private TextView properties;
-        private TextView valueLabel;
+        private TextView valueDisplayTypeLabel;
         private TextView value;
+        private Uuids.GATTDisplayType displayType;
+        private ImageView expandArrow;
     }
 
     private static final class DescViewHolder
@@ -329,8 +523,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                 value = 3;
             if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0)
                 value = value == 0 ? 1 : 2;
-
-            Log.d("++--", "char named " + bgc.getUuid() + " has sort key " + value);
 
             return value;
         }

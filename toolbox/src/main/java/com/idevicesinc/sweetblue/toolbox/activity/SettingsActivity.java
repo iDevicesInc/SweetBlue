@@ -49,6 +49,12 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SettingsActivity extends BaseActivity
 {
@@ -116,7 +122,7 @@ public class SettingsActivity extends BaseActivity
                 if (t == boolean.class || t == Boolean.class)
                 {
                     CheckBoxPreference cbp = new CheckBoxPreference(mContext);
-                    boolean b = f.getBoolean(o);
+                    boolean b = (Boolean)f.get(o);
                     cbp.setChecked(b);
                     cbp.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
                     {
@@ -139,6 +145,7 @@ public class SettingsActivity extends BaseActivity
                             return true;
                         }
                     });
+                    Log.d("settings++", "Boolean for  " + f);
 
                     p = cbp;
                 }
@@ -248,19 +255,69 @@ public class SettingsActivity extends BaseActivity
             PreferenceScreen screen = getPreferenceManager().createPreferenceScreen(mContext);
             setPreferenceScreen(screen);
 
-            PreferenceCategory category = new PreferenceCategory(mContext);
-            category.setTitle("Preferences for " + o.getClass().getSimpleName());
-
-            screen.addPreference(category);
-
             Class c = o.getClass();
             Field[] fields = c.getFields();
-            for (final Field f : fields)
+            List<Field> fl = Arrays.asList(fields);
+            sortFieldList(fl, o);
+
+            Class prevFieldClass = null;
+            PreferenceCategory category = null;
+
+            for (final Field f : fl)
             {
                 Preference p = createPreferenceForField(o, f);
                 if (p != null)
+                {
+                    // Add heading, if appropriate
+                    if (f.getDeclaringClass() != prevFieldClass)
+                    {
+                        category = new PreferenceCategory(mContext);
+                        category.setTitle("Preferences for " + f.getDeclaringClass().getSimpleName());
+                        screen.addPreference(category);
+                        prevFieldClass = f.getDeclaringClass();
+                    }
+
                     category.addPreference(p);
+                }
             }
+        }
+
+        private List<Field> sortFieldList(List<Field> l, Object baseObject)
+        {
+            // First, make a map of class priorities based on the inheritence tree of the base object
+            Class c = baseObject.getClass();
+
+            final Map<Class, Integer> classPriorityMap = new HashMap<>();
+
+            int nextPriority = 1;
+            while (c != null)
+            {
+                classPriorityMap.put(c, nextPriority++);
+                c = c.getSuperclass();
+            }
+
+            // OK, now sort each field first by priority (ascending) then by name (ascending)
+            Collections.sort(l, new Comparator<Field>()
+            {
+                @Override
+                public int compare(Field o1, Field o2)
+                {
+                    Class o1Class = o1.getDeclaringClass();
+                    Class o2Class = o2.getDeclaringClass();
+
+                    // First go by class
+                    Integer o1classPriority = classPriorityMap.get(o1Class);
+                    Integer o2classPriority = classPriorityMap.get(o2Class);
+
+                    if (o1classPriority != o2classPriority)
+                        return (o1classPriority - o2classPriority);
+
+                    // OK, now go by name
+                    return o1.getName().compareTo(o2.getName());
+                }
+            });
+
+            return l;
         }
 
         private static String unHumpCamelCase(String camelCaseString)
