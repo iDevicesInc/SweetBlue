@@ -11,7 +11,9 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.toolbox.util.DebugLog;
 import com.idevicesinc.sweetblue.toolbox.R;
@@ -45,6 +47,9 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         setTitle(getString(R.string.logger_title));
+
+        ImageView logo = find(R.id.navBarLogo);
+        logo.setVisibility(View.GONE);
 
         mSwipeLayout = find(R.id.swipeLayout);
 
@@ -154,11 +159,11 @@ public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
     {
         if (item.getItemId() == R.id.filter)
         {
-
             return true;
         }
         else
         {
+            item.setChecked(true);
             switch (item.getItemId())
             {
                 case R.id.verbose:

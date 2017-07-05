@@ -41,7 +41,7 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.DeviceHolder>
         {
             @Override public void onClick(View v)
             {
-                if (holder.row.hasDevice() && holder.row.isConnected())
+                if (holder.row.hasDevice())
                 {
                     Intent intent = new Intent(m_context, BleServicesActivity.class);
                     intent.putExtra("mac", holder.row.macAddress());
