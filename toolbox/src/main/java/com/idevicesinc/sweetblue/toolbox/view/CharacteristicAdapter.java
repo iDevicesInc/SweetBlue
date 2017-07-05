@@ -23,7 +23,6 @@ import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.utils.Uuids;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -119,7 +118,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
         // Figure out how we shuold format the characteristic
         Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
-        Uuids.GATTCharacteristicDisplayType dt = gc != null ? gc.getDisplayType() : Uuids.GATTCharacteristicDisplayType.Hex;
+        Uuids.GATTDisplayType dt = gc != null ? gc.getDisplayType() : Uuids.GATTDisplayType.Hex;
 
         final CharViewHolder h;
         if (convertView == null)
@@ -196,31 +195,31 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                                 switch (item.getItemId())
                                 {
                                     case R.id.displayTypeBoolean:
-                                        h.displayType = Uuids.GATTCharacteristicDisplayType.Boolean;
+                                        h.displayType = Uuids.GATTDisplayType.Boolean;
                                         break;
 
                                     case R.id.displayTypeBitfield:
-                                        h.displayType = Uuids.GATTCharacteristicDisplayType.Bitfield;
+                                        h.displayType = Uuids.GATTDisplayType.Bitfield;
                                         break;
 
                                     case R.id.displayTypeUnsignedInteger:
-                                        h.displayType = Uuids.GATTCharacteristicDisplayType.UnsignedInteger;
+                                        h.displayType = Uuids.GATTDisplayType.UnsignedInteger;
                                         break;
 
                                     case R.id.displayTypeSignedInteger:
-                                        h.displayType = Uuids.GATTCharacteristicDisplayType.SignedInteger;
+                                        h.displayType = Uuids.GATTDisplayType.SignedInteger;
                                         break;
 
                                     case R.id.displayTypeDecimal:
-                                        h.displayType = Uuids.GATTCharacteristicDisplayType.Decimal;
+                                        h.displayType = Uuids.GATTDisplayType.Decimal;
                                         break;
 
                                     case R.id.displayTypeString:
-                                        h.displayType = Uuids.GATTCharacteristicDisplayType.String;
+                                        h.displayType = Uuids.GATTDisplayType.String;
                                         break;
 
                                     case R.id.displayTypeHex:
-                                        h.displayType = Uuids.GATTCharacteristicDisplayType.Hex;
+                                        h.displayType = Uuids.GATTDisplayType.Hex;
                                         break;
                                 }
 
@@ -251,11 +250,11 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                             String value = v.getText().toString();
 
                             // Attempt to make the value into an object that we can write out
-                            Uuids.GATTCharacteristicDisplayType dt = Uuids.GATTCharacteristicDisplayType.values()[h.displayType.ordinal()];
+                            Uuids.GATTDisplayType dt = Uuids.GATTDisplayType.values()[h.displayType.ordinal()];
                             Object valObject = dt.stringToObject(value);
 
                             Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
-                            Uuids.GATTCharacteristicFormatType ft = gc != null ? gc.getFormat() : Uuids.GATTCharacteristicFormatType.GCFT_struct;
+                            Uuids.GATTFormatType ft = gc != null ? gc.getFormat() : Uuids.GATTFormatType.GCFT_struct;
 
                             try
                             {
@@ -325,7 +324,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                 h.expandArrow.setVisibility(View.VISIBLE);
 
             boolean expanded = elv.isGroupExpanded(groupPosition);
-            h.expandArrow.setImageResource(expanded ? R.drawable.icon_x : R.drawable.icon_check);
+            h.expandArrow.setImageResource(expanded ? R.drawable.ic_expand_less_black_24dp : R.drawable.ic_expand_more_black_24dp);
         }
 
         // Remove ripple if not clickable
@@ -353,7 +352,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             {
                 try
                 {
-                    Uuids.GATTCharacteristicDisplayType dt = Uuids.GATTCharacteristicDisplayType.values()[cvh.displayType.ordinal()];
+                    Uuids.GATTDisplayType dt = Uuids.GATTDisplayType.values()[cvh.displayType.ordinal()];
 
                     valueString = dt.toString(bgc.getValue());
                 }
@@ -502,7 +501,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         private TextView properties;
         private TextView valueDisplayTypeLabel;
         private TextView value;
-        private Uuids.GATTCharacteristicDisplayType displayType;
+        private Uuids.GATTDisplayType displayType;
         private ImageView expandArrow;
     }
 

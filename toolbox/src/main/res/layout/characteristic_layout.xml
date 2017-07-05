@@ -81,13 +81,17 @@
 
     <ImageView
         android:id="@+id/fakeOverflowMenu"
+        android:background="?attr/selectableItemBackground"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@android:style/Widget.DeviceDefault.Light.ActionButton.Overflow"
+        android:src="@drawable/ic_more_vert_black_24dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
         android:layout_marginLeft="5dp"
         android:layout_marginBottom="5dp"
+        android:padding="5dp"
         />
 
     <!--style="@android:style/Widget.Holo.ActionButton.Overflow"-->
@@ -105,7 +109,7 @@
         android:id="@+id/expandArrow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/icon_check"
+        android:src="@drawable/ic_expand_more_black_24dp"
         android:layout_centerVertical="true"/>
 
 </RelativeLayout>

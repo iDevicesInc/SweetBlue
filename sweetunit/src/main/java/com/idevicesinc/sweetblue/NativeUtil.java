@@ -9,7 +9,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
 import android.content.Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Util;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 
 import java.util.UUID;
@@ -557,7 +556,7 @@ public final class NativeUtil
     {
         if (mgr.is(BleManagerState.SCANNING))
         {
-            mgr.getScanManager().postScanResult(null, rssi, scanRecord);
+            mgr.getScanManager().addScanResult(null, rssi, scanRecord);
         }
         else
         {

@@ -24,6 +24,8 @@ import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 
 final class P_BleManager_Listeners
@@ -243,7 +245,10 @@ final class P_BleManager_Listeners
             final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer(BleDevice.NULL);
             layer.setNativeDevice(device_native);
 
-            m_mngr.onDiscoveredFromNativeStack(layer, rssi, null);
+            final List<P_ScanManager.DiscoveryEntry> entries = new ArrayList<>(1);
+            entries.add(new P_ScanManager.DiscoveryEntry(layer, rssi, null));
+
+            m_mngr.onDiscoveredFromNativeStack(entries);
         }
     }
 

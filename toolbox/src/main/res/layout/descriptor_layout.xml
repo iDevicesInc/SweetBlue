@@ -3,48 +3,48 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:padding="@dimen/small">
 
     <TextView
         android:id="@+id/descriptorName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="48dp"
-        android:layout_marginBottom="2dp"
-        android:text="Descriptor Name"
-        android:textStyle="bold"/>
+	    style="@style/item_title"
+        android:layout_marginStart="@dimen/large"
+        android:text="Descriptor Name"/>
+
+    <TextView
+        android:id="@+id/detailsHeading"
+        style="@style/item_heading"
+        android:layout_marginStart="@dimen/large"
+        android:layout_below="@+id/descriptorName"
+        android:text="Details" />
 
     <TextView
         android:id="@+id/uuidLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="48dp"
-        android:layout_marginBottom="2dp"
-        android:layout_below="@+id/descriptorName"
+        style="@style/item_text"
+        android:layout_marginStart="@dimen/large"
+        android:layout_marginBottom="@dimen/tiniest"
+        android:layout_below="@+id/detailsHeading"
         android:text="UUID: "/>
 
     <TextView
         android:id="@+id/uuid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/descriptorName"
+        style="@style/item_text"
+        android:layout_below="@+id/detailsHeading"
         android:layout_toRightOf="@+id/uuidLabel"
         android:text="0x2902"/>
 
     <TextView
         android:id="@+id/valueLabel"
-        android:layout_width="wrap_content"
-        android:layout_marginLeft="48dp"
-        android:layout_height="wrap_content"
+        style="@style/item_text"
+        android:layout_marginStart="@dimen/large"
         android:layout_below="@+id/uuidLabel"
         android:text="Value: "/>
 
     <TextView
         android:id="@+id/value"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/item_text"
         android:layout_below="@+id/uuidLabel"
         android:layout_toRightOf="@+id/valueLabel"
-        android:text="00 00"/>
+        android:text="00 00" />
 
 </RelativeLayout>
