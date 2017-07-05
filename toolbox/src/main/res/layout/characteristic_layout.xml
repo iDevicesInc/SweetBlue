@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:background="?attr/selectableItemBackground"
+                android:id="@+id/parentLayout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="8dp">
+                android:layout_height="wrap_content"
+                android:padding="4dp">
 
     <TextView
         android:id="@+id/characteristicName"
@@ -19,7 +21,6 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
         android:layout_below="@+id/characteristicName"
-        android:layout_marginTop="5dp"
         style="@style/item_heading"
         android:text="Details"/>
 
@@ -28,7 +29,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
-        android:layout_marginTop="0dp"
         android:layout_below="@+id/detailsHeading"
         style="@style/item_text"
         android:text="UUID: "/>
@@ -47,7 +47,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
-        android:layout_marginTop="0dp"
         android:layout_below="@+id/uuidLabel"
         style="@style/item_text"
         android:text="Properties: "/>
@@ -66,7 +65,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="24dp"
-        android:layout_marginTop="5dp"
         android:layout_below="@+id/propLabel"
         style="@style/item_heading"
         android:text="Integer"/>
@@ -76,19 +74,10 @@
         style="@style/AppTheme"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="0dp"
         android:layout_marginLeft="24dp"
         android:text="Read"
         android:background="@android:color/transparent"
         android:layout_below="@+id/valueDisplayTypeLabel"/>
-
-    <!--TextView
-        android:id="@+id/writeValueTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/displayTypeSpinner"
-        android:layout_alignParentRight="true"
-        android:text="write"/-->
 
     <ImageView
         android:id="@+id/fakeOverflowMenu"
@@ -97,7 +86,8 @@
         style="@android:style/Widget.DeviceDefault.Light.ActionButton.Overflow"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
-        android:layout_margin="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginBottom="5dp"
         />
 
     <!--style="@android:style/Widget.Holo.ActionButton.Overflow"-->
@@ -111,5 +101,11 @@
         android:layout_alignTop="@id/fakeOverflowMenu"
         android:layout_alignRight="@id/fakeOverflowMenu"/>
 
+    <ImageView
+        android:id="@+id/expandArrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/icon_check"
+        android:layout_centerVertical="true"/>
 
 </RelativeLayout>

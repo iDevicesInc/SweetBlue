@@ -3,25 +3,21 @@ package com.idevicesinc.sweetblue.toolbox.view;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.content.DialogInterface;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
-import android.text.InputType;
 import android.util.Log;
-import android.view.Gravity;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AdapterView;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.ImageView;
-import android.widget.Spinner;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.toolbox.R;
@@ -37,7 +33,6 @@ import java.util.Map;
 
 public class CharacteristicAdapter extends BaseExpandableListAdapter
 {
-
     private final static String READ = "Read";
     private final static String WRITE = "Write";
     private final static String NOTIFY = "Notify";
@@ -85,7 +80,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
     {
         final BluetoothGattCharacteristic ch = m_characteristicList.get(groupPosition);
         final List<BluetoothGattDescriptor> dList = m_charDescMap.get(ch);
-        return dList != null ? dList.size() : 0;
+        int count = dList != null ? dList.size() : 0;
+        return count;
     }
 
     @Override public BluetoothGattCharacteristic getGroup(int groupPosition)
@@ -115,10 +111,11 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         return true;
     }
 
-    @Override public View getGroupView(int groupPosition, boolean isExpanded, View convertView, final ViewGroup parent)
+    @Override public View getGroupView(final int groupPosition, boolean isExpanded, View convertView, final ViewGroup parent)
     {
         final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
         final String name = UuidUtil.getCharacteristicName(characteristic);
+        final ExpandableListView elv = (ExpandableListView)parent;
 
         // Figure out how we shuold format the characteristic
         Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
@@ -128,13 +125,51 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         if (convertView == null)
         {
             convertView = View.inflate(parent.getContext(), R.layout.characteristic_layout, null);
+
+            final View finalCV = convertView;
+
             h = new CharViewHolder();
+            h.parentLayout = (RelativeLayout) convertView.findViewById(R.id.parentLayout);
             h.name = (TextView) convertView.findViewById(R.id.characteristicName);
             h.uuid = (TextView) convertView.findViewById(R.id.uuid);
             h.properties = (TextView) convertView.findViewById(R.id.properties);
             h.valueDisplayTypeLabel = (TextView) convertView.findViewById(R.id.valueDisplayTypeLabel);
             h.value = (TextView) convertView.findViewById(R.id.value);
             h.displayType = dt;
+            h.expandArrow = (ImageView) convertView.findViewById(R.id.expandArrow);
+
+            // Shrink text if too large...
+            //FIXME:  Find a less horrible way of doing this
+            final ViewTreeObserver viewTreeObserver = convertView.getViewTreeObserver();
+            if(viewTreeObserver.isAlive())
+            {
+                viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
+                {
+                    @Override public void onGlobalLayout()
+                    {
+                        if (h.uuid.getLineCount() > 1)
+                        {
+                            // Shrink the size so the text all fits
+                            h.uuid.setTextSize(TypedValue.COMPLEX_UNIT_PX, h.uuid.getTextSize() - 1);
+                        }
+                        else
+                            finalCV.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    }
+                });
+            }
+
+            // We have to do the following to 'fix' clicking on the cell itself
+            h.parentLayout.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    if (elv.isGroupExpanded(groupPosition))
+                        elv.collapseGroup(groupPosition);
+                    else
+                        elv.expandGroup(groupPosition);
+                }
+            });
 
             {
                 View v = convertView.findViewById(R.id.fakeOverflowMenu);
@@ -281,6 +316,23 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         final String properties = getPropertyString(characteristic);
 
         h.properties.setText(properties);
+
+        // Update expand arrow
+        {
+            if (getChildrenCount(groupPosition) < 1)
+                h.expandArrow.setVisibility(View.GONE);
+            else
+                h.expandArrow.setVisibility(View.VISIBLE);
+
+            boolean expanded = elv.isGroupExpanded(groupPosition);
+            h.expandArrow.setImageResource(expanded ? R.drawable.icon_x : R.drawable.icon_check);
+        }
+
+        // Remove ripple if not clickable
+        {
+            if (getChildrenCount(groupPosition) < 1)
+                h.parentLayout.setBackground(null);
+        }
 
         refreshValue(h, characteristic);
 
@@ -444,12 +496,14 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
     private static final class CharViewHolder
     {
+        private RelativeLayout parentLayout;
         private TextView name;
         private TextView uuid;
         private TextView properties;
         private TextView valueDisplayTypeLabel;
         private TextView value;
         private Uuids.GATTCharacteristicDisplayType displayType;
+        private ImageView expandArrow;
     }
 
     private static final class DescViewHolder
@@ -470,8 +524,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                 value = 3;
             if ((properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0)
                 value = value == 0 ? 1 : 2;
-
-            Log.d("++--", "char named " + bgc.getUuid() + " has sort key " + value);
 
             return value;
         }

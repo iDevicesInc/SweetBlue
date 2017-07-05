@@ -39,6 +39,9 @@ public class BleCharacteristicsActivity extends BaseActivity
         Toolbar toolbar = find(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // Hide logo
+        toolbar.findViewById(R.id.navBarLogo).setVisibility(View.GONE);
+
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
@@ -54,6 +57,9 @@ public class BleCharacteristicsActivity extends BaseActivity
         m_charListView = find(R.id.expandingListView);
 
         m_charListView.setAdapter(m_adapter);
+
+        // Disable native indicator, we will use our own
+        m_charListView.setGroupIndicator(null);
 
         boolean haveCharacteristics = !m_characteristicList.isEmpty();
 
