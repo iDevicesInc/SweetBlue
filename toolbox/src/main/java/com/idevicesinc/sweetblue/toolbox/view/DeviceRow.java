@@ -262,7 +262,7 @@ public class DeviceRow extends FrameLayout
         }
         else if (e.didEnter(BleDeviceState.DISCONNECTED))
         {
-            m_rssi.setText(getResources().getText(R.string.signal_strength_colon, m_device.getRssiPercent().toString()));
+            m_rssi.setText(getResources().getString(R.string.signal_strength_colon, m_device.getRssiPercent().toString()));
         }
         else if (e.didEnter(BleDeviceState.BONDING))
         {
@@ -272,7 +272,7 @@ public class DeviceRow extends FrameLayout
         {
             if (m_device.is(BleDeviceState.DISCONNECTED))
             {
-                m_rssi.setText(getResources().getText(R.string.signal_strength_colon, m_device.getRssiPercent().toString()));
+                m_rssi.setText(getResources().getString(R.string.signal_strength_colon, m_device.getRssiPercent().toString()));
             }
             else if (m_device.is(BleDeviceState.INITIALIZED))
             {
