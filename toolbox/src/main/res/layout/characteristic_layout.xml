@@ -69,7 +69,7 @@
         style="@style/item_heading"
         android:text="Integer"/>
 
-    <EditText
+    <TextView
         android:id="@+id/value"
         style="@style/AppTheme"
         android:layout_width="wrap_content"
@@ -78,6 +78,16 @@
         android:text="Read"
         android:background="@android:color/transparent"
         android:layout_below="@+id/valueDisplayTypeLabel"/>
+
+    <!--EditText
+        android:id="@+id/value"
+        style="@style/AppTheme"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="24dp"
+        android:text="Read"
+        android:background="@android:color/transparent"
+        android:layout_below="@+id/valueDisplayTypeLabel"/-->
 
     <ImageView
         android:id="@+id/fakeOverflowMenu"

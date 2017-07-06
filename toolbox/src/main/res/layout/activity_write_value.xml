@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <include layout="@layout/toolbar"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/valueTitle"
+            style="@style/item_heading"
+            android:text="Value"/>
+
+        <ImageView
+            android:id="@+id/legalityImageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon_alert"
+            android:layout_toRightOf="@id/valueTitle"
+            android:tint="@color/red"
+            android:layout_marginLeft="10dp"/>
+
+        <EditText
+            android:id="@+id/valueEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/medium"
+            android:layout_below="@id/valueTitle"/>
+
+        <TextView
+            android:id="@+id/writeTypeTitle"
+            style="@style/item_heading"
+            android:layout_below="@+id/valueEditText"
+            android:text="Write Type"/>
+
+        <Spinner
+            android:id="@+id/writeTypeSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/medium"
+            android:layout_below="@id/writeTypeTitle"
+            android:entries="@array/write_type_array"/>
+
+        <TextView
+            android:id="@+id/saveNameTitle"
+            style="@style/item_heading"
+            android:layout_below="@+id/writeTypeSpinner"
+            android:text="Save as"/>
+
+        <EditText
+            android:id="@+id/saveNameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/medium"
+            android:layout_below="@id/saveNameTitle"/>
+
+        <TextView
+            android:id="@+id/writeValueTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/saveNameEditText"
+            android:text="Write Value"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="10dp"
+            android:padding="10dp"
+            android:background="@color/gray"
+            />
+
+    </RelativeLayout>
+
+</LinearLayout>
+
+

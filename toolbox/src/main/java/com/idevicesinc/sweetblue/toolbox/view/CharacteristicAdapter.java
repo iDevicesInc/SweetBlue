@@ -3,6 +3,9 @@ package com.idevicesinc.sweetblue.toolbox.view;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.PopupMenu;
 import android.util.Log;
@@ -21,6 +24,7 @@ import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.activity.WriteValueActivity;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import java.util.Collections;
@@ -42,12 +46,14 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
     private final static String EXTENDED_PROPS = "Extended Properties";
 
     private BleDevice m_device;
+    private BluetoothGattService m_service;
     private Map<BluetoothGattCharacteristic, List<BluetoothGattDescriptor>> m_charDescMap;
     private List<BluetoothGattCharacteristic> m_characteristicList;
 
-    public CharacteristicAdapter(@NonNull BleDevice device, @NonNull List<BluetoothGattCharacteristic> charList)
+    public CharacteristicAdapter(@NonNull BleDevice device, @NonNull BluetoothGattService service, @NonNull List<BluetoothGattCharacteristic> charList)
     {
         m_device = device;
+        m_service = service;
         m_charDescMap = new HashMap<>(charList.size());
         m_characteristicList = charList;
 
@@ -115,6 +121,10 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
         final String name = UuidUtil.getCharacteristicName(characteristic);
         final ExpandableListView elv = (ExpandableListView)parent;
+        final Context context = parent.getContext();
+
+        boolean writable = (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+        boolean readable = (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
 
         // Figure out how we shuold format the characteristic
         Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
@@ -123,7 +133,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         final CharViewHolder h;
         if (convertView == null)
         {
-            convertView = View.inflate(parent.getContext(), R.layout.characteristic_layout, null);
+            convertView = View.inflate(context, R.layout.characteristic_layout, null);
 
             final View finalCV = convertView;
 
@@ -181,7 +191,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                     public void onClick(View v)
                     {
                         //Creating the instance of PopupMenu
-                        PopupMenu popup = new PopupMenu(parent.getContext(), anchor);
+                        PopupMenu popup = new PopupMenu(context, anchor);
                         //Inflating the Popup using xml file
                         popup.getMenuInflater().inflate(R.menu.char_value_type_popup, popup.getMenu());
 
@@ -236,9 +246,23 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             }
 
             // Make value editable or not depending on what's allowed
-            boolean writable = (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
             h.value.setEnabled(writable);
-            h.value.setOnEditorActionListener(new TextView.OnEditorActionListener()
+            h.value.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    // Navigate to the write activity
+                    //final BluetoothGattService service = m_serviceList.get(position);
+                    Intent intent = new Intent(context, WriteValueActivity.class);
+                    intent.putExtra("mac", m_device.getMacAddress());
+                    intent.putExtra("serviceUUID", m_service.getUuid().toString());
+                    intent.putExtra("characteristicUUID", characteristic.getUuid().toString());
+
+                    context.startActivity(intent);
+                }
+            });
+            /*h.value.setOnEditorActionListener(new TextView.OnEditorActionListener()
             {
                 @Override
                 public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
@@ -289,7 +313,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                     }
                     return false;
                 }
-            });
+            });*/
 
             convertView.setTag(h);
         }

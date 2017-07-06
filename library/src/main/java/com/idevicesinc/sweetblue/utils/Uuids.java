@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue.utils;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -603,6 +605,236 @@ public final class Uuids
 		public int getSizeBytes()
 		{
 			return (mSizeBits + 7) / 8;
+		}
+
+		private void checkOrThrow(BigInteger bi, Exception biex, long min, long max) throws GATTCharacteristicFormatTypeConversionException
+		{
+			BigInteger biMin = BigInteger.valueOf(min);
+			BigInteger biMax = BigInteger.valueOf(max);
+			checkOrThrow(bi, biex, biMin, biMax);
+		}
+
+		private void checkOrThrow(BigInteger bi, Exception biex, BigInteger biMin, BigInteger biMax) throws GATTCharacteristicFormatTypeConversionException
+		{
+			if (bi == null)
+				throw new GATTCharacteristicFormatTypeConversionException(biex);
+			if (bi.compareTo(biMin) < 0 || bi.compareTo(biMax) > 0)
+				throw new GATTCharacteristicFormatTypeConversionException("Value " + bi + " out of range.  Valid range is (" + biMin + ", " + biMax + ")");
+		}
+
+		public byte[] stringToByteArray(String s) throws GATTCharacteristicFormatTypeConversionException  //FIXME:  New exception
+		{
+			// First, try to interpret the string as a numeric type
+			BigInteger bi;
+			Exception biex = null;
+
+			try
+			{
+				bi = new BigInteger(s);
+			}
+			catch (NumberFormatException e)
+			{
+				bi = null;
+				biex = e;
+			}
+
+			// Also attempt to parse as a big decimal
+			BigDecimal bd;
+			Exception bdex = null;
+			try
+			{
+				bd = new BigDecimal(s);
+			}
+			catch (NumberFormatException e)
+			{
+				bd = null;
+				bdex = e;
+			}
+
+			byte result1[] = new byte[1];
+
+			switch (this)
+			{
+				case GCFT_boolean:
+				{
+					try
+					{
+						Boolean b = new Boolean(s);
+						result1[0] = Utils_Byte.boolToByte(b);
+						return result1;
+					}
+					catch (Exception e)
+					{
+						throw new GATTCharacteristicFormatTypeConversionException(e);
+					}
+				}
+				case GCFT_2bit:
+				{
+					checkOrThrow(bi, biex, 0L, 3L);
+					byte b = bi.byteValue();
+					result1[0] = b;
+					return result1;
+				}
+				case GCFT_nibble:
+				{
+					checkOrThrow(bi, biex, 0L, 15L);
+					byte b = bi.byteValue();
+					result1[0] = b;
+					return result1;
+				}
+				case GCFT_uint8:
+				{
+					checkOrThrow(bi, biex, 0L, 255L);
+					byte b = bi.byteValue();
+					result1[0] = b;
+					return result1;
+				}
+				case GCFT_uint12:
+				{
+					checkOrThrow(bi, biex, 0L, 4095L);
+					byte result[] = Utils_Byte.shortToBytes(bi.shortValue());
+					return result;
+				}
+				case GCFT_uint16:
+				{
+					checkOrThrow(bi, biex, 0L, 65535L);
+					byte result[] = Utils_Byte.shortToBytes(bi.shortValue());
+					return result;
+				}
+				case GCFT_uint24:
+				{
+					checkOrThrow(bi, biex, 0L, 16777215L);
+					byte result[] = Utils_Byte.intToBytes(bi.intValue());
+					//FIXME:  Trim one byte from result
+					return result;
+				}
+				case GCFT_uint32:
+				{
+					checkOrThrow(bi, biex, 0L, 4294967295L);
+					byte result[] = Utils_Byte.intToBytes(bi.intValue());
+					return result;
+				}
+				case GCFT_uint48:
+				{
+					checkOrThrow(bi, biex, 0L, 281474976710655L);
+					byte result[] = Utils_Byte.longToBytes(bi.intValue());
+					//FIXME:  Trim result
+					return result;
+				}
+				case GCFT_uint64:
+				{
+					checkOrThrow(bi, biex, new BigInteger("0"), new BigInteger("18446744073709551615"));
+					byte result[] = Utils_Byte.longToBytes(bi.longValue());
+					return result;
+				}
+				case GCFT_uint128:
+				{
+					checkOrThrow(bi, biex, new BigInteger("0"), new BigInteger("340282366920938463463374607431768211455"));
+					byte result[] = bi.toByteArray();
+					//FIXME:  Pad up result, adding missing bytes at the START of the array
+					byte result2[] = new byte[16];
+					System.arraycopy(result, 0, result2, result2.length - result.length, result.length);
+					return result;
+				}
+				case GCFT_sint8:
+				{
+					checkOrThrow(bi, biex, -128L, 127L);
+					byte b = bi.byteValue();
+					result1[0] = b;
+					return result1;
+				}
+				case GCFT_sint12:
+				{
+					checkOrThrow(bi, biex, -2048L, 2047L);
+					byte result[] = Utils_Byte.shortToBytes(bi.shortValue());
+					return result;
+				}
+				case GCFT_sint16:
+				{
+					checkOrThrow(bi, biex, -32768L, 32767L);
+					byte result[] = Utils_Byte.shortToBytes(bi.shortValue());
+					return result;
+				}
+				case GCFT_sint24:
+				{
+					checkOrThrow(bi, biex, -8388608L, 8388607L);
+					byte result[] = Utils_Byte.intToBytes(bi.intValue());
+					//FIXME:  Trim one byte from result
+					return result;
+				}
+				case GCFT_sint32:
+				{
+					checkOrThrow(bi, biex, -2147483648L, 2147483647L);
+					byte result[] = Utils_Byte.intToBytes(bi.intValue());
+					return result;
+				}
+				case GCFT_sint48:
+				{
+					checkOrThrow(bi, biex, -140737488355328L, 140737488355327L);
+					byte result[] = Utils_Byte.longToBytes(bi.intValue());
+					//FIXME:  Trim result
+					return result;
+				}
+				case GCFT_sint64:
+				{
+					checkOrThrow(bi, biex, new BigInteger("-9223372036854775808"), new BigInteger("9223372036854775807"));
+					byte result[] = Utils_Byte.longToBytes(bi.longValue());
+					return result;
+				}
+				case GCFT_sint128:
+				{
+					checkOrThrow(bi, biex, new BigInteger("-170141183460469231731687303715884105728"), new BigInteger("170141183460469231731687303715884105727"));
+					byte result[] = bi.toByteArray();
+					byte result2[] = new byte[16];
+					//FIXME:  Pad up result, adding missing bytes at the START of the array
+					//FIXME:  Flood sign bit
+					System.arraycopy(result, 0, result2, result2.length - result.length, result.length);
+					return result;
+				}
+				case GCFT_float32:
+				case GCFT_float64:
+				case GCFT_SFLOAT:
+				case GCFT_FLOAT:
+				case GCFT_duint16:
+				{
+					throw new GATTCharacteristicFormatTypeConversionException("Not supported");
+				}
+				case GCFT_utf8s:
+				{
+					try
+					{
+						byte result[] = s.getBytes("UTF-8");
+						//FIXME:  Null terminate?
+						return result;
+					}
+					catch (UnsupportedEncodingException e)
+					{
+						throw new GATTCharacteristicFormatTypeConversionException(e);
+					}
+				}
+				case GCFT_utf16s:
+				{
+					try
+					{
+						byte result[] = s.getBytes("UTF-16");
+						//FIXME:  Null terminate?
+						return result;
+					}
+					catch (UnsupportedEncodingException e)
+					{
+						throw new GATTCharacteristicFormatTypeConversionException(e);
+					}
+				}
+				case GCFT_struct:
+				{
+					// Interpret input as hex string
+					byte result[] = Utils_Byte.hexStringToBytes(s);
+					return result;
+				}
+			}
+
+			// Should never get here anyway...
+			throw new GATTCharacteristicFormatTypeConversionException("Not supported");
 		}
 
 		public byte[] objectToByteArray(Object o) throws GATTCharacteristicFormatTypeConversionException

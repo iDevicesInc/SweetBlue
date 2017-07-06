@@ -49,6 +49,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.idevicesinc.sweetblue.toolbox.activity.BleServicesActivity"/>
         </activity>
+        <activity android:name=".activity.WriteValueActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.idevicesinc.sweetblue.toolbox.activity.WriteValueActivity"/>
+        </activity>
         <activity android:name=".activity.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
