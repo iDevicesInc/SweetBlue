@@ -74,12 +74,12 @@ Getting Started
     ```
     
     android {
-        compileSdkVersion 23
-        buildToolsVersion '23.0.2'
+        compileSdkVersion 25
+        buildToolsVersion '25.0.3'
         
         defaultConfig {
             minSdkVersion 18
-            targetSdkVersion 23
+            targetSdkVersion 25
             ...
         }
     
@@ -98,12 +98,12 @@ Getting Started
     ```
       
       android {
-          compileSdkVersion 23
-          buildToolsVersion '23.0.2'
+          compileSdkVersion 25
+          buildToolsVersion '25.0.3'
           
           defaultConfig {
               minSdkVersion 18
-              targetSdkVersion 23
+              targetSdkVersion 25
               ...
           }
       
@@ -122,12 +122,12 @@ Getting Started
     ```
     
     android {
-        compileSdkVersion 23
-        buildToolsVersion '23.0.2'
+        compileSdkVersion 25
+        buildToolsVersion '25.0.3'
         
         defaultConfig {
             minSdkVersion 18
-            targetSdkVersion 23
+            targetSdkVersion 25
             ...
         }
     
@@ -143,7 +143,7 @@ Getting Started
 2. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```
-    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="23" />
+    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="25" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />

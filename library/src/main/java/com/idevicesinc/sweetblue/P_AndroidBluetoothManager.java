@@ -19,6 +19,7 @@ import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.Set;
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
@@ -75,12 +76,18 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
 
     @Override public final boolean disable()
     {
-        return m_adaptor.disable();
+        if (m_adaptor != null)
+            return m_adaptor.disable();
+
+        return false;
     }
 
     @Override public final boolean enable()
     {
-        return m_adaptor.enable();
+        if (m_adaptor != null)
+            return m_adaptor.enable();
+
+        return false;
     }
 
     @Override public final boolean isMultipleAdvertisementSupported()
@@ -90,7 +97,10 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
 
     @Override public final int getState()
     {
-        return m_adaptor.getState();
+        if (m_adaptor != null)
+            return m_adaptor.getState();
+
+        return BleStatuses.STATE_OFF;
     }
 
     @Override public final int getBleState()
@@ -129,7 +139,10 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
 
     @Override public final String getAddress()
     {
-        return m_adaptor.getAddress();
+        if (m_adaptor != null)
+            return m_adaptor.getAddress();
+
+        return BleDevice.NULL_MAC();
     }
 
     @Override public final P_NativeServerLayer openGattServer(Context context, P_BleServer_Listeners listeners)
@@ -167,7 +180,10 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
 
     @Override public final Set<BluetoothDevice> getBondedDevices()
     {
-        return m_adaptor.getBondedDevices();
+        if (m_adaptor != null)
+            return m_adaptor.getBondedDevices();
+
+        return new HashSet<>(0);
     }
 
     @Override
@@ -182,7 +198,10 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
 
     @Override public final BluetoothDevice getRemoteDevice(String macAddress)
     {
-        return m_adaptor.getRemoteDevice(macAddress);
+        if (m_adaptor != null)
+            return m_adaptor.getRemoteDevice(macAddress);
+
+        return null;
     }
 
     @Override
@@ -236,18 +255,26 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
 
     @Override public final boolean startLeScan(BluetoothAdapter.LeScanCallback callback)
     {
-        return m_adaptor.startLeScan(callback);
+        if (m_adaptor != null)
+            return m_adaptor.startLeScan(callback);
+
+        return false;
     }
 
     @Override public final void stopLeScan(BluetoothAdapter.LeScanCallback callback)
     {
-        if (m_bleManager.getScanManager().isPostLollipopScan())
+        if (m_adaptor != null)
         {
-            L_Util.stopNativeScan(m_adaptor);
+            if (m_bleManager.getScanManager().isPostLollipopScan())
+            {
+                L_Util.stopNativeScan(m_adaptor);
+            }
+            else
+            {
+                m_adaptor.stopLeScan(callback);
+            }
         }
         else
-        {
-            m_adaptor.stopLeScan(callback);
-        }
+            m_bleManager.getLogger().e("Tried to stop scan (if it's even running), but the Bluetooth Adaptor is null!");
     }
 }

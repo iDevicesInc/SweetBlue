@@ -155,9 +155,9 @@
     <string name="visit_website_url">http://idevicesinc.com/sweetblue</string>
 
     <!-- Feedback -->
-    <string name="send_feedback_email_address">sweetblue@idevicesinc.com</string>
-    <string name="send_feedback_email_subject">Please take my money!</string>
-    <string name="send_feedback_email_body">Sweetblue toolbox feedback.\n\nGive me sweet blue!  Do it now!</string>
+    <string name="send_feedback_email_address">SweetBlueTechSupport@idevicesinc.com</string>
+    <string name="send_feedback_email_subject">SweetBlue Toolbox feedback</string>
+    <string name="send_feedback_email_body"></string>
     <string name="send_feedback_send_mail">Send Mail</string>
     <string name="debug_level">Level:</string>
     <string name="filter">Filter...</string>
