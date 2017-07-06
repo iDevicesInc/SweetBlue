@@ -22,7 +22,7 @@
         android:layout_marginLeft="24dp"
         android:layout_below="@+id/characteristicName"
         style="@style/item_heading"
-        android:text="Details"/>
+        android:text="@string/details"/>
 
     <TextView
         android:id="@+id/uuidLabel"
@@ -31,10 +31,11 @@
         android:layout_marginLeft="24dp"
         android:layout_below="@+id/detailsHeading"
         style="@style/item_text"
-        android:text="UUID: "/>
+        android:text="@string/uuid_colon"/>
 
     <TextView
         android:id="@+id/uuid"
+        android:layout_marginLeft="@dimen/tiny"
         android:layout_width="wrap_content"
         android:layout_alignTop="@id/uuidLabel"
         android:layout_toRightOf="@+id/uuidLabel"
@@ -46,16 +47,18 @@
         android:id="@+id/propLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="24dp"
+        android:layout_marginStart="24dp"
         android:layout_below="@+id/uuidLabel"
         style="@style/item_text"
-        android:text="Properties: "/>
+        android:text="@string/properties_colon"/>
 
     <TextView
         android:id="@+id/properties"
+        android:layout_marginStart="@dimen/tiny"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@id/propLabel"
+        android:layout_marginLeft="5dp"
         android:layout_toRightOf="@+id/propLabel"
         style="@style/item_text"
         android:text="Read"/>
@@ -67,7 +70,7 @@
         android:layout_marginLeft="24dp"
         android:layout_below="@+id/propLabel"
         style="@style/item_heading"
-        android:text="Integer"/>
+        android:text="@string/integer"/>
 
     <EditText
         android:id="@+id/value"

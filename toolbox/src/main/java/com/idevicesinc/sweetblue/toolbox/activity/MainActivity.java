@@ -580,7 +580,7 @@ public class MainActivity extends BaseActivity
             @Override
             public void onChoiceSelected(String choice)
             {
-                if (choice.equals("Name"))
+                if (choice.equals(R.string.name))
                 {
                     m_currentComparator = nameComparator;
                 }
@@ -623,21 +623,23 @@ public class MainActivity extends BaseActivity
             public void onChoiceSelected(String choice)
             {
                 BleManagerConfig cfg = m_manager.getConfigClone();
-                switch (choice)
+                if (choice.equals(getString(R.string.scan_type_classic)))
                 {
-                    case "Classic":
-                        cfg.scanApi = BleScanApi.CLASSIC;
-                        break;
-                    case "Pre-Lollipop":
-                        cfg.scanApi = BleScanApi.PRE_LOLLIPOP;
-                        break;
-                    case "Post-Lollipop":
-                        cfg.scanApi = BleScanApi.POST_LOLLIPOP;
-                        break;
-                    default:
-                        cfg.scanApi = BleScanApi.AUTO;
-                        break;
+                cfg.scanApi = BleScanApi.CLASSIC;
                 }
+                else if (choice.equals(getString(R.string.scan_type_pre_lollipop)))
+                {
+                    cfg.scanApi = BleScanApi.PRE_LOLLIPOP;
+                }
+                else if (choice.equals(getString(R.string.scan_type_post_lollipop)))
+                {
+                    cfg.scanApi = BleScanApi.POST_LOLLIPOP;
+                }
+                else
+                {
+                    cfg.scanApi = BleScanApi.AUTO;
+                }
+
                 m_manager.setConfig(cfg);
             }
 

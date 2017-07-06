@@ -27,7 +27,7 @@
 				android:layout_marginStart="@dimen/medium"
 				android:layout_marginEnd="@dimen/small"
 				android:layout_marginTop="@dimen/small"
-				android:text="Log Text Here" />
+				android:text="@string/log_text_here" />
 
 		</ScrollView>
 

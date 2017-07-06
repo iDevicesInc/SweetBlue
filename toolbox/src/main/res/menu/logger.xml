@@ -6,31 +6,31 @@
     <item
         android:id="@+id/filter"
         android:icon="@android:drawable/ic_menu_search"
-        android:title="Filter"
+        android:title="@string/filter"
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="always"/>
 
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/verbose"
-            android:title="Verbose"
+            android:title="@string/verbose"
             android:checked="true" />
 
         <item
             android:id="@+id/debug"
-            android:title="Debug"/>
+            android:title="@string/debug"/>
 
         <item
             android:id="@+id/info"
-            android:title="Info"/>
+            android:title="@string/info"/>
 
         <item
             android:id="@+id/warn"
-            android:title="Warn"/>
+            android:title="@string/warn"/>
 
         <item
             android:id="@+id/error"
-            android:title="Error"/>
+            android:title="@string/error"/>
 
     </group>
 

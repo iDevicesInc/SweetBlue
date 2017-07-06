@@ -14,12 +14,13 @@
 
     <TextView
         android:id="@+id/noCharacteristicsTextView"
+        style="@style/item_title"
         android:visibility="visible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="No Characteristics"
-        android:textSize="20dp"
+        android:text="@string/no_characteristics"
+        android:textSize="20sp"
         android:layout_margin="20dp"/>
 
 </LinearLayout>

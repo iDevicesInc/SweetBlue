@@ -110,7 +110,7 @@ public class DeviceRow extends FrameLayout
 
     private void refreshRssiStatusTextView()
     {
-        m_rssi.setText("Signal Strength: " + m_device.getRssiPercent());
+        m_rssi.setText(getResources().getString(R.string.signal_strength_colon, m_device.getRssiPercent().toString()));
     }
 
     private void refreshBondTextView()
@@ -242,41 +242,41 @@ public class DeviceRow extends FrameLayout
     {
         if (e.didEnter(BleDeviceState.CONNECTING) || e.didEnter(BleDeviceState.RETRYING_BLE_CONNECTION))
         {
-            m_rssi.setText("Connecting...");
+            m_rssi.setText(R.string.connecting);
         }
         else if (e.didEnter(BleDeviceState.DISCOVERING_SERVICES))
         {
-            m_rssi.setText("Discovering Services...");
+            m_rssi.setText(R.string.discovering_services);
         }
         else if (e.didEnter(BleDeviceState.AUTHENTICATING))
         {
-            m_rssi.setText("Authenticating...");
+            m_rssi.setText(R.string.authenticating);
         }
         else if (e.didEnter(BleDeviceState.INITIALIZING))
         {
-            m_rssi.setText("Initializing...");
+            m_rssi.setText(R.string.initializing);
         }
         else if (e.didEnter(BleDeviceState.INITIALIZED))
         {
-            m_rssi.setText("Connected");
+            m_rssi.setText(R.string.connected);
         }
         else if (e.didEnter(BleDeviceState.DISCONNECTED))
         {
-            m_rssi.setText("Signal Strength: " + m_device.getRssiPercent());
+            m_rssi.setText(getResources().getText(R.string.signal_strength_colon, m_device.getRssiPercent().toString()));
         }
         else if (e.didEnter(BleDeviceState.BONDING))
         {
-            m_rssi.setText("Bonding...");
+            m_rssi.setText(R.string.bonding);
         }
         else if (e.didEnter(BleDeviceState.BONDED) || e.didEnter(BleDeviceState.UNBONDED))
         {
             if (m_device.is(BleDeviceState.DISCONNECTED))
             {
-                m_rssi.setText("Signal Strength: " + m_device.getRssiPercent());
+                m_rssi.setText(getResources().getText(R.string.signal_strength_colon, m_device.getRssiPercent().toString()));
             }
             else if (m_device.is(BleDeviceState.INITIALIZED))
             {
-                m_rssi.setText("Connected");
+                m_rssi.setText(R.string.connected);
             }
         }
         else
@@ -288,6 +288,4 @@ public class DeviceRow extends FrameLayout
         refreshConnectTextView();
         refreshBondTextView();
     }
-
-
 }

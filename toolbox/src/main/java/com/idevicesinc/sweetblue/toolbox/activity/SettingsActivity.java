@@ -208,7 +208,7 @@ public class SettingsActivity extends BaseActivity
                     final EditTextPreference etp = new EditTextPreference(mContext);
                     etp.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
                     etp.setDefaultValue(val.toString());
-                    etp.setSummary(val.toString() + " seconds");
+                    etp.setSummary(getResources().getString(R.string.x_seconds, val));
                     etp.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
                     {
                         @Override
@@ -221,7 +221,7 @@ public class SettingsActivity extends BaseActivity
                                 Interval i = Interval.secs(d);
                                 f.set(o, i);
 
-                                etp.setSummary(d.toString() + " seconds");
+                                etp.setSummary(getResources().getString(R.string.x_seconds, d));
 
                                 mDirty = true;
                             }
@@ -272,7 +272,7 @@ public class SettingsActivity extends BaseActivity
                     if (f.getDeclaringClass() != prevFieldClass)
                     {
                         category = new PreferenceCategory(mContext);
-                        category.setTitle("Preferences for " + f.getDeclaringClass().getSimpleName());
+                        category.setTitle(getResources().getString(R.string.preferences_for, f.getDeclaringClass().getSimpleName()));
                         screen.addPreference(category);
                         prevFieldClass = f.getDeclaringClass();
                     }
@@ -499,7 +499,7 @@ public class SettingsActivity extends BaseActivity
                 .addCategory(Intent.CATEGORY_OPENABLE)
                 .setAction(Intent.ACTION_GET_CONTENT);
 
-        startActivityForResult(Intent.createChooser(intent, "Select a file"), REQUEST_CODE_IMPORT_SETTINGS);
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.select_a_file)), REQUEST_CODE_IMPORT_SETTINGS);
     }
 
     private void importSettingsFromJSON(JSONObject jo)

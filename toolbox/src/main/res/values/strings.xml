@@ -118,8 +118,8 @@
     <string name="nav_drawer_logger">Logger</string>
     <string name="nav_drawer_device_information">Device Information</string>
     <string name="nav_drawer_settings">Settings</string>
-    <string name="nav_drawer_website">Website</string>
-    <string name="nav_drawer_send_feedback">Send Feedback</string>
+    <string name="nav_drawer_about">About Sweetblue</string>
+    <string name="nav_drawer_feedback">Feedback</string>
     <string name="app_version">App Version - %1$s</string>
 
     <!-- Website -->
@@ -130,13 +130,77 @@
     <string name="send_feedback_email_subject">Please take my money!</string>
     <string name="send_feedback_email_body">Sweetblue toolbox feedback.\n\nGive me sweet blue!  Do it now!</string>
     <string name="send_feedback_send_mail">Send Mail</string>
-    <string name="debug_level">Level:</string>
-    <string name="filter">Filter...</string>
+
 
     <!-- Characteristic -->
-    <string name="service_characteristic_name">Characteristic Name</string>
-    <string name="characteristic_details">Details</string>
-    <string name="characteristic_uuid">UUID:</string>
+    <!--<string name="service_characteristic_name">Characteristic Name</string>-->
+    <!--<string name="characteristic_details">Details</string>-->
+    <!--<string name="characteristic_uuid">UUID:</string>-->
+    <string name="properties_colon">Properties:</string>
+    <string name="uuid_colon">UUID:</string>
+    <string name="value_colon">Value:</string>
+    <string name="data_colon">Data:</string>
+
+    <string name="primary_service">PRIMARY SERVICE</string>
+	<string name="secondary_service">SECONDARY SERVICE</string>
+    <string name="need_connection_characteristics_error">You must be connected to view the characteristics.</string>
+    <string name="loading">Loading...</string>
+	<string name="broadcast">Broadcast</string>
+    <string name="read">Read</string>
+    <string name="write_no_response">Write No Response</string>
+    <string name="write">Write</string>
+    <string name="notify">Notify</string>
+    <string name="indicate">Indicate</string>
+    <string name="signed_write">Signed Write</string>
+    <string name="extended_properties">Extended Properties</string>
+    <string name="unknown">Unknown</string>
+    <string name="signal_strength_colon">Signal Strength: %1$s</string>
+
+    <string name="connecting">Connecting...</string>
+    <string name="discovering_services">Discovering Services...</string>
+    <string name="authenticating">Authenticating...</string>
+    <string name="initializing">Initializing...</string>
+    <string name="connected">Connected</string>
+    <string name="bonding">Bonding...</string>
+
+    <string name="scan_type_classic">Classic</string>
+    <string name="scan_type_pre_lollipop">Pre-Lollipop</string>
+    <string name="scan_type_post_lollipop">Post-Lollipop</string>
+
+    <string name="x_seconds">%1$d seconds</string>
+    <string name="preferences_for">Preferences for %1$s</string>
+    <string name="select_a_file">Select a file</string>
+
+    <string name="custom_service">CUSTOM SERVICE</string>
+    <string name="custom_characteristic">CUSTOM CHARACTERISTIC</string>
+    <string name="custom_descriptor">CUSTOM DESCRIPTOR</string>
+
+    <string name="no_characteristics">No Characteristics</string>
+
+    <string name="device_information">Device Information</string>
+    <string name="android_os_version">Android OS Version</string>
+    <string name="os_api_level">OS API Level</string>
+    <string name="linux_kernel_version">Linux Kernel Version</string>
+    <string name="device_name">Device Name</string>
+    <string name="brand">Brand</string>
+    <string name="manufacturer">Manufacturer</string>
+    <string name="model">Model</string>
+    <string name="product">Product</string>
+    <string name="board">Board</string>
+    <string name="supported_features">Supported Features</string>
+    <string name="bluetooth_le_supported">Bluetooth LE Supported</string>
+    <string name="lollipop_scan_api_supported">Lollipop Scan API Supported</string>
+    <string name="scan_batching_supported">Scan batching supported</string>
+    <string name="multiple_advertisement_supported">Multiple Advertisement supported</string>
+
+    <string name="log_text_here">Log Text Here</string>
+
+    <string name="integer">Integer</string>
+
+    <string name="filter">Filter</string>
+    <string name="filter_by_name">Filter by Name</string>
+    <string name="scan_options">Scan Options</string>
+    <string name="sort_options">Sort Options</string>
 
 
 </resources>
