@@ -57,7 +57,7 @@ public class UhOhThrottleTest extends BaseBleUnitTest
         startTest();
     }
 
-    @Test(timeout = 20000)
+    @Test(timeout = 30000)
     public void uhOhThrottleShutdownTest() throws Exception
     {
         final UhOhCallback callback = new UhOhCallback();
