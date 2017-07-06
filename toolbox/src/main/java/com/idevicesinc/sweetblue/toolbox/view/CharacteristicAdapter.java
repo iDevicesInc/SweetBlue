@@ -245,8 +245,19 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                 });
             }
 
-            // Make value editable or not depending on what's allowed
-            h.value.setEnabled(writable);
+            convertView.setTag(h);
+        }
+        else
+        {
+            h = (CharViewHolder) convertView.getTag();
+        }
+
+        // Make value editable or not depending on what's allowed
+        if (writable)
+        {
+            h.valueDisplayTypeLabel.setVisibility(View.VISIBLE);
+            h.value.setVisibility(View.VISIBLE);
+            h.value.setTextColor(context.getResources().getColor(R.color.item_title_blue));
             h.value.setOnClickListener(new View.OnClickListener()
             {
                 @Override
@@ -262,64 +273,19 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                     context.startActivity(intent);
                 }
             });
-            /*h.value.setOnEditorActionListener(new TextView.OnEditorActionListener()
-            {
-                @Override
-                public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
-                {
-                    if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE || event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)
-                    {
-                        if (!event.isShiftPressed())
-                        {
-                            String value = v.getText().toString();
-
-                            // Attempt to make the value into an object that we can write out
-                            Uuids.GATTDisplayType dt = Uuids.GATTDisplayType.values()[h.displayType.ordinal()];
-                            Object valObject = dt.stringToObject(value);
-
-                            Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
-                            Uuids.GATTFormatType ft = gc != null ? gc.getFormat() : Uuids.GATTFormatType.GCFT_struct;
-
-                            try
-                            {
-                                byte valRaw[] = ft.objectToByteArray(valObject);
-
-                                m_device.write(characteristic.getUuid(), valRaw, new BleDevice.ReadWriteListener()
-                                {
-                                    @Override
-                                    public void onEvent(ReadWriteEvent e)
-                                    {
-                                        if (e.wasSuccess())
-                                        {
-                                            // Do something successful
-                                        }
-                                        else
-                                        {
-                                            // Oh noes!
-                                        }
-                                    }
-                                });
-                            }
-                            catch (Uuids.GATTCharacteristicFormatTypeConversionException e)
-                            {
-                                //FIXME:  Add toast telling user the write failed
-                                e.printStackTrace();
-                            }
-
-                            // the user is done typing.
-
-                            return true; // consume.
-                        }
-                    }
-                    return false;
-                }
-            });*/
-
-            convertView.setTag(h);
+        }
+        else if (readable)
+        {
+            // Adjust format of text
+            h.valueDisplayTypeLabel.setVisibility(View.VISIBLE);
+            h.value.setVisibility(View.VISIBLE);
+            h.value.setTextColor(context.getResources().getColor(R.color.primary_gray));
         }
         else
         {
-            h = (CharViewHolder) convertView.getTag();
+            // Hide the value area
+            h.valueDisplayTypeLabel.setVisibility(View.GONE);
+            h.value.setVisibility(View.GONE);
         }
 
         h.name.setText(name);

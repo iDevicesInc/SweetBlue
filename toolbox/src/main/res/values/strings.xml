@@ -124,6 +124,12 @@
     <!-- Characteristics -->
     <string name="characteristics_no_characteristics">No Characteristics</string>
 
+    <!-- Write Value -->
+    <string name="write_value_value">Value</string>
+    <string name="write_value_write_type">Write Type</string>
+    <string name="write_value_save_as">Save As (Optional)</string>
+    <string name="write_value_write">Write</string>
+
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_import">Import Settings</string>

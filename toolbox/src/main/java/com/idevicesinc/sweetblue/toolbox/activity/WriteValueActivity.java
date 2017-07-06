@@ -5,15 +5,17 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -24,6 +26,7 @@ import android.widget.Toast;
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.List;
@@ -57,9 +60,6 @@ public class WriteValueActivity extends BaseActivity
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        //FIXME:  Real title
-        setTitle(getString(R.string.device_information_title));
-
         final String mac = getIntent().getStringExtra("mac");
         final String serviceUUID = getIntent().getStringExtra("serviceUUID");
         final String characteristicUUID = getIntent().getStringExtra("characteristicUUID");
@@ -71,7 +71,7 @@ public class WriteValueActivity extends BaseActivity
         {
             for (BluetoothGattCharacteristic bgc : charList)
             {
-                if (bgc.getUuid().equals(characteristicUUID))
+                if (characteristicUUID.equals(bgc.getUuid().toString()))
                 {
                     mCharacteristic = bgc;
                     break;
@@ -82,16 +82,18 @@ public class WriteValueActivity extends BaseActivity
         mValueEditText = find(R.id.valueEditText);
         mWriteTypeSpinner = find(R.id.writeTypeSpinner);
         mLegalityImageView = find(R.id.legalityImageView);
-        mWriteValueTextView = find(R.id.writeValueTextView);
+        //mWriteValueTextView = find(R.id.writeValueTextView);
 
         // Focus the value edit text
         mValueEditText.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(mValueEditText, InputMethodManager.SHOW_FORCED);
+
+        setTitle(UuidUtil.getCharacteristicName(mCharacteristic));
 
         setValueEditText();
 
         setWriteTypeSpinner();
-
-        setWriteValueTextView();
 
         refreshLegalityIndicator();
     }
@@ -119,50 +121,7 @@ public class WriteValueActivity extends BaseActivity
                 refreshLegalityIndicator();
             }
         });
-
-        /*mValueEditText.setOnEditorActionListener(new TextView.OnEditorActionListener()
-        {
-            @Override
-            public boolean onEditorAction(TextView tv, int actionId, KeyEvent event)
-            {
-                if (!(actionId == EditorInfo.IME_ACTION_DONE || event.getKeyCode() == KeyEvent.KEYCODE_ENTER))
-                    return false;
-
-                String value = tv.getText().toString();
-                Uuids.GATTFormatType gft = Uuids.GATTFormatType.values()[mWriteTypeSpinner.getSelectedItemPosition()];
-
-                try
-                {
-                    byte rawVal[] = gft.stringToByteArray(value);
-
-                    final Dialog d = ProgressDialog.show(getApplicationContext(), "title", "message");
-
-                    mDevice.write(mCharacteristic.getUuid(), rawVal, new BleDevice.ReadWriteListener()
-                    {
-                        @Override
-                        public void onEvent(ReadWriteEvent e)
-                        {
-                            if (e.wasSuccess())
-                                Toast.makeText(getApplicationContext(), "Value written!", Toast.LENGTH_LONG).show();
-                            else
-                                Toast.makeText(getApplicationContext(), "Write failed", Toast.LENGTH_LONG).show();
-
-                            d.dismiss();
-                        }
-                    });
-                }
-                catch (Uuids.GATTCharacteristicFormatTypeConversionException e)
-                {
-                    //FIXME:  Add toast telling user the write failed
-                    Toast.makeText(getApplicationContext(), "Invalid input: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
-                }
-
-                return true; // consume.
-            }
-        });*/
     }
-
 
     private void setWriteTypeSpinner()
     {
@@ -172,17 +131,19 @@ public class WriteValueActivity extends BaseActivity
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
                 refreshLegalityIndicator();
+                refreshTextInputType();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent)
             {
                 refreshLegalityIndicator();
+                refreshTextInputType();
             }
         });
     }
 
-    private void setWriteValueTextView()
+    /*private void setWriteValueTextView()
     {
         mWriteValueTextView.setOnClickListener(new View.OnClickListener()
         {
@@ -192,7 +153,7 @@ public class WriteValueActivity extends BaseActivity
                 writeValue();
             }
         });
-    }
+    }*/
 
     private void refreshLegalityIndicator()
     {
@@ -208,6 +169,53 @@ public class WriteValueActivity extends BaseActivity
         {
             mLegalityImageView.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void refreshTextInputType()
+    {
+        int type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL;
+        switch (Uuids.GATTFormatType.values()[mWriteTypeSpinner.getSelectedItemPosition() + 1])
+        {
+            case GCFT_boolean:
+                type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL;
+                break;
+            case GCFT_2bit:
+            case GCFT_nibble:
+            case GCFT_uint8:
+            case GCFT_uint12:
+            case GCFT_uint16:
+            case GCFT_uint24:
+            case GCFT_uint32:
+            case GCFT_uint48:
+            case GCFT_uint64:
+            case GCFT_uint128:
+                type = InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_NORMAL;
+                break;
+            case GCFT_sint8:
+            case GCFT_sint12:
+            case GCFT_sint16:
+            case GCFT_sint24:
+            case GCFT_sint32:
+            case GCFT_sint48:
+            case GCFT_sint64:
+            case GCFT_sint128:
+                type = InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED;
+                break;
+            case GCFT_float32:
+            case GCFT_float64:
+            case GCFT_SFLOAT:
+            case GCFT_FLOAT:
+                type = InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL;
+                break;
+            case GCFT_duint16:
+            case GCFT_utf8s:
+            case GCFT_utf16s:
+            case GCFT_struct:
+                type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL;
+                break;
+        }
+
+        mValueEditText.setInputType(type);
     }
 
     private void writeValue()
@@ -227,7 +235,10 @@ public class WriteValueActivity extends BaseActivity
                 public void onEvent(ReadWriteEvent e)
                 {
                     if (e.wasSuccess())
+                    {
                         Toast.makeText(getApplicationContext(), "Value written!", Toast.LENGTH_LONG).show();
+                        finish();
+                    }
                     else
                         Toast.makeText(getApplicationContext(), "Write failed", Toast.LENGTH_LONG).show();
 
@@ -246,6 +257,8 @@ public class WriteValueActivity extends BaseActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
+        getMenuInflater().inflate(R.menu.write_value, menu);
+
         return true;
     }
 
@@ -254,6 +267,16 @@ public class WriteValueActivity extends BaseActivity
     {
         finish();
         return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if (item.getItemId() == R.id.write)
+        {
+            writeValue();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }

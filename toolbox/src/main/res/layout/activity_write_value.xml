@@ -15,7 +15,7 @@
         <TextView
             android:id="@+id/valueTitle"
             style="@style/item_heading"
-            android:text="Value"/>
+            android:text="@string/write_value_value"/>
 
         <ImageView
             android:id="@+id/legalityImageView"
@@ -37,7 +37,7 @@
             android:id="@+id/writeTypeTitle"
             style="@style/item_heading"
             android:layout_below="@+id/valueEditText"
-            android:text="Write Type"/>
+            android:text="@string/write_value_write_type"/>
 
         <Spinner
             android:id="@+id/writeTypeSpinner"
@@ -51,7 +51,7 @@
             android:id="@+id/saveNameTitle"
             style="@style/item_heading"
             android:layout_below="@+id/writeTypeSpinner"
-            android:text="Save as"/>
+            android:text="@string/write_value_save_as"/>
 
         <EditText
             android:id="@+id/saveNameEditText"
@@ -60,7 +60,7 @@
             android:layout_marginBottom="@dimen/medium"
             android:layout_below="@id/saveNameTitle"/>
 
-        <TextView
+        <!--TextView
             android:id="@+id/writeValueTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -70,7 +70,7 @@
             android:layout_margin="10dp"
             android:padding="10dp"
             android:background="@color/gray"
-            />
+            /-->
 
     </RelativeLayout>
 
