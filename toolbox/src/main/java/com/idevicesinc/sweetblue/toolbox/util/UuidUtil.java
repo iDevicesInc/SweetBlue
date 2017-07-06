@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
+import android.content.Context;
+import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import java.lang.reflect.Field;
@@ -16,12 +18,20 @@ import java.util.UUID;
 public final class UuidUtil
 {
 
-    public static final String CUSTOM_SERVICE = "CUSTOM SERVICE";
-    public static final String CUSTOM_CHARACTERISTIC = "CUSTOM CHARACTERISTIC";
-    public static final String CUSTOM_DESCRIPTOR = "CUSTOM DESCRIPTOR";
+    public static String CUSTOM_SERVICE = "CUSTOM SERVICE";
+    public static String CUSTOM_CHARACTERISTIC = "CUSTOM CHARACTERISTIC";
+    public static String CUSTOM_DESCRIPTOR = "CUSTOM DESCRIPTOR";
 
     private static Map<UUID, Field> uuidFields;
 
+    public static void makeStrings(Context context)
+    {
+        CUSTOM_SERVICE = context.getString(R.string.custom_service);
+
+        CUSTOM_CHARACTERISTIC = context.getString(R.string.custom_characteristic);
+
+        CUSTOM_DESCRIPTOR = context.getString(R.string.custom_descriptor);
+    }
 
     public static String getServiceName(BluetoothGattService service)
     {

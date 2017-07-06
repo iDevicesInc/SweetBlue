@@ -16,7 +16,7 @@
         <TextView
             android:id="@+id/infoTitle"
             style="@style/item_heading"
-            android:text="Device Information"/>
+            android:text="@string/device_information"/>
 
         <TableLayout
             android:id="@+id/deviceTable"
@@ -31,7 +31,7 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Android OS Version" />
+                    android:text="@string/android_os_version" />
 
                 <TextView
                     android:id="@+id/osVersion"
@@ -46,7 +46,7 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="OS API Level"/>
+                    android:text="@string/os_api_level"/>
 
                 <TextView
                     android:id="@+id/apiVersion"
@@ -61,7 +61,7 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Linux Kernel Version"/>
+                    android:text="@string/linux_kernel_version"/>
 
                 <TextView
                     android:id="@+id/kernelVersion"
@@ -76,7 +76,7 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Device Name"/>
+                    android:text="@string/device_name"/>
 
                 <TextView
                     android:id="@+id/deviceName"
@@ -91,7 +91,7 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Brand"/>
+                    android:text="@string/brand"/>
 
                 <TextView
                     android:id="@+id/brand"
@@ -106,7 +106,7 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Manufacturer"/>
+                    android:text="@string/manufacturer"/>
 
                 <TextView
                     android:id="@+id/manufacturer"
@@ -122,7 +122,7 @@
                     android:layout_width="wrap_content"
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Model"/>
+                    android:text="@string/model"/>
 
                 <TextView
                     android:id="@+id/model"
@@ -137,7 +137,7 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Product"/>
+                    android:text="@string/product"/>
 
                 <TextView
                     android:id="@+id/product"
@@ -152,7 +152,7 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
-                    android:text="Board"/>
+                    android:text="@string/board"/>
 
                 <TextView
                     android:id="@+id/board"
@@ -169,7 +169,7 @@
             style="@style/item_heading"
             android:layout_margin="0dp"
             android:layout_below="@+id/deviceTable"
-            android:text="Supported Features"/>
+            android:text="@string/supported_features"/>
 
         <TableLayout
             android:layout_width="match_parent"
@@ -180,7 +180,7 @@
 
                 <TextView
                     style="@style/item_text.no_spacing"
-                    android:text="Bluetooth LE Supported"/>
+                    android:text="@string/bluetooth_le_supported"/>
 
                 <FrameLayout android:layout_weight="1">
 
@@ -199,7 +199,7 @@
 
                 <TextView
                     style="@style/item_text.no_spacing"
-                    android:text="Lollipop Scan API Supported"/>
+                    android:text="@string/lollipop_scan_api_supported"/>
 
                 <FrameLayout android:layout_weight="1">
 
@@ -207,7 +207,7 @@
                         android:id="@+id/lollipopScanSupported"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="right"
+                        android:layout_gravity="end"
                         android:src="@drawable/icon_x"/>
 
                 </FrameLayout>
@@ -218,7 +218,7 @@
 
                 <TextView
                     style="@style/item_text.no_spacing"
-                    android:text="Scan batching supported"/>
+                    android:text="@string/scan_batching_supported"/>
 
                 <FrameLayout android:layout_weight="1">
 
@@ -226,7 +226,7 @@
                         android:id="@+id/scanBatchingSupported"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="right"
+                        android:layout_gravity="end"
                         android:src="@drawable/icon_check"/>
 
                 </FrameLayout>
@@ -237,7 +237,7 @@
 
                 <TextView
                     style="@style/item_text.no_spacing"
-                    android:text="Multiple Advertisement supported"/>
+                    android:text="@string/multiple_advertisement_supported"/>
 
                 <FrameLayout android:layout_weight="1">
 
@@ -245,7 +245,7 @@
                         android:id="@+id/multipleAdvertisementSupported"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="right"
+                        android:layout_gravity="end"
                         android:src="@drawable/icon_check"/>
 
                 </FrameLayout>

@@ -39,7 +39,7 @@
             <TextView
                 style="@style/nav_text"
                 android:drawableStart="@drawable/icon_menu_logger"
-                android:text="Logger"/>
+                android:text="@string/nav_drawer_logger"/>
 
         </LinearLayout>
 
@@ -50,7 +50,7 @@
             <TextView
                 style="@style/nav_text"
                 android:drawableStart="@drawable/icon_menu_device"
-                android:text="Device Information"/>
+                android:text="@string/nav_drawer_device_information"/>
         </LinearLayout>
 
         <LinearLayout
@@ -60,7 +60,7 @@
             <TextView
                 style="@style/nav_text"
                 android:drawableStart="@drawable/icon_menu_about"
-                android:text="About SweetBlue"/>
+                android:text="@string/nav_drawer_about"/>
 
         </LinearLayout>
 
@@ -71,7 +71,7 @@
             <TextView
                 style="@style/nav_text"
                 android:drawableStart="@drawable/icon_menu_settings"
-                android:text="Settings"/>
+                android:text="@string/nav_drawer_settings"/>
 
         </LinearLayout>
 
@@ -82,7 +82,7 @@
             <TextView
                 style="@style/nav_text"
                 android:drawableStart="@drawable/icon_menu_feedback"
-                android:text="Feedback"/>
+                android:text="@string/nav_drawer_feedback"/>
 
         </LinearLayout>
 

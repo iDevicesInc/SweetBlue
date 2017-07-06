@@ -52,7 +52,7 @@ public class BleCharacteristicsActivity extends BaseActivity
         m_service = m_device.getNativeService(UUID.fromString(uuid));
         m_characteristicList = m_service.getCharacteristics();
 
-        m_adapter = new CharacteristicAdapter(m_device, m_characteristicList);
+        m_adapter = new CharacteristicAdapter(this, m_device, m_characteristicList);
 
         m_charListView = find(R.id.expandingListView);
 

@@ -109,7 +109,7 @@ public class DeviceInformationActivity extends BaseActivity
         multiAdvSupported.setImageResource(multiSupported ? supported : notsupported);
     }
 
-    static String getKernelVersion()
+    String getKernelVersion()
     {
         try
         {
@@ -131,7 +131,7 @@ public class DeviceInformationActivity extends BaseActivity
         catch (Exception e)
         {
             e.printStackTrace();
-            return "Unknown";
+            return this.getString(R.string.unknown);
         }
     }
 
