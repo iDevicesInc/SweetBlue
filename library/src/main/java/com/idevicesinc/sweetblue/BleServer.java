@@ -2256,6 +2256,12 @@ public final class BleServer extends BleNode
 		return serviceMngr_server().addService(service, listener);
 	}
 
+	// TODO - This should become public for v3. For now, it will stay package private. (We may want to use BleService, etc in the GattDatabase class)
+	final ServiceAddListener.ServiceAddEvent addService(final BluetoothGattService service, final ServiceAddListener listener)
+	{
+		return serviceMngr_server().addService_native(service, listener);
+	}
+
 	/**
 	 * Remove any service previously provided to {@link #addService(BleService, ServiceAddListener)} or overloads. This can be safely called
 	 * even if the call to {@link #addService(BleService, ServiceAddListener)} hasn't resulted in a callback to the provided listener yet, in which
