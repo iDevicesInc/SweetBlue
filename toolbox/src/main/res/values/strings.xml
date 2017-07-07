@@ -174,7 +174,9 @@
     <string name="properties_colon">Properties:</string>
     <string name="uuid_colon">UUID:</string>
     <string name="value_colon">Value:</string>
+    <string name="value">Value</string>
     <string name="data_colon">Data:</string>
+    <string name="write_value">Write Value</string>
 
     <string name="primary_service">PRIMARY SERVICE</string>
 	<string name="secondary_service">SECONDARY SERVICE</string>

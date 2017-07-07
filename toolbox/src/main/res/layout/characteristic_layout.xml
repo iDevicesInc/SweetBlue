@@ -58,7 +58,7 @@
         style="@style/item_heading"
         android:layout_alignStart="@+id/characteristicName"
         android:layout_below="@+id/propLabel"
-        android:text="Value" />
+        android:text="@string/value" />
 
     <TextView
         android:id="@+id/value"
@@ -67,7 +67,7 @@
         android:layout_height="wrap_content"
         android:layout_alignStart="@+id/characteristicName"
         android:layout_below="@+id/valueDisplayTypeLabel"
-        android:text="Write Value"/>
+        android:text="@string/write_value"/>
 
     <ImageView
         android:id="@+id/fakeOverflowMenu"

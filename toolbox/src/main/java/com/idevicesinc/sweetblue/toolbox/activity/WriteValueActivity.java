@@ -44,6 +44,18 @@ public class WriteValueActivity extends BaseActivity
     private ImageView mLegalityImageView;
     private TextView mWriteValueTextView;
 
+    class SavedValue
+    {
+        String mValueString;
+        Uuids.GATTFormatType mGattFormatType;
+
+        SavedValue(String value, Uuids.GATTFormatType gft)
+        {
+            mValueString = value;
+            mGattFormatType = gft;
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
