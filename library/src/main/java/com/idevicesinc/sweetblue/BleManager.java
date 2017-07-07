@@ -2747,6 +2747,22 @@ public final class BleManager
 	}
 
 	/**
+	 * Overload of {@link #getServer(GattDatabase, BleServer.ServiceAddListener)}, with no {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener} set.
+	 */
+	public final BleServer getServer(final GattDatabase gattDatabase)
+	{
+		return getServer(gattDatabase, null);
+	}
+
+	/**
+	 * Overload of {@link #getServer(IncomingListener, GattDatabase, BleServer.ServiceAddListener)}, with no {@link IncomingListener} set.
+	 */
+	public final BleServer getServer(final GattDatabase gattDatabase, BleServer.ServiceAddListener addServiceListener)
+	{
+		return getServer(null, gattDatabase, addServiceListener);
+	}
+
+	/**
 	 * Returns a {@link BleServer} instance. This is now the preferred method to retrieve the server instance.
 	 */
 	public final BleServer getServer(final IncomingListener incomingListener, final GattDatabase gattDatabase, final BleServer.ServiceAddListener addServiceListener)
