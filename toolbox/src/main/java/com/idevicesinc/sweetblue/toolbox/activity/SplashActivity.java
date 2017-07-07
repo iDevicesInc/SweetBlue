@@ -15,6 +15,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 
 
 public class SplashActivity extends AppCompatActivity
@@ -62,6 +63,8 @@ public class SplashActivity extends AppCompatActivity
         mSweetLogo = (ImageView) findViewById(R.id.sweetLogo);
         mBlueLogo = (ImageView) findViewById(R.id.blueLogo);
         mSlogan = (ImageView) findViewById(R.id.slogan);
+
+        UuidUtil.makeStrings(getBaseContext());
 
         startAnimation();
 

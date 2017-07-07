@@ -29,14 +29,14 @@
                 <TextView
                     style="@style/page_title"
                     android:id="@+id/scanTextView"
-                    android:text="Not Ready To Scan"/>
+                    android:text="@string/not_ready_to_scan"/>
 
                 <LinearLayout
                     android:id="@+id/scanLayout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:padding="18dp"
-                    android:layout_alignParentRight="true">
+                    android:layout_alignParentEnd="true">
 
                     <ImageView
                         android:id="@+id/scanImageView"
@@ -60,7 +60,7 @@
             layout="@layout/nav_drawer"
             android:layout_width="270dp"
             android:layout_height="match_parent"
-            android:layout_gravity="left"/>
+            android:layout_gravity="start"/>
 
     </android.support.v4.widget.DrawerLayout>
 

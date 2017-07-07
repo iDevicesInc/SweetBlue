@@ -25,8 +25,8 @@
         android:id="@+id/connectLayout"
         android:layout_width="70dp"
         android:layout_height="wrap_content"
-        android:layout_marginRight="8dp"
-        android:layout_toLeftOf="@+id/bondLayout"
+        android:layout_marginEnd="8dp"
+        android:layout_toStartOf="@+id/bondLayout"
         android:gravity="center"
         android:orientation="vertical">
 
@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="Connect"
+            android:text="@string/connect"
             android:textColor="@color/primary_gray"/>
 
     </LinearLayout>
@@ -53,8 +53,8 @@
         android:id="@+id/bondLayout"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="12dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="12dp"
         android:gravity="center"
         android:orientation="vertical">
 
@@ -72,7 +72,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="Bond"
+            android:text="@string/bond"
             android:textColor="@color/primary_gray"/>
 
     </LinearLayout>

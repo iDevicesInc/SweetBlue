@@ -21,10 +21,11 @@
 
         <TextView
             style="@style/item_text.no_spacing"
-            android:text="UUID: "/>
+            android:text="@string/uuid_colon"/>
 
         <TextView
             android:id="@+id/uuid"
+            android:paddingStart="@dimen/tiny"
             style="@style/item_text.no_spacing"
             android:text="0x1800"/>
 
