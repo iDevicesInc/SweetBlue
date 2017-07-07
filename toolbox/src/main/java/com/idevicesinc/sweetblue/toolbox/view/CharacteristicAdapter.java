@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.PopupMenu;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
@@ -141,8 +142,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         {
             convertView = View.inflate(context, R.layout.characteristic_layout, null);
 
-            final View finalCV = convertView;
-
             h = new CharViewHolder();
             h.parentLayout = (RelativeLayout) convertView.findViewById(R.id.parentLayout);
             h.name = (TextView) convertView.findViewById(R.id.characteristicName);
@@ -152,26 +151,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             h.value = (TextView) convertView.findViewById(R.id.value);
             h.displayType = dt;
             h.expandArrow = (ImageView) convertView.findViewById(R.id.expandArrow);
-
-            // Shrink text if too large...
-            //FIXME:  Find a less horrible way of doing this
-            final ViewTreeObserver viewTreeObserver = convertView.getViewTreeObserver();
-            if(viewTreeObserver.isAlive())
-            {
-                viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
-                {
-                    @Override public void onGlobalLayout()
-                    {
-                        if (h.uuid.getLineCount() > 1)
-                        {
-                            // Shrink the size so the text all fits
-                            h.uuid.setTextSize(TypedValue.COMPLEX_UNIT_PX, h.uuid.getTextSize() - 1);
-                        }
-                        else
-                            finalCV.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                    }
-                });
-            }
 
             // We have to do the following to 'fix' clicking on the cell itself
             h.parentLayout.setOnClickListener(new View.OnClickListener()
@@ -331,7 +310,30 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
         refreshValue(h, characteristic);
 
+        // Shrink text if too large...
+        //FIXME:  Find a less horrible way of doing this
+        postFixRunnable(h.uuid, h);
+
         return convertView;
+    }
+
+    private void postFixRunnable(final View v, final CharViewHolder cvh)
+    {
+        v.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (cvh.uuid.getLineCount() > 1)
+                {
+                    // Shrink the size so the text all fits
+                    cvh.uuid.setTextSize(TypedValue.COMPLEX_UNIT_PX, cvh.uuid.getTextSize() - 1);
+                    cvh.uuid.requestLayout();
+                    Log.d("++tag", "Too big!  Shrinking 1 point size");
+                    postFixRunnable(v, cvh);
+                }
+            }
+        });
     }
 
     private void refreshValue(CharViewHolder cvh, BluetoothGattCharacteristic bgc)

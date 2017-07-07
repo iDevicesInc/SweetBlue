@@ -13,8 +13,21 @@
         android:padding="12dp">
 
         <TextView
+            android:id="@+id/loadValueTitle"
+            style="@style/item_heading"
+            android:text="@string/write_value_load_value"/>
+
+        <Spinner
+            android:id="@+id/loadValueSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/medium"
+            android:layout_below="@id/loadValueTitle"/>
+
+        <TextView
             android:id="@+id/valueTitle"
             style="@style/item_heading"
+            android:layout_below="@+id/loadValueSpinner"
             android:text="@string/write_value_value"/>
 
         <ImageView
@@ -23,6 +36,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/icon_alert"
             android:layout_toRightOf="@id/valueTitle"
+            android:layout_alignTop="@id/valueTitle"
             android:tint="@color/red"
             android:layout_marginLeft="10dp"/>
 
@@ -44,8 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/medium"
-            android:layout_below="@id/writeTypeTitle"
-            android:entries="@array/write_type_array"/>
+            android:layout_below="@id/writeTypeTitle"/>
 
         <TextView
             android:id="@+id/saveNameTitle"

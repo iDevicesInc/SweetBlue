@@ -6,7 +6,9 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -17,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
@@ -29,7 +32,10 @@ import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class WriteValueActivity extends BaseActivity
@@ -39,22 +45,107 @@ public class WriteValueActivity extends BaseActivity
     private BluetoothGattService mService;
     private BluetoothGattCharacteristic mCharacteristic;
 
+    private Spinner mLoadValueSpinner;
     private EditText mValueEditText;
     private Spinner mWriteTypeSpinner;
+    private EditText mSaveAsEditText;
     private ImageView mLegalityImageView;
     private TextView mWriteValueTextView;
 
-    class SavedValue
+    private final String SHARED_PREFERENCES_FILE_NAME = "SAVED_VALUES";
+
+    static final Uuids.GATTFormatType sAllowedFormats[] =
+        {
+            Uuids.GATTFormatType.GCFT_boolean,
+            Uuids.GATTFormatType.GCFT_2bit,
+            Uuids.GATTFormatType.GCFT_nibble,
+            Uuids.GATTFormatType.GCFT_uint8,
+            Uuids.GATTFormatType.GCFT_uint12,
+            Uuids.GATTFormatType.GCFT_uint16,
+            Uuids.GATTFormatType.GCFT_uint24,
+            Uuids.GATTFormatType.GCFT_uint32,
+            Uuids.GATTFormatType.GCFT_uint48,
+            Uuids.GATTFormatType.GCFT_uint64,
+            Uuids.GATTFormatType.GCFT_uint128,
+            Uuids.GATTFormatType.GCFT_sint8,
+            Uuids.GATTFormatType.GCFT_sint12,
+            Uuids.GATTFormatType.GCFT_sint16,
+            Uuids.GATTFormatType.GCFT_sint24,
+            Uuids.GATTFormatType.GCFT_sint32,
+            Uuids.GATTFormatType.GCFT_sint48,
+            Uuids.GATTFormatType.GCFT_sint64,
+            Uuids.GATTFormatType.GCFT_sint128,
+            Uuids.GATTFormatType.GCFT_float32,
+            Uuids.GATTFormatType.GCFT_float64,
+            Uuids.GATTFormatType.GCFT_utf8s,
+            Uuids.GATTFormatType.GCFT_utf16s,
+            Uuids.GATTFormatType.GCFT_struct
+        };
+
+    static class SavedValue implements Comparable<SavedValue>
     {
+        String mName;
         String mValueString;
         Uuids.GATTFormatType mGattFormatType;
 
-        SavedValue(String value, Uuids.GATTFormatType gft)
+        SavedValue(String name, String value, Uuids.GATTFormatType gft)
         {
+            mName = name;
             mValueString = value;
             mGattFormatType = gft;
         }
+
+        public String getName()
+        {
+            return mName;
+        }
+
+        public String getValueString()
+        {
+            return mValueString;
+        }
+
+        public Uuids.GATTFormatType getGATTFormatType()
+        {
+            return mGattFormatType;
+        }
+
+        public static SavedValue parse(String name, String packed)
+        {
+            String splits[] = packed.split("\\|", 2);
+            String lenString = splits[0];
+            String leftover = splits[1];
+
+            Integer len = Integer.parseInt(lenString);
+
+            String value = leftover.substring(0, len);
+            String typeString = leftover.substring(len);
+            Uuids.GATTFormatType gft = Uuids.GATTFormatType.valueOf(typeString);
+
+            SavedValue sv = new SavedValue(name, value, gft);
+            return sv;
+        }
+
+        public void writePreference(SharedPreferences.Editor editor)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("" + mValueString.length());
+            sb.append("|");
+            sb.append(mValueString);
+            sb.append(mGattFormatType.name());
+
+            editor.putString(mName, sb.toString());
+        }
+
+        @Override
+        public int compareTo(@NonNull SavedValue o)
+        {
+            return mName.compareTo(o.mName);
+        }
     }
+
+    private List<SavedValue> mSavedValueList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -91,10 +182,13 @@ public class WriteValueActivity extends BaseActivity
             }
         }
 
+        mLoadValueSpinner = find(R.id.loadValueSpinner);
         mValueEditText = find(R.id.valueEditText);
         mWriteTypeSpinner = find(R.id.writeTypeSpinner);
         mLegalityImageView = find(R.id.legalityImageView);
-        //mWriteValueTextView = find(R.id.writeValueTextView);
+        mSaveAsEditText = find(R.id.saveNameEditText);
+
+        loadSavedValues();
 
         // Focus the value edit text
         mValueEditText.requestFocus();
@@ -103,11 +197,83 @@ public class WriteValueActivity extends BaseActivity
 
         setTitle(UuidUtil.getCharacteristicName(mCharacteristic));
 
+        setLoadValueSpinner();
+
         setValueEditText();
 
         setWriteTypeSpinner();
 
         refreshLegalityIndicator();
+    }
+
+    private void loadSavedValues()
+    {
+        mSavedValueList.clear();
+
+        SharedPreferences sp = getSharedPreferences(SHARED_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE);
+        Set<String> keySet = sp.getAll().keySet();
+
+        for (String key : keySet)
+        {
+            String s = sp.getString(key, null);
+
+            SavedValue sv = SavedValue.parse(key, s);
+
+            mSavedValueList.add(sv);
+        }
+
+        Collections.sort(mSavedValueList);
+    }
+
+    private void saveSavedValues()
+    {
+        SharedPreferences sp = getSharedPreferences(SHARED_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+
+        for (SavedValue sv : mSavedValueList)
+            sv.writePreference(editor);
+
+        editor.commit();
+    }
+
+    private void setLoadValueSpinner()
+    {
+        List<String> l = new ArrayList<>();
+
+        l.add("");  // Add empty row first
+        for (SavedValue sv : mSavedValueList)
+            l.add(sv.getName());
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, l);
+
+        mLoadValueSpinner.setAdapter(adapter);
+        mLoadValueSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                // Populate from saved value
+                if (position > 0)
+                {
+                    SavedValue sv = mSavedValueList.get(position - 1);
+
+                    mValueEditText.setText(sv.getValueString());
+
+                    for (int i = 0 ; i < sAllowedFormats.length; ++i)
+                    {
+                        Uuids.GATTFormatType gft = sAllowedFormats[i];
+                        if (gft == sv.getGATTFormatType())
+                            mWriteTypeSpinner.setSelection(i);
+                    }
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+
+            }
+        });
     }
 
     private void setValueEditText()
@@ -137,6 +303,15 @@ public class WriteValueActivity extends BaseActivity
 
     private void setWriteTypeSpinner()
     {
+        List<String> l = new ArrayList<>();
+
+        String names[] = getResources().getStringArray(R.array.gatt_format_type_names);
+
+        for (Uuids.GATTFormatType gft : sAllowedFormats)
+            l.add(names[gft.ordinal()]);
+
+        ArrayAdapter<String> aa = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, l);
+
         mWriteTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
         {
             @Override
@@ -153,23 +328,13 @@ public class WriteValueActivity extends BaseActivity
                 refreshTextInputType();
             }
         });
-    }
 
-    /*private void setWriteValueTextView()
-    {
-        mWriteValueTextView.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                writeValue();
-            }
-        });
-    }*/
+        mWriteTypeSpinner.setAdapter(aa);
+    }
 
     private void refreshLegalityIndicator()
     {
-        Uuids.GATTFormatType gft = Uuids.GATTFormatType.values()[mWriteTypeSpinner.getSelectedItemPosition() + 1];
+        Uuids.GATTFormatType gft = sAllowedFormats[mWriteTypeSpinner.getSelectedItemPosition()];
         String currentInput = mValueEditText.getText().toString();
         try
         {
@@ -186,7 +351,7 @@ public class WriteValueActivity extends BaseActivity
     private void refreshTextInputType()
     {
         int type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL;
-        switch (Uuids.GATTFormatType.values()[mWriteTypeSpinner.getSelectedItemPosition() + 1])
+        switch (sAllowedFormats[mWriteTypeSpinner.getSelectedItemPosition()])
         {
             case GCFT_boolean:
                 type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL;
@@ -233,13 +398,13 @@ public class WriteValueActivity extends BaseActivity
     private void writeValue()
     {
         String value = mValueEditText.getText().toString();
-        Uuids.GATTFormatType gft = Uuids.GATTFormatType.values()[mWriteTypeSpinner.getSelectedItemPosition()+1];
+        Uuids.GATTFormatType gft = sAllowedFormats[mWriteTypeSpinner.getSelectedItemPosition()];
 
         try
         {
             byte rawVal[] = gft.stringToByteArray(value);
 
-            final Dialog d = ProgressDialog.show(WriteValueActivity.this, "title", "message");
+            final Dialog d = ProgressDialog.show(WriteValueActivity.this, getString(R.string.write_value_writing_dialog_title), getString(R.string.write_value_writing_dialog_message));
 
             mDevice.write(mCharacteristic.getUuid(), rawVal, new BleDevice.ReadWriteListener()
             {
@@ -248,11 +413,11 @@ public class WriteValueActivity extends BaseActivity
                 {
                     if (e.wasSuccess())
                     {
-                        Toast.makeText(getApplicationContext(), "Value written!", Toast.LENGTH_LONG).show();
-                        finish();
+                        Toast.makeText(getApplicationContext(), R.string.write_value_writing_success_toast, Toast.LENGTH_LONG).show();
+                        saveAndFinish();
                     }
                     else
-                        Toast.makeText(getApplicationContext(), "Write failed", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), R.string.write_value_writing_fail_toast, Toast.LENGTH_LONG).show();
 
                     d.dismiss();
                 }
@@ -279,6 +444,24 @@ public class WriteValueActivity extends BaseActivity
     {
         finish();
         return true;
+    }
+
+    private void saveAndFinish()
+    {
+        String saveAsName = mSaveAsEditText.getText().toString();
+        if (saveAsName != null && saveAsName.length() > 0)
+        {
+            String value = mValueEditText.getText().toString();
+            Uuids.GATTFormatType gft = sAllowedFormats[mWriteTypeSpinner.getSelectedItemPosition()];
+
+            SavedValue sv = new SavedValue(saveAsName, value, gft);
+
+            mSavedValueList.add(sv);
+        }
+
+        saveSavedValues();
+
+        finish();
     }
 
     public boolean onOptionsItemSelected(MenuItem item)

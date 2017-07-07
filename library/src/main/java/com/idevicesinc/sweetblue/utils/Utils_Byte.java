@@ -123,7 +123,7 @@ public final class Utils_Byte extends Utils
 		return sb.toString();
 	}
 
-	public static byte[] binaryStringToBytes(String s)
+	public static byte[] binaryStringToBytes(String s) throws Exception
 	{
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 
@@ -142,8 +142,8 @@ public final class Utils_Byte extends Utils
 					continue;
 
 				// Anything else is an error
-				//TODO:  Throw an exception here?
-				return null;
+				//FIXME:  Custom exception type
+				throw new Exception("Illegal character " + c + " encountered while parsing binary string");
 			}
 
 			int val = c == '1' ? 1 : 0;

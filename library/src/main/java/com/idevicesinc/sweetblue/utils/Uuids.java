@@ -622,6 +622,71 @@ public final class Uuids
 				throw new GATTCharacteristicFormatTypeConversionException("Value " + bi + " out of range.  Valid range is (" + biMin + ", " + biMax + ")");
 		}
 
+		private byte[] padBigInt(byte bigEndianBytes[], int toByteSize)
+		{
+			if (bigEndianBytes.length >= toByteSize)
+				return bigEndianBytes;
+
+			// Look at the most significant bit of the first byte
+			int firstBit = bigEndianBytes.length > 0 ? bigEndianBytes[0] : 0;
+			firstBit >>>= 7;
+			firstBit &= 0x1;
+
+			byte pad = (byte)(firstBit == 0 ? 0x0 : 0xFF);
+
+			int shift = 16 - bigEndianBytes.length;
+			byte paddedBytes[] = new byte[toByteSize];
+			for (int i = paddedBytes.length - 1; i >= 0; --i)
+			{
+				int idx = i - shift;
+				if (idx >= 0)
+					paddedBytes[i] = bigEndianBytes[idx];
+				else
+					paddedBytes[i] = pad;
+			}
+
+			BigInteger t1 = new BigInteger(bigEndianBytes);
+			BigInteger t2 = new BigInteger(paddedBytes);
+
+			assert(t1.compareTo(t2) == 0);
+
+			return paddedBytes;
+		}
+
+		private BigInteger parseHexString(String hexString)
+		{
+			try
+			{
+				hexString = hexString.trim();
+				if (hexString.startsWith("0x"))
+					hexString = hexString.replaceFirst("0x", "");
+				byte hexBytes[] = Utils_Byte.hexStringToBytes(hexString);
+				BigInteger bi = new BigInteger(hexBytes);
+				return bi;
+			}
+			catch (Exception e)
+			{
+				return null;
+			}
+		}
+
+		private BigInteger parseBinaryString(String binaryString)
+		{
+			try
+			{
+				binaryString = binaryString.trim();
+				if (binaryString.startsWith("0b"))
+					binaryString = binaryString.replaceFirst("0b", "");
+				byte binaryBytes[] = Utils_Byte.binaryStringToBytes(binaryString);
+				BigInteger bi = new BigInteger(binaryBytes);
+				return bi;
+			}
+			catch (Exception e)
+			{
+				return null;
+			}
+		}
+
 		public byte[] stringToByteArray(String s) throws GATTCharacteristicFormatTypeConversionException  //FIXME:  New exception
 		{
 			// First, try to interpret the string as a numeric type
@@ -634,8 +699,12 @@ public final class Uuids
 			}
 			catch (NumberFormatException e)
 			{
-				bi = null;
 				biex = e;
+
+				// Also try interpreting as hex or binary
+				bi = parseHexString(s);
+				if (bi == null)
+					bi = parseBinaryString(s);
 			}
 
 			// Also attempt to parse as a big decimal
@@ -705,7 +774,7 @@ public final class Uuids
 				{
 					checkOrThrow(bi, biex, 0L, 16777215L);
 					byte result[] = Utils_Byte.intToBytes(bi.intValue());
-					//FIXME:  Trim one byte from result
+					result = Arrays.copyOfRange(result, 1, 4);
 					return result;
 				}
 				case GCFT_uint32:
@@ -718,7 +787,7 @@ public final class Uuids
 				{
 					checkOrThrow(bi, biex, 0L, 281474976710655L);
 					byte result[] = Utils_Byte.longToBytes(bi.intValue());
-					//FIXME:  Trim result
+					result = Arrays.copyOfRange(result, 2, 8);
 					return result;
 				}
 				case GCFT_uint64:
@@ -731,10 +800,7 @@ public final class Uuids
 				{
 					checkOrThrow(bi, biex, new BigInteger("0"), new BigInteger("340282366920938463463374607431768211455"));
 					byte result[] = bi.toByteArray();
-					//FIXME:  Pad up result, adding missing bytes at the START of the array
-					byte result2[] = new byte[16];
-					System.arraycopy(result, 0, result2, result2.length - result.length, result.length);
-					return result;
+					return padBigInt(result, 16);
 				}
 				case GCFT_sint8:
 				{
@@ -747,6 +813,7 @@ public final class Uuids
 				{
 					checkOrThrow(bi, biex, -2048L, 2047L);
 					byte result[] = Utils_Byte.shortToBytes(bi.shortValue());
+					//FIXME:  Are we supposed to mask out the first 4 bits?  Or does it not matter?
 					return result;
 				}
 				case GCFT_sint16:
@@ -759,7 +826,7 @@ public final class Uuids
 				{
 					checkOrThrow(bi, biex, -8388608L, 8388607L);
 					byte result[] = Utils_Byte.intToBytes(bi.intValue());
-					//FIXME:  Trim one byte from result
+					result = Arrays.copyOfRange(result, 1, 4);
 					return result;
 				}
 				case GCFT_sint32:
@@ -772,7 +839,7 @@ public final class Uuids
 				{
 					checkOrThrow(bi, biex, -140737488355328L, 140737488355327L);
 					byte result[] = Utils_Byte.longToBytes(bi.intValue());
-					//FIXME:  Trim result
+					result = Arrays.copyOfRange(result, 2, 8);
 					return result;
 				}
 				case GCFT_sint64:
@@ -785,14 +852,22 @@ public final class Uuids
 				{
 					checkOrThrow(bi, biex, new BigInteger("-170141183460469231731687303715884105728"), new BigInteger("170141183460469231731687303715884105727"));
 					byte result[] = bi.toByteArray();
-					byte result2[] = new byte[16];
-					//FIXME:  Pad up result, adding missing bytes at the START of the array
-					//FIXME:  Flood sign bit
-					System.arraycopy(result, 0, result2, result2.length - result.length, result.length);
-					return result;
+					return padBigInt(result, 16);
 				}
 				case GCFT_float32:
+				{
+					float f = bd.floatValue();
+					int raw = Float.floatToIntBits(f);
+					byte result[] = Utils_Byte.intToBytes(raw);
+					return result;
+				}
 				case GCFT_float64:
+				{
+					double d = bd.doubleValue();
+					long raw = Double.doubleToLongBits(d);
+					byte result[] = Utils_Byte.longToBytes(raw);
+					return result;
+				}
 				case GCFT_SFLOAT:
 				case GCFT_FLOAT:
 				case GCFT_duint16:
@@ -995,7 +1070,14 @@ public final class Uuids
 				case Boolean:
 					return java.lang.Boolean.valueOf(s);
 				case Bitfield:
-					return Utils_Byte.binaryStringToBytes(s);
+					try
+					{
+						return Utils_Byte.binaryStringToBytes(s);
+					}
+					catch (Exception e)
+					{
+						return null;
+					}
 				case UnsignedInteger:
 				case SignedInteger:
 					return Long.valueOf(s);
