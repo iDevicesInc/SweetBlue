@@ -339,7 +339,7 @@ public final class Utils_ScanRecord extends Utils
 					case DATA_TYPE_LOCAL_NAME_COMPLETE:
 						String n = new String(extractBytes(scanRecord, currentPos, dataLength));
 						if (!TextUtils.isEmpty(n)) {
-							name = n;
+							return n;
 						}
 						break;
 					default:

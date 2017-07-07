@@ -79,6 +79,18 @@ public class Utils_String extends Utils
 		return consistentName;
 	}
 
+	public static String debugizeDeviceName(String macAddress, String normalizedName, boolean isNativeDeviceNull)
+	{
+		String[] address_split = macAddress.split(":");
+		StringBuilder b = new StringBuilder();
+		b.append(normalizedName.length() == 0 ? "<no_name>" : normalizedName);
+		if (!isNativeDeviceNull)
+		{
+			b.append("_").append(address_split[address_split.length - 2]).append(address_split[address_split.length - 1]);
+		}
+		return b.toString();
+	}
+
 	public static String getStringValue(final byte[] data, final String charset)
 	{
 		String string = "";
