@@ -867,7 +867,7 @@ public class BleManagerConfig extends BleDeviceConfig
 
 	/**
 	 * Creates a {@link BleManagerConfig} with all default options set. Then, any configuration options
-	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig.writeJSON}
+	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig#writeJSON()}
 	 * regarding the creation of the JSONObject
 	 */
 	public BleManagerConfig(JSONObject jo)

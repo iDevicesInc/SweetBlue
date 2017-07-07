@@ -3009,77 +3009,57 @@ public final class BleManager
 		for (DiscoveryEntry entry : entries)
 		{
 
-			final String rawDeviceName;
-
-			try
-			{
-				rawDeviceName = getDeviceName(entry.device(), entry.record());
-			}
-
-			//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.
-			catch (Exception e)
-			{
-				m_logger.e(e.getStackTrace().toString());
-
-				//--- DRK > Can't actually catch the DeadObjectException itself.
-				if (e instanceof DeadObjectException)
-				{
-					uhOh(UhOh.DEAD_OBJECT_EXCEPTION);
-				}
-				else
-				{
-					uhOh(UhOh.RANDOM_EXCEPTION);
-				}
-
-				continue;
-			}
-
-			final String loggedDeviceName = rawDeviceName;
-
 			final String macAddress = entry.device().getAddress();
 			BleDevice device_sweetblue = m_deviceMngr.get(macAddress);
 
-			if (device_sweetblue == null)
+			if (device_sweetblue != null)
 			{
-//    		m_logger.i("Discovered device " + loggedDeviceName + " " + macAddress + " not in list.");
-			}
-			else
-			{
-				if (device_sweetblue.layerManager().getDeviceLayer().equals(entry.device()))
+				if (!device_sweetblue.layerManager().getDeviceLayer().equals(entry.device()))
 				{
-//    			m_logger.i("Discovered device " + loggedDeviceName + " " + macAddress + " already in list.");
-				}
-				else
-				{
-					ASSERT(false, "Discovered device " + loggedDeviceName + " " + macAddress + " already in list but with new native device instance.");
+					ASSERT(false, "Discovered device " + entry.device().getName() + " " + macAddress + " already in list but with new native device instance.");
 				}
 			}
-
-			final String normalizedDeviceName = Utils_String.normalizeDeviceName(rawDeviceName);
-			final ScanFilter.ScanEvent scanEvent_nullable;
 
 			final Please please;
+			final boolean newlyDiscovered;
+			final ScanFilter.ScanEvent scanEvent_nullable;
 
 			if (device_sweetblue == null)
 			{
+				final String rawDeviceName;
+
+				try
+				{
+					rawDeviceName = getDeviceName(entry.device(), entry.record());
+				}
+
+				//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.
+				catch (Exception e)
+				{
+					m_logger.e(e.getStackTrace().toString());
+
+					//--- DRK > Can't actually catch the DeadObjectException itself.
+					if (e instanceof DeadObjectException)
+					{
+						uhOh(UhOh.DEAD_OBJECT_EXCEPTION);
+					}
+					else
+					{
+						uhOh(UhOh.RANDOM_EXCEPTION);
+					}
+
+					continue;
+				}
+
+				final String normalizedDeviceName = Utils_String.normalizeDeviceName(rawDeviceName);
+
 				final boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 				final State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
 				scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(entry.device().getNativeDevice(), rawDeviceName, normalizedDeviceName, entry.rssi(), lastDisconnectIntent, entry.record()) : null;
-				final String deviceName = rawDeviceName != null ? rawDeviceName : "";
 				please = m_filterMngr.allow(m_logger, scanEvent_nullable);
 
 				if (please != null && false == please.ack()) continue;
-			}
-			else
-			{
-				please = null;
-				scanEvent_nullable = null;
-			}
 
-			final boolean newlyDiscovered;
-
-			if (device_sweetblue == null)
-			{
 				final String name_native = rawDeviceName;
 
 				final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
@@ -3088,8 +3068,10 @@ public final class BleManager
 			}
 			else
 			{
+				scanEvent_nullable = null;
 				newlyDiscovered = false;
 			}
+
 			entry.m_newlyDiscovered = newlyDiscovered;
 			entry.m_bleDevice = device_sweetblue;
 			entry.m_origin = BleDeviceOrigin.FROM_DISCOVERY;
@@ -3242,6 +3224,7 @@ public final class BleManager
 	private void onDiscovered_wrapItUp(List<DiscoveryEntry> entries)
 	{
 		final List<DiscoveryEvent> events = new ArrayList<>(entries.size());
+
 		for (DiscoveryEntry e : entries)
 		{
 			if (e.m_newlyDiscovered)
@@ -3513,6 +3496,7 @@ public final class BleManager
 			//--- RB > Not sure why this was put here. If the tick is over a second, we still want to know that, otherwise tasks will end up running longer
 			// 			than expected.
 //			timeStep = timeStep > 1.0 ? 1.0 : timeStep;
+
 
 			update(timeStep, currentTime);
 
