@@ -8,14 +8,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.PopupMenu;
-import android.util.Log;
 import android.util.TypedValue;
-import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.inputmethod.EditorInfo;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
@@ -36,22 +33,30 @@ import java.util.Map;
 
 public class CharacteristicAdapter extends BaseExpandableListAdapter
 {
-    private final static String READ = "Read";
-    private final static String WRITE = "Write";
-    private final static String NOTIFY = "Notify";
-    private final static String INDICATE = "Indicate";
-    private final static String BROADCAST = "Broadcast";
-    private final static String SIGNED_WRITE = "Signed Write";
-    private final static String WRITE_NO_RESPONSE = "Write No Response";
-    private final static String EXTENDED_PROPS = "Extended Properties";
+    private static String READ;
+    private static String WRITE;
+    private static String NOTIFY;
+    private static String INDICATE;
+    private static String BROADCAST;
+    private static String SIGNED_WRITE;
+    private static String WRITE_NO_RESPONSE;
+    private static String EXTENDED_PROPS;
 
     private BleDevice m_device;
     private BluetoothGattService m_service;
     private Map<BluetoothGattCharacteristic, List<BluetoothGattDescriptor>> m_charDescMap;
     private List<BluetoothGattCharacteristic> m_characteristicList;
 
-    public CharacteristicAdapter(@NonNull BleDevice device, @NonNull BluetoothGattService service, @NonNull List<BluetoothGattCharacteristic> charList)
+    public CharacteristicAdapter(Context context, @NonNull BleDevice device, @NonNull BluetoothGattService service, @NonNull List<BluetoothGattCharacteristic> charList)
     {
+        READ = context.getString(R.string.read);
+        WRITE = context.getString(R.string.write);
+        NOTIFY = context.getString(R.string.notify);
+        INDICATE = context.getString(R.string.indicate);
+        BROADCAST = context.getString(R.string.broadcast);
+        SIGNED_WRITE = context.getString(R.string.signed_write);
+        EXTENDED_PROPS = context.getString(R.string.extended_properties);
+        WRITE_NO_RESPONSE = context.getString(R.string.write_no_response);
         m_device = device;
         m_service = service;
         m_charDescMap = new HashMap<>(charList.size());
@@ -118,6 +123,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
     @Override public View getGroupView(final int groupPosition, boolean isExpanded, View convertView, final ViewGroup parent)
     {
+
         final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
         final String name = UuidUtil.getCharacteristicName(characteristic);
         final ExpandableListView elv = (ExpandableListView)parent;
@@ -337,7 +343,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         }
         else
         {
-            String valueString = "Loading...";
+            String valueString = cvh.name.getContext().getString(R.string.loading);
             if (bgc.getValue() != null)
             {
                 try
@@ -348,7 +354,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                 }
                 catch (Exception e)
                 {
-                    valueString = "<Error>";
+                    valueString = "<" + cvh.name.getContext().getString(R.string.error) + ">";
                 }
             }
             cvh.value.setText(valueString);

@@ -98,7 +98,7 @@ public class BleDetailsFragment extends Fragment implements BleServicesActivity.
             boolean both = info.getServiceUUIDS().size() > 0 && info.getServiceData().size() > 0;
             for (UUID u : uuids)
             {
-                b.append("UUID: ").append(u).append("\n");
+                b.append(getString(R.string.uuid_colon)).append(" ").append(u).append("\n");
             }
             if (both)
             {
@@ -106,7 +106,7 @@ public class BleDetailsFragment extends Fragment implements BleServicesActivity.
             }
             for (UUID u : data.keySet())
             {
-                b.append("UUID: ").append(u).append("\n").append("Data: ").append(Utils_Byte.bytesToHexString(data.get(u))).append("\n");
+                b.append(R.string.uuid_colon).append(" ").append(u).append("\n").append(getString(R.string.data_colon)).append(" ").append(Utils_Byte.bytesToHexString(data.get(u))).append("\n");
             }
             serviceUuids.setText(b.toString());
         }

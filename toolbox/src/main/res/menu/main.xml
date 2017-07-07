@@ -5,15 +5,15 @@
     <item
         android:id="@+id/scanFilter"
         android:icon="@android:drawable/ic_menu_search"
-        android:title="Filter by Name"
+        android:title="@string/filter_by_name"
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="always"/>
 
     <item android:id="@+id/scanOptions"
-          android:title="Scan Options" />
+          android:title="@string/scan_options" />
 
     <item android:id="@+id/sortOptions"
-          android:title="Sort Options" />
+          android:title="@string/sort_options" />
 
 
 </menu>

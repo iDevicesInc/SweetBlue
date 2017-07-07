@@ -11,7 +11,7 @@
 
         <TextView
             style="@style/item_heading"
-            android:text="Native Name"/>
+            android:text="@string/native_name"/>
 
         <TextView
             android:id="@+id/nativeName"
@@ -21,7 +21,7 @@
 
         <TextView
             style="@style/item_heading"
-            android:text="MAC Address"/>
+            android:text="@string/mac_address"/>
 
 
         <TextView
@@ -32,7 +32,7 @@ android:layout_marginBottom="@dimen/medium"
 
         <TextView
             style="@style/item_heading"
-            android:text="Status"/>
+            android:text="@string/status"/>
 
         <TextView
             android:id="@+id/status"
@@ -48,7 +48,7 @@ android:layout_marginBottom="@dimen/medium"
         <TextView
             android:id="@+id/advName"
             style="@style/item_text"
-android:layout_marginBottom="@dimen/medium"
+            android:layout_marginBottom="@dimen/medium"
             android:text="Name from Scan record"/>
 
         <TextView
@@ -59,7 +59,7 @@ android:layout_marginBottom="@dimen/medium"
         <TextView
             android:id="@+id/serviceUuids"
             style="@style/item_text"
-android:layout_marginBottom="@dimen/medium"
+            android:layout_marginBottom="@dimen/medium"
             android:text="UUID: 0xFF1D\nData: AABBCCDD"/>
 
         <TextView
@@ -70,7 +70,7 @@ android:layout_marginBottom="@dimen/medium"
         <TextView
             android:id="@+id/manufacturerId"
             style="@style/item_text"
-android:layout_marginBottom="@dimen/medium"
+            android:layout_marginBottom="@dimen/medium"
             android:text="15"/>
 
         <TextView
@@ -81,7 +81,7 @@ android:layout_marginBottom="@dimen/medium"
         <TextView
             android:id="@+id/manufacturerData"
             style="@style/item_text"
-android:layout_marginBottom="@dimen/medium"
+            android:layout_marginBottom="@dimen/medium"
             android:text="90ABCDEF0326"/>
 
         <TextView
@@ -92,7 +92,7 @@ android:layout_marginBottom="@dimen/medium"
         <TextView
             android:id="@+id/advFlags"
             style="@style/item_text"
-android:layout_marginBottom="@dimen/medium"
+            android:layout_marginBottom="@dimen/medium"
             android:text="001101001"/>
 
         <TextView
@@ -103,7 +103,7 @@ android:layout_marginBottom="@dimen/medium"
         <TextView
             android:id="@+id/txPower"
             style="@style/item_text"
-android:layout_marginBottom="@dimen/medium"
+            android:layout_marginBottom="@dimen/medium"
             android:text="45"/>
 
 

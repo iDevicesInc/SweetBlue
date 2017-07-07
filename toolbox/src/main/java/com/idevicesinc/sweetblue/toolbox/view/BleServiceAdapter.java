@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue.toolbox.view;
 
 
+import android.app.Activity;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -10,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.activity.MainActivity;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import java.util.ArrayList;
 
@@ -52,7 +54,7 @@ public class BleServiceAdapter extends ArrayAdapter<BluetoothGattService>
 
         h.uuid.setText(uuid);
 
-        final String type = service.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY ? "PRIMARY SERVICE" : "SECONDARY SERVICE";
+        final String type = service.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY ? getContext().getString(R.string.primary_service) : getContext().getString(R.string.secondary_service);
         h.type.setText(type);
 
         return convertView;
