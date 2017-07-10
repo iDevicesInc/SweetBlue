@@ -123,7 +123,8 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
             }
             else
             {
-                m_refState = BleStatuses.STATE_OFF;
+                // --- RB  > Not sure why this was setting to off, when the above handles the exception we want to handle. Commenting out for now.
+//                m_refState = BleStatuses.STATE_OFF;
             }
             return m_refState;
         } catch (Exception e)
