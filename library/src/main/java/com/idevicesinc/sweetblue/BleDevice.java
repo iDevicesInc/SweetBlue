@@ -5867,7 +5867,7 @@ public final class BleDevice extends BleNode
         {
             final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
             final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
-            needsBond = Utils.phoneHasBondingIssues() && BleDeviceConfig.bool(conf_device().alwaysBondOnConnect, conf_mngr().alwaysBondOnConnect);
+            needsBond = Utils.phoneHasBondingIssues() || BleDeviceConfig.bool(conf_device().alwaysBondOnConnect, conf_mngr().alwaysBondOnConnect);
             final boolean doPreBond = getManager().m_diskOptionsMngr.loadNeedsBonding(getMacAddress(), tryBondingWhileDisconnected_manageOnDisk) || needsBond;
 
             if (doPreBond && tryBondingWhileDisconnected)
@@ -6368,7 +6368,7 @@ public final class BleDevice extends BleNode
 
         if (!ignoreKindOf)
         {
-            if (isDisconnectedAfterReconnectingShortTermStateCallback || wasExplicit)
+            if (isDisconnectedAfterReconnectingShortTermStateCallback/* || wasExplicit*/)
             {
                 m_connectionFailMngr.onExplicitDisconnect();
 
@@ -6740,12 +6740,14 @@ public final class BleDevice extends BleNode
             postEventAsCallback(getManager().m_defaultReadWriteListener, event);
         }
 
-        if (m_defaultNotificationListener != null && (event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION))
+        final boolean isNotificationType = (event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION);
+
+        if (m_defaultNotificationListener != null && isNotificationType)
         {
             postEventAsCallback(m_defaultNotificationListener, fromReadWriteEvent(event));
         }
 
-        if (getManager() != null && getManager().m_defaultNotificationListener != null)
+        if (getManager() != null && getManager().m_defaultNotificationListener != null && isNotificationType)
         {
             postEventAsCallback(getManager().m_defaultNotificationListener, fromReadWriteEvent(event));
         }

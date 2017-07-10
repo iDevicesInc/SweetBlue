@@ -11,11 +11,9 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.os.Build;
 import android.os.DeadObjectException;
-
 import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
-
 import java.lang.reflect.Field;
 import java.util.ConcurrentModificationException;
 import java.util.List;
@@ -406,38 +404,49 @@ final class P_AndroidGatt implements P_GattLayer
     @Override
     public boolean discoverServices()
     {
-        return m_gatt.discoverServices();
+        if (m_gatt != null)
+            return m_gatt.discoverServices();
+        return false;
     }
 
     @Override
     public boolean executeReliableWrite()
     {
-        return m_gatt.executeReliableWrite();
+        if (m_gatt != null)
+            return m_gatt.executeReliableWrite();
+        return false;
     }
 
     @Override
     public boolean beginReliableWrite()
     {
-        return m_gatt.beginReliableWrite();
+        if (m_gatt != null)
+            return m_gatt.beginReliableWrite();
+        return false;
     }
 
     @Override
     public void abortReliableWrite(BluetoothDevice device)
     {
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2)
+        if (m_gatt != null)
         {
-            m_gatt.abortReliableWrite(device);
-        }
-        else
-        {
-            K_Util.abortReliableWrite(m_gatt);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2)
+            {
+                m_gatt.abortReliableWrite(device);
+            }
+            else
+            {
+                K_Util.abortReliableWrite(m_gatt);
+            }
         }
     }
 
     @Override
     public boolean readRemoteRssi()
     {
-        return m_gatt.readRemoteRssi();
+        if (m_gatt != null)
+            return m_gatt.readRemoteRssi();
+        return false;
     }
 
 }
