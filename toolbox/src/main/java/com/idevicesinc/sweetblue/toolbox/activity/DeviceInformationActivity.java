@@ -22,6 +22,7 @@ public class DeviceInformationActivity extends BaseActivity
 
     private TextView kernelVersion;
     private TextView deviceName;
+    private TextView bluetoothName;
     private TextView androidVer;
     private TextView apiVersion;
     private TextView brand;
@@ -60,6 +61,9 @@ public class DeviceInformationActivity extends BaseActivity
 
         deviceName = find(R.id.deviceName);
         deviceName.setText(DeviceName.getDeviceName(Build.MODEL, getString(R.string.unknown_device)));
+
+        bluetoothName = find(R.id.bluetoothName);
+        bluetoothName.setText(bleManager.getNativeAdapter().getName());
 
         androidVer = find(R.id.osVersion);
         androidVer.setText(Build.VERSION.RELEASE);
