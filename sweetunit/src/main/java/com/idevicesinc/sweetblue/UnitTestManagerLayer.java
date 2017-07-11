@@ -23,6 +23,7 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     private int m_nativeState = BleStatuses.STATE_ON;
     private String m_address;
+    private String m_name = "MockedDevice";
     private Map<String, Integer> deviceStates = new HashMap<>();
 
 
@@ -121,6 +122,18 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
     @Override public int getBleState()
     {
         return m_nativeState;
+    }
+
+    @Override
+    public String getName()
+    {
+        return m_name;
+    }
+
+    @Override
+    public void setName(String name)
+    {
+        m_name = name;
     }
 
     @Override public String getAddress()
