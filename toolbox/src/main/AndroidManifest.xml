@@ -49,7 +49,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.idevicesinc.sweetblue.toolbox.activity.BleServicesActivity"/>
         </activity>
-        <activity android:name=".activity.WriteValueActivity">
+        <activity android:name=".activity.WriteValueActivity"
+                  android:windowSoftInputMode="adjustPan"
+                  android:configChanges="keyboard|keyboardHidden">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.idevicesinc.sweetblue.toolbox.activity.WriteValueActivity"/>

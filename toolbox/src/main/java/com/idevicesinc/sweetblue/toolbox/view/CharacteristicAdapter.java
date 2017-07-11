@@ -8,12 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.PopupMenu;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
@@ -21,7 +19,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
-import com.idevicesinc.sweetblue.WriteBuilder;
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.activity.WriteValueActivity;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
@@ -33,7 +30,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 
 public class CharacteristicAdapter extends BaseExpandableListAdapter
@@ -337,7 +333,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         cvh.uuid.setTextSize(TypedValue.COMPLEX_UNIT_PX, cvh.uuidOriginalTextSize);
 
         // Now, post a runnable to shrink it down
-        ViewUtil.postFixRunnable(cvh.uuid);
+        ViewUtil.fixOversizedText(cvh.uuid);
     }
 
 
@@ -413,7 +409,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         h.value.setText(hexString);
 
         // Text shrink hack
-        ViewUtil.postFixRunnable(h.uuid);
+        ViewUtil.fixOversizedText(h.uuid);
 
         return convertView;
     }

@@ -3,35 +3,35 @@ package com.idevicesinc.sweetblue.toolbox.activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
+import com.idevicesinc.sweetblue.DeviceStateListener;
 import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.fragment.WriteValueLoadFragment;
+import com.idevicesinc.sweetblue.toolbox.fragment.WriteValueNewFragment;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,21 +40,21 @@ import java.util.UUID;
 
 public class WriteValueActivity extends BaseActivity
 {
+    // What are we writing to?
     private BleManager mBleManager;
     private BleDevice mDevice;
     private BluetoothGattService mService;
     private BluetoothGattCharacteristic mCharacteristic;
 
-    private Spinner mLoadValueSpinner;
-    private EditText mValueEditText;
-    private Spinner mWriteTypeSpinner;
-    private EditText mSaveAsEditText;
-    private ImageView mLegalityImageView;
-    private TextView mWriteValueTextView;
+    // UI configuration
+    private TabLayout mTabLayout;
+    private ViewPager mViewPager;
+    private DetailsTabsAdaptor mPagerAdapter;
+    private ArrayList<BleServicesActivity.Listener> mListeners;
 
     private final String SHARED_PREFERENCES_FILE_NAME = "SAVED_VALUES";
 
-    static final Uuids.GATTFormatType sAllowedFormats[] =
+    public static final Uuids.GATTFormatType sAllowedFormats[] =
         {
             Uuids.GATTFormatType.GCFT_boolean,
             Uuids.GATTFormatType.GCFT_2bit,
@@ -82,7 +82,8 @@ public class WriteValueActivity extends BaseActivity
             Uuids.GATTFormatType.GCFT_struct
         };
 
-    static class SavedValue implements Comparable<SavedValue>
+    // Saved values
+    public static class SavedValue implements Comparable<SavedValue>
     {
         String mName;
         String mValueString;
@@ -146,19 +147,25 @@ public class WriteValueActivity extends BaseActivity
     }
 
     private List<SavedValue> mSavedValueList = new ArrayList<>();
+    private boolean mSavedValueListDirty = false;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState)
+    private enum Tabs
+    {
+        New,
+        Load
+    };
+
+    @Override protected void onCreate(@Nullable Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_write_value);
+        setContentView(R.layout.activity_bleservices);
+
+        mListeners = new ArrayList<>(2);
 
         Toolbar toolbar = find(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         toolbar.findViewById(R.id.navBarLogo).setVisibility(View.GONE);
-
-        mBleManager = BleManager.get(this);
 
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -167,6 +174,7 @@ public class WriteValueActivity extends BaseActivity
         final String serviceUUID = getIntent().getStringExtra("serviceUUID");
         final String characteristicUUID = getIntent().getStringExtra("characteristicUUID");
 
+        mBleManager = BleManager.get(this);
         mDevice = mBleManager.getDevice(mac);
         mService = mDevice.getNativeService(UUID.fromString(serviceUUID));
         List<BluetoothGattCharacteristic> charList = mService.getCharacteristics();
@@ -182,28 +190,208 @@ public class WriteValueActivity extends BaseActivity
             }
         }
 
-        mLoadValueSpinner = find(R.id.loadValueSpinner);
-        mValueEditText = find(R.id.valueEditText);
-        mWriteTypeSpinner = find(R.id.writeTypeSpinner);
-        mLegalityImageView = find(R.id.legalityImageView);
-        mSaveAsEditText = find(R.id.saveNameEditText);
+        actionBar.setTitle(UuidUtil.getCharacteristicName(mCharacteristic));
+
+        mTabLayout = find(R.id.tabLayout);
+        mViewPager = find(R.id.viewPager);
+        mPagerAdapter = new DetailsTabsAdaptor(getSupportFragmentManager());
+
+        mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener()
+        {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab)
+            {
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(findViewById(android.R.id.content).getWindowToken(), 0);
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab)
+            {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab)
+            {
+
+            }
+        });
+
+        mViewPager.setAdapter(mPagerAdapter);
+        mTabLayout.setupWithViewPager(mViewPager);
+
+        if (mDevice.getNativeServices_List() == null || mDevice.getNativeServices_List().size() == 0)
+        {
+            mViewPager.setCurrentItem(1);
+        }
+
+        mDevice.setListener_State(new DeviceStateListener()
+        {
+            @Override
+            public void onEvent(BleDevice.StateListener.StateEvent e)
+            {
+                if (mListeners.size() > 0)
+                {
+                    for (BleServicesActivity.Listener l : mListeners)
+                    {
+                        if (l != null)
+                        {
+                            l.onEvent(e);
+                        }
+                    }
+                }
+            }
+        });
 
         loadSavedValues();
+    }
 
-        // Focus the value edit text
-        mValueEditText.requestFocus();
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(mValueEditText, InputMethodManager.SHOW_FORCED);
+    public BleDevice getDevice()
+    {
+        return mDevice;
+    }
 
-        setTitle(UuidUtil.getCharacteristicName(mCharacteristic));
+    public List<SavedValue> getSavedValues()
+    {
+        // Return a defensive copy
+        List<SavedValue> l = new ArrayList<>();
+        l.addAll(mSavedValueList);
+        return l;
+    }
 
-        setLoadValueSpinner();
+    public void addSavedValue(SavedValue sv)
+    {
+        // Remove then add so we replace identically named values
+        mSavedValueList.remove(sv);
+        mSavedValueList.add(sv);
+        mSavedValueListDirty = true;
+    }
 
-        setValueEditText();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        getMenuInflater().inflate(R.menu.write_value, menu);
 
-        setWriteTypeSpinner();
+        return true;
+    }
 
-        refreshLegalityIndicator();
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if (item.getItemId() == R.id.write)
+        {
+            if (mViewPager.getCurrentItem() == Tabs.New.ordinal())
+            {
+                Fragment f = mPagerAdapter.getFragmentAtPosition(Tabs.New.ordinal());
+                WriteValueNewFragment wvnf = (WriteValueNewFragment)f;
+                if (wvnf != null)
+                {
+                    String valueString = wvnf.getValueString();
+                    Uuids.GATTFormatType gft = wvnf.getValueGATTFormatType();
+                    String saveAsName = wvnf.getSaveAsName();
+                    if (saveAsName != null)
+                    {
+                        SavedValue sv = new SavedValue(saveAsName, valueString, gft);
+                        addSavedValue(sv);
+                    }
+
+                    writeValue(valueString, gft);
+                }
+                return true;
+            }
+            else if (mViewPager.getCurrentItem() == Tabs.Load.ordinal())
+            {
+                Fragment f = mPagerAdapter.getFragmentAtPosition(Tabs.Load.ordinal());
+                WriteValueLoadFragment wvlf = (WriteValueLoadFragment)f;
+                if (wvlf != null)
+                {
+                    SavedValue sv = wvlf.getSelectedValue();
+                    if (sv != null)
+                        writeValue(sv.getValueString(), sv.getGATTFormatType());
+                }
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override protected void onDestroy()
+    {
+        mDevice.setListener_State((DeviceStateListener) null);
+        mListeners.clear();
+        super.onDestroy();
+    }
+
+    public void registerListener(BleServicesActivity.Listener listener)
+    {
+        if (!mListeners.contains(listener))
+            mListeners.add(listener);
+    }
+
+    private class DetailsTabsAdaptor extends FragmentPagerAdapter
+    {
+        private WeakReference<Fragment> mFragments[] = new WeakReference[Tabs.values().length];
+
+        public DetailsTabsAdaptor(FragmentManager fm)
+        {
+            super(fm);
+        }
+
+        public Fragment getFragmentAtPosition(int position)
+        {
+            try
+            {
+                return mFragments[position].get();
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
+        @Override
+        public Fragment getItem(int position)
+        {
+            Fragment f = null;
+            if (position == Tabs.New.ordinal())
+                f = new WriteValueNewFragment();
+            else if (position == Tabs.Load.ordinal())
+            {
+                WriteValueLoadFragment wvlf = new WriteValueLoadFragment();
+                wvlf.setSavedValues(getSavedValues());
+                f = wvlf;
+            }
+            mFragments[position] = new WeakReference<>(f);
+            return f;
+        }
+
+        @Override
+        public int getCount()
+        {
+            return 2;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position)
+        {
+            if (position == Tabs.New.ordinal())
+                return getString(R.string.write_value_new_tab);
+            else if (position == Tabs.Load.ordinal())
+                return getString(R.string.write_value_load_tab);
+            return null;
+        }
+    }
+
+    public interface Listener extends DeviceStateListener
+    {
+    }
+
+    @Override
+    public boolean onNavigateUp()
+    {
+        saveSavedValues();
+        finish();
+        return true;
     }
 
     private void loadSavedValues()
@@ -227,6 +415,9 @@ public class WriteValueActivity extends BaseActivity
 
     private void saveSavedValues()
     {
+        if (!mSavedValueListDirty)
+            return;
+
         SharedPreferences sp = getSharedPreferences(SHARED_PREFERENCES_FILE_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
 
@@ -236,173 +427,11 @@ public class WriteValueActivity extends BaseActivity
         editor.commit();
     }
 
-    private void setLoadValueSpinner()
+    private void writeValue(final String valueString, final Uuids.GATTFormatType gft)
     {
-        List<String> l = new ArrayList<>();
-
-        l.add("");  // Add empty row first
-        for (SavedValue sv : mSavedValueList)
-            l.add(sv.getName());
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, l);
-
-        mLoadValueSpinner.setAdapter(adapter);
-        mLoadValueSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-        {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-            {
-                // Populate from saved value
-                if (position > 0)
-                {
-                    SavedValue sv = mSavedValueList.get(position - 1);
-
-                    mValueEditText.setText(sv.getValueString());
-
-                    for (int i = 0 ; i < sAllowedFormats.length; ++i)
-                    {
-                        Uuids.GATTFormatType gft = sAllowedFormats[i];
-                        if (gft == sv.getGATTFormatType())
-                            mWriteTypeSpinner.setSelection(i);
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent)
-            {
-
-            }
-        });
-    }
-
-    private void setValueEditText()
-    {
-        mValueEditText.addTextChangedListener(new TextWatcher()
-        {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after)
-            {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count)
-            {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s)
-            {
-                // Refresh legality
-                refreshLegalityIndicator();
-            }
-        });
-    }
-
-    private void setWriteTypeSpinner()
-    {
-        List<String> l = new ArrayList<>();
-
-        String names[] = getResources().getStringArray(R.array.gatt_format_type_names);
-
-        for (Uuids.GATTFormatType gft : sAllowedFormats)
-            l.add(names[gft.ordinal()]);
-
-        ArrayAdapter<String> aa = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, l);
-
-        mWriteTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-        {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-            {
-                refreshLegalityIndicator();
-                refreshTextInputType();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent)
-            {
-                refreshLegalityIndicator();
-                refreshTextInputType();
-            }
-        });
-
-        mWriteTypeSpinner.setAdapter(aa);
-    }
-
-    private void refreshLegalityIndicator()
-    {
-        Uuids.GATTFormatType gft = sAllowedFormats[mWriteTypeSpinner.getSelectedItemPosition()];
-        String currentInput = mValueEditText.getText().toString();
         try
         {
-            if (currentInput != null && currentInput.length() > 0)
-                gft.stringToByteArray(currentInput);
-            mLegalityImageView.setVisibility(View.GONE);
-        }
-        catch (Exception e)
-        {
-            mLegalityImageView.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void refreshTextInputType()
-    {
-        int type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL;
-        switch (sAllowedFormats[mWriteTypeSpinner.getSelectedItemPosition()])
-        {
-            case GCFT_boolean:
-                type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL;
-                break;
-            case GCFT_2bit:
-            case GCFT_nibble:
-            case GCFT_uint8:
-            case GCFT_uint12:
-            case GCFT_uint16:
-            case GCFT_uint24:
-            case GCFT_uint32:
-            case GCFT_uint48:
-            case GCFT_uint64:
-            case GCFT_uint128:
-                type = InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_NORMAL;
-                break;
-            case GCFT_sint8:
-            case GCFT_sint12:
-            case GCFT_sint16:
-            case GCFT_sint24:
-            case GCFT_sint32:
-            case GCFT_sint48:
-            case GCFT_sint64:
-            case GCFT_sint128:
-                type = InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED;
-                break;
-            case GCFT_float32:
-            case GCFT_float64:
-            case GCFT_SFLOAT:
-            case GCFT_FLOAT:
-                type = InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL;
-                break;
-            case GCFT_duint16:
-            case GCFT_utf8s:
-            case GCFT_utf16s:
-            case GCFT_struct:
-                type = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL;
-                break;
-        }
-
-        mValueEditText.setInputType(type);
-    }
-
-    private void writeValue()
-    {
-        String value = mValueEditText.getText().toString();
-        Uuids.GATTFormatType gft = sAllowedFormats[mWriteTypeSpinner.getSelectedItemPosition()];
-
-        try
-        {
-            byte rawVal[] = gft.stringToByteArray(value);
+            byte rawVal[] = gft.stringToByteArray(valueString);
 
             final Dialog d = ProgressDialog.show(WriteValueActivity.this, getString(R.string.write_value_writing_dialog_title), getString(R.string.write_value_writing_dialog_message));
 
@@ -414,7 +443,8 @@ public class WriteValueActivity extends BaseActivity
                     if (e.wasSuccess())
                     {
                         Toast.makeText(getApplicationContext(), R.string.write_value_writing_success_toast, Toast.LENGTH_LONG).show();
-                        saveAndFinish();
+                        saveSavedValues();
+                        finish();
                     }
                     else
                         Toast.makeText(getApplicationContext(), R.string.write_value_writing_fail_toast, Toast.LENGTH_LONG).show();
@@ -426,52 +456,8 @@ public class WriteValueActivity extends BaseActivity
         catch (Uuids.GATTCharacteristicFormatTypeConversionException e)
         {
             //FIXME:  Add toast telling user the write failed
-            Toast.makeText(getApplicationContext(), "Invalid input: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.write_value_invalid_value_toast) + e.getMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        getMenuInflater().inflate(R.menu.write_value, menu);
-
-        return true;
-    }
-
-    @Override
-    public boolean onNavigateUp()
-    {
-        finish();
-        return true;
-    }
-
-    private void saveAndFinish()
-    {
-        String saveAsName = mSaveAsEditText.getText().toString();
-        if (saveAsName != null && saveAsName.length() > 0)
-        {
-            String value = mValueEditText.getText().toString();
-            Uuids.GATTFormatType gft = sAllowedFormats[mWriteTypeSpinner.getSelectedItemPosition()];
-
-            SavedValue sv = new SavedValue(saveAsName, value, gft);
-
-            mSavedValueList.add(sv);
-        }
-
-        saveSavedValues();
-
-        finish();
-    }
-
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
-        if (item.getItemId() == R.id.write)
-        {
-            writeValue();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
 }

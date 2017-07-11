@@ -657,6 +657,7 @@ public class MainActivity extends BaseActivity
         @Override
         public int compare(BleDevice o1, BleDevice o2)
         {
+            //TODO:  Prioritize connecting/connected devices
             return o2.getRssi() - o1.getRssi();
         }
     }
@@ -667,6 +668,7 @@ public class MainActivity extends BaseActivity
         @Override
         public int compare(BleDevice o1, BleDevice o2)
         {
+            //TODO:  Prioritize connecting/connected devices
             return o1.getName_normalized().compareTo(o2.getName_normalized());
         }
     }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:background="?attr/selectableItemBackground"
+                android:id="@+id/parentLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/tiny"
+                android:paddingEnd="@dimen/tiny"
+                android:paddingTop="@dimen/medium"
+                android:paddingBottom="@dimen/medium" >
+
+    <TextView
+        android:id="@+id/valueNameLabel"
+        style="@style/item_title"
+        android:layout_marginStart="29dp"
+        android:text="@string/write_value_value_name" />
+
+    <TextView
+        android:id="@+id/valueTypeLabel"
+        style="@style/item_text"
+        android:layout_alignStart="@+id/valueNameLabel"
+        android:layout_below="@+id/valueNameLabel"
+        android:text="Integer"/>
+
+    <TextView
+        android:id="@+id/valueLabel"
+        style="@style/item_text"
+        android:layout_alignStart="@+id/valueNameLabel"
+        android:layout_below="@+id/valueTypeLabel"
+        android:text="0x2902"/>
+
+</RelativeLayout>

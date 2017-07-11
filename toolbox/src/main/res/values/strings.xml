@@ -128,13 +128,19 @@
     <!-- Write Value -->
     <string name="write_value_load_value">Load Value</string>
     <string name="write_value_value">Value</string>
+    <string name="write_value_value_hint">Enter value here</string>
     <string name="write_value_write_type">Write Type</string>
     <string name="write_value_save_as">Save As (Optional)</string>
+    <string name="write_value_save_as_hint">Enter a name to save</string>
     <string name="write_value_write">Write</string>
     <string name="write_value_writing_dialog_title">Writing Value</string>
     <string name="write_value_writing_dialog_message">Please wait while the value is written to the device</string>
     <string name="write_value_writing_success_toast">Value Written Successfully</string>
     <string name="write_value_writing_fail_toast">Value Write Failed</string>
+    <string name="write_value_invalid_value_toast">Invalid Value: </string>
+    <string name="write_value_new_tab">New</string>
+    <string name="write_value_load_tab">Load</string>
+    <string name="write_value_value_name">Value Name</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

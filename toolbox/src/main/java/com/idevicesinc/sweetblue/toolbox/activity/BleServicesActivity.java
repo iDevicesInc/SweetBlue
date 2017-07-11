@@ -168,7 +168,6 @@ public class BleServicesActivity extends BaseActivity
 
     private class DetailsTabsAdaptor extends FragmentPagerAdapter
     {
-
         public DetailsTabsAdaptor(FragmentManager fm)
         {
             super(fm);
