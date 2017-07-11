@@ -54,6 +54,36 @@
         <item>@string/display_type_string</item>
         <item>@string/display_type_hex</item>
     </array>
+    <array name="gatt_format_type_names">
+        <item>@string/gatt_format_type_rfu</item>
+        <item>@string/gatt_format_type_boolean</item>
+        <item>@string/gatt_format_type_2bit</item>
+        <item>@string/gatt_format_type_nibble</item>
+        <item>@string/gatt_format_type_uint8</item>
+        <item>@string/gatt_format_type_uint12</item>
+        <item>@string/gatt_format_type_uint16</item>
+        <item>@string/gatt_format_type_uint24</item>
+        <item>@string/gatt_format_type_uint32</item>
+        <item>@string/gatt_format_type_uint48</item>
+        <item>@string/gatt_format_type_uint64</item>
+        <item>@string/gatt_format_type_uint128</item>
+        <item>@string/gatt_format_type_sint8</item>
+        <item>@string/gatt_format_type_sint12</item>
+        <item>@string/gatt_format_type_sint16</item>
+        <item>@string/gatt_format_type_sint24</item>
+        <item>@string/gatt_format_type_sint32</item>
+        <item>@string/gatt_format_type_sint48</item>
+        <item>@string/gatt_format_type_sint64</item>
+        <item>@string/gatt_format_type_sint128</item>
+        <item>@string/gatt_format_type_float32</item>
+        <item>@string/gatt_format_type_float64</item>
+        <item>@string/gatt_format_type_sfloat</item>
+        <item>@string/gatt_format_type_float</item>
+        <item>@string/gatt_format_type_duint16</item>
+        <item>@string/gatt_format_type_utf8s</item>
+        <item>@string/gatt_format_type_utf16s</item>
+        <item>@string/gatt_format_type_struct</item>
+    </array>
 
     <!-- Main Activity -->
     <string name="drawer_open">Open Drawer</string>
@@ -94,6 +124,26 @@
 
     <!-- Characteristics -->
     <string name="characteristics_no_characteristics">No Characteristics</string>
+
+    <!-- Write Value -->
+    <string name="write_value_load_value">Load Value</string>
+    <string name="write_value_value">Value</string>
+    <string name="write_value_value_hint">Enter value here</string>
+    <string name="write_value_write_type">Write Type</string>
+    <string name="write_value_save_as">Save As (Optional)</string>
+    <string name="write_value_save_as_hint">Enter a name to save</string>
+    <string name="write_value_write">Write</string>
+    <string name="write_value_writing_dialog_title">Writing Value</string>
+    <string name="write_value_writing_dialog_message">Please wait while the value is written to the device</string>
+    <string name="write_value_writing_success_toast">Value Written Successfully</string>
+    <string name="write_value_writing_fail_toast">Value Write Failed</string>
+    <string name="write_value_invalid_value_toast">Invalid Value: </string>
+    <string name="write_value_new_tab">New</string>
+    <string name="write_value_load_tab">Load</string>
+    <string name="write_value_value_name">Value Name</string>
+    <string name="write_value_select_value_toast">Please select a value to write</string>
+    <string name="write_value_overflow_edit">Edit</string>
+    <string name="write_value_overflow_delete">Delete</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -139,7 +189,9 @@
     <string name="properties_colon">Properties:</string>
     <string name="uuid_colon">UUID:</string>
     <string name="value_colon">Value:</string>
+    <string name="value">Value</string>
     <string name="data_colon">Data:</string>
+    <string name="write_value">Write Value</string>
 
     <string name="primary_service">PRIMARY SERVICE</string>
 	<string name="secondary_service">SECONDARY SERVICE</string>
@@ -203,5 +255,34 @@
     <string name="scan_options">Scan Options</string>
     <string name="sort_options">Sort Options</string>
 
+    <!-- Gatt format types -->
+    <string name="gatt_format_type_rfu">RFU</string>
+    <string name="gatt_format_type_boolean">Boolean</string>
+    <string name="gatt_format_type_2bit">2-Bit</string>
+    <string name="gatt_format_type_nibble">Nibble</string>
+    <string name="gatt_format_type_uint8">UInt 8</string>
+    <string name="gatt_format_type_uint12">UInt 12</string>
+    <string name="gatt_format_type_uint16">UInt 16</string>
+    <string name="gatt_format_type_uint24">UInt 24</string>
+    <string name="gatt_format_type_uint32">UInt 32</string>
+    <string name="gatt_format_type_uint48">UInt 48</string>
+    <string name="gatt_format_type_uint64">UInt 64</string>
+    <string name="gatt_format_type_uint128">UInt 128</string>
+    <string name="gatt_format_type_sint8">SInt 8</string>
+    <string name="gatt_format_type_sint12">SInt 12</string>
+    <string name="gatt_format_type_sint16">SInt 16</string>
+    <string name="gatt_format_type_sint24">SInt 24</string>
+    <string name="gatt_format_type_sint32">SInt 32</string>
+    <string name="gatt_format_type_sint48">SInt 48</string>
+    <string name="gatt_format_type_sint64">SInt 64</string>
+    <string name="gatt_format_type_sint128">SInt 128</string>
+    <string name="gatt_format_type_float32">Float 32</string>
+    <string name="gatt_format_type_float64">Float 64</string>
+    <string name="gatt_format_type_sfloat">SFloat</string>
+    <string name="gatt_format_type_float">Float</string>
+    <string name="gatt_format_type_duint16">DUInt16</string>
+    <string name="gatt_format_type_utf8s">UTF-8 String</string>
+    <string name="gatt_format_type_utf16s">UTF-16 String</string>
+    <string name="gatt_format_type_struct">Struct</string>
 
 </resources>

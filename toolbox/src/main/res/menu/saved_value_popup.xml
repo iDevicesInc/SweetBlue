@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="none">
+
+        <item
+            android:id="@+id/writeValueEdit"
+            android:title="@string/write_value_overflow_edit"/>
+
+        <item
+            android:id="@+id/writeValueDelete"
+            android:title="@string/write_value_overflow_delete"/>
+
+    </group>
+
+</menu>

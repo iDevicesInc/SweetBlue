@@ -20,6 +20,8 @@ public class UpdateManager implements PI_UpdateLoop.Callback
         void onUpdate();  //TODO:  Add some parameters
     }
 
+    static int pending = 0;
+
     private class ListenerInfo
     {
         private WeakReference<UpdateListener> m_listenerWR;

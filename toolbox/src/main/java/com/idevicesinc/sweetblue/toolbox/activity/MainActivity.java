@@ -580,7 +580,8 @@ public class MainActivity extends BaseActivity
             @Override
             public void onChoiceSelected(String choice)
             {
-                if (choice.equals(R.string.name))
+                String nameString = getString(R.string.name);
+                if (choice.equals(nameString))
                 {
                     m_currentComparator = nameComparator;
                 }
@@ -588,7 +589,7 @@ public class MainActivity extends BaseActivity
                 {
                     m_currentComparator = rssiComparator;
                 }
-                Collections.sort(m_deviceList, m_currentComparator);
+                Collections.sort(m_displayList, m_currentComparator);
                 m_adapter.notifyDataSetChanged();
             }
 
@@ -653,7 +654,6 @@ public class MainActivity extends BaseActivity
 
     private final static class RssiComparator implements Comparator<BleDevice>
     {
-
         @Override
         public int compare(BleDevice o1, BleDevice o2)
         {
@@ -663,7 +663,6 @@ public class MainActivity extends BaseActivity
 
     private final static class NameComparator implements Comparator<BleDevice>
     {
-
         @Override
         public int compare(BleDevice o1, BleDevice o2)
         {

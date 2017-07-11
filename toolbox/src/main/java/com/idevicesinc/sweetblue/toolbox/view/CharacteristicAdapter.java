@@ -3,17 +3,15 @@ package com.idevicesinc.sweetblue.toolbox.view;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.PopupMenu;
-import android.util.Log;
 import android.util.TypedValue;
-import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.inputmethod.EditorInfo;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
@@ -22,8 +20,10 @@ import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.activity.WriteValueActivity;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
-import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.toolbox.util.ViewUtil;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,10 +44,11 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
     private static String EXTENDED_PROPS;
 
     private BleDevice m_device;
+    private BluetoothGattService m_service;
     private Map<BluetoothGattCharacteristic, List<BluetoothGattDescriptor>> m_charDescMap;
     private List<BluetoothGattCharacteristic> m_characteristicList;
 
-    public CharacteristicAdapter(Context context, @NonNull BleDevice device, @NonNull List<BluetoothGattCharacteristic> charList)
+    public CharacteristicAdapter(Context context, @NonNull BleDevice device, @NonNull BluetoothGattService service, @NonNull List<BluetoothGattCharacteristic> charList)
     {
         READ = context.getString(R.string.read);
         WRITE = context.getString(R.string.write);
@@ -58,6 +59,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         EXTENDED_PROPS = context.getString(R.string.extended_properties);
         WRITE_NO_RESPONSE = context.getString(R.string.write_no_response);
         m_device = device;
+        m_service = service;
         m_charDescMap = new HashMap<>(charList.size());
         m_characteristicList = charList;
 
@@ -68,6 +70,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             m_charDescMap.put(ch, ch.getDescriptors());
 
             // Start updating each characteristic
+
             m_device.read(ch.getUuid(), new BleDevice.ReadWriteListener()
             {
                 @Override
@@ -77,6 +80,12 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                     notifyDataSetChanged();
                 }
             });
+
+            List<BluetoothGattDescriptor> descriptorList = ch.getDescriptors();
+            for (BluetoothGattDescriptor bgd : descriptorList)
+            {
+                m_device.readDescriptor(ch.getUuid(), bgd.getUuid());
+            }
         }
     }
 
@@ -122,9 +131,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
     @Override public View getGroupView(final int groupPosition, boolean isExpanded, View convertView, final ViewGroup parent)
     {
-
         final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
-        final String name = UuidUtil.getCharacteristicName(characteristic);
+        final Context context = parent.getContext();
         final ExpandableListView elv = (ExpandableListView)parent;
 
         // Figure out how we shuold format the characteristic
@@ -134,39 +142,18 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         final CharViewHolder h;
         if (convertView == null)
         {
-            convertView = View.inflate(parent.getContext(), R.layout.characteristic_layout, null);
-
-            final View finalCV = convertView;
+            convertView = View.inflate(context, R.layout.characteristic_layout, null);
 
             h = new CharViewHolder();
             h.parentLayout = (RelativeLayout) convertView.findViewById(R.id.parentLayout);
             h.name = (TextView) convertView.findViewById(R.id.characteristicName);
             h.uuid = (TextView) convertView.findViewById(R.id.uuid);
+            h.uuidOriginalTextSize = h.uuid.getTextSize();
             h.properties = (TextView) convertView.findViewById(R.id.properties);
             h.valueDisplayTypeLabel = (TextView) convertView.findViewById(R.id.valueDisplayTypeLabel);
             h.value = (TextView) convertView.findViewById(R.id.value);
             h.displayType = dt;
             h.expandArrow = (ImageView) convertView.findViewById(R.id.expandArrow);
-
-            // Shrink text if too large...
-            //FIXME:  Find a less horrible way of doing this
-            final ViewTreeObserver viewTreeObserver = convertView.getViewTreeObserver();
-            if(viewTreeObserver.isAlive())
-            {
-                viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
-                {
-                    @Override public void onGlobalLayout()
-                    {
-                        if (h.uuid.getLineCount() > 1)
-                        {
-                            // Shrink the size so the text all fits
-                            h.uuid.setTextSize(TypedValue.COMPLEX_UNIT_PX, h.uuid.getTextSize() - 1);
-                        }
-                        else
-                            finalCV.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                    }
-                });
-            }
 
             // We have to do the following to 'fix' clicking on the cell itself
             h.parentLayout.setOnClickListener(new View.OnClickListener()
@@ -192,7 +179,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                     public void onClick(View v)
                     {
                         //Creating the instance of PopupMenu
-                        PopupMenu popup = new PopupMenu(parent.getContext(), anchor);
+                        PopupMenu popup = new PopupMenu(context, anchor);
                         //Inflating the Popup using xml file
                         popup.getMenuInflater().inflate(R.menu.char_value_type_popup, popup.getMenu());
 
@@ -246,62 +233,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                 });
             }
 
-            // Make value editable or not depending on what's allowed
-            boolean writable = (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
-            h.value.setEnabled(writable);
-            h.value.setOnEditorActionListener(new TextView.OnEditorActionListener()
-            {
-                @Override
-                public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
-                {
-                    if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE || event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)
-                    {
-                        if (!event.isShiftPressed())
-                        {
-                            String value = v.getText().toString();
-
-                            // Attempt to make the value into an object that we can write out
-                            Uuids.GATTDisplayType dt = Uuids.GATTDisplayType.values()[h.displayType.ordinal()];
-                            Object valObject = dt.stringToObject(value);
-
-                            Uuids.GATTCharacteristic gc = Uuids.GATTCharacteristic.getCharacteristicForUUID(characteristic.getUuid());
-                            Uuids.GATTFormatType ft = gc != null ? gc.getFormat() : Uuids.GATTFormatType.GCFT_struct;
-
-                            try
-                            {
-                                byte valRaw[] = ft.objectToByteArray(valObject);
-
-                                m_device.write(characteristic.getUuid(), valRaw, new BleDevice.ReadWriteListener()
-                                {
-                                    @Override
-                                    public void onEvent(ReadWriteEvent e)
-                                    {
-                                        if (e.wasSuccess())
-                                        {
-                                            // Do something successful
-                                        }
-                                        else
-                                        {
-                                            // Oh noes!
-                                        }
-                                    }
-                                });
-                            }
-                            catch (Uuids.GATTCharacteristicFormatTypeConversionException e)
-                            {
-                                //FIXME:  Add toast telling user the write failed
-                                e.printStackTrace();
-                            }
-
-                            // the user is done typing.
-
-                            return true; // consume.
-                        }
-                    }
-                    return false;
-                }
-            });
-
             convertView.setTag(h);
         }
         else
@@ -309,45 +240,102 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             h = (CharViewHolder) convertView.getTag();
         }
 
-        h.name.setText(name);
+        refreshCharacteristicView(elv, groupPosition, h, characteristic);
+
+        return convertView;
+    }
+
+    private void refreshCharacteristicView(final ExpandableListView parent, int groupPosition, final CharViewHolder cvh, final BluetoothGattCharacteristic bgc)
+    {
+        final String name = UuidUtil.getCharacteristicName(bgc);
+        final Context context = parent.getContext();
+
+        boolean writable = (bgc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+        boolean readable = (bgc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
+
+        // Make value editable or not depending on what's allowed
+        if (writable)
+        {
+            cvh.valueDisplayTypeLabel.setVisibility(View.VISIBLE);
+            cvh.value.setVisibility(View.VISIBLE);
+            cvh.value.setTextColor(context.getResources().getColor(R.color.item_title_blue));
+            cvh.value.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    // Navigate to the write activity
+                    //final BluetoothGattService service = m_serviceList.get(position);
+                    Intent intent = new Intent(context, WriteValueActivity.class);
+                    intent.putExtra("mac", m_device.getMacAddress());
+                    intent.putExtra("serviceUUID", m_service.getUuid().toString());
+                    intent.putExtra("characteristicUUID", bgc.getUuid().toString());
+
+                    context.startActivity(intent);
+                }
+            });
+        }
+        else if (readable)
+        {
+            // Adjust format of text
+            cvh.valueDisplayTypeLabel.setVisibility(View.VISIBLE);
+            cvh.value.setVisibility(View.VISIBLE);
+            cvh.value.setTextColor(context.getResources().getColor(R.color.primary_gray));
+        }
+        else
+        {
+            // Hide the value area
+            cvh.valueDisplayTypeLabel.setVisibility(View.GONE);
+            cvh.value.setVisibility(View.GONE);
+        }
+
+        cvh.name.setText(name);
 
         final String uuid;
 
         if (name.equals(UuidUtil.CUSTOM_CHARACTERISTIC))
         {
-            uuid = characteristic.getUuid().toString();
+            uuid = bgc.getUuid().toString();
         }
         else
         {
-            uuid = UuidUtil.getShortUuid(characteristic.getUuid());
+            uuid = UuidUtil.getShortUuid(bgc.getUuid());
         }
-        h.uuid.setText(uuid);
+        cvh.uuid.setText(uuid);
 
-        final String properties = getPropertyString(characteristic);
+        final String properties = getPropertyString(bgc);
 
-        h.properties.setText(properties);
+        cvh.properties.setText(properties);
 
         // Update expand arrow
         {
             if (getChildrenCount(groupPosition) < 1)
-                h.expandArrow.setVisibility(View.GONE);
+                cvh.expandArrow.setVisibility(View.GONE);
             else
-                h.expandArrow.setVisibility(View.VISIBLE);
+                cvh.expandArrow.setVisibility(View.VISIBLE);
 
-            boolean expanded = elv.isGroupExpanded(groupPosition);
-            h.expandArrow.setImageResource(expanded ? R.drawable.ic_expand_less_black_24dp : R.drawable.ic_expand_more_black_24dp);
+            boolean expanded = parent.isGroupExpanded(groupPosition);
+            cvh.expandArrow.setImageResource(expanded ? R.drawable.ic_expand_less_black_24dp : R.drawable.ic_expand_more_black_24dp);
         }
 
         // Remove ripple if not clickable
         {
             if (getChildrenCount(groupPosition) < 1)
-                h.parentLayout.setBackground(null);
+                cvh.parentLayout.setBackground(null);
         }
 
-        refreshValue(h, characteristic);
+        refreshValue(cvh, bgc);
 
-        return convertView;
+        // Shrink text if too large...
+        //FIXME:  Find a less horrible way of doing this
+
+        // First, reset the text to the original size
+        cvh.uuid.setTextSize(TypedValue.COMPLEX_UNIT_PX, cvh.uuidOriginalTextSize);
+
+        // Now, post a runnable to shrink it down
+        ViewUtil.fixOversizedText(cvh.uuid);
     }
+
 
     private void refreshValue(CharViewHolder cvh, BluetoothGattCharacteristic bgc)
     {
@@ -378,7 +366,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             cvh.valueDisplayTypeLabel.setVisibility(View.VISIBLE);
         }
     }
-
 
     @Override public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent)
     {
@@ -414,7 +401,15 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             uuid = UuidUtil.getShortUuid(descriptor.getUuid());
         }
 
+        // Set the UUID
         h.uuid.setText(uuid);
+
+        // Show value (as hex, for now)
+        String hexString = (descriptor != null && descriptor.getValue() != null ? Utils_Byte.bytesToHexString(descriptor.getValue()) : "<null>");
+        h.value.setText(hexString);
+
+        // Text shrink hack
+        ViewUtil.fixOversizedText(h.uuid);
 
         return convertView;
     }
@@ -509,6 +504,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         private RelativeLayout parentLayout;
         private TextView name;
         private TextView uuid;
+        private float uuidOriginalTextSize;
         private TextView properties;
         private TextView valueDisplayTypeLabel;
         private TextView value;

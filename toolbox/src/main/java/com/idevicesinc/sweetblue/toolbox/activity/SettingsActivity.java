@@ -145,14 +145,11 @@ public class SettingsActivity extends BaseActivity
                             return true;
                         }
                     });
-                    Log.d("settings++", "Boolean for  " + f);
-
                     p = cbp;
                 }
                 else if (t == short.class || t == Short.class)
                 {
                     //TODO
-                    Log.d("settings++", "Would add short preference for " + f);
                 }
                 else if (t == int.class || t == Integer.class)
                 {
@@ -189,17 +186,14 @@ public class SettingsActivity extends BaseActivity
                 else if (t == long.class || t == Long.class)
                 {
                     //TODO
-                    Log.d("settings++", "Would add long preference for " + f);
                 }
                 else if (t == float.class || t == Float.class)
                 {
                     //TODO
-                    Log.d("settings++", "Would add float preference for " + f);
                 }
                 else if (t == double.class || t == Double.class)
                 {
                     //TODO
-                    Log.d("settings++", "Would add double preference for " + f);
                 }
                 else if (t == Interval.class)
                 {
@@ -236,7 +230,6 @@ public class SettingsActivity extends BaseActivity
                 }
                 else
                 {
-                    Log.d("settings++", "Unknown type '" + t + "' for  " + f);
                 }
 
                 if (p != null)

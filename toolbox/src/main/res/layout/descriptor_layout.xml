@@ -8,6 +8,9 @@
     <TextView
         android:id="@+id/descriptorName"
 	    style="@style/item_title"
+        android:maxLines="2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/large"
         android:text="Descriptor Name"/>
 
