@@ -182,6 +182,7 @@
     <string name="os_api_level">OS API Level</string>
     <string name="linux_kernel_version">Linux Kernel Version</string>
     <string name="device_name">Device Name</string>
+    <string name="bluetooth_name">Bluetooth Name</string>
     <string name="brand">Brand</string>
     <string name="manufacturer">Manufacturer</string>
     <string name="model">Model</string>

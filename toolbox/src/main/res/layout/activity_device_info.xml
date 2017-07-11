@@ -91,6 +91,21 @@
                 <TextView
                     style="@style/item_text"
                     android:layout_weight="1"
+                    android:text="@string/bluetooth_name"/>
+
+                <TextView
+                    android:id="@+id/bluetoothName"
+                    style="@style/item_text"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="Some Name"/>
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    style="@style/item_text"
+                    android:layout_weight="1"
                     android:text="@string/brand"/>
 
                 <TextView
