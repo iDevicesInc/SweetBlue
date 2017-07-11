@@ -49,8 +49,9 @@ public class XMLRipper
                         xmlURLs.add("https://www.bluetooth.com/api/gatt/XmlFile?xmlFileName=" + m.group());
                     }
                 }
-                catch(Exception e){
-                    Log.d("oops", e.toString());
+                catch(Exception e)
+                {
+                    Log.d("XMLParse", e.toString());
                 }
 
                 for (String urlString : xmlURLs)
@@ -59,11 +60,11 @@ public class XMLRipper
                     {
                         String download = downloadURL(urlString);
                         l.add(parseXMLString(download));
-                        Log.d("Progress", "Retrieving GATT information: " + l.size() + "/" + xmlURLs.size());
+                        Log.d("XMLParse", "Retrieving GATT information: " + l.size() + "/" + xmlURLs.size());
                     }
                     catch (Exception e)
                     {
-                        Log.d("oops", e.toString());
+                        Log.d("XMLParse", e.toString());
                     }
                 }
 
