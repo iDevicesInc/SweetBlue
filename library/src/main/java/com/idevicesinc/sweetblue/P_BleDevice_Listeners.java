@@ -159,6 +159,13 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 				m_device.m_nativeWrapper.closeGattIfNeeded(/*disconnectAlso=*/false);
 
+				final BleDeviceConfig.RefreshOption option = m_device.conf_device().gattRefreshOption != null ? m_device.conf_device().gattRefreshOption : m_device.conf_mngr().gattRefreshOption;
+
+				if (option == BleDeviceConfig.RefreshOption.AFTER_DISCONNECTING)
+				{
+					Utils.refreshGatt(m_device.getNativeGatt());
+				}
+
 				if (disconnectTask != null)
 				{
 					disconnectTask.onNativeSuccess(gattStatus);
