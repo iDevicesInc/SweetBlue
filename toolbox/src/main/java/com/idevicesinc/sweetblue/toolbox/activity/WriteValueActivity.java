@@ -308,6 +308,8 @@ public class WriteValueActivity extends BaseActivity
                     SavedValue sv = wvlf.getSelectedValue();
                     if (sv != null)
                         writeValue(sv.getValueString(), sv.getGATTFormatType());
+                    else
+                        Toast.makeText(this, R.string.write_value_select_value_toast, Toast.LENGTH_LONG);
                 }
                 return true;
             }
@@ -357,8 +359,7 @@ public class WriteValueActivity extends BaseActivity
                 f = new WriteValueNewFragment();
             else if (position == Tabs.Load.ordinal())
             {
-                WriteValueLoadFragment wvlf = new WriteValueLoadFragment();
-                wvlf.setSavedValues(getSavedValues());
+                WriteValueLoadFragment wvlf = WriteValueLoadFragment.newInstance(WriteValueActivity.this, getSavedValues());
                 f = wvlf;
             }
             mFragments[position] = new WeakReference<>(f);
@@ -459,5 +460,34 @@ public class WriteValueActivity extends BaseActivity
             Toast.makeText(getApplicationContext(), getString(R.string.write_value_invalid_value_toast) + e.getMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
+    }
+
+    private Fragment getFragmentForTab(Tabs t)
+    {
+        try
+        {
+            return mPagerAdapter.getFragmentAtPosition(t.ordinal());
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
+    public void deleteSavedValue(SavedValue sv)
+    {
+        mSavedValueList.remove(sv);
+        mSavedValueListDirty = true;
+    }
+
+    public void editSavedValue(SavedValue sv)
+    {
+        // Change to the new tab
+        // Populate it with the saved value
+        mViewPager.setCurrentItem(Tabs.New.ordinal());
+        Fragment f = getFragmentForTab(Tabs.New);
+        WriteValueNewFragment wvnf = (WriteValueNewFragment)f;
+        if (wvnf != null)
+            wvnf.setFromSavedValue(sv);
     }
 }

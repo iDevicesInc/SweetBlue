@@ -50,7 +50,7 @@
                 android:value="com.idevicesinc.sweetblue.toolbox.activity.BleServicesActivity"/>
         </activity>
         <activity android:name=".activity.WriteValueActivity"
-                  android:windowSoftInputMode="adjustPan"
+                  android:windowSoftInputMode="stateVisible|adjustPan"
                   android:configChanges="keyboard|keyboardHidden">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

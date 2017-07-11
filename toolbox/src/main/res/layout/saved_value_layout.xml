@@ -29,4 +29,25 @@
         android:layout_below="@+id/valueTypeLabel"
         android:text="0x2902"/>
 
+    <ImageView
+        android:id="@+id/fakeOverflowMenu"
+        android:background="?attr/selectableItemBackground"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_more_vert_black_24dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginBottom="5dp"
+        android:padding="5dp" />
+
+    <View
+        android:id="@+id/fakeOverflowMenuAnchor"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="invisible"
+        android:background="@color/red"
+        android:layout_alignTop="@id/fakeOverflowMenu"
+        android:layout_alignEnd="@id/fakeOverflowMenu"/>
+
 </RelativeLayout>

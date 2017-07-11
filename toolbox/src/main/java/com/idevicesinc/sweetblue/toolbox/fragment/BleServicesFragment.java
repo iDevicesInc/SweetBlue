@@ -88,6 +88,7 @@ public class BleServicesFragment extends Fragment implements BleServicesActivity
         {
             if (m_device.getNativeServices_List() != null && m_device.getNativeServices_List().size() > 0)
             {
+                m_serviceList.clear();
                 m_serviceList.addAll(m_device.getNativeServices_List());
                 m_adapter.notifyDataSetChanged();
             }

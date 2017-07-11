@@ -4,26 +4,39 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.idevicesinc.sweetblue.toolbox.R;
 import com.idevicesinc.sweetblue.toolbox.activity.WriteValueActivity;
+
 import java.util.List;
 
 
 public class WriteValueLoadFragment extends Fragment
 {
+    WriteValueActivity mParent;
+
     SavedValueAdapter mAdapter;
     ListView mListView;
     List<WriteValueActivity.SavedValue> mSavedValueList = null;
-
     WriteValueActivity.SavedValue mSelectedValue = null;
+
+    public static WriteValueLoadFragment newInstance(WriteValueActivity parent, List<WriteValueActivity.SavedValue> savedValueList)
+    {
+        WriteValueLoadFragment wvlf = new WriteValueLoadFragment();
+        wvlf.mParent = parent;
+        wvlf.mSavedValueList = savedValueList;
+        return wvlf;
+    }
 
     @Nullable
     @Override
@@ -55,19 +68,12 @@ public class WriteValueLoadFragment extends Fragment
         });
 
         if (mSavedValueList != null)
-            setSavedValues(mSavedValueList);
-
-        return layout;
-    }
-
-    public void setSavedValues(List<WriteValueActivity.SavedValue> l)
-    {
-        mSavedValueList = l;
-        if (mListView != null)
         {
             mAdapter = new SavedValueAdapter(getContext(), mSavedValueList);
             mListView.setAdapter(mAdapter);
         }
+
+        return layout;
     }
 
     public WriteValueActivity.SavedValue getSelectedValue()
@@ -85,7 +91,7 @@ public class WriteValueLoadFragment extends Fragment
         @Override
         public View getView(int position, View convertView, ViewGroup parent)
         {
-            WriteValueActivity.SavedValue sv = getItem(position);
+            final WriteValueActivity.SavedValue sv = getItem(position);
             String names[] = getResources().getStringArray(R.array.gatt_format_type_names);
 
             if (convertView == null)
@@ -100,6 +106,46 @@ public class WriteValueLoadFragment extends Fragment
             valueLabel.setText(sv.getValueString());
 
             convertView.setBackgroundColor(getResources().getColor(sv.equals(mSelectedValue) ? R.color.very_light_blue : R.color.white));
+
+            // Bind (or re-bind) the fake oveflow menu
+            View v = convertView.findViewById(R.id.fakeOverflowMenu);
+            final View anchor = convertView.findViewById(R.id.fakeOverflowMenuAnchor);
+            v.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    //Creating the instance of PopupMenu
+                    PopupMenu popup = new PopupMenu(getContext(), anchor);
+                    //Inflating the Popup using xml file
+                    popup.getMenuInflater().inflate(R.menu.saved_value_popup, popup.getMenu());
+
+                    //registering popup with OnMenuItemClickListener
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener()
+                    {
+                        public boolean onMenuItemClick(MenuItem item)
+                        {
+                            switch (item.getItemId())
+                            {
+                                case R.id.writeValueEdit:
+                                    mParent.editSavedValue(sv);
+                                    break;
+
+                                case R.id.writeValueDelete:
+                                    mParent.deleteSavedValue(sv);
+                                    mSavedValueList.remove(sv);
+                                    mAdapter.notifyDataSetChanged();
+                                    if (sv.equals(mSelectedValue))
+                                        mSelectedValue = null;
+                                    break;
+                            }
+                            return true;
+                        }
+                    });
+
+                    popup.show();
+                }
+            });
 
             return convertView;
         }

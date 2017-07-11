@@ -141,6 +141,9 @@
     <string name="write_value_new_tab">New</string>
     <string name="write_value_load_tab">Load</string>
     <string name="write_value_value_name">Value Name</string>
+    <string name="write_value_select_value_toast">Please select a value to write</string>
+    <string name="write_value_overflow_edit">Edit</string>
+    <string name="write_value_overflow_delete">Delete</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

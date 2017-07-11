@@ -1,8 +1,6 @@
 package com.idevicesinc.sweetblue.toolbox.fragment;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -11,7 +9,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -49,6 +46,8 @@ public class WriteValueNewFragment extends Fragment/* implements BleServicesActi
         setWriteTypeSpinner();
 
         refreshLegalityIndicator();
+
+        mValueEditText.requestFocus();
 
         /*new Handler().postDelayed(new Runnable()
         {
@@ -204,5 +203,16 @@ public class WriteValueNewFragment extends Fragment/* implements BleServicesActi
         if (s == null || s.length() < 1)
             return null;
         return s;
+    }
+
+    public void setFromSavedValue(WriteValueActivity.SavedValue sv)
+    {
+        mValueEditText.setText(sv.getValueString());
+        mSaveAsEditText.setText(sv.getName());
+        for (int i = 0; i < sAllowedFormats.length; ++i)
+        {
+            if (sAllowedFormats[i] == sv.getGATTFormatType())
+                mWriteTypeSpinner.setSelection(i);
+        }
     }
 }
