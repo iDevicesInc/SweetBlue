@@ -19,6 +19,7 @@ import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleTransaction;
 import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.toolbox.view.CharacteristicAdapter;
 
 import java.util.ArrayList;
@@ -169,6 +170,9 @@ public class BleCharacteristicsActivity extends BaseActivity implements BleDevic
         m_device = BleManager.get(this).getDevice(mac);
         m_service = m_device.getNativeService(UUID.fromString(uuid));
         m_characteristicList = m_service.getCharacteristics();
+
+        String title = UuidUtil.getServiceName(m_service);
+        setTitle(title);
 
         m_swipeRefreshLayout = find(R.id.swipeRefreshLayout);
 

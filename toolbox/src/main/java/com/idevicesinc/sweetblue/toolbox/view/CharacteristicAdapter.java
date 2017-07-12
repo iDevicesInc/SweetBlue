@@ -51,7 +51,6 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
     private BluetoothGattService mService;
     private Map<BluetoothGattCharacteristic, List<BluetoothGattDescriptor>> mCharDescMap;
     private List<BluetoothGattCharacteristic> mCharacteristicList;
-    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     public CharacteristicAdapter(BleCharacteristicsActivity parent, @NonNull BleDevice device, @NonNull BluetoothGattService service, @NonNull List<BluetoothGattCharacteristic> charList)
     {
@@ -69,6 +68,9 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
         mService = service;
         mCharDescMap = new HashMap<>(charList.size());
         mCharacteristicList = charList;
+
+        for (BluetoothGattCharacteristic ch : charList)
+            mCharDescMap.put(ch, ch.getDescriptors());
 
         Collections.sort(mCharacteristicList, new CharacteristicComparator());
     }

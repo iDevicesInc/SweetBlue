@@ -154,7 +154,7 @@ public class SettingsActivity extends BaseActivity
                 else if (t == int.class || t == Integer.class)
                 {
                     final EditTextPreference etp = new EditTextPreference(mContext);
-                    etp.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER);
+                    etp.getEditText().setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
                     etp.setDefaultValue(f.get(o).toString());
                     etp.setSummary(f.get(o).toString());
                     etp.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
