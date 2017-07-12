@@ -103,7 +103,10 @@ public class MainActivity extends BaseActivity
                 }
                 else if (e.didExit(BleManagerState.SCANNING))
                 {
-                    m_scanImageView.setImageResource(R.drawable.icon_scan);
+                    if (!m_manager.isScanning())
+                    {
+                        m_scanImageView.setImageResource(R.drawable.icon_scan);
+                    }
                 }
                 else
                 {
