@@ -35,7 +35,7 @@ final class P_Task_Read extends PA_Task_ReadOrWrite
 
 	@Override protected void executeReadOrWrite()
 	{
-		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
+		final BluetoothGattCharacteristic char_native = getFilteredCharacteristic() != null ? getFilteredCharacteristic() : getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
 
 		if( char_native == null )
 		{
