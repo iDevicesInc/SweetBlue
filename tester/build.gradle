@@ -37,6 +37,8 @@ repositories {
 
 dependencies {
     testCompile project(':sweetunit')
+    compile project(':library')
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.2.2'
     // This is a hack to get robolectric to work on higher API levels
@@ -44,5 +46,4 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
     androidTestCompile 'com.android.support.test:rules:0.5'
-    compile project(':library')
 }

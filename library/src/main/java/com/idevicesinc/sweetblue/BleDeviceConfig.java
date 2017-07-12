@@ -273,6 +273,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Boolean useGattRefresh								= false;
 
 	/**
+	 * Default is {@link RefreshOption#BEFORE_SERVICE_DISCOVERY} - This determines when SweetBlue will refresh the gatt database.
+	 * This only applies if you have set {@link #useGattRefresh} to <code>true</code>.
+	 */
+	public RefreshOption gattRefreshOption						= RefreshOption.BEFORE_SERVICE_DISCOVERY;
+
+
+	/**
 	 * Default is <code>null</code> - whether SweetBlue should retry a connect <i>after</i> successfully connecting via
 	 * BLE. This means that if discovering services, or {@link com.idevicesinc.sweetblue.BleTransaction.Init}, or {@link com.idevicesinc.sweetblue.BleTransaction.Auth}
 	 * fail for any reason, SweetBlue will disconnect, then retry the connection.
@@ -447,6 +454,24 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * at least 1. If set to anything lower, it will be ignored, and the max size will be 1.
 	 */
 	public int maxConnectionFailHistorySize									= DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE;
+
+	/**
+	 * Enumeration used with {@link #useGattRefresh}. This specifies where SweetBlue will refresh the gatt database for a device.
+	 */
+	public enum RefreshOption
+	{
+		/**
+		 * The gatt database will be refreshed after connecting, and before service discovery. This is the original behavior (and current
+		 * default) of the library.
+		 */
+		BEFORE_SERVICE_DISCOVERY,
+
+		/**
+		 * The gatt database will be refreshed after disconnecting from a device. It's been found that at least some devices connect better
+		 * when the database is refreshed prior to connecting, if you have connected at least once already.
+		 */
+		AFTER_DISCONNECTING
+	}
 
 	/**
 	 * As of now there are two main default uses for this class...

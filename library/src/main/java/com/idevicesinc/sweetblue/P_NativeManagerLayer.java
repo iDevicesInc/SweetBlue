@@ -27,6 +27,8 @@ interface P_NativeManagerLayer {
     int getState();
     int getBleState();
     String getAddress();
+    String getName();
+    void setName(String name);
     Set<BluetoothDevice> getBondedDevices();
     BluetoothAdapter getNativeAdaptor();
     BluetoothManager getNativeManager();

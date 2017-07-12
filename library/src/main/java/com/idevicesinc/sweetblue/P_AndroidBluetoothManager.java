@@ -146,6 +146,21 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
         return BleDevice.NULL_MAC();
     }
 
+    @Override
+    public String getName()
+    {
+        if (m_adaptor != null)
+            return m_adaptor.getName();
+        return "";
+    }
+
+    @Override
+    public void setName(String name)
+    {
+        if (m_adaptor != null)
+            m_adaptor.setName(name);
+    }
+
     @Override public final P_NativeServerLayer openGattServer(Context context, P_BleServer_Listeners listeners)
     {
         return new P_AndroidBleServer(m_manager.openGattServer(context, listeners));

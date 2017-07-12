@@ -13,6 +13,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
@@ -48,6 +49,7 @@ import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -2746,6 +2748,42 @@ public final class BleManager
 //		bleServer.setConfig(config);
 		m_server.setListener_Incoming(incomingListener);
 
+		return m_server;
+	}
+
+	/**
+	 * Overload of {@link #getServer(GattDatabase, BleServer.ServiceAddListener)}, with no {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener} set.
+	 */
+	public final BleServer getServer(final GattDatabase gattDatabase)
+	{
+		return getServer(gattDatabase, null);
+	}
+
+	/**
+	 * Overload of {@link #getServer(IncomingListener, GattDatabase, BleServer.ServiceAddListener)}, with no {@link IncomingListener} set.
+	 */
+	public final BleServer getServer(final GattDatabase gattDatabase, BleServer.ServiceAddListener addServiceListener)
+	{
+		return getServer(null, gattDatabase, addServiceListener);
+	}
+
+	/**
+	 * Returns a {@link BleServer} instance. This is now the preferred method to retrieve the server instance.
+	 */
+	public final BleServer getServer(final IncomingListener incomingListener, final GattDatabase gattDatabase, final BleServer.ServiceAddListener addServiceListener)
+	{
+		if (m_server == null)
+		{
+			m_server = new BleServer(this, /*isNull*/false);
+			if (gattDatabase != null)
+			{
+				for (BluetoothGattService service : gattDatabase.getServiceList())
+				{
+					m_server.addService(service, addServiceListener);
+				}
+			}
+		}
+		m_server.setListener_Incoming(incomingListener);
 		return m_server;
 	}
 

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import com.idevicesinc.sweetblue.annotations.Immutable;
+import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.FutureData;
 import java.util.UUID;
@@ -55,23 +56,35 @@ public interface DescriptorFilter
         /**
          * Convenience method which returns the {@link BluetoothGattService}.
          */
-        public final BluetoothGattService service()
+        public final @Nullable(Nullable.Prevalence.NEVER) BluetoothGattService service()
         {
             return m_service;
         }
 
         /**
          * Convenience method which returns the current {@link BluetoothGattCharacteristic}.
+         *
+         * @deprecated - Method name is misspelled, but left in here so as to not break any current implementations.
          */
-        public final BluetoothGattCharacteristic characteristc()
+        @Deprecated
+        public final @Nullable(Nullable.Prevalence.NEVER) BluetoothGattCharacteristic characteristc()
         {
             return m_char;
         }
 
         /**
-         * Convenience method which returns the {@link BluetoothGattDescriptor}
+         * Convenience method which returns the current {@link BluetoothGattCharacteristic}.
          */
-        public final BluetoothGattDescriptor descriptor()
+        public final @Nullable(Nullable.Prevalence.NEVER) BluetoothGattCharacteristic characteristic()
+        {
+            return m_char;
+        }
+
+        /**
+         * Convenience method which returns the {@link BluetoothGattDescriptor}. If {@link #descriptorUuid()} is returning <code>null</code>,
+         * then this will always be <code>null</code> as well.
+         */
+        public final @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattDescriptor descriptor()
         {
             return m_desc;
         }

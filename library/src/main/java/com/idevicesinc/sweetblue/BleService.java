@@ -33,6 +33,11 @@ public final class BleService
 		}
 	}
 
+	BleService(BluetoothGattService native_service)
+	{
+		m_native = native_service;
+	}
+
 	void init()
 	{
 		if( m_native != null )  return;
