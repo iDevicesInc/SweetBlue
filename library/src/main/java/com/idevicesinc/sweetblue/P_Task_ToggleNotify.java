@@ -1,11 +1,9 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
-
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
@@ -13,6 +11,7 @@ import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+
 
 final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I_StateListener
 {
@@ -70,7 +69,7 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 
 	@Override protected void executeReadOrWrite()
 	{
-		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
+		final BluetoothGattCharacteristic char_native = getFilteredCharacteristic() != null ? getFilteredCharacteristic() : getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
 
 		if( char_native == null )
 		{

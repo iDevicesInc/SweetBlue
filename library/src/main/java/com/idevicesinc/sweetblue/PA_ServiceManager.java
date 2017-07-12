@@ -128,10 +128,23 @@ abstract class PA_ServiceManager
 				}
 				else
 				{
-					final BluetoothGattDescriptor desc = char_jth.getDescriptor(filter.descriptorUuid());
-					if (desc != null)
+					final UUID descUuid = filter.descriptorUuid();
+					if (descUuid != null)
 					{
-						final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(service, char_jth, desc, new PresentData(desc.getValue()));
+						final BluetoothGattDescriptor desc = char_jth.getDescriptor(filter.descriptorUuid());
+						if (desc != null)
+						{
+							final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(service, char_jth, desc, new PresentData(desc.getValue()));
+							final DescriptorFilter.Please please = filter.onEvent(event);
+							if (please.isAccepted())
+							{
+								return char_jth;
+							}
+						}
+					}
+					else
+					{
+						final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(service, char_jth, null, PresentData.EMPTY);
 						final DescriptorFilter.Please please = filter.onEvent(event);
 						if (please.isAccepted())
 						{
