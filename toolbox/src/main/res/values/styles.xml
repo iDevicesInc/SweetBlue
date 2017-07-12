@@ -8,6 +8,7 @@
         <item name="actionBarPopupTheme">@style/TopOverflowMenuBackground</item>
         <item name="actionMenuTextColor">@color/item_title_blue</item>
         <item name="android:actionMenuTextColor">@color/item_title_blue</item>
+        <item name="colorAccent">@color/header_gray</item>
     </style>
 
     <style name="OverflowTextAppearance" parent="TextAppearance.AppCompat.Widget.ActionBar.Menu">

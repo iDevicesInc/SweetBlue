@@ -26,13 +26,11 @@ import static com.idevicesinc.sweetblue.utils.Utils.isOnMainThread;
 
 public class LoggerActivity extends BaseActivity implements DebugLogger.LogEvent
 {
-
     private SwipeRefreshLayout mSwipeLayout;
     private TextView m_logTextView;
 
     private int m_logLevel = 2;
     private String m_filter = "";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState)

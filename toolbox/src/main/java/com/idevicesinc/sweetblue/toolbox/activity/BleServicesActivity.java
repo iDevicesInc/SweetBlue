@@ -55,7 +55,8 @@ public class BleServicesActivity extends BaseActivity
         String mac = getIntent().getStringExtra("mac");
         m_device = BleManager.get(this).getDevice(mac);
 
-        setTitle(m_device.getName_normalized());
+        String title = m_device.getName_native();
+        setTitle(title);
 
         m_tabLayout = find(R.id.tabLayout);
         m_viewPager = find(R.id.viewPager);
