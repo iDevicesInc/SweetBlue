@@ -24,12 +24,10 @@ import java.util.List;
 
 public class BleServicesFragment extends Fragment implements BleServicesActivity.Listener
 {
-
     private BleDevice m_device;
     private ListView m_serviceListView;
     private ArrayList<BluetoothGattService> m_serviceList;
     private BleServiceAdapter m_adapter;
-
 
     @Nullable
     @Override

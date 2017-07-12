@@ -391,6 +391,7 @@ public class WriteValueActivity extends BaseActivity
     public boolean onNavigateUp()
     {
         saveSavedValues();
+        setResult(RESULT_CANCELED);
         finish();
         return true;
     }
@@ -432,7 +433,7 @@ public class WriteValueActivity extends BaseActivity
     {
         try
         {
-            byte rawVal[] = gft.stringToByteArray(valueString);
+            final byte rawVal[] = gft.stringToByteArray(valueString);
 
             final Dialog d = ProgressDialog.show(WriteValueActivity.this, getString(R.string.write_value_writing_dialog_title), getString(R.string.write_value_writing_dialog_message));
 
@@ -443,8 +444,10 @@ public class WriteValueActivity extends BaseActivity
                 {
                     if (e.wasSuccess())
                     {
+                        mCharacteristic.setValue(rawVal);  // Update local cache
                         Toast.makeText(getApplicationContext(), R.string.write_value_writing_success_toast, Toast.LENGTH_LONG).show();
                         saveSavedValues();
+                        setResult(RESULT_OK);
                         finish();
                     }
                     else

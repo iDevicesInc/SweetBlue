@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
 import android.util.TypedValue;
 import android.view.MenuItem;
@@ -20,11 +21,13 @@ import android.widget.TextView;
 
 import com.idevicesinc.sweetblue.BleDevice;
 import com.idevicesinc.sweetblue.toolbox.R;
+import com.idevicesinc.sweetblue.toolbox.activity.BleCharacteristicsActivity;
 import com.idevicesinc.sweetblue.toolbox.activity.WriteValueActivity;
 import com.idevicesinc.sweetblue.toolbox.util.UuidUtil;
 import com.idevicesinc.sweetblue.toolbox.util.ViewUtil;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Uuids;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -43,74 +46,55 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
     private static String WRITE_NO_RESPONSE;
     private static String EXTENDED_PROPS;
 
-    private BleDevice m_device;
-    private BluetoothGattService m_service;
-    private Map<BluetoothGattCharacteristic, List<BluetoothGattDescriptor>> m_charDescMap;
-    private List<BluetoothGattCharacteristic> m_characteristicList;
+    private BleCharacteristicsActivity mParent;
+    private BleDevice mDevice;
+    private BluetoothGattService mService;
+    private Map<BluetoothGattCharacteristic, List<BluetoothGattDescriptor>> mCharDescMap;
+    private List<BluetoothGattCharacteristic> mCharacteristicList;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
-    public CharacteristicAdapter(Context context, @NonNull BleDevice device, @NonNull BluetoothGattService service, @NonNull List<BluetoothGattCharacteristic> charList)
+    public CharacteristicAdapter(BleCharacteristicsActivity parent, @NonNull BleDevice device, @NonNull BluetoothGattService service, @NonNull List<BluetoothGattCharacteristic> charList)
     {
-        READ = context.getString(R.string.read);
-        WRITE = context.getString(R.string.write);
-        NOTIFY = context.getString(R.string.notify);
-        INDICATE = context.getString(R.string.indicate);
-        BROADCAST = context.getString(R.string.broadcast);
-        SIGNED_WRITE = context.getString(R.string.signed_write);
-        EXTENDED_PROPS = context.getString(R.string.extended_properties);
-        WRITE_NO_RESPONSE = context.getString(R.string.write_no_response);
-        m_device = device;
-        m_service = service;
-        m_charDescMap = new HashMap<>(charList.size());
-        m_characteristicList = charList;
+        mParent = parent;
 
-        Collections.sort(m_characteristicList, new CharacteristicComparator());
+        READ = mParent.getString(R.string.read);
+        WRITE = mParent.getString(R.string.write);
+        NOTIFY = mParent.getString(R.string.notify);
+        INDICATE = mParent.getString(R.string.indicate);
+        BROADCAST = mParent.getString(R.string.broadcast);
+        SIGNED_WRITE = mParent.getString(R.string.signed_write);
+        EXTENDED_PROPS = mParent.getString(R.string.extended_properties);
+        WRITE_NO_RESPONSE = mParent.getString(R.string.write_no_response);
+        mDevice = device;
+        mService = service;
+        mCharDescMap = new HashMap<>(charList.size());
+        mCharacteristicList = charList;
 
-        for (BluetoothGattCharacteristic ch : charList)
-        {
-            m_charDescMap.put(ch, ch.getDescriptors());
-
-            // Start updating each characteristic
-
-            m_device.read(ch.getUuid(), new BleDevice.ReadWriteListener()
-            {
-                @Override
-                public void onEvent(ReadWriteEvent e)
-                {
-                    // Refresh the UI
-                    notifyDataSetChanged();
-                }
-            });
-
-            List<BluetoothGattDescriptor> descriptorList = ch.getDescriptors();
-            for (BluetoothGattDescriptor bgd : descriptorList)
-            {
-                m_device.readDescriptor(ch.getUuid(), bgd.getUuid());
-            }
-        }
+        Collections.sort(mCharacteristicList, new CharacteristicComparator());
     }
 
     @Override public int getGroupCount()
     {
-        return m_characteristicList.size();
+        return mCharacteristicList.size();
     }
 
     @Override public int getChildrenCount(int groupPosition)
     {
-        final BluetoothGattCharacteristic ch = m_characteristicList.get(groupPosition);
-        final List<BluetoothGattDescriptor> dList = m_charDescMap.get(ch);
+        final BluetoothGattCharacteristic ch = mCharacteristicList.get(groupPosition);
+        final List<BluetoothGattDescriptor> dList = mCharDescMap.get(ch);
         int count = dList != null ? dList.size() : 0;
         return count;
     }
 
     @Override public BluetoothGattCharacteristic getGroup(int groupPosition)
     {
-        return m_characteristicList.get(groupPosition);
+        return mCharacteristicList.get(groupPosition);
     }
 
     @Override public BluetoothGattDescriptor getChild(int groupPosition, int childPosition)
     {
-        final BluetoothGattCharacteristic ch = m_characteristicList.get(groupPosition);
-        final List<BluetoothGattDescriptor> dList = m_charDescMap.get(ch);
+        final BluetoothGattCharacteristic ch = mCharacteristicList.get(groupPosition);
+        final List<BluetoothGattDescriptor> dList = mCharDescMap.get(ch);
         return dList != null ? dList.get(childPosition) : null;
     }
 
@@ -131,7 +115,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
     @Override public View getGroupView(final int groupPosition, boolean isExpanded, View convertView, final ViewGroup parent)
     {
-        final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
+        final BluetoothGattCharacteristic characteristic = mCharacteristicList.get(groupPosition);
         final Context context = parent.getContext();
         final ExpandableListView elv = (ExpandableListView)parent;
 
@@ -265,13 +249,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
                 public void onClick(View v)
                 {
                     // Navigate to the write activity
-                    //final BluetoothGattService service = m_serviceList.get(position);
-                    Intent intent = new Intent(context, WriteValueActivity.class);
-                    intent.putExtra("mac", m_device.getMacAddress());
-                    intent.putExtra("serviceUUID", m_service.getUuid().toString());
-                    intent.putExtra("characteristicUUID", bgc.getUuid().toString());
-
-                    context.startActivity(intent);
+                    mParent.openWriteCharacteristicActivity(mService.getUuid(), bgc.getUuid());
                 }
             });
         }
@@ -339,14 +317,12 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
     private void refreshValue(CharViewHolder cvh, BluetoothGattCharacteristic bgc)
     {
-        if ((bgc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0)
-        {
-            /*cvh.value.setVisibility(View.GONE);
-            cvh.valueLabel.setVisibility(View.GONE);*/
-        }
-        else
         {
             String valueString = cvh.name.getContext().getString(R.string.loading);
+
+            if ((bgc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) == 0)
+                valueString = cvh.name.getContext().getString(R.string.write_value);
+
             if (bgc.getValue() != null)
             {
                 try
@@ -384,8 +360,8 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
             h = (DescViewHolder) convertView.getTag();
         }
 
-        final BluetoothGattCharacteristic characteristic = m_characteristicList.get(groupPosition);
-        final List<BluetoothGattDescriptor> descList = m_charDescMap.get(characteristic);
+        final BluetoothGattCharacteristic characteristic = mCharacteristicList.get(groupPosition);
+        final List<BluetoothGattDescriptor> descList = mCharDescMap.get(characteristic);
         final BluetoothGattDescriptor descriptor = descList.get(childPosition);
 
         final String name = UuidUtil.getDescriptorName(descriptor);
@@ -489,7 +465,7 @@ public class CharacteristicAdapter extends BaseExpandableListAdapter
 
     private void readCharacteristic(BluetoothGattCharacteristic characteristic)
     {
-        m_device.read(characteristic.getUuid(), new BleDevice.ReadWriteListener()
+        mDevice.read(characteristic.getUuid(), new BleDevice.ReadWriteListener()
         {
             @Override
             public void onEvent(ReadWriteEvent e)

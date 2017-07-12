@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical">
 
     <include layout="@layout/toolbar"/>
 
-    <ExpandableListView
-        android:visibility="gone"
-        android:id="@+id/expandingListView"
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar">
+
+
+        <ExpandableListView
+            android:visibility="gone"
+            android:id="@+id/expandingListView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <TextView
         android:id="@+id/noCharacteristicsTextView"
@@ -19,8 +28,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_below="@+id/toolbar"
+        android:layout_centerHorizontal="true"
         android:text="@string/no_characteristics"
         android:textSize="20sp"
         android:layout_margin="20dp"/>
 
-</LinearLayout>
+</RelativeLayout>
