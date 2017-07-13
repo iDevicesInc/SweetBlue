@@ -228,11 +228,11 @@ final class P_ScanManager
 
     final void addBatchScanResults(final List<L_Util.ScanResult> devices)
     {
-        for (L_Util.ScanResult res : devices)
+        synchronized (entryLock)
         {
-            final ScanInfo info = new ScanInfo(res.getDevice(), res.getRssi(), res.getRecord());
-            synchronized (entryLock)
+            for (L_Util.ScanResult res : devices)
             {
+                final ScanInfo info = new ScanInfo(res.getDevice(), res.getRssi(), res.getRecord());
                 m_scanEntries.add(info);
             }
         }
