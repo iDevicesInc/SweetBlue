@@ -90,8 +90,6 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	public static final int DEFAULT_MAX_BOND_RETRIES = 3;
 
-
-
 	/**
 	 * Default is <code>false</code>. If the bluetooth device you are trying to connect to requires a pairing dialog to show up, you should
 	 * set this to <code>true</code>. Android will do one of two things when you try to pair to the device. It will either A) show the pairing dialog, or
@@ -100,6 +98,12 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * as it sounds, it works. Note that no devices will be discovered during this one second scan.
 	 */
 	public boolean forceBondDialog								= false;
+
+	/**
+	 * Default is no delay.  This is the amount of time to delay after connecting, before discovering services.  If
+	 * {@link #useGattRefresh} is <code>true</code>, then {@link #gattRefreshDelay} is used instead of this value.
+	 */
+	public Interval discoverServicesDelay						= Interval.ZERO;
 
 	/**
 	 * Default is {@link #DEFAULT_GATT_REFRESH_DELAY}. This only applies when {@link #useGattRefresh} is <code>true</code>. This is the amount of time to delay after

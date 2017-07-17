@@ -6012,9 +6012,13 @@ public final class BleDevice extends BleNode
             return;
         }
 
+        Interval discoverDelay = BleDeviceConfig.interval(conf_device().discoverServicesDelay, conf_mngr().discoverServicesDelay);
         boolean gattRefresh = BleDeviceConfig.bool(conf_device().useGattRefresh, conf_mngr().useGattRefresh);
-        Interval refreshDelay = BleDeviceConfig.interval(conf_device().gattRefreshDelay, conf_mngr().gattRefreshDelay);
-        queue().add(new P_Task_DiscoverServices(this, m_taskStateListener, gattRefresh, refreshDelay));
+        if (gattRefresh) {
+            discoverDelay = BleDeviceConfig.interval(conf_device().gattRefreshDelay, conf_mngr().gattRefreshDelay);
+        }
+
+        queue().add(new P_Task_DiscoverServices(this, m_taskStateListener, gattRefresh, discoverDelay));
 
         //--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
         //--- Even without this check the library should still be in a goodish state. Might send some weird state

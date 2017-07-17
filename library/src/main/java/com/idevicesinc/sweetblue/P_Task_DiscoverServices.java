@@ -7,19 +7,18 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 {
-
 	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	private boolean m_gattRefresh;
-	private double m_curGattDelay;
-	private double m_gattDelayTarget;
+	private double m_curDiscoverDelay;
+	private double m_discoverDelayTarget;
 	private boolean m_discoverAttempted;
 
 	
-	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener, boolean gattRefresh, Interval gattDelay)
+	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener, boolean gattRefresh, Interval discoverDelay)
 	{
 		super(bleDevice, listener);
 		m_gattRefresh = gattRefresh;
-		m_gattDelayTarget = Interval.isDisabled(gattDelay) || gattDelay == Interval.INFINITE ? 0.0 : gattDelay.secs();
+		m_discoverDelayTarget = Interval.isDisabled(discoverDelay) || discoverDelay == Interval.INFINITE ? 0.0 : discoverDelay.secs();
 	}
 
 	@Override public void execute()
@@ -30,21 +29,23 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 			return;
 		}
 
-		if( !getDevice().layerManager().discoverServices() )
-		{
-			failImmediately();
-			
-			getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
+		if (m_discoverDelayTarget == 0.0) {
+			m_discoverAttempted = true;
+			if (!getDevice().layerManager().discoverServices() )
+			{
+				failImmediately();
+
+				getManager().uhOh(UhOh.SERVICE_DISCOVERY_IMMEDIATELY_FAILED);
+			}
 		}
-		m_discoverAttempted = true;
 	}
 
 	@Override protected void update(double timeStep)
 	{
-		if (m_gattRefresh && !m_discoverAttempted)
+		if ((m_gattRefresh || m_discoverDelayTarget > 0.0) && !m_discoverAttempted)
 		{
-			m_curGattDelay += timeStep;
-			if (m_curGattDelay >= m_gattDelayTarget)
+			m_curDiscoverDelay += timeStep;
+			if (m_curDiscoverDelay >= m_discoverDelayTarget)
 			{
 				m_discoverAttempted = true;
 				if( !getDevice().layerManager().discoverServices() )
