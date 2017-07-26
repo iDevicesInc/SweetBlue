@@ -32,6 +32,11 @@ public final class ManagerStateTest extends BaseBleUnitTest
                 if (e.didEnter(BleManagerState.TURNING_OFF))
                 {
                     System.out.println("Bluetooth is turning off...");
+
+                    if (e.didEnter(BleManagerState.OFF))
+                    {
+                        succeed();
+                    }
                 }
                 else if (e.didEnter(BleManagerState.OFF))
                 {
@@ -63,6 +68,11 @@ public final class ManagerStateTest extends BaseBleUnitTest
                 if (e.didEnter(BleManagerState.TURNING_OFF))
                 {
                     System.out.println("Bluetooth is turning off...");
+
+                    if (e.didEnter(BleManagerState.OFF))
+                    {
+                        m_mgr.turnOn();
+                    }
                 }
                 else if (e.didEnter(BleManagerState.OFF))
                 {
