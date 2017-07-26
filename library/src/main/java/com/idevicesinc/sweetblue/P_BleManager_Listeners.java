@@ -267,7 +267,7 @@ final class P_BleManager_Listeners
         m_mngr.getTaskQueue().interrupt(P_Task_Scan.class, m_mngr);
     }
 
-    private void onNativeBleStateChangeFromBroadcastReceiver(Context context, Intent intent)
+    final void onNativeBleStateChangeFromBroadcastReceiver(Context context, Intent intent)
     {
         final int previousNativeState = intent.getExtras().getInt(BluetoothAdapter.EXTRA_PREVIOUS_STATE);
         final int newNativeState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
