@@ -14,10 +14,12 @@ import static org.junit.Assert.assertTrue;
 public final class ManagerStateTest extends BaseBleUnitTest
 {
 
-    @Test
+    @Test(timeout = 20000)
     public void onToOffTest() throws Exception
     {
         m_config.loggingEnabled = true;
+
+        m_config.nativeManagerLayer = new UnitTestManagerLayer();
 
         m_mgr.setConfig(m_config);
 
@@ -43,10 +45,12 @@ public final class ManagerStateTest extends BaseBleUnitTest
         startTest();
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void onToOffToOnTest() throws Exception
     {
         m_config.loggingEnabled = true;
+
+        m_config.nativeManagerLayer = new UnitTestManagerLayer();
 
         m_mgr.setConfig(m_config);
 
@@ -84,6 +88,7 @@ public final class ManagerStateTest extends BaseBleUnitTest
     public void turningOffToTurningOnTest() throws Exception
     {
         m_config.loggingEnabled = true;
+
         final DontTurnOffManagerLayer layer = new DontTurnOffManagerLayer();
         m_config.nativeManagerLayer = layer;
 
