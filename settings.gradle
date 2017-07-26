@@ -1,1 +1,1 @@
-include ':library', ':tester', ':integration', ':sweetunit', ':toolbox', ':gattspecparser'
+include ':library', ':tester', ':integration', ':sweetunit', ':gattspecparser'
