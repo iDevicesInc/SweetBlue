@@ -18,12 +18,20 @@ import java.util.List;
 public final class DebugLogger implements SweetLogger
 {
 
+    public interface LogEvent
+    {
+        void onLogEntry(String entry);
+    }
+
+
     public final static int DEFAULT_MAX_SIZE = 50;
 
     private final int m_maxLogSize;
     private final List<String> m_logList;
     private final boolean m_unitTest;
     private final boolean m_printToLogCat;
+
+    private LogEvent m_log_listener = null;
 
 
     /**
@@ -68,11 +76,13 @@ public final class DebugLogger implements SweetLogger
 
     @Override public final void onLogEntry(int level, String tag, String msg)
     {
+        String entry = Utils_String.makeString(new Date(), " ", level(level), "/", tag, ": ", msg);
+
         if (m_printToLogCat)
         {
             if (m_unitTest)
             {
-                System.out.print(Utils_String.makeString(new Date(), " ", level(level), "/", tag, ": ", msg + "\n"));
+                System.out.print(entry + "\n");
             }
             else
             {
@@ -83,7 +93,9 @@ public final class DebugLogger implements SweetLogger
         {
             m_logList.remove(0);
         }
-        m_logList.add(Utils_String.makeString(new Date(), " ", level(level), "/", tag, ": ", msg));
+        m_logList.add(entry);
+
+        if (m_log_listener != null) m_log_listener.onLogEntry(entry);
     }
 
     /**
@@ -143,7 +155,7 @@ public final class DebugLogger implements SweetLogger
         return Utils_String.prettyFormatLogList(getLogList());
     }
 
-    private static String level(int level)
+    public static String level(int level)
     {
         switch (level)
         {
@@ -164,4 +176,7 @@ public final class DebugLogger implements SweetLogger
         }
     }
 
+    public void setLogListener(LogEvent logListener){
+        m_log_listener = logListener;
+    }
 }

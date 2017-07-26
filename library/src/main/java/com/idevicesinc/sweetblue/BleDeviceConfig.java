@@ -17,6 +17,8 @@ import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.*;
 
+import org.json.JSONObject;
+
 /**
  * Provides a number of options to (optionally) pass to {@link BleDevice#setConfig(BleDeviceConfig)}.
  * This class is also a super class of {@link BleManagerConfig}, which you can pass
@@ -719,6 +721,17 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	public BleDeviceConfig()
 	{
+	}
+
+	/**
+	 * Creates a {@link BleDeviceConfig} with all default options set. Then, any configuration options
+	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig.writeJSON}
+	 * regarding the creation of the JSONObject
+	 */
+	public BleDeviceConfig(JSONObject jo)
+	{
+		super();
+		readJSON(jo);
 	}
 	
 	/**

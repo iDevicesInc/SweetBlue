@@ -3,6 +3,8 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.util.Log;
+
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -226,11 +228,11 @@ final class P_ScanManager
 
     final void addBatchScanResults(final List<L_Util.ScanResult> devices)
     {
-        for (L_Util.ScanResult res : devices)
+        synchronized (entryLock)
         {
-            final ScanInfo info = new ScanInfo(res.getDevice(), res.getRssi(), res.getRecord());
-            synchronized (entryLock)
+            for (L_Util.ScanResult res : devices)
             {
+                final ScanInfo info = new ScanInfo(res.getDevice(), res.getRssi(), res.getRecord());
                 m_scanEntries.add(info);
             }
         }
@@ -254,7 +256,9 @@ final class P_ScanManager
             m_totalTimeScanning += timeStep;
             m_intervalTimeScanning += timeStep;
 
-            handleScanEntries();
+            int size = m_scanEntries.size();
+
+            handleScanEntries(size);
 
             if (!m_forceActualInfinite && m_doingInfiniteScan && Interval.isEnabled(m_manager.m_config.infiniteScanInterval) && m_intervalTimeScanning >= m_manager.m_config.infiniteScanInterval.secs())
             {
@@ -403,9 +407,9 @@ final class P_ScanManager
 
 
 
-    private void handleScanEntries()
+    private void handleScanEntries(int size)
     {
-        if ( m_scanEntries.size() > 0 )
+        if ( size > 0 )
         {
             final List<ScanInfo> infos;
             synchronized (entryLock)
@@ -413,6 +417,7 @@ final class P_ScanManager
                 infos = new ArrayList<>(m_scanEntries);
                 m_scanEntries.clear();
             }
+
             final List<DiscoveryEntry> entries = new ArrayList<>(infos.size());
 
             for (ScanInfo info : infos)
@@ -767,9 +772,22 @@ final class P_ScanManager
         {
             if (m_device != null)
             {
-                return m_device.hashCode();
+                return m_device.getAddress().hashCode();
             }
             return super.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (obj == null)
+                return false;
+            if (obj instanceof ScanInfo)
+            {
+                ScanInfo other = (ScanInfo) obj;
+                return m_device.getAddress().equals(other.m_device.getAddress());
+            }
+            return false;
         }
     }
 

@@ -31,6 +31,8 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
+import org.json.JSONObject;
+
 /**
  * Provides a number of options to pass to the {@link BleManager#get(Context, BleManagerConfig)}
  * singleton getter or {@link BleManager#setConfig(BleManagerConfig)}.
@@ -382,7 +384,10 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * {@link android.bluetooth.le.ScanSettings.Builder#setReportDelay(long)} so that scan results are "batched" ¯\_(ツ)_/¯. It's not clear from source
 	 * code, API documentation, or internet search what effects this has, when you would want to use it, etc. The reason we use the default
 	 * value provided is largely subjective. It seemed to help discover a peripheral faster on the Nexus 7 that was only advertising on channels
-	 * 37 and 38 - i.e. not on channel 39 too. It is also the default option in the nRF Master Control panel diagnostic app.
+	 * 37 and 38 - i.e. not on channel 39 too.
+	 * <br><br>
+	 * It has been observed that with the default value on the Pixel, it can take over 5 seconds to get the first batch of devices seen. Due to this,
+	 * the default will most likely go to zero for v3.
 	 * <br><br>
 	 * NOTE: This option is only relevant if {@link BluetoothAdapter#isOffloadedScanBatchingSupported()} returns <code>true</code> - otherwise
 	 * it has no effect because the hardware does not support it.
@@ -861,6 +866,17 @@ public class BleManagerConfig extends BleDeviceConfig
 	public BleManagerConfig()
 	{
 		this(false);
+	}
+
+	/**
+	 * Creates a {@link BleManagerConfig} with all default options set. Then, any configuration options
+	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig#writeJSON()}
+	 * regarding the creation of the JSONObject
+	 */
+	public BleManagerConfig(JSONObject jo)
+	{
+		super();
+		readJSON(jo);
 	}
 	
 	/**

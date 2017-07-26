@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -80,22 +81,26 @@ final class P_NativeDeviceWrapper
 		return m_device.getManager().getLogger();
 	}
 
-	void updateNativeDevice(final P_NativeDeviceLayer device_native, final byte[] scanRecord_nullable)
+	void updateNativeDevice(final P_NativeDeviceLayer device_native, final byte[] scanRecord_nullable, boolean isSameScanRecord)
 	{
-		String name_native;
-		try
+		if (!isSameScanRecord)
 		{
-			name_native = getManager().getDeviceName(device_native, scanRecord_nullable);
-		}
-		catch (Exception e)
-		{
-			getLogger().e("Failed to parse name, returning what BluetoothDevice returns.");
-			name_native = device_native.getName();
-		}
+			String name_native;
+			try
+			{
+				name_native = getManager().getDeviceName(device_native, scanRecord_nullable);
+			} catch (Exception e)
+			{
+				getLogger().e("Failed to parse name, returning what BluetoothDevice returns.");
+				name_native = device_native.getName();
+			}
 
-		updateNativeName(name_native);
+			updateNativeName(name_native);
+
+		}
 
 		m_device_native.setNativeDevice(device_native.getNativeDevice());
+
 	}
 
 	void setName_override(final String name)

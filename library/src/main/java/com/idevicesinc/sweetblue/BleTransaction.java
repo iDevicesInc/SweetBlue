@@ -171,7 +171,7 @@ public abstract class BleTransaction
 		return true;
 	}
 	
-	final void cancel()
+	protected final void cancel()
 	{
 		end(EndReason.CANCELLED, m_device.NULL_READWRITE_EVENT());
 	}

@@ -1991,6 +1991,14 @@ public final class BleDevice extends BleNode
         return m_reliableWriteMngr.execute();
     }
 
+    /**
+     * Returns a string of all the states this {@link BleDevice} is currently in.
+     */
+    public final String printState()
+    {
+        return stateTracker_main().toString();
+    }
+
     @Override protected final PA_ServiceManager newServiceManager()
     {
         return new P_DeviceServiceManager(this);
@@ -2475,6 +2483,14 @@ public final class BleDevice extends BleNode
     public final @Nullable(Prevalence.NEVER) byte[] getScanRecord()
     {
         return m_scanRecord;
+    }
+
+    /**
+     * Returns the {@link BleScanInfo} instance held by this {@link BleDevice}.
+     */
+    public final @Nullable(Prevalence.NEVER) BleScanInfo getScanInfo()
+    {
+        return m_scanInfo;
     }
 
     /**
@@ -5636,7 +5652,7 @@ public final class BleDevice extends BleNode
 
         clear_discovery();
 
-        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable);
+        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable, false);
 
         onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 
@@ -5647,7 +5663,7 @@ public final class BleDevice extends BleNode
     {
         m_origin_latest = origin;
 
-        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable);
+        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable, Arrays.equals(m_scanRecord, scanRecord_nullable));
 
         onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 

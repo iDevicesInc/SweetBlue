@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,6 +46,8 @@ public final class Utils_Byte extends Utils
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
+		//TODO:  Remove 0x prefix, ignore whitespace
+
 		for(int idx = 0; idx + 2 <= string.length(); idx += 2)
 		{
 			String hexStr = string.substring(idx, idx + 2);
@@ -69,6 +72,111 @@ public final class Utils_Byte extends Utils
 		return new String(hexChars);
 	}
 
+	/**
+	 * Convert a byte array to a hex string
+	 */
+	public static String bytesToBinaryString(final byte[] bytes)
+	{
+		return bytesToBinaryString(bytes, -1);
+	}
+
+	/**
+	 * Convert a byte array to a hex string
+	 * Also inserts spaces between every count bytes (for legibility)
+	 */
+	public static String bytesToBinaryString(final byte[] bytes, int bytesBetweenSpaces)
+	{
+		if (bytes == null)
+			return null;
+
+		StringBuilder sb = new StringBuilder();
+
+		int count = 0;
+
+		for (byte b : bytes)
+		{
+			for (int i = 0; i < 4; ++i)
+			{
+				int downShift = (3 - i) * 2;
+				int quarterByte = (b>>downShift) & 0x3;
+				switch (quarterByte)
+				{
+					case 0x0:
+						sb.append("00");
+						break;
+					case 0x1:
+						sb.append("01");
+						break;
+					case 0x2:
+						sb.append("10");
+						break;
+					case 0x3:
+						sb.append("11");
+						break;
+				}
+			}
+
+			if (++count >= bytesBetweenSpaces && bytesBetweenSpaces != -1)
+				sb.append(' ');
+		}
+
+		return sb.toString();
+	}
+
+	public static byte[] binaryStringToBytes(String s) throws Exception
+	{
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+		// Iterate over the string and make a byte array
+		int b = 0;
+		int count;
+		for (count = 0; count < s.length();)
+		{
+			int index = s.length() - 1 - count;
+			char c = s.charAt(index);
+
+			if (c != '0' && c != '1')
+			{
+				// Whitespace is simply ignored
+				if (Character.isWhitespace(c))
+					continue;
+
+				// Anything else is an error
+				//FIXME:  Custom exception type
+				throw new Exception("Illegal character " + c + " encountered while parsing binary string");
+			}
+
+			int val = c == '1' ? 1 : 0;
+			b >>>= 1;
+			b |= (val<<7);
+
+			if (((++count) % 8) == 0)
+			{
+				os.write(b);
+				b = 0;
+			}
+		}
+
+		// Final byte (if needed)
+		int extraBytes = (count % 8);
+		if (extraBytes > 0)
+		{
+			b >>>= (8-extraBytes);
+			os.write(b);
+		}
+
+		// Make, then reverse the output array
+		byte output[] = os.toByteArray();
+		for (int i = 0; i < output.length / 2; ++i)
+		{
+			byte temp = output[i];
+			int swapIndex = output.length - 1 - i;
+			output[i] = output[swapIndex];
+			output[swapIndex] = temp;
+		}
+
+		return output;
+	}
 
 	// Not sure what this was added for. It seems like it's for a pretty specific case. Marking as deprecated for now,
 	// and will remove in 3.0, unless we get complaints
@@ -291,7 +399,8 @@ public final class Utils_Byte extends Utils
 	public static short bytesToShort(byte[] b)
 	{
 		short result = 0;
-		for( short i = 0; i < 2; i++ )
+		int loopLimit = Math.min(2, b.length);
+		for( short i = 0; i < loopLimit; i++ )
 		{
 			result <<= 8;
 			result |= (b[i] & 0xFF);
@@ -330,7 +439,7 @@ public final class Utils_Byte extends Utils
      */
 	public static boolean byteToBool(byte val)
 	{
-		return val == 0x1;
+		return val == 0x0 ? false : true;
 	}
 
 	/**
@@ -345,7 +454,7 @@ public final class Utils_Byte extends Utils
 		}
 		else
 		{
-			return new Pointer<>(b[offset] == 1);
+			return new Pointer<>(b[offset] == 0x0 ? false : true);
 		}
 	}
 
@@ -369,14 +478,11 @@ public final class Utils_Byte extends Utils
 	public static int bytesToInt(byte[] b)
 	{
 		int result = 0;
-		for( int i = 0; i < 4; i++ )
+		int loopLimit = Math.min(4, b.length);
+		for( int i = 0; i < loopLimit; i++ )
 		{
 			result <<= 8;
-
-			if( i < b.length )
-			{
-				result |= (b[i] & 0xFF);
-			}
+			result |= (b[i] & 0xFF);
 		}
 
 		return result;
@@ -419,7 +525,8 @@ public final class Utils_Byte extends Utils
 	public static long bytesToLong(byte[] b)
 	{
 		long result = 0;
-		for( int i = 0; i < 8; i++ )
+		int loopLimit = Math.min(8, b.length);
+		for( int i = 0; i < loopLimit; i++ )
 		{
 			result <<= 8;
 			result |= (b[i] & 0xFF);
