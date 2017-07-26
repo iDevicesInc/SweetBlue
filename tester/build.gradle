@@ -24,7 +24,7 @@ tasks.withType(Test) {
     testLogging {
         exceptionFormat "full"
         events "skipped", "passed", "failed"
-        showStandardStreams true
+        showStandardStreams false
     }
 }
 
