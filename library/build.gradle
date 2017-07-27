@@ -146,21 +146,24 @@ task javadocJar(type: Jar, dependsOn: gendocs) {
 }
 
 // Copy the src and res directories, and Readme file
-task copyFiles << {
-    checkDir("${BUNDLE_FOLDER}")
-    copy {
-        from "src/main/java"
-        into "${BUNDLE_FOLDER}/src"
-    }
-    copy {
-        from "src/main/res"
-        into "${BUNDLE_FOLDER}/res"
-    }
-    copy {
-        from "../README.md"
-        into BUNDLE_FOLDER
-    }
+task copyFiles {
     group = "sweetblue"
+
+    doLast {
+        checkDir("${BUNDLE_FOLDER}")
+        copy {
+            from "src/main/java"
+            into "${BUNDLE_FOLDER}/src"
+        }
+        copy {
+            from "src/main/res"
+            into "${BUNDLE_FOLDER}/res"
+        }
+        copy {
+            from "../README.md"
+            into BUNDLE_FOLDER
+        }
+    }
 }
 
 def checkDir(String dir) {
@@ -171,31 +174,34 @@ def checkDir(String dir) {
 }
 
 // Pull down the samples repo
-task getSamples(dependsOn: [jar, sourceJar, javadocJar]) << {
-    // If the directory already exists, wipe it out, and start over
-    // again, so this doesn't fail the build
-    String samplePath = projectDir.absolutePath + "/${STAGE}/samples"
-    File f = new File(samplePath)
-    if (f.exists()) {
-        delete "${samplePath}"
-    }
-
-    // When running on the build server, we need to inject the username and password
-    // otherwise it will pull the un/pw of the current user.
-    String gu = System.getenv("G_UNAME")
-    def r;
-    if (!gu || !gu.trim()) {
-        r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}".execute()
-    } else {
-        String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}"
-        r = run.execute()
-    }
-    r.waitFor()
-    String v = r.exitValue()
-    if (!v.equals("0")) {
-        throw new RuntimeException(r.errorStream.text)
-    }
+task getSamples(dependsOn: [jar, sourceJar, javadocJar]) {
     group = "sweetblue"
+
+    doLast {
+        // If the directory already exists, wipe it out, and start over
+        // again, so this doesn't fail the build
+        String samplePath = projectDir.absolutePath + "/${STAGE}/samples"
+        File f = new File(samplePath)
+        if (f.exists()) {
+            delete "${samplePath}"
+        }
+
+        // When running on the build server, we need to inject the username and password
+        // otherwise it will pull the un/pw of the current user.
+        String gu = System.getenv("G_UNAME")
+        def r;
+        if (!gu || !gu.trim()) {
+            r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}".execute()
+        } else {
+            String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}"
+            r = run.execute()
+        }
+        r.waitFor()
+        String v = r.exitValue()
+        if (!v.equals("0")) {
+            throw new RuntimeException(r.errorStream.text)
+        }
+    }
 }
 
 
@@ -204,13 +210,16 @@ ext.sourcesJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-sources.jar"
 ext.javadocJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-javadoc.jar"
 
 // Copy the samples to the bundle folder
-task copySamples(dependsOn: [copyFiles, getSamples]) << {
-    String d = "${STAGE}/samples/samples"
-    copy {
-        from d
-        into "${BUNDLE_FOLDER}/samples"
-    }
+task copySamples(dependsOn: [copyFiles, getSamples]) {
     group = "sweetblue"
+
+    doLast {
+        String d = "${STAGE}/samples/samples"
+        copy {
+            from d
+            into "${BUNDLE_FOLDER}/samples"
+        }
+    }
 }
 
 // Creates a new gradle build task for the input build.gradle file
@@ -223,63 +232,69 @@ def buildSampleTask(buildDir) {
 
 // Copy the new sweetblue jar, sourcejar, and javadoc jars to each sample AS
 // project, and build 
-task copyAndRenameJars(dependsOn: copySamples) << {
-    File sampleDir = new File("${BUNDLE_FOLDER}/samples/")
-    FileCollection collection = files {
-        sampleDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return !file.isHidden();
-            }
-        })
-    }
-    collection.each { File file ->
-        copy {
-            from mainJar
-            into file.getAbsolutePath() + AS_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from mainJar
-            into file.getAbsolutePath() + ECLIPSE_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from sourcesJar
-            into file.getAbsolutePath() + AS_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from sourcesJar
-            into file.getAbsolutePath() + ECLIPSE_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from javadocJar
-            into file.getAbsolutePath() + AS_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from javadocJar
-            into file.getAbsolutePath() + ECLIPSE_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from '../local.properties'
-            into file.getAbsolutePath() + "/android_studio"
-        }
-        buildSampleTask(file.getAbsolutePath()).execute()
-        delete(file.getAbsolutePath() + "/android_studio/local.properties")
-    }
+task copyAndRenameJars(dependsOn: copySamples) {
     group = "sweetblue"
+
+    doLast {
+        File sampleDir = new File("${BUNDLE_FOLDER}/samples/")
+        FileCollection collection = files {
+            sampleDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return !file.isHidden();
+                }
+            })
+        }
+        collection.each { File file ->
+            copy {
+                from mainJar
+                into file.getAbsolutePath() + AS_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from mainJar
+                into file.getAbsolutePath() + ECLIPSE_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from sourcesJar
+                into file.getAbsolutePath() + AS_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from sourcesJar
+                into file.getAbsolutePath() + ECLIPSE_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from javadocJar
+                into file.getAbsolutePath() + AS_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from javadocJar
+                into file.getAbsolutePath() + ECLIPSE_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from '../local.properties'
+                into file.getAbsolutePath() + "/android_studio"
+            }
+            buildSampleTask(file.getAbsolutePath()).execute()
+            delete(file.getAbsolutePath() + "/android_studio/local.properties")
+        }
+    }
 }
 
-task copyGPL(dependsOn: copyAndRenameJars) << {
-    copy {
-        from "../LICENSE"
-        into "${BUNDLE_FOLDER}"
-    }
+task copyGPL(dependsOn: copyAndRenameJars) {
     group = "sweetblue"
+
+    doLast {
+        copy {
+            from "../LICENSE"
+            into "${BUNDLE_FOLDER}"
+        }
+    }
 }
 
 task zipTrial(type: Zip, dependsOn: copyGPL) {
@@ -472,8 +487,10 @@ task bumpGradlePluginVersion (dependsOn: getSamples) {
 }
 
 
-task cleanFolders << {
-    delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
+task cleanFolders {
+    doLast {
+        delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
+    }
 }
 
 
