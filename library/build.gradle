@@ -318,11 +318,24 @@ def String getHexString(byte[] data) {
 import java.security.MessageDigest
 
 task outputVersion {
-    group = "idevices"
+    group = "sweetblue"
     description = 'Outputs the current version to version.txt file, for build server purposes.'
     doLast {
         File ver = new File('version.txt')
         ver.write(version, 'UTF-8')
+    }
+}
+
+task incrementVersion() {
+    doLast {
+        String[] vers = "${version}".split('\\.')
+        int release = Integer.parseInt(vers[2])
+        release++
+        String newVersion = vers[0] + "_" + vers[1] + "_" + release
+        File buildFile = new File(rootDir.absolutePath + "/gradle.properties")
+        String contents = buildFile.getText('UTF-8')
+        contents = contents.replaceAll("SEMVER=.*", "SEMVER=${newVersion}")
+        buildFile.write(contents, 'UTF-8')
     }
 }
 
@@ -342,6 +355,19 @@ task bumpVersion {
         contents = contents.replaceAll("version-.*-blue", "version-${version}-blue")
         contents = contents.replaceAll("sweetblue:.*'", "sweetblue:${version}'")
         readme.write(contents, 'UTF-8')
+    }
+}
+
+task createAndPushGitTag {
+    group = "sweetblue"
+    description = 'Creates a tag based on the current version and pushes it to origin'
+    doLast {
+        exec {
+            commandLine 'git', 'tag', "-a", "v${version}", "-m", "\"${version} Release\""
+        }
+        exec {
+            commandLine 'git', "push", "origin", "v${version}"
+        }
     }
 }
 
