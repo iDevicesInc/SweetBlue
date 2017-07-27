@@ -99,7 +99,6 @@ public class UnitTestGatt implements P_GattLayer {
     public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback) {
         m_gattIsNull = false;
         m_explicitDisconnect = false;
-        ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTING);
         m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
             @Override public void run()
@@ -130,7 +129,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     public void setToConnecting()
     {
-        m_device.m_listeners.onConnectionStateChange(null, BleStatuses.GATT_SUCCESS, BluetoothGatt.STATE_CONNECTING);
+        NativeUtil.setToConnecting(m_device, BleStatuses.GATT_SUCCESS, true, Interval.millis(0));
     }
 
     public void setToConnected()

@@ -317,6 +317,15 @@ def String getHexString(byte[] data) {
 
 import java.security.MessageDigest
 
+task outputVersion {
+    group = "idevices"
+    description = 'Outputs the current version to version.txt file, for build server purposes.'
+    doLast {
+        File ver = new File('version.txt')
+        ver.write(version, 'UTF-8')
+    }
+}
+
 task bumpVersion {
     group = "sweetblue"
     description = "Updates readme file with the latest version number, and updates hash in Uuids.java"
