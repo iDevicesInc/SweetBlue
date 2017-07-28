@@ -43,25 +43,25 @@ final class P_AndroidGatt implements P_GattLayer
 
 
     @Override
-    public BleDevice getBleDevice()
+    public final BleDevice getBleDevice()
     {
         return m_device;
     }
 
     @Override
-    public void setGatt(BluetoothGatt gatt)
+    public final void setGatt(BluetoothGatt gatt)
     {
         m_gatt = gatt;
     }
 
     @Override
-    public BluetoothGatt getGatt()
+    public final BluetoothGatt getGatt()
     {
         return m_gatt;
     }
 
     @Override
-    public Boolean getAuthRetryValue()
+    public final Boolean getAuthRetryValue()
     {
         if (m_gatt != null)
         {
@@ -134,7 +134,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean equals(BluetoothGatt gatt)
+    public final boolean equals(BluetoothGatt gatt)
     {
         return gatt == m_gatt;
     }
@@ -145,7 +145,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public BleManager.UhOhListener.UhOh closeGatt()
+    public final BleManager.UhOhListener.UhOh closeGatt()
     {
         BleManager.UhOhListener.UhOh uhoh = null;
         if (m_gatt == null) return uhoh;
@@ -227,7 +227,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public List<BluetoothGattService> getNativeServiceList(P_Logger logger)
+    public final List<BluetoothGattService> getNativeServiceList(P_Logger logger)
     {
         if (m_gatt == null)
         {
@@ -256,7 +256,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
+    public final BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
     {
         BluetoothGattService service = null;
         try
@@ -280,20 +280,20 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean isGattNull()
+    public final boolean isGattNull()
     {
         return m_gatt == null;
     }
 
     @Override
-    public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
+    public final BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
     {
         m_gatt = device.connect(context, useAutoConnect, callback);
         return m_gatt;
     }
 
     @Override
-    public boolean requestMtu(int mtu)
+    public final boolean requestMtu(int mtu)
     {
         if (m_gatt != null)
         {
@@ -303,7 +303,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean refreshGatt()
+    public final boolean refreshGatt()
     {
         if (m_gatt != null)
         {
@@ -313,7 +313,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean requestConnectionPriority(BleConnectionPriority priority)
+    public final boolean requestConnectionPriority(BleConnectionPriority priority)
     {
         if (m_gatt != null)
         {
@@ -323,7 +323,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public void disconnect()
+    public final void disconnect()
     {
         if (m_gatt != null)
         {
@@ -332,7 +332,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
+    public final boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
     {
         if (m_gatt != null && characteristic != null)
         {
@@ -342,7 +342,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean setCharValue(BluetoothGattCharacteristic characteristic, byte[] data)
+    public final boolean setCharValue(BluetoothGattCharacteristic characteristic, byte[] data)
     {
         if (characteristic != null)
         {
@@ -352,7 +352,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic)
+    public final boolean writeCharacteristic(BluetoothGattCharacteristic characteristic)
     {
         if (m_gatt != null && characteristic != null)
         {
@@ -362,7 +362,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)
+    public final boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable)
     {
         if (m_gatt != null && characteristic != null)
         {
@@ -372,7 +372,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean readDescriptor(BluetoothGattDescriptor descriptor)
+    public final boolean readDescriptor(BluetoothGattDescriptor descriptor)
     {
         if (m_gatt != null && descriptor != null)
         {
@@ -382,7 +382,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean setDescValue(BluetoothGattDescriptor descriptor, byte[] data)
+    public final boolean setDescValue(BluetoothGattDescriptor descriptor, byte[] data)
     {
         if (descriptor != null)
         {
@@ -392,7 +392,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean writeDescriptor(BluetoothGattDescriptor descriptor)
+    public final boolean writeDescriptor(BluetoothGattDescriptor descriptor)
     {
         if (m_gatt != null && descriptor != null)
         {
@@ -402,7 +402,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean discoverServices()
+    public final boolean discoverServices()
     {
         if (m_gatt != null)
             return m_gatt.discoverServices();
@@ -410,7 +410,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean executeReliableWrite()
+    public final boolean executeReliableWrite()
     {
         if (m_gatt != null)
             return m_gatt.executeReliableWrite();
@@ -418,7 +418,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean beginReliableWrite()
+    public final boolean beginReliableWrite()
     {
         if (m_gatt != null)
             return m_gatt.beginReliableWrite();
@@ -426,7 +426,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public void abortReliableWrite(BluetoothDevice device)
+    public final void abortReliableWrite(BluetoothDevice device)
     {
         if (m_gatt != null)
         {
@@ -442,7 +442,7 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public boolean readRemoteRssi()
+    public final boolean readRemoteRssi()
     {
         if (m_gatt != null)
             return m_gatt.readRemoteRssi();

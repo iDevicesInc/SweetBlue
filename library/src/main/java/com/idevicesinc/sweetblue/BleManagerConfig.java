@@ -370,6 +370,13 @@ public class BleManagerConfig extends BleDeviceConfig
 	public Interval minTimeToIdle							= Interval.secs(DEFAULT_DELAY_BEFORE_IDLE);
 
 	/**
+	 * Default is {@link Interval#DISABLED} - This sets an amount of time to delay between executing each task in the queue. The delay simply makes sure
+	 * that the amount of time requested here has passed since the last task ended.
+	 */
+	@Advanced
+	public Interval delayBetweenTasks						= Interval.DISABLED;
+
+	/**
 	 * Default is <code>false</code><br></br>
 	 * <br></br>
 	 * This specifies if SweetBlue is running in a unit test or not. If set to <code>true</code>, then SweetBlue will create
@@ -454,6 +461,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * This might be useful for extension/wrapper libraries or apps that want to tie into the {@link BleManager} instance's existing update loop.
 	 */
 	public PI_UpdateLoop.Callback updateLoopCallback			= null;
+
 
 	P_GattLayer newGattLayer(BleDevice device)
 	{

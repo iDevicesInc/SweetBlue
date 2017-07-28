@@ -116,6 +116,7 @@ public class MainActivity extends Activity
         config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
         config.scanApi = BleScanApi.AUTO;
         config.runOnMainThread = false;
+        config.delayBetweenTasks = Interval.secs(2.0);
         config.defaultInitFactory = new BleDeviceConfig.InitTransactionFactory()
         {
             @Override

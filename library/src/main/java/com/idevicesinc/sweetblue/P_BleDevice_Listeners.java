@@ -1,15 +1,12 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.UUID;
-
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
-import android.util.Log;
-
 import com.idevicesinc.sweetblue.BleDevice.BondListener.Status;
 import com.idevicesinc.sweetblue.BleNode.ConnectionFailListener.AutoConnectUsage;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -17,6 +14,7 @@ import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Utils;
+
 
 final class P_BleDevice_Listeners extends BluetoothGattCallback
 {
@@ -27,7 +25,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	final PA_Task.I_StateListener m_taskStateListener = new PA_Task.I_StateListener()
 	{
 		@Override
-		public void onStateChange(PA_Task task, PE_TaskState state)
+		public final void onStateChange(PA_Task task, PE_TaskState state)
 		{
 			if (task.getClass() == P_Task_Connect.class)
 			{
@@ -116,6 +114,8 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 	};
 
+
+
 	public P_BleDevice_Listeners(BleDevice device)
 	{
 		m_device = device;
@@ -124,7 +124,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onConnectionStateChange(final BluetoothGatt gatt, final int gattStatus, final int newState)
+	public final void onConnectionStateChange(final BluetoothGatt gatt, final int gattStatus, final int newState)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
@@ -259,7 +259,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onServicesDiscovered(final BluetoothGatt gatt, final int gattStatus)
+	public final void onServicesDiscovered(final BluetoothGatt gatt, final int gattStatus)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
@@ -291,7 +291,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
+	public final void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
 	{
 		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
 
@@ -332,7 +332,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
+	public final void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus)
 	{
 		final byte[] data = characteristic.getValue();
 
@@ -409,7 +409,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onReliableWriteCompleted(final BluetoothGatt gatt, final int gattStatus)
+	public final void onReliableWriteCompleted(final BluetoothGatt gatt, final int gattStatus)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
@@ -438,7 +438,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
+	public final void onReadRemoteRssi(final BluetoothGatt gatt, final int rssi, final int gattStatus)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
@@ -470,7 +470,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
+	public final void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
 	{
 		final byte[] data = descriptor.getValue();
 
@@ -512,7 +512,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
+	public final void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int gattStatus)
 	{
 		final byte[] data = descriptor.getValue();
 
@@ -560,7 +560,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	}
 
 	@Override
-	public void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)
+	public final void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)
 	{
 		final byte[] value = characteristic.getValue() == null ? null : characteristic.getValue().clone();
 
@@ -584,13 +584,13 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		m_device.getPollManager().onCharacteristicChangedFromNativeNotify(serviceUuid, characteristicUuid, value);
 	}
 
-	public void onNativeBoneRequest_updateThread(BleDevice device)
+	public final void onNativeBoneRequest_updateThread(BleDevice device)
 	{
 		m_logger.i("Bond request served for device with mac " + device.getMacAddress());
 		device.m_bondMngr.onNativeBondRequest();
 	}
 
-	public void onNativeBondStateChanged_updateThread(int previousState, int newState, int failReason)
+	public final void onNativeBondStateChanged_updateThread(int previousState, int newState, int failReason)
 	{
 		if (newState == BluetoothDevice.ERROR)
 		{
@@ -651,7 +651,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 	}
 
-	@Override public void onMtuChanged(final BluetoothGatt gatt, final int mtu, final int gattStatus)
+	@Override public final void onMtuChanged(final BluetoothGatt gatt, final int mtu, final int gattStatus)
 	{
 		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
