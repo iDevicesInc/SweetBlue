@@ -3357,7 +3357,7 @@ public final class BleManager
 
 		m_uhOhThrottler.update(timeStep_seconds);
 
-		if (m_taskQueue.update(timeStep_seconds))
+		if (m_taskQueue.update(timeStep_seconds, currentTime))
 		{
 			m_lastTaskExecution = currentTime;
 			checkIdleStatus();
