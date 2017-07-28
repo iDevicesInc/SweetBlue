@@ -2253,12 +2253,17 @@ public final class BleManager
 	{
 		m_scanManager.resetTimeNotScanning();
 
-		// Specifically stop the scan
-		//m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
-
 		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
 		{
-			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
+			m_postManager.runOrPostToUpdateThread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					m_taskQueue.clearQueueOf(P_Task_Scan.class, BleManager.this);
+				}
+			});
+
 		}
 
 		m_stateTracker.remove(BleManagerState.STARTING_SCAN, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -2904,7 +2909,14 @@ public final class BleManager
 	@Advanced
 	public final void clearQueue()
 	{
-		m_taskQueue.clearQueueOfAll();
+		m_postManager.runOrPostToUpdateThread(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				m_taskQueue.clearQueueOfAll();
+			}
+		});
 	}
 
 	/**
