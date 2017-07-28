@@ -35,6 +35,8 @@ ext.JAR_DIR = BUNDLE_FOLDER + "/jars"
 ext.JAR_NAME = JAR_BASE_NAME + ".jar"
 ext.JAVADOC_JAR_NAME = JAR_BASE_NAME + "-javadoc.jar"
 ext.SOURCES_JAR_NAME = JAR_BASE_NAME + "-sources.jar"
+ext.AS_BUILD_SUFFIX = "/android_studio/build"
+ext.AS_APP_BUILD_SUFFIX = "/android_studio/app/build"
 ext.AS_SUFFIX = "/android_studio/app/libs"
 ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
@@ -46,7 +48,6 @@ def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle")
         + files(rootDir.absolutePath + "/library/build.gradle") \
         + files(rootDir.absolutePath + "/sweetunit/build.gradle") \
         + files(rootDir.absolutePath + "/tester/build.gradle") \
-        + files(rootDir.absolutePath + "/toolbox/build.gradle") \
         + files(rootDir.absolutePath + "/lint.gradle")
 
 repositories {
@@ -282,6 +283,10 @@ task copyAndRenameJars(dependsOn: copySamples) {
             }
             buildSampleTask(file.getAbsolutePath()).execute()
             delete(file.getAbsolutePath() + "/android_studio/local.properties")
+            
+            // Delete build folders to save on space in the resulting zip file
+            delete(file.getAbsolutePath() + AS_APP_BUILD_SUFFIX)
+            delete(file.getAbsolutePath() + AS_BUILD_SUFFIX)
         }
     }
 }
