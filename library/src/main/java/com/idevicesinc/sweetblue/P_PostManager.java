@@ -60,7 +60,7 @@ final class P_PostManager
     {
         if (m_manager.m_config.postCallbacksToMainThread)
         {
-            m_uiHandler.post(action);
+            postToMain(action);
         }
         else
         {
