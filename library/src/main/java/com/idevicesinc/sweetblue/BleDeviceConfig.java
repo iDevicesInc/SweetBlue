@@ -725,7 +725,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 	/**
 	 * Creates a {@link BleDeviceConfig} with all default options set. Then, any configuration options
-	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig.writeJSON}
+	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig#writeJSON}
 	 * regarding the creation of the JSONObject
 	 */
 	public BleDeviceConfig(JSONObject jo)

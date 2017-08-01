@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.content.Context;
-
 import com.idevicesinc.sweetblue.compat.K_Util;
 import com.idevicesinc.sweetblue.compat.M_Util;
 import com.idevicesinc.sweetblue.utils.Utils;
