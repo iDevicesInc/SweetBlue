@@ -3,7 +3,7 @@
 <b>|</b>&nbsp;<a href='#getting-started'>Getting Started</a>
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>&nbsp;<a href="https://github.com/iDevicesInc/SweetBlue/wiki">Wiki</a>
-<b>|</b>
+<b>|</b>&nbsp;<a href="https://play.google.com/store/apps/details?id=com.idevicesinc.sweetblue.toolbox">Toolbox</a>
 <a href="https://travis-ci.org/iDevicesInc/SweetBlue">
   <img align="right" src="https://img.shields.io/badge/version-2.52.10-blue.svg" />
   <img align="right" src="https://travis-ci.org/iDevicesInc/SweetBlue.svg?branch=master"/>
@@ -108,8 +108,8 @@ Getting Started
           }
       
           sourceSets {
-              main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'              
-              main.res.srcDirs += 'src/main/lib/sweetblue/app/src/main/res'
+              main.java.srcDirs += 'src/main/lib/sweetblue/library/src/main/java'              
+              main.res.srcDirs += 'src/main/lib/sweetblue/library/src/main/res'
               ...
           }
           ...
@@ -203,7 +203,7 @@ Getting Started
     
     // This class helps you navigate the treacherous waters of Android M Location requirements for scanning.
     // First it enables bluetooth itself, then location permissions, then location services. The latter two
-    // are only needed in Android M.
+    // are only needed in Android M. This must be called from an Activity instance.
     BluetoothEnabler.start(this, new DefaultBluetoothEnablerFilter()
     {
     	@Override public Please onEvent(BluetoothEnablerEvent e)
