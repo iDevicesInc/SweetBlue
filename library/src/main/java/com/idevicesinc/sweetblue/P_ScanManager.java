@@ -785,6 +785,8 @@ final class P_ScanManager
             if (obj instanceof ScanInfo)
             {
                 ScanInfo other = (ScanInfo) obj;
+                if ((m_device == null && other.m_device != null) || (m_device != null && other.m_device == null))
+                    return false;
                 return m_device.getAddress().equals(other.m_device.getAddress());
             }
             return false;
