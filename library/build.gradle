@@ -12,7 +12,7 @@ version = "${SEMVER}".replace("_", ".")
 
 android {
     compileSdkVersion 25
-    buildToolsVersion = '25.0.3'
+    buildToolsVersion '25.0.3'
 
     defaultConfig {
         minSdkVersion 18
@@ -35,11 +35,20 @@ ext.JAR_DIR = BUNDLE_FOLDER + "/jars"
 ext.JAR_NAME = JAR_BASE_NAME + ".jar"
 ext.JAVADOC_JAR_NAME = JAR_BASE_NAME + "-javadoc.jar"
 ext.SOURCES_JAR_NAME = JAR_BASE_NAME + "-sources.jar"
+ext.AS_BUILD_SUFFIX = "/android_studio/build"
+ext.AS_APP_BUILD_SUFFIX = "/android_studio/app/build"
 ext.AS_SUFFIX = "/android_studio/app/libs"
 ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
+
+// List of all of the modules' build.gradle files
+def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
+        + files(rootDir.absolutePath + "/library/build.gradle") \
+        + files(rootDir.absolutePath + "/sweetunit/build.gradle") \
+        + files(rootDir.absolutePath + "/tester/build.gradle") \
+        + files(rootDir.absolutePath + "/lint.gradle")
 
 repositories {
     mavenCentral()
@@ -138,21 +147,24 @@ task javadocJar(type: Jar, dependsOn: gendocs) {
 }
 
 // Copy the src and res directories, and Readme file
-task copyFiles << {
-    checkDir("${BUNDLE_FOLDER}")
-    copy {
-        from "src/main/java"
-        into "${BUNDLE_FOLDER}/src"
-    }
-    copy {
-        from "src/main/res"
-        into "${BUNDLE_FOLDER}/res"
-    }
-    copy {
-        from "../README.md"
-        into BUNDLE_FOLDER
-    }
+task copyFiles {
     group = "sweetblue"
+
+    doLast {
+        checkDir("${BUNDLE_FOLDER}")
+        copy {
+            from "src/main/java"
+            into "${BUNDLE_FOLDER}/src"
+        }
+        copy {
+            from "src/main/res"
+            into "${BUNDLE_FOLDER}/res"
+        }
+        copy {
+            from "../README.md"
+            into BUNDLE_FOLDER
+        }
+    }
 }
 
 def checkDir(String dir) {
@@ -163,31 +175,34 @@ def checkDir(String dir) {
 }
 
 // Pull down the samples repo
-task getSamples(dependsOn: [jar, sourceJar, javadocJar]) << {
-    // If the directory already exists, wipe it out, and start over
-    // again, so this doesn't fail the build
-    String samplePath = projectDir.absolutePath + "/${STAGE}/samples"
-    File f = new File(samplePath)
-    if (f.exists()) {
-        delete "${samplePath}"
-    }
-
-    // When running on the build server, we need to inject the username and password
-    // otherwise it will pull the un/pw of the current user.
-    String gu = System.getenv("G_UNAME")
-    def r;
-    if (!gu || !gu.trim()) {
-        r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}".execute()
-    } else {
-        String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}"
-        r = run.execute()
-    }
-    r.waitFor()
-    String v = r.exitValue()
-    if (!v.equals("0")) {
-        throw new RuntimeException(r.errorStream.text)
-    }
+task getSamples(dependsOn: [jar, sourceJar, javadocJar]) {
     group = "sweetblue"
+
+    doLast {
+        // If the directory already exists, wipe it out, and start over
+        // again, so this doesn't fail the build
+        String samplePath = projectDir.absolutePath + "/${STAGE}/samples"
+        File f = new File(samplePath)
+        if (f.exists()) {
+            delete "${samplePath}"
+        }
+
+        // When running on the build server, we need to inject the username and password
+        // otherwise it will pull the un/pw of the current user.
+        String gu = System.getenv("G_UNAME")
+        def r;
+        if (!gu || !gu.trim()) {
+            r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}".execute()
+        } else {
+            String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}"
+            r = run.execute()
+        }
+        r.waitFor()
+        String v = r.exitValue()
+        if (!v.equals("0")) {
+            throw new RuntimeException(r.errorStream.text)
+        }
+    }
 }
 
 
@@ -196,13 +211,16 @@ ext.sourcesJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-sources.jar"
 ext.javadocJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-javadoc.jar"
 
 // Copy the samples to the bundle folder
-task copySamples(dependsOn: [copyFiles, getSamples]) << {
-    String d = "${STAGE}/samples/samples"
-    copy {
-        from d
-        into "${BUNDLE_FOLDER}/samples"
-    }
+task copySamples(dependsOn: [copyFiles, getSamples]) {
     group = "sweetblue"
+
+    doLast {
+        String d = "${STAGE}/samples/samples"
+        copy {
+            from d
+            into "${BUNDLE_FOLDER}/samples"
+        }
+    }
 }
 
 // Creates a new gradle build task for the input build.gradle file
@@ -215,63 +233,73 @@ def buildSampleTask(buildDir) {
 
 // Copy the new sweetblue jar, sourcejar, and javadoc jars to each sample AS
 // project, and build 
-task copyAndRenameJars(dependsOn: copySamples) << {
-    File sampleDir = new File("${BUNDLE_FOLDER}/samples/")
-    FileCollection collection = files {
-        sampleDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return !file.isHidden();
-            }
-        })
-    }
-    collection.each { File file ->
-        copy {
-            from mainJar
-            into file.getAbsolutePath() + AS_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from mainJar
-            into file.getAbsolutePath() + ECLIPSE_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from sourcesJar
-            into file.getAbsolutePath() + AS_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from sourcesJar
-            into file.getAbsolutePath() + ECLIPSE_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from javadocJar
-            into file.getAbsolutePath() + AS_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from javadocJar
-            into file.getAbsolutePath() + ECLIPSE_SUFFIX
-            rename("_${SEMVER}", "")
-        }
-        copy {
-            from '../local.properties'
-            into file.getAbsolutePath() + "/android_studio"
-        }
-        buildSampleTask(file.getAbsolutePath()).execute()
-        delete(file.getAbsolutePath() + "/android_studio/local.properties")
-    }
+task copyAndRenameJars(dependsOn: copySamples) {
     group = "sweetblue"
+
+    doLast {
+        File sampleDir = new File("${BUNDLE_FOLDER}/samples/")
+        FileCollection collection = files {
+            sampleDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return !file.isHidden();
+                }
+            })
+        }
+        collection.each { File file ->
+            copy {
+                from mainJar
+                into file.getAbsolutePath() + AS_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from mainJar
+                into file.getAbsolutePath() + ECLIPSE_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from sourcesJar
+                into file.getAbsolutePath() + AS_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from sourcesJar
+                into file.getAbsolutePath() + ECLIPSE_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from javadocJar
+                into file.getAbsolutePath() + AS_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from javadocJar
+                into file.getAbsolutePath() + ECLIPSE_SUFFIX
+                rename("_${SEMVER}", "")
+            }
+            copy {
+                from '../local.properties'
+                into file.getAbsolutePath() + "/android_studio"
+            }
+            buildSampleTask(file.getAbsolutePath()).execute()
+            delete(file.getAbsolutePath() + "/android_studio/local.properties")
+            
+            // Delete build folders to save on space in the resulting zip file
+            delete(file.getAbsolutePath() + AS_APP_BUILD_SUFFIX)
+            delete(file.getAbsolutePath() + AS_BUILD_SUFFIX)
+        }
+    }
 }
 
-task copyGPL(dependsOn: copyAndRenameJars) << {
-    copy {
-        from "../LICENSE"
-        into "${BUNDLE_FOLDER}"
-    }
+task copyGPL(dependsOn: copyAndRenameJars) {
     group = "sweetblue"
+
+    doLast {
+        copy {
+            from "../LICENSE"
+            into "${BUNDLE_FOLDER}"
+        }
+    }
 }
 
 task zipTrial(type: Zip, dependsOn: copyGPL) {
@@ -309,6 +337,28 @@ def String getHexString(byte[] data) {
 
 import java.security.MessageDigest
 
+task outputVersion {
+    group = "sweetblue"
+    description = 'Outputs the current version to version.txt file, for build server purposes.'
+    doLast {
+        File ver = new File('version.txt')
+        ver.write(version, 'UTF-8')
+    }
+}
+
+task incrementVersion() {
+    doLast {
+        String[] vers = "${version}".split('\\.')
+        int release = Integer.parseInt(vers[2])
+        release++
+        String newVersion = vers[0] + "_" + vers[1] + "_" + release
+        File buildFile = new File(rootDir.absolutePath + "/gradle.properties")
+        String contents = buildFile.getText('UTF-8')
+        contents = contents.replaceAll("SEMVER=.*", "SEMVER=${newVersion}")
+        buildFile.write(contents, 'UTF-8')
+    }
+}
+
 task bumpVersion {
     group = "sweetblue"
     description = "Updates readme file with the latest version number, and updates hash in Uuids.java"
@@ -328,8 +378,124 @@ task bumpVersion {
     }
 }
 
-task cleanFolders << {
-    delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
+task createAndPushGitTag {
+    group = "sweetblue"
+    description = 'Creates a tag based on the current version and pushes it to origin'
+    doLast {
+        exec {
+            commandLine 'git', 'tag', "-a", "v${version}", "-m", "\"${version} Release\""
+        }
+        exec {
+            commandLine 'git', "push", "origin", "v${version}"
+        }
+    }
+}
+
+task gitAddCommitPush {
+    // Takes parameter "message" for git commit message
+    group = "sweetblue"
+    description = "Adds, commits with message, and pushes all tracked files to git"
+    doLast {
+        // git add -u
+        String gu = System.getenv("G_UNAME")
+        def r1 = "git add -u".execute()
+        r1.waitFor()
+        String v1 = r1.exitValue()
+        if(!v1.equals("0"))
+            throw new RuntimeException(r1.errorStream.text)
+
+        // git commit -m "$message"
+        String commit = "git commit -m \"" + message + "\""
+        println(commit)
+        def r2 = (commit).execute()
+        r2.waitFor()
+        String v2 = r2.exitValue()
+        if(!v2.equals("0"))
+        {
+            throw new RuntimeException(r2.errorStream.text)
+        }
+
+        def r3 = ("git push origin HEAD").execute() // Push to current head
+        r3.waitFor()
+        String v3 = r3.exitValue()
+        if(!v3.equals("0"))
+        {
+            throw new RuntimeException(r3.errorStream.text)
+        }
+    }
+}
+
+task bumpCompileSdkVersion (dependsOn: getSamples) {
+    // Takes parameter compileSdkVersion (e.g. 25)
+    group = "sweetblue"
+    description = "Updates compileSdkVersion and targetSdkVersion in all inner project's build.gradle"
+    doLast {
+        def allFiles = moduleFiles
+
+        // Add samples to allFiles
+        File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
+        def samples = files { samplesDir.listFiles() }
+        samples.each {File sample ->
+            allFiles.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
+        println allFiles.asFileTree.files
+
+        allFiles.each { File f ->
+            String contents = f.getText('UTF-8')
+            contents = contents.replaceAll("compileSdkVersion \\d+", "compileSdkVersion " + compileSdkVersion)  // Replace compileSdkVersion
+            contents = contents.replaceAll("targetSdkVersion \\d+", "targetSdkVersion " + compileSdkVersion)  // Replace targetSdkVersion
+            f.write(contents, 'UTF-8')
+        }
+    }
+}
+
+task bumpGradleVersion (dependsOn: getSamples) {
+    // Takes parameter gradleVersion (e.g. 3.3)
+    group = "sweetblue"
+    description = "Updates the Gradle distribution version in all inner project's build.gradle"
+    doLast {
+        def allFiles = files(rootDir.getAbsolutePath() + "/gradle/wrapper/gradle-wrapper.properties") + files()
+
+        File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
+        def samples = files { samplesDir.listFiles() }
+        samples.each {File sample ->
+            allFiles.add files(sample.absolutePath + "/android_studio/gradle/wrapper/gradle-wrapper.properties") }
+        println allFiles.asFileTree.files
+
+        allFiles.each { File f ->
+            String contents = f.getText('UTF-8')
+            contents = contents.replaceAll("services.gradle.org/distributions/.*zip", "services.gradle.org/distributions/gradle-" + gradleVersion + "-all.zip")  // Replace the Gradle distro version
+            f.write(contents, 'UTF-8')
+        }
+    }
+}
+
+task bumpGradlePluginVersion (dependsOn: getSamples) {
+    // Takes parameter gradlePluginVersion (e.g. 2.3.3)
+    group = "sweetblue"
+    description = "Updates the Gradle plugin version in all inner project's build.gradle"
+    doLast {
+        def allFiles = files(rootDir.absolutePath + "/build.gradle") \
+        + files(rootDir.absolutePath + "/lint.gradle")
+
+        File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
+        def samples = files { samplesDir.listFiles() }
+        samples.each {File sample ->
+            allFiles.add files(sample.absolutePath + "/android_studio/build.gradle") }
+        println allFiles.asFileTree.files
+
+        allFiles.each { File f ->
+            String contents = f.getText('UTF-8')
+            contents = contents.replaceAll("'com.android.tools.build:gradle:.*'", "'com.android.tools.build:gradle:" + gradlePluginVersion + "'")  // Replace the Gradle plugin version
+            f.write(contents, 'UTF-8')
+        }
+    }
+}
+
+
+task cleanFolders {
+    doLast {
+        delete "${STAGE}/${STANDARD_DIR}", "${STAGE}/${PRO_DIR}", "build"
+    }
 }
 
 

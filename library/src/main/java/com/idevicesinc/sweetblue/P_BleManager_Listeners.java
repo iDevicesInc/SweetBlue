@@ -7,6 +7,8 @@ import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING_PAUSED;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
+import static com.idevicesinc.sweetblue.BleManagerState.TURNING_OFF;
+import static com.idevicesinc.sweetblue.BleManagerState.TURNING_ON;
 
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
@@ -24,6 +26,8 @@ import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 
 final class P_BleManager_Listeners
@@ -243,7 +247,10 @@ final class P_BleManager_Listeners
             final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer(BleDevice.NULL);
             layer.setNativeDevice(device_native);
 
-            m_mngr.onDiscoveredFromNativeStack(layer, rssi, null);
+            final List<P_ScanManager.DiscoveryEntry> entries = new ArrayList<>(1);
+            entries.add(new P_ScanManager.DiscoveryEntry(layer, rssi, null));
+
+            m_mngr.onDiscoveredFromNativeStack(entries);
         }
     }
 
@@ -260,7 +267,7 @@ final class P_BleManager_Listeners
         m_mngr.getTaskQueue().interrupt(P_Task_Scan.class, m_mngr);
     }
 
-    private void onNativeBleStateChangeFromBroadcastReceiver(Context context, Intent intent)
+    final void onNativeBleStateChangeFromBroadcastReceiver(Context context, Intent intent)
     {
         final int previousNativeState = intent.getExtras().getInt(BluetoothAdapter.EXTRA_PREVIOUS_STATE);
         final int newNativeState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
@@ -350,6 +357,12 @@ final class P_BleManager_Listeners
             //---		sure all devices are cleared in case something weird happens and we go straight
             //---		from ON to OFF or something.
             m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, intent);
+
+            // We need to make sure to remove the transitory states, in case they were missed, and to enforce the ON/OFF state to get propagated app-side
+            if (m_mngr.isAny(TURNING_OFF, TURNING_ON))
+            {
+                m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, TURNING_OFF, false, TURNING_ON, false, OFF, true, ON, false);
+            }
         }
         else if (newNativeState == BluetoothAdapter.STATE_TURNING_ON)
         {
@@ -367,6 +380,12 @@ final class P_BleManager_Listeners
             P_Task_TurnBleOn turnOnTask = m_mngr.getTaskQueue().getCurrent(P_Task_TurnBleOn.class, m_mngr);
             intent = turnOnTask == null || turnOnTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
             m_mngr.getTaskQueue().succeed(P_Task_TurnBleOn.class, m_mngr);
+
+            // We need to make sure to remove the transitory states, in case they were missed, and to enforce the ON/OFF state to get propagated app-side
+            if (m_mngr.isAny(TURNING_OFF, TURNING_ON))
+            {
+                m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, TURNING_OFF, false, TURNING_ON, false, ON, true, OFF, false);
+            }
         }
         else if (newNativeState == BluetoothAdapter.STATE_TURNING_OFF)
         {

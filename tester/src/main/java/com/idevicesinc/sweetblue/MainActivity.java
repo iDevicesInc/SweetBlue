@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import com.idevicesinc.sweetblue.tester.R;
+import com.idevicesinc.sweetblue.utils.Utils_Reflection;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
@@ -116,6 +117,7 @@ public class MainActivity extends Activity
         config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
         config.scanApi = BleScanApi.AUTO;
         config.runOnMainThread = false;
+        config.delayBetweenTasks = Interval.secs(2.0);
         config.defaultInitFactory = new BleDeviceConfig.InitTransactionFactory()
         {
             @Override
@@ -149,13 +151,13 @@ public class MainActivity extends Activity
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
 
-        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
-        {
-            @Override public Please onEvent(ScanEvent e)
-            {
-                return Please.acknowledgeIf(e.name_normalized().contains("tag"));
-            }
-        };
+//        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+//        {
+//            @Override public Please onEvent(ScanEvent e)
+//            {
+//                return Please.acknowledgeIf(e.name_normalized().contains("tag"));
+//            }
+//        };
 
         mgr = BleManager.get(this, config);
 

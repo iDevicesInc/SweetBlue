@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Tester</string>
+    <string name="title_activity_server">ServerActivity</string>
 </resources>

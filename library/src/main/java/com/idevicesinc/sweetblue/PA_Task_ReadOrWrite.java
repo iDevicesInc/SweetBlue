@@ -160,30 +160,54 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 				size = m_characteristicList.size();
 				if (size == 0)
 				{
-					fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
+					fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_descriptorFilter.descriptorUuid());
 					return;
 				}
-				BluetoothGattCharacteristic m_char = m_characteristicList.get(0);
-				BluetoothGattDescriptor m_desc = m_char.getDescriptor(m_descriptorFilter.descriptorUuid());
-				if (m_desc == null)
+
+				final UUID descUuid = m_descriptorFilter.descriptorUuid();
+
+				if (descUuid != null)
 				{
-					fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
-				}
-				else
-				{
-					if (false == getDevice().layerManager().readDescriptor(m_desc))
+					final BluetoothGattCharacteristic m_char = m_characteristicList.get(0);
+					final BluetoothGattDescriptor m_desc = m_char.getDescriptor(descUuid);
+					if (m_desc == null)
 					{
-						fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, m_char.getUuid(), m_desc.getUuid());
+						fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_descriptorFilter.descriptorUuid());
 					}
 					else
 					{
-						// Wait for the descriptor read callback
+						if (false == getDevice().layerManager().readDescriptor(m_desc))
+						{
+							fail(BleDevice.ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, m_char.getUuid(), m_desc.getUuid());
+						}
+						else
+						{
+							// Wait for the descriptor read callback
+						}
 					}
+				}
+				else
+				{
+					// If the descriptor Uuid is null, then we'll forward all chars we find and let the app decide if it's the right one or not
+					for (BluetoothGattCharacteristic ch : m_characteristicList)
+					{
+						final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(ch.getService(), ch, null, PresentData.EMPTY);
+						final DescriptorFilter.Please please = m_descriptorFilter.onEvent(event);
+						if (please.isAccepted())
+						{
+							m_filteredCharacteristic = ch;
+							executeReadOrWrite();
+							return;
+						}
+					}
+
+					// If we got here, we couldn't find a valid char to write to
+					fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_descriptorFilter.descriptorUuid());
 				}
 			}
 			else
 			{
-				fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, Uuids.BATTERY_LEVEL, m_descriptorFilter.descriptorUuid());
+				fail(BleDevice.ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_descriptorFilter.descriptorUuid());
 			}
 		}
 	}

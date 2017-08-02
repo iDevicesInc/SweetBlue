@@ -23,6 +23,7 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     private int m_nativeState = BleStatuses.STATE_ON;
     private String m_address;
+    private String m_name = "MockedDevice";
     private Map<String, Integer> deviceStates = new HashMap<>();
 
 
@@ -123,6 +124,18 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
         return m_nativeState;
     }
 
+    @Override
+    public String getName()
+    {
+        return m_name;
+    }
+
+    @Override
+    public void setName(String name)
+    {
+        m_name = name;
+    }
+
     @Override public String getAddress()
     {
         if (TextUtils.isEmpty(m_address))
@@ -211,25 +224,25 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     protected void setToTurningOff()
     {
-        NativeUtil.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_TURNING_OFF);
+        NativeUtil.sendBluetoothStateChange(BleManager.s_instance, m_nativeState, BluetoothAdapter.STATE_TURNING_OFF);
         m_nativeState = BluetoothAdapter.STATE_TURNING_OFF;
     }
 
     protected void setToOff()
     {
-        NativeUtil.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_OFF);
+        NativeUtil.sendBluetoothStateChange(BleManager.s_instance, m_nativeState, BluetoothAdapter.STATE_OFF);
         m_nativeState = BluetoothAdapter.STATE_OFF;
     }
 
     protected void setToTurningOn()
     {
-        NativeUtil.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_TURNING_ON);
+        NativeUtil.sendBluetoothStateChange(BleManager.s_instance, m_nativeState, BluetoothAdapter.STATE_TURNING_ON);
         m_nativeState = BluetoothAdapter.STATE_TURNING_ON;
     }
 
     protected void setToOn()
     {
-        NativeUtil.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_ON);
+        NativeUtil.sendBluetoothStateChange(BleManager.s_instance, m_nativeState, BluetoothAdapter.STATE_ON);
         m_nativeState = BluetoothAdapter.STATE_ON;
     }
 }

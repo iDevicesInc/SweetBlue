@@ -1991,6 +1991,14 @@ public final class BleDevice extends BleNode
         return m_reliableWriteMngr.execute();
     }
 
+    /**
+     * Returns a string of all the states this {@link BleDevice} is currently in.
+     */
+    public final String printState()
+    {
+        return stateTracker_main().toString();
+    }
+
     @Override protected final PA_ServiceManager newServiceManager()
     {
         return new P_DeviceServiceManager(this);
@@ -2475,6 +2483,14 @@ public final class BleDevice extends BleNode
     public final @Nullable(Prevalence.NEVER) byte[] getScanRecord()
     {
         return m_scanRecord;
+    }
+
+    /**
+     * Returns the {@link BleScanInfo} instance held by this {@link BleDevice}.
+     */
+    public final @Nullable(Prevalence.NEVER) BleScanInfo getScanInfo()
+    {
+        return m_scanInfo;
     }
 
     /**
@@ -5636,7 +5652,7 @@ public final class BleDevice extends BleNode
 
         clear_discovery();
 
-        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable);
+        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable, false);
 
         onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 
@@ -5647,7 +5663,7 @@ public final class BleDevice extends BleNode
     {
         m_origin_latest = origin;
 
-        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable);
+        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable, Arrays.equals(m_scanRecord, scanRecord_nullable));
 
         onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 
@@ -5867,7 +5883,7 @@ public final class BleDevice extends BleNode
         {
             final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
             final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
-            needsBond = Utils.phoneHasBondingIssues() && BleDeviceConfig.bool(conf_device().alwaysBondOnConnect, conf_mngr().alwaysBondOnConnect);
+            needsBond = Utils.phoneHasBondingIssues() || BleDeviceConfig.bool(conf_device().alwaysBondOnConnect, conf_mngr().alwaysBondOnConnect);
             final boolean doPreBond = getManager().m_diskOptionsMngr.loadNeedsBonding(getMacAddress(), tryBondingWhileDisconnected_manageOnDisk) || needsBond;
 
             if (doPreBond && tryBondingWhileDisconnected)
@@ -6013,6 +6029,8 @@ public final class BleDevice extends BleNode
         }
 
         boolean gattRefresh = BleDeviceConfig.bool(conf_device().useGattRefresh, conf_mngr().useGattRefresh);
+        BleDeviceConfig.RefreshOption option = conf_device().gattRefreshOption != null ? conf_device().gattRefreshOption : conf_mngr().gattRefreshOption;
+        gattRefresh = gattRefresh && option == BleDeviceConfig.RefreshOption.BEFORE_SERVICE_DISCOVERY;
         Interval refreshDelay = BleDeviceConfig.interval(conf_device().gattRefreshDelay, conf_mngr().gattRefreshDelay);
         queue().add(new P_Task_DiscoverServices(this, m_taskStateListener, gattRefresh, refreshDelay));
 
@@ -6368,7 +6386,7 @@ public final class BleDevice extends BleNode
 
         if (!ignoreKindOf)
         {
-            if (isDisconnectedAfterReconnectingShortTermStateCallback || wasExplicit)
+            if (isDisconnectedAfterReconnectingShortTermStateCallback/* || wasExplicit*/)
             {
                 m_connectionFailMngr.onExplicitDisconnect();
 
@@ -6740,12 +6758,14 @@ public final class BleDevice extends BleNode
             postEventAsCallback(getManager().m_defaultReadWriteListener, event);
         }
 
-        if (m_defaultNotificationListener != null && (event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION))
+        final boolean isNotificationType = (event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION);
+
+        if (m_defaultNotificationListener != null && isNotificationType)
         {
             postEventAsCallback(m_defaultNotificationListener, fromReadWriteEvent(event));
         }
 
-        if (getManager() != null && getManager().m_defaultNotificationListener != null)
+        if (getManager() != null && getManager().m_defaultNotificationListener != null && isNotificationType)
         {
             postEventAsCallback(getManager().m_defaultNotificationListener, fromReadWriteEvent(event));
         }

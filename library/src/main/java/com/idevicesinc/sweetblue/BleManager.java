@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +13,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
@@ -35,6 +37,7 @@ import com.idevicesinc.sweetblue.BleManager.ResetListener.ResetEvent;
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
 import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
+import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Nullable;
@@ -46,6 +49,7 @@ import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -250,6 +254,11 @@ public final class BleManager
 					"rssi", rssi(),
 					"rssi_percent", rssi_percent()
 				);
+			}
+
+			static DiscoveryEvent newEvent(BleDevice device, LifeCycle lifeCycle)
+			{
+				return new DiscoveryEvent(device, lifeCycle);
 			}
 		}
 
@@ -869,9 +878,14 @@ public final class BleManager
 	 */
 	public final void setConfig(@Nullable(Prevalence.RARE) BleManagerConfig config_nullable)
 	{
-		this.m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
-		this.initLogger(this);
-		this.initConfigDependentMembers();
+		m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
+		initLogger(this);
+		initConfigDependentMembers();
+	}
+
+	public final BleManagerConfig getConfigClone()
+	{
+		return m_config.clone();
 	}
 
 	private void initLogger(BleManager mgr)
@@ -2239,12 +2253,17 @@ public final class BleManager
 	{
 		m_scanManager.resetTimeNotScanning();
 
-		// Specifically stop the scan
-		//m_config.bleScanner.stopLeScan(m_listeners.m_scanCallback_preLollipop);
-
 		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
 		{
-			m_taskQueue.clearQueueOf(P_Task_Scan.class, this);
+			m_postManager.runOrPostToUpdateThread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					m_taskQueue.clearQueueOf(P_Task_Scan.class, BleManager.this);
+				}
+			});
+
 		}
 
 		m_stateTracker.remove(BleManagerState.STARTING_SCAN, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -2738,6 +2757,42 @@ public final class BleManager
 	}
 
 	/**
+	 * Overload of {@link #getServer(GattDatabase, BleServer.ServiceAddListener)}, with no {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener} set.
+	 */
+	public final BleServer getServer(final GattDatabase gattDatabase)
+	{
+		return getServer(gattDatabase, null);
+	}
+
+	/**
+	 * Overload of {@link #getServer(IncomingListener, GattDatabase, BleServer.ServiceAddListener)}, with no {@link IncomingListener} set.
+	 */
+	public final BleServer getServer(final GattDatabase gattDatabase, BleServer.ServiceAddListener addServiceListener)
+	{
+		return getServer(null, gattDatabase, addServiceListener);
+	}
+
+	/**
+	 * Returns a {@link BleServer} instance. This is now the preferred method to retrieve the server instance.
+	 */
+	public final BleServer getServer(final IncomingListener incomingListener, final GattDatabase gattDatabase, final BleServer.ServiceAddListener addServiceListener)
+	{
+		if (m_server == null)
+		{
+			m_server = new BleServer(this, /*isNull*/false);
+			if (gattDatabase != null)
+			{
+				for (BluetoothGattService service : gattDatabase.getServiceList())
+				{
+					m_server.addService(service, addServiceListener);
+				}
+			}
+		}
+		m_server.setListener_Incoming(incomingListener);
+		return m_server;
+	}
+
+	/**
 	 * Same as {@link #newDevice(String, String, BleDeviceConfig)} but uses an empty string for the name
 	 * and passes a <code>null</code> {@link BleDeviceConfig}, which results in inherited options from {@link BleManagerConfig}.
 	 */
@@ -2854,7 +2909,14 @@ public final class BleManager
 	@Advanced
 	public final void clearQueue()
 	{
-		m_taskQueue.clearQueueOfAll();
+		m_postManager.runOrPostToUpdateThread(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				m_taskQueue.clearQueueOfAll();
+			}
+		});
 	}
 
 	/**
@@ -2979,7 +3041,7 @@ public final class BleManager
 		return false;
 	}
 
-	final void onDiscoveredFromNativeStack(final P_NativeDeviceLayer device_native, final int rssi, final byte[] scanRecord_nullable)
+	final void onDiscoveredFromNativeStack(List<DiscoveryEntry> entries)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
@@ -2992,89 +3054,82 @@ public final class BleManager
 		//---		after user called stopScan(), so just a check to prevent unexpected callbacks to the user.
 		if( false == is(SCANNING) )  return;
 
-		final String rawDeviceName;
+		final List<DiscoveryEntry> list = new ArrayList<>();
 
-		try
+		for (DiscoveryEntry entry : entries)
 		{
-			rawDeviceName = getDeviceName(device_native, scanRecord_nullable);
-		}
 
-		//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.
-		catch(Exception e)
-		{
-			m_logger.e(e.getStackTrace().toString());
+			final String macAddress = entry.device().getAddress();
+			BleDevice device_sweetblue = m_deviceMngr.get(macAddress);
 
-			//--- DRK > Can't actually catch the DeadObjectException itself.
-			if( e instanceof DeadObjectException )
+			if (device_sweetblue != null)
 			{
-				uhOh(UhOh.DEAD_OBJECT_EXCEPTION);
+				if (!device_sweetblue.layerManager().getDeviceLayer().equals(entry.device()))
+				{
+					ASSERT(false, "Discovered device " + entry.device().getName() + " " + macAddress + " already in list but with new native device instance.");
+				}
+			}
+
+			final Please please;
+			final boolean newlyDiscovered;
+			final ScanFilter.ScanEvent scanEvent_nullable;
+
+			if (device_sweetblue == null)
+			{
+				final String rawDeviceName;
+
+				try
+				{
+					rawDeviceName = getDeviceName(entry.device(), entry.record());
+				}
+
+				//--- DRK > Can occasionally catch a DeadObjectException or NullPointerException here...nothing we can do about it.
+				catch (Exception e)
+				{
+					m_logger.e(e.getStackTrace().toString());
+
+					//--- DRK > Can't actually catch the DeadObjectException itself.
+					if (e instanceof DeadObjectException)
+					{
+						uhOh(UhOh.DEAD_OBJECT_EXCEPTION);
+					}
+					else
+					{
+						uhOh(UhOh.RANDOM_EXCEPTION);
+					}
+
+					continue;
+				}
+
+				final String normalizedDeviceName = Utils_String.normalizeDeviceName(rawDeviceName);
+
+				final boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
+				final State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
+				scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(entry.device().getNativeDevice(), rawDeviceName, normalizedDeviceName, entry.rssi(), lastDisconnectIntent, entry.record()) : null;
+				please = m_filterMngr.allow(m_logger, scanEvent_nullable);
+
+				if (please != null && false == please.ack()) continue;
+
+				final String name_native = rawDeviceName;
+
+				final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
+				device_sweetblue = newDevice_private(entry.device(), normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
+				newlyDiscovered = true;
 			}
 			else
 			{
-				uhOh(UhOh.RANDOM_EXCEPTION);
+				scanEvent_nullable = null;
+				newlyDiscovered = false;
 			}
 
-			return;
+			entry.m_newlyDiscovered = newlyDiscovered;
+			entry.m_bleDevice = device_sweetblue;
+			entry.m_origin = BleDeviceOrigin.FROM_DISCOVERY;
+			entry.m_scanEvent = scanEvent_nullable;
+			list.add(entry);
 		}
 
-		final String loggedDeviceName = rawDeviceName;
-
-		final String macAddress = device_native.getAddress();
-		BleDevice device_sweetblue = m_deviceMngr.get(macAddress);
-
-		if ( device_sweetblue == null )
-    	{
-//    		m_logger.i("Discovered device " + loggedDeviceName + " " + macAddress + " not in list.");
-    	}
-    	else
-    	{
-    		if( device_sweetblue.layerManager().getDeviceLayer().equals(device_native) )
-    		{
-//    			m_logger.i("Discovered device " + loggedDeviceName + " " + macAddress + " already in list.");
-    		}
-    		else
-    		{
-    			ASSERT(false, "Discovered device " + loggedDeviceName + " " + macAddress + " already in list but with new native device instance.");
-    		}
-    	}
-
-		final String normalizedDeviceName = Utils_String.normalizeDeviceName(rawDeviceName);
-		final ScanFilter.ScanEvent scanEvent_nullable;
-
-		final Please please;
-
-		if( device_sweetblue == null )
-		{
-			final boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
-			final State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
-			scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(device_native.getNativeDevice(), rawDeviceName, normalizedDeviceName, rssi, lastDisconnectIntent, scanRecord_nullable) : null;
-	    	final String deviceName = rawDeviceName != null ? rawDeviceName : "";
-	    	please = m_filterMngr.allow(m_logger, scanEvent_nullable);
-
-	    	if( please != null && false == please.ack() )  return;
-		}
-		else
-		{
-			please = null;
-			scanEvent_nullable = null;
-		}
-
-    	final boolean newlyDiscovered;
-
-    	if ( device_sweetblue == null )
-    	{
-			final String name_native = rawDeviceName;
-
-    		final BleDeviceConfig config_nullable = please != null ? please.getConfig() : null;
-    		device_sweetblue = newDevice_private(device_native, normalizedDeviceName, name_native, BleDeviceOrigin.FROM_DISCOVERY, config_nullable);
-    		newlyDiscovered = true;
-    	}
-		else
-		{
-			newlyDiscovered = false;
-		}
-
-    	onDiscovered_wrapItUp(device_sweetblue, device_native, newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, scanEvent_nullable);
+		onDiscovered_wrapItUp(list);
 	}
 
 	private BleDevice newDevice_private(final P_NativeDeviceLayer device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
@@ -3151,6 +3206,47 @@ public final class BleManager
 		}
 	}
 
+	<T extends Event> void postEvents(final GenericListener_Void listener, final List<T> events)
+	{
+		if (listener != null)
+		{
+			if (listener instanceof PA_CallbackWrapper)
+			{
+				m_postManager.runOrPostToUpdateThread(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (listener != null)
+						{
+							for (Event e : events)
+							{
+								listener.onEvent(e);
+							}
+						}
+					}
+				});
+			}
+			else
+			{
+				m_postManager.postCallback(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						if (listener != null)
+						{
+							for (Event e : events)
+							{
+								listener.onEvent(e);
+							}
+						}
+					}
+				});
+			}
+		}
+	}
+
     private void onDiscovered_wrapItUp(final BleDevice device, final P_NativeDeviceLayer device_native, final boolean newlyDiscovered, final byte[] scanRecord_nullable, final int rssi, final BleDeviceOrigin origin, ScanFilter.ScanEvent scanEvent_nullable)
     {
     	if( newlyDiscovered )
@@ -3174,6 +3270,31 @@ public final class BleManager
     		}
     	}
     }
+
+	private void onDiscovered_wrapItUp(List<DiscoveryEntry> entries)
+	{
+		final List<DiscoveryEvent> events = new ArrayList<>(entries.size());
+
+		for (DiscoveryEntry e : entries)
+		{
+			if (e.m_newlyDiscovered)
+			{
+				e.m_bleDevice.onNewlyDiscovered(e.device(), e.m_scanEvent, e.rssi(), e.record(), e.m_origin);
+				final DiscoveryEvent event = DiscoveryEvent.newEvent(e.m_bleDevice, LifeCycle.DISCOVERED);
+				events.add(event);
+			}
+			else
+			{
+				e.m_bleDevice.onRediscovered(e.device(), e.m_scanEvent, e.rssi(), e.record(), e.m_origin);
+				final DiscoveryEvent event = DiscoveryEvent.newEvent(e.m_bleDevice, LifeCycle.REDISCOVERED);
+				events.add(event);
+			}
+		}
+		if (m_discoveryListener != null)
+		{
+			postEvents(m_discoveryListener, events);
+		}
+	}
 
 	final void clearScanningRelatedMembers(final E_Intent intent)
 	{
@@ -3236,7 +3357,7 @@ public final class BleManager
 
 		m_uhOhThrottler.update(timeStep_seconds);
 
-		if (m_taskQueue.update(timeStep_seconds))
+		if (m_taskQueue.update(timeStep_seconds, currentTime))
 		{
 			m_lastTaskExecution = currentTime;
 			checkIdleStatus();
@@ -3425,6 +3546,7 @@ public final class BleManager
 			//--- RB > Not sure why this was put here. If the tick is over a second, we still want to know that, otherwise tasks will end up running longer
 			// 			than expected.
 //			timeStep = timeStep > 1.0 ? 1.0 : timeStep;
+
 
 			update(timeStep, currentTime);
 

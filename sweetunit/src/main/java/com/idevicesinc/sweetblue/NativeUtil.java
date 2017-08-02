@@ -9,7 +9,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
 import android.content.Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Util;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 
 import java.util.UUID;
@@ -30,13 +29,28 @@ public final class NativeUtil
 
     /**
      * Sends a broadcast for a bluetooth state change, such as {@link BluetoothAdapter#STATE_ON}, {@link BluetoothAdapter#STATE_OFF}, etc.
+     *
+     * @deprecated This is deprecated in favor of {@link #sendBluetoothStateChange(BleManager, int, int)}, as some build servers have issues with sending
+     * broadcasts.
      */
+    @Deprecated
     public static void sendBluetoothStateBroadcast(Context context, int previousState, int newState)
     {
         Intent intent = new Intent(BluetoothAdapter.ACTION_STATE_CHANGED);
         intent.putExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE, previousState);
         intent.putExtra(BluetoothAdapter.EXTRA_STATE, newState);
         context.sendBroadcast(intent);
+    }
+
+    /**
+     * Sends a bluetooth state change, such as {@link BluetoothAdapter#STATE_ON}, {@link BluetoothAdapter#STATE_OFF}, etc.
+     */
+    public static void sendBluetoothStateChange(BleManager manager, int previousState, int newState)
+    {
+        Intent intent = new Intent(BluetoothAdapter.ACTION_STATE_CHANGED);
+        intent.putExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE, previousState);
+        intent.putExtra(BluetoothAdapter.EXTRA_STATE, newState);
+        manager.m_listeners.onNativeBleStateChangeFromBroadcastReceiver(null, intent);
     }
 
     /**
@@ -557,7 +571,7 @@ public final class NativeUtil
     {
         if (mgr.is(BleManagerState.SCANNING))
         {
-            mgr.getScanManager().postScanResult(null, rssi, scanRecord);
+            mgr.getScanManager().addScanResult(null, rssi, scanRecord);
         }
         else
         {

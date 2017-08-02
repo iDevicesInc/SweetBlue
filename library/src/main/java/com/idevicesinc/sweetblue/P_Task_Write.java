@@ -56,7 +56,7 @@ final class P_Task_Write extends PA_Task_ReadOrWrite
 
 		if( false == write_earlyOut(m_data) )
 		{
-			final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
+			final BluetoothGattCharacteristic char_native = getFilteredCharacteristic() != null ? getFilteredCharacteristic() : getDevice().getNativeCharacteristic(getServiceUuid(), getCharUuid());
 
 			if( char_native == null )
 			{
@@ -64,7 +64,7 @@ final class P_Task_Write extends PA_Task_ReadOrWrite
 			}
 			else
 			{
-				// Set the write type now, if it is no null
+				// Set the write type now, if it is not null
 				if (m_writeType != null)
 				{
 					if (m_writeType == Type.WRITE_NO_RESPONSE)

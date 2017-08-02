@@ -104,7 +104,7 @@ public final class Utils_ScanRecord extends Utils
 		boolean completeList = false;
 
 		int mfgId = -1;
-		byte[] mfgData = new byte[34];
+		byte[] mfgData = new byte[0];
 
 		if(scanRecord == null)
 		{
@@ -339,7 +339,7 @@ public final class Utils_ScanRecord extends Utils
 					case DATA_TYPE_LOCAL_NAME_COMPLETE:
 						String n = new String(extractBytes(scanRecord, currentPos, dataLength));
 						if (!TextUtils.isEmpty(n)) {
-							name = n;
+							return n;
 						}
 						break;
 					default:

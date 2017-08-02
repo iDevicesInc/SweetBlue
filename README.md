@@ -3,9 +3,9 @@
 <b>|</b>&nbsp;<a href='#getting-started'>Getting Started</a>
 <b>|</b>&nbsp;<a href='#licensing'>Licensing</a>
 <b>|</b>&nbsp;<a href="https://github.com/iDevicesInc/SweetBlue/wiki">Wiki</a>
-<b>|</b>
+<b>|</b>&nbsp;<a href="https://play.google.com/store/apps/details?id=com.idevicesinc.sweetblue.toolbox">Toolbox</a>
 <a href="https://travis-ci.org/iDevicesInc/SweetBlue">
-  <img align="right" src="https://img.shields.io/badge/version-2.52.09-blue.svg" />
+  <img align="right" src="https://img.shields.io/badge/version-2.52.10-blue.svg" />
   <img align="right" src="https://travis-ci.org/iDevicesInc/SweetBlue.svg?branch=master"/>
 </a>
 <p align="center">
@@ -74,12 +74,12 @@ Getting Started
     ```
     
     android {
-        compileSdkVersion 23
-        buildToolsVersion '23.0.2'
+        compileSdkVersion 25
+        buildToolsVersion '25.0.3'
         
         defaultConfig {
             minSdkVersion 18
-            targetSdkVersion 23
+            targetSdkVersion 25
             ...
         }
     
@@ -98,18 +98,18 @@ Getting Started
     ```
       
       android {
-          compileSdkVersion 23
-          buildToolsVersion '23.0.2'
+          compileSdkVersion 25
+          buildToolsVersion '25.0.3'
           
           defaultConfig {
               minSdkVersion 18
-              targetSdkVersion 23
+              targetSdkVersion 25
               ...
           }
       
           sourceSets {
-              main.java.srcDirs += 'src/main/lib/sweetblue/app/src/main/java'              
-              main.res.srcDirs += 'src/main/lib/sweetblue/app/src/main/res'
+              main.java.srcDirs += 'src/main/lib/sweetblue/library/src/main/java'              
+              main.res.srcDirs += 'src/main/lib/sweetblue/library/src/main/res'
               ...
           }
           ...
@@ -122,12 +122,12 @@ Getting Started
     ```
     
     android {
-        compileSdkVersion 23
-        buildToolsVersion '23.0.2'
+        compileSdkVersion 25
+        buildToolsVersion '25.0.3'
         
         defaultConfig {
             minSdkVersion 18
-            targetSdkVersion 23
+            targetSdkVersion 25
             ...
         }
     
@@ -143,7 +143,7 @@ Getting Started
 2. Now add these to the root of `MyApp/AndroidManifest.xml`:
  
     ```
-    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="23" />
+    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="25" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -203,7 +203,7 @@ Getting Started
     
     // This class helps you navigate the treacherous waters of Android M Location requirements for scanning.
     // First it enables bluetooth itself, then location permissions, then location services. The latter two
-    // are only needed in Android M.
+    // are only needed in Android M. This must be called from an Activity instance.
     BluetoothEnabler.start(this, new DefaultBluetoothEnablerFilter()
     {
     	@Override public Please onEvent(BluetoothEnablerEvent e)

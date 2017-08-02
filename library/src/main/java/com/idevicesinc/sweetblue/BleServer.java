@@ -1395,7 +1395,7 @@ public final class BleServer extends BleNode
 	 */
 	public final void setConfig(final BleNodeConfig config_nullable)
 	{
-		m_config = config_nullable;
+		m_config = config_nullable == null ? null : config_nullable.clone();
 	}
 
 	@Override /*package*/ final BleNodeConfig conf_node()
@@ -1857,6 +1857,25 @@ public final class BleServer extends BleNode
 		}
 	}
 
+	/**
+	 * Returns the name this {@link BleServer} is using (and will be advertised as, if applicable).
+	 */
+	public final String getName()
+	{
+		return getManager().managerLayer().getName();
+	}
+
+	/**
+	 * Set the name you wish this {@link BleServer} to be known as. This will affect how other devices see this server, and sets the name
+	 * on the lower level {@link BluetoothAdapter}. If you DO change this, please be aware this will affect everything, including apps outside
+	 * of your own. It's probably best NOT to use this, but it's here for flexibility.
+	 */
+	@Advanced
+	public final void setName(String name)
+	{
+		getManager().managerLayer().setName(name);
+	}
+
     /**
      * Provides just-in-case lower-level access to the native server instance.
      * See similar warning for {@link BleDevice#getNative()}.
@@ -2254,6 +2273,12 @@ public final class BleServer extends BleNode
 	public final @Nullable(Nullable.Prevalence.NEVER) ServiceAddListener.ServiceAddEvent addService(final BleService service, final ServiceAddListener listener)
 	{
 		return serviceMngr_server().addService(service, listener);
+	}
+
+	// TODO - This should become public for v3. For now, it will stay package private. (We may want to use BleService, etc in the GattDatabase class)
+	final ServiceAddListener.ServiceAddEvent addService(final BluetoothGattService service, final ServiceAddListener listener)
+	{
+		return serviceMngr_server().addService_native(service, listener);
 	}
 
 	/**

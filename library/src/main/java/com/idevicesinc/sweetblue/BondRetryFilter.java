@@ -251,8 +251,8 @@ public interface BondRetryFilter extends GenericListener_T<BondRetryFilter.Retry
 
     /**
      * The default {@link BondRetryFilter} that SweetBlue uses. Feel free to instantiate this with your own number of retry attempts,
-     * See {@link #DefaultBondRetryFilter(int)}, or to provide custom logic on when to retry the bond attempt, in which case you should override
-     * the {@link DefaultBondRetryFilter#onEvent(RetryEvent)} method. This will retry the bond only if the bond attempt was direct, in that
+     * See {@link BondRetryFilter.DefaultBondRetryFilter#DefaultBondRetryFilter(int)}, or to provide custom logic on when to retry the bond attempt, in which case you should override
+     * the {@link BondRetryFilter.DefaultBondRetryFilter#onEvent(RetryEvent)} method. This will retry the bond only if the bond attempt was direct, in that
      * {@link BleDevice#bond(BleDevice.BondListener)}, or {@link BleDevice#bond()} was called, and if we think it's a possible retry situation.
      * See {@link RetryEvent#possibleRetry()}.
      */
