@@ -407,7 +407,7 @@ final class P_DeviceManager
         {
             BleDevice device = get(i);
 
-            if (device.m_nativeWrapper.isNativelyBonded() || device.m_nativeWrapper.isNativelyBonding())
+            if (device.m_bondMngr.isNativelyBondingOrBonded())
             {
                 device.unbond_internal(priority, status);
             }

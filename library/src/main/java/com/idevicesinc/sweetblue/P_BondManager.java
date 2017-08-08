@@ -1,5 +1,7 @@
 package com.idevicesinc.sweetblue;
 
+import android.bluetooth.BluetoothDevice;
+
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
@@ -312,10 +314,12 @@ final class P_BondManager
 
 	final Object[] getNativeBondingStateOverrides()
 	{
-		return new Object[]{BONDING, m_device.m_nativeWrapper.isNativelyBonding(), BONDED, m_device.m_nativeWrapper.isNativelyBonded(), UNBONDED, m_device.m_nativeWrapper.isNativelyUnbonded()};
+		// Cut the 3 calls to jni layer down to one for efficiency (getting the native bond state calls a jni function)
+		int bondState = m_device.m_nativeWrapper.getNativeBondState();
+		return new Object[]{BONDING, m_device.m_nativeWrapper.isNativelyBonding(bondState), BONDED, m_device.m_nativeWrapper.isNativelyBonded(bondState), UNBONDED, m_device.m_nativeWrapper.isNativelyUnbonded(bondState)};
 	}
 	
-	private boolean isNativelyBondingOrBonded()
+	boolean isNativelyBondingOrBonded()
 	{
 		//--- DRK > These asserts are here because, as far as I could discern from logs, the abstracted
 		//---		state for bonding/bonded was true, but when we did an encrypted write, it kicked
@@ -331,7 +335,8 @@ final class P_BondManager
 		//---		UPDATE AGAIN AGAIN: Nevermind, it seems getBondState *can* actually lie, so original comment sorta stands...wow.
 //		m_mngr.ASSERT(m_stateTracker.checkBitMatch(BONDED, isNativelyBonded()));
 //		m_mngr.ASSERT(m_stateTracker.checkBitMatch(BONDING, isNativelyBonding()));
+		int bondState = m_device.m_nativeWrapper.getNativeBondState();
 		
-		return m_device.m_nativeWrapper.isNativelyBonded() || m_device.m_nativeWrapper.isNativelyBonding();
+		return bondState == BluetoothDevice.BOND_BONDED || bondState == BluetoothDevice.BOND_BONDING;
 	}
 }
