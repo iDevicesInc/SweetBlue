@@ -822,6 +822,7 @@ public final class BleManager
 	 */
 	public Object appData;
 
+
 	private BleManager(Context context, BleManagerConfig config)
 	{
 		m_context = context.getApplicationContext();

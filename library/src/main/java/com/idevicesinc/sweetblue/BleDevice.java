@@ -6263,7 +6263,7 @@ public final class BleDevice extends BleNode
                         final int taskOrdinal;
                         final boolean clearQueue;
 
-                        if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED) || attemptingReconnect_shortTerm)
+                        if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
                         {
                             final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/explicit, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
                             queue().add(disconnectTask);
@@ -6310,7 +6310,7 @@ public final class BleDevice extends BleNode
 //			}
 //		}
 
-                    if (wasConnecting)
+                    if (wasConnecting || attemptingReconnect_shortTerm)
                     {
                         if (getManager().ASSERT(connectionFailReasonIfConnecting != null))
                         {
