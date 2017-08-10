@@ -43,6 +43,7 @@ import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
+import com.idevicesinc.sweetblue.utils.TimeTracker;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
@@ -1956,7 +1957,8 @@ public final class BleDevice extends BleNode
             m_dummyDisconnectTask = new P_Task_Disconnect(this, null, /*explicit=*/false, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING, /*cancellable=*/true);
             m_historicalDataMngr = new P_HistoricalDataManager(this, getMacAddress());
             m_reliableWriteMngr = new P_ReliableWriteManager(this);
-            stateTracker().set(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true, m_bondMngr.getNativeBondingStateOverrides());
+            final Object[] bondStates = m_bondMngr.getNativeBondingStateOverrides();
+            stateTracker().set(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.UNDISCOVERED, true, BleDeviceState.DISCONNECTED, true, bondStates);
         }
     }
 
@@ -5652,7 +5654,9 @@ public final class BleDevice extends BleNode
 
         clear_discovery();
 
-        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable, false);
+//        m_nativeWrapper.updateNativeDevice(device_native, scanRecord_nullable, false);
+
+        m_nativeWrapper.updateNativeDeviceOnly(device_native);
 
         onDiscovered_private(scanEvent_nullable, rssi, scanRecord_nullable);
 
@@ -6161,6 +6165,8 @@ public final class BleDevice extends BleNode
 
         final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
 
+        final int bondState = m_nativeWrapper.getNativeBondState();
+
         tracker.set
                 (
                         intent,
@@ -6169,9 +6175,9 @@ public final class BleDevice extends BleNode
                         DISCONNECTED, true,
                         // Commenting these out because of un-thought-of case where you unbond then immediately disconnect...native bond state is still BONDED but abstracted state is UNBONDED so a state transition occurs where it shouldn't.
                         // Uncommenting these out to reflect actual bond state when the device gets disconnected
-			            BONDING, m_nativeWrapper.isNativelyBonding(),
-			            BONDED, m_nativeWrapper.isNativelyBonded(),
-			            UNBONDED, m_nativeWrapper.isNativelyUnbonded(),
+			            BONDING, m_nativeWrapper.isNativelyBonding(bondState),
+			            BONDED, m_nativeWrapper.isNativelyBonded(bondState),
+			            UNBONDED, m_nativeWrapper.isNativelyUnbonded(bondState),
                         RETRYING_BLE_CONNECTION, retryingConnection,
                         RECONNECTING_LONG_TERM, attemptingReconnect_longTerm,
                         ADVERTISING, !attemptingReconnect_longTerm && m_origin_latest == BleDeviceOrigin.FROM_DISCOVERY
@@ -6230,6 +6236,7 @@ public final class BleDevice extends BleNode
                     }
 
                     final boolean wasConnecting = is_internal(CONNECTING_OVERALL);
+                    final boolean attemptingReconnect_shortTerm = is(RECONNECTING_SHORT_TERM);
                     final boolean attemptingReconnect_longTerm = cancelled ? false : is(RECONNECTING_LONG_TERM);
 
                     E_Intent intent = cancelled ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL;
@@ -6303,7 +6310,7 @@ public final class BleDevice extends BleNode
 //			}
 //		}
 
-                    if (wasConnecting)
+                    if (wasConnecting || attemptingReconnect_shortTerm)
                     {
                         if (getManager().ASSERT(connectionFailReasonIfConnecting != null))
                         {

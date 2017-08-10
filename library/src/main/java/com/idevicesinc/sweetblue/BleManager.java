@@ -822,6 +822,7 @@ public final class BleManager
 	 */
 	public Object appData;
 
+
 	private BleManager(Context context, BleManagerConfig config)
 	{
 		m_context = context.getApplicationContext();
@@ -2260,6 +2261,9 @@ public final class BleManager
 				@Override
 				public void run()
 				{
+					P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, BleManager.this);
+					if (scanTask != null)
+						scanTask.succeed();
 					m_taskQueue.clearQueueOf(P_Task_Scan.class, BleManager.this);
 				}
 			});
@@ -3041,7 +3045,7 @@ public final class BleManager
 		return false;
 	}
 
-	final void onDiscoveredFromNativeStack(List<DiscoveryEntry> entries)
+	final synchronized void onDiscoveredFromNativeStack(List<DiscoveryEntry> entries)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
@@ -3106,6 +3110,7 @@ public final class BleManager
 				final boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 				final State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
 				scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(entry.device().getNativeDevice(), rawDeviceName, normalizedDeviceName, entry.rssi(), lastDisconnectIntent, entry.record()) : null;
+
 				please = m_filterMngr.allow(m_logger, scanEvent_nullable);
 
 				if (please != null && false == please.ack()) continue;

@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
@@ -81,6 +82,11 @@ final class P_NativeDeviceWrapper
 		return m_device.getManager().getLogger();
 	}
 
+	void updateNativeDeviceOnly(final P_NativeDeviceLayer device_native)
+	{
+		m_device_native.setNativeDevice(device_native.getNativeDevice());
+	}
+
 	void updateNativeDevice(final P_NativeDeviceLayer device_native, final byte[] scanRecord_nullable, boolean isSameScanRecord)
 	{
 		if (!isSameScanRecord)
@@ -95,8 +101,10 @@ final class P_NativeDeviceWrapper
 				name_native = device_native.getName();
 			}
 
-			updateNativeName(name_native);
-
+			if (!TextUtils.equals(name_native, m_name_native))
+			{
+				updateNativeName(name_native);
+			}
 		}
 
 		m_device_native.setNativeDevice(device_native.getNativeDevice());
@@ -140,10 +148,10 @@ final class P_NativeDeviceWrapper
 
 		m_name_normalized = name_normalized;
 
-		String[] address_split = m_address.split(":");
-		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
-		String debugName = m_name_normalized.length() == 0 ? "<no_name>" : m_name_normalized;
-		m_name_debug = m_device_native != null ? String.format("%s%s%s", debugName, "_", lastFourOfMac) : debugName;
+//		String[] address_split = m_address.split(":");
+//		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
+//		String debugName = m_name_normalized.length() == 0 ? "<no_name>" : m_name_normalized;
+//		m_name_debug = m_device_native != null ? String.format("%s%s%s", debugName, "_", lastFourOfMac) : debugName;
 	}
 	
 	public String getAddress()
@@ -173,7 +181,11 @@ final class P_NativeDeviceWrapper
 	
 	public String getDebugName()
 	{
-		return m_name_debug;
+		String[] address_split = m_address.split(":");
+		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
+		String debugName = m_name_normalized.length() == 0 ? "<no_name>" : m_name_normalized;
+		String debug = m_device_native != null ? String.format("%s%s%s", debugName, "_", lastFourOfMac) : debugName;
+		return debug;
 	}
 
 	public P_NativeDeviceLayer getDeviceLayer()
@@ -249,7 +261,8 @@ final class P_NativeDeviceWrapper
 		}
 		else
 		{
-			bondState_native = m_bondState_cached;		}
+			bondState_native = m_bondState_cached;
+		}
 		
 		return bondState_native;
 	}
@@ -258,15 +271,30 @@ final class P_NativeDeviceWrapper
 	{
 		return getNativeBondState() == BluetoothDevice.BOND_BONDING;
 	}
+
+	boolean isNativelyBonding(int bondState)
+	{
+		return bondState == BluetoothDevice.BOND_BONDING;
+	}
 	
 	boolean isNativelyBonded()
 	{
 		return getNativeBondState() == BluetoothDevice.BOND_BONDED;
 	}
+
+	boolean isNativelyBonded(int bondState)
+	{
+		return bondState == BluetoothDevice.BOND_BONDED;
+	}
 	
 	boolean isNativelyUnbonded()
 	{
 		return getNativeBondState() == BluetoothDevice.BOND_NONE;
+	}
+
+	boolean isNativelyUnbonded(int bondState)
+	{
+		return bondState == BluetoothDevice.BOND_NONE;
 	}
 	
 	boolean isNativelyConnected()

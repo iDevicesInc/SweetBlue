@@ -407,7 +407,7 @@ final class P_DeviceManager
         {
             BleDevice device = get(i);
 
-            if (device.m_nativeWrapper.isNativelyBonded() || device.m_nativeWrapper.isNativelyBonding())
+            if (device.m_bondMngr.isNativelyBondingOrBonded())
             {
                 device.unbond_internal(priority, status);
             }
@@ -467,7 +467,7 @@ final class P_DeviceManager
 
             if (!device.is(BleDeviceState.DISCOVERED))
             {
-                device.onNewlyDiscovered(device.layerManager().getDeviceLayer(), null, device.getRssi(), null, device.getOrigin());
+                device.onNewlyDiscovered(device.layerManager().getDeviceLayer(), null, device.getRssi(), device.getScanRecord(), device.getOrigin());
 
                 if (m_mngr.m_discoveryListener != null)
                 {
