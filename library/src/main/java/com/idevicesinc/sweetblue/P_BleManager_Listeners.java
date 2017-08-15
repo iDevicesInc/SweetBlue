@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue;
 
+import static com.idevicesinc.sweetblue.BleManagerState.BLE_SCAN_READY;
 import static com.idevicesinc.sweetblue.BleManagerState.BOOST_SCANNING;
 import static com.idevicesinc.sweetblue.BleManagerState.IDLE;
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
@@ -361,7 +362,7 @@ final class P_BleManager_Listeners
             // We need to make sure to remove the transitory states, in case they were missed, and to enforce the ON/OFF state to get propagated app-side
             if (m_mngr.isAny(TURNING_OFF, TURNING_ON))
             {
-                m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, TURNING_OFF, false, TURNING_ON, false, OFF, true, ON, false);
+                m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, TURNING_OFF, false, TURNING_ON, false, OFF, true, ON, false, BLE_SCAN_READY, false);
             }
         }
         else if (newNativeState == BluetoothAdapter.STATE_TURNING_ON)
@@ -421,6 +422,12 @@ final class P_BleManager_Listeners
 
         m_mngr.getNativeStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
         m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, previousState, false, newState, true);
+
+        // If BT is now off, and the manager thinks it's still in the scan ready state, then remove the scan ready state.
+        if (newNativeState == BluetoothAdapter.STATE_OFF && m_mngr.is(BLE_SCAN_READY))
+        {
+            m_mngr.getStateTracker().update(intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BLE_SCAN_READY, false);
+        }
 
         if (previousNativeState != BluetoothAdapter.STATE_ON && newNativeState == BluetoothAdapter.STATE_ON)
         {
