@@ -324,7 +324,7 @@ final class P_BleManager_Listeners
         //---		simply because where this is where it was first observed. Checking at the bottom
         //---		may not work because maybe this bug relied on a race condition.
         //---		UPDATE: Not checking for inconsistent state anymore cause it can be legitimate due to native
-        //---		state changing while call to this method is sitting on the main thread queue.
+        //---		state changing while call to this method is sitting on the update thread queue.
         final int adapterState = m_mngr.managerLayer().getState();
 
 //		boolean inconsistentState = adapterState != newNativeState;
