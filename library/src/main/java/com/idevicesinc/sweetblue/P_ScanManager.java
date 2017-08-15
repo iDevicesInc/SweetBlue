@@ -3,14 +3,13 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.util.Log;
-
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -412,10 +411,22 @@ final class P_ScanManager
         if ( size > 0 )
         {
             final List<ScanInfo> infos;
+
+            // Get our max scan entries to process based off the update loop rate, with
+            // a minimum of 5.
+            final long upRate = m_manager.m_config.autoUpdateRate.millis();
+            final int maxEntries = (int) Math.min(size, Math.max(5, upRate));
+            infos = new ArrayList<>(maxEntries);
             synchronized (entryLock)
             {
-                infos = new ArrayList<>(m_scanEntries);
-                m_scanEntries.clear();
+                int current = 0;
+                final Iterator<ScanInfo> it = m_scanEntries.iterator();
+                while (it.hasNext() && current < maxEntries)
+                {
+                    infos.add(it.next());
+                    it.remove();
+                    current++;
+                }
             }
 
             final List<DiscoveryEntry> entries = new ArrayList<>(infos.size());
