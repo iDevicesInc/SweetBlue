@@ -34,7 +34,7 @@ public class UhOhThrottleTest extends BaseBleUnitTest
         };
 
         m_mgr.setConfig(m_config);
-        m_mgr.setListener_UhOh(new BleManager.UhOhListener()
+        m_mgr.setListener_UhOh(new UhOhListener()
         {
             private long m_lastEvent;
 
@@ -52,8 +52,8 @@ public class UhOhThrottleTest extends BaseBleUnitTest
                 }
             }
         });
-        m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-        m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
+        m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
+        m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
         startTest();
     }
 
@@ -65,7 +65,7 @@ public class UhOhThrottleTest extends BaseBleUnitTest
         m_config.uhOhCallbackThrottle = Interval.secs(20);
 
         m_mgr.setConfig(m_config);
-        m_mgr.setListener_UhOh(new BleManager.UhOhListener()
+        m_mgr.setListener_UhOh(new UhOhListener()
         {
             private long m_lastEvent;
 
@@ -83,8 +83,8 @@ public class UhOhThrottleTest extends BaseBleUnitTest
                 }
             }
         });
-        m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-        m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
+        m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
+        m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
         startTest();
     }
 
@@ -109,10 +109,10 @@ public class UhOhThrottleTest extends BaseBleUnitTest
                     {
                         System.out.println("Restarting BleManager...");
                         m_mgr = BleManager.get(m_activity, m_config);
-                        m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-                        m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-                        m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-                        m_mgr.uhOh(BleManager.UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
+                        m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
+                        m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
+                        m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
+                        m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
                     }
                 }).start();
 

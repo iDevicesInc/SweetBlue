@@ -29,14 +29,14 @@ public class PollingTest extends BaseBleUnitTest
     {
         final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Rssi Poll Tester");
         final Pointer<Integer> counter = new Pointer<>(0);
-        device.connect(new BleDevice.StateListener()
+        device.connect(new DeviceStateListener()
         {
             @Override
             public void onEvent(StateEvent e)
             {
                 if (e.didEnter(BleDeviceState.INITIALIZED))
                 {
-                    device.startRssiPoll(Interval.ONE_SEC, new BleDevice.ReadWriteListener()
+                    device.startRssiPoll(Interval.ONE_SEC, new ReadWriteListener()
                     {
                         @Override
                         public void onEvent(ReadWriteEvent e)
@@ -60,14 +60,14 @@ public class PollingTest extends BaseBleUnitTest
     {
         final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Battery Poll Tester");
         final Pointer<Integer> counter = new Pointer<>(0);
-        device.connect(new BleDevice.StateListener()
+        device.connect(new DeviceStateListener()
         {
             @Override
             public void onEvent(StateEvent e)
             {
                 if (e.didEnter(BleDeviceState.INITIALIZED))
                 {
-                    device.startPoll(Uuids.BATTERY_LEVEL, Interval.ONE_SEC, new BleDevice.ReadWriteListener()
+                    device.startPoll(Uuids.BATTERY_LEVEL, Interval.ONE_SEC, new ReadWriteListener()
                     {
                         @Override
                         public void onEvent(ReadWriteEvent e)

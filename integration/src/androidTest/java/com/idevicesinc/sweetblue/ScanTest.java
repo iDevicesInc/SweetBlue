@@ -91,7 +91,7 @@ public class ScanTest extends BaseTester<MainActivity>
         mConfig.scanClassicBoostLength = boostScanTime;
         mgr.setConfig(mConfig);
 
-        mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override
             public void onEvent(DiscoveryEvent e)
@@ -115,7 +115,7 @@ public class ScanTest extends BaseTester<MainActivity>
         mgr.setListener_State(new ManagerStateListener()
         {
             @Override
-            public void onEvent(BleManager.StateListener.StateEvent e)
+            public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didExit(BleManagerState.SCANNING))
                 {

@@ -124,7 +124,7 @@ public class ConnectTest extends BaseBleUnitTest
                     }
                 }
             }
-        }, new BleDevice.DefaultConnectionFailListener(3, 3));
+        }, new DefaultDeviceConnectionFailListener(3, 3));
 
         startTest();
     }
@@ -404,7 +404,7 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_ConnectionFail(new BleDevice.DefaultConnectionFailListener()
+        m_mgr.setListener_ConnectionFail(new DefaultDeviceConnectionFailListener()
         {
             @Override public Please onEvent(ConnectionFailEvent e)
             {

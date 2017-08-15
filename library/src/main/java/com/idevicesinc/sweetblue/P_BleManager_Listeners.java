@@ -10,9 +10,7 @@ import static com.idevicesinc.sweetblue.BleManagerState.SCANNING_PAUSED;
 import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 import static com.idevicesinc.sweetblue.BleManagerState.TURNING_OFF;
 import static com.idevicesinc.sweetblue.BleManagerState.TURNING_ON;
-
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -20,13 +18,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
-
-import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
+import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
-
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -43,7 +43,7 @@ final class P_Task_Connect extends PA_Task_RequiresBleOn
 		{
 			getLogger().w("Native stack is reporting already connected!");
 
-			BleManager.UhOhListener.UhOh uhoh = BleManager.UhOhListener.UhOh.INCONSISTENT_NATIVE_DEVICE_STATE;
+			UhOhListener.UhOh uhoh = UhOhListener.UhOh.INCONSISTENT_NATIVE_DEVICE_STATE;
 			getManager().uhOh(uhoh);
 		}
 		

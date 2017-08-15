@@ -23,7 +23,7 @@ public class BondTest extends BaseBleUnitTest
     public void bondTest() throws Exception
     {
         BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #1");
-        device.bond(new BleDevice.BondListener()
+        device.bond(new BondListener()
         {
             @Override
             public void onEvent(BondEvent e)
@@ -51,7 +51,7 @@ public class BondTest extends BaseBleUnitTest
         m_mgr.setConfig(m_config);
 
         BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #2");
-        device.bond(new BleDevice.BondListener()
+        device.bond(new BondListener()
         {
             @Override
             public void onEvent(BondEvent e)
@@ -93,7 +93,7 @@ public class BondTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        m_mgr.setListener_Bond(new BleDevice.BondListener()
+        m_mgr.setListener_Bond(new BondListener()
         {
             @Override
             public void onEvent(BondEvent e)

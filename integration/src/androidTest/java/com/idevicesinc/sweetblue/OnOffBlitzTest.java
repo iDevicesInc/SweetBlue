@@ -22,7 +22,7 @@ public class OnOffBlitzTest extends BaseTester<MainActivity>
         mgr.setListener_State(new ManagerStateListener()
         {
             @Override
-            public void onEvent(BleManager.StateListener.StateEvent e)
+            public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (counter.incrementAndGet() >= 200)
                 {

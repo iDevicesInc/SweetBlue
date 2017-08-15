@@ -2,16 +2,13 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.BluetoothGattCharacteristic;
-
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Util;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertTrue;
 
 
@@ -31,35 +28,35 @@ public class WriteTypeTest extends BaseBleUnitTest
     public void writeNoResponseTest() throws Exception
     {
         startTest(false);
-        doWriteTest(BleDevice.ReadWriteListener.Type.WRITE_NO_RESPONSE, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+        doWriteTest(ReadWriteListener.Type.WRITE_NO_RESPONSE, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
     }
 
     @Test
     public void writeSignedTest() throws Exception
     {
         startTest(false);
-        doWriteTest(BleDevice.ReadWriteListener.Type.WRITE_SIGNED, BluetoothGattCharacteristic.WRITE_TYPE_SIGNED);
+        doWriteTest(ReadWriteListener.Type.WRITE_SIGNED, BluetoothGattCharacteristic.WRITE_TYPE_SIGNED);
     }
 
     @Test
     public void defaultWriteTest() throws Exception
     {
         startTest(false);
-        doWriteTest(BleDevice.ReadWriteListener.Type.WRITE, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+        doWriteTest(ReadWriteListener.Type.WRITE, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
     }
 
 
 
-    private void doWriteTest(final BleDevice.ReadWriteListener.Type writeType, final int checkType) throws Exception
+    private void doWriteTest(final ReadWriteListener.Type writeType, final int checkType) throws Exception
     {
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             @Override
             public void onEvent(DiscoveryEvent e)
             {
                 if (e.was(LifeCycle.DISCOVERED))
                 {
-                    e.device().connect(new BleDevice.StateListener()
+                    e.device().connect(new DeviceStateListener()
                     {
                         @Override
                         public void onEvent(StateEvent e)
@@ -71,7 +68,7 @@ public class WriteTypeTest extends BaseBleUnitTest
                                         .setReadWriteListener(new ReadWriteListener()
                                         {
                                             @Override
-                                            public void onEvent(BleDevice.ReadWriteListener.ReadWriteEvent e)
+                                            public void onEvent(ReadWriteListener.ReadWriteEvent e)
                                             {
                                                 assertTrue(e.wasSuccess());
                                                 BluetoothGattCharacteristic ch = e.characteristic();

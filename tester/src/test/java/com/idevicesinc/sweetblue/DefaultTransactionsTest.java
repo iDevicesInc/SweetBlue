@@ -49,7 +49,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                 {
                     @Override protected void start(BleDevice device)
                     {
-                        device.read(mAuthServiceUuid, mAuthCharUuid, new BleDevice.ReadWriteListener()
+                        device.read(mAuthServiceUuid, mAuthCharUuid, new ReadWriteListener()
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
@@ -104,7 +104,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                 {
                     @Override protected void start(BleDevice device)
                     {
-                        device.read(mInitServiceUuid, mInitCharUuid, new BleDevice.ReadWriteListener()
+                        device.read(mInitServiceUuid, mInitCharUuid, new ReadWriteListener()
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
@@ -159,7 +159,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                 {
                     @Override protected void start(BleDevice device)
                     {
-                        device.read(mInitServiceUuid, mInitCharUuid, new BleDevice.ReadWriteListener()
+                        device.read(mInitServiceUuid, mInitCharUuid, new ReadWriteListener()
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
@@ -185,7 +185,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
                 {
                     @Override protected void start(BleDevice device)
                     {
-                        device.read(mAuthServiceUuid, mAuthCharUuid, new BleDevice.ReadWriteListener()
+                        device.read(mAuthServiceUuid, mAuthCharUuid, new ReadWriteListener()
                         {
                             @Override public void onEvent(ReadWriteEvent e)
                             {
@@ -223,7 +223,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
+        m_mgr.setListener_Discovery(new DiscoveryListener()
         {
             final Pointer<Integer> connected = new Pointer(0);
 
@@ -231,7 +231,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
             {
                 if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
                 {
-                    e.device().connect(new BleDevice.StateListener()
+                    e.device().connect(new DeviceStateListener()
                     {
                         @Override public void onEvent(StateEvent e)
                         {
@@ -259,7 +259,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
 
         m_mgr.setListener_State(new ManagerStateListener()
         {
-            @Override public void onEvent(BleManager.StateListener.StateEvent e)
+            @Override public void onEvent(ManagerStateListener.StateEvent e)
             {
                 if (e.didExit(BleManagerState.STARTING_SCAN) && e.didEnter(BleManagerState.SCANNING))
                 {
