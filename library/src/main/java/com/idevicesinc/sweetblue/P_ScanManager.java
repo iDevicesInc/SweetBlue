@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.os.Build;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.compat.L_Util;
@@ -686,12 +687,20 @@ final class P_ScanManager
 
     private void startLScan(int mode)
     {
-        m_manager.managerLayer().startLScan(mode, m_manager.m_config.scanReportDelay, m_postLollipopScanCallback);
+        m_manager.managerLayer().startLScan(mode, getReportDelay(), m_postLollipopScanCallback);
     }
 
     private void startMScan(int mode)
     {
-        m_manager.managerLayer().startMScan(mode, m_manager.m_config.scanReportDelay, m_postLollipopScanCallback);
+        m_manager.managerLayer().startMScan(mode, getReportDelay(), m_postLollipopScanCallback);
+    }
+
+    private Interval getReportDelay()
+    {
+        Interval delay = m_manager.m_config.scanReportDelay;
+        if (Build.MODEL.toLowerCase().contains("pixel"))
+            delay = Interval.ZERO;
+        return delay;
     }
 
     private void fail()

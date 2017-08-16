@@ -26,6 +26,7 @@ final class P_Logger
 	private final static String MAIN = "MAIN";
 	private final static String UPDATE = "UPDATE";
 	private final static String NATIVE_TAG = "%s [Native]";
+	private final static String THREAD_TMPLT = "%s(%d)";
 	private String[] m_debugThreadNamePool;
 	private int m_poolIndex = 0;
 	private final SparseArray<String> m_threadNames = new SparseArray<>();
@@ -104,12 +105,12 @@ final class P_Logger
 
 	public final void setMainThread(int threadId)
 	{
-		m_threadNames.put(threadId, MAIN);
+		m_threadNames.put(threadId, String.format(THREAD_TMPLT, MAIN, threadId));
 	}
 
 	public final void setUpdateThread(int threadId)
 	{
-		m_threadNames.put(threadId, UPDATE);
+		m_threadNames.put(threadId, String.format(THREAD_TMPLT, UPDATE, threadId));
 	}
 
 
@@ -178,6 +179,31 @@ final class P_Logger
 	public final void e_native(String tag, String message)
 	{
 		log_native(Log.ERROR, tag, null, message);
+	}
+
+	public final void v_native(String tag, String macAddress, String message)
+	{
+		log_native(Log.VERBOSE, tag, macAddress, message);
+	}
+
+	public final void d_native(String tag, String macAddress, String message)
+	{
+		log_native(Log.DEBUG, tag, macAddress, message);
+	}
+
+	public final void i_native(String tag, String macAddress, String message)
+	{
+		log_native(Log.INFO, tag, macAddress, message);
+	}
+
+	public final void w_native(String tag, String macAddress, String message)
+	{
+		log_native(Log.WARN, tag, macAddress, message);
+	}
+
+	public final void e_native(String tag, String macAddress, String message)
+	{
+		log_native(Log.ERROR, tag, macAddress, message);
 	}
 
 	public final void v_native(String message)
@@ -258,6 +284,31 @@ final class P_Logger
 	public final void w(String tag, String message)
 	{
 		log(Log.WARN, tag, null, message);
+	}
+
+	public final void d(String tag, String macAddress, String message)
+	{
+		log(Log.DEBUG, tag, macAddress, message);
+	}
+
+	public final void i(String tag, String macAddress, String message)
+	{
+		log(Log.INFO, tag, macAddress, message);
+	}
+
+	public final void v(String tag, String macAddress, String message)
+	{
+		log(Log.VERBOSE, tag, macAddress, message);
+	}
+
+	public final void e(String tag, String macAddress, String message)
+	{
+		log(Log.ERROR, tag, macAddress, message);
+	}
+
+	public final void w(String tag, String macAddress, String message)
+	{
+		log(Log.WARN, tag, macAddress, message);
 	}
 	
 	public final void d(String message)
@@ -429,7 +480,7 @@ final class P_Logger
 
 
 
-	private void log_private(int level, String tag, String macAddress, String message, StackTraceElement trace)
+	void log_private(int level, String tag, String macAddress, String message, StackTraceElement trace)
 	{
 		message = prefixMessage(trace.getMethodName(), macAddress, message);
 		if (m_logger != null)
