@@ -34,7 +34,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        m_config.defaultScanFilter = new ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
@@ -89,7 +89,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        m_config.defaultScanFilter = new ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
@@ -144,7 +144,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        m_config.defaultScanFilter = new ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {

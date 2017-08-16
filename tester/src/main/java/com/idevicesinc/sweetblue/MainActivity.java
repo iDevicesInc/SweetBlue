@@ -97,13 +97,13 @@ public class MainActivity extends Activity
             @Override public void onClick(View v)
             {
 
-                ScanOptions options = new ScanOptions().scanPeriodically(Interval.TEN_SECS, Interval.ONE_SEC).withScanFilter(new BleManagerConfig.ScanFilter()
+                ScanOptions options = new ScanOptions().scanPeriodically(Interval.TEN_SECS, Interval.ONE_SEC).withScanFilter(new ScanFilter()
                 {
                     @Override public Please onEvent(ScanEvent e)
                     {
-                        return Please.acknowledgeIf(e.name_normalized().contains("tag"));
+                        return Please.acknowledgeIf(e.name_normalized().contains("switch"));
                     }
-                });
+                }).withScanFilterApplyMode(ScanFilter.ApplyMode.CombineBoth);
                 mgr.startScan(options);
             }
         });
@@ -157,8 +157,15 @@ public class MainActivity extends Activity
         config.forceBondDialog = true;
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
+        config.defaultScanFilter = new ScanFilter()
+        {
+            @Override public Please onEvent(ScanEvent e)
+            {
+                return Please.acknowledgeIf(e.name_normalized().contains("wall"));
+            }
+        };
 
-//        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+//        config.defaultScanFilter = new ScanFilter()
 //        {
 //            @Override public Please onEvent(ScanEvent e)
 //            {
@@ -194,25 +201,25 @@ public class MainActivity extends Activity
                     mAdaptor.notifyDataSetChanged();
             }
         });
-//        mgr.setListener_Discovery(new DiscoveryListener()
-//        {
-//            @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
-//            {
-//                if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
-//                {
-//                    if (!mDevices.contains(e.device()))
-//                    {
-//                        mDevices.add(e.device());
-//                        mAdaptor.notifyDataSetChanged();
-//
-//                    }
-//                }
-//                else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
-//                {
-//
-//                }
-//            }
-//        });
+        mgr.setListener_Discovery(new DiscoveryListener()
+        {
+            @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
+            {
+               if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
+                {
+                   if (!mDevices.contains(e.device()))
+                    {
+                       mDevices.add(e.device());
+                        mAdaptor.notifyDataSetChanged();
+
+                    }
+                }
+                else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
+                {
+
+                }
+            }
+        });
 
 
         mStartScan.setEnabled(false);

@@ -22,7 +22,7 @@ public enum BleScanApi
     /**
      * Will force SweetBlue to use {@link BluetoothAdapter#startDiscovery()}, which is so-called "Bluetooth Classic" discovery.
      * This is the scanning mode used on the Android Bluetooth Settings screen. It only returns the mac address and name of your
-     * device through a {@link com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.ScanEvent}, as opposed to full LE scanning packets
+     * device through a {@link com.idevicesinc.sweetblue.ScanFilter.ScanEvent}, as opposed to full LE scanning packets
      * which usually have a service {@link java.util.UUID} (at the least) as well.
      */
     CLASSIC,
