@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleManagerState.BLE_SCAN_READY;
 import static com.idevicesinc.sweetblue.BleManagerState.BOOST_SCANNING;
-import static com.idevicesinc.sweetblue.BleManagerState.IDLE;
 import static com.idevicesinc.sweetblue.BleManagerState.OFF;
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
 import static com.idevicesinc.sweetblue.BleManagerState.SCANNING;
@@ -22,6 +21,8 @@ import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Utils_String;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -124,7 +125,7 @@ final class P_BleManager_Listeners
                 }
                 else if (action.equals(BluetoothDevice.ACTION_UUID))
                 {
-                    m_mngr.getLogger().d("");
+                    m_mngr.getLogger().d_native("Received BluetoothDevice.ACTION_UUID broadcast.");
                 }
 
                 BleDevice device = m_mngr.getDevice(device_native.getAddress());
@@ -154,6 +155,8 @@ final class P_BleManager_Listeners
 
     private void onNativeBondRequest(final P_NativeDeviceLayer device_native)
     {
+        final String macAddress = device_native != null && device_native.getAddress() != null ? device_native.getAddress() : null;
+        m_mngr.getLogger().log_native(Log.INFO, macAddress, "Bond request served.");
         m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
         {
             @Override
@@ -165,7 +168,7 @@ final class P_BleManager_Listeners
                 {
                     if (device.getListeners() != null)
                     {
-                        device.getListeners().onNativeBoneRequest_updateThread(device);
+                        device.getListeners().onNativeBondRequest_updateThread(device);
                     }
                 }
             }
@@ -229,7 +232,7 @@ final class P_BleManager_Listeners
 
     private void onDeviceFound_classic(Context context, Intent intent)
     {
-        // If this was discovered via the hack to show the bond popup, then do not propogate this
+        // If this was discovered via the hack to show the bond popup, then do not propagate this
         // any further, as this scan is JUST to get the dialog to pop up (rather than show in the notification area)
         P_Task_BondPopupHack hack = m_mngr.getTaskQueue().getCurrent(P_Task_BondPopupHack.class, m_mngr);
 
@@ -238,6 +241,10 @@ final class P_BleManager_Listeners
         if (hack == null && scan != null && m_mngr.m_config.scanApi == BleScanApi.CLASSIC)
         {
             final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+            final String macAddress = device_native != null ? device_native.getAddress() : null;
+            m_mngr.getLogger().log_native(Log.VERBOSE, macAddress, "Discovered device via CLASSIC scan.");
+
             final int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
 
             final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer(BleDevice.NULL);
@@ -269,7 +276,7 @@ final class P_BleManager_Listeners
         final int newNativeState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
 
         int logLevel = newNativeState == BluetoothAdapter.ERROR || previousNativeState == BluetoothAdapter.ERROR ? Log.WARN : Log.INFO;
-        m_mngr.getLogger().log(logLevel, "previous=" + m_mngr.getLogger().gattBleState(previousNativeState) + " new=" + m_mngr.getLogger().gattBleState(newNativeState));
+        m_mngr.getLogger().log_native(logLevel, null, Utils_String.makeString("previous=", m_mngr.getLogger().gattBleState(previousNativeState), " new=", m_mngr.getLogger().gattBleState(newNativeState)));
 
         if (Utils.isMarshmallow())
         {
@@ -454,8 +461,10 @@ final class P_BleManager_Listeners
     {
         final int previousState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
         final int newState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
+        final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
         int logLevel = newState == BluetoothDevice.ERROR || previousState == BluetoothDevice.ERROR ? Log.WARN : Log.INFO;
-        m_mngr.getLogger().log(logLevel, "previous=" + m_mngr.getLogger().gattBondState(previousState) + " new=" + m_mngr.getLogger().gattBondState(newState));
+        final String macAddress = device_native != null ? device_native.getAddress() : null;
+        m_mngr.getLogger().log_native(logLevel, macAddress, Utils_String.makeString("previous=", m_mngr.getLogger().gattBondState(previousState), " new=", m_mngr.getLogger().gattBondState(newState)));
 
         final int failReason;
 
@@ -466,7 +475,7 @@ final class P_BleManager_Listeners
 
             if (failReason != BleStatuses.BOND_SUCCESS)
             {
-                m_mngr.getLogger().w(m_mngr.getLogger().gattUnbondReason(failReason));
+                m_mngr.getLogger().w_native(m_mngr.getLogger().gattUnbondReason(failReason));
             }
         }
         else
@@ -475,8 +484,6 @@ final class P_BleManager_Listeners
         }
 
         final P_NativeDeviceLayer layer = m_mngr.m_config.newDeviceLayer(BleDevice.NULL);
-
-        final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
         layer.setNativeDevice(device_native);
 

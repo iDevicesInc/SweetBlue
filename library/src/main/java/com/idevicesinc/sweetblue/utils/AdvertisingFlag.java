@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue.utils;
 
 
-public enum AdvertisingFlag
+public enum AdvertisingFlag implements Flag
 {
 
     Limited_Discoverable_Mode(0x0),
@@ -19,9 +19,10 @@ public enum AdvertisingFlag
         this.bit = bit;
     }
 
-    public byte getBit()
+    @Override
+    public int bit()
     {
-        return (byte) bit;
+        return bit;
     }
 
     public boolean overlaps(int mask)

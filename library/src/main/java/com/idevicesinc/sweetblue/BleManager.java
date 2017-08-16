@@ -268,7 +268,7 @@ public final class BleManager
 
 		addLifecycleCallbacks();
 		m_config = config.clone();
-		initLogger(this);
+		m_logger = new P_Logger(this, m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingOptions, m_config.logger);
 		m_scanManager = new P_ScanManager(this);
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
@@ -298,7 +298,7 @@ public final class BleManager
 
 		initConfigDependentMembers();
 
-		initLogger(this);
+		updateLogger();
 
 		m_postManager.postToMain(new Runnable()
 		{
@@ -325,7 +325,7 @@ public final class BleManager
 	public final void setConfig(@Nullable(Prevalence.RARE) BleManagerConfig config_nullable)
 	{
 		m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
-		initLogger(this);
+		updateLogger();
 		initConfigDependentMembers();
 	}
 
@@ -334,9 +334,9 @@ public final class BleManager
 		return m_config.clone();
 	}
 
-	private void initLogger(BleManager mgr)
+	private void updateLogger()
 	{
-		m_logger = new P_Logger(mgr, m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled, m_config.logger);
+		m_logger.updateInstance(m_config.debugThreadNames, m_config.loggingOptions, m_config.logger);
 	}
 
 	private void initConfigDependentMembers()

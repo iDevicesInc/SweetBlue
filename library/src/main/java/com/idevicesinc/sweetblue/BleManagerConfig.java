@@ -12,7 +12,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.SparseArray;
-import com.idevicesinc.sweetblue.DiscoveryListener;
+
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -119,6 +119,13 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public boolean loggingEnabled							= false;
+
+	/**
+	 * Default is {@link LogOptions#OFF} - There are 3 static instances you can use for convenience - {@link LogOptions#OFF},
+	 * {@link LogOptions#ON}, and {@link LogOptions#ALL_ON}. If you want more fine-grained logs, then instantiate {@link LogOptions} with the levels of logging
+	 * you would like for SweetBlue logs, and native logs (logs printed when receiving any native callbacks).
+	 */
+	public LogOptions loggingOptions						= LogOptions.OFF;
 
 
 	/**

@@ -3,6 +3,8 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.util.Log;
+
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -809,6 +811,8 @@ final class P_ScanManager
 
         @Override public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord)
         {
+            final String macAddress = device != null ? device.getAddress() : null;
+            m_manager.getLogger().log_native(Log.VERBOSE, macAddress, "Discovered new device via PRE-LOLLIPOP scan.");
             addScanResult(device, rssi, scanRecord);
         }
     }
@@ -820,17 +824,27 @@ final class P_ScanManager
 
         @Override public void onScanResult(int callbackType, L_Util.ScanResult result)
         {
+            final String macAddress = result != null && result.getDevice() != null ? result.getDevice().getAddress() : null;
+            m_manager.getLogger().log_native(Log.VERBOSE, macAddress, "Discovered new device via POST-LOLLIPOP scan.");
             addScanResult(result.getDevice(), result.getRssi(), result.getRecord());
         }
 
         @Override public void onBatchScanResults(List<L_Util.ScanResult> results)
         {
+            if (m_manager.getLogger().isEnabled())
+            {
+                for (L_Util.ScanResult res : results)
+                {
+                    final String macAddress = res != null && res.getDevice() != null ? res.getDevice().getAddress() : null;
+                    m_manager.getLogger().log_native(Log.VERBOSE, macAddress, "Discovered new device via POST-LOLLIPOP scan (batch).");
+                }
+            }
             addBatchScanResults(results);
         }
 
         @Override public void onScanFailed(int errorCode)
         {
-            m_manager.getLogger().e(Utils_String.concatStrings("Post lollipop scan failed with error code ", String.valueOf(errorCode)));
+            m_manager.getLogger().e_native(Utils_String.concatStrings("Post lollipop scan failed with error code ", String.valueOf(errorCode)));
             if (errorCode != SCAN_FAILED_ALREADY_STARTED)
             {
                 fail();
