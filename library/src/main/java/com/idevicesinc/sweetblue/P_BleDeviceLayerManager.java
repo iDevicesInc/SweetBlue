@@ -98,7 +98,7 @@ final class P_BleDeviceLayerManager
 
     public final boolean createBondSneaky(String methodName)
     {
-        return m_deviceLayer.createBondSneaky(methodName, m_device.getManager().m_config.loggingEnabled);
+        return m_deviceLayer.createBondSneaky(methodName, m_device.getManager().getLogger().isEnabled());
     }
 
     public final boolean startDiscovery()
