@@ -97,13 +97,13 @@ public class MainActivity extends Activity
             @Override public void onClick(View v)
             {
 
-                ScanOptions options = new ScanOptions().scanPeriodically(Interval.TEN_SECS, Interval.ONE_SEC).withScanFilter(new BleManagerConfig.ScanFilter()
+                ScanOptions options = new ScanOptions().scanPeriodically(Interval.TEN_SECS, Interval.ONE_SEC).withScanFilter(new ScanFilter()
                 {
                     @Override public Please onEvent(ScanEvent e)
                     {
-                        return Please.acknowledgeIf(e.name_normalized().contains("tag"));
+                        return Please.acknowledgeIf(e.name_normalized().contains("switch"));
                     }
-                });
+                }).withScanFilterApplyMode(ScanFilter.ApplyMode.CombineBoth);
                 mgr.startScan(options);
             }
         });
@@ -158,8 +158,15 @@ public class MainActivity extends Activity
         config.forceBondDialog = true;
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
+        config.defaultScanFilter = new ScanFilter()
+        {
+            @Override public Please onEvent(ScanEvent e)
+            {
+                return Please.acknowledgeIf(e.name_normalized().contains("wall"));
+            }
+        };
 
-//        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+//        config.defaultScanFilter = new ScanFilter()
 //        {
 //            @Override public Please onEvent(ScanEvent e)
 //            {

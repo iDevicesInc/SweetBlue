@@ -21,7 +21,7 @@ public class ScanClassicBoostTest extends BaseTester<MainActivity>
     {
         BleManagerConfig config = new BleManagerConfig();
         config.runOnMainThread = false;
-        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        config.defaultScanFilter = new ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {

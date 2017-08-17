@@ -12,7 +12,8 @@ public final class ScanOptions
 
     Interval m_scanTime;
     Interval m_pauseTime;
-    BleManagerConfig.ScanFilter m_scanFilter;
+    ScanFilter m_scanFilter;
+    ScanFilter.ApplyMode m_scanFilterApplyMode = ScanFilter.ApplyMode.CombineEither;
     DiscoveryListener m_discoveryListener;
     boolean m_isPeriodic;
     boolean m_isPriorityScan;
@@ -22,7 +23,7 @@ public final class ScanOptions
     public ScanOptions()
     {}
 
-    public ScanOptions(BleManagerConfig.ScanFilter scanFilter)
+    public ScanOptions(ScanFilter scanFilter)
     {
         m_scanFilter = scanFilter;
     }
@@ -32,7 +33,7 @@ public final class ScanOptions
         m_discoveryListener = listener_nullable;
     }
 
-    public ScanOptions(BleManagerConfig.ScanFilter scanFilter, DiscoveryListener listener_nullable)
+    public ScanOptions(ScanFilter scanFilter, DiscoveryListener listener_nullable)
     {
         m_scanFilter = scanFilter;
         m_discoveryListener = listener_nullable;
@@ -87,11 +88,20 @@ public final class ScanOptions
     }
 
     /**
-     * Set a {@link com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter} for this scan.
+     * Set a {@link com.idevicesinc.sweetblue.ScanFilter} for this scan.
      */
-    public final ScanOptions withScanFilter(BleManagerConfig.ScanFilter filter)
+    public final ScanOptions withScanFilter(ScanFilter filter)
     {
         m_scanFilter = filter;
+        return this;
+    }
+
+    /**
+     * Set a {@link com.idevicesinc.sweetblue.ScanFilter.ApplyMode} for this scan.
+     */
+    public final ScanOptions withScanFilterApplyMode(ScanFilter.ApplyMode applyMode)
+    {
+        m_scanFilterApplyMode = applyMode;
         return this;
     }
 

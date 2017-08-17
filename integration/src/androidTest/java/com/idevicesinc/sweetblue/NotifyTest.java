@@ -20,7 +20,7 @@ public class NotifyTest extends BaseTester<MainActivity>
     @Override BleManagerConfig getInitialConfig()
     {
         BleManagerConfig config = new BleManagerConfig();
-        config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        config.defaultScanFilter = new ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {

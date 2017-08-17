@@ -1,15 +1,16 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
-import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
-import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
-import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.ScanEvent;
+import java.util.List;
 
+import com.idevicesinc.sweetblue.ScanFilter.Please;
+import com.idevicesinc.sweetblue.ScanFilter.ScanEvent;
 
 final class P_ScanFilterManager
 {
-	private final ArrayList<BleManagerConfig.ScanFilter> m_filters = new ArrayList<BleManagerConfig.ScanFilter>();
-	private ScanFilter m_default;
+	private ScanFilter m_default;  // Regular default scan filter
+	private ScanFilter m_ephemeral = null;  // Temporary filter for just the current scan
+	private ScanFilter.ApplyMode m_ephemeralApplyMode = ScanFilter.ApplyMode.CombineEither;  // How should the ephemeral filter be applied?
 	private final BleManager m_mngr;
 	
 	P_ScanFilterManager(final BleManager mngr, final ScanFilter defaultFilter)
@@ -18,76 +19,88 @@ final class P_ScanFilterManager
 		m_default = defaultFilter;
 	}
 
-	void updateFilter(ScanFilter filter)
+	void setDefaultFilter(ScanFilter filter)
 	{
 		m_default = filter;
 	}
-	
-	void clear()
+
+	void setEphemeralFilter(ScanFilter ephemeral)
 	{
-		m_filters.clear();
+		m_ephemeral = ephemeral;
 	}
-	
-	void remove(ScanFilter filter)
+
+	void setEphemeralFilter(ScanFilter ephemeral, ScanFilter.ApplyMode applyMode)
 	{
-		while( m_filters.remove(filter) ){};
+		m_ephemeral = ephemeral;
+		m_ephemeralApplyMode = applyMode;
 	}
-	
-	void add(ScanFilter filter)
+
+	void setEphemeralFilterApplyMode(ScanFilter.ApplyMode applyMode)
 	{
-		if( filter == null )  return;
-		
-		if( m_filters.contains(filter) )
+		m_ephemeralApplyMode = applyMode;
+	}
+
+	void clearEphemeralFilter()
+	{
+		m_ephemeral = null;
+		m_ephemeralApplyMode = ScanFilter.ApplyMode.CombineEither;
+	}
+
+	private List<ScanFilter> activeFilters()
+	{
+		List<ScanFilter> l = new ArrayList<>();
+		if (m_ephemeralApplyMode == ScanFilter.ApplyMode.Override)
 		{
-			return;
+			if (m_ephemeral != null)
+				l.add(m_ephemeral);
 		}
-		
-		m_filters.add(filter);
+		else
+		{
+			if (m_default != null)
+				l.add(m_default);
+			if (m_ephemeral != null)
+				l.add(m_ephemeral);
+		}
+		return l;
 	}
 
 	public boolean makeEvent()
 	{
-		return m_default != null || m_filters.size() > 0;
+		return activeFilters().size() > 0;
 	}
 	
-	BleManagerConfig.ScanFilter.Please allow(P_Logger logger, final ScanEvent e)
+	ScanFilter.Please allow(P_Logger logger, final ScanEvent e)
 	{
-		if( m_filters.size() == 0 && m_default == null )  return Please.acknowledge();
+		List<ScanFilter> activeFilters = activeFilters();
 
-		if( m_default != null )
+		if (activeFilters.size() < 1)
+			return Please.acknowledge();
+
+		Please yesPlease = null;
+		for (ScanFilter sf : activeFilters)
 		{
-			final Please please = m_default.onEvent(e);
-			
+			final Please please = sf.onEvent(e);
+
 			logger.checkPlease(please, Please.class);
 
-			stopScanningIfNeeded(m_default, please);
-			
-			if( please != null && please.ack() )
-			{
-				return please;
-			}
-		}
-		
-		for( int i = 0; i < m_filters.size(); i++ )
-		{
-			final ScanFilter ithFilter = m_filters.get(i);
-			
-			final Please please = ithFilter.onEvent(e);
-			
-			logger.checkPlease(please, Please.class);
+			stopScanningIfNeeded(sf, please);
 
-			stopScanningIfNeeded(ithFilter, please);
-			
-			if( please != null && please.ack() )
-			{
+			boolean accepted = (please != null && please.ack());
+
+			if (accepted && yesPlease == null)
+				yesPlease = please;
+
+			if (m_ephemeralApplyMode != ScanFilter.ApplyMode.CombineBoth && accepted)
 				return please;
-			}
+
+			if (m_ephemeralApplyMode == ScanFilter.ApplyMode.CombineBoth && !accepted)
+				return ScanFilter.Please.ignore();
 		}
-		
-		return BleManagerConfig.ScanFilter.Please.ignore();
+
+		return m_ephemeralApplyMode == ScanFilter.ApplyMode.CombineBoth && yesPlease != null ? yesPlease : ScanFilter.Please.ignore();
 	}
 
-	private void stopScanningIfNeeded(final ScanFilter filter, final BleManagerConfig.ScanFilter.Please please_nullable)
+	private void stopScanningIfNeeded(final ScanFilter filter, final ScanFilter.Please please_nullable)
 	{
 		if( please_nullable != null )
 		{

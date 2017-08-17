@@ -3744,7 +3744,7 @@ public final class BleDevice extends BleNode
         m_connectionFailMngr.onLongTermTimedOut();
     }
 
-    final void onNewlyDiscovered(final P_NativeDeviceLayer device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+    final void onNewlyDiscovered(final P_NativeDeviceLayer device_native, final ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
 
@@ -3759,7 +3759,7 @@ public final class BleDevice extends BleNode
         stateTracker_main().update(E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, m_bondMngr.getNativeBondingStateOverrides(), UNDISCOVERED, false, DISCOVERED, true, ADVERTISING, origin == BleDeviceOrigin.FROM_DISCOVERY, DISCONNECTED, true);
     }
 
-    final void onRediscovered(final P_NativeDeviceLayer device_native, final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
+    final void onRediscovered(final P_NativeDeviceLayer device_native, final ScanFilter.ScanEvent scanEvent_nullable, int rssi, byte[] scanRecord_nullable, final BleDeviceOrigin origin)
     {
         m_origin_latest = origin;
 
@@ -3793,7 +3793,7 @@ public final class BleDevice extends BleNode
         return m_timeSinceLastDiscovery;
     }
 
-    private void onDiscovered_private(final BleManagerConfig.ScanFilter.ScanEvent scanEvent_nullable, final int rssi, byte[] scanRecord_nullable)
+    private void onDiscovered_private(final ScanFilter.ScanEvent scanEvent_nullable, final int rssi, byte[] scanRecord_nullable)
     {
         m_lastDiscoveryTime = EpochTime.now();
         m_timeSinceLastDiscovery = 0.0;
