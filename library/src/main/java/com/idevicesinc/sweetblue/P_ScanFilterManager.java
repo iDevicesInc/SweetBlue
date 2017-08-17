@@ -19,7 +19,7 @@ final class P_ScanFilterManager
 		m_default = defaultFilter;
 	}
 
-	void updateFilter(ScanFilter filter)
+	void setDefaultFilter(ScanFilter filter)
 	{
 		m_default = filter;
 	}

@@ -31,7 +31,6 @@ import com.idevicesinc.sweetblue.BondListener.Status;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleServer.IncomingListener;
-import com.idevicesinc.sweetblue.ScanFilter;
 import com.idevicesinc.sweetblue.ScanFilter.Please;
 import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -355,7 +354,7 @@ public final class BleManager
 
 		m_listeners.updatePollRate(m_config.defaultStatePollRate);
 
-		m_filterMngr.updateFilter(m_config.defaultScanFilter);
+		m_filterMngr.setDefaultFilter(m_config.defaultScanFilter);
 
 		if (m_config.nativeManagerLayer instanceof P_AndroidBluetoothManager)
 		{
