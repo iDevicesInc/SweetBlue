@@ -32,7 +32,7 @@ public class ConnectTest extends BaseBleUnitTest
         m_device = null;
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         doConnectCreatedDeviceTest(m_config, false);
 
@@ -89,7 +89,7 @@ public class ConnectTest extends BaseBleUnitTest
         m_device = null;
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override
@@ -145,7 +145,7 @@ public class ConnectTest extends BaseBleUnitTest
         };
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         doConnectDiscoveredDeviceTest(m_config, false);
 
@@ -222,7 +222,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         doConnectDiscoveredMultipleDeviceTest(m_config, false);
 
@@ -300,7 +300,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
@@ -383,7 +383,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
@@ -465,7 +465,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
@@ -533,7 +533,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
@@ -605,7 +605,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
@@ -699,7 +699,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
@@ -781,7 +781,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
@@ -856,7 +856,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         doDisconnectDuringServiceDiscoveryTest(m_config, false);
 
@@ -922,7 +922,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         doConnectThenDisconnectTest(m_config, false);
 

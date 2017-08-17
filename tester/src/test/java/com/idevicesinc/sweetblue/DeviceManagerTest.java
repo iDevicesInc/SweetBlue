@@ -20,7 +20,7 @@ public class DeviceManagerTest extends BaseBleUnitTest
     public void removeDevicesFromCacheTest() throws Exception
     {
         final long m_timeStarted = System.currentTimeMillis();
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_mgr.setConfig(m_config);
         new Thread(new Runnable()
         {

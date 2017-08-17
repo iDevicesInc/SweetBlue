@@ -95,5 +95,4 @@ public interface DeviceStateListener extends GenericListener_Void<DeviceStateLis
         }
     }
 
-    @Override void onEvent(StateEvent e);
 }

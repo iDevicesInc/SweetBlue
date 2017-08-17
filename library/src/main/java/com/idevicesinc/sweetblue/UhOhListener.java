@@ -239,8 +239,4 @@ public interface UhOhListener extends GenericListener_Void<UhOhListener.UhOhEven
         }
     }
 
-    /**
-     * Run for the hills.
-     */
-    void onEvent(final UhOhListener.UhOhEvent e);
 }

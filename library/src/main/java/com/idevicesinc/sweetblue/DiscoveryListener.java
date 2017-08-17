@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.Utils_String;
@@ -10,6 +11,11 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * callbacks when a device is newly discovered, rediscovered, or undiscovered after calling various {@link BleManager#startScan()}
  * or {@link BleManager#startPeriodicScan(Interval, Interval)} methods. You can also provide this to various
  * overloads of {@link BleManager#startScan()} and {@link BleManager#startPeriodicScan(Interval, Interval)}.
+ *
+ * {@link DiscoveryListener#onEvent(Event)} is called when the discovery lifecycle of a device is updated.
+ * <br><br>
+ * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}
+ * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
  */
 @com.idevicesinc.sweetblue.annotations.Lambda
 public interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<DiscoveryListener.DiscoveryEvent>
@@ -18,7 +24,7 @@ public interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.Gener
      * Enumerates changes in the "discovered" state of a device.
      * Used at {@link DiscoveryListener.DiscoveryEvent#lifeCycle()}.
      */
-    public static enum LifeCycle
+    enum LifeCycle
     {
         /**
          * Used when a device is discovered for the first time after
@@ -46,31 +52,31 @@ public interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.Gener
     }
 
     /**
-     * Struct passed to {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)}.
+     * Struct passed to {@link DiscoveryListener#onEvent(Event)}.
      */
     @com.idevicesinc.sweetblue.annotations.Immutable
-    public static class DiscoveryEvent extends com.idevicesinc.sweetblue.utils.Event
+    class DiscoveryEvent extends com.idevicesinc.sweetblue.utils.Event
     {
         /**
          * The {@link BleManager} which is currently {@link BleManagerState#SCANNING}.
          */
-        public BleManager manager(){  return device().getManager();  }
+        public final BleManager manager(){  return device().getManager();  }
 
         /**
          * The device in question.
          */
-        public BleDevice device(){  return m_device;  }
+        public final BleDevice device(){  return m_device;  }
         private final BleDevice m_device;
 
         /**
          * Convience to return the mac address of {@link #device()}.
          */
-        public String macAddress()  {  return m_device.getMacAddress();  }
+        public final String macAddress()  {  return m_device.getMacAddress();  }
 
         /**
          * The discovery {@link DiscoveryListener.LifeCycle} that the device has undergone.
          */
-        public LifeCycle lifeCycle(){  return m_lifeCycle;  }
+        public final LifeCycle lifeCycle(){  return m_lifeCycle;  }
         private final LifeCycle m_lifeCycle;
 
         DiscoveryEvent(final BleDevice device, final LifeCycle lifeCycle)
@@ -82,7 +88,7 @@ public interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.Gener
         /**
          * Forwards {@link BleDevice#getRssi()}.
          */
-        public int rssi()
+        public final int rssi()
         {
             return device().getRssi();
         }
@@ -90,7 +96,7 @@ public interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.Gener
         /**
          * Forwards {@link BleDevice#getRssiPercent()}.
          */
-        public Percent rssi_percent()
+        public final Percent rssi_percent()
         {
             return device().getRssiPercent();
         }
@@ -98,12 +104,12 @@ public interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.Gener
         /**
          * Convenience method for checking equality of given {@link DiscoveryListener.LifeCycle} and {@link #lifeCycle()}.
          */
-        public boolean was(LifeCycle lifeCycle)
+        public final boolean was(LifeCycle lifeCycle)
         {
             return lifeCycle == lifeCycle();
         }
 
-        @Override public String toString()
+        @Override public final String toString()
         {
             return Utils_String.toString
                     (
@@ -121,11 +127,4 @@ public interface DiscoveryListener extends com.idevicesinc.sweetblue.utils.Gener
         }
     }
 
-    /**
-     * Called when the discovery lifecycle of a device is updated.
-     * <br><br>
-     * TIP: Take a look at {@link BleDevice#getLastDisconnectIntent()}. If it is {@link com.idevicesinc.sweetblue.utils.State.ChangeIntent#UNINTENTIONAL}
-     * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
-     */
-    void onEvent(final DiscoveryEvent e);
 }

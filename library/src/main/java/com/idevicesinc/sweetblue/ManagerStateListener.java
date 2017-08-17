@@ -46,9 +46,4 @@ public interface ManagerStateListener extends GenericListener_Void<ManagerStateL
         }
     }
 
-    /**
-     * Called when the manager's abstracted {@link BleManagerState} changes.
-     */
-    void onEvent(final ManagerStateListener.StateEvent e);
-
 }

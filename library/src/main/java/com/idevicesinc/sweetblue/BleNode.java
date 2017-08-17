@@ -37,7 +37,8 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * A callback that is used by various overloads of {@link BleDevice#loadHistoricalData()} that accept instances hereof.
 	 * You can also set default listeners on {@link BleDevice#setListener_HistoricalDataLoad(BleNode.HistoricalDataLoadListener)}
-	 * and {@link BleManager#setListener_HistoricalDataLoad(BleNode.HistoricalDataLoadListener)}.
+	 * and {@link BleManager#setListener_HistoricalDataLoad(BleNode.HistoricalDataLoadListener)}. The {@link HistoricalDataLoadListener#onEvent(Event)} method
+	 * is called when the historical data for a given characteristic {@link UUID} is done loading from disk.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
 	public static interface HistoricalDataLoadListener extends GenericListener_Void<HistoricalDataLoadListener.HistoricalDataLoadEvent>
@@ -91,7 +92,7 @@ public abstract class BleNode implements UsesCustomNull
 		}
 
 		/**
-		 * Event struct passed to {@link HistoricalDataLoadListener#onEvent(HistoricalDataLoadEvent)} that provides
+		 * Event struct passed to {@link HistoricalDataLoadListener#onEvent(Event)} that provides
 		 * further information about the status of a historical data load to memory using {@link BleDevice#loadHistoricalData()}
 		 * (or overloads).
 		 */
@@ -154,14 +155,11 @@ public abstract class BleNode implements UsesCustomNull
 			}
 		}
 
-		/**
-		 * Called when the historical data for a given characteristic {@link UUID} is done loading from disk.
-		 */
-		void onEvent(final HistoricalDataLoadEvent e);
 	}
 
 	/**
-	 * A callback that is used by {@link BleDevice#select()} to listen for when a database query is done processing.
+	 * A callback that is used by {@link BleDevice#select()} to listen for when a database query is done processing. The
+	 * {@link HistoricalDataQueryListener#onEvent(Event)} method is called when the historical data for a given characteristic {@link UUID} is done querying.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Alpha
 	@com.idevicesinc.sweetblue.annotations.Lambda
@@ -207,7 +205,7 @@ public abstract class BleNode implements UsesCustomNull
 		}
 
 		/**
-		 * Event struct passed to {@link HistoricalDataQueryListener#onEvent(HistoricalDataQueryEvent)} that provides
+		 * Event struct passed to {@link HistoricalDataQueryListener#onEvent(Event)} that provides
 		 * further information about the status of a historical data load to memory using {@link BleDevice#loadHistoricalData()}
 		 * (or overloads).
 		 */
@@ -268,10 +266,6 @@ public abstract class BleNode implements UsesCustomNull
 			}
 		}
 
-		/**
-		 * Called when the historical data for a given characteristic {@link UUID} is done querying.
-		 */
-		void onEvent(final HistoricalDataQueryEvent e);
 	}
 
 

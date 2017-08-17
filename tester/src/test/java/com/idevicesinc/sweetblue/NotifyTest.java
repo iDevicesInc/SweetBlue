@@ -50,7 +50,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_mgr.setConfig(m_config);
 
@@ -104,7 +104,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_mgr.setConfig(m_config);
 
@@ -282,7 +282,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_mgr.setConfig(m_config);
 
@@ -342,7 +342,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_mgr.setConfig(m_config);
 
@@ -415,7 +415,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_mgr.setConfig(m_config);
 

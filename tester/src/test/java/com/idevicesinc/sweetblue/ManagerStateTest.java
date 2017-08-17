@@ -17,7 +17,7 @@ public final class ManagerStateTest extends BaseBleUnitTest
     @Test(timeout = 20000)
     public void onToOffTest() throws Exception
     {
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_config.nativeManagerLayer = new UnitTestManagerLayer();
 
@@ -53,7 +53,7 @@ public final class ManagerStateTest extends BaseBleUnitTest
     @Test(timeout = 20000)
     public void onToOffToOnTest() throws Exception
     {
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_config.nativeManagerLayer = new UnitTestManagerLayer();
 
@@ -97,7 +97,7 @@ public final class ManagerStateTest extends BaseBleUnitTest
 //    @Test
     public void turningOffToTurningOnTest() throws Exception
     {
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         final DontTurnOffManagerLayer layer = new DontTurnOffManagerLayer();
         m_config.nativeManagerLayer = layer;

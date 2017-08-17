@@ -132,7 +132,7 @@ public class UhOhThrottleTest extends BaseBleUnitTest
     {
         BleManagerConfig config = super.getConfig();
         config.runOnMainThread = false;
-        config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         config.uhOhCallbackThrottle = Interval.secs(5.0);
         return config;
     }
