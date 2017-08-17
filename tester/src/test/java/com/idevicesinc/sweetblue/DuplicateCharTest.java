@@ -101,7 +101,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 {
                     if (e1.didEnter(BleDeviceState.INITIALIZED))
                     {
-                        m_device.read(mTestChar, new DescriptorFilter()
+                        BleRead read = new BleRead(mTestChar).setDescriptorFilter(new DescriptorFilter()
                         {
                             @Override public Please onEvent(DescriptorEvent event)
                             {
@@ -112,13 +112,14 @@ public class DuplicateCharTest extends BaseBleUnitTest
                             {
                                 return mTestDesc;
                             }
-                        }, e11 ->
+                        }).setReadWriteListener(e11 ->
                         {
                             assertTrue(e11.status().name(), e11.wasSuccess());
                             assertTrue(e11.characteristic().getDescriptor(mTestDesc).getValue()[0] == 2);
                             assertTrue(Arrays.equals(e11.data(), new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }));
                             succeed();
                         });
+                        m_device.read(read);
                     }
                 });
             }
@@ -148,7 +149,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 {
                     if (e1.didEnter(BleDeviceState.INITIALIZED))
                     {
-                        m_device.read(mTestChar, new DescriptorFilter()
+                        BleRead read = new BleRead(mTestChar).setDescriptorFilter(new DescriptorFilter()
                         {
                             @Override public Please onEvent(DescriptorEvent event)
                             {
@@ -160,13 +161,14 @@ public class DuplicateCharTest extends BaseBleUnitTest
                             {
                                 return null;
                             }
-                        }, e11 ->
+                        }).setReadWriteListener(e11 ->
                         {
                             assertTrue(e11.status().name(), e11.wasSuccess());
                             assertNull(e11.characteristic().getDescriptor(mNotifyDesc));
                             assertTrue(Arrays.equals(e11.data(), new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }));
                             succeed();
                         });
+                        m_device.read(read);
                     }
                 });
             }
