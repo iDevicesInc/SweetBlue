@@ -9,113 +9,58 @@ import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
 /**
- * Builder class for sending a write over BLE. Use this class to set the service and/or characteristic
+ * Builder-type class for sending a write over BLE. Use this class to set the service and/or characteristic
  * UUIDs, and the data you'd like to write. This class provides convenience methods for sending
  * booleans, ints, shorts, longs, and Strings. Use with {@link BleDevice#write(BleWrite)},
- * or {@link BleDevice#write(BleWrite, ReadWriteListener)}.
+ * or {@link BleDevice#write(BleWrite, ReadWriteListener)}. Note that all {@link BleOp} classes assume
+ * the device you're talking to is {@link java.nio.ByteOrder#BIG_ENDIAN}. While Java is {@link java.nio.ByteOrder#BIG_ENDIAN} by
+ * default, android actually is {@link java.nio.ByteOrder#LITTLE_ENDIAN}, so the convenience methods take this into
+ * account by reversing the bytes. If you don't want this to happen, the call {@link #setIsBigEndian(boolean)} to
+ * <code>false</code>.
  */
-public final class BleWrite
+public final class BleWrite extends BleOp<BleWrite>
 {
 
-    private final static String TAG = BleWrite.class.getSimpleName();
-
-    UUID serviceUuid = null;
-    UUID charUuid = null;
-    UUID descriptorUuid = null;
     FutureData data = null;
     ReadWriteListener.Type writeType = null;
-    ReadWriteListener readWriteListener = null;
-    DescriptorFilter descriptorFilter = null;
     boolean bigEndian = true;
 
 
-    /**
-     * Basic constructor. You must at the very least call {@link #setCharacteristicUUID(UUID)}, and one of the
-     * methods that add data ({@link #setBytes(byte[])}, {@link #setInt(int)}, etc..) before attempting to
-     * send the write.
-     */
-    public BleWrite()
+    public BleWrite(UUID serviceUuid, UUID characteristicUuid)
     {
-        this(/*bigEndian*/true, null, null, null);
+        super(serviceUuid, characteristicUuid);
+    }
+
+    public BleWrite(UUID characteristicUuid)
+    {
+        super(characteristicUuid);
+    }
+
+    public BleWrite(boolean bigEndian)
+    {
+        this.bigEndian = bigEndian;
+    }
+
+
+    @Override
+    public final boolean isValid()
+    {
+        return charUuid != null && data != null && data.getData() != null;
     }
 
     /**
-     * Overload of {@link BleWrite#BleWrite(boolean, UUID, UUID, DescriptorFilter)}.
-     *
-     * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
-     *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
+     * Tells SweetBlue the endianness of the BLE device you want to perform a write to. This value only matters if you are using any of the
+     * convenience methods: <br><br>
+     * {@link #setBoolean(boolean)} <br>
+     * {@link #setInt(int)} <br>
+     * {@link #setLong(long)} <br>
+     * {@link #setShort(short)} <br>
+     * {@link #setString(String)} <br>
+     * {@link #setString(String, String)} <br>
      */
-    public BleWrite(boolean isBigEndian)
-    {
-        this(isBigEndian, null, null, null);
-    }
-
-    /**
-     * Overload of {@link  BleWrite#BleWrite(boolean, UUID, UUID, DescriptorFilter)}.
-     *
-     * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
-     *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
-     */
-    public BleWrite(boolean isBigEndian, UUID characteristicUUID)
-    {
-        this(isBigEndian, null, characteristicUUID, null);
-    }
-
-    /**
-     * Overload of {@link BleWrite#BleWrite(boolean, UUID, UUID, DescriptorFilter)}.
-     */
-    public BleWrite(UUID characteristicUUID)
-    {
-        this(/*bigendian*/true, null, characteristicUUID, null);
-    }
-
-    /**
-     * Overload of {@link BleWrite#BleWrite(boolean, UUID, UUID, DescriptorFilter)}.
-     */
-    public BleWrite(UUID serviceUUID, UUID characteristicUUID)
-    {
-        this(/*bigendian*/true, serviceUUID, characteristicUUID, null);
-    }
-
-    /**
-     * Main constructor to use. All other constructors overload this one.
-     *
-     * @param isBigEndian - if <code>true</code>, then when using {@link #setInt(int)}, {@link #setShort(short)},
-     *                    or {@link #setLong(long)}, SweetBlue will reverse the bytes for you.
-     */
-    public BleWrite(boolean isBigEndian, UUID serviceUUID, UUID characteristicUUID, DescriptorFilter descriptorFilter)
+    public final BleWrite setIsBigEndian(boolean isBigEndian)
     {
         bigEndian = isBigEndian;
-        this.serviceUuid = serviceUUID;
-        charUuid = characteristicUUID;
-        this.descriptorFilter = descriptorFilter;
-    }
-
-
-    /**
-     * Set the service UUID for this write. This is only needed when you have characteristics with identical uuids under different services.
-     */
-    public final BleWrite setServiceUUID(UUID uuid)
-    {
-        serviceUuid = uuid;
-        return this;
-    }
-
-    /**
-     * Set the characteristic UUID to write to.
-     */
-    public final BleWrite setCharacteristicUUID(UUID uuid)
-    {
-        charUuid = uuid;
-        return this;
-    }
-
-    /**
-     * Set the descriptor UUID to write to (if writing to a descriptor).
-     */
-    public final BleWrite setDescriptorUUID(UUID uuid)
-    {
-        descriptorUuid = uuid;
         return this;
     }
 
@@ -133,25 +78,6 @@ public final class BleWrite
             Log.e(TAG, "Tried to set a write type of " + writeType.toString() + ". Only " + ReadWriteListener.Type.WRITE + ", " + ReadWriteListener.Type.WRITE_NO_RESPONSE +
             ", or " + ReadWriteListener.Type.WRITE_SIGNED + " is allowed here. " + ReadWriteListener.Type.WRITE + " will be used by default.");
         }
-        return this;
-    }
-
-    /**
-     * Set the {@link ReadWriteListener} for listening to the callback of the write you wish to perform.
-     */
-    public final BleWrite setReadWriteListener(final ReadWriteListener listener)
-    {
-        readWriteListener = listener;
-        return this;
-    }
-
-    /**
-     * Set the {@link DescriptorFilter} to determine which characteristic to write to, if there are multiple with the same {@link UUID} in the same
-     * {@link android.bluetooth.BluetoothGattService}.
-     */
-    public final BleWrite setDescriptorFilter(DescriptorFilter filter)
-    {
-        descriptorFilter = filter;
         return this;
     }
 

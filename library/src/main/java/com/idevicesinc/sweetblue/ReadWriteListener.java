@@ -62,6 +62,11 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
         NOT_CONNECTED,
 
         /**
+         * This is only used when performing a descriptor read. If you do not provide a descriptor UUID, you will get this status.
+         */
+        NO_DESCRIPTOR_UUID,
+
+        /**
          * Couldn't find a matching {@link ReadWriteListener.ReadWriteEvent#target} for the {@link ReadWriteListener.ReadWriteEvent#charUuid} (or
          * {@link ReadWriteListener.ReadWriteEvent#descUuid} if {@link ReadWriteListener.ReadWriteEvent#target} is {@link ReadWriteListener.Target#DESCRIPTOR}) which was given to
          * {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#write(UUID, byte[])}, etc. This most likely

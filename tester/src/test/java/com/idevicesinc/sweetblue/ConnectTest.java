@@ -634,28 +634,24 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override protected void start(BleDevice device)
             {
-                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new ReadWriteListener()
+                BleRead read = new BleRead(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL).setReadWriteListener(e ->
                 {
-                    @Override public void onEvent(ReadWriteEvent e)
+                    assertFalse("Read was successful! How did this happen?", e.wasSuccess());
+                    if (!e.wasSuccess())
                     {
-                        assertFalse("Read was successful! How did this happen?", e.wasSuccess());
-                        if (!e.wasSuccess())
-                        {
 //                            fail();
-                        }
                     }
                 });
-                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new ReadWriteListener()
+                device.read(read);
+                read.setReadWriteListener(e ->
                 {
-                    @Override public void onEvent(ReadWriteEvent e)
+                    assertFalse("Read was successful! How did this happen?", e.wasSuccess());
+                    if (!e.wasSuccess())
                     {
-                        assertFalse("Read was successful! How did this happen?", e.wasSuccess());
-                        if (!e.wasSuccess())
-                        {
-                            fail();
-                        }
+                        fail();
                     }
                 });
+                device.read(read);
             }
         };
 
@@ -725,17 +721,15 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override protected void start(BleDevice device)
             {
-                device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new ReadWriteListener()
+                BleRead read = new BleRead(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL).setReadWriteListener(e ->
                 {
-                    @Override public void onEvent(ReadWriteEvent e)
+                    assertFalse("Read was successful! How did this happen?", e.wasSuccess());
+                    if (!e.wasSuccess())
                     {
-                        assertFalse("Read was successful! How did this happen?", e.wasSuccess());
-                        if (!e.wasSuccess())
-                        {
-                            fail();
-                        }
+                        fail();
                     }
                 });
+                device.read(read);
             }
         };
 
@@ -782,14 +776,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         m_config.runOnMainThread = false;
         m_config.loggingOptions = LogOptions.ON;
-        m_config.gattLayerFactory = new P_GattLayerFactory()
-        {
-            @Override public P_GattLayer newInstance(BleDevice device)
-            {
-                //return new DisconnectGattLayer(device);
-                return new UnitTestGatt(device);
-            }
-        };
+        m_config.gattLayerFactory = device -> new UnitTestGatt(device);
 
         doDisconnectDuringConnectTest(m_config, false);
 
@@ -815,27 +802,24 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new DeviceStateListener()
+                    m_device.connect(e1 ->
                     {
-                        @Override public void onEvent(StateEvent e)
+                        System.out.print(e1);
+                        if (e1.didEnter(BleDeviceState.CONNECTING))
                         {
-                            System.out.print(e);
-                            if (e.didEnter(BleDeviceState.CONNECTING))
+                            hasConnected = true;
+                            //((DisconnectGattLayer) m_device.layerManager().getGattLayer()).disconnectCalled = true;
+                            m_device.disconnect();
+                        }
+                        else if (hasConnected && e1.didEnter(BleDeviceState.DISCONNECTED))
+                        {
+                            if (completeTest)
                             {
-                                hasConnected = true;
-                                //((DisconnectGattLayer) m_device.layerManager().getGattLayer()).disconnectCalled = true;
-                                m_device.disconnect();
+                                succeed();
                             }
-                            else if (hasConnected && e.didEnter(BleDeviceState.DISCONNECTED))
+                            else
                             {
-                                if (completeTest)
-                                {
-                                    succeed();
-                                }
-                                else
-                                {
-                                    release();
-                                }
+                                release();
                             }
                         }
                     });
@@ -882,25 +866,22 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new DeviceStateListener()
+                    m_device.connect(e1 ->
                     {
-                        @Override public void onEvent(StateEvent e)
+                        if (e1.didEnter(BleDeviceState.DISCOVERING_SERVICES))
                         {
-                            if (e.didEnter(BleDeviceState.DISCOVERING_SERVICES))
+                            hasConnected = true;
+                            m_device.disconnect();
+                        }
+                        else if (hasConnected && e1.didEnter(BleDeviceState.DISCONNECTED))
+                        {
+                            if (completeTest)
                             {
-                                hasConnected = true;
-                                m_device.disconnect();
+                                succeed();
                             }
-                            else if (hasConnected && e.didEnter(BleDeviceState.DISCONNECTED))
+                            else
                             {
-                                if (completeTest)
-                                {
-                                    succeed();
-                                }
-                                else
-                                {
-                                    release();
-                                }
+                                release();
                             }
                         }
                     });
@@ -948,25 +929,22 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(new DeviceStateListener()
+                    m_device.connect(e1 ->
                     {
-                        @Override public void onEvent(StateEvent e)
+                        if (e1.didEnter(BleDeviceState.INITIALIZED))
                         {
-                            if (e.didEnter(BleDeviceState.INITIALIZED))
+                            hasConnected = true;
+                            m_device.disconnect();
+                        }
+                        else if (hasConnected && e1.didEnter(BleDeviceState.DISCONNECTED))
+                        {
+                            if (completeTest)
                             {
-                                hasConnected = true;
-                                m_device.disconnect();
+                                succeed();
                             }
-                            else if (hasConnected && e.didEnter(BleDeviceState.DISCONNECTED))
+                            else
                             {
-                                if (completeTest)
-                                {
-                                    succeed();
-                                }
-                                else
-                                {
-                                    release();
-                                }
+                                release();
                             }
                         }
                     });
@@ -985,20 +963,8 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_config = new BleManagerConfig();
         m_config.nativeManagerLayer = new UnitTestManagerLayer();
-        m_config.nativeDeviceFactory = new P_NativeDeviceLayerFactory<UnitTestDevice>()
-        {
-            @Override public UnitTestDevice newInstance(BleDevice device)
-            {
-                return new UnitTestDevice(device);
-            }
-        };
-        m_config.gattLayerFactory = new P_GattLayerFactory<UnitTestGatt>()
-        {
-            @Override public UnitTestGatt newInstance(BleDevice device)
-            {
-                return new UnitTestGatt(device);
-            }
-        };
+        m_config.nativeDeviceFactory = (P_NativeDeviceLayerFactory<UnitTestDevice>) device -> new UnitTestDevice(device);
+        m_config.gattLayerFactory = (P_GattLayerFactory<UnitTestGatt>) device -> new UnitTestGatt(device);
         m_config.logger = new UnitTestLogger();
         m_config.runOnMainThread = false;
         return m_config;

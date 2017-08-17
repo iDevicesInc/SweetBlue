@@ -82,7 +82,7 @@ import static com.idevicesinc.sweetblue.BleDeviceState.UNDISCOVERED;
  * {@link BleManager#newDevice(String, String)}, usually they're created
  * implicitly by {@link BleManager} as a result of a scanning operation (e.g.
  * {@link BleManager#startScan()}) and sent to you through
- * {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)}.
+ * {@link DiscoveryListener#onEvent(Event)}.
  */
 public final class BleDevice extends BleNode
 {
@@ -2210,6 +2210,8 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(BleWrite bleWrite)
     {
+        // Set the descriptor Uuid to INVALID, to ensure that SweetBlue treats this as a characteristic read, as opposed to a descriptor read.
+        bleWrite.descriptorUuid = Uuids.INVALID;
         return write_internal(bleWrite);
     }
 
@@ -2220,7 +2222,7 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(BleWrite bleWrite, ReadWriteListener listener)
     {
-        return write_internal(bleWrite.setReadWriteListener(listener));
+        return write(bleWrite.setReadWriteListener(listener));
     }
 
     /**
@@ -2559,6 +2561,9 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(BleWrite write)
     {
+        // If no descriptor Uuid is set, or it's invalid, then early out here so we don't try to write to a characteristic.
+        if (write.descriptorUuid == null || write.descriptorUuid == Uuids.INVALID)
+            return new ReadWriteEvent(this, write.serviceUuid, write.charUuid, write.descriptorUuid, write.descriptorFilter, write.writeType, ReadWriteListener.Target.DESCRIPTOR, write.data.getData(), ReadWriteListener.Status.NO_DESCRIPTOR_UUID, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, /*solicited=*/true);
         return write_internal(write);
     }
 
@@ -2570,27 +2575,26 @@ public final class BleDevice extends BleNode
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(BleWrite write, ReadWriteListener listener)
     {
         write.setReadWriteListener(listener);
-        return write_internal(write);
+        return writeDescriptor(write);
     }
 
     /**
-     * Reads from the device without a callback - the callback will still be sent through any listeners provided
-     * to either {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} or {@link BleManager#setListener_Read_Write(ReadWriteListener)}.
+     * Overload of {@link #readDescriptor(BleRead)}.
      *
-     * @return same as {@link #readDescriptor(UUID, ReadWriteListener)}.
-     * @see #readDescriptor(UUID, ReadWriteListener)
+     * @deprecated - This will be removed in v3.1. Please use {@link #readDescriptor(BleRead)} instead.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid)
     {
         return readDescriptor(descriptorUuid, (ReadWriteListener) null);
     }
 
     /**
-     * Reads from the device with a callback.
+     * Overload of {@link #readDescriptor(BleRead)}.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
-     * @see #readDescriptor(UUID)
+     * @deprecated - This will be removed in v3.1. Please use {@link #readDescriptor(BleRead)} instead.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID descriptorUuid, final ReadWriteListener listener)
     {
         final UUID characteristicUuid = null;
@@ -2599,35 +2603,61 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Overload of {@link #readDescriptor(UUID)} for when you have descriptors with identical uuids under different services.
+     * Overload of {@link #readDescriptor(BleRead)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #readDescriptor(BleRead)} instead.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid)
     {
         return readDescriptor(characteristicUuid, descriptorUuid, (ReadWriteListener) null);
     }
 
     /**
-     * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
+     * Overload of {@link #readDescriptor(BleRead)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #readDescriptor(BleRead)} instead.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
     {
         return readDescriptor(null, characteristicUuid, descriptorUuid, listener);
     }
 
     /**
-     * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
+     * Overload of {@link #readDescriptor(BleRead)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #readDescriptor(BleRead)} instead.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid)
     {
         return readDescriptor(serviceUuid, characteristicUuid, descriptorUuid, null);
     }
 
     /**
-     * Overload of {@link #readDescriptor(UUID, ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
+     * Overload of {@link #readDescriptor(BleRead)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #readDescriptor(BleRead)} instead.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final ReadWriteListener listener)
     {
-        return read_internal(serviceUuid, characteristicUuid, descriptorUuid, Type.READ, null, listener);
+        final BleRead read = new BleRead(serviceUuid, characteristicUuid).setDescriptorUUID(descriptorUuid).setReadWriteListener(listener);
+        return readDescriptor(read);
+    }
+
+    /**
+     * Reads a descriptor from the device with a callback, if one is set in the provided {@link BleRead}.
+     *
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final BleRead read)
+    {
+        // If there's no descriptor UUID set, or it's invalid, then we early out here to avoid trying to read a characteristic.
+        if (read.descriptorUuid == null || read.descriptorUuid == Uuids.INVALID)
+            return new ReadWriteEvent(this, read.serviceUuid, read.charUuid, read.descriptorUuid, read.descriptorFilter, Type.READ, ReadWriteListener.Target.DESCRIPTOR, P_Const.EMPTY_BYTE_ARRAY, ReadWriteListener.Status.NO_DESCRIPTOR_UUID, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, /*solicited=*/true);
+        return read_internal(Type.READ, read);
     }
 
     /**
@@ -3131,7 +3161,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #read(UUID)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #readMany(BleRead[])} instead.
      */
+    @Deprecated
     public final void read(final UUID[] charUuids)
     {
         read(charUuids, null);
@@ -3139,7 +3172,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #read(UUID, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #readMany(BleRead[])} instead.
      */
+    @Deprecated
     public final void read(final UUID[] charUuids, final ReadWriteListener listener)
     {
         for (int i = 0; i < charUuids.length; i++)
@@ -3149,8 +3185,37 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Overload of {@link #read(UUID)}.
+     * Overload of {@link #read(BleRead)}.
      */
+    public final void readMany(final BleRead[] bleReads)
+    {
+        for (int i = 0; i < bleReads.length; i++)
+        {
+            read(bleReads[i]);
+        }
+    }
+
+    /**
+     * Overload of {@link #read(BleRead)}.
+     */
+    public final void readMany(final Iterable<BleRead> bleReads)
+    {
+        final Iterator<BleRead> it = bleReads.iterator();
+
+        while (it.hasNext())
+        {
+            final BleRead read = it.next();
+
+            read(read);
+        }
+    }
+
+    /**
+     * Overload of {@link #read(UUID)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #readMany(Iterable<BleRead)} instead.
+     */
+    @Deprecated
     public final void read(final Iterable<UUID> charUuids)
     {
         read(charUuids, null);
@@ -3158,7 +3223,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #read(UUID, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #readMany(Iterable<BleRead)} instead.
      */
+    @Deprecated
     public final void read(final Iterable<UUID> charUuids, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = charUuids.iterator();
@@ -3176,12 +3244,15 @@ public final class BleDevice extends BleNode
      * if you don't immediately care about the result. The callback will still be posted to {@link ReadWriteListener}
      * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
      * {@link BleManager#setListener_Read_Write(ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid)
     {
         final UUID serviceUuid = null;
 
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null, null);
+        return read(serviceUuid, characteristicUuid, null, null);
     }
 
     /**
@@ -3189,24 +3260,30 @@ public final class BleDevice extends BleNode
      * if you don't immediately care about the result. The callback will still be posted to {@link ReadWriteListener}
      * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
      * {@link BleManager#setListener_Read_Write(ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final DescriptorFilter descriptorFilter)
     {
         final UUID serviceUuid = null;
 
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, descriptorFilter, null);
+        return read(serviceUuid, characteristicUuid, descriptorFilter, null);
     }
 
     /**
      * Reads a characteristic from the device.
      *
      * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null, listener);
+        return read(serviceUuid, characteristicUuid, null, listener);
     }
 
     /**
@@ -3214,44 +3291,73 @@ public final class BleDevice extends BleNode
      * more than one with the same {@link UUID} in the same {@link BluetoothGattService}.
      *
      * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent read(final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, descriptorFilter, listener);
+        return read(serviceUuid, characteristicUuid, descriptorFilter, listener);
     }
 
     /**
      * Overload of {@link #read(UUID)} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid)
     {
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null, null);
+        return read(serviceUuid, characteristicUuid, null, null);
     }
 
     /**
      * Overload of {@link #read(UUID, DescriptorFilter)} for when you have characteristics with identical uuids under the same service.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, DescriptorFilter descriptorFilter)
     {
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, descriptorFilter, null);
+        return read(serviceUuid, characteristicUuid, descriptorFilter, null);
     }
 
     /**
      * Overload of {@link #read(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, null, listener);
+        return read(serviceUuid, characteristicUuid, null, listener);
     }
 
     /**
      * Overload of {@link #read(UUID, DescriptorFilter, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent read(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
-        return read_internal(serviceUuid, characteristicUuid, Uuids.INVALID, Type.READ, descriptorFilter, listener);
+        BleRead read = new BleRead(serviceUuid, characteristicUuid).setDescriptorFilter(descriptorFilter).setReadWriteListener(listener);
+        return read(read);
+    }
+
+    /**
+     * Reads a characteristic from the device. The provided {@link DescriptorFilter} (if set in the {@link BleRead} will grab the correct {@link BluetoothGattCharacteristic} in the case there are
+     * more than one with the same {@link UUID} in the same {@link BluetoothGattService}.
+     *
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
+     */
+    public final ReadWriteListener.ReadWriteEvent read(final BleRead read)
+    {
+        // Set the descriptor Uuid to INVALID, to ensure that SweetBlue treats this as a characteristic read, as opposed to a descriptor read.
+        read.descriptorUuid = Uuids.INVALID;
+        return read_internal(Type.READ, read);
     }
 
     /**
@@ -3261,7 +3367,8 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteEvent readBatteryLevel(ReadWriteListener listener)
     {
-        return read_internal(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, Type.READ, null, listener);
+        final BleRead read = new BleRead(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL).setReadWriteListener(listener);
+        return read_internal(Type.READ, read);
     }
 
     /**
@@ -4763,33 +4870,33 @@ public final class BleDevice extends BleNode
         m_pollMngr.stopPoll(serviceUuid, characteristicUuid, descriptorFilter, interval, listener, /* usingNotify= */false);
     }
 
-    final ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, DescriptorFilter descriptorFilter, final ReadWriteListener listener)
+    final ReadWriteListener.ReadWriteEvent read_internal(final Type type, final BleRead read)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(read.serviceUuid, read.charUuid, Uuids.INVALID, read.descriptorFilter, P_Const.EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(read.readWriteListener, earlyOutResult);
 
             return earlyOutResult;
         }
 
-        if (descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID))
+        if (read.descriptorUuid == null || read.descriptorUuid.equals(Uuids.INVALID))
         {
-            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
-            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristicUuid, BondFilter.CharacteristicEventType.READ);
+            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(read.serviceUuid, read.charUuid);
+            final boolean requiresBonding = m_bondMngr.bondIfNeeded(read.charUuid, BondFilter.CharacteristicEventType.READ);
 
             final P_Task_Read task;
 
-            if (descriptorFilter == null)
+            if (read.descriptorFilter == null)
             {
 
-                task = new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, characteristic, type, requiresBonding, read.readWriteListener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
             else
             {
-                task = new P_Task_Read(this, characteristic.getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, characteristic.getService().getUuid(), read.charUuid, type, requiresBonding, read.descriptorFilter, read.readWriteListener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
 
             queue().add(task);
@@ -4797,9 +4904,9 @@ public final class BleDevice extends BleNode
         else
         {
             final boolean requiresBonding = false;
-            final BluetoothGattDescriptor descriptor = getNativeDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
+            final BluetoothGattDescriptor descriptor = getNativeDescriptor(read.serviceUuid, read.charUuid, read.descriptorUuid);
 
-            queue().add(new P_Task_ReadDescriptor(this, descriptor, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+            queue().add(new P_Task_ReadDescriptor(this, descriptor, type, requiresBonding, read.readWriteListener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
         }
 
         return NULL_READWRITE_EVENT();
