@@ -2210,6 +2210,8 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(BleWrite bleWrite)
     {
+        // Set the descriptor Uuid to INVALID, to ensure that SweetBlue treats this as a characteristic read, as opposed to a descriptor read.
+        bleWrite.descriptorUuid = Uuids.INVALID;
         return write_internal(bleWrite);
     }
 
@@ -2220,7 +2222,7 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(BleWrite bleWrite, ReadWriteListener listener)
     {
-        return write_internal(bleWrite.setReadWriteListener(listener));
+        return write(bleWrite.setReadWriteListener(listener));
     }
 
     /**
@@ -2559,6 +2561,9 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(BleWrite write)
     {
+        // If no descriptor Uuid is set, or it's invalid, then early out here so we don't try to write to a characteristic.
+        if (write.descriptorUuid == null || write.descriptorUuid == Uuids.INVALID)
+            return new ReadWriteEvent(this, write.serviceUuid, write.charUuid, write.descriptorUuid, write.descriptorFilter, write.writeType, ReadWriteListener.Target.DESCRIPTOR, write.data.getData(), ReadWriteListener.Status.NO_DESCRIPTOR_UUID, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, /*solicited=*/true);
         return write_internal(write);
     }
 
@@ -2570,7 +2575,7 @@ public final class BleDevice extends BleNode
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(BleWrite write, ReadWriteListener listener)
     {
         write.setReadWriteListener(listener);
-        return write_internal(write);
+        return writeDescriptor(write);
     }
 
     /**
@@ -2651,7 +2656,7 @@ public final class BleDevice extends BleNode
     {
         // If there's no descriptor UUID set, or it's invalid, then we early out here to avoid trying to read a characteristic.
         if (read.descriptorUuid == null || read.descriptorUuid == Uuids.INVALID)
-            return new ReadWriteEvent(this, read.serviceUuid, read.charUuid, read.descriptorUuid, read.descriptorFilter, Type.READ, ReadWriteListener.Target.DESCRIPTOR, P_Const.EMPTY_BYTE_ARRAY, ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, /*solicited=*/true);
+            return new ReadWriteEvent(this, read.serviceUuid, read.charUuid, read.descriptorUuid, read.descriptorFilter, Type.READ, ReadWriteListener.Target.DESCRIPTOR, P_Const.EMPTY_BYTE_ARRAY, ReadWriteListener.Status.NO_DESCRIPTOR_UUID, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, /*solicited=*/true);
         return read_internal(Type.READ, read);
     }
 
