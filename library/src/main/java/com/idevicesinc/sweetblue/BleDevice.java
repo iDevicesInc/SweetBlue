@@ -2210,7 +2210,7 @@ public final class BleDevice extends BleNode
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(BleWrite bleWrite)
     {
-        // Set the descriptor Uuid to INVALID, to ensure that SweetBlue treats this as a characteristic read, as opposed to a descriptor read.
+        // Set the descriptor Uuid to INVALID, to ensure that SweetBlue treats this as a characteristic write, as opposed to a descriptor write.
         bleWrite.descriptorUuid = Uuids.INVALID;
         return write_internal(bleWrite);
     }
