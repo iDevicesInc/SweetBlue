@@ -49,38 +49,26 @@ public class WriteTypeTest extends BaseBleUnitTest
 
     private void doWriteTest(final ReadWriteListener.Type writeType, final int checkType) throws Exception
     {
-        m_mgr.setListener_Discovery(new DiscoveryListener()
+        m_mgr.setListener_Discovery(e ->
         {
-            @Override
-            public void onEvent(DiscoveryEvent e)
+            if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
             {
-                if (e.was(LifeCycle.DISCOVERED))
+                e.device().connect(e12 ->
                 {
-                    e.device().connect(new DeviceStateListener()
+                    if (e12.didEnter(BleDeviceState.INITIALIZED))
                     {
-                        @Override
-                        public void onEvent(StateEvent e)
-                        {
-                            if (e.didEnter(BleDeviceState.INITIALIZED))
-                            {
-                                WriteBuilder write = new WriteBuilder(m_WriteService, m_WriteChar);
-                                write.setBytes(new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9 }).setWriteType(writeType)
-                                        .setReadWriteListener(new ReadWriteListener()
-                                        {
-                                            @Override
-                                            public void onEvent(ReadWriteListener.ReadWriteEvent e)
-                                            {
-                                                assertTrue(e.wasSuccess());
-                                                BluetoothGattCharacteristic ch = e.characteristic();
-                                                assertTrue(ch.getWriteType() == checkType);
-                                                succeed();
-                                            }
-                                        });
-                                e.device().write(write);
-                            }
-                        }
-                    });
-                }
+                        BleWrite write = new BleWrite(m_WriteService, m_WriteChar);
+                        write.setBytes(new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9 }).setWriteType(writeType)
+                                .setReadWriteListener(e1 ->
+                                {
+                                    assertTrue(e1.wasSuccess());
+                                    BluetoothGattCharacteristic ch = e1.characteristic();
+                                    assertTrue(ch.getWriteType() == checkType);
+                                    succeed();
+                                });
+                        e12.device().write(write);
+                    }
+                });
             }
         });
 
@@ -92,16 +80,9 @@ public class WriteTypeTest extends BaseBleUnitTest
     public BleManagerConfig getConfig()
     {
         BleManagerConfig config = super.getConfig();
-        config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         config.runOnMainThread = false;
-        config.gattLayerFactory = new P_GattLayerFactory()
-        {
-            @Override
-            public P_GattLayer newInstance(BleDevice device)
-            {
-                return new UnitTestGatt(device, db);
-            }
-        };
+        config.gattLayerFactory = device -> new UnitTestGatt(device, db);
         return config;
     }
 

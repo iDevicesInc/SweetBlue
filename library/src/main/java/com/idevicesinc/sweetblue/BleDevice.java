@@ -2204,31 +2204,34 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device without a callback.
      *
-     * @return same as {@link #write(UUID, UUID, byte[])}.
-     * @see #write(UUID, UUID, byte[])
+     * @return same as {@link #write(BleWrite, ReadWriteListener)}.
+     * @see #write(BleWrite, ReadWriteListener)
+     *
      */
-    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(BleWrite bleWrite)
     {
-        return write(writeBuilder.serviceUuid, writeBuilder.charUuid, writeBuilder.data, writeBuilder.descriptorFilter);
+        return write_internal(bleWrite);
     }
 
     /**
      * Writes to the device with a callback.
      *
-     * @return same as {@link #write(UUID, UUID, byte[], ReadWriteListener)}.
-     * @see #write(UUID, UUID, byte[], ReadWriteListener)
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
-    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(WriteBuilder writeBuilder, ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(BleWrite bleWrite, ReadWriteListener listener)
     {
-        return write_internal(writeBuilder.setReadWriteListener(listener));
+        return write_internal(bleWrite.setReadWriteListener(listener));
     }
 
     /**
      * Writes to the device without a callback.
      *
-     * @return same as {@link #write(UUID, byte[], ReadWriteListener)}.
-     * @see #write(UUID, byte[], ReadWriteListener)
+     * @return same as {@link #write(BleWrite, ReadWriteListener)}.
+     * @see #write(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data)
     {
         return this.write(characteristicUuid, new PresentData(data), (ReadWriteListener) null);
@@ -2237,9 +2240,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device without a callback.
      *
-     * @return same as {@link #write(UUID, byte[], ReadWriteListener)}.
-     * @see #write(UUID, byte[], ReadWriteListener)
+     * @return same as {@link #write(BleWrite, ReadWriteListener)}.
+     * @see #write(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final byte[] data)
     {
         return this.write(characteristicUuid, new PresentData(data), descriptorFilter, (ReadWriteListener) null);
@@ -2248,9 +2254,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
-     * @see #write(UUID, byte[])
+     * @return same as {@link #write(BleWrite, ReadWriteListener)}.
+     * @see #write(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
@@ -2261,9 +2270,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
-     * @see #write(UUID, byte[])
+     * @return same as {@link #write(BleWrite, ReadWriteListener)}.
+     * @see #write(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final byte[] data, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
@@ -2273,7 +2285,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #write(UUID, byte[])} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data)
     {
         return this.write(serviceUuid, characteristicUuid, new PresentData(data), (ReadWriteListener) null);
@@ -2281,7 +2296,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #write(UUID, DescriptorFilter, byte[])} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter filter, final byte[] data)
     {
         return this.write(serviceUuid, characteristicUuid, new PresentData(data), filter, (ReadWriteListener) null);
@@ -2289,7 +2307,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #write(UUID, byte[], ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final ReadWriteListener listener)
     {
         return write(serviceUuid, characteristicUuid, new PresentData(data), listener);
@@ -2297,7 +2318,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #write(UUID, byte[], ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final byte[] data, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
         return write(serviceUuid, characteristicUuid, new PresentData(data), descriptorFilter, listener);
@@ -2306,9 +2330,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device without a callback.
      *
-     * @return same as {@link #write(UUID, FutureData, ReadWriteListener)}.
-     * @see #write(UUID, FutureData, ReadWriteListener)
+     * @return same as {@link #write(BleWrite, ReadWriteListener)}.
+     * @see #write(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData)
     {
         return this.write(characteristicUuid, futureData, (ReadWriteListener) null);
@@ -2317,9 +2344,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
-     * @see #write(UUID, FutureData)
+     * @return same as {@link #write(BleWrite, ReadWriteListener)}.
+     * @see #write(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
@@ -2330,9 +2360,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
-     * @see #write(UUID, FutureData)
+     * @return same as {@link #write(BleWrite, ReadWriteListener)}.
+     * @see #write(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID characteristicUuid, final FutureData futureData, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
@@ -2342,7 +2375,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #write(UUID, FutureData)} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData)
     {
         return this.write(serviceUuid, characteristicUuid, futureData, (ReadWriteListener) null);
@@ -2351,7 +2387,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #write(UUID, FutureData)} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final DescriptorFilter descriptorFilter)
     {
         return this.write(serviceUuid, characteristicUuid, futureData, descriptorFilter, (ReadWriteListener) null);
@@ -2359,19 +2398,25 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #write(UUID, FutureData, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final ReadWriteListener listener)
     {
-        final WriteBuilder write = new WriteBuilder(serviceUuid, characteristicUuid).setData(futureData).setReadWriteListener(listener);
+        final BleWrite write = new BleWrite(serviceUuid, characteristicUuid).setData(futureData).setReadWriteListener(listener);
         return write_internal(write);
     }
 
     /**
      * Overload of {@link #write(UUID, FutureData, ReadWriteListener)} for when you have characteristics with identical uuids under the same service.
+     *
+     * @deprecated to be removed in 3.1, use {@link #write(BleWrite)}, or {@link #write(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(final UUID serviceUuid, final UUID characteristicUuid, final FutureData futureData, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
-        final WriteBuilder builder = new WriteBuilder(serviceUuid, characteristicUuid).setDescriptorFilter(descriptorFilter).
+        final BleWrite builder = new BleWrite(serviceUuid, characteristicUuid).setDescriptorFilter(descriptorFilter).
                 setReadWriteListener(listener).setData(futureData);
         return write_internal(builder);
     }
@@ -2379,9 +2424,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device descriptor without a callback.
      *
-     * @return same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}.
-     * @see #writeDescriptor(UUID, byte[], ReadWriteListener)
+     * @return same as {@link #writeDescriptor(BleWrite, ReadWriteListener)}.
+     * @see #writeDescriptor(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data)
     {
         return writeDescriptor(descriptorUuid, data, (ReadWriteListener) null);
@@ -2390,9 +2438,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device descriptor with a callback.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
-     * @see #writeDescriptor(UUID, byte[])
+     * @return same as {@link #writeDescriptor(BleWrite, ReadWriteListener)}.
+     * @see #writeDescriptor(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
     {
         final UUID characteristicUuid = null;
@@ -2402,7 +2453,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[])} for when you have descriptors with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data)
     {
         return writeDescriptor(characteristicUuid, descriptorUuid, data, (ReadWriteListener) null);
@@ -2410,7 +2464,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
@@ -2420,7 +2477,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final byte[] data, final ReadWriteListener listener)
     {
         return writeDescriptor(serviceUuid, characteristicUuid, descriptorUuid, new PresentData(data), listener);
@@ -2429,9 +2489,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device descriptor without a callback.
      *
-     * @return same as {@link #writeDescriptor(UUID, byte[], ReadWriteListener)}.
-     * @see #writeDescriptor(UUID, byte[], ReadWriteListener)
+     * @return same as {@link #writeDescriptor(BleWrite, ReadWriteListener)}.
+     * @see #writeDescriptor(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData)
     {
         return writeDescriptor(descriptorUuid, futureData, (ReadWriteListener) null);
@@ -2440,9 +2503,12 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
-     * @see #writeDescriptor(UUID, byte[])
+     * @return same as {@link #writeDescriptor(BleWrite, ReadWriteListener)}.
+     * @see #writeDescriptor(BleWrite, ReadWriteListener)
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
         final UUID characteristicUuid = null;
@@ -2452,7 +2518,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[])} for when you have descriptors with identical uuids under different services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData)
     {
         return writeDescriptor(characteristicUuid, descriptorUuid, futureData, (ReadWriteListener) null);
@@ -2460,7 +2529,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics.
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
         return writeDescriptor(null, characteristicUuid, descriptorUuid, futureData, listener);
@@ -2468,12 +2540,37 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload of {@link #writeDescriptor(UUID, byte[], ReadWriteListener)} for when you have descriptors with identical uuids under different characteristics and/or services.
+     *
+     * @deprecated to be removed in 3.1, use {@link #writeDescriptor(BleWrite)}, or {@link #writeDescriptor(BleWrite, ReadWriteListener)} instead
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final FutureData futureData, final ReadWriteListener listener)
     {
-        final WriteBuilder builder = new WriteBuilder(serviceUuid, characteristicUuid).setDescriptorUUID(descriptorUuid).setData(futureData).
+        final BleWrite builder = new BleWrite(serviceUuid, characteristicUuid).setDescriptorUUID(descriptorUuid).setData(futureData).
                 setReadWriteListener(listener);
-        return write_internal(builder);
+        return writeDescriptor(builder);
+    }
+
+    /**
+     * Writes to the device descriptor without a callback.
+     *
+     * @return same as {@link #writeDescriptor(BleWrite, ReadWriteListener)}.
+     * @see #writeDescriptor(BleWrite, ReadWriteListener)
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(BleWrite write)
+    {
+        return write_internal(write);
+    }
+
+    /**
+     * Writes to the device descriptor with a callback.
+     *
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
+     */
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(BleWrite write, ReadWriteListener listener)
+    {
+        write.setReadWriteListener(listener);
+        return write_internal(write);
     }
 
     /**
@@ -4708,7 +4805,7 @@ public final class BleDevice extends BleNode
         return NULL_READWRITE_EVENT();
     }
 
-    final ReadWriteListener.ReadWriteEvent write_internal(final com.idevicesinc.sweetblue.WriteBuilder wb)
+    final ReadWriteListener.ReadWriteEvent write_internal(final BleWrite wb)
     {
         final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(wb.serviceUuid, wb.charUuid, wb.descriptorUuid, wb.descriptorFilter, wb.data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 

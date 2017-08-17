@@ -434,21 +434,9 @@ public final class BleManager
 		{
 			ui = new P_SweetUIHandler(this);
 			update = new P_SweetBlueThread();
-			update.post(new Runnable()
-			{
-				@Override public void run()
-				{
-					m_logger.setUpdateThread(android.os.Process.myTid());
-				}
-			});
+			update.post(() -> m_logger.setUpdateThread(android.os.Process.myTid()));
 		}
-		ui.post(new Runnable()
-		{
-			@Override public void run()
-			{
-				m_logger.setMainThread(android.os.Process.myTid());
-			}
-		});
+		ui.post(() -> m_logger.setMainThread(android.os.Process.myTid()));
 		m_postManager = new P_PostManager(this, ui, update);
 	}
 
@@ -2537,7 +2525,7 @@ public final class BleManager
 		onDiscovered_wrapItUp(device, device.layerManager().getDeviceLayer(), newlyDiscovered, scanRecord_nullable, rssi, BleDeviceOrigin.FROM_DISCOVERY, /*scanEvent=*/null);
 	}
 
-	void postEvent(final GenericListener_Void listener, final Event event)
+	final void postEvent(final GenericListener_Void listener, final Event event)
 	{
 		if (listener != null)
 		{
@@ -2572,7 +2560,7 @@ public final class BleManager
 		}
 	}
 
-	<T extends Event> void postEvents(final GenericListener_Void listener, final List<T> events)
+	final <T extends Event> void postEvents(final GenericListener_Void listener, final List<T> events)
 	{
 		if (listener != null)
 		{

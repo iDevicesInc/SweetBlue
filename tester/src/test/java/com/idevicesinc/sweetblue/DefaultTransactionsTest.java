@@ -68,7 +68,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         connectToMultipleDevices(m_config, false);
 
@@ -123,7 +123,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         connectToMultipleDevices(m_config, false);
 
@@ -204,7 +204,7 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
             }
         };
 
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         connectToMultipleDevices(m_config, false);
 

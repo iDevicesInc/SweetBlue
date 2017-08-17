@@ -20,6 +20,8 @@ import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Event;
+import com.idevicesinc.sweetblue.utils.GenericListener_T;
+import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Pointer;
@@ -563,7 +565,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * {@link BleManager#startScan(Interval, BleManagerConfig.ScanFilter)}, etc.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface ScanFilter
+	public static interface ScanFilter extends GenericListener_T<ScanFilter.ScanEvent, ScanFilter.Please>
 	{
 		/**
 		 * Instances of this class are passed to {@link ScanFilter#onEvent(ScanEvent)} to aid in making a decision.

@@ -113,7 +113,7 @@ public class BondTest extends BaseBleUnitTest
     public BleManagerConfig getConfig()
     {
         BleManagerConfig config = super.getConfig();
-        config.loggingEnabled = true;
+        config.loggingOptions = LogOptions.ON;
         return config;
     }
 

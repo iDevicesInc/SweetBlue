@@ -19,7 +19,7 @@ public class IdleTest extends BaseBleUnitTest
     public void enterIdleTest() throws Exception
     {
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_config.minTimeToIdle = Interval.secs(2.0);
 
@@ -44,7 +44,7 @@ public class IdleTest extends BaseBleUnitTest
     public void exitIdleTest() throws Exception
     {
         m_config.runOnMainThread = false;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_config.minTimeToIdle = Interval.ONE_SEC;
 
         m_mgr.setConfig(m_config);

@@ -177,7 +177,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
         }
     };
 
-    private final ArrayList<WriteBuilder> writeQueue = new ArrayList<WriteBuilder>();
+    private final ArrayList<BleWrite> writeQueue = new ArrayList<BleWrite>();
     private final FailListener mfailListener;
     private final WriteQueueListener mWriteListener;
 
@@ -231,10 +231,10 @@ public final class BleWriteTransaction extends BleTransaction.Ota
     }
 
     /**
-     * Add an {@link WriteBuilder} to the write queue. You can chain this method, to make it easier to add multiple
+     * Add an {@link BleWrite} to the write queue. You can chain this method, to make it easier to add multiple
      * writes.
      */
-    public BleWriteTransaction add(WriteBuilder write)
+    public BleWriteTransaction add(BleWrite write)
     {
         writeQueue.add(write);
         return this;
@@ -243,7 +243,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
     /**
      * Add a Collection of writes to the write queue.
      */
-    public BleWriteTransaction addAll(Collection<WriteBuilder> writes)
+    public BleWriteTransaction addAll(Collection<BleWrite> writes)
     {
         writeQueue.addAll(writes);
         return this;
@@ -255,7 +255,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
      */
     public BleWriteTransaction add(UUID charUuid, byte[] data)
     {
-        writeQueue.add(new WriteBuilder(charUuid).setBytes(data));
+        writeQueue.add(new BleWrite(charUuid).setBytes(data));
         return this;
     }
 
@@ -265,7 +265,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
      */
     public BleWriteTransaction add(UUID serviceUuid, UUID charUuid, byte[] data)
     {
-        writeQueue.add(new WriteBuilder(serviceUuid, charUuid).setBytes(data));
+        writeQueue.add(new BleWrite(serviceUuid, charUuid).setBytes(data));
         return this;
     }
 
@@ -284,7 +284,7 @@ public final class BleWriteTransaction extends BleTransaction.Ota
 
     private void performNextWrite()
     {
-        final WriteBuilder mCurWrite = writeQueue.get(0);
+        final BleWrite mCurWrite = writeQueue.get(0);
         getDevice().write(mCurWrite, mListener);
     }
 

@@ -54,67 +54,48 @@ public class MainActivity extends Activity
         mDevices = new ArrayList<>(0);
         mAdaptor = new ScanAdaptor(this, mDevices);
         mListView.setAdapter(mAdaptor);
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        mListView.setOnItemClickListener((parent, view, position, id) ->
         {
-            @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            final BleDevice device = mDevices.get(position);
+            device.setListener_State(e ->
             {
-                final BleDevice device = mDevices.get(position);
-                device.setListener_State(new DeviceStateListener()
+                if (e.didEnter(BleDeviceState.INITIALIZED))
                 {
-                    @Override public void onEvent(StateEvent e)
-                    {
-                        if (e.didEnter(BleDeviceState.INITIALIZED))
-                        {
-//                            byte[] fakeData = new byte[100];
-//                            new Random().nextBytes(fakeData);
-//                            device.write(tempUuid, fakeData, null);
-                            device.read(Uuids.BATTERY_LEVEL);
-                        }
-                    }
-                });
-                device.connect();
-            }
-        });
-        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener()
-        {
-            @Override public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
-            {
-                BleDevice device = mDevices.get(position);
-                if (device.is(BleDeviceState.CONNECTED))
-                {
-                    device.disconnect();
-                    return true;
+                    device.read(Uuids.BATTERY_LEVEL);
                 }
-                return false;
+            });
+            device.connect();
+        });
+        mListView.setOnItemLongClickListener((parent, view, position, id) ->
+        {
+            BleDevice device = mDevices.get(position);
+            if (device.is(BleDeviceState.CONNECTED))
+            {
+                device.disconnect();
+                return true;
             }
+            return false;
         });
 
         registerForContextMenu(mListView);
 
         mStartScan = (Button) findViewById(R.id.startScan);
-        mStartScan.setOnClickListener(new View.OnClickListener()
+        mStartScan.setOnClickListener(v ->
         {
-            @Override public void onClick(View v)
-            {
-
-                ScanOptions options = new ScanOptions().scanPeriodically(Interval.TEN_SECS, Interval.ONE_SEC).withScanFilter(new BleManagerConfig.ScanFilter()
-                {
-                    @Override public Please onEvent(ScanEvent e)
+            ScanOptions options = new ScanOptions().scanPeriodically(Interval.TEN_SECS, Interval.ONE_SEC).withScanFilter(
+                    new BleManagerConfig.ScanFilter()
                     {
-                        return Please.acknowledgeIf(e.name_normalized().contains("tag"));
-                    }
-                });
-                mgr.startScan(options);
-            }
+                        @Override
+                        public Please onEvent(ScanEvent e)
+                        {
+                            return Please.acknowledgeIf(e.name_normalized().contains("tag"));
+                        }
+                    });
+            mgr.startScan(options);
         });
+
         mStopScan = (Button) findViewById(R.id.stopScan);
-        mStopScan.setOnClickListener(new View.OnClickListener()
-        {
-            @Override public void onClick(View v)
-            {
-                mgr.stopAllScanning();
-            }
-        });
+        mStopScan.setOnClickListener(v -> mgr.stopAllScanning());
 
         mLogger = new DebugLogger(250);
 
@@ -126,33 +107,22 @@ public class MainActivity extends Activity
         config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
         config.scanApi = BleScanApi.AUTO;
         config.runOnMainThread = false;
-        config.defaultInitFactory = new BleDeviceConfig.InitTransactionFactory()
+        config.defaultInitFactory = () -> new BleTransaction.Init()
         {
             @Override
-            public BleTransaction.Init newInitTxn()
+            protected void start(BleDevice device)
             {
-                return new BleTransaction.Init()
+                device.read(Uuids.BATTERY_LEVEL, e ->
                 {
-                    @Override
-                    protected void start(BleDevice device)
+                    if (e.wasSuccess())
                     {
-                        device.read(Uuids.BATTERY_LEVEL, new ReadWriteListener()
-                        {
-                            @Override
-                            public void onEvent(ReadWriteEvent e)
-                            {
-                                if (e.wasSuccess())
-                                {
-                                    succeed();
-                                }
-                                else
-                                {
-                                    fail();
-                                }
-                            }
-                        });
+                        succeed();
                     }
-                };
+                    else
+                    {
+                        fail();
+                    }
+                });
             }
         };
         config.forceBondDialog = true;
@@ -169,48 +139,32 @@ public class MainActivity extends Activity
 
         mgr = BleManager.get(this, config);
 
-        mgr.setListener_UhOh(new UhOhListener()
+        mgr.setListener_UhOh(e -> Log.e("UhOhs", "Got " + e.uhOh() + " with remedy " + e.remedy()));
+
+        mgr.setListener_State(e ->
         {
-            @Override public void onEvent(UhOhListener.UhOhEvent e)
-            {
-                Log.e("UhOhs", "Got " + e.uhOh() + " with remedy " + e.remedy());
-            }
+            boolean scanning = mgr.isScanning();
+            mStartScan.setEnabled(!scanning);
         });
 
-        mgr.setListener_State(new ManagerStateListener()
+        mgr.setListener_DeviceState(e ->
         {
-            @Override public void onEvent(StateEvent event)
-            {
-                boolean scanning = mgr.isScanning();
-                mStartScan.setEnabled(!scanning);
-
-            }
+            if (System.currentTimeMillis() - mLastStateChange > STATE_CHANGE_MIN_TIME)
+                mAdaptor.notifyDataSetChanged();
         });
-        mgr.setListener_DeviceState(new DeviceStateListener()
+        mgr.setListener_Discovery(e ->
         {
-            @Override
-            public void onEvent(DeviceStateListener.StateEvent e)
+            if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
             {
-                if (System.currentTimeMillis() - mLastStateChange > STATE_CHANGE_MIN_TIME)
+                if (!mDevices.contains(e.device()))
+                {
+                    mDevices.add(e.device());
                     mAdaptor.notifyDataSetChanged();
+                }
             }
-        });
-        mgr.setListener_Discovery(new DiscoveryListener()
-        {
-            @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
+            else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
             {
-                if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
-                {
-                    if (!mDevices.contains(e.device()))
-                    {
-                        mDevices.add(e.device());
-                        mAdaptor.notifyDataSetChanged();
-                    }
-                }
-                else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
-                {
 
-                }
             }
         });
 
@@ -281,14 +235,7 @@ public class MainActivity extends Activity
         }
         else if (item.getItemId() == 1)
         {
-            mDevices.get(info.position).bond(new BondListener()
-            {
-                @Override
-                public void onEvent(BondEvent e)
-                {
-                    Log.e("Bonding Event", e.toString());
-                }
-            });
+            mDevices.get(info.position).bond(e -> Log.e("Bonding Event", e.toString()));
             return true;
         }
         else if (item.getItemId() == 2)
