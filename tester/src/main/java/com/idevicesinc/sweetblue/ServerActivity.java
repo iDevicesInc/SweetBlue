@@ -30,7 +30,7 @@ public class ServerActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server);
 
-        BleManagerConfig config = new BleManagerConfig(true);
+        BleManagerConfig config = new BleManagerConfig(LogOptions.ON);
         config.runOnMainThread = false;
 
         m_manager = BleManager.get(this, config);

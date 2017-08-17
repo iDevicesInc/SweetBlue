@@ -12,7 +12,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.SparseArray;
-import com.idevicesinc.sweetblue.DiscoveryListener;
+
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
@@ -104,7 +104,6 @@ public class BleManagerConfig extends BleDeviceConfig
 		}
 	}
 
-
 	
 	/**
 	 * Maximum amount of time for a classic scan to run. This was determined based on experimentation.
@@ -112,19 +111,19 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * was for setting a time lower than this, so here's a TODO to try to remember that.
 	 */
 	static final double MAX_CLASSIC_SCAN_TIME							= 7.0;
-	
+
 	/**
-	 * Default is <code>false</code> - basically only useful for developers working on the library itself.
-	 * May also be useful for providing context when reporting bugs.
+	 * Default is {@link LogOptions#OFF} - There are 3 static instances you can use for convenience - {@link LogOptions#OFF},
+	 * {@link LogOptions#ON}, and {@link LogOptions#ALL_ON}. If you want more fine-grained logs, then instantiate {@link LogOptions} with the levels of logging
+	 * you would like for SweetBlue logs, and native logs (logs printed when receiving any native callbacks).
 	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	public boolean loggingEnabled							= false;
+	public LogOptions loggingOptions						= LogOptions.OFF;
 
 
 	/**
 	 * Default is {@link DefaultLogger} - which prints the log statements to Android's logcat. If you want to
 	 * pipe the log statements elsewhere, create a class which implements {@link SweetLogger}, and set this field
-	 * with an instance of it. If {@link #loggingEnabled} is not set, then this option will not affect anything.
+	 * with an instance of it. If {@link #loggingOptions} is not set -- or it's set to {@link LogOptions#OFF} --, then this option will not affect anything.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	public SweetLogger logger						= new DefaultLogger();
@@ -393,8 +392,8 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * value provided is largely subjective. It seemed to help discover a peripheral faster on the Nexus 7 that was only advertising on channels
 	 * 37 and 38 - i.e. not on channel 39 too.
 	 * <br><br>
-	 * It has been observed that with the default value on the Pixel, it can take over 5 seconds to get the first batch of devices seen. Due to this,
-	 * the default will most likely go to zero for v3.
+	 * It has been observed that with the default value on the Pixel, it can take over 5 seconds to get the first batch of devices seen. So, SweetBlue will
+	 * automatically use {@link Interval#ZERO} for the delay.
 	 * <br><br>
 	 * NOTE: This option is only relevant if {@link BluetoothAdapter#isOffloadedScanBatchingSupported()} returns <code>true</code> - otherwise
 	 * it has no effect because the hardware does not support it.
@@ -514,7 +513,7 @@ public class BleManagerConfig extends BleDeviceConfig
 
 
 	/**
-	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
+	 * Used if {@link #loggingOptions} is not {@link LogOptions#OFF}. Gives threads names so they are more easily identifiable.
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
 	@Nullable(Prevalence.NORMAL)
@@ -525,7 +524,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	};
 	
 	/**
-	 * Default is <code>null</code> - optional, only used if {@link #loggingEnabled} is true. Provides a look-up table
+	 * Default is <code>null</code> - optional, only used if {@link #loggingOptions} is not {@link LogOptions#OFF}. Provides a look-up table
 	 * so logs can show the name associated with a {@link UUID} along with its numeric string.
 	 */
 	@Nullable(Prevalence.NORMAL)
@@ -604,7 +603,7 @@ public class BleManagerConfig extends BleDeviceConfig
 	 */
 	public BleManagerConfig()
 	{
-		this(false);
+		this(LogOptions.OFF);
 	}
 
 	/**
@@ -620,26 +619,27 @@ public class BleManagerConfig extends BleDeviceConfig
 	
 	/**
 	 * Returns a new constructor that populates {@link #uuidNameMaps} with {@link Uuids}
-	 * using {@link ReflectionUuidNameMap} to help with readable logging.
+	 * using {@link ReflectionUuidNameMap} to help with readable logging. This sets {@link #loggingOptions} to
+	 * {@link LogOptions#ON}.
 	 */
 	public static BleManagerConfig newWithLogging()
 	{
-		return new BleManagerConfig(true);
+		return new BleManagerConfig(LogOptions.ON);
 	}
 	
 	/**
 	 * Convenience constructor that populates {@link #uuidNameMaps} with {@link Uuids}
 	 * using {@link ReflectionUuidNameMap} if logging is enabled.
 	 * 
-	 * @param loggingEnabled_in Sets {@link #loggingEnabled}.
+	 * @param logOptions Sets {@link #loggingOptions}.
 	 */
-	protected BleManagerConfig(boolean loggingEnabled_in)
+	protected BleManagerConfig(LogOptions logOptions)
 	{
-		this.loggingEnabled = loggingEnabled_in;
+		this.loggingOptions = logOptions;
 		
-		if( this.loggingEnabled )
+		if( logOptions.enabled() )
 		{
-			uuidNameMaps = new ArrayList<UuidNameMap>();
+			uuidNameMaps = new ArrayList<>();
 			uuidNameMaps.add(new ReflectionUuidNameMap(Uuids.class));
 		}
 	}

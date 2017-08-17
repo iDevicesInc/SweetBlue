@@ -268,7 +268,7 @@ public final class BleManager
 
 		addLifecycleCallbacks();
 		m_config = config.clone();
-		initLogger(this);
+		m_logger = new P_Logger(this, m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingOptions, m_config.logger);
 		m_scanManager = new P_ScanManager(this);
 		m_historicalDatabase = PU_HistoricalData.newDatabase(context, this);
 		m_diskOptionsMngr = new P_DiskOptionsManager(m_context);
@@ -298,7 +298,7 @@ public final class BleManager
 
 		initConfigDependentMembers();
 
-		initLogger(this);
+		updateLogger();
 
 		m_postManager.postToMain(new Runnable()
 		{
@@ -325,7 +325,7 @@ public final class BleManager
 	public final void setConfig(@Nullable(Prevalence.RARE) BleManagerConfig config_nullable)
 	{
 		m_config = config_nullable != null ? config_nullable.clone() : new BleManagerConfig();
-		initLogger(this);
+		updateLogger();
 		initConfigDependentMembers();
 	}
 
@@ -334,9 +334,9 @@ public final class BleManager
 		return m_config.clone();
 	}
 
-	private void initLogger(BleManager mgr)
+	private void updateLogger()
 	{
-		m_logger = new P_Logger(mgr, m_config.debugThreadNames, m_config.uuidNameMaps, m_config.loggingEnabled, m_config.logger);
+		m_logger.updateInstance(m_config.debugThreadNames, m_config.loggingOptions, m_config.logger);
 	}
 
 	private void initConfigDependentMembers()
@@ -1121,7 +1121,7 @@ public final class BleManager
 
 	/**
 	 * Fires a callback to {@link AssertListener} if condition is false. Will post a {@link android.util.Log#ERROR}-level
-	 * message with a stack trace to the console as well if {@link BleManagerConfig#loggingEnabled} is true.
+	 * message with a stack trace to the console as well if {@link BleManagerConfig#loggingOptions} is not {@link LogOptions#OFF}.
 	 */
 	@Advanced
 	public final boolean ASSERT(boolean condition)
@@ -1140,12 +1140,12 @@ public final class BleManager
 			Exception dummyException = null;
 			message = message != null ? message : "";
 
-			if( m_config.loggingEnabled || m_assertionListener != null )
+			if( m_logger.isEnabled() || m_assertionListener != null )
 			{
 				dummyException = new Exception();
 			}
 
-			if( m_config.loggingEnabled )
+			if( m_logger.isEnabled() )
 			{
 				Log.e(BleManager.class.getSimpleName(), "ASSERTION FAILED " + message, dummyException);
 			}
@@ -2655,12 +2655,14 @@ public final class BleManager
 		{
 			if (e.m_newlyDiscovered)
 			{
+				m_logger.i("BleManager", e.device().getAddress(), Utils_String.makeString("Discovered new BleDevice ", e.device().getName()));
 				e.m_bleDevice.onNewlyDiscovered(e.device(), e.m_scanEvent, e.rssi(), e.record(), e.m_origin);
 				final DiscoveryEvent event = DiscoveryEvent.newEvent(e.m_bleDevice, LifeCycle.DISCOVERED);
 				events.add(event);
 			}
 			else
 			{
+				m_logger.d("BleManager", e.device().getAddress(), Utils_String.makeString("Re-discovered BleDevice ", e.device().getName()));
 				e.m_bleDevice.onRediscovered(e.device(), e.m_scanEvent, e.rssi(), e.record(), e.m_origin);
 				final DiscoveryEvent event = DiscoveryEvent.newEvent(e.m_bleDevice, LifeCycle.REDISCOVERED);
 				events.add(event);

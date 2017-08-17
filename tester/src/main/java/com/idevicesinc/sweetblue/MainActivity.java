@@ -118,13 +118,14 @@ public class MainActivity extends Activity
 
         mLogger = new DebugLogger(250);
 
+
+
         BleManagerConfig config = new BleManagerConfig();
-        config.loggingEnabled = true;
+        config.loggingOptions = new LogOptions(LogOptions.LogLevel.INFO, LogOptions.LogLevel.INFO);
         config.logger = mLogger;
         config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
         config.scanApi = BleScanApi.AUTO;
         config.runOnMainThread = false;
-        config.delayBetweenTasks = Interval.secs(2.0);
         config.defaultInitFactory = new BleDeviceConfig.InitTransactionFactory()
         {
             @Override
@@ -205,13 +206,12 @@ public class MainActivity extends Activity
         {
             @Override public void onEvent(DiscoveryListener.DiscoveryEvent e)
             {
-               if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
+                if (e.was(DiscoveryListener.LifeCycle.DISCOVERED))
                 {
-                   if (!mDevices.contains(e.device()))
+                    if (!mDevices.contains(e.device()))
                     {
-                       mDevices.add(e.device());
+                        mDevices.add(e.device());
                         mAdaptor.notifyDataSetChanged();
-
                     }
                 }
                 else if (e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
@@ -236,6 +236,7 @@ public class MainActivity extends Activity
                     }
                 }
         );
+
     }
 
     @Override public boolean onOptionsItemSelected(MenuItem item)
