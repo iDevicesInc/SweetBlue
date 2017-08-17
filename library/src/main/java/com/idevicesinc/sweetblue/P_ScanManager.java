@@ -744,7 +744,7 @@ final class P_ScanManager
 
         BleDevice m_bleDevice;
         BleDeviceOrigin m_origin;
-        BleManagerConfig.ScanFilter.ScanEvent m_scanEvent;
+        ScanFilter.ScanEvent m_scanEvent;
         boolean m_newlyDiscovered;
 
 

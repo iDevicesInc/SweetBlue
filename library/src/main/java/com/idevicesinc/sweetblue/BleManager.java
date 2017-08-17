@@ -31,8 +31,7 @@ import com.idevicesinc.sweetblue.BondListener.Status;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.BleServer.IncomingListener;
-import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter;
-import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
+import com.idevicesinc.sweetblue.ScanFilter.Please;
 import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
@@ -72,7 +71,7 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * <br><br>
  * {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} (or {@link android.Manifest.permission#ACCESS_FINE_LOCATION})
  * is also strongly recommended but optional. Without it, {@link BleManager#startScan()} and overloads will not properly return results in {@link android.os.Build.VERSION_CODES#M} and above.
- * See {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)} for more information.
+ * See {@link #startScan(Interval, ScanFilter, DiscoveryListener)} for more information.
  * <br><br>
  * Now here is a simple example usage:<pre><code>
  * public class MyActivity extends Activity
@@ -355,7 +354,7 @@ public final class BleManager
 
 		m_listeners.updatePollRate(m_config.defaultStatePollRate);
 
-		m_filterMngr.updateFilter(m_config.defaultScanFilter);
+		m_filterMngr.setDefaultFilter(m_config.defaultScanFilter);
 
 		if (m_config.nativeManagerLayer instanceof P_AndroidBluetoothManager)
 		{
@@ -804,7 +803,7 @@ public final class BleManager
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
-	public final void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter)
+	public final void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, ScanFilter filter)
 	{
 		startPeriodicScan(scanActiveTime, scanPauseTime, filter, (DiscoveryListener) null);
 	}
@@ -814,7 +813,17 @@ public final class BleManager
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
-	public final void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, BleManagerConfig.ScanFilter filter, DiscoveryListener discoveryListener)
+	public final void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, ScanFilter filter, DiscoveryListener discoveryListener)
+	{
+		startPeriodicScan(scanActiveTime, scanPauseTime, filter, ScanFilter.ApplyMode.CombineEither, discoveryListener);
+	}
+
+	/**
+	 * Same as {@link #startPeriodicScan(Interval, Interval)} but calls {@link #setListener_Discovery(DiscoveryListener)} for you too and adds a filter and a filter mode.
+	 *
+	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
+	 */
+	public final void startPeriodicScan(Interval scanActiveTime, Interval scanPauseTime, ScanFilter filter, ScanFilter.ApplyMode filterApplyMode, DiscoveryListener discoveryListener)
 	{
 		showScanWarningIfNeeded();
 
@@ -823,7 +832,7 @@ public final class BleManager
 			setListener_Discovery(discoveryListener);
 		}
 
-		m_filterMngr.add(filter);
+		m_filterMngr.setEphemeralFilter(filter, filterApplyMode);
 
 		m_config.autoScanActiveTime = scanActiveTime;
 		m_config.autoScanPauseInterval = scanPauseTime;
@@ -835,12 +844,12 @@ public final class BleManager
 	}
 
 	/**
-	 * Same as {@link #stopPeriodicScan()} but will also unregister any {@link BleManagerConfig.ScanFilter} provided
-	 * through {@link #startPeriodicScan(Interval, Interval, BleManagerConfig.ScanFilter)} or other overloads.
+	 * Same as {@link #stopPeriodicScan()} but will also unregister any {@link ScanFilter} provided
+	 * through {@link #startPeriodicScan(Interval, Interval, ScanFilter)} or other overloads.
 	 */
 	public final void stopPeriodicScan(final ScanFilter filter)
 	{
-		m_filterMngr.remove(filter);
+		m_filterMngr.clearEphemeralFilter();
 
 		stopPeriodicScan();
 	}
@@ -872,7 +881,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Calls {@link #startScan(Interval, BleManagerConfig.ScanFilter)} with {@link Interval#INFINITE}.
+	 * Calls {@link #startScan(Interval, ScanFilter)} with {@link Interval#INFINITE}.
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
@@ -896,7 +905,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, ScanFilter, DiscoveryListener)}
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
@@ -908,7 +917,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)}
+	 * Overload of {@link #startScan(Interval, ScanFilter, DiscoveryListener)}
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 *
@@ -1046,7 +1055,7 @@ public final class BleManager
 
 			if (options.m_scanFilter != null)
 			{
-				m_filterMngr.add(options.m_scanFilter);
+				m_filterMngr.setEphemeralFilter(options.m_scanFilter, options.m_scanFilterApplyMode);
 			}
 
 			if (options.m_isPeriodic)
@@ -1425,7 +1434,7 @@ public final class BleManager
 	 * <br><br>
 	 * If this returns <code>true</code> then you are good to go for calling {@link #startScan()}.
 	 *
-	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 * @see #startScan(Interval, ScanFilter, DiscoveryListener)
 	 *
 	 * @see #turnOnLocationWithIntent_forPermissions(Activity, int)
 	 * @see #turnOnLocationWithIntent_forOsServices(Activity)
@@ -1442,7 +1451,7 @@ public final class BleManager
 	 * Returns <code>true</code> if you're either pre-Android-M, or app has permission for either {@link android.Manifest.permission#ACCESS_COARSE_LOCATION}
 	 * or {@link android.Manifest.permission#ACCESS_FINE_LOCATION} in your AndroidManifest.xml, <code>false</code> otherwise.
 	 *
-	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 * @see #startScan(Interval, ScanFilter, DiscoveryListener)
 	 *
 	 * @see com.idevicesinc.sweetblue.utils.BluetoothEnabler
 	 */
@@ -1456,7 +1465,7 @@ public final class BleManager
 	 * <a href="https://developer.android.com/reference/android/support/v4/content/ContextCompat.html#checkSelfPermission(android.content.Context, java.lang.String)"</a>	 *
 	 * See more information at https://developer.android.com/training/permissions/index.html.
 	 *
-	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 * @see #startScan(Interval, ScanFilter, DiscoveryListener)
 	 *
 	 * @see #turnOnLocationWithIntent_forPermissions(Activity, int)
 	 *
@@ -1474,7 +1483,7 @@ public final class BleManager
 	 * NOTE: If this returns <code>false</code> but all other overloads of {@link #isLocationEnabledForScanning()} return <code>true</code> then
 	 * SweetBlue will fall back to classic discovery through {@link BluetoothAdapter#startDiscovery()} when you call {@link #startScan()} or overloads.
 	 *
-	 * @see #startScan(Interval, BleManagerConfig.ScanFilter, DiscoveryListener)
+	 * @see #startScan(Interval, ScanFilter, DiscoveryListener)
 	 *
 	 * @see #turnOnLocationWithIntent_forOsServices(Activity)
 	 * @see #turnOnLocationWithIntent_forOsServices(Activity, int)
@@ -1589,12 +1598,12 @@ public final class BleManager
 
 	/**
 	 * Same as {@link #stopScan()} but also unregisters any filter supplied to various overloads of
-	 * {@link #startScan()} or {@link #startPeriodicScan(Interval, Interval)} that take an {@link BleManagerConfig.ScanFilter}.
+	 * {@link #startScan()} or {@link #startPeriodicScan(Interval, Interval)} that take an {@link ScanFilter}.
 	 * Calling {@link #stopScan()} alone will keep any previously registered filters active.
 	 */
 	public final void stopScan(ScanFilter filter)
 	{
-		m_filterMngr.remove(filter);
+		m_filterMngr.clearEphemeralFilter();
 
 		stopScan();
 	}

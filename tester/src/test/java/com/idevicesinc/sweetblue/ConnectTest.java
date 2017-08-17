@@ -136,7 +136,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         m_device = null;
 
-        m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        m_config.defaultScanFilter = new ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
@@ -214,7 +214,7 @@ public class ConnectTest extends BaseBleUnitTest
         startTest(false);
 
         m_config.runOnMainThread = false;
-        m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
+        m_config.defaultScanFilter = new ScanFilter()
         {
             @Override public Please onEvent(ScanEvent e)
             {
