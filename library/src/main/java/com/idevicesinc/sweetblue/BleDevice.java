@@ -3373,7 +3373,7 @@ public final class BleDevice extends BleNode
 
     /**
      * Returns <code>true</code> if notifications are enabled for the given uuid.
-     * NOTE: {@link #isNotifyEnabling(UUID)} may return true here even if this returns false.
+     * NOTE: {@link #isNotifyEnabling(UUID)} may return true even if this method returns false.
      *
      * @see #isNotifyEnabling(UUID)
      */
@@ -3406,7 +3406,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #enableNotify(UUID)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotifies(BleNotify[])} instead.
      */
+    @Deprecated
     public final void enableNotify(final UUID[] charUuids)
     {
         this.enableNotify(charUuids, Interval.INFINITE, null);
@@ -3414,7 +3417,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #enableNotify(UUID, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotifies(BleNotify[])} instead.
      */
+    @Deprecated
     public final void enableNotify(final UUID[] charUuids, ReadWriteListener listener)
     {
         this.enableNotify(charUuids, Interval.INFINITE, listener);
@@ -3422,7 +3428,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #enableNotify(UUID, Interval)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotifies(BleNotify[])} instead.
      */
+    @Deprecated
     public final void enableNotify(final UUID[] charUuids, final Interval forceReadTimeout)
     {
         this.enableNotify(charUuids, forceReadTimeout, null);
@@ -3430,7 +3439,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #enableNotify(UUID, Interval, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotifies(BleNotify[])} instead.
      */
+    @Deprecated
     public final void enableNotify(final UUID[] charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         for (int i = 0; i < charUuids.length; i++)
@@ -3442,8 +3454,38 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Overload for {@link #enableNotify(UUID)}.
+     * Overload for {@link #enableNotify(BleNotify)}.
      */
+    public final void enableNotifies(BleNotify[] notifies)
+    {
+        for (int i = 0; i < notifies.length; i++)
+        {
+            final BleNotify notify = notifies[i];
+
+            enableNotify(notify);
+        }
+    }
+
+    /**
+     * Overload for {@link #enableNotify(BleNotify)}.
+     */
+    public final void enableNotifies(final Iterable<BleNotify> notifies)
+    {
+        final Iterator<BleNotify> iterator = notifies.iterator();
+
+        while (iterator.hasNext())
+        {
+            final BleNotify notify = iterator.next();
+            enableNotify(notify);
+        }
+    }
+
+    /**
+     * Overload for {@link #enableNotify(UUID)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotifies(Iterable)} instead.
+     */
+    @Deprecated
     public final void enableNotify(final Iterable<UUID> charUuids)
     {
         this.enableNotify(charUuids, Interval.INFINITE, null);
@@ -3451,7 +3493,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #enableNotify(UUID, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotifies(Iterable)} instead.
      */
+    @Deprecated
     public final void enableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
     {
         this.enableNotify(charUuids, Interval.INFINITE, listener);
@@ -3459,7 +3504,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #enableNotify(UUID, Interval)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotifies(Iterable)} instead.
      */
+    @Deprecated
     public final void enableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
     {
         this.enableNotify(charUuids, forceReadTimeout, null);
@@ -3467,7 +3515,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #enableNotify(UUID, Interval, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotifies(Iterable)} instead.
      */
+    @Deprecated
     public final void enableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = charUuids.iterator();
@@ -3481,14 +3532,92 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #enableNotify(java.util.UUID, ReadWriteListener)} but you can use
-     * this if you don't need a callback. Callbacks will still be posted to {@link ReadWriteListener}
-     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
-     * {@link BleManager#setListener_Read_Write(ReadWriteListener)} .
+     * Overload of {@link #enableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid)
     {
         return this.enableNotify(null, characteristicUuid, Interval.INFINITE, null, null);
+    }
+
+    /**
+     * Overload of {@link #enableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotify(BleNotify)} instead.
+     */
+    @Deprecated
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, ReadWriteListener listener)
+    {
+        return this.enableNotify(null, characteristicUuid, Interval.INFINITE, null, listener);
+    }
+
+    /**
+     * Overload of {@link #enableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotify(BleNotify)} instead.
+     */
+    @Deprecated
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
+    {
+        return this.enableNotify(null, characteristicUuid, forceReadTimeout, null, null);
+    }
+
+    /**
+     * Overload of {@link #enableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotify(BleNotify)} instead.
+     */
+    @Deprecated
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
+    {
+        return this.enableNotify(null, characteristicUuid, forceReadTimeout, null, listener);
+    }
+
+    /**
+     * Overload of {@link #enableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotify(BleNotify)} instead.
+     */
+    @Deprecated
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid)
+    {
+        return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null, null);
+    }
+
+    /**
+     * Overload of {@link #enableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotify(BleNotify)} instead.
+     */
+    @Deprecated
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, ReadWriteListener listener)
+    {
+        return enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null, listener);
+    }
+
+    /**
+     * Overload of {@link #enableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotify(BleNotify)} instead.
+     */
+    @Deprecated
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
+    {
+        return enableNotify(serviceUuid, characteristicUuid, forceReadTimeout, null, null);
+    }
+
+    /**
+     * Overload of {@link #enableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #enableNotify(BleNotify)} instead.
+     */
+    @Deprecated
+    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
+    {
+        final BleNotify notify = new BleNotify(serviceUuid, characteristicUuid).setForceReadTimeout(forceReadTimeout).setReadWriteListener(listener).setDescriptorFilter(descriptorFilter);
+        return enableNotify(notify);
     }
 
     /**
@@ -3498,70 +3627,20 @@ public final class BleDevice extends BleNode
      *
      * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
      */
-    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, ReadWriteListener listener)
+    public final ReadWriteListener.ReadWriteEvent enableNotify(BleNotify notify)
     {
-        return this.enableNotify(null, characteristicUuid, Interval.INFINITE, null, listener);
+        return enableNotify_private(notify);
     }
 
-    /**
-     * Same as {@link #enableNotify(java.util.UUID, Interval, ReadWriteListener)} but you can use
-     * this if you don't need a callback. Callbacks will still be posted to {@link ReadWriteListener}
-     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
-     * {@link BleManager#setListener_Read_Write(ReadWriteListener)} .
-     */
-    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
+    private ReadWriteListener.ReadWriteEvent enableNotify_private(BleNotify notify)
     {
-        return this.enableNotify(null, characteristicUuid, forceReadTimeout, null, null);
-    }
-
-    /**
-     * Same as {@link #enableNotify(UUID, ReadWriteListener)} but forces a read after a given amount of time. If you received {@link ReadWriteListener.Status#SUCCESS} for
-     * {@link Type#ENABLING_NOTIFICATION} but haven't received an actual notification in some time it may be a sign that notifications have broken
-     * in the underlying stack.
-     *
-     * @return same as {@link #enableNotify(UUID, ReadWriteListener)}.
-     */
-    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
-    {
-        return this.enableNotify(null, characteristicUuid, forceReadTimeout, null, listener);
-    }
-
-    /**
-     * Overload of {@link #enableNotify(UUID)} for when you have characteristics with identical uuids under different services.
-     */
-    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid)
-    {
-        return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null, null);
-    }
-
-    /**
-     * Overload of {@link #enableNotify(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
-     */
-    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, ReadWriteListener listener)
-    {
-        return this.enableNotify(serviceUuid, characteristicUuid, Interval.INFINITE, null, listener);
-    }
-
-    /**
-     * Overload of {@link #enableNotify(UUID, Interval)} for when you have characteristics with identical uuids under different services.
-     */
-    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
-    {
-        return this.enableNotify(serviceUuid, characteristicUuid, forceReadTimeout, null, null);
-    }
-
-    /**
-     * Overload of {@link #enableNotify(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
-     */
-    public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
-    {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(notify.serviceUuid, notify.charUuid, Uuids.INVALID, notify.descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(notify.readWriteListener, earlyOutResult);
 
-            if (earlyOutResult.status() == ReadWriteListener.Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)))
+            if (earlyOutResult.status() == ReadWriteListener.Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(notify.m_forceReadTimeout) || Interval.DISABLED.equals(notify.m_forceReadTimeout)))
             {
                 //--- DRK > No need to put this notify in the poll manager because either the characteristic wasn't found
                 //--- or the notify (or indicate) property isn't supported and we're not doing a backing read poll.
@@ -3569,8 +3648,8 @@ public final class BleDevice extends BleNode
             }
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
-        final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
+        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(notify.serviceUuid, notify.charUuid);
+        final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(notify.serviceUuid, notify.charUuid);
         final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
         final ReadWriteEvent result;
@@ -3578,31 +3657,31 @@ public final class BleDevice extends BleNode
 
         if (shouldSendOutNotifyEnable && characteristic != null && isConnected)
         {
-            m_bondMngr.bondIfNeeded(characteristicUuid, CharacteristicEventType.ENABLE_NOTIFY);
+            m_bondMngr.bondIfNeeded(notify.charUuid, CharacteristicEventType.ENABLE_NOTIFY);
 
             final P_Task_ToggleNotify task;
 
-            if (descriptorFilter == null)
+            if (notify.descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, m_txnMngr.getCurrent(), notify.readWriteListener, getOverrideReadWritePriority());
             }
             else
             {
-                task = new P_Task_ToggleNotify(this, serviceUuid, characteristicUuid, descriptorFilter, true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, notify.serviceUuid, notify.charUuid, notify.descriptorFilter, true, m_txnMngr.getCurrent(), notify.readWriteListener, getOverrideReadWritePriority());
             }
             queue().add(task);
 
-            m_pollMngr.onNotifyStateChange(serviceUuid, characteristicUuid, P_PollManager.E_NotifyState__ENABLING);
+            m_pollMngr.onNotifyStateChange(notify.serviceUuid, notify.charUuid, P_PollManager.E_NotifyState__ENABLING);
 
             result = NULL_READWRITE_EVENT();
         }
         else if (notifyState == P_PollManager.E_NotifyState__ENABLED)
         {
-            if (listener != null && isConnected)
+            if (notify.readWriteListener != null && isConnected)
             {
-                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, serviceUuid, characteristicUuid, descriptorFilter);
+                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, notify.serviceUuid, notify.charUuid, notify.descriptorFilter);
 
-                invokeReadWriteCallback(listener, result);
+                invokeReadWriteCallback(notify.readWriteListener, result);
             }
             else
             {
@@ -3619,7 +3698,7 @@ public final class BleDevice extends BleNode
             result = NULL_READWRITE_EVENT();
         }
 
-        m_pollMngr.startPoll(serviceUuid, characteristicUuid, descriptorFilter, forceReadTimeout.secs(), listener, /*trackChanges=*/true, /*usingNotify=*/true);
+        m_pollMngr.startPoll(notify.serviceUuid, notify.charUuid, notify.descriptorFilter, notify.m_forceReadTimeout.secs(), notify.readWriteListener, /*trackChanges=*/true, /*usingNotify=*/true);
 
         return result;
     }
@@ -3627,100 +3706,160 @@ public final class BleDevice extends BleNode
 
 
     /**
-     * Disables all notifications enabled by {@link #enableNotify(UUID, ReadWriteListener)} or
-     * {@link #enableNotify(UUID, Interval, ReadWriteListener)}. The listener
-     * provided should be the same one that you passed to {@link #enableNotify(UUID, ReadWriteListener)}. Listen for
-     * {@link Type#DISABLING_NOTIFICATION} in your listener to know when the remote device actually confirmed.
+     * Overload of {@link #disableNotify(BleNotify)}.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
-        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null, listener);
+        return disableNotify(serviceUuid, characteristicUuid, null, listener);
     }
 
     /**
-     * Same as {@link #disableNotify(UUID, ReadWriteListener)} but filters on the given {@link Interval}.
+     * Overload of {@link #disableNotify(BleNotify)}.
      *
-     * @return same as {@link #disableNotify(UUID, ReadWriteListener)}.
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         final UUID serviceUuid = null;
 
-        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null, listener);
+        return disableNotify(serviceUuid, characteristicUuid, forceReadTimeout, listener);
     }
 
     /**
-     * Same as {@link #disableNotify(java.util.UUID, ReadWriteListener)} but you can use this if you don't care about the result.
-     * The callback will still be posted to {@link ReadWriteListener}
-     * instances (if any) provided to {@link BleDevice#setListener_ReadWrite(ReadWriteListener)} and
-     * {@link BleManager#setListener_Read_Write(ReadWriteListener)} .
+     * Overload of {@link #disableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid)
     {
         final UUID serviceUuid = null;
 
-        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null, null);
+        return disableNotify(serviceUuid, characteristicUuid, (DescriptorFilter) null, null);
     }
 
     /**
-     * Same as {@link #disableNotify(UUID, ReadWriteListener)} but filters on the given {@link Interval} without a listener.
+     * Overload of {@link #disableNotify(BleNotify)}.
      *
-     * @return same as {@link #disableNotify(UUID, ReadWriteListener)}.
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID characteristicUuid, final Interval forceReadTimeout)
     {
         final UUID serviceUuid = null;
 
-        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null, null);
+        return disableNotify(serviceUuid, characteristicUuid, forceReadTimeout, null);
     }
 
     /**
-     * Overload of {@link #disableNotify(UUID, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+     * Overload of {@link #disableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final ReadWriteListener listener)
     {
-        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null, listener);
+        return disableNotify(serviceUuid, characteristicUuid, null, listener);
     }
 
     /**
-     * Overload of {@link #disableNotify(UUID, Interval, ReadWriteListener)} for when you have characteristics with identical uuids under different services.
+     * Overload of {@link #disableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
-        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), null, listener);
+        BleNotify notify = new BleNotify(serviceUuid, characteristicUuid).setForceReadTimeout(forceReadTimeout).setReadWriteListener(listener);
+        return disableNotify(notify);
     }
 
     /**
-     * Overload of {@link #disableNotify(UUID)} for when you have characteristics with identical uuids under different services.
+     * Overload of {@link #disableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid)
     {
-        return this.disableNotify_private(serviceUuid, characteristicUuid, null, null, null);
+        return disableNotify(serviceUuid, characteristicUuid, (DescriptorFilter) null, null);
     }
 
     /**
-     * Overload of {@link #disableNotify(UUID, UUID, DescriptorFilter, Interval)} for when you have characteristics with identical uuids under different services.
+     * Overload of {@link #disableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout)
     {
-        return this.disableNotify(serviceUuid, characteristicUuid, null, forceReadTimeout);
+        return disableNotify(serviceUuid, characteristicUuid, null, forceReadTimeout);
     }
 
     /**
-     * Overload of {@link #disableNotify(UUID, Interval)} for when you have characteristics with identical uuids under different services.
+     * Overload of {@link #disableNotify(BleNotify)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotify(BleNotify)} instead.
      */
+    @Deprecated
     public final ReadWriteListener.ReadWriteEvent disableNotify(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Interval forceReadTimeout)
     {
-        return this.disableNotify_private(serviceUuid, characteristicUuid, Interval.secs(forceReadTimeout), descriptorFilter, null);
+        final BleNotify notify = new BleNotify(serviceUuid, characteristicUuid).setDescriptorFilter(descriptorFilter).setForceReadTimeout(forceReadTimeout);
+        return disableNotify(notify);
+    }
+
+    /**
+     * Disables all notifications enabled by {@link #enableNotify(BleNotify)} or
+     * any of it's overloads. The listener provided should be the same one that you passed to {@link #enableNotify(BleNotify)}. Listen for
+     * {@link Type#DISABLING_NOTIFICATION} in your listener to know when the remote device actually confirmed.
+     *
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceConnectionFailListener)}.
+     */
+    public final ReadWriteListener.ReadWriteEvent disableNotify(BleNotify notify)
+    {
+        return disableNotify_private(notify);
+    }
+
+    /**
+     * Overload for {@link #disableNotify(BleNotify)}.
+     */
+    public final void disableNotifies(final BleNotify[] notifies)
+    {
+        for (int i = 0; i < notifies.length; i++)
+        {
+            final BleNotify notify = notifies[i];
+
+            disableNotify(notify);
+        }
+    }
+
+    /**
+     * Overload for {@link #disableNotify(BleNotify)}.
+     */
+    public final void disableNotifies(final Iterable<BleNotify> notifies)
+    {
+        final Iterator<BleNotify> iterator = notifies.iterator();
+
+        while (iterator.hasNext())
+        {
+            final BleNotify notify = iterator.next();
+
+            disableNotify(notify);
+        }
     }
 
     /**
      * Overload for {@link #disableNotify(UUID, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotifies(BleNotify[])} instead.
      */
+    @Deprecated
     public final void disableNotify(final UUID[] uuids, final ReadWriteListener listener)
     {
         this.disableNotify(uuids, null, listener);
@@ -3728,7 +3867,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #disableNotify(UUID)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotifies(BleNotify[])} instead.
      */
+    @Deprecated
     public final void disableNotify(final UUID[] uuids)
     {
         this.disableNotify(uuids, null, null);
@@ -3736,7 +3878,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #disableNotify(UUID, Interval)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotifies(BleNotify[])} instead.
      */
+    @Deprecated
     public final void disableNotify(final UUID[] uuids, final Interval forceReadTimeout)
     {
         this.disableNotify(uuids, forceReadTimeout, null);
@@ -3744,7 +3889,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #disableNotify(UUID, Interval, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotifies(BleNotify[])} instead.
      */
+    @Deprecated
     public final void disableNotify(final UUID[] uuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         for (int i = 0; i < uuids.length; i++)
@@ -3757,7 +3905,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #disableNotify(UUID)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotifies(Iterable<BleNotify>)} instead.
      */
+    @Deprecated
     public final void disableNotify(final Iterable<UUID> charUuids)
     {
         this.disableNotify(charUuids, Interval.INFINITE, null);
@@ -3765,7 +3916,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #disableNotify(UUID, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotifies(Iterable<BleNotify>)} instead.
      */
+    @Deprecated
     public final void disableNotify(final Iterable<UUID> charUuids, ReadWriteListener listener)
     {
         this.disableNotify(charUuids, Interval.INFINITE, listener);
@@ -3773,7 +3927,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #disableNotify(UUID, Interval)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotifies(Iterable<BleNotify>)} instead.
      */
+    @Deprecated
     public final void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout)
     {
         this.disableNotify(charUuids, forceReadTimeout, null);
@@ -3781,7 +3938,10 @@ public final class BleDevice extends BleNode
 
     /**
      * Overload for {@link #disableNotify(UUID, Interval, ReadWriteListener)}.
+     *
+     * @deprecated - This will be removed in v3.1. Please use {@link #disableNotifies(Iterable<BleNotify>)} instead.
      */
+    @Deprecated
     public final void disableNotify(final Iterable<UUID> charUuids, final Interval forceReadTimeout, final ReadWriteListener listener)
     {
         final Iterator<UUID> iterator = charUuids.iterator();
@@ -4979,35 +5139,35 @@ public final class BleDevice extends BleNode
         }
     }
 
-    private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, DescriptorFilter descriptorFilter, ReadWriteListener listener)
+    private ReadWriteListener.ReadWriteEvent disableNotify_private(BleNotify notify)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(notify.serviceUuid, notify.charUuid, Uuids.INVALID, notify.descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
         if (earlyOutResult != null)
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(notify.readWriteListener, earlyOutResult);
 
             return earlyOutResult;
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(notify.serviceUuid, notify.charUuid);
 
         if (characteristic != null && is(CONNECTED))
         {
             final P_Task_ToggleNotify task;
-            if (descriptorFilter == null)
+            if (notify.descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic, /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, characteristic, /* enable= */false, m_txnMngr.getCurrent(), notify.readWriteListener, getOverrideReadWritePriority());
             }
             else
             {
-                task = new P_Task_ToggleNotify(this, serviceUuid, characteristicUuid, descriptorFilter, false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, notify.serviceUuid, notify.charUuid, notify.descriptorFilter, false, m_txnMngr.getCurrent(), notify.readWriteListener, getOverrideReadWritePriority());
             }
             queue().add(task);
         }
 
-        m_pollMngr.stopPoll(serviceUuid, characteristicUuid, descriptorFilter, forceReadTimeout, listener, /* usingNotify= */true);
+        m_pollMngr.stopPoll(notify.serviceUuid, notify.charUuid, notify.descriptorFilter, notify.m_forceReadTimeout.secs(), notify.readWriteListener, /* usingNotify= */true);
 
         return NULL_READWRITE_EVENT();
     }

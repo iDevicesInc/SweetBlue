@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -14,6 +16,8 @@ public abstract class BleOp<T extends BleOp>
 {
 
     final static String TAG = BleOp.class.getSimpleName();
+
+    private List<T> opList = new ArrayList<>();
 
     UUID serviceUuid = null;
     UUID charUuid = null;
@@ -43,6 +47,10 @@ public abstract class BleOp<T extends BleOp>
      * Returns <code>true</code> if the minimum values have been set for this operation
      */
     public abstract boolean isValid();
+
+    abstract T createDuplicate();
+
+    abstract T createNewOp();
 
 
 
@@ -90,6 +98,52 @@ public abstract class BleOp<T extends BleOp>
     {
         descriptorFilter = filter;
         return (T) this;
+    }
+
+    /**
+     * Adds the current Ble operation to a list, and returns a new copy (with all the values the same as the current). This is helpful if you are performing
+     * a bunch of reads/writes/notifies where you only need to change one thing for each (for instance, the characteristic UUID).
+     */
+    public final T next()
+    {
+        opList.add((T) this);
+        return createDuplicate();
+    }
+
+    /**
+     * Adds the current Ble operation to a list, and returns a new instance for chaining multiple together into a list.
+     */
+    public final T nextNew()
+    {
+        opList.add((T) this);
+        return createNewOp();
+    }
+
+    /**
+     * Returns the list of operations. This will be empty if {@link #next()}, or {@link #nextNew()} is never called.
+     */
+    public final List<T> list()
+    {
+        return opList;
+    }
+
+    /**
+     * Same as {@link #list()}, only returns an array instead.
+     */
+    public final T[] array()
+    {
+        return (T[]) opList.toArray();
+    }
+
+    final T getDuplicateOp()
+    {
+        BleOp op = createNewOp();
+        op.charUuid = charUuid;
+        op.serviceUuid = serviceUuid;
+        op.readWriteListener = readWriteListener;
+        op.descriptorUuid = descriptorUuid;
+        op.descriptorFilter = descriptorFilter;
+        return (T) op;
     }
 
 

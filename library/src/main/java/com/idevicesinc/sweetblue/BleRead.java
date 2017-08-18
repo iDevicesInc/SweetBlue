@@ -9,6 +9,10 @@ import java.util.UUID;
 public class BleRead extends BleOp<BleRead>
 {
 
+    public BleRead()
+    {
+    }
+
     public BleRead(UUID serviceUuid, UUID characteristicUuid)
     {
         super(serviceUuid, characteristicUuid);
@@ -23,5 +27,17 @@ public class BleRead extends BleOp<BleRead>
     public final boolean isValid()
     {
         return charUuid != null;
+    }
+
+    @Override
+    final BleRead createDuplicate()
+    {
+        return getDuplicateOp();
+    }
+
+    @Override
+    final BleRead createNewOp()
+    {
+        return new BleRead();
     }
 }
