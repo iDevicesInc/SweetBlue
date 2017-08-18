@@ -194,7 +194,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 {
                     if (e1.didEnter(BleDeviceState.INITIALIZED))
                     {
-                        m_device.enableNotify(mTestService, mTestChar, Interval.DISABLED, new DescriptorFilter()
+                        BleNotify notify = new BleNotify(mTestService, mTestChar).setDescriptorFilter(new DescriptorFilter()
                         {
                             @Override public Please onEvent(DescriptorEvent event)
                             {
@@ -205,14 +205,15 @@ public class DuplicateCharTest extends BaseBleUnitTest
                             {
                                 return mTestDesc;
                             }
-                        }, e11 ->
+                        }).setReadWriteListener(e11 ->
                         {
                             if (e11.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
                             {
                                 assertTrue(e11.wasSuccess());
                                 succeed();
                             }
-                        });
+                        }).setForceReadTimeout(Interval.DISABLED);
+                        m_device.enableNotify(notify);
                     }
                 });
             }

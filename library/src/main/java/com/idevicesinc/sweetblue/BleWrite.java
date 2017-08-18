@@ -26,6 +26,10 @@ public final class BleWrite extends BleOp<BleWrite>
     boolean bigEndian = true;
 
 
+    public BleWrite()
+    {
+    }
+
     public BleWrite(UUID serviceUuid, UUID characteristicUuid)
     {
         super(serviceUuid, characteristicUuid);
@@ -46,6 +50,22 @@ public final class BleWrite extends BleOp<BleWrite>
     public final boolean isValid()
     {
         return charUuid != null && data != null && data.getData() != null;
+    }
+
+    @Override
+    final BleWrite createDuplicate()
+    {
+        final BleWrite write = getDuplicateOp();
+        write.bigEndian = bigEndian;
+        write.writeType = writeType;
+        write.data = data;
+        return write;
+    }
+
+    @Override
+    final BleWrite createNewOp()
+    {
+        return new BleWrite();
     }
 
     /**
