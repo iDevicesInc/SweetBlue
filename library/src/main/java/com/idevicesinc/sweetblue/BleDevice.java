@@ -2201,6 +2201,35 @@ public final class BleDevice extends BleNode
         stopPoll(uuids, null, null);
     }
 
+
+    /**
+     * Overload for {@link #write(BleWrite)}.
+     */
+    public final void writeMany(BleWrite[] writes)
+    {
+        for (int i = 0; i < writes.length; i++)
+        {
+            final BleWrite write = writes[i];
+
+            write(write);
+        }
+    }
+
+    /**
+     * Overload for {@link #write(BleWrite)}.
+     */
+    public final void writeMany(Iterable<BleWrite> writes)
+    {
+        final Iterator<BleWrite> iterator = writes.iterator();
+
+        while (iterator.hasNext())
+        {
+            final BleWrite write = iterator.next();
+
+            write(write);
+        }
+    }
+
     /**
      * Writes to the device without a callback.
      *
@@ -5119,7 +5148,7 @@ public final class BleDevice extends BleNode
     private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, Type writeType, DescriptorFilter filter, ReadWriteListener listener)
     {
         int mtuSize = getEffectiveWriteMtuSize();
-        if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
+        if (!conf_device().autoStripeWrites || data.getData().length <= mtuSize)
         {
             final P_Task_Write task_write;
             if (filter == null)

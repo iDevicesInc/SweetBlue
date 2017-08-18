@@ -40,4 +40,28 @@ public class BleRead extends BleOp<BleRead>
     {
         return new BleRead();
     }
+
+
+
+    /**
+     * Builder class to build out a list (or array) of {@link BleRead} instances.
+     */
+    public final static class Builder extends BleOp.Builder<Builder, BleRead>
+    {
+
+        public Builder()
+        {
+            this(null, null);
+        }
+
+        public Builder(UUID characteristicUuid)
+        {
+            this(null, characteristicUuid);
+        }
+
+        public Builder(UUID serviceUuid, UUID characteristicUuid)
+        {
+            currentOp = new BleRead(serviceUuid, characteristicUuid);
+        }
+    }
 }

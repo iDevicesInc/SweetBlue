@@ -244,8 +244,9 @@ final class P_PollManager
 					if( !m_waitingForResponse )
 					{
 						m_waitingForResponse = true;
-						Type type = trackingChanges() ? Type.PSUEDO_NOTIFICATION : Type.POLL;
-						m_device.read_internal(m_serviceUuid, m_charUuid, Uuids.INVALID, type, null, m_pollingReadListener);
+						final Type type = trackingChanges() ? Type.PSUEDO_NOTIFICATION : Type.POLL;
+						final BleRead read = new BleRead(m_serviceUuid, m_charUuid).setReadWriteListener(m_pollingReadListener);
+						m_device.read_internal(type, read);
 					}
 				}
 			}

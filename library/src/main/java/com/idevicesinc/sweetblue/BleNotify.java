@@ -51,4 +51,35 @@ public class BleNotify extends BleOp<BleNotify>
         m_forceReadTimeout = timeout;
         return this;
     }
+
+
+    /**
+     * Builder class to build out a list (or array) of {@link BleNotify} instances.
+     */
+    public final static class Builder extends BleOp.Builder<Builder, BleNotify>
+    {
+
+        public Builder()
+        {
+            this(null, null);
+        }
+
+        public Builder(UUID characteristicUuid)
+        {
+            this(null, characteristicUuid);
+        }
+
+        public Builder(UUID serviceUuid, UUID characteristicUuid)
+        {
+            currentOp = new BleNotify(serviceUuid, characteristicUuid);
+        }
+
+
+        public final Builder setForceReadTimeout(Interval timeout)
+        {
+            currentOp.setForceReadTimeout(timeout);
+            return this;
+        }
+
+    }
 }

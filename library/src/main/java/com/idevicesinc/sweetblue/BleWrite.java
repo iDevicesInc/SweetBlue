@@ -196,4 +196,128 @@ public final class BleWrite extends BleOp<BleWrite>
         return setString(value, "UTF-8");
     }
 
+
+    /**
+     * Builder class to build out a list (or array) of {@link BleWrite} instances.
+     */
+    public static final class Builder extends BleOp.Builder<Builder, BleWrite>
+    {
+
+        public Builder()
+        {
+            this(null, null);
+        }
+
+        public Builder(UUID characteristicUuid)
+        {
+            this(null, characteristicUuid);
+        }
+
+        public Builder(UUID serviceUuid, UUID characteristicUuid)
+        {
+            currentOp = new BleWrite(serviceUuid, characteristicUuid);
+        }
+
+        /**
+         * Tells SweetBlue the endianness of the BLE device you want to perform a write to. This value only matters if you are using any of the
+         * convenience methods: <br><br>
+         * {@link #setBoolean(boolean)} <br>
+         * {@link #setInt(int)} <br>
+         * {@link #setLong(long)} <br>
+         * {@link #setShort(short)} <br>
+         * {@link #setString(String)} <br>
+         * {@link #setString(String, String)} <br>
+         */
+        public final Builder setIsBigEndian(boolean isBigEndian)
+        {
+            currentOp.setIsBigEndian(isBigEndian);
+            return this;
+        }
+
+        /**
+         * Set the {@link com.idevicesinc.sweetblue.ReadWriteListener.Type} of the write to perform. This is here in the case that the
+         * characteristic you are writing to has more than one write type associated with it eg. {@link android.bluetooth.BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE},
+         * {@link android.bluetooth.BluetoothGattCharacteristic#WRITE_TYPE_SIGNED} along with standard writes.
+         */
+        @Advanced
+        public final Builder setWriteType(ReadWriteListener.Type writeType)
+        {
+            currentOp.setWriteType(writeType);
+            return this;
+        }
+
+        /**
+         * Set the raw bytes to write.
+         */
+        public final Builder setBytes(byte[] data)
+        {
+            currentOp.setBytes(data);
+            return this;
+        }
+
+        /**
+         * Set the {@link FutureData} to write.
+         */
+        public final Builder setData(FutureData data)
+        {
+            currentOp.setData(data);
+            return this;
+        }
+
+        /**
+         * Set the boolean to write.
+         */
+        public final Builder setBoolean(boolean value)
+        {
+            currentOp.setBoolean(value);
+            return this;
+        }
+
+        /**
+         * Set an int to be written.
+         */
+        public final Builder setInt(int val)
+        {
+            currentOp.setInt(val);
+            return this;
+        }
+
+        /**
+         * Set a short to be written.
+         */
+        public final Builder setShort(short val)
+        {
+            currentOp.setShort(val);
+            return this;
+        }
+
+        /**
+         * Set a long to be written.
+         */
+        public final Builder setLong(long val)
+        {
+            currentOp.setLong(val);
+            return this;
+        }
+
+        /**
+         * Set a string to be written. This method also allows you to specify the string encoding. If the encoding
+         * fails, then {@link String#getBytes()} is used instead, which uses "UTF-8" by default.
+         */
+        public final Builder setString(String value, String stringEncoding)
+        {
+            currentOp.setString(value, stringEncoding);
+            return this;
+        }
+
+        /**
+         * Set a string to be written. This defaults to "UTF-8" encoding.
+         */
+        public final Builder setString(String value)
+        {
+            return setString(value, "UTF-8");
+        }
+
+    }
+
 }

@@ -100,39 +100,109 @@ public abstract class BleOp<T extends BleOp>
         return (T) this;
     }
 
-    /**
-     * Adds the current Ble operation to a list, and returns a new copy (with all the values the same as the current). This is helpful if you are performing
-     * a bunch of reads/writes/notifies where you only need to change one thing for each (for instance, the characteristic UUID).
-     */
-    public final T next()
+    static class Builder<B extends Builder, T extends BleOp>
     {
-        opList.add((T) this);
-        return createDuplicate();
-    }
+        private List<T> readList = new ArrayList<>();
 
-    /**
-     * Adds the current Ble operation to a list, and returns a new instance for chaining multiple together into a list.
-     */
-    public final T nextNew()
-    {
-        opList.add((T) this);
-        return createNewOp();
-    }
+        T currentOp;
+        private T lastRead = null;
 
-    /**
-     * Returns the list of operations. This will be empty if {@link #next()}, or {@link #nextNew()} is never called.
-     */
-    public final List<T> list()
-    {
-        return opList;
-    }
 
-    /**
-     * Same as {@link #list()}, only returns an array instead.
-     */
-    public final T[] array()
-    {
-        return (T[]) opList.toArray();
+        /**
+         * Set the service UUID for this operation. This is only needed when you have characteristics with identical uuids under different services.
+         */
+        public final B setServiceUUID(UUID uuid)
+        {
+            currentOp.setServiceUUID(uuid);
+            return (B) this;
+        }
+
+        /**
+         * Set the characteristic UUID.
+         */
+        public final B setCharacteristicUUID(UUID uuid)
+        {
+            currentOp.setCharacteristicUUID(uuid);
+            return (B) this;
+        }
+
+        /**
+         * Set the descriptor UUID (if operating with a descriptor).
+         */
+        public final B setDescriptorUUID(UUID uuid)
+        {
+            currentOp.setDescriptorUUID(uuid);
+            return (B) this;
+        }
+
+        /**
+         * Set the {@link ReadWriteListener} for listening to the callback of the operation you wish to perform.
+         */
+        public final B setReadWriteListener(final ReadWriteListener listener)
+        {
+            currentOp.setReadWriteListener(listener);
+            return (B) this;
+        }
+
+        /**
+         * Set the {@link DescriptorFilter} to determine which characteristic to operate on, if there are multiple with the same {@link UUID} in the same
+         * {@link android.bluetooth.BluetoothGattService}.
+         */
+        public final B setDescriptorFilter(DescriptorFilter filter)
+        {
+            currentOp.setDescriptorFilter(filter);
+            return (B) this;
+        }
+
+        /**
+         * Move on to another {@link BleRead} instance, based on the last one (so if you only need to change the char UUID, you don't have to set all
+         * other fields again).
+         */
+        public final B next()
+        {
+            if (currentOp != lastRead)
+            {
+                readList.add(currentOp);
+                lastRead = currentOp;
+                currentOp = (T) currentOp.createDuplicate();
+            }
+            return (B) this;
+        }
+
+        /**
+         * Move on to another {@link BleRead} instance, with the new instance having no fields set.
+         */
+        public final B nextNew()
+        {
+            if (currentOp != lastRead)
+            {
+                readList.add(currentOp);
+                lastRead = currentOp;
+                currentOp = (T) currentOp.createNewOp();
+            }
+            return (B) this;
+        }
+
+        /**
+         * Builds, and returns the list of {@link BleRead}s.
+         */
+        public final List<T> build()
+        {
+            if (currentOp != lastRead)
+            {
+                readList.add(currentOp);
+                lastRead = currentOp;
+            }
+            return readList;
+        }
+
+        /**
+         * Same as {@link #build()}, only returns an array instead of a list.
+         */
+        public final T[] buildArray()
+        {
+            return (T[]) build().toArray();
+        }
     }
 
     final T getDuplicateOp()
@@ -143,6 +213,7 @@ public abstract class BleOp<T extends BleOp>
         op.readWriteListener = readWriteListener;
         op.descriptorUuid = descriptorUuid;
         op.descriptorFilter = descriptorFilter;
+        op.opList = opList;
         return (T) op;
     }
 

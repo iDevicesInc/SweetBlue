@@ -25,6 +25,7 @@ public class NotifyTest extends BaseBleUnitTest
 
     private static final UUID mTestService = Uuids.fromShort("12BA");
     private static final UUID mTestChar = Uuids.fromShort("12BC");
+    private static final UUID mTest2Char = Uuids.fromShort("12BD");
     private static final UUID mTestDesc = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
 
 
@@ -33,7 +34,8 @@ public class NotifyTest extends BaseBleUnitTest
             .addCharacteristic(mTestChar).setProperties().readWriteNotify().setPermissions().read().build()
             .addDescriptor(mTestDesc).setPermissions().read().completeService();
     private GattDatabase dbNotify = new GattDatabase().addService(mTestService)
-            .addCharacteristic(mTestChar).setProperties().readWriteNotify().setPermissions().read().completeService();
+            .addCharacteristic(mTestChar).setProperties().readWriteNotify().setPermissions().read().completeChar()
+            .addCharacteristic(mTest2Char).setProperties().readWriteNotify().setPermissions().read().completeService();
     private GattDatabase dbIndicateNoDesc = new GattDatabase().addService(mTestService)
             .addCharacteristic(mTestChar).setProperties().readWriteIndicate().setPermissions().read().completeService();
 
@@ -115,6 +117,46 @@ public class NotifyTest extends BaseBleUnitTest
         });
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+
+        startTest();
+    }
+
+    @Test
+    public void multiNotifyTest() throws Exception
+    {
+        m_config.gattLayerFactory = device -> new UnitTestGatt(device, dbNotify);
+
+        m_config.loggingOptions = LogOptions.ON;
+
+        m_mgr.setConfig(m_config);
+
+        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "NotifyTesterererer");
+
+        final boolean[] notifies = new boolean[2];
+
+        device.connect(e ->
+        {
+            if (e.didEnter(BleDeviceState.INITIALIZED))
+            {
+                BleNotify.Builder builder = new BleNotify.Builder(mTestService, mTestChar).setReadWriteListener(e1 ->
+                {
+                    if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
+                    {
+                        assertTrue(e1.wasSuccess());
+                        notifies[0] = true;
+                    }
+                });
+                builder.next().setCharacteristicUUID(mTest2Char).setReadWriteListener(e1 ->
+                {
+                    if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
+                    {
+                        assertTrue(e1.wasSuccess());
+                        succeed();
+                    }
+                });
+                device.enableNotifies(builder.build());
+            }
+        });
 
         startTest();
     }
