@@ -17,7 +17,7 @@ final class P_ConnectionFailManager
 	private final BleDevice m_device;
 	
 
-	private DeviceConnectionFailListener m_connectionFailListener = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER;
+	private DeviceConnectionFailListener m_connectionFailListener = null;
 
 	private int m_failCount = 0;
 	private BleDeviceState m_highestStateReached_total = null;
