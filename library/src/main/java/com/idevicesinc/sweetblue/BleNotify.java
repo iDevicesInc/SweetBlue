@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+
 import com.idevicesinc.sweetblue.utils.Interval;
 import java.util.UUID;
 

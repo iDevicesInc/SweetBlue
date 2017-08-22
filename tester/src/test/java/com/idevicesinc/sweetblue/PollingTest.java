@@ -50,6 +50,10 @@ public class PollingTest extends BaseBleUnitTest
     @Test(timeout = 30000)
     public void batteryPollTest() throws Exception
     {
+        m_config.loggingOptions = LogOptions.ON;
+
+        m_mgr.setConfig(m_config);
+
         final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Battery Poll Tester");
         final Pointer<Integer> counter = new Pointer<>(0);
         device.connect(e ->
@@ -58,7 +62,7 @@ public class PollingTest extends BaseBleUnitTest
             {
                 device.startPoll(Uuids.BATTERY_LEVEL, Interval.ONE_SEC, e1 ->
                 {
-                    assertTrue(e1.wasSuccess());
+                    assertTrue(e1.status().name(), e1.wasSuccess());
                     counter.value++;
                     if (counter.value >= 5)
                     {

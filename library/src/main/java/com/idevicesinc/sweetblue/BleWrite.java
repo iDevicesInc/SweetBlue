@@ -3,8 +3,11 @@ package com.idevicesinc.sweetblue;
 import android.util.Log;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
+import com.idevicesinc.sweetblue.utils.Uuids;
+
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
@@ -21,7 +24,11 @@ import java.util.UUID;
 public final class BleWrite extends BleOp<BleWrite>
 {
 
-    FutureData data = null;
+    /**
+     * "Invalid" static instance used when doing things like setting connection parameters
+     */
+    final static BleWrite INVALID = new BleWrite(Uuids.INVALID, Uuids.INVALID).setData(P_Const.EMPTY_FUTURE_DATA);
+
     ReadWriteListener.Type writeType = null;
     boolean bigEndian = true;
 
@@ -49,7 +56,7 @@ public final class BleWrite extends BleOp<BleWrite>
     @Override
     public final boolean isValid()
     {
-        return charUuid != null && data != null && data.getData() != null;
+        return charUuid != null && m_data != null && m_data.getData() != null;
     }
 
     @Override
@@ -58,7 +65,7 @@ public final class BleWrite extends BleOp<BleWrite>
         final BleWrite write = getDuplicateOp();
         write.bigEndian = bigEndian;
         write.writeType = writeType;
-        write.data = data;
+        write.m_data = m_data;
         return write;
     }
 
@@ -106,7 +113,7 @@ public final class BleWrite extends BleOp<BleWrite>
      */
     public final BleWrite setBytes(byte[] data)
     {
-        this.data = new PresentData(data);
+        this.m_data = new PresentData(data);
         return this;
     }
 
@@ -115,7 +122,7 @@ public final class BleWrite extends BleOp<BleWrite>
      */
     public final BleWrite setData(FutureData data)
     {
-        this.data = data;
+        this.m_data = data;
         return this;
     }
 
@@ -124,7 +131,7 @@ public final class BleWrite extends BleOp<BleWrite>
      */
     public final BleWrite setBoolean(boolean value)
     {
-        data = new PresentData(value ? new byte[]{0x1} : new byte[]{0x0});
+        m_data = new PresentData(value ? new byte[]{0x1} : new byte[]{0x0});
         return this;
     }
 
@@ -138,7 +145,7 @@ public final class BleWrite extends BleOp<BleWrite>
         {
             Utils_Byte.reverseBytes(d);
         }
-        data = new PresentData(d);
+        m_data = new PresentData(d);
         return this;
     }
 
@@ -152,7 +159,7 @@ public final class BleWrite extends BleOp<BleWrite>
         {
             Utils_Byte.reverseBytes(d);
         }
-        data = new PresentData(d);
+        m_data = new PresentData(d);
         return this;
     }
 
@@ -166,7 +173,7 @@ public final class BleWrite extends BleOp<BleWrite>
         {
             Utils_Byte.reverseBytes(d);
         }
-        data = new PresentData(d);
+        m_data = new PresentData(d);
         return this;
     }
 
@@ -184,7 +191,7 @@ public final class BleWrite extends BleOp<BleWrite>
         {
             bytes = value.getBytes();
         }
-        data = new PresentData(bytes);
+        m_data = new PresentData(bytes);
         return this;
     }
 

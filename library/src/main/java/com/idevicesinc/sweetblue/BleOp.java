@@ -1,6 +1,11 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.P_Const;
+import com.idevicesinc.sweetblue.utils.PresentData;
+import com.idevicesinc.sweetblue.utils.Uuids;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +29,7 @@ public abstract class BleOp<T extends BleOp>
     UUID descriptorUuid = null;
     ReadWriteListener readWriteListener = null;
     DescriptorFilter descriptorFilter = null;
+    FutureData m_data = P_Const.EMPTY_FUTURE_DATA;
 
 
 
@@ -99,6 +105,58 @@ public abstract class BleOp<T extends BleOp>
         descriptorFilter = filter;
         return (T) this;
     }
+
+
+
+    final boolean isRead()
+    {
+        return this instanceof BleRead;
+    }
+
+    final boolean isWrite()
+    {
+        return this instanceof BleWrite;
+    }
+
+    final boolean isNotify()
+    {
+        return this instanceof BleNotify;
+    }
+
+    final boolean isServiceUuidValid()
+    {
+        return serviceUuid != null && !serviceUuid.equals(Uuids.INVALID);
+    }
+
+    final boolean isCharUuidValid()
+    {
+        return charUuid != null && !charUuid.equals(Uuids.INVALID);
+    }
+
+
+    static BleOp createOp(UUID serviceUuid, UUID charUuid, UUID descUuid, DescriptorFilter filter, byte[] data, ReadWriteListener.Type type)
+    {
+        BleOp op;
+        switch (type)
+        {
+            case WRITE:
+            case WRITE_NO_RESPONSE:
+            case WRITE_SIGNED:
+                op = new BleWrite(serviceUuid, charUuid).setWriteType(type);
+                break;
+            case NOTIFICATION:
+            case DISABLING_NOTIFICATION:
+            case ENABLING_NOTIFICATION:
+            case PSUEDO_NOTIFICATION:
+                op = new BleNotify(serviceUuid, charUuid);
+                break;
+            default:
+                op = new BleRead(serviceUuid, charUuid);
+        }
+        op.m_data = new PresentData(data);
+        return op.setDescriptorFilter(filter).setDescriptorUUID(descUuid);
+    }
+
 
     static class Builder<B extends Builder, T extends BleOp>
     {

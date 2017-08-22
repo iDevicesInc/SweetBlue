@@ -322,15 +322,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			final P_Task_BatteryLevel batteryTask = m_queue.getCurrent(P_Task_BatteryLevel.class, m_device);
-			if (batteryTask != null)
-			{
-				batteryTask.onCharacteristicRead(gatt, characteristic.getUuid(), value, gattStatus);
-			}
-			else
-			{
-				fireUnsolicitedEvent(characteristic, null, ReadWriteListener.Type.READ, ReadWriteListener.Target.CHARACTERISTIC, value, gattStatus);
-			}
+			fireUnsolicitedEvent(characteristic, null, ReadWriteListener.Type.READ, ReadWriteListener.Target.CHARACTERISTIC, value, gattStatus);
 		}
 	}
 
@@ -381,12 +373,13 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		final ReadWriteListener.ReadWriteEvent e;
 
+		final BleOp op = BleOp.createOp(serviceUuid, characteristicUuid, descriptorUuid, null, data, type);
+
 		if( target == ReadWriteListener.Target.CHARACTERISTIC || target == ReadWriteListener.Target.DESCRIPTOR )
 		{
 			e = new ReadWriteListener.ReadWriteEvent
 			(
-				m_device, serviceUuid, characteristicUuid, descriptorUuid, null, type_modified,
-				target, data, status, gattStatus, time, time, solicited
+				m_device, op, type_modified, target, status, gattStatus, time, time, solicited
 			);
 		}
 		else if( target == ReadWriteListener.Target.RSSI )

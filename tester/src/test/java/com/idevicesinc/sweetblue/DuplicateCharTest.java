@@ -116,7 +116,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
                         {
                             assertTrue(e11.status().name(), e11.wasSuccess());
                             assertTrue(e11.characteristic().getDescriptor(mTestDesc).getValue()[0] == 2);
-                            assertTrue(Arrays.equals(e11.data(), new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }));
+                            assertTrue("Goal: " + Arrays.toString(new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }) + " Return: " + Arrays.toString(e11.data()), Arrays.equals(e11.data(), new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }));
                             succeed();
                         });
                         m_device.read(read);

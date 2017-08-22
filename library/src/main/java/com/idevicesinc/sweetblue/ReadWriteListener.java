@@ -611,24 +611,26 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
         private final DescriptorFilter m_descriptorFilter;
 
 
-        ReadWriteEvent(BleDevice device, UUID serviceUuid, UUID charUuid, UUID descUuid, DescriptorFilter descFilter, ReadWriteListener.Type type, ReadWriteListener.Target target, byte[] data, ReadWriteListener.Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
+
+        ReadWriteEvent(BleDevice device, BleOp bleOp, ReadWriteListener.Type type, ReadWriteListener.Target target, ReadWriteListener.Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
         {
             this.m_device = device;
-            this.m_serviceUuid = serviceUuid != null ? serviceUuid : NON_APPLICABLE_UUID;
-            this.m_charUuid = charUuid != null ? charUuid : NON_APPLICABLE_UUID;
-            this.m_descUuid = descUuid != null ? descUuid : NON_APPLICABLE_UUID;
+            this.m_serviceUuid = bleOp.serviceUuid != null ? bleOp.serviceUuid : NON_APPLICABLE_UUID;
+            this.m_charUuid = bleOp.charUuid != null ? bleOp.charUuid : NON_APPLICABLE_UUID;
+            this.m_descUuid = bleOp.descriptorUuid != null ? bleOp.descriptorUuid : NON_APPLICABLE_UUID;
             this.m_type = type;
             this.m_target = target;
             this.m_status = status;
             this.m_gattStatus = gattStatus;
             this.m_totalTime = Interval.secs(totalTime);
             this.m_transitTime = Interval.secs(transitTime);
-            this.m_data = data != null ? data : P_Const.EMPTY_BYTE_ARRAY;
+            final byte[] bytes = bleOp.m_data.getData();
+            this.m_data = bytes;
             this.m_rssi = device.getRssi();
             this.m_mtu = device.getMtu();
             this.m_solicited = solicited;
             this.m_connectionPriority = device.getConnectionPriority();
-            this.m_descriptorFilter = descFilter;
+            this.m_descriptorFilter = bleOp.descriptorFilter;
         }
 
 
@@ -694,7 +696,8 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
 
         static ReadWriteListener.ReadWriteEvent NULL(BleDevice device)
         {
-            return new ReadWriteListener.ReadWriteEvent(device, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, NON_APPLICABLE_UUID, null, ReadWriteListener.Type.NULL, ReadWriteListener.Target.NULL, P_Const.EMPTY_BYTE_ARRAY, ReadWriteListener.Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
+            BleRead read = new BleRead(NON_APPLICABLE_UUID, NON_APPLICABLE_UUID);
+            return new ReadWriteListener.ReadWriteEvent(device, read, ReadWriteListener.Type.NULL, ReadWriteListener.Target.NULL, ReadWriteListener.Status.NULL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Interval.ZERO.secs(), Interval.ZERO.secs(), /*solicited=*/true);
         }
 
         /**

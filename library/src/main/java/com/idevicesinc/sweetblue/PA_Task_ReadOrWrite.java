@@ -17,53 +17,32 @@ import com.idevicesinc.sweetblue.utils.Uuids;
 abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {
 
-	private final UUID m_charUuid;
-	private final UUID m_servUuid;
+	final BleOp m_bleOp;
 
-	protected final ReadWriteListener m_readWriteListener;
-	
 	private Boolean m_authRetryValue_onExecute = null;
 	private boolean m_triedToKickOffBond = false;
-	protected final DescriptorFilter m_descriptorFilter;
 
 	private BluetoothGattCharacteristic m_filteredCharacteristic;
 	private List<BluetoothGattCharacteristic> m_characteristicList;
 
-	
-	PA_Task_ReadOrWrite(BleDevice device, BluetoothGattCharacteristic nativeChar, ReadWriteListener readWriteListener, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
+
+	PA_Task_ReadOrWrite(BleDevice device, BleOp bleOp, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority)
 	{
 		super(device, txn_nullable, requiresBonding, priority);
 
-		m_charUuid = nativeChar.getUuid();
-		m_servUuid = nativeChar.getService().getUuid();
-
-		m_readWriteListener = readWriteListener;
-
-		m_descriptorFilter = null;
-	}
-
-	PA_Task_ReadOrWrite(BleDevice device, UUID serviceUuid, UUID charUuid, boolean requiresBonding, BleTransaction txn_nullable, PE_TaskPriority priority, DescriptorFilter filter, ReadWriteListener readWriteListener)
-	{
-		super(device, txn_nullable, requiresBonding, priority);
-
-		m_servUuid = serviceUuid;
-		m_charUuid = charUuid;
-
-		m_readWriteListener = readWriteListener;
-
-		m_descriptorFilter = filter;
+		m_bleOp = bleOp;
 
 		m_characteristicList = new ArrayList<>();
 	}
 
 	
-	protected abstract ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid);
+	protected abstract ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, BleOp bleOp);
 	protected abstract void executeReadOrWrite();
 
 
 	protected UUID getActualDescUuid(UUID descUuid)
 	{
-		return descUuid != null ? descUuid : m_descriptorFilter != null ? m_descriptorFilter.descriptorUuid() : null;
+		return descUuid != null ? descUuid : m_bleOp.descriptorFilter != null ? m_bleOp.descriptorFilter.descriptorUuid() : null;
 	}
 
 	protected Target getDefaultTarget()
@@ -75,16 +54,16 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 	{
 		this.fail();
 
-		getDevice().invokeReadWriteCallback(m_readWriteListener, newReadWriteEvent(status, gattStatus, target, getServiceUuid(), charUuid, descUuid));
+		getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, newReadWriteEvent(status, gattStatus, target, m_bleOp));
 	}
 
 	@Override protected void onNotExecutable()
 	{
 		super.onNotExecutable();
 
-		final ReadWriteEvent event = newReadWriteEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getServiceUuid(), getCharUuid(), getDescUuid());
+		final ReadWriteEvent event = newReadWriteEvent(Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_bleOp);
 
-		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
+		getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, event);
 	}
 	
 	protected boolean acknowledgeCallback(int status)
@@ -137,15 +116,18 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 	{
 		m_authRetryValue_onExecute = getAuthRetryValue();
 
-		if (m_descriptorFilter == null)
+		if (m_bleOp.descriptorFilter == null)
 		{
 			executeReadOrWrite();
 		}
 		else
 		{
+			// A descriptor filter has been set, so here we need to determine which characteristic to perform the read/write on.
+			// Get the list of characteristics in the service of the Uuid provided
 			List<BluetoothGattCharacteristic> charList = getDevice().getNativeCharacteristics_List(getServiceUuid());
 			if (charList != null)
 			{
+				// Now update the list of characteristics that match the given char Uuid
 				int size = charList.size();
 				for (int i = 0; i < size; i++)
 				{
@@ -158,19 +140,20 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 				size = m_characteristicList.size();
 				if (size == 0)
 				{
-					fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_descriptorFilter.descriptorUuid());
+					fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_bleOp.descriptorFilter.descriptorUuid());
 					return;
 				}
 
-				final UUID descUuid = m_descriptorFilter.descriptorUuid();
+				final UUID descUuid = m_bleOp.descriptorFilter.descriptorUuid();
 
 				if (descUuid != null)
 				{
+					// Find the descriptor matching the given desc Uuid, and read it (the rest of the logic is handled in onDescriptorReadCallback)
 					final BluetoothGattCharacteristic m_char = m_characteristicList.get(0);
 					final BluetoothGattDescriptor m_desc = m_char.getDescriptor(descUuid);
 					if (m_desc == null)
 					{
-						fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_descriptorFilter.descriptorUuid());
+						fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_bleOp.descriptorFilter.descriptorUuid());
 					}
 					else
 					{
@@ -190,22 +173,25 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 					for (BluetoothGattCharacteristic ch : m_characteristicList)
 					{
 						final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(ch.getService(), ch, null, PresentData.EMPTY);
-						final DescriptorFilter.Please please = m_descriptorFilter.onEvent(event);
+						final DescriptorFilter.Please please = m_bleOp.descriptorFilter.onEvent(event);
 						if (please.isAccepted())
 						{
 							m_filteredCharacteristic = ch;
+							if (!m_bleOp.isServiceUuidValid())
+								m_bleOp.serviceUuid = m_filteredCharacteristic.getService().getUuid();
+
 							executeReadOrWrite();
 							return;
 						}
 					}
 
 					// If we got here, we couldn't find a valid char to write to
-					fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_descriptorFilter.descriptorUuid());
+					fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_bleOp.descriptorFilter.descriptorUuid());
 				}
 			}
 			else
 			{
-				fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_descriptorFilter.descriptorUuid());
+				fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.CHARACTERISTIC, getCharUuid(), m_bleOp.descriptorFilter.descriptorUuid());
 			}
 		}
 	}
@@ -225,12 +211,12 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 	
 	@Override protected UUID getCharUuid()
 	{
-		return m_charUuid;
+		return m_bleOp.charUuid;
 	}
 
 	protected UUID getServiceUuid()
 	{
-		return m_servUuid;
+		return m_bleOp.serviceUuid;
 	}
 
 	public boolean isFor(final BluetoothGattCharacteristic characteristic)
@@ -274,19 +260,19 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 
 	boolean descriptorMatches(BluetoothGattDescriptor descriptor)
 	{
-		if (m_descriptorFilter == null)
+		if (m_bleOp.descriptorFilter == null)
 		{
 			return isFor(descriptor);
 		}
 		else
 		{
-			return descriptor.getUuid().equals(m_descriptorFilter.descriptorUuid());
+			return descriptor.getUuid().equals(m_bleOp.descriptorFilter.descriptorUuid());
 		}
 	}
 
 	void onDescriptorReadCallback(BluetoothGatt gatt, BluetoothGattDescriptor desc, byte[] value, int gattStatus)
 	{
-		if (m_descriptorFilter == null)
+		if (m_bleOp.descriptorFilter == null)
 		{
 			onDescriptorRead(gatt, desc.getUuid(), value, gattStatus);
 		}
@@ -299,7 +285,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 			if( Utils.isSuccess(gattStatus))
 			{
 				final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(desc.getCharacteristic().getService(), desc.getCharacteristic(), desc, new PresentData(value));
-				final DescriptorFilter.Please please = m_descriptorFilter.onEvent(event);
+				final DescriptorFilter.Please please = m_bleOp.descriptorFilter.onEvent(event);
 				if (please.isAccepted())
 				{
 					m_filteredCharacteristic = desc.getCharacteristic();
@@ -315,7 +301,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 					else
 					{
 						final BluetoothGattCharacteristic ch = m_characteristicList.get(0);
-						final BluetoothGattDescriptor descr = ch.getDescriptor(m_descriptorFilter.descriptorUuid());
+						final BluetoothGattDescriptor descr = ch.getDescriptor(m_bleOp.descriptorFilter.descriptorUuid());
 						if (false == getDevice().layerManager().readDescriptor(descr))
 						{
 							fail(ReadWriteListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.DESCRIPTOR, ch.getUuid(), descr.getUuid());
@@ -375,26 +361,28 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 
 	private ReadWriteEvent newSuccessReadWriteEvent(byte[] data, Target target, ReadWriteListener.Type type, UUID charUuid, UUID descUuid, DescriptorFilter descriptorFilter)
 	{
-		return new ReadWriteEvent(getDevice(), getServiceUuid(), charUuid, descUuid, descriptorFilter, type, target, data, Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
+		BleOp op = BleOp.createOp(getServiceUuid(), charUuid, descUuid, descriptorFilter, data, type);
+		op.m_data = new PresentData(data);
+		return new ReadWriteEvent(getDevice(), op, type, target, Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
 	private void succeedRead(byte[] value, Target target, ReadWriteListener.Type type)
 	{
 		super.succeed();
 
-		final ReadWriteEvent event = newSuccessReadWriteEvent(value, target, type, getCharUuid(), getDescUuid(), m_descriptorFilter);
+		final ReadWriteEvent event = newSuccessReadWriteEvent(value, target, type, getCharUuid(), getDescUuid(), m_bleOp.descriptorFilter);
 		getDevice().addReadTime(event.time_total().secs());
 
-		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
+		getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, event);
 	}
 
 	protected void succeedWrite()
 	{
 		super.succeed();
 
-		final ReadWriteEvent event = newReadWriteEvent(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getDefaultTarget(), getServiceUuid(), getCharUuid(), ReadWriteEvent.NON_APPLICABLE_UUID);
+		final ReadWriteEvent event = newReadWriteEvent(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, getDefaultTarget(), m_bleOp);
 		getDevice().addWriteTime(event.time_total().secs());
-		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
+		getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, event);
 	}
 
 	protected boolean write_earlyOut(final byte[] data_nullable)

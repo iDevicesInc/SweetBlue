@@ -25,7 +25,7 @@ final class P_ReliableWriteManager
 
 	ReadWriteListener.ReadWriteEvent newEvent(final ReadWriteListener.Status status, final int gattStatus, final boolean solicited)
 	{
-		return new ReadWriteListener.ReadWriteEvent(m_device, Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, ReadWriteListener.Type.WRITE, ReadWriteListener.Target.RELIABLE_WRITE, P_Const.EMPTY_BYTE_ARRAY, status, gattStatus, 0.0, 0.0, solicited);
+		return new ReadWriteListener.ReadWriteEvent(m_device, BleWrite.INVALID, ReadWriteListener.Type.WRITE, ReadWriteListener.Target.RELIABLE_WRITE, status, gattStatus, 0.0, 0.0, solicited);
 	}
 
 	private ReadWriteListener.ReadWriteEvent getGeneralEarlyOutEvent()
