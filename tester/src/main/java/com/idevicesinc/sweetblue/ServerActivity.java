@@ -54,14 +54,14 @@ public class ServerActivity extends Activity
         GattDatabase db = new GattDatabase().addService(mFakeService)
                 .addCharacteristic(mFakeChar).setValue(new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8 }).setProperties().readWrite().setPermissions().readWrite().completeService();
 
-        m_server = m_manager.getServer(new BleServer.IncomingListener()
+        m_server = m_manager.getServer(new IncomingListener()
         {
             @Override
             public Please onEvent(IncomingEvent e)
             {
                 return Please.respondWithSuccess();
             }
-        }, db, new BleServer.ServiceAddListener()
+        }, db, new AddServiceListener()
         {
             @Override
             public void onEvent(ServiceAddEvent e)
@@ -73,7 +73,7 @@ public class ServerActivity extends Activity
                 else
                 {
                     BleAdvertisingPacket packet = new BleAdvertisingPacket(mAdvService);
-                    m_server.startAdvertising(packet, new BleServer.AdvertisingListener()
+                    m_server.startAdvertising(packet, new AdvertisingListener()
                     {
                         @Override
                         public void onEvent(AdvertisingEvent e)

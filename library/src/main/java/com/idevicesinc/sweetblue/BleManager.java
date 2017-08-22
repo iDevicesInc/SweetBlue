@@ -30,7 +30,6 @@ import com.idevicesinc.sweetblue.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BondListener.Status;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
-import com.idevicesinc.sweetblue.BleServer.IncomingListener;
 import com.idevicesinc.sweetblue.ScanFilter.Please;
 import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -219,7 +218,7 @@ public final class BleManager
 	private AssertListener m_assertionListener;
 			DeviceStateListener m_defaultDeviceStateListener;
 			DeviceConnectionFailListener m_defaultConnectionFailListener;
-			BleServer.ConnectionFailListener m_defaultConnectionFailListener_server;
+			ServerConnectionFailListener m_defaultConnectionFailListener_server;
 			BondListener m_defaultBondListener;
 			ReadWriteListener m_defaultReadWriteListener;
 			NotificationListener m_defaultNotificationListener;
@@ -235,11 +234,11 @@ public final class BleManager
     private long m_lastUpdateLoopWarning = 0;
 
 
-    BleServer.StateListener m_defaultServerStateListener;
-	BleServer.OutgoingListener m_defaultServerOutgoingListener;
+    ServerStateListener m_defaultServerStateListener;
+	OutgoingListener m_defaultServerOutgoingListener;
 	IncomingListener m_defaultServerIncomingListener;
-	BleServer.ServiceAddListener m_serviceAddListener;
-	BleServer.AdvertisingListener m_advertisingListener;
+	AddServiceListener m_serviceAddListener;
+	AdvertisingListener m_advertisingListener;
 //    final P_ServerManager m_serverMngr;
 
 	final Backend_HistoricalDatabase m_historicalDatabase;
@@ -658,13 +657,13 @@ public final class BleManager
 	/**
 	 * Convenience method to handle server connection fail events at the manager level. The listener provided
 	 * will only get called if the server whose connection failed doesn't have a listener provided to
-	 * {@link BleServer#setListener_ConnectionFail(BleServer.ConnectionFailListener)}. This is unlike the behavior
-	 * behind (for example) {@link #setListener_ServerState(BleServer.StateListener)} because
-	 * {@link BleServer.ConnectionFailListener#onEvent(BleServer.ConnectionFailListener.ConnectionFailEvent)} requires a return value.
+	 * {@link BleServer#setListener_ConnectionFail(ServerConnectionFailListener)}. This is unlike the behavior
+	 * behind (for example) {@link #setListener_ServerState(ServerStateListener)} because
+	 * {@link ServerConnectionFailListener#onEvent(ServerConnectionFailListener.ConnectionFailEvent)} requires a return value.
 	 *
-	 * @see BleServer#setListener_ConnectionFail(BleServer.ConnectionFailListener)
+	 * @see BleServer#setListener_ConnectionFail(ServerConnectionFailListener)
 	 */
-	public final void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) BleServer.ConnectionFailListener listener_nullable)
+	public final void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) ServerConnectionFailListener listener_nullable)
 	{
 		m_defaultConnectionFailListener_server = listener_nullable;
 	}
@@ -672,13 +671,13 @@ public final class BleManager
 	/**
 	 * Convenience method to handle server request events at the manager level. The listener provided
 	 * will only get called if the server receiving a request doesn't have a listener provided to
-	 * {@link BleServer#setListener_Incoming(BleServer.IncomingListener)} . This is unlike the behavior (for example)
-	 * behind {@link #setListener_Outgoing(BleServer.OutgoingListener)} because
-	 * {@link BleServer.IncomingListener#onEvent(BleServer.IncomingListener.IncomingEvent)} requires a return value.
+	 * {@link BleServer#setListener_Incoming(IncomingListener)} . This is unlike the behavior (for example)
+	 * behind {@link #setListener_Outgoing(OutgoingListener)} because
+	 * {@link IncomingListener#onEvent(IncomingListener.IncomingEvent)} requires a return value.
 	 *
 	 * @see BleServer#setListener_Incoming(IncomingListener)
 	 */
-	public final void setListener_Incoming(@Nullable(Prevalence.NORMAL) BleServer.IncomingListener listener_nullable)
+	public final void setListener_Incoming(@Nullable(Prevalence.NORMAL) IncomingListener listener_nullable)
 	{
 		m_defaultServerIncomingListener = listener_nullable;
 	}
@@ -686,11 +685,11 @@ public final class BleManager
 	/**
 	 * Convenience method to listen for all service addition events for all servers.
 	 * The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleServer#setListener_ServiceAdd(BleServer.ServiceAddListener)}.
+	 * to {@link BleServer#setListener_ServiceAdd(AddServiceListener)}.
 	 *
-	 * @see BleServer#setListener_ServiceAdd(BleServer.ServiceAddListener)
+	 * @see BleServer#setListener_ServiceAdd(AddServiceListener)
 	 */
-	public final void setListener_ServiceAdd(@Nullable(Prevalence.NORMAL) BleServer.ServiceAddListener listener_nullable)
+	public final void setListener_ServiceAdd(@Nullable(Prevalence.NORMAL) AddServiceListener listener_nullable)
 	{
 		m_serviceAddListener = listener_nullable;
 	}
@@ -698,11 +697,11 @@ public final class BleManager
 	/**
 	 * Convenience method to listen for all changes in {@link BleServerState} for all servers.
 	 * The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleServer#setListener_State(BleServer.StateListener)}.
+	 * to {@link BleServer#setListener_State(ServerStateListener)}.
 	 *
-	 * @see BleServer#setListener_State(BleServer.StateListener)
+	 * @see BleServer#setListener_State(ServerStateListener)
 	 */
-	public final void setListener_ServerState(@Nullable(Prevalence.NORMAL) BleServer.StateListener listener_nullable)
+	public final void setListener_ServerState(@Nullable(Prevalence.NORMAL) ServerStateListener listener_nullable)
 	{
 		m_defaultServerStateListener = listener_nullable;
 	}
@@ -710,11 +709,11 @@ public final class BleManager
 	/**
 	 * Convenience method to listen for completion of all outgoing messages from
 	 * {@link BleServer} instances. The listener provided will get called in addition to and after the listener, if any, provided
-	 * to {@link BleServer#setListener_Outgoing(BleServer.OutgoingListener)}.
+	 * to {@link BleServer#setListener_Outgoing(OutgoingListener)}.
 	 *
-	 * @see BleServer#setListener_Outgoing(BleServer.OutgoingListener)
+	 * @see BleServer#setListener_Outgoing(OutgoingListener)
 	 */
-	public final void setListener_Outgoing(@Nullable(Prevalence.NORMAL) BleServer.OutgoingListener listener_nullable)
+	public final void setListener_Outgoing(@Nullable(Prevalence.NORMAL) OutgoingListener listener_nullable)
 	{
 		m_defaultServerOutgoingListener = listener_nullable;
 	}
@@ -767,7 +766,7 @@ public final class BleManager
 	/**
 	 * Set a listener here to be notified of the result of starting to advertise.
 	 */
-	public final void setListener_Advertising(BleServer.AdvertisingListener listener)
+	public final void setListener_Advertising(AdvertisingListener listener)
 	{
 		m_advertisingListener = listener;
 	}
@@ -2098,7 +2097,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #getServer(BleServer.IncomingListener)} without any initial set-up parameters.
+	 * Overload of {@link #getServer(IncomingListener)} without any initial set-up parameters.
 	 */
 	public final BleServer getServer()
 	{
@@ -2119,7 +2118,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #getServer(GattDatabase, BleServer.ServiceAddListener)}, with no {@link com.idevicesinc.sweetblue.BleServer.ServiceAddListener} set.
+	 * Overload of {@link #getServer(GattDatabase, AddServiceListener)}, with no {@link AddServiceListener} set.
 	 */
 	public final BleServer getServer(final GattDatabase gattDatabase)
 	{
@@ -2127,9 +2126,9 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #getServer(IncomingListener, GattDatabase, BleServer.ServiceAddListener)}, with no {@link IncomingListener} set.
+	 * Overload of {@link #getServer(IncomingListener, GattDatabase, AddServiceListener)}, with no {@link IncomingListener} set.
 	 */
-	public final BleServer getServer(final GattDatabase gattDatabase, BleServer.ServiceAddListener addServiceListener)
+	public final BleServer getServer(final GattDatabase gattDatabase, AddServiceListener addServiceListener)
 	{
 		return getServer(null, gattDatabase, addServiceListener);
 	}
@@ -2137,7 +2136,7 @@ public final class BleManager
 	/**
 	 * Returns a {@link BleServer} instance. This is now the preferred method to retrieve the server instance.
 	 */
-	public final BleServer getServer(final IncomingListener incomingListener, final GattDatabase gattDatabase, final BleServer.ServiceAddListener addServiceListener)
+	public final BleServer getServer(final IncomingListener incomingListener, final GattDatabase gattDatabase, final AddServiceListener addServiceListener)
 	{
 		if (m_server == null)
 		{
@@ -2182,7 +2181,7 @@ public final class BleManager
 
 	/**
 	 * Creates a new {@link BleDevice} or returns an existing one if the macAddress matches.
-	 * {@link DiscoveryListener#onEvent(DiscoveryEvent)} will be called if a new device
+	 * {@link DiscoveryListener#onEvent(Event)} will be called if a new device
 	 * is created.
 	 * <br><br>
 	 * NOTE: You should always do a {@link BleDevice#isNull()} check on this method's return value just in case. Android
@@ -2241,7 +2240,7 @@ public final class BleManager
 
 	/**
 	 * Forcefully undiscovers a device, disconnecting it first if needed and removing it from this manager's internal list.
-	 * {@link DiscoveryListener#onEvent(DiscoveryEvent)} with {@link LifeCycle#UNDISCOVERED} will be called.
+	 * {@link DiscoveryListener#onEvent(Event)} with {@link LifeCycle#UNDISCOVERED} will be called.
 	 * No clear use case has been thought of but the method is here just in case anyway.
 	 *
 	 * @return	<code>true</code> if the device was undiscovered, <code>false</code> if device is already {@link BleDeviceState#UNDISCOVERED} or manager
@@ -2351,7 +2350,7 @@ public final class BleManager
 
 		if( m_server != null )
 		{
-			m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ChangeIntent.INTENTIONAL);
+			m_server.disconnect_internal(AddServiceListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ServerConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ChangeIntent.INTENTIONAL);
 		}
 
 		final P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()

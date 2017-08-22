@@ -9,9 +9,8 @@ import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 
-import com.idevicesinc.sweetblue.BleServer.IncomingListener;
-import static com.idevicesinc.sweetblue.BleServer.IncomingListener.*;
-import static com.idevicesinc.sweetblue.BleServer.OutgoingListener.*;
+import static com.idevicesinc.sweetblue.IncomingListener.*;
+import static com.idevicesinc.sweetblue.OutgoingListener.*;
 
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -55,9 +54,9 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 					}
 					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
 					{
-						final BleServer.ConnectionFailListener.Status status = task_cast.getStatus();
+						final ServerConnectionFailListener.Status status = task_cast.getStatus();
 
-						if( status == BleServer.ConnectionFailListener.Status.SERVER_OPENING_FAILED || status == BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY )
+						if( status == ServerConnectionFailListener.Status.SERVER_OPENING_FAILED || status == ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY )
 						{
 							m_server.onNativeConnectFail(task_cast.m_nativeDevice, status, task_cast.getGattStatus());
 						}
@@ -65,16 +64,16 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 						{
 							m_server.getManager().ASSERT(false, "Didn't expect server failed-immediately status to be something else.");
 
-							m_server.onNativeConnectFail(task_cast.m_nativeDevice, BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY, task_cast.getGattStatus());
+							m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY, task_cast.getGattStatus());
 						}
 					}
 					else if( state == PE_TaskState.FAILED )
 					{
-						m_server.onNativeConnectFail(task_cast.m_nativeDevice, BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
+						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
 					}
 					else if( state == PE_TaskState.TIMED_OUT )
 					{
-						m_server.onNativeConnectFail(task_cast.m_nativeDevice, BleServer.ConnectionFailListener.Status.TIMED_OUT, task_cast.getGattStatus());
+						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerConnectionFailListener.Status.TIMED_OUT, task_cast.getGattStatus());
 					}
 					else if( state == PE_TaskState.SOFTLY_CANCELLED )
 					{
@@ -84,7 +83,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 					{
 						m_server.getManager().ASSERT(false, "Did not expect ending state " + state + " for connect task failure.");
 
-						m_server.onNativeConnectFail(task_cast.m_nativeDevice, BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
+						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
 					}
 				}
 			}
@@ -153,7 +152,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		}
 		else
 		{
-			m_server.onNativeConnectFail(nativeDevice, BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, gattStatus);
+			m_server.onNativeConnectFail(nativeDevice, ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, gattStatus);
 		}
 	}
 
@@ -285,8 +284,8 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		}
 		else
 		{
-			final BleServer.ServiceAddListener.Status status = Utils.isSuccess(gattStatus) ? BleServer.ServiceAddListener.Status.SUCCESS : BleServer.ServiceAddListener.Status.FAILED_EVENTUALLY;
-			final BleServer.ServiceAddListener.ServiceAddEvent e = new BleServer.ServiceAddListener.ServiceAddEvent
+			final AddServiceListener.Status status = Utils.isSuccess(gattStatus) ? AddServiceListener.Status.SUCCESS : AddServiceListener.Status.FAILED_EVENTUALLY;
+			final AddServiceListener.ServiceAddEvent e = new AddServiceListener.ServiceAddEvent
 			(
 				m_server, service, status, gattStatus, /*solicited=*/false
 			);
@@ -295,7 +294,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		}
     }
 
-	private OutgoingEvent newEarlyOutResponse_Read(final BluetoothDevice device, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable, final int requestId, final int offset, final BleServer.OutgoingListener.Status status)
+	private OutgoingEvent newEarlyOutResponse_Read(final BluetoothDevice device, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable, final int requestId, final int offset, final OutgoingListener.Status status)
 	{
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 
@@ -371,7 +370,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		});
 	}
 
-	private OutgoingEvent newEarlyOutResponse_Write(final BluetoothDevice device, final Type type, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable, final int requestId, final int offset, final BleServer.OutgoingListener.Status status)
+	private OutgoingEvent newEarlyOutResponse_Write(final BluetoothDevice device, final Type type, final UUID serviceUuid, final UUID charUuid, final UUID descUuid_nullable, final int requestId, final int offset, final OutgoingListener.Status status)
 	{
 		final Target target = descUuid_nullable == null ? Target.CHARACTERISTIC : Target.DESCRIPTOR;
 
@@ -473,11 +472,11 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		}
 		else
 		{
-			final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
+			final OutgoingListener.OutgoingEvent e = new OutgoingListener.OutgoingEvent
 			(
-				m_server, device, Uuids.INVALID, Uuids.INVALID, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, Type.NOTIFICATION,
-				BleServer.ExchangeListener.Target.CHARACTERISTIC, P_Const.EMPTY_BYTE_ARRAY, P_Const.EMPTY_BYTE_ARRAY, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
-				/*offset=*/0, /*responseNeeded=*/false, BleServer.OutgoingListener.Status.SUCCESS, BleStatuses.GATT_STATUS_NOT_APPLICABLE, gattStatus, /*solicited=*/false
+				m_server, device, Uuids.INVALID, Uuids.INVALID, ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, Type.NOTIFICATION,
+				ExchangeListener.Target.CHARACTERISTIC, P_Const.EMPTY_BYTE_ARRAY, P_Const.EMPTY_BYTE_ARRAY, ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
+				/*offset=*/0, /*responseNeeded=*/false, OutgoingListener.Status.SUCCESS, BleStatuses.GATT_STATUS_NOT_APPLICABLE, gattStatus, /*solicited=*/false
 			);
 
 			m_server.invokeOutgoingListeners(e, null);

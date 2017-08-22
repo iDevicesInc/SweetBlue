@@ -13,17 +13,17 @@ abstract class PA_Task_RequiresServerConnection extends PA_Task_RequiresBleOn
 		m_macAddress = macAddress;
 	}
 
-	protected final BleServer.OutgoingListener.Status getCancelStatusType()
+	protected final OutgoingListener.Status getCancelStatusType()
 	{
 		BleManager mngr = this.getManager();
 
 		if( mngr.isAny(BleManagerState.TURNING_OFF, BleManagerState.OFF) )
 		{
-			return BleServer.OutgoingListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
+			return OutgoingListener.Status.CANCELLED_FROM_BLE_TURNING_OFF;
 		}
 		else
 		{
-			return BleServer.OutgoingListener.Status.CANCELLED_FROM_DISCONNECT;
+			return OutgoingListener.Status.CANCELLED_FROM_DISCONNECT;
 		}
 	}
 	

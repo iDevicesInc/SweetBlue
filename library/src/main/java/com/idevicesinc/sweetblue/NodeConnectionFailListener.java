@@ -12,7 +12,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 
 /**
- * Base interface for {@link DeviceConnectionFailListener} and {@link BleServer.ConnectionFailListener}.
+ * Base interface for {@link DeviceConnectionFailListener} and {@link ServerConnectionFailListener}.
  */
 @com.idevicesinc.sweetblue.annotations.Lambda
 public interface NodeConnectionFailListener
@@ -49,7 +49,7 @@ public interface NodeConnectionFailListener
     }
 
     /**
-     * Abstract base class for structures passed to {@link BleServer.ConnectionFailListener#onEvent(BleServer.ConnectionFailListener.ConnectionFailEvent)}
+     * Abstract base class for structures passed to {@link ServerConnectionFailListener#onEvent(ServerConnectionFailListener.ConnectionFailEvent)}
      * and {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)} to provide more info about how/why a connection failed.
      */
     @Immutable
@@ -106,7 +106,7 @@ public interface NodeConnectionFailListener
 
     /**
      * Return value for {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)}
-     * and {@link BleServer.ConnectionFailListener#onEvent(BleServer.ConnectionFailListener.ConnectionFailEvent)}.
+     * and {@link ServerConnectionFailListener#onEvent(ServerConnectionFailListener.ConnectionFailEvent)}.
      * Generally you will only return {@link #retry()} or {@link #doNotRetry()}, but there are more advanced options as well.
      */
     @Immutable

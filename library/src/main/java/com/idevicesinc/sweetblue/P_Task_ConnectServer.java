@@ -1,18 +1,17 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGattServer;
 
 final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 {
-	private BleServer.ConnectionFailListener.Status m_status = BleServer.ConnectionFailListener.Status.NULL;
+	private ServerConnectionFailListener.Status m_status = ServerConnectionFailListener.Status.NULL;
 
 	public P_Task_ConnectServer(BleServer server, BluetoothDevice nativeDevice, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
 	{
 		super(server, nativeDevice, listener, explicit, priority);
 	}
 
-	public BleServer.ConnectionFailListener.Status getStatus()
+	public ServerConnectionFailListener.Status getStatus()
 	{
 		return m_status;
 	}
@@ -25,7 +24,7 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 		{
 			if( !getServer().m_nativeWrapper.openServer() )
 			{
-				m_status = BleServer.ConnectionFailListener.Status.SERVER_OPENING_FAILED;
+				m_status = ServerConnectionFailListener.Status.SERVER_OPENING_FAILED;
 
 				failImmediately();
 
@@ -37,7 +36,7 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 
 		if( server_native.isServerNull() )
 		{
-			m_status = BleServer.ConnectionFailListener.Status.SERVER_OPENING_FAILED;
+			m_status = ServerConnectionFailListener.Status.SERVER_OPENING_FAILED;
 
 			failImmediately();
 
@@ -53,7 +52,7 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				}
 				else
 				{
-					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
+					m_status = ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 				}
@@ -62,7 +61,7 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 			{
 				if( getServer().m_nativeWrapper.isDisconnecting(m_nativeDevice.getAddress()) )
 				{
-					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
+					m_status = ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 
@@ -75,13 +74,13 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				}
 				else if( getServer().m_nativeWrapper.isConnected(m_nativeDevice.getAddress()) )
 				{
-					m_status = BleServer.ConnectionFailListener.Status.ALREADY_CONNECTING_OR_CONNECTED;
+					m_status = ServerConnectionFailListener.Status.ALREADY_CONNECTING_OR_CONNECTED;
 
 					redundant();
 				}
 				else
 				{
-					m_status = BleServer.ConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
+					m_status = ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 
