@@ -401,7 +401,7 @@ final class P_BleManager_Listeners
 
                 if (m_mngr.m_server != null)
                 {
-                    m_mngr.m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, State.ChangeIntent.UNINTENTIONAL);
+                    m_mngr.m_server.disconnect_internal(AddServiceListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ServerConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, State.ChangeIntent.UNINTENTIONAL);
                 }
 
                 intent = E_Intent.UNINTENTIONAL;

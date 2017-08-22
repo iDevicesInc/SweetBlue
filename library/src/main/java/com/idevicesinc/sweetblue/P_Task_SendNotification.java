@@ -15,7 +15,7 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 	private final BleServer m_server;
 	private final BluetoothDevice m_nativeDevice;
 
-	private final BleServer.OutgoingListener m_responseListener;
+	private final OutgoingListener m_responseListener;
 	private final FutureData m_futureData;
 
 	private final UUID m_charUuid;
@@ -25,7 +25,7 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 
 	private byte[] m_data_sent = null;
 
-	public P_Task_SendNotification(BleServer server, BluetoothDevice device, final UUID serviceUuid, final UUID charUuid, final FutureData futureData, boolean confirm, final BleServer.OutgoingListener responseListener)
+	public P_Task_SendNotification(BleServer server, BluetoothDevice device, final UUID serviceUuid, final UUID charUuid, final FutureData futureData, boolean confirm, final OutgoingListener responseListener)
 	{
 		super(server, device.getAddress());
 
@@ -59,19 +59,19 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 
 		if( characteristic == null )
 		{
-			fail(BleServer.OutgoingListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			fail(OutgoingListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 		else
 		{
 			if( !characteristic.setValue(data_sent()) )
 			{
-				fail(BleServer.OutgoingListener.Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+				fail(OutgoingListener.Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 			}
 			else
 			{
 				if( !getServer().getNativeLayer().notifyCharacteristicChanged(m_nativeDevice, characteristic, m_confirm) )
 				{
-					fail(BleServer.OutgoingListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+					fail(OutgoingListener.Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 				}
 				else
 				{
@@ -83,27 +83,27 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 
 	@Override protected void onNotExecutable()
 	{
-		fail(BleServer.OutgoingListener.Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		fail(OutgoingListener.Status.NOT_CONNECTED, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	private BleServer.ExchangeListener.Type getType()
+	private ExchangeListener.Type getType()
 	{
-		return m_confirm ? BleServer.ExchangeListener.Type.INDICATION : BleServer.ExchangeListener.Type.NOTIFICATION;
+		return m_confirm ? ExchangeListener.Type.INDICATION : ExchangeListener.Type.NOTIFICATION;
 	}
 
-	private void fail(final BleServer.OutgoingListener.Status status, final int gattStatus_received)
+	private void fail(final OutgoingListener.Status status, final int gattStatus_received)
 	{
 		super.fail();
 
 		invokeFailCallback(status, gattStatus_received);
 	}
 
-	private void invokeFailCallback(final BleServer.OutgoingListener.Status status, final int gattStatus_received)
+	private void invokeFailCallback(final OutgoingListener.Status status, final int gattStatus_received)
 	{
-		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
+		final OutgoingListener.OutgoingEvent e = new OutgoingListener.OutgoingEvent
 		(
-			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
-			BleServer.ExchangeListener.Target.CHARACTERISTIC, P_Const.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
+			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
+			ExchangeListener.Target.CHARACTERISTIC, P_Const.EMPTY_BYTE_ARRAY, data_sent(), ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
 			/*offset=*/0, /*responseNeeded=*/false, status, BleStatuses.GATT_STATUS_NOT_APPLICABLE, gattStatus_received, /*solicited=*/true
 		);
 
@@ -114,11 +114,11 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 	{
 		super.succeed();
 
-		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent
+		final OutgoingListener.OutgoingEvent e = new OutgoingListener.OutgoingEvent
 		(
-			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
-			BleServer.ExchangeListener.Target.CHARACTERISTIC, P_Const.EMPTY_BYTE_ARRAY, data_sent(), BleServer.ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
-			/*offset=*/0, /*responseNeeded=*/false, BleServer.OutgoingListener.Status.SUCCESS, BleStatuses.GATT_STATUS_NOT_APPLICABLE, gattStatus, /*solicited=*/true
+			getServer(), m_nativeDevice, m_serviceUuid, m_charUuid, ExchangeListener.ExchangeEvent.NON_APPLICABLE_UUID, getType(),
+			ExchangeListener.Target.CHARACTERISTIC, P_Const.EMPTY_BYTE_ARRAY, data_sent(), ExchangeListener.ExchangeEvent.NON_APPLICABLE_REQUEST_ID,
+			/*offset=*/0, /*responseNeeded=*/false, OutgoingListener.Status.SUCCESS, BleStatuses.GATT_STATUS_NOT_APPLICABLE, gattStatus, /*solicited=*/true
 		);
 
 		getServer().invokeOutgoingListeners(e, m_responseListener);
@@ -132,7 +132,7 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 		}
 		else
 		{
-			fail(BleServer.OutgoingListener.Status.REMOTE_GATT_FAILURE, gattStatus);
+			fail(OutgoingListener.Status.REMOTE_GATT_FAILURE, gattStatus);
 		}
 	}
 
@@ -149,7 +149,7 @@ final class P_Task_SendNotification extends PA_Task_RequiresServerConnection imp
 		}
 		else if( state == PE_TaskState.TIMED_OUT )
 		{
-			invokeFailCallback(BleServer.OutgoingListener.Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+			invokeFailCallback(OutgoingListener.Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		}
 	}
 }

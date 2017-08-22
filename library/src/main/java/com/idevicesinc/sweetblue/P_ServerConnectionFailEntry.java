@@ -13,7 +13,7 @@ final class P_ServerConnectionFailEntry
 	private Long m_timeOfFirstConnect = null;
 	private Long m_timeOfLastConnectFail = null;
 
-	private final ArrayList<BleServer.ConnectionFailListener.ConnectionFailEvent> m_history = new ArrayList<BleServer.ConnectionFailListener.ConnectionFailEvent>();
+	private final ArrayList<ServerConnectionFailListener.ConnectionFailEvent> m_history = new ArrayList<ServerConnectionFailListener.ConnectionFailEvent>();
 
 	private final P_ServerConnectionFailManager m_mngr;
 
@@ -43,7 +43,7 @@ final class P_ServerConnectionFailEntry
 		m_history.clear();
 	}
 
-	void onNativeConnectFail(final BluetoothDevice nativeDevice, final BleServer.ConnectionFailListener.Status status, final int gattStatus)
+	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ServerConnectionFailListener.Status status, final int gattStatus)
 	{
 		final long currentTime = System.currentTimeMillis();
 
@@ -55,10 +55,10 @@ final class P_ServerConnectionFailEntry
 
 		m_failCount++;
 
-		final BleServer.ConnectionFailListener.ConnectionFailEvent e = new BleServer.ConnectionFailListener.ConnectionFailEvent
+		final ServerConnectionFailListener.ConnectionFailEvent e = new ServerConnectionFailListener.ConnectionFailEvent
 		(
 			m_mngr.m_server, nativeDevice, status, m_failCount, attemptTime_latest, attemptTime_total,
-			gattStatus, BleServer.ConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, m_history
+			gattStatus, ServerConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, m_history
 		);
 
 		m_history.add(e);

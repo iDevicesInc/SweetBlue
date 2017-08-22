@@ -3,8 +3,8 @@ package com.idevicesinc.sweetblue;
 import android.annotation.TargetApi;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseSettings;
-import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.Build;
+
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode;
@@ -16,7 +16,7 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
 
     private final BleAdvertisingPacket m_packet;
-    private final BleServer.AdvertisingListener m_listener;
+    private final AdvertisingListener m_listener;
     private final BleAdvertisingMode m_mode;
     private final BleTransmissionPower m_power;
     private final Interval m_timeOut;
@@ -28,14 +28,14 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
         public void onStartSuccess(AdvertiseSettings settingsInEffect)
         {
             getLogger().d("Advertising started successfully.");
-            getServer().invokeAdvertiseListeners(BleServer.AdvertisingListener.Status.SUCCESS, m_listener);
+            getServer().invokeAdvertiseListeners(AdvertisingListener.Status.SUCCESS, m_listener);
             succeed();
         }
 
         @Override
         public void onStartFailure(int errorCode)
         {
-            BleServer.AdvertisingListener.Status result = BleServer.AdvertisingListener.Status.fromNativeStatus(errorCode);
+            AdvertisingListener.Status result = AdvertisingListener.Status.fromNativeStatus(errorCode);
             getLogger().e("Failed to start advertising! Result: " + result);
             getServer().invokeAdvertiseListeners(result, m_listener);
             fail();
@@ -43,7 +43,7 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
     };
 
 
-    public P_Task_Advertise(BleServer server, BleAdvertisingPacket info, BleServer.AdvertisingListener listener, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout)
+    public P_Task_Advertise(BleServer server, BleAdvertisingPacket info, AdvertisingListener listener, BleAdvertisingMode mode, BleTransmissionPower power, Interval timeout)
     {
         super(server, null);
         m_packet = info;
@@ -53,7 +53,7 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
         m_timeOut = timeout;
     }
 
-    public P_Task_Advertise(BleServer server, BleAdvertisingPacket info, BleAdvertisingSettings settings, BleServer.AdvertisingListener listener)
+    public P_Task_Advertise(BleServer server, BleAdvertisingPacket info, BleAdvertisingSettings settings, AdvertisingListener listener)
     {
         super(server, null);
         m_packet = info;

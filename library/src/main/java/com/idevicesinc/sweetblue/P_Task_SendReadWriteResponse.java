@@ -5,12 +5,12 @@ import com.idevicesinc.sweetblue.utils.P_Const;
 
 final class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnection implements I_StateListener
 {
-	private final BleServer.IncomingListener.IncomingEvent m_requestEvent;
-	private final BleServer.IncomingListener.Please m_please;
+	private final IncomingListener.IncomingEvent m_requestEvent;
+	private final IncomingListener.Please m_please;
 
 	private byte[] m_data_sent = null;
 
-	public P_Task_SendReadWriteResponse(BleServer server, final BleServer.IncomingListener.IncomingEvent requestEvent, BleServer.IncomingListener.Please please)
+	public P_Task_SendReadWriteResponse(BleServer server, final IncomingListener.IncomingEvent requestEvent, IncomingListener.Please please)
 	{
 		super( server, requestEvent.macAddress());
 
@@ -37,20 +37,20 @@ final class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnectio
 		}
 		else if( state == PE_TaskState.TIMED_OUT )
 		{
-			invokeFailCallback(BleServer.OutgoingListener.Status.TIMED_OUT);
+			invokeFailCallback(OutgoingListener.Status.TIMED_OUT);
 		}
 	}
 
-	private void fail(final BleServer.OutgoingListener.Status status)
+	private void fail(final OutgoingListener.Status status)
 	{
 		super.fail();
 
 		invokeFailCallback(status);
 	}
 
-	private void invokeFailCallback(BleServer.OutgoingListener.Status status)
+	private void invokeFailCallback(OutgoingListener.Status status)
 	{
-		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), status, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		final OutgoingListener.OutgoingEvent e = new OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), status, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
 	}
@@ -59,7 +59,7 @@ final class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnectio
 	{
 		super.succeed();
 
-		final BleServer.OutgoingListener.OutgoingEvent e = new BleServer.OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), BleServer.OutgoingListener.Status.SUCCESS, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+		final OutgoingListener.OutgoingEvent e = new OutgoingListener.OutgoingEvent(m_requestEvent, data_sent(), OutgoingListener.Status.SUCCESS, m_please.m_gattStatus, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
 		getServer().invokeOutgoingListeners(e, m_please.m_outgoingListener);
 	}
@@ -68,7 +68,7 @@ final class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnectio
 	{
 		if( false == getServer().getNativeLayer().sendResponse(m_requestEvent.nativeDevice(), m_requestEvent.requestId(), m_please.m_gattStatus, m_requestEvent.offset(), data_sent()) )
 		{
-			fail(BleServer.OutgoingListener.Status.FAILED_TO_SEND_OUT);
+			fail(OutgoingListener.Status.FAILED_TO_SEND_OUT);
 		}
 		else
 		{
@@ -78,7 +78,7 @@ final class P_Task_SendReadWriteResponse extends PA_Task_RequiresServerConnectio
 
 	@Override protected void onNotExecutable()
 	{
-		fail(BleServer.OutgoingListener.Status.NOT_CONNECTED);
+		fail(OutgoingListener.Status.NOT_CONNECTED);
 	}
 
 	@Override protected void update(double timeStep)

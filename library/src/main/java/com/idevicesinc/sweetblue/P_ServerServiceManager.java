@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.BluetoothGattService;
+
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Pointer;
@@ -13,14 +14,14 @@ final class P_ServerServiceManager extends PA_ServiceManager
 {
 	private final BleServer m_server;
 
-	private BleServer.ServiceAddListener m_listener = null;
+	private AddServiceListener m_listener = null;
 
 	P_ServerServiceManager(final BleServer server)
 	{
 		m_server = server;
 	}
 
-	public final void setListener(BleServer.ServiceAddListener listener)
+	public final void setListener(AddServiceListener listener)
 	{
 		m_listener = listener;
 	}
@@ -130,18 +131,18 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 	}
 
-	public final BleServer.ServiceAddListener.ServiceAddEvent addService(final BleService service, final BleServer.ServiceAddListener listener_specific_nullable)
+	public final AddServiceListener.ServiceAddEvent addService(final BleService service, final AddServiceListener listener_specific_nullable)
 	{
 		service.init();
 
 		return addService_native(service.m_native, listener_specific_nullable);
 	}
 
-	public final BleServer.ServiceAddListener.ServiceAddEvent addService_native(final BluetoothGattService service, final BleServer.ServiceAddListener listener_specific_nullable)
+	public final AddServiceListener.ServiceAddEvent addService_native(final BluetoothGattService service, final AddServiceListener listener_specific_nullable)
 	{
 		if( m_server.isNull() )
 		{
-			final BleServer.ServiceAddListener.ServiceAddEvent e = BleServer.ServiceAddListener.ServiceAddEvent.EARLY_OUT(m_server, service, BleServer.ServiceAddListener.Status.NULL_SERVER);
+			final AddServiceListener.ServiceAddEvent e = AddServiceListener.ServiceAddEvent.EARLY_OUT(m_server, service, AddServiceListener.Status.NULL_SERVER);
 
 			invokeListeners(e, listener_specific_nullable);
 
@@ -149,7 +150,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 		else if( false == m_server.getManager().is(BleManagerState.ON) )
 		{
-			final BleServer.ServiceAddListener.ServiceAddEvent e = BleServer.ServiceAddListener.ServiceAddEvent.EARLY_OUT(m_server, service, BleServer.ServiceAddListener.Status.BLE_NOT_ON);
+			final AddServiceListener.ServiceAddEvent e = AddServiceListener.ServiceAddEvent.EARLY_OUT(m_server, service, AddServiceListener.Status.BLE_NOT_ON);
 
 			invokeListeners(e, listener_specific_nullable);
 
@@ -157,7 +158,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 		else if( alreadyAddingOrAdded(service) )
 		{
-			final BleServer.ServiceAddListener.ServiceAddEvent e = BleServer.ServiceAddListener.ServiceAddEvent.EARLY_OUT(m_server, service, BleServer.ServiceAddListener.Status.DUPLICATE_SERVICE);
+			final AddServiceListener.ServiceAddEvent e = AddServiceListener.ServiceAddEvent.EARLY_OUT(m_server, service, AddServiceListener.Status.DUPLICATE_SERVICE);
 
 			invokeListeners(e, listener_specific_nullable);
 
@@ -168,11 +169,11 @@ final class P_ServerServiceManager extends PA_ServiceManager
 			final P_Task_AddService task = new P_Task_AddService(m_server, service, listener_specific_nullable);
 			m_server.getManager().getTaskQueue().add(task);
 
-			return BleServer.ServiceAddListener.ServiceAddEvent.NULL(m_server, service);
+			return AddServiceListener.ServiceAddEvent.NULL(m_server, service);
 		}
 	}
 
-	public final void removeAll(final BleServer.ServiceAddListener.Status status)
+	public final void removeAll(final AddServiceListener.Status status)
 	{
 		final P_NativeServerLayer server_native = m_server.getNativeLayer();
 
@@ -208,7 +209,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 					{
 						pointer.value = next.getService();
 
-						next.cancel(BleServer.ServiceAddListener.Status.CANCELLED_FROM_REMOVAL);
+						next.cancel(AddServiceListener.Status.CANCELLED_FROM_REMOVAL);
 
 						return Please.doBreak();
 					}
@@ -240,7 +241,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		}
 	}
 
-	public final void invokeListeners(final BleServer.ServiceAddListener.ServiceAddEvent e, final BleServer.ServiceAddListener listener_specific_nullable)
+	public final void invokeListeners(final AddServiceListener.ServiceAddEvent e, final AddServiceListener listener_specific_nullable)
 	{
 		if( listener_specific_nullable != null )
 		{

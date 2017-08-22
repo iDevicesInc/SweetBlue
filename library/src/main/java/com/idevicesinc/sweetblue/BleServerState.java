@@ -1,9 +1,5 @@
 package com.idevicesinc.sweetblue;
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattServer;
-import android.bluetooth.BluetoothGattService;
-
 import com.idevicesinc.sweetblue.utils.BitwiseEnum;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
@@ -11,9 +7,9 @@ import com.idevicesinc.sweetblue.utils.Utils_Byte;
 /**
  * An enumeration of the various states that a {@link BleServer} can be in on a per-client (mac address) basis.
  * Note that unlike a {@link BleDevice}, a {@link BleServer} can only be in one state at a time for a given client
- * Use {@link BleServer#setListener_State(BleServer.StateListener)} to be notified of state changes.
+ * Use {@link BleServer#setListener_State(ServerStateListener)} to be notified of state changes.
  * 
- * @see BleServer.StateListener
+ * @see ServerStateListener
  */
 public enum BleServerState implements State
 {

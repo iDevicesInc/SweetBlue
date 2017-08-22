@@ -39,7 +39,7 @@ public final class BleStatuses
 
 
 	/**
-	 * Status code used for {@link BleServer.AdvertisingListener.AdvertisingEvent#status()} when advertising has been
+	 * Status code used for {@link AdvertisingListener.AdvertisingEvent#status()} when advertising has been
 	 * successfully started.
 	 */
 	public static final int ADVERTISE_SUCCESS = 0;
