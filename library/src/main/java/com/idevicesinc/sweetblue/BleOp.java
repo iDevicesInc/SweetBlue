@@ -3,6 +3,7 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.P_Const;
+import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.ArrayList;
@@ -141,7 +142,7 @@ public abstract class BleOp<T extends BleOp>
             case WRITE:
             case WRITE_NO_RESPONSE:
             case WRITE_SIGNED:
-                op = new BleWrite(serviceUuid, charUuid).setBytes(data).setWriteType(type);
+                op = new BleWrite(serviceUuid, charUuid).setWriteType(type);
                 break;
             case NOTIFICATION:
             case DISABLING_NOTIFICATION:
@@ -152,6 +153,7 @@ public abstract class BleOp<T extends BleOp>
             default:
                 op = new BleRead(serviceUuid, charUuid);
         }
+        op.m_data = new PresentData(data);
         return op.setDescriptorFilter(filter).setDescriptorUUID(descUuid);
     }
 
