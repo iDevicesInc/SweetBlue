@@ -1,37 +1,28 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.bluetooth.BluetoothGattCharacteristic;
-
 import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.PresentData;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
 final class P_StripedWriteTransaction extends BleTransaction
 {
 
-
-    private final FutureData m_data;
-    private final BluetoothGattCharacteristic m_characteristic;
     private final boolean m_requiresBonding;
-    private final ReadWriteListener m_listener;
     private final ReadWriteListener.Type m_writeType;
     private final List<P_Task_Write> m_writeList;
     private final WriteListener m_internalListener;
-    private final DescriptorFilter m_descriptorFilter;
+    private BleWrite m_write;
 
 
 
-    P_StripedWriteTransaction(FutureData data, BluetoothGattCharacteristic characteristic, boolean requiresBonding, DescriptorFilter filter, ReadWriteListener.Type writeType, ReadWriteListener listener)
+    P_StripedWriteTransaction(BleWrite write, boolean requiresBonding, ReadWriteListener.Type writeType)
     {
-        m_data = data;
-        m_characteristic = characteristic;
+        m_write = write;
         m_requiresBonding = requiresBonding;
-        m_listener = listener;
-        m_descriptorFilter = filter;
         m_writeType = writeType;
         m_writeList = new ArrayList<>();
         m_internalListener = new WriteListener();
@@ -40,22 +31,17 @@ final class P_StripedWriteTransaction extends BleTransaction
 
     @Override protected final void start(BleDevice device)
     {
-        final byte[] allData = m_data.getData();
+        final byte[] allData = m_write.m_data.getData();
         int curIndex = 0;
         FutureData curData;
         while (curIndex < allData.length)
         {
             int end = Math.min(allData.length, curIndex + device.getEffectiveWriteMtuSize());
             curData = new PresentData(Arrays.copyOfRange(allData, curIndex, end));
-            final P_Task_Write task;
-            if (m_descriptorFilter == null)
-            {
-                task = new P_Task_Write(device, m_characteristic, curData, m_requiresBonding, m_writeType, m_internalListener, device.m_txnMngr.getCurrent(), device.getOverrideReadWritePriority());
-            }
-            else
-            {
-                task = new P_Task_Write(device, m_characteristic.getService().getUuid(), m_characteristic.getUuid(), m_descriptorFilter, curData, m_requiresBonding, m_writeType, m_internalListener, device.m_txnMngr.getCurrent(), device.getOverrideReadWritePriority());
-            }
+            final BleWrite write = m_write.createDuplicate()
+                    .setReadWriteListener(m_internalListener)
+                    .setData(curData);
+            final P_Task_Write task = new P_Task_Write(device, write, m_requiresBonding, device.m_txnMngr.getCurrent(), device.getOverrideReadWritePriority());
             m_writeList.add(task);
 
             curIndex = end;
@@ -77,18 +63,18 @@ final class P_StripedWriteTransaction extends BleTransaction
                 else
                 {
                     succeed();
-                    if (m_listener != null)
+                    if (m_write.readWriteListener != null)
                     {
-                        m_listener.onEvent(e);
+                        m_write.readWriteListener.onEvent(e);
                     }
                 }
             }
             else
             {
                 fail();
-                if (m_listener != null)
+                if (m_write.readWriteListener != null)
                 {
-                    m_listener.onEvent(e);
+                    m_write.readWriteListener.onEvent(e);
                 }
             }
         }

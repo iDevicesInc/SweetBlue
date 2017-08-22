@@ -7,46 +7,46 @@ import com.idevicesinc.sweetblue.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.UhOhListener.UhOh;
-import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.Utils;
 import java.util.UUID;
 
 
 final class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 {
-	private final UUID m_descriptorUuid;
 
-	private final FutureData m_futureData;
-	private byte[] m_data = null;
-
-	public P_Task_WriteDescriptor(BleDevice device, BluetoothGattDescriptor descriptor, FutureData futureData, boolean requiresBonding, ReadWriteListener readListener, BleTransaction txn, PE_TaskPriority priority)
+	public P_Task_WriteDescriptor(BleDevice device, BleWrite write, boolean requiresBonding, BleTransaction txn, PE_TaskPriority priority)
 	{
-		super(device, descriptor.getCharacteristic(), readListener, requiresBonding, txn, priority);
-
-		m_descriptorUuid = descriptor.getUuid();
-		m_futureData = futureData;
-	}
-	
-	@Override protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
-	{
-		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, null, Type.WRITE, target, m_data, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
+		super(device, write, requiresBonding, txn, priority);
 	}
 
-	@Override protected UUID getDescUuid()
+	@Override
+	protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, BleOp bleOp)
 	{
-		return m_descriptorUuid;
+		final BleOp op = BleOp.createOp(bleOp.serviceUuid, bleOp.charUuid, bleOp.descriptorUuid, bleOp.descriptorFilter, bleOp.m_data.getData(), Type.WRITE);
+		return new ReadWriteEvent(getDevice(), op, Type.WRITE, target, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
-	@Override protected Target getDefaultTarget()
+	@Override
+	protected UUID getDescUuid()
+	{
+		return m_bleOp.descriptorUuid;
+	}
+
+	@Override
+	protected Target getDefaultTarget()
 	{
 		return Target.DESCRIPTOR;
 	}
 
+	private byte[] getData()
+	{
+		return m_bleOp.m_data.getData();
+	}
+
 	@Override protected void executeReadOrWrite()
 	{
-		m_data = m_futureData.getData();
 
-		if( false == write_earlyOut(m_data) )
+		if( false == write_earlyOut(getData()) )
 		{
 			final BluetoothGattDescriptor desc_native = getDevice().getNativeDescriptor(getServiceUuid(), getCharUuid(), getDescUuid());
 
@@ -56,7 +56,12 @@ final class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 			}
 			else
 			{
-				if( false == getDevice().layerManager().setDescValue(desc_native, m_data) )
+				if (!m_bleOp.isServiceUuidValid())
+					m_bleOp.serviceUuid = desc_native.getCharacteristic().getService().getUuid();
+				if (!m_bleOp.isCharUuidValid())
+					m_bleOp.charUuid = desc_native.getCharacteristic().getUuid();
+
+				if( false == getDevice().layerManager().setDescValue(desc_native, getData()) )
 				{
 					fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getCharUuid(), getDescUuid());
 				}
@@ -101,16 +106,16 @@ final class P_Task_WriteDescriptor extends PA_Task_ReadOrWrite
 		{
 			getLogger().w(getLogger().descriptorName(getDescUuid()) + " read timed out!");
 
-			final ReadWriteEvent event = newReadWriteEvent(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getServiceUuid(), getCharUuid(), getDescUuid());
+			final ReadWriteEvent event = newReadWriteEvent(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_bleOp);
 			
-			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
+			getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, event);
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
-			final ReadWriteEvent event = newReadWriteEvent(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), getServiceUuid(), getCharUuid(), getDescUuid());
-			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
+			final ReadWriteEvent event = newReadWriteEvent(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, getDefaultTarget(), m_bleOp);
+			getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, event);
 		}
 	}
 	

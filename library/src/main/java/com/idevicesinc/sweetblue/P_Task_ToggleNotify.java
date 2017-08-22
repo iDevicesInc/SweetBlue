@@ -8,8 +8,8 @@ import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.utils.P_Const;
+import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Uuids;
 import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 
 
@@ -19,23 +19,14 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 	private static int Type_INDICATE = 1;
 	
 	private final boolean m_enable;
-	private final UUID m_descUuid;
-	
+
 	private byte[] m_writeValue = null;
 
-	public P_Task_ToggleNotify(BleDevice device, BluetoothGattCharacteristic nativeChar, boolean enable, BleTransaction txn, final ReadWriteListener writeListener, PE_TaskPriority priority)
-	{
-		super(device, nativeChar, writeListener, false, txn, priority);
-		
-		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
-		m_enable = enable;
-	}
 
-	public P_Task_ToggleNotify(BleDevice device, UUID serviceUuid, UUID charUuid, DescriptorFilter filter, boolean enable, BleTransaction txn, final ReadWriteListener writeListener, PE_TaskPriority priority)
+	public P_Task_ToggleNotify(BleDevice device, BleNotify notify, boolean enable, BleTransaction txn, PE_TaskPriority priority)
 	{
-		super(device, serviceUuid, charUuid, false, txn, priority, filter, writeListener);
+		super(device, notify, false, txn, priority);
 
-		m_descUuid = Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID;
 		m_enable = enable;
 	}
 	
@@ -81,7 +72,7 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 		}
 		else
 		{
-			final BluetoothGattDescriptor descriptor = char_native.getDescriptor(m_descUuid);
+			final BluetoothGattDescriptor descriptor = char_native.getDescriptor(m_bleOp.descriptorUuid);
 
 			if( descriptor == null )
 			{
@@ -93,15 +84,18 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 			}
 			else
 			{
+				if (!m_bleOp.isServiceUuidValid())
+					m_bleOp.serviceUuid = char_native.getService().getUuid();
+
 				m_writeValue = getWriteValue(char_native, m_enable);
 
 				if( false == descriptor.setValue(getWriteValue()) )
 				{
-					this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
+					this.fail(Status.FAILED_TO_SET_VALUE_ON_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_bleOp.descriptorUuid);
 				}
 				else if( false == getDevice().layerManager().getGattLayer().writeDescriptor(descriptor) )
 				{
-					this.fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_descUuid);
+					this.fail(Status.FAILED_TO_SEND_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getCharUuid(), m_bleOp.descriptorUuid);
 				}
 				else
 				{
@@ -136,15 +130,15 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 
 		super.succeed();
 
-		final ReadWriteEvent event = newReadWriteEvent(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, Target.DESCRIPTOR, getServiceUuid(), getCharUuid(), m_descUuid);
-		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
+		final ReadWriteEvent event = newReadWriteEvent(Status.SUCCESS, BluetoothGatt.GATT_SUCCESS, Target.DESCRIPTOR, m_bleOp);
+		getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, event);
 	}
 
 	public void onDescriptorWrite(BluetoothGatt gatt, UUID descUuid, int status)
 	{
 		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 
-		if( !descUuid.equals(m_descUuid) ) return;
+		if( !descUuid.equals(m_bleOp.descriptorUuid) ) return;
 
 		final boolean isConnected = getDevice().is_internal(BleDeviceState.CONNECTED);
 
@@ -178,25 +172,25 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 		{
 			getLogger().w(getLogger().charName(getCharUuid()) + " descriptor write timed out!");
 
-			final ReadWriteEvent event = newReadWriteEvent(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, getServiceUuid(), getCharUuid(), m_descUuid);
+			final ReadWriteEvent event = newReadWriteEvent(Status.TIMED_OUT, BleStatuses.GATT_STATUS_NOT_APPLICABLE, Target.DESCRIPTOR, m_bleOp);
 
-			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
+			getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, event);
 			
 			getManager().uhOh(UhOh.WRITE_TIMED_OUT);
 		}
 		else if( state == PE_TaskState.SOFTLY_CANCELLED )
 		{
 			final Target target = this.getState() == PE_TaskState.EXECUTING ? Target.DESCRIPTOR : Target.CHARACTERISTIC;
-			final UUID descUuid = target == Target.DESCRIPTOR ? m_descUuid : ReadWriteEvent.NON_APPLICABLE_UUID;
-			final ReadWriteEvent event = newReadWriteEvent(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, target, getServiceUuid(), getCharUuid(), descUuid);
+			final UUID descUuid = target == Target.DESCRIPTOR ? m_bleOp.descriptorUuid : ReadWriteEvent.NON_APPLICABLE_UUID;
+			final ReadWriteEvent event = newReadWriteEvent(getCancelType(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, target, m_bleOp);
 
-			getDevice().invokeReadWriteCallback(m_readWriteListener, event);
+			getDevice().invokeReadWriteCallback(m_bleOp.readWriteListener, event);
 		}
 	}
 	
 	@Override protected UUID getDescUuid()
 	{
-		return m_descUuid;
+		return m_bleOp.descriptorUuid;
 	}
 	
 	@Override public boolean isMoreImportantThan(PA_Task task)
@@ -209,9 +203,11 @@ final class P_Task_ToggleNotify extends PA_Task_ReadOrWrite implements PA_Task.I
 		return m_enable ? ReadWriteListener.Type.ENABLING_NOTIFICATION : ReadWriteListener.Type.DISABLING_NOTIFICATION;
 	}
 
-	@Override protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, UUID serviceUuid, UUID charUuid, UUID descUuid)
+	@Override protected ReadWriteEvent newReadWriteEvent(Status status, int gattStatus, Target target, BleOp bleOp)
 	{
-		return new ReadWriteEvent(getDevice(), serviceUuid, charUuid, descUuid, m_descriptorFilter, getReadWriteType(), target, getWriteValue(), status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
+		BleNotify notify = new BleNotify(bleOp.serviceUuid, bleOp.charUuid).setDescriptorUUID(bleOp.descriptorUuid).setDescriptorFilter(bleOp.descriptorFilter);
+		notify.m_data = new PresentData(getWriteValue());
+		return new ReadWriteEvent(getDevice(), notify, getReadWriteType(), target, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 	
 	@Override protected BleTask getTaskType()

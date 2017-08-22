@@ -61,7 +61,7 @@ public class WriteTypeTest extends BaseBleUnitTest
                         write.setBytes(new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9 }).setWriteType(writeType)
                                 .setReadWriteListener(e1 ->
                                 {
-                                    assertTrue(e1.wasSuccess());
+                                    assertTrue(e1.status().name(), e1.wasSuccess());
                                     BluetoothGattCharacteristic ch = e1.characteristic();
                                     assertTrue(ch.getWriteType() == checkType);
                                     succeed();

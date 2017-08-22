@@ -9,6 +9,7 @@ import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.utils.Uuids;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ abstract class PA_ServiceManager
 
 	public BluetoothGattCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid)
 	{
-		if( serviceUuid_nullable == null )
+		if( serviceUuid_nullable == null || serviceUuid_nullable.equals(Uuids.INVALID))
 		{
 			final List<BluetoothGattService> serviceList_native = getNativeServiceList_original();
 
@@ -63,7 +64,7 @@ abstract class PA_ServiceManager
 
 	public BluetoothGattCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid, final DescriptorFilter filter)
 	{
-		if( serviceUuid_nullable == null )
+		if( serviceUuid_nullable == null || serviceUuid_nullable.equals(Uuids.INVALID) )
 		{
 			final List<BluetoothGattService> serviceList_native = getNativeServiceList_original();
 

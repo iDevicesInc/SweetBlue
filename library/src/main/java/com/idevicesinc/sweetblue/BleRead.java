@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Uuids;
+
 import java.util.UUID;
 
 /**
@@ -8,6 +10,12 @@ import java.util.UUID;
  */
 public class BleRead extends BleOp<BleRead>
 {
+
+    /**
+     * "Invalid" static instance used when reading things like RSSI, or setting connection parameters
+     */
+    final static BleRead INVALID = new BleRead(Uuids.INVALID, Uuids.INVALID);
+
 
     public BleRead()
     {
