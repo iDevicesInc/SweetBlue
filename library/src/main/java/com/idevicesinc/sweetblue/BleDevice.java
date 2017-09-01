@@ -5790,15 +5790,19 @@ public final class BleDevice extends BleNode
 
     final void unbond_internal(final PE_TaskPriority priority_nullable, final BondListener.Status status)
     {
-        unbond_justAddTheTask(priority_nullable);
-
-        final boolean wasBonding = is(BONDING);
-
-        stateTracker_updateBoth(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_BondManager.OVERRIDE_UNBONDED_STATES);
-
-        if (wasBonding)
+        // If the unbond task is already in the queue, then do nothing
+        if (!queue().isInQueue(P_Task_Unbond.class, this))
         {
-            m_bondMngr.invokeCallback(status, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, State.ChangeIntent.INTENTIONAL);
+            unbond_justAddTheTask(priority_nullable);
+
+            final boolean wasBonding = is(BONDING);
+
+            stateTracker_updateBoth(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, P_BondManager.OVERRIDE_UNBONDED_STATES);
+
+            if (wasBonding)
+            {
+                m_bondMngr.invokeCallback(status, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, State.ChangeIntent.INTENTIONAL);
+            }
         }
     }
 
@@ -6263,7 +6267,7 @@ public final class BleDevice extends BleNode
                         final int taskOrdinal;
                         final boolean clearQueue;
 
-                        if (isAny_internal(CONNECTED, CONNECTING_OVERALL, INITIALIZED))
+                        if (isAny_internal(CONNECTED, CONNECTING, INITIALIZED))
                         {
                             final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/explicit, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
                             queue().add(disconnectTask);
@@ -6292,6 +6296,7 @@ public final class BleDevice extends BleNode
 
                         if (clearQueue)
                         {
+                            queue().clearQueueOf(P_Task_Connect.class, BleDevice.this, -1);
                             queue().clearQueueOf(PA_Task_RequiresConnection.class, BleDevice.this, taskOrdinal);
                         }
 
@@ -6536,7 +6541,7 @@ public final class BleDevice extends BleNode
         //---		so we have to bail out.
         if (is(DISCONNECTED) && !is(RECONNECTING_LONG_TERM) && m_reconnectMngr_longTerm.isRunning() == false && m_reconnectMngr_shortTerm.isRunning() == false)
         {
-            if (m_nativeWrapper.isNativelyConnecting() || m_nativeWrapper.isNativelyConnected())
+            if (m_nativeWrapper.isNativelyConnectingOrConnected())
             {
                 queue().add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/false, null, /*cancellable=*/true));
             }
