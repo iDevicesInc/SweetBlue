@@ -595,7 +595,7 @@ task uploadInternal(type: Upload) {
 }
 
 signing {
-    required { /*gradle.taskGraph.hasTask("uploadArchives")*/ true }
+    required { gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
 }
 
