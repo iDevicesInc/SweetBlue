@@ -543,6 +543,11 @@ gradle.taskGraph.whenReady { taskGraph ->
         allprojects { ext."signing.secretKeyRingFile" = System.getenv("SIGN_RING") }
         allprojects { ext."signing.password" = System.getenv("SIGN_PW") }
     }
+    if (taskGraph.hasTask("uploadArchives")) {
+        signing {
+            sign configurations.archives
+        }
+    }
 }
 
 uploadArchives {
@@ -594,14 +599,10 @@ task uploadInternal(type: Upload) {
     }
 }
 
-signing {
-    required {
-        boolean hasUpload = gradle.taskGraph.hasTask("uploadArchives")
-        System.out.println("System shows having upload in queue: " + String.valueOf(hasUpload))
-        return hasUpload
-    }
-    sign configurations.archives
-}
+//signing {
+//    required { gradle.taskGraph.hasTask("uploadArchives") }
+//    sign configurations.archives
+//}
 
 task androidJavadocs(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
