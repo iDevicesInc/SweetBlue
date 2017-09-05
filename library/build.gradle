@@ -595,7 +595,11 @@ task uploadInternal(type: Upload) {
 }
 
 signing {
-    required { gradle.taskGraph.hasTask("uploadArchives") }
+    required {
+        boolean hasUpload = gradle.taskGraph.hasTask("uploadArchives")
+        System.out.println("System shows having upload in queue: " + String.valueOf(hasUpload))
+        return hasUpload
+    }
     sign configurations.archives
 }
 
