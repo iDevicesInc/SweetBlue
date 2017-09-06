@@ -165,12 +165,8 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         /**
          * Associated with {@link BleDevice#startChangeTrackingPoll(UUID, Interval, ReadWriteListener)}
          * or {@link BleDevice#enableNotify(UUID, Interval, ReadWriteListener)} where a force-read timeout is invoked.
-         *
-         * @deprecated - This is only marked as deprecated because it's misspelled. Rather than cause a breaking change to rename it, it's marked
-         * as deprecated, and will be renamed in v3.
          */
-        @Deprecated
-        PSUEDO_NOTIFICATION,
+        PSEUDO_NOTIFICATION,
 
         /**
          * Associated with {@link BleDevice#enableNotify(UUID, ReadWriteListener)} and called when enabling the notification completes by writing to the
@@ -188,7 +184,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
         /**
          * Returns <code>true</code> only for {@link #NOTIFICATION} and {@link #INDICATION}, i.e. only
          * notifications whose origin is an *actual* notification (or indication) sent from the remote BLE device (as opposed to
-         * a {@link #PSUEDO_NOTIFICATION}).
+         * a {@link #PSEUDO_NOTIFICATION}).
          */
         public boolean isNativeNotification()
         {
@@ -207,7 +203,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
                     return BleNodeConfig.HistoricalDataLogFilter.Source.NOTIFICATION;
                 case INDICATION:
                     return BleNodeConfig.HistoricalDataLogFilter.Source.INDICATION;
-                case PSUEDO_NOTIFICATION:
+                case PSEUDO_NOTIFICATION:
                     return BleNodeConfig.HistoricalDataLogFilter.Source.PSUEDO_NOTIFICATION;
             }
 

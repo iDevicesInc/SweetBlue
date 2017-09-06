@@ -10,6 +10,7 @@ import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 
 final class P_ConnectionFailManager
@@ -17,7 +18,7 @@ final class P_ConnectionFailManager
 	private final BleDevice m_device;
 	
 
-	private DeviceConnectionFailListener m_connectionFailListener = null;
+	private final Stack<DeviceConnectionFailListener> m_connectionFailListenerStack;
 
 	private int m_failCount = 0;
 	private BleDeviceState m_highestStateReached_total = null;
@@ -34,41 +35,43 @@ final class P_ConnectionFailManager
 	P_ConnectionFailManager(BleDevice device)
 	{
 		m_device = device;
+
+		m_connectionFailListenerStack = new Stack<>();
 		
 		resetFailCount();
 	}
 
-	void onLongTermTimedOut()
+	final void onLongTermTimedOut()
 	{
 		m_triedReconnectingLongTerm = true;
 	}
-	
-	void onExplicitDisconnect()
+
+	final void onExplicitDisconnect()
 	{
 		resetFailCount();
 	}
 
-	boolean hasPendingConnectionFailEvent()
+	final boolean hasPendingConnectionFailEvent()
 	{
 		return m_pendingConnectionRetry != null;
 	}
 
-	int getPendingConnectionFailRetry()
+	final int getPendingConnectionFailRetry()
 	{
 		return m_pendingConnectionRetry;
 	}
 
-	void clearPendingRetry()
+	final void clearPendingRetry()
 	{
 		m_pendingConnectionRetry = null;
 	}
-	
-	void onFullyInitialized()
+
+	final void onFullyInitialized()
 	{
 		resetFailCount();
 	}
-	
-	void onExplicitConnectionStarted()
+
+	final void onExplicitConnectionStarted()
 	{
 		resetFailCount();
 
@@ -77,27 +80,24 @@ final class P_ConnectionFailManager
 	
 	private void resetFailCount()
 	{
-		m_device.getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
-		{
-			@Override public void run()
-			{
-				m_failCount = 0;
-				m_highestStateReached_total = null;
-				m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
-				m_history.clear();
-				m_triedReconnectingLongTerm = false;
-			}
-		});
+		m_device.getManager().getPostManager().runOrPostToUpdateThread(() ->
+        {
+            m_failCount = 0;
+            m_highestStateReached_total = null;
+            m_timeOfFirstConnect = m_timeOfLastConnectFail = null;
+            m_history.clear();
+            m_triedReconnectingLongTerm = false;
+        });
 	}
-	
-	int getRetryCount()
+
+	final int getRetryCount()
 	{
 		int retryCount = m_failCount;
 		
 		return retryCount;
 	}
 
-	int/*__PE_Please*/ onConnectionFailed(DeviceConnectionFailListener.Status reason_nullable, DeviceConnectionFailListener.Timing timing, boolean isAttemptingReconnect_longTerm, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, NodeConnectionFailListener.AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
+	final int/*__PE_Please*/ onConnectionFailed(DeviceConnectionFailListener.Status reason_nullable, DeviceConnectionFailListener.Timing timing, boolean isAttemptingReconnect_longTerm, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, NodeConnectionFailListener.AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
 	{
 		if( reason_nullable == null )  return DeviceConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
 		
@@ -209,7 +209,7 @@ final class P_ConnectionFailManager
 		return retryChoice__PE_Please;
 	}
 
-	ArrayList<ConnectionFailEvent> getHistory()
+	final ArrayList<ConnectionFailEvent> getHistory()
 	{
 		return new ArrayList<>(m_history);
 	}
@@ -223,14 +223,14 @@ final class P_ConnectionFailManager
 		}
 		m_history.add(event);
 	}
-	
-	int/*__PE_Please*/ invokeCallback(final ConnectionFailEvent moreInfo)
+
+	final int/*__PE_Please*/ invokeCallback(final ConnectionFailEvent moreInfo)
 	{
 		int retryChoice__PE_Please = Please.PE_Please_NULL;
 		
-		if( m_connectionFailListener != null )
+		if( getListener() != null )
 		{
-			final Please please = m_connectionFailListener.onEvent(moreInfo);
+			final Please please = getListener().onEvent(moreInfo);
 			retryChoice__PE_Please = please != null ? please.please() : Please.PE_Please_NULL;
 			
 			m_device.getManager().getLogger().checkPlease(please, Please.class);
@@ -254,9 +254,36 @@ final class P_ConnectionFailManager
 		
 		return retryChoice__PE_Please;
 	}
-	
-	public void setListener(DeviceConnectionFailListener listener)
+
+	public final DeviceConnectionFailListener getListener()
 	{
-		m_connectionFailListener = listener;
+		if (m_connectionFailListenerStack.empty())
+			return null;
+		return m_connectionFailListenerStack.peek();
 	}
+	
+	public final void setListener(DeviceConnectionFailListener listener)
+	{
+		m_connectionFailListenerStack.clear();
+		m_connectionFailListenerStack.push(listener);
+	}
+
+	public final void clearListenerStack()
+    {
+        m_connectionFailListenerStack.clear();
+    }
+
+	public final void pushListener(DeviceConnectionFailListener listener)
+    {
+        if (listener != null)
+            m_connectionFailListenerStack.push(listener);
+    }
+
+    public final boolean popListener()
+    {
+        if (m_connectionFailListenerStack.empty())
+            return false;
+        m_connectionFailListenerStack.pop();
+        return true;
+    }
 }

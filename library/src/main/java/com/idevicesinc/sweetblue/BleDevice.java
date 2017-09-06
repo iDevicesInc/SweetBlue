@@ -3,7 +3,6 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import com.idevicesinc.sweetblue.ReadWriteListener.Type;
 import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
@@ -48,6 +47,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.UUID;
 import static com.idevicesinc.sweetblue.BleDeviceState.ADVERTISING;
 import static com.idevicesinc.sweetblue.BleDeviceState.AUTHENTICATED;
@@ -115,8 +115,8 @@ public final class BleDevice extends BleNode
     private final P_HistoricalDataManager m_historicalDataMngr;
     final P_BondManager m_bondMngr;
 
-    private ReadWriteListener m_defaultReadWriteListener = null;
-    private NotificationListener m_defaultNotificationListener = null;
+    private final Stack<ReadWriteListener> m_readWriteListenerStack;
+    private final Stack<NotificationListener> m_notificationListenerStack;
 
     private TimeEstimator m_writeTimeEstimator;
     private TimeEstimator m_readTimeEstimator;
@@ -160,6 +160,9 @@ public final class BleDevice extends BleNode
         m_origin = origin;
         m_origin_latest = m_origin;
         m_isNull = isNull;
+
+        m_readWriteListenerStack = new Stack<>();
+        m_notificationListenerStack = new Stack<>();
 
         m_deviceLayer = device_native;
 
@@ -437,32 +440,99 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Set a listener here to be notified whenever this device's state changes.
+     * Set a listener here to be notified whenever this device's state changes. NOTE: This will clear the stack of {@link DeviceStateListener}s, and set
+     * the one provided here to be the only one in the stack.
+     *
+     * If the provided listener is <code>null</code>, then the stack of listeners will be cleared.
      */
     public final void setListener_State(@Nullable(Prevalence.NORMAL) DeviceStateListener listener_nullable)
     {
         if (isNull()) return;
 
-        stateTracker_main().setListener(listener_nullable);
+        stateTracker_main().clearListenerStack();
+        if (listener_nullable != null)
+            stateTracker_main().setListener(listener_nullable);
     }
 
     /**
-     * Returns the {@link DeviceStateListener} this device currently using.
+     * Push a new {@link DeviceStateListener} onto the stack. This new listener will be the one events are dispatched to, until
+     * {@link #popListener_State()} is called.
+     * This method will early-out if the provided listener is <code>null</code>
      */
-    public final DeviceStateListener getStateListener()
+    public final void pushListener_State(@Nullable(Prevalence.NEVER) DeviceStateListener listener)
+    {
+        if (isNull()) return;
+
+        if (listener == null) return;
+
+        stateTracker_main().pushListener(listener);
+    }
+
+    /**
+     * Pop the current {@link DeviceStateListener} out of the stack of listeners.
+     * Returns <code>true</code> if a listener was actually removed from the stack (it will only be false if the stack is already empty).
+     */
+    public final boolean popListener_State()
+    {
+        if (isNull()) return false;
+
+        return stateTracker_main().popListener();
+    }
+
+    /**
+     * Returns the current {@link DeviceStateListener} being used (the top of the stack). This can return <code>null</code> if there
+     * are no listeners in the stack.
+     */
+    public final @Nullable(Prevalence.NORMAL) DeviceStateListener getStateListener()
     {
         return stateTracker_main().getListener();
     }
 
     /**
      * Set a listener here to be notified whenever a connection fails and to
-     * have control over retry behavior.
+     * have control over retry behavior. NOTE: This will clear the stack of {@link DeviceConnectionFailListener}s, and set
+     * the one provided here to be the only one in the stack. If the provided listener is <code>null</code>, then the stack of listeners will be cleared.
      */
     public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceConnectionFailListener listener_nullable)
     {
         if (isNull()) return;
 
-        m_connectionFailMngr.setListener(listener_nullable);
+        m_connectionFailMngr.clearListenerStack();
+        if (listener_nullable != null)
+            m_connectionFailMngr.setListener(listener_nullable);
+    }
+
+    /**
+     * Pushes the provided {@link DeviceConnectionFailListener} on to the top of the stack of listeners.
+     * This method will early-out if the provided listener is <code>null</code>
+     */
+    public final void pushListener_ConnectionFail(@Nullable(Prevalence.NEVER) DeviceConnectionFailListener listener)
+    {
+        if (isNull()) return;
+
+        if (listener == null) return;
+
+        m_connectionFailMngr.pushListener(listener);
+    }
+
+    /**
+     * Pops the current {@link DeviceConnectionFailListener} off the stack of listeners.
+     * Returns <code>true</code> if a listener was actually removed from the stack (it will only be false if the stack is already empty).
+     */
+    public final boolean popListener_ConnectionFail()
+    {
+        if (isNull()) return false;
+
+        return m_connectionFailMngr.popListener();
+    }
+
+    /**
+     * Returns the current {@link DeviceConnectionFailListener} being used (the top of the stack). This can return <code>null</code> if there
+     * are no listeners in the stack.
+     */
+    public final @Nullable(Prevalence.NORMAL) DeviceConnectionFailListener getListener_ConnectionFail()
+    {
+        return m_connectionFailMngr.getListener();
     }
 
     /**
@@ -480,12 +550,56 @@ public final class BleDevice extends BleNode
     /**
      * Sets a default backup {@link ReadWriteListener} that will be called for all calls to {@link #read(UUID, ReadWriteListener)},
      * {@link #write(UUID, byte[], ReadWriteListener)}, {@link #enableNotify(UUID, ReadWriteListener)}, etc.
+     * NOTE: This will clear the stack of {@link ReadWriteListener}s, and set
+     * the one provided here to be the only one in the stack. If the provided listener is <code>null</code>, then the stack of listeners will be cleared.
      */
     public final void setListener_ReadWrite(@Nullable(Prevalence.NORMAL) final ReadWriteListener listener_nullable)
     {
         if (isNull()) return;
 
-        m_defaultReadWriteListener = listener_nullable;
+        m_readWriteListenerStack.clear();
+
+        if (listener_nullable != null)
+            m_readWriteListenerStack.push(listener_nullable);
+    }
+
+    /**
+     * Pushes the provided {@link ReadWriteListener} on to the top of the stack of listeners.
+     * This method will early-out if the provided listener is <code>null</code>
+     */
+    public final void pushListener_ReadWrite(@Nullable(Prevalence.NEVER) ReadWriteListener listener)
+    {
+        if (isNull()) return;
+
+        if (listener == null) return;
+
+        m_readWriteListenerStack.push(listener);
+    }
+
+    /**
+     * Pops the current {@link ReadWriteListener} off the stack of listeners.
+     * Returns <code>true</code> if a listener was actually removed from the stack (it will only be false if the stack is already empty).
+     */
+    public final boolean popListener_ReadWrite()
+    {
+        if (isNull()) return false;
+
+        if (m_readWriteListenerStack.empty())
+            return false;
+
+        m_readWriteListenerStack.pop();
+        return true;
+    }
+
+    /**
+     * Returns the current {@link ReadWriteListener} being used (the top of the stack). This can return <code>null</code> if there
+     * are no listeners in the stack.
+     */
+    public final @Nullable(Prevalence.NORMAL) ReadWriteListener getListener_ReadWrite()
+    {
+        if (isNull() || m_readWriteListenerStack.empty())
+            return null;
+        return m_readWriteListenerStack.peek();
     }
 
 
@@ -493,12 +607,56 @@ public final class BleDevice extends BleNode
      * Sets a default {@link NotificationListener} that will be called when receiving notifications, or indications. This listener will also
      * be called when toggling notifications. This does NOT replace {@link com.idevicesinc.sweetblue.ReadWriteListener}, just adds to it. If
      * a default {@link com.idevicesinc.sweetblue.ReadWriteListener} has been set, it will still fire in addition to this listener.
+     * NOTE: This will clear the stack of {@link ReadWriteListener}s, and set
+     * the one provided here to be the only one in the stack. If the provided listener is <code>null</code>, then the stack of listeners will be cleared.
      */
     public final void setListener_Notification(@Nullable(Prevalence.NORMAL) NotificationListener listener_nullable)
     {
         if (isNull()) return;
 
-        m_defaultNotificationListener = listener_nullable;
+        m_notificationListenerStack.clear();
+
+        if (listener_nullable != null)
+            m_notificationListenerStack.push(listener_nullable);
+    }
+
+    /**
+     * Pushes the provided {@link NotificationListener} on to the top of the stack of listeners.
+     * This method will early-out if the provided listener is <code>null</code>
+     */
+    public final void pushListener_Notification(@Nullable(Prevalence.NEVER) NotificationListener listener)
+    {
+        if (isNull()) return;
+
+        if (listener == null) return;
+
+        m_notificationListenerStack.push(listener);
+    }
+
+    /**
+     * Pops the current {@link NotificationListener} off the stack of listeners.
+     * Returns <code>true</code> if a listener was actually removed from the stack (it will only be false if the stack is already empty).
+     */
+    public final boolean popListener_Notification()
+    {
+        if (isNull()) return false;
+
+        if (m_notificationListenerStack.empty())
+            return false;
+
+        m_notificationListenerStack.pop();
+        return true;
+    }
+
+    /**
+     * Returns the current {@link NotificationListener} being used (the top of the stack). This can return <code>null</code> if there
+     * are no listeners in the stack.
+     */
+    public final @Nullable(Prevalence.NORMAL) NotificationListener getListener_Notification()
+    {
+        if (isNull() || m_notificationListenerStack.empty()) return null;
+
+        return m_notificationListenerStack.peek();
     }
 
     /**
@@ -5212,9 +5370,9 @@ public final class BleDevice extends BleNode
             postEventAsCallback(listener_nullable, event);
         }
 
-        if (m_defaultReadWriteListener != null)
+        if (getListener_ReadWrite() != null)
         {
-            postEventAsCallback(m_defaultReadWriteListener, event);
+            postEventAsCallback(getListener_ReadWrite(), event);
         }
 
         if (getManager() != null && getManager().m_defaultReadWriteListener != null)
@@ -5224,9 +5382,9 @@ public final class BleDevice extends BleNode
 
         final boolean isNotificationType = (event.type().isNotification() || event.type() == Type.DISABLING_NOTIFICATION || event.type() == Type.ENABLING_NOTIFICATION);
 
-        if (m_defaultNotificationListener != null && isNotificationType)
+        if (getListener_Notification() != null && isNotificationType)
         {
-            postEventAsCallback(m_defaultNotificationListener, fromReadWriteEvent(event));
+            postEventAsCallback(getListener_Notification(), fromReadWriteEvent(event));
         }
 
         if (getManager() != null && getManager().m_defaultNotificationListener != null && isNotificationType)
@@ -5246,7 +5404,7 @@ public final class BleDevice extends BleNode
                 type = NotificationListener.Type.INDICATION;
                 break;
             case PSUEDO_NOTIFICATION:
-                type = NotificationListener.Type.PSUEDO_NOTIFICATION;
+                type = NotificationListener.Type.PSEUDO_NOTIFICATION;
                 break;
             case DISABLING_NOTIFICATION:
                 type = NotificationListener.Type.DISABLING_NOTIFICATION;
