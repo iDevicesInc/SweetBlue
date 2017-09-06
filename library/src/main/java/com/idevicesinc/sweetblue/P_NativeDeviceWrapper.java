@@ -314,6 +314,12 @@ final class P_NativeDeviceWrapper
 	{
 		return getConnectionState() == BluetoothGatt.STATE_DISCONNECTING;
 	}
+
+	boolean isNativelyConnectingOrConnected()
+	{
+		int state = getConnectionState();
+		return state == BluetoothGatt.STATE_CONNECTED || state == BluetoothGatt.STATE_CONNECTING;
+	}
 	
 	public int getNativeConnectionState()
 	{

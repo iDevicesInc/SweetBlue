@@ -545,6 +545,13 @@ gradle.taskGraph.whenReady { taskGraph ->
         allprojects { ext."signing.secretKeyRingFile" = System.getenv("SIGN_RING") }
         allprojects { ext."signing.password" = System.getenv("SIGN_PW") }
     }
+    // Hack to get signArchives to NOT be executed on the build server. It seems the conditional check we had originally
+    // isn't enough to prevent the task from running, and consequently failing the job on the build server
+    if (taskGraph.hasTask("uploadArchives")) {
+        signing {
+            sign configurations.archives
+        }
+    }
 }
 
 uploadArchives {
@@ -596,10 +603,12 @@ task uploadInternal(type: Upload) {
     }
 }
 
-signing {
-    required { /*gradle.taskGraph.hasTask("uploadArchives")*/ true }
-    sign configurations.archives
-}
+// Hopefully some day they fix this. The conditional check here doesn't bypass the signArchives task, so on build servers,
+// or computers that don't have the signing information, it makes builds fail.
+//signing {
+//    required { gradle.taskGraph.hasTask("uploadArchives") }
+//    sign configurations.archives
+//}
 
 task androidJavadocs(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
