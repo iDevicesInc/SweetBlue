@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.bluetooth.BluetoothGattCharacteristic;
+
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Util;
@@ -9,6 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
+import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -409,6 +413,58 @@ public class NotifyTest extends BaseBleUnitTest
         });
 
         m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+
+        startTest();
+    }
+
+    @Test
+    public void notifyStackTest() throws Exception
+    {
+        m_config.loggingOptions = LogOptions.ON;
+
+        m_config.gattLayerFactory = device -> new UnitTestGatt(device, dbNotify);
+
+        final byte[] first = Util.randomBytes(20);
+        final byte[] second = Util.randomBytes(20);
+
+        m_config.defaultInitFactory = () -> new BleTransaction.Init()
+        {
+            @Override
+            protected void start(BleDevice device)
+            {
+                BleNotify notify = new BleNotify(mTestService, mTestChar)
+                        .setReadWriteListener((e) -> {
+                            assertTrue(e.wasSuccess());
+                            succeed();
+                        });
+                device.enableNotify(notify);
+            }
+        };
+
+        m_mgr.setConfig(m_config);
+
+        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "NotifMotif");
+
+        final BluetoothGattCharacteristic ch = device.getNativeCharacteristic(mTestService, mTestChar);
+
+        device.setListener_Notification((e) -> {
+            if (e.type() == NotificationListener.Type.NOTIFICATION)
+            {
+                assertTrue(Arrays.equals(e.data(), first));
+                device.pushListener_Notification((e1) -> {
+                    assertTrue(Arrays.equals(e1.data(), second));
+                    succeed();
+                });
+                NativeUtil.sendNotification(device, ch, second);
+            }
+        });
+
+        device.connect((e) -> {
+            if (e.didEnter(BleDeviceState.INITIALIZED))
+            {
+                NativeUtil.sendNotification(device, ch, first);
+            }
+        });
 
         startTest();
     }

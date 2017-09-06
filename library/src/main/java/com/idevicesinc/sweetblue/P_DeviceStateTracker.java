@@ -3,35 +3,62 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.DeviceStateListener.StateEvent;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.utils.State;
+import java.util.Stack;
 
 
 final class P_DeviceStateTracker extends PA_StateTracker
 {
-	private DeviceStateListener m_stateListener;
+	private final Stack<DeviceStateListener> m_stateListenerStack;
 	private final BleDevice m_device;
 	private final boolean m_forShortTermReconnect;
 	
 	private boolean m_syncing = false;
+
 	
 	P_DeviceStateTracker(BleDevice device, final boolean forShortTermReconnect)
 	{
 		super(BleDeviceState.VALUES(), /*trackTimes=*/forShortTermReconnect==false);
-		
+
+		m_stateListenerStack = new Stack<>();
+
 		m_device = device;
 		m_forShortTermReconnect = forShortTermReconnect;
 	}
 	
-	public void setListener(DeviceStateListener listener)
+	public final void setListener(DeviceStateListener listener)
 	{
-		m_stateListener = listener;
+		m_stateListenerStack.clear();
+		m_stateListenerStack.push(listener);
 	}
 
-	public DeviceStateListener getListener()
+	public final void pushListener(DeviceStateListener listener)
 	{
-		return m_stateListener;
+		m_stateListenerStack.push(listener);
 	}
-	
-	void sync(P_DeviceStateTracker otherTracker)
+
+	public final boolean popListener()
+	{
+		if (!m_stateListenerStack.empty())
+        {
+            m_stateListenerStack.pop();
+            return true;
+        }
+        return false;
+	}
+
+	public final void clearListenerStack()
+    {
+        m_stateListenerStack.clear();
+    }
+
+	public final DeviceStateListener getListener()
+	{
+		if (m_stateListenerStack.empty())
+			return null;
+		return m_stateListenerStack.peek();
+	}
+
+    final void sync(P_DeviceStateTracker otherTracker)
 	{
 		m_syncing = true;
 		
@@ -40,15 +67,15 @@ final class P_DeviceStateTracker extends PA_StateTracker
 		m_syncing = false;
 	}
 
-	@Override protected void onStateChange(final int oldStateBits, final int newStateBits, final int intentMask, final int gattStatus)
+	@Override protected final void onStateChange(final int oldStateBits, final int newStateBits, final int intentMask, final int gattStatus)
 	{
 		if( m_device.isNull() )		return;
 		if( m_syncing )				return;
 
-		if( m_stateListener != null )
+		if( getListener() != null )
 		{
 			final StateEvent event = new StateEvent(m_device, oldStateBits, newStateBits, intentMask, gattStatus);
-			m_device.postEventAsCallback(m_stateListener, event);
+			m_device.postEventAsCallback(getListener(), event);
 		}
 		
 		if( !m_forShortTermReconnect && m_device.getManager().m_defaultDeviceStateListener != null )
@@ -72,7 +99,7 @@ final class P_DeviceStateTracker extends PA_StateTracker
 //		m_device.getManager().getLogger().e(this.toString());
 	}
 
-	@Override protected void append_assert(State newState)
+	@Override protected final void append_assert(State newState)
 	{
 		if( newState.ordinal() > BleDeviceState.CONNECTING.ordinal() )
 		{
@@ -89,7 +116,7 @@ final class P_DeviceStateTracker extends PA_StateTracker
 		}
 	}
 	
-	@Override public String toString()
+	@Override public final String toString()
 	{
 		return super.toString(BleDeviceState.VALUES());
 	}

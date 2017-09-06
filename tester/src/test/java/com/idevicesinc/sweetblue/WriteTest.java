@@ -106,6 +106,37 @@ public class WriteTest extends BaseBleUnitTest
         startTest();
     }
 
+    @Test
+    public void writeStackTest() throws Exception
+    {
+        m_config.loggingOptions = LogOptions.ON;
+
+        m_mgr.setConfig(m_config);
+
+        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "WriteMonster");
+
+        final BleWrite write = new BleWrite(firstServiceUuid, firstCharUuid).setBytes(Util.randomBytes(20));
+
+        device.setListener_ReadWrite((e) -> {
+            assertTrue(e.wasSuccess());
+            device.pushListener_ReadWrite((e1) -> {
+                assertTrue(e.wasSuccess());
+                succeed();
+            });
+            write.setBytes(Util.randomBytes(20));
+            device.write(write);
+        });
+
+        device.connect((e) -> {
+            if (e.didEnter(BleDeviceState.INITIALIZED))
+            {
+                device.write(write);
+            }
+        });
+
+        startTest();
+    }
+
     @Override
     public P_GattLayer getGattLayer(BleDevice device)
     {

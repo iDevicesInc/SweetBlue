@@ -106,6 +106,36 @@ public class ReadTest extends BaseBleUnitTest
         startTest();
     }
 
+    @Test
+    public void readListenerStackTest() throws Exception
+    {
+        m_config.loggingOptions = LogOptions.ON;
+
+        m_mgr.setConfig(m_config);
+
+        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "SomeBLEdevice");
+
+        final BleRead read = new BleRead(firstServiceUuid, firstCharUuid);
+
+        device.setListener_ReadWrite((e) -> {
+            assertTrue(e.wasSuccess());
+            device.pushListener_ReadWrite((e1) -> {
+                assertTrue(e.wasSuccess());
+                succeed();
+            });
+            device.read(read);
+        });
+
+        device.connect(e -> {
+            if (e.didEnter(BleDeviceState.INITIALIZED))
+            {
+                device.read(read);
+            }
+        });
+
+        startTest();
+    }
+
     @Override
     public P_GattLayer getGattLayer(BleDevice device)
     {
