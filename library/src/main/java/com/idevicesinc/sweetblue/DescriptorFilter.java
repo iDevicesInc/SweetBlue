@@ -8,6 +8,9 @@ import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.FutureData;
+import com.idevicesinc.sweetblue.utils.UsesCustomNull;
+import com.idevicesinc.sweetblue.utils.Uuids;
+
 import java.util.UUID;
 
 

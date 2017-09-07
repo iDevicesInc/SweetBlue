@@ -43,7 +43,6 @@ import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
-import com.idevicesinc.sweetblue.utils.TimeTracker;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
@@ -157,6 +156,18 @@ public final class BleDevice extends BleNode
              * This can also happen if the internal call to get a BluetoothService(s) causes an exception (seen on some phones).
              */
             NO_MATCHING_TARGET,
+
+            /**
+             * Sometimes android can throw a {@link java.util.ConcurrentModificationException} when we try to retrieve a {@link BluetoothGattService},
+             * {@link BluetoothGattCharacteristic}, or {@link BluetoothGattDescriptor}. In this case, it's best to just try your operation again.
+             */
+            GATT_CONCURRENT_EXCEPTION,
+
+            /**
+             * Sometimes android can throw an {@link Exception} when we try to retrieve a {@link BluetoothGattService},
+             * {@link BluetoothGattCharacteristic}, or {@link BluetoothGattDescriptor}.
+             */
+            GATT_RANDOM_EXCEPTION,
 
             /**
              * Specific to {@link Target#RELIABLE_WRITE}, this means the underlying call to {@link BluetoothGatt#beginReliableWrite()}
@@ -681,7 +692,6 @@ public final class BleDevice extends BleNode
 
             private final BleConnectionPriority m_connectionPriority;
 
-
             /**
              * This is the {@link DescriptorFilter} that was used for this read/write operation, if any.
              */
@@ -699,6 +709,7 @@ public final class BleDevice extends BleNode
                 this.m_serviceUuid = serviceUuid != null ? serviceUuid : NON_APPLICABLE_UUID;
                 this.m_charUuid = charUuid != null ? charUuid : NON_APPLICABLE_UUID;
                 this.m_descUuid = descUuid != null ? descUuid : NON_APPLICABLE_UUID;
+                this.m_descriptorFilter = descFilter;
                 this.m_type = type;
                 this.m_target = target;
                 this.m_status = status;
@@ -710,7 +721,6 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
-                this.m_descriptorFilter = descFilter;
             }
 
 
@@ -720,6 +730,7 @@ public final class BleDevice extends BleNode
                 this.m_charUuid = NON_APPLICABLE_UUID;
                 this.m_descUuid = NON_APPLICABLE_UUID;
                 this.m_serviceUuid = NON_APPLICABLE_UUID;
+                this.m_descriptorFilter = null;
                 this.m_type = type;
                 this.m_target = Target.RSSI;
                 this.m_status = status;
@@ -731,7 +742,6 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
-                this.m_descriptorFilter = null;
             }
 
             ReadWriteEvent(BleDevice device, int mtu, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
@@ -740,6 +750,7 @@ public final class BleDevice extends BleNode
                 this.m_charUuid = NON_APPLICABLE_UUID;
                 this.m_descUuid = NON_APPLICABLE_UUID;
                 this.m_serviceUuid = NON_APPLICABLE_UUID;
+                this.m_descriptorFilter = null;
                 this.m_type = Type.WRITE;
                 this.m_target = Target.MTU;
                 this.m_status = status;
@@ -751,7 +762,6 @@ public final class BleDevice extends BleNode
                 this.m_mtu = status == Status.SUCCESS ? mtu : device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = device.getConnectionPriority();
-                this.m_descriptorFilter = null;
             }
 
             ReadWriteEvent(BleDevice device, BleConnectionPriority connectionPriority, Status status, int gattStatus, double totalTime, double transitTime, boolean solicited)
@@ -760,6 +770,7 @@ public final class BleDevice extends BleNode
                 this.m_charUuid = NON_APPLICABLE_UUID;
                 this.m_descUuid = NON_APPLICABLE_UUID;
                 this.m_serviceUuid = NON_APPLICABLE_UUID;
+                this.m_descriptorFilter = null;
                 this.m_type = Type.WRITE;
                 this.m_target = Target.CONNECTION_PRIORITY;
                 this.m_status = status;
@@ -771,7 +782,6 @@ public final class BleDevice extends BleNode
                 this.m_mtu = device.getMtu();
                 this.m_solicited = solicited;
                 this.m_connectionPriority = connectionPriority;
-                this.m_descriptorFilter = null;
             }
 
             static ReadWriteEvent NULL(BleDevice device)
@@ -5067,9 +5077,9 @@ public final class BleDevice extends BleNode
             return earlyOutResult;
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
+        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
 
-        final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.READ);
+        final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.READ);
 
         queue().add(new P_Task_BatteryLevel(this, valueToMatch, descriptorUuid, listener, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
@@ -5274,7 +5284,7 @@ public final class BleDevice extends BleNode
             }
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
         final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
         final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
@@ -5289,7 +5299,7 @@ public final class BleDevice extends BleNode
 
             if (descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic, /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, characteristic.getCharacteristic(), /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
             }
             else
             {
@@ -5305,7 +5315,7 @@ public final class BleDevice extends BleNode
         {
             if (listener != null && isConnected)
             {
-                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, serviceUuid, characteristicUuid, descriptorFilter);
+                result = m_pollMngr.newAlreadyEnabledEvent(characteristic.getCharacteristic(), serviceUuid, characteristicUuid, descriptorFilter);
 
                 invokeReadWriteCallback(listener, result);
             }
@@ -6597,7 +6607,7 @@ public final class BleDevice extends BleNode
 
         if (descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID))
         {
-            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+            final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristicUuid, BondFilter.CharacteristicEventType.READ);
 
             final P_Task_Read task;
@@ -6605,11 +6615,11 @@ public final class BleDevice extends BleNode
             if (descriptorFilter == null)
             {
 
-                task = new P_Task_Read(this, characteristic, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, characteristic.getCharacteristic(), type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
             else
             {
-                task = new P_Task_Read(this, characteristic.getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, characteristic.getCharacteristic().getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
 
             queue().add(task);
@@ -6638,11 +6648,11 @@ public final class BleDevice extends BleNode
 
         if (wb.descriptorUuid == null || wb.descriptorUuid.equals(Uuids.INVALID))
         {
-            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(wb.serviceUuid, wb.charUuid);
+            final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(wb.serviceUuid, wb.charUuid);
 
-            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
+            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
-            addWriteTasks(characteristic, wb.data, requiresBonding, wb.writeType, wb.descriptorFilter, wb.readWriteListener);
+            addWriteTasks(characteristic.getCharacteristic(), wb.data, requiresBonding, wb.writeType, wb.descriptorFilter, wb.readWriteListener);
         }
         else
         {
@@ -6704,14 +6714,14 @@ public final class BleDevice extends BleNode
             return earlyOutResult;
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 
         if (characteristic != null && is(CONNECTED))
         {
             final P_Task_ToggleNotify task;
             if (descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic, /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, characteristic.getCharacteristic(), /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
             }
             else
             {
