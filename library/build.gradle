@@ -547,6 +547,7 @@ gradle.taskGraph.whenReady { taskGraph ->
     }
     // Hack to get signArchives to NOT be executed on the build server. It seems the conditional check we had originally
     // isn't enough to prevent the task from running, and consequently failing the job on the build server
+    // See https://discuss.gradle.org/t/signing-plugin-add-to-configuration-even-if-its-not-being-run/1001
     if (taskGraph.hasTask("uploadArchives")) {
         signing {
             sign configurations.archives
