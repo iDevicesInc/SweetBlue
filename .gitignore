@@ -15,9 +15,10 @@ samples/hello_ble/.settings/org.eclipse.jdt.core.prefs
 samples/ble_util/.settings/org.eclipse.jdt.core.prefs
 *.iml
 .idea/
-app/build
-app/script_output/
+library/build
+library/script_output/
 local.properties
-app/app.iml
+library/app.iml
 sweetblue.iml
-app/sweetblue-app.iml
+library/sweetblue-app.iml
+captures/

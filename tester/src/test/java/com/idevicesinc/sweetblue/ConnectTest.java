@@ -1,55 +1,51 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.content.Context;
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Pointer;
+import com.idevicesinc.sweetblue.utils.Util;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.Semaphore;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
-@Config(manifest = Config.NONE, sdk = 24)
+@Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
 public class ConnectTest extends BaseBleUnitTest
 {
 
     private BleDevice m_device;
 
+    private GattDatabase batteryDb = new GattDatabase().addService(Uuids.BATTERY_SERVICE_UUID)
+            .addCharacteristic(Uuids.BATTERY_LEVEL).setProperties().read().setPermissions().read().completeService();
+
 
     @Test(timeout = 12000)
     public void connectCreatedDeviceTest() throws Exception
     {
+        startTest(false);
         m_device = null;
 
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
 
-        doConnectCreatedDeviceTest(m_config);
+        doConnectCreatedDeviceTest(m_config, false);
 
         m_mgr.disconnectAll();
 
         m_config.runOnMainThread = true;
 
-        doConnectCreatedDeviceTest(m_config);
+        doConnectCreatedDeviceTest(m_config, true);
 
     }
 
-    private void doConnectCreatedDeviceTest(BleManagerConfig config) throws Exception
+    private void doConnectCreatedDeviceTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -64,7 +60,14 @@ public class ConnectTest extends BaseBleUnitTest
                         {
                             if (e.didEnter(BleDeviceState.INITIALIZED))
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                         }
                     });
@@ -72,14 +75,62 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
+    }
+
+    @Test(timeout = 40000)
+    public void retryConnectionTest() throws Exception
+    {
+        m_device = null;
+
+        m_config.runOnMainThread = false;
+        m_config.loggingEnabled = true;
+        m_config.gattLayerFactory = new P_GattLayerFactory()
+        {
+            @Override
+            public P_GattLayer newInstance(BleDevice device)
+            {
+                return new ConnectFailGatt(device, ConnectFailGatt.FailurePoint.POST_CONNECTING_BLE, ConnectFailGatt.FailureType.DISCONNECT_GATT_ERROR);
+            }
+        };
+
+        m_mgr.setConfig(m_config);
+
+        m_device = m_mgr.newDevice(Util.randomMacAddress());
+
+        m_device.connect(new BleDevice.StateListener() {
+
+            int timesTried = 0;
+
+            @Override
+            public void onEvent(BleDevice.StateListener.StateEvent e)
+            {
+                if (e.didEnter(BleDeviceState.DISCONNECTED))
+                {
+                    if (timesTried < 3)
+                    {
+                        timesTried++;
+                        assertTrue(e.device().is(BleDeviceState.RETRYING_BLE_CONNECTION));
+                    }
+                    else
+                    {
+                        assertFalse(e.device().is(BleDeviceState.RETRYING_BLE_CONNECTION));
+                        succeed();
+                    }
+                }
+            }
+        }, new BleDevice.DefaultConnectionFailListener(3, 3));
+
+        startTest();
     }
 
     @Test(timeout = 12000)
     public void connectDiscoveredDeviceTest() throws Exception
     {
+        startTest(false);
+
         m_device = null;
 
         m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
@@ -93,20 +144,18 @@ public class ConnectTest extends BaseBleUnitTest
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
 
-        doConnectDiscoveredDeviceTest(m_config);
+        doConnectDiscoveredDeviceTest(m_config, false);
 
         m_mgr.disconnectAll();
 
         m_config.runOnMainThread = true;
 
-        doConnectDiscoveredDeviceTest(m_config);
+        doConnectDiscoveredDeviceTest(m_config, true);
     }
 
-    private void doConnectDiscoveredDeviceTest(BleManagerConfig config) throws Exception
+    private void doConnectDiscoveredDeviceTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -122,7 +171,14 @@ public class ConnectTest extends BaseBleUnitTest
                         {
                             if (e.didEnter(BleDeviceState.INITIALIZED))
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                         }
                     });
@@ -136,19 +192,21 @@ public class ConnectTest extends BaseBleUnitTest
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -45, "Test Device");
+                    NativeUtil.advertiseNewDevice(m_mgr, -45, "Test Device");
                 }
             }
         });
 
         m_mgr.startScan();
-        s.acquire();
+        reacquire();
     }
 
-    @Test(timeout = 16000)
+    @Test(timeout = 30000)
     public void connectDiscoveredMultipleDeviceTest() throws Exception
     {
         m_device = null;
+
+        startTest(false);
 
         m_config.runOnMainThread = false;
         m_config.defaultScanFilter = new BleManagerConfig.ScanFilter()
@@ -161,22 +219,20 @@ public class ConnectTest extends BaseBleUnitTest
 
         m_config.loggingEnabled = true;
 
-        doConnectDiscoveredMultipleDeviceTest(m_config);
+        doConnectDiscoveredMultipleDeviceTest(m_config, false);
 
         m_mgr.stopScan();
         m_mgr.disconnectAll();
 
         m_config.runOnMainThread = true;
 
-        doConnectDiscoveredMultipleDeviceTest(m_config);
+        doConnectDiscoveredMultipleDeviceTest(m_config, true);
 
     }
 
-    private void doConnectDiscoveredMultipleDeviceTest(BleManagerConfig config) throws Exception
+    private void doConnectDiscoveredMultipleDeviceTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -196,7 +252,14 @@ public class ConnectTest extends BaseBleUnitTest
                                 System.out.println(e.device().getName_override() + " connected. #" + connected.value);
                                 if (connected.value == 3)
                                 {
-                                    s.release();
+                                    if (completeTest)
+                                    {
+                                        succeed();
+                                    }
+                                    else
+                                    {
+                                        release();
+                                    }
                                 }
                             }
                         }
@@ -211,21 +274,23 @@ public class ConnectTest extends BaseBleUnitTest
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -45, "Test Device #1");
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -35, "Test Device #2");
-                    UnitTestUtils.advertiseNewDevice(m_mgr, -60, "Test Device #3");
+                    NativeUtil.advertiseNewDevice(m_mgr, -45, "Test Device #1");
+                    NativeUtil.advertiseNewDevice(m_mgr, -35, "Test Device #2");
+                    NativeUtil.advertiseNewDevice(m_mgr, -60, "Test Device #3");
                 }
             }
         });
 
         m_mgr.startScan();
-        s.acquire();
+        reacquire();
     }
 
-    @Test(timeout = 12000)
+    @Test(timeout = 40000)
     public void connectFailTest() throws Exception
     {
         m_device = null;
+
+        startTest(false);
 
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
@@ -233,23 +298,21 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new ConnectFailGattLayer(device);
+                return new ConnectFailGatt(device, ConnectFailGatt.FailurePoint.POST_CONNECTING_BLE, ConnectFailGatt.FailureType.DISCONNECT_GATT_ERROR);
             }
         };
 
-        doConnectFailTest(m_config);
+        doConnectFailTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doConnectFailTest(m_config);
+        doConnectFailTest(m_config, true);
 
     }
 
-    private void doConnectFailTest(BleManagerConfig config) throws Exception
+    private void doConnectFailTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -264,7 +327,14 @@ public class ConnectTest extends BaseBleUnitTest
                         {
                             if (e.didEnter(BleDeviceState.INITIALIZED))
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                         }
                     }, new BleDevice.DefaultConnectionFailListener()
@@ -274,7 +344,14 @@ public class ConnectTest extends BaseBleUnitTest
                             System.out.println("Connection fail event: " + e.toString());
                             if (e.failureCountSoFar() == 3)
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                             return super.onEvent(e);
                         }
@@ -284,15 +361,17 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
-    @Test(timeout = 12000)
+    @Test(timeout = 40000)
     public void connectFailManagerTest() throws Exception
     {
         m_device = null;
+
+        startTest(false);
 
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
@@ -300,23 +379,21 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new ConnectFailGattLayer(device);
+                return new ConnectFailGatt(device, ConnectFailGatt.FailurePoint.POST_CONNECTING_BLE, ConnectFailGatt.FailureType.DISCONNECT_GATT_ERROR);
             }
         };
 
-        doConnectFailManagerTest(m_config);
+        doConnectFailManagerTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doConnectFailManagerTest(m_config);
+        doConnectFailManagerTest(m_config, true);
 
     }
 
-    private void doConnectFailManagerTest(BleManagerConfig config) throws Exception
+    private void doConnectFailManagerTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_ConnectionFail(new BleDevice.DefaultConnectionFailListener()
         {
@@ -325,7 +402,14 @@ public class ConnectTest extends BaseBleUnitTest
                 System.out.println("Connection fail event: " + e.toString());
                 if (e.failureCountSoFar() == 3)
                 {
-                    s.release();
+                    if (completeTest)
+                    {
+                        succeed();
+                    }
+                    else
+                    {
+                        release();
+                    }
                 }
                 return super.onEvent(e);
             }
@@ -344,7 +428,14 @@ public class ConnectTest extends BaseBleUnitTest
                         {
                             if (e.didEnter(BleDeviceState.INITIALIZED))
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                         }
                     });
@@ -352,15 +443,17 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 40000)
     public void connectThenDisconnectBeforeServiceDiscoveryTest() throws Exception
     {
         m_device = null;
+
+        startTest(false);
 
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
@@ -368,23 +461,21 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new DisconnectBeforeServiceDiscoveryGattLayer(device);
+                return new ConnectFailGatt(device, ConnectFailGatt.FailurePoint.SERVICE_DISCOVERY, ConnectFailGatt.FailureType.DISCONNECT_GATT_ERROR);
             }
         };
 
-        doConnectThenDisconnectBeforeServiceDiscoveryTest(m_config);
+        doConnectThenDisconnectBeforeServiceDiscoveryTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doConnectThenDisconnectBeforeServiceDiscoveryTest(m_config);
+        doConnectThenDisconnectBeforeServiceDiscoveryTest(m_config, true);
 
     }
 
-    private void doConnectThenDisconnectBeforeServiceDiscoveryTest(BleManagerConfig config) throws Exception
+    private void doConnectThenDisconnectBeforeServiceDiscoveryTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -404,7 +495,14 @@ public class ConnectTest extends BaseBleUnitTest
                             System.out.println("Connection fail event: " + e.toString());
                             if (e.failureCountSoFar() == 3)
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                             return super.onEvent(e);
                         }
@@ -413,15 +511,17 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
-    @Test(timeout = 12000)
+    @Test(timeout = 40000)
     public void connectThenFailDiscoverServicesTest() throws Exception
     {
         m_device = null;
+
+        startTest(false);
 
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
@@ -429,25 +529,23 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new DiscoverServicesFailGattLayer(device);
+                return new ConnectFailGatt(device, ConnectFailGatt.FailurePoint.SERVICE_DISCOVERY, ConnectFailGatt.FailureType.SERVICE_DISCOVERY_FAILED);
             }
         };
 
         m_config.connectFailRetryConnectingOverall = true;
 
-        doConnectThenFailDiscoverServicesTest(m_config);
+        doConnectThenFailDiscoverServicesTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doConnectThenFailDiscoverServicesTest(m_config);
+        doConnectThenFailDiscoverServicesTest(m_config, true);
 
     }
 
-    private void doConnectThenFailDiscoverServicesTest(BleManagerConfig config) throws Exception
+    private void doConnectThenFailDiscoverServicesTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -467,7 +565,14 @@ public class ConnectTest extends BaseBleUnitTest
                             System.out.println("Connection fail event: " + e.toString());
                             if (e.failureCountSoFar() == 3)
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                             return super.onEvent(e);
                         }
@@ -476,9 +581,9 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
     @Test(timeout = 9000000)
@@ -486,33 +591,33 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_device = null;
 
+        startTest(false);
+
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new TimeOutGattLayer(device);
+                return new ReadWriteFailGatt(device, batteryDb, ReadWriteFailGatt.FailType.TIME_OUT);
             }
         };
 
         m_config.connectFailRetryConnectingOverall = false;
 
-        doconnectThenTimeoutThenFailTest(m_config);
+        doconnectThenTimeoutThenFailTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doconnectThenTimeoutThenFailTest(m_config);
+        doconnectThenTimeoutThenFailTest(m_config, true);
 
     }
 
-    private void doconnectThenTimeoutThenFailTest(BleManagerConfig config) throws Exception
+    private void doconnectThenTimeoutThenFailTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_device = null;
 
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         final BleTransaction.Init init = new BleTransaction.Init()
         {
@@ -553,10 +658,15 @@ public class ConnectTest extends BaseBleUnitTest
                     m_device.connect(init, null, new BleDevice.DefaultConnectionFailListener() {
                         @Override public Please onEvent(ConnectionFailEvent e)
                         {
+                            assertTrue(e.status() == Status.INITIALIZATION_FAILED);
                             System.out.println("Connection fail event: " + e.toString());
-                            if (e.failureCountSoFar() == 3)
+                            if (completeTest)
                             {
-                                s.release();
+                                succeed();
+                            }
+                            else
+                            {
+                                release();
                             }
                             return super.onEvent(e);
                         }
@@ -565,15 +675,17 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
-    @Test(timeout = 14000)
+    @Test(timeout = 40000)
     public void connectThenFailInitTxnTest() throws Exception
     {
         m_device = null;
+
+        startTest(false);
 
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
@@ -581,24 +693,22 @@ public class ConnectTest extends BaseBleUnitTest
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new ReadFailGattLayer(device);
+                return new ReadWriteFailGatt(device, batteryDb, ReadWriteFailGatt.FailType.GATT_ERROR);
             }
         };
         m_config.connectFailRetryConnectingOverall = true;
 
-        doConnectThenFailInitTxnTest(m_config);
+        doConnectThenFailInitTxnTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doConnectThenFailInitTxnTest(m_config);
+        doConnectThenFailInitTxnTest(m_config, true);
 
     }
 
-    private void doConnectThenFailInitTxnTest(BleManagerConfig config) throws Exception
+    private void doConnectThenFailInitTxnTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         final BleTransaction.Init init = new BleTransaction.Init()
         {
@@ -631,7 +741,14 @@ public class ConnectTest extends BaseBleUnitTest
                             System.out.println("Connection fail event: " + e.toString());
                             if (e.failureCountSoFar() == 3)
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                             return super.onEvent(e);
                         }
@@ -640,9 +757,9 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
     @Test(timeout = 12000)
@@ -650,29 +767,30 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_device = null;
 
+        startTest(false);
+
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
             @Override public P_GattLayer newInstance(BleDevice device)
             {
-                return new DisconnectGattLayer(device);
+                //return new DisconnectGattLayer(device);
+                return new UnitTestGatt(device);
             }
         };
 
-        doDisconnectDuringConnectTest(m_config);
+        doDisconnectDuringConnectTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doDisconnectDuringConnectTest(m_config);
+        doDisconnectDuringConnectTest(m_config, true);
 
     }
 
-    private void doDisconnectDuringConnectTest(BleManagerConfig config) throws Exception
+    private void doDisconnectDuringConnectTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -692,12 +810,19 @@ public class ConnectTest extends BaseBleUnitTest
                             if (e.didEnter(BleDeviceState.CONNECTING))
                             {
                                 hasConnected = true;
-                                ((DisconnectGattLayer) m_device.layerManager().getGattLayer()).disconnectCalled = true;
+                                //((DisconnectGattLayer) m_device.layerManager().getGattLayer()).disconnectCalled = true;
                                 m_device.disconnect();
                             }
                             else if (hasConnected && e.didEnter(BleDeviceState.DISCONNECTED))
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                         }
                     });
@@ -705,9 +830,9 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
     @Test(timeout = 12000)
@@ -715,22 +840,22 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_device = null;
 
+        startTest(false);
+
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
 
-        doDisconnectDuringServiceDiscoveryTest(m_config);
+        doDisconnectDuringServiceDiscoveryTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doDisconnectDuringServiceDiscoveryTest(m_config);
+        doDisconnectDuringServiceDiscoveryTest(m_config, true);
 
     }
 
-    private void doDisconnectDuringServiceDiscoveryTest(BleManagerConfig config) throws Exception
+    private void doDisconnectDuringServiceDiscoveryTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -753,7 +878,14 @@ public class ConnectTest extends BaseBleUnitTest
                             }
                             else if (hasConnected && e.didEnter(BleDeviceState.DISCONNECTED))
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                         }
                     });
@@ -761,9 +893,9 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
 
@@ -772,22 +904,22 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_device = null;
 
+        startTest(false);
+
         m_config.runOnMainThread = false;
         m_config.loggingEnabled = true;
 
-        doConnectThenDisconnectTest(m_config);
+        doConnectThenDisconnectTest(m_config, false);
 
         m_config.runOnMainThread = true;
 
-        doConnectThenDisconnectTest(m_config);
+        doConnectThenDisconnectTest(m_config, true);
 
     }
 
-    private void doConnectThenDisconnectTest(BleManagerConfig config) throws Exception
+    private void doConnectThenDisconnectTest(BleManagerConfig config, final boolean completeTest) throws Exception
     {
         m_mgr.setConfig(config);
-
-        final Semaphore s = new Semaphore(0);
 
         m_mgr.setListener_Discovery(new BleManager.DiscoveryListener()
         {
@@ -810,7 +942,14 @@ public class ConnectTest extends BaseBleUnitTest
                             }
                             else if (hasConnected && e.didEnter(BleDeviceState.DISCONNECTED))
                             {
-                                s.release();
+                                if (completeTest)
+                                {
+                                    succeed();
+                                }
+                                else
+                                {
+                                    release();
+                                }
                             }
                         }
                     });
@@ -818,9 +957,9 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(UnitTestUtils.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
 
-        s.acquire();
+        reacquire();
     }
 
 
@@ -846,131 +985,6 @@ public class ConnectTest extends BaseBleUnitTest
         m_config.logger = new UnitTestLogger();
         m_config.runOnMainThread = false;
         return m_config;
-    }
-
-
-
-    private class DisconnectGattLayer extends UnitTestGatt
-    {
-
-        public boolean disconnectCalled = false;
-
-        public DisconnectGattLayer(BleDevice device)
-        {
-            super(device);
-        }
-
-        @Override public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
-        {
-            setGattNull(false);
-            ((UnitTestManagerLayer) m_device.layerManager().getManagerLayer()).updateDeviceState(m_device, BluetoothGatt.STATE_CONNECTING);
-            m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-            {
-                @Override public void run()
-                {
-                    if (!disconnectCalled)
-                    {
-                        setToConnecting();
-                    }
-                }
-            }, 50);
-            m_device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-            {
-                @Override public void run()
-                {
-                    if (!disconnectCalled)
-                    {
-                        setToConnected();
-                    }
-                }
-            }, 150);
-            return device.connect(context, useAutoConnect, callback);
-        }
-    }
-
-
-    private class TimeOutGattLayer extends UnitTestGatt
-    {
-
-        public TimeOutGattLayer(BleDevice device)
-        {
-            super(device);
-            GattDatabase db = new GattDatabase().addService(Uuids.BATTERY_SERVICE_UUID).primary()
-                     .addCharacteristic(Uuids.BATTERY_LEVEL).setProperties().read().setPermissions().read().completeService();
-            setDatabase(db);
-        }
-
-        @Override public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic)
-        {
-            UnitTestUtils.disconnectDevice(getBleDevice(), BleStatuses.GATT_ERROR, 14500);
-            return true;
-        }
-    }
-
-    private class ReadFailGattLayer extends UnitTestGatt
-    {
-
-        public ReadFailGattLayer(BleDevice device)
-        {
-            super(device);
-            GattDatabase db = new GattDatabase().addService(Uuids.BATTERY_SERVICE_UUID).
-                    addCharacteristic(Uuids.BATTERY_LEVEL).setProperties().read().setPermissions().read().completeService();
-            setDatabase(db);
-        }
-
-        @Override public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic)
-        {
-            UnitTestUtils.readError(getBleDevice(), characteristic, BleStatuses.GATT_ERROR, 150);
-            return true;
-        }
-    }
-
-    private class ConnectFailGattLayer extends UnitTestGatt
-    {
-
-        public ConnectFailGattLayer(BleDevice device)
-        {
-            super(device);
-        }
-
-        @Override public void setToConnecting()
-        {
-            super.setToConnecting();
-            UnitTestUtils.disconnectDevice(getBleDevice(), BleStatuses.GATT_ERROR, 50);
-        }
-
-        @Override public void setToConnected()
-        {
-        }
-    }
-
-    private class DisconnectBeforeServiceDiscoveryGattLayer extends UnitTestGatt
-    {
-
-        public DisconnectBeforeServiceDiscoveryGattLayer(BleDevice device)
-        {
-            super(device);
-        }
-
-        @Override public BluetoothGatt connect(P_NativeDeviceLayer device, Context context, boolean useAutoConnect, BluetoothGattCallback callback)
-        {
-            UnitTestUtils.disconnectDevice(getBleDevice(), BleStatuses.GATT_ERROR, false, 175);
-            return super.connect(device, context, useAutoConnect, callback);
-        }
-    }
-
-    private class DiscoverServicesFailGattLayer extends UnitTestGatt
-    {
-
-        public DiscoverServicesFailGattLayer(BleDevice device)
-        {
-            super(device);
-        }
-
-        @Override public void setServicesDiscovered()
-        {
-            UnitTestUtils.failDiscoverServices(getBleDevice(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-        }
     }
 
 }

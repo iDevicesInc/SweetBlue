@@ -15,45 +15,53 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="com.idevicesinc.sweetblue.MainActivity"
-            android:screenOrientation="sensorPortrait"
-            android:configChanges="keyboardHidden|keyboard|orientation">
+            android:configChanges="keyboardHidden|keyboard|orientation"
+            android:screenOrientation="sensorPortrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <activity android:name="com.idevicesinc.sweetblue.BluetoothPowerActivity"
-            android:screenOrientation="sensorPortrait"
-            android:configChanges="keyboardHidden|keyboard|orientation">
+        <activity
+            android:name="com.idevicesinc.sweetblue.BluetoothPowerActivity"
+            android:configChanges="keyboardHidden|keyboard|orientation"
+            android:screenOrientation="sensorPortrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <activity android:name="com.idevicesinc.sweetblue.BleScanActivity"
-            android:screenOrientation="sensorPortrait"
-            android:configChanges="keyboardHidden|keyboard|orientation">
+        <activity
+            android:name="com.idevicesinc.sweetblue.BleScanActivity"
+            android:configChanges="keyboardHidden|keyboard|orientation"
+            android:screenOrientation="sensorPortrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <activity android:name="com.idevicesinc.sweetblue.TestActivity"
-                  android:screenOrientation="sensorPortrait"
-                  android:configChanges="keyboardHidden|keyboard|orientation">
+        <activity
+            android:name="com.idevicesinc.sweetblue.TestActivity"
+            android:configChanges="keyboardHidden|keyboard|orientation"
+            android:screenOrientation="sensorPortrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.idevicesinc.sweetblue.ServerActivity"
+            android:label="@string/title_activity_server">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
 
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

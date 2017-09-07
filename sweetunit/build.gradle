@@ -4,7 +4,7 @@ version = "${SEMVER}".replace("_", ".")
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '25.0.3'
 
     defaultConfig {
         minSdkVersion 18
@@ -23,10 +23,17 @@ android {
     }
 }
 
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://maven.google.com'
+    }
+}
+
 dependencies {
     // TODO - Create script to turn the below on/off for releasing. Release needs to point to SB's maven repo
 //    debugCompile project(':app')
 //    releaseCompile "com.idevicesinc:sweetblue:${version}"
-    compile project(':app')
+    compile project(':library')
     testCompile 'junit:junit:4.12'
 }

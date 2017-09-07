@@ -2,14 +2,16 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
 import android.text.TextUtils;
 
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Util;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +23,7 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     private int m_nativeState = BleStatuses.STATE_ON;
     private String m_address;
+    private String m_name = "MockedDevice";
     private Map<String, Integer> deviceStates = new HashMap<>();
 
 
@@ -121,11 +124,23 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
         return m_nativeState;
     }
 
+    @Override
+    public String getName()
+    {
+        return m_name;
+    }
+
+    @Override
+    public void setName(String name)
+    {
+        m_name = name;
+    }
+
     @Override public String getAddress()
     {
         if (TextUtils.isEmpty(m_address))
         {
-            m_address = UnitTestUtils.randomMacAddress();
+            m_address = Util.randomMacAddress();
         }
         return m_address;
     }
@@ -145,14 +160,19 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
         return null;
     }
 
-    @Override public BluetoothGattServer openGattServer(Context context, P_BleServer_Listeners listeners)
+    @Override public P_NativeServerLayer openGattServer(Context context, P_BleServer_Listeners listeners)
     {
-        return null;
+        return new UnitTestServerLayer();
     }
 
-    @Override public BluetoothLeAdvertiser getBluetoothLeAdvertiser()
+    @Override
+    public void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, AdvertiseCallback callback)
     {
-        return null;
+    }
+
+    @Override
+    public void stopAdvertising(AdvertiseCallback callback)
+    {
     }
 
     @Override public boolean isLocationEnabledForScanning_byOsServices()
@@ -204,25 +224,25 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     protected void setToTurningOff()
     {
-        UnitTestUtils.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_TURNING_OFF);
+        NativeUtil.sendBluetoothStateChange(BleManager.s_instance, m_nativeState, BluetoothAdapter.STATE_TURNING_OFF);
         m_nativeState = BluetoothAdapter.STATE_TURNING_OFF;
     }
 
     protected void setToOff()
     {
-        UnitTestUtils.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_OFF);
+        NativeUtil.sendBluetoothStateChange(BleManager.s_instance, m_nativeState, BluetoothAdapter.STATE_OFF);
         m_nativeState = BluetoothAdapter.STATE_OFF;
     }
 
     protected void setToTurningOn()
     {
-        UnitTestUtils.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_TURNING_ON);
+        NativeUtil.sendBluetoothStateChange(BleManager.s_instance, m_nativeState, BluetoothAdapter.STATE_TURNING_ON);
         m_nativeState = BluetoothAdapter.STATE_TURNING_ON;
     }
 
     protected void setToOn()
     {
-        UnitTestUtils.sendBluetoothStateBroadcast(BleManager.s_instance.getApplicationContext(), m_nativeState, BluetoothAdapter.STATE_ON);
+        NativeUtil.sendBluetoothStateChange(BleManager.s_instance, m_nativeState, BluetoothAdapter.STATE_ON);
         m_nativeState = BluetoothAdapter.STATE_ON;
     }
 }

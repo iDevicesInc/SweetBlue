@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '25.0.3'
 
     defaultConfig {
         applicationId "com.idevicesinc.sweetblue"
@@ -20,11 +20,18 @@ android {
     }
 }
 
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://maven.google.com'
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
     androidTestCompile 'com.android.support.test:rules:0.5'
-    compile project(':app')
+    compile project(':library')
     testCompile 'junit:junit:4.12'
 }
