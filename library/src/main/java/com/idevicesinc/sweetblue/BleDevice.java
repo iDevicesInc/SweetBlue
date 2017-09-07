@@ -3593,7 +3593,12 @@ public final class BleDevice extends BleNode
      */
     public final boolean disconnect()
     {
-        return disconnect_private(null, Status.EXPLICIT_DISCONNECT);
+        return disconnect_private(null, Status.EXPLICIT_DISCONNECT, false);
+    }
+
+    final boolean disconnectAndUndiscover()
+    {
+        return disconnect_private(null, Status.EXPLICIT_DISCONNECT, true);
     }
 
     /**
@@ -3606,7 +3611,7 @@ public final class BleDevice extends BleNode
      */
     public final boolean disconnectWhenReady()
     {
-        return disconnect_private(PE_TaskPriority.LOW, Status.EXPLICIT_DISCONNECT);
+        return disconnect_private(PE_TaskPriority.LOW, Status.EXPLICIT_DISCONNECT, false);
     }
 
     /**
@@ -3623,10 +3628,10 @@ public final class BleDevice extends BleNode
      */
     public final boolean disconnect_remote()
     {
-        return disconnect_private(null, Status.ROGUE_DISCONNECT);
+        return disconnect_private(null, Status.ROGUE_DISCONNECT, false);
     }
 
-    private boolean disconnect_private(final PE_TaskPriority priority, final Status status)
+    private boolean disconnect_private(final PE_TaskPriority priority, final Status status, final boolean undiscoverAfter)
     {
         if (isNull()) return false;
 
@@ -3641,7 +3646,7 @@ public final class BleDevice extends BleNode
                 clearForExplicitDisconnect();
             }
 
-            disconnectWithReason(priority, status, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, NULL_READWRITE_EVENT());
+            disconnectWithReason(priority, status, Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, undiscoverAfter, NULL_READWRITE_EVENT());
         }
 
         return !alreadyDisconnected || reconnecting_longTerm || !alreadyQueuedToDisconnect;
@@ -6204,10 +6209,10 @@ public final class BleDevice extends BleNode
 
     final void disconnectWithReason(ConnectionFailListener.Status connectionFailReasonIfConnecting, Timing timing, int gattStatus, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
     {
-        disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus, bondFailReason, txnFailReason);
+        disconnectWithReason(null, connectionFailReasonIfConnecting, timing, gattStatus, bondFailReason, false, txnFailReason);
     }
 
-    final void disconnectWithReason(final PE_TaskPriority disconnectPriority_nullable, final ConnectionFailListener.Status connectionFailReasonIfConnecting, final Timing timing, final int gattStatus, final int bondFailReason, final ReadWriteListener.ReadWriteEvent txnFailReason)
+    final void disconnectWithReason(final PE_TaskPriority disconnectPriority_nullable, final ConnectionFailListener.Status connectionFailReasonIfConnecting, final Timing timing, final int gattStatus, final int bondFailReason, final boolean undiscoverAfter, final ReadWriteListener.ReadWriteEvent txnFailReason)
     {
         getManager().getPostManager().runOrPostToUpdateThread(new Runnable()
         {
@@ -6323,6 +6328,9 @@ public final class BleDevice extends BleNode
                         }
                     }
                 }
+
+                if (undiscoverAfter)
+                    getManager().m_deviceMngr.undiscoverAndRemove(BleDevice.this, getManager().m_discoveryListener, getManager().m_deviceMngr_cache, E_Intent.INTENTIONAL);
             }
         });
     }
