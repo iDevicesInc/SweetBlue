@@ -454,7 +454,7 @@ final class P_DeviceManager
             //--- DRK > Just an early-out performance check here.
             if (device.isAny(BleDeviceState.CONNECTING_OVERALL, BleDeviceState.CONNECTED))
             {
-                device.disconnectWithReason(priority, Status.BLE_TURNING_OFF, ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
+                device.disconnectWithReason(priority, Status.BLE_TURNING_OFF, ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, false, device.NULL_READWRITE_EVENT());
             }
         }
     }
