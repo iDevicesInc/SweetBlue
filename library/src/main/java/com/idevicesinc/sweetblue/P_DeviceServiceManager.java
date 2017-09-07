@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
@@ -71,8 +70,8 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		
 		if( target == Target.RSSI || target == Target.MTU || target == Target.CONNECTION_PRIORITY )  return null;
 		
-		final NativeBleCharacteristic characteristic = m_device.getNativeBleCharacteristic(serviceUuid, characteristicUuid);
-		final NativeBleDescriptor descriptor = m_device.getNativeBleDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
+		final BleCharacteristicWrapper characteristic = m_device.getNativeBleCharacteristic(serviceUuid, characteristicUuid);
+		final BleDescriptorWrapper descriptor = m_device.getNativeBleDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
 		
 		if( target == Target.CHARACTERISTIC && characteristic.isNull() || target == Target.DESCRIPTOR && descriptor.isNull())
 		{
@@ -124,7 +123,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		return null;
 	}
 	
-	static BleDevice.ReadWriteListener.Type modifyResultType(NativeBleCharacteristic char_native, BleDevice.ReadWriteListener.Type type)
+	static BleDevice.ReadWriteListener.Type modifyResultType(BleCharacteristicWrapper char_native, BleDevice.ReadWriteListener.Type type)
 	{
 		if( !char_native.isNull())
 		{
@@ -189,7 +188,7 @@ final class P_DeviceServiceManager extends PA_ServiceManager
 		return 0x0;
 	}
 
-	@Override public final NativeBleGattService getServiceDirectlyFromNativeNode(UUID serviceUuid)
+	@Override public final BleServiceWrapper getServiceDirectlyFromNativeNode(UUID serviceUuid)
 	{
 		return m_device.layerManager().getService(serviceUuid);
 	}

@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
@@ -195,7 +194,7 @@ final class P_PollManager
 			//---		regardless.
 			if( m_device.is(BleDeviceState.DISCONNECTED) )  return;
 			
-			NativeBleCharacteristic characteristic = m_device.getNativeBleCharacteristic(m_serviceUuid, m_charUuid);
+			BleCharacteristicWrapper characteristic = m_device.getNativeBleCharacteristic(m_serviceUuid, m_charUuid);
 			
 			if( characteristic.isNull() )  return;
 

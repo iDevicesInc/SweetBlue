@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import android.bluetooth.BluetoothGatt;
@@ -13,7 +12,6 @@ import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA_Task.I_StateListener
@@ -286,7 +284,7 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 		}
 	}
 
-	void onDescriptorReadCallback(BluetoothGatt gatt, NativeBleDescriptor desc, byte[] value, int gattStatus)
+	void onDescriptorReadCallback(BluetoothGatt gatt, BleDescriptorWrapper desc, byte[] value, int gattStatus)
 	{
 		if (m_descriptorFilter == null)
 		{

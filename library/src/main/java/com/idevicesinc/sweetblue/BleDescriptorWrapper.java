@@ -7,26 +7,26 @@ import android.bluetooth.BluetoothGattDescriptor;
  * Wrapper class which holds an instance of {@link BluetoothGattDescriptor}. You should always check {@link #isNull()} before
  * doing anything with the {@link BluetoothGattDescriptor} returned from {@link #getDescriptor()}.
  */
-public final class NativeBleDescriptor extends P_NativeGattObject<BluetoothGattDescriptor>
+public final class BleDescriptorWrapper extends P_NativeGattObject<BluetoothGattDescriptor>
 {
 
 
-    private NativeBleDescriptor()
+    private BleDescriptorWrapper()
     {
         super(null, null);
     }
 
-    NativeBleDescriptor(BluetoothGattDescriptor descriptor)
+    BleDescriptorWrapper(BluetoothGattDescriptor descriptor)
     {
         super(descriptor);
     }
 
-    NativeBleDescriptor(BleManager.UhOhListener.UhOh uhOh)
+    BleDescriptorWrapper(BleManager.UhOhListener.UhOh uhOh)
     {
         super(uhOh);
     }
 
-    NativeBleDescriptor(BluetoothGattDescriptor descriptor, BleManager.UhOhListener.UhOh uhoh)
+    BleDescriptorWrapper(BluetoothGattDescriptor descriptor, BleManager.UhOhListener.UhOh uhoh)
     {
         super(descriptor, uhoh);
     }
@@ -34,11 +34,11 @@ public final class NativeBleDescriptor extends P_NativeGattObject<BluetoothGattD
     /**
      * Returns the instance of {@link BluetoothGattDescriptor} held in this class.
      */
-    public BluetoothGattDescriptor getDescriptor()
+    public final BluetoothGattDescriptor getDescriptor()
     {
         return getGattObject();
     }
 
-    public final static NativeBleDescriptor NULL = new NativeBleDescriptor();
+    public final static BleDescriptorWrapper NULL = new BleDescriptorWrapper();
 
 }

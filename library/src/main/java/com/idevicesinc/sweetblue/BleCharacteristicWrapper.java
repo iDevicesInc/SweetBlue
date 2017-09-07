@@ -6,25 +6,25 @@ import android.bluetooth.BluetoothGattCharacteristic;
  * Wrapper class which holds an instance of {@link BluetoothGattCharacteristic}. You should always check {@link #isNull()} before
  * doing anything with the {@link BluetoothGattCharacteristic} returned from {@link #getCharacteristic()}.
  */
-public final class NativeBleCharacteristic extends P_NativeGattObject<BluetoothGattCharacteristic>
+public final class BleCharacteristicWrapper extends P_NativeGattObject<BluetoothGattCharacteristic>
 {
 
-    private NativeBleCharacteristic()
+    private BleCharacteristicWrapper()
     {
         super();
     }
 
-    NativeBleCharacteristic(BluetoothGattCharacteristic characteristic)
+    BleCharacteristicWrapper(BluetoothGattCharacteristic characteristic)
     {
         super(characteristic);
     }
 
-    NativeBleCharacteristic(BleManager.UhOhListener.UhOh uhoh)
+    BleCharacteristicWrapper(BleManager.UhOhListener.UhOh uhoh)
     {
         super(uhoh);
     }
 
-    NativeBleCharacteristic(BluetoothGattCharacteristic characteristic, BleManager.UhOhListener.UhOh uhoh)
+    BleCharacteristicWrapper(BluetoothGattCharacteristic characteristic, BleManager.UhOhListener.UhOh uhoh)
     {
         super(characteristic, uhoh);
     }
@@ -32,11 +32,11 @@ public final class NativeBleCharacteristic extends P_NativeGattObject<BluetoothG
     /**
      * Returns the instance of {@link BluetoothGattCharacteristic} held in this class.
      */
-    public BluetoothGattCharacteristic getCharacteristic()
+    public final BluetoothGattCharacteristic getCharacteristic()
     {
         return getGattObject();
     }
 
-    public final static NativeBleCharacteristic NULL = new NativeBleCharacteristic();
+    public final static BleCharacteristicWrapper NULL = new BleCharacteristicWrapper();
 
 }

@@ -4,9 +4,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
-import com.idevicesinc.sweetblue.utils.EmptyIterator;
 import com.idevicesinc.sweetblue.utils.P_Const;
-import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
 
@@ -23,12 +21,12 @@ abstract class PA_ServiceManager
     {
     }
 
-    public abstract NativeBleGattService getServiceDirectlyFromNativeNode(final UUID uuid);
+    public abstract BleServiceWrapper getServiceDirectlyFromNativeNode(final UUID uuid);
 
     protected abstract List<BluetoothGattService> getNativeServiceList_original();
 
 
-    public NativeBleCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid)
+    public BleCharacteristicWrapper getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid)
     {
         if (serviceUuid_nullable == null)
         {
@@ -36,8 +34,8 @@ abstract class PA_ServiceManager
 
             for (int i = 0; i < serviceList_native.size(); i++)
             {
-                final NativeBleGattService service_ith = new NativeBleGattService(serviceList_native.get(i));
-                final NativeBleCharacteristic characteristic = getCharacteristic(service_ith, charUuid);
+                final BleServiceWrapper service_ith = new BleServiceWrapper(serviceList_native.get(i));
+                final BleCharacteristicWrapper characteristic = getCharacteristic(service_ith, charUuid);
 
                 if (!characteristic.isNull())
                 {
@@ -45,16 +43,19 @@ abstract class PA_ServiceManager
                 }
             }
 
-            return NativeBleCharacteristic.NULL;
+            return BleCharacteristicWrapper.NULL;
         }
         else
         {
-            final NativeBleGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
-            return getCharacteristic(service_nullable, charUuid);
+            final BleServiceWrapper service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+            if (service_nullable.hasUhOh())
+                return new BleCharacteristicWrapper(service_nullable.getUhOh());
+            else
+                return getCharacteristic(service_nullable, charUuid);
         }
     }
 
-    public NativeBleCharacteristic getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid, final DescriptorFilter filter)
+    public BleCharacteristicWrapper getCharacteristic(final UUID serviceUuid_nullable, final UUID charUuid, final DescriptorFilter filter)
     {
         if (serviceUuid_nullable == null)
         {
@@ -62,8 +63,8 @@ abstract class PA_ServiceManager
 
             for (int i = 0; i < serviceList_native.size(); i++)
             {
-                final NativeBleGattService service_ith = new NativeBleGattService(serviceList_native.get(i));
-                final NativeBleCharacteristic characteristic = getCharacteristic(service_ith, charUuid, filter);
+                final BleServiceWrapper service_ith = new BleServiceWrapper(serviceList_native.get(i));
+                final BleCharacteristicWrapper characteristic = getCharacteristic(service_ith, charUuid, filter);
 
                 if (!characteristic.isNull())
                 {
@@ -71,17 +72,20 @@ abstract class PA_ServiceManager
                 }
             }
 
-            return NativeBleCharacteristic.NULL;
+            return BleCharacteristicWrapper.NULL;
         }
         else
         {
-            final NativeBleGattService service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+            final BleServiceWrapper service_nullable = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
 
-            return getCharacteristic(service_nullable, charUuid, filter);
+            if (service_nullable.hasUhOh())
+                return new BleCharacteristicWrapper(service_nullable.getUhOh());
+            else
+                return getCharacteristic(service_nullable, charUuid, filter);
         }
     }
 
-    private NativeBleCharacteristic getCharacteristic(final NativeBleGattService service, final UUID charUuid)
+    private BleCharacteristicWrapper getCharacteristic(final BleServiceWrapper service, final UUID charUuid)
     {
         if (!service.isNull())
         {
@@ -93,15 +97,15 @@ abstract class PA_ServiceManager
 
                 if (char_jth.getUuid().equals(charUuid))
                 {
-                    return new NativeBleCharacteristic(char_jth);
+                    return new BleCharacteristicWrapper(char_jth);
                 }
             }
         }
 
-        return NativeBleCharacteristic.NULL;
+        return BleCharacteristicWrapper.NULL;
     }
 
-    private NativeBleCharacteristic getCharacteristic(final NativeBleGattService service, final UUID charUuid, DescriptorFilter filter)
+    private BleCharacteristicWrapper getCharacteristic(final BleServiceWrapper service, final UUID charUuid, DescriptorFilter filter)
     {
         if (!service.isNull())
         {
@@ -116,7 +120,7 @@ abstract class PA_ServiceManager
 
                     if (filter == null)
                     {
-                        return new NativeBleCharacteristic(char_jth);
+                        return new BleCharacteristicWrapper(char_jth);
                     }
                     else
                     {
@@ -130,7 +134,7 @@ abstract class PA_ServiceManager
                                 final DescriptorFilter.Please please = filter.onEvent(event);
                                 if (please.isAccepted())
                                 {
-                                    return new NativeBleCharacteristic(char_jth);
+                                    return new BleCharacteristicWrapper(char_jth);
                                 }
                             }
                         }
@@ -140,17 +144,17 @@ abstract class PA_ServiceManager
                             final DescriptorFilter.Please please = filter.onEvent(event);
                             if (please.isAccepted())
                             {
-                                return new NativeBleCharacteristic(char_jth);
+                                return new BleCharacteristicWrapper(char_jth);
                             }
                         }
                     }
                 }
             }
-            return NativeBleCharacteristic.NULL;
+            return BleCharacteristicWrapper.NULL;
         }
         else
         {
-            return NativeBleCharacteristic.NULL;
+            return BleCharacteristicWrapper.NULL;
         }
     }
 
@@ -161,7 +165,7 @@ abstract class PA_ServiceManager
         return list_native == P_Const.EMPTY_SERVICE_LIST ? list_native : new ArrayList<>(list_native);
     }
 
-    private List<BluetoothGattCharacteristic> getNativeCharacteristicList_original(final NativeBleGattService service)
+    private List<BluetoothGattCharacteristic> getNativeCharacteristicList_original(final BleServiceWrapper service)
     {
         if (!service.isNull())
         {
@@ -173,7 +177,7 @@ abstract class PA_ServiceManager
             return P_Const.EMPTY_CHARACTERISTIC_LIST;
     }
 
-    private List<BluetoothGattCharacteristic> getNativeCharacteristicList_cloned(final NativeBleGattService service)
+    private List<BluetoothGattCharacteristic> getNativeCharacteristicList_cloned(final BleServiceWrapper service)
     {
         if (!service.isNull())
         {
@@ -185,7 +189,7 @@ abstract class PA_ServiceManager
             return P_Const.EMPTY_CHARACTERISTIC_LIST;
     }
 
-    private List<BluetoothGattDescriptor> getNativeDescriptorList_original(final NativeBleCharacteristic characteristic)
+    private List<BluetoothGattDescriptor> getNativeDescriptorList_original(final BleCharacteristicWrapper characteristic)
     {
         if (!characteristic.isNull())
         {
@@ -198,7 +202,7 @@ abstract class PA_ServiceManager
 
     }
 
-    private List<BluetoothGattDescriptor> getNativeDescriptorList_cloned(final NativeBleCharacteristic characteristic)
+    private List<BluetoothGattDescriptor> getNativeDescriptorList_cloned(final BleCharacteristicWrapper characteristic)
     {
         if (!characteristic.isNull())
         {
@@ -217,7 +221,7 @@ abstract class PA_ServiceManager
 
         for (int i = 0; i < serviceList_native.size(); i++)
         {
-            final NativeBleGattService service_ith = new NativeBleGattService(serviceList_native.get(i));
+            final BleServiceWrapper service_ith = new BleServiceWrapper(serviceList_native.get(i));
 
             if (serviceUuid_nullable == null || !service_ith.isNull() && serviceUuid_nullable.equals(service_ith.getService().getUuid()))
             {
@@ -248,7 +252,7 @@ abstract class PA_ServiceManager
 
         for (int i = 0; i < serviceList_native.size(); i++)
         {
-            final NativeBleGattService service_ith = new NativeBleGattService(serviceList_native.get(i));
+            final BleServiceWrapper service_ith = new BleServiceWrapper(serviceList_native.get(i));
 
             if (serviceUuid_nullable == null || !service_ith.isNull() && serviceUuid_nullable.equals(service_ith.getService().getUuid()))
             {
@@ -256,7 +260,7 @@ abstract class PA_ServiceManager
 
                 for (int j = 0; j < charList_native.size(); j++)
                 {
-                    final NativeBleCharacteristic char_jth = new NativeBleCharacteristic(charList_native.get(j));
+                    final BleCharacteristicWrapper char_jth = new BleCharacteristicWrapper(charList_native.get(j));
 
                     if (charUuid_nullable == null || !char_jth.isNull() && charUuid_nullable.equals(char_jth.getCharacteristic().getUuid()))
                     {
@@ -303,7 +307,7 @@ abstract class PA_ServiceManager
         return collectAllNativeCharacteristics(serviceUuid_nullable, /*forEach=*/null);
     }
 
-    private NativeBleDescriptor getDescriptor(final NativeBleCharacteristic characteristic, final UUID descUuid)
+    private BleDescriptorWrapper getDescriptor(final BleCharacteristicWrapper characteristic, final UUID descUuid)
     {
         if (!characteristic.isNull())
         {
@@ -315,15 +319,15 @@ abstract class PA_ServiceManager
 
                 if (ith.getUuid().equals(descUuid))
                 {
-                    return new NativeBleDescriptor(ith);
+                    return new BleDescriptorWrapper(ith);
                 }
             }
         }
 
-        return NativeBleDescriptor.NULL;
+        return BleDescriptorWrapper.NULL;
     }
 
-    private NativeBleDescriptor getDescriptor(final NativeBleGattService service, final UUID charUuid_nullable, final UUID descUuid)
+    private BleDescriptorWrapper getDescriptor(final BleServiceWrapper service, final UUID charUuid_nullable, final UUID descUuid)
     {
         if (!service.isNull())
         {
@@ -331,18 +335,18 @@ abstract class PA_ServiceManager
 
             for (int j = 0; j < charList.size(); j++)
             {
-                final NativeBleCharacteristic char_jth = new NativeBleCharacteristic(charList.get(j));
+                final BleCharacteristicWrapper char_jth = new BleCharacteristicWrapper(charList.get(j));
 
                 if (charUuid_nullable == null || !char_jth.isNull() && charUuid_nullable.equals(char_jth.getCharacteristic().getUuid()))
                 {
-                    final NativeBleDescriptor descriptor = getDescriptor(char_jth, descUuid);
+                    final BleDescriptorWrapper descriptor = getDescriptor(char_jth, descUuid);
 
                     return descriptor;
                 }
             }
         }
 
-        return NativeBleDescriptor.NULL;
+        return BleDescriptorWrapper.NULL;
     }
 
     public Iterator<BluetoothGattDescriptor> getDescriptors(final UUID serviceUuid_nullable, final UUID charUuid_nullable)
@@ -355,7 +359,7 @@ abstract class PA_ServiceManager
         return collectAllNativeDescriptors(serviceUuid_nullable, charUuid_nullable, null);
     }
 
-    public NativeBleDescriptor getDescriptor(final UUID serviceUuid_nullable, final UUID charUuid_nullable, final UUID descUuid)
+    public BleDescriptorWrapper getDescriptor(final UUID serviceUuid_nullable, final UUID charUuid_nullable, final UUID descUuid)
     {
         if (serviceUuid_nullable == null)
         {
@@ -363,20 +367,23 @@ abstract class PA_ServiceManager
 
             for (int i = 0; i < serviceList.size(); i++)
             {
-                final NativeBleGattService service_ith = new NativeBleGattService(serviceList.get(i));
-                final NativeBleDescriptor descriptor = getDescriptor(service_ith, charUuid_nullable, descUuid);
+                final BleServiceWrapper service_ith = new BleServiceWrapper(serviceList.get(i));
+                final BleDescriptorWrapper descriptor = getDescriptor(service_ith, charUuid_nullable, descUuid);
 
                 return descriptor;
             }
         }
         else
         {
-            final NativeBleGattService service = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
+            final BleServiceWrapper service = getServiceDirectlyFromNativeNode(serviceUuid_nullable);
 
-            return getDescriptor(service, charUuid_nullable, descUuid);
+            if (service.hasUhOh())
+                return new BleDescriptorWrapper(service.getUhOh());
+            else
+                return getDescriptor(service, charUuid_nullable, descUuid);
         }
 
-        return NativeBleDescriptor.NULL;
+        return BleDescriptorWrapper.NULL;
     }
 
     public void getServices(final Object forEach)

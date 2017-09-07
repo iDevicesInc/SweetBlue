@@ -256,14 +256,14 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public NativeBleGattService getBleService(UUID serviceUuid, P_Logger logger)
+    public BleServiceWrapper getBleService(UUID serviceUuid, P_Logger logger)
     {
-        NativeBleGattService wService;
+        BleServiceWrapper wService;
         final BluetoothGattService service;
         try
         {
             service = m_gatt.getService(serviceUuid);
-            wService = new NativeBleGattService(service);
+            wService = new BleServiceWrapper(service);
         }
         catch (Exception e)
         {
@@ -277,7 +277,7 @@ final class P_AndroidGatt implements P_GattLayer
                 uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
             m_device.getManager().uhOh(uhoh);
-            wService = new NativeBleGattService(uhoh);
+            wService = new BleServiceWrapper(uhoh);
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the native service!");
         }
         return wService;

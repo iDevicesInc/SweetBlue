@@ -1,11 +1,11 @@
 package com.idevicesinc.sweetblue;
 
-import android.bluetooth.BluetoothGattDescriptor;
+
 import android.os.Parcelable;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 
 
-abstract class P_NativeGattObject<T extends Parcelable> implements UsesCustomNull
+abstract class P_NativeGattObject<T> implements UsesCustomNull
 {
 
     private final BleManager.UhOhListener.UhOh m_uhOh;

@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.database.Cursor;
 
-import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.utils.EmptyCursor;
@@ -19,17 +18,15 @@ import com.idevicesinc.sweetblue.utils.EpochTimeRange;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
-import com.idevicesinc.sweetblue.utils.FutureData;
 import com.idevicesinc.sweetblue.utils.GenericListener_Void;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
 import com.idevicesinc.sweetblue.utils.HistoricalDataColumn;
 import com.idevicesinc.sweetblue.utils.HistoricalDataQuery;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
-import java.util.ArrayList;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -513,10 +510,11 @@ public abstract class BleNode implements UsesCustomNull
 	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
 	 * matching the given {@link UUID}.
 	 *
-	 * Note that this will never return a <code>null</code> instance. You need to call {@link NativeBleDescriptor#isNull()} to check if the {@link BluetoothGattDescriptor}
+	 * Note that this will never return a <code>null</code> instance. You need to call {@link BleDescriptorWrapper#isNull()} to check if the {@link BluetoothGattDescriptor}
 	 * actually exists (in other words, it will return <code>true</code> if we were unable to find the requested descriptor).
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) NativeBleDescriptor getNativeBleDescriptor(final UUID descUuid)
+	public @Nullable(Nullable.Prevalence.NEVER)
+	BleDescriptorWrapper getNativeBleDescriptor(final UUID descUuid)
 	{
 		return getNativeBleDescriptor(null, null, descUuid);
 	}
@@ -537,10 +535,11 @@ public abstract class BleNode implements UsesCustomNull
 	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
 	 * inside the given characteristic matching the given {@link UUID}.
 	 *
-	 * Note that this will never return a <code>null</code> instance. You need to call {@link NativeBleDescriptor#isNull()} to check if the {@link BluetoothGattDescriptor}
+	 * Note that this will never return a <code>null</code> instance. You need to call {@link BleDescriptorWrapper#isNull()} to check if the {@link BluetoothGattDescriptor}
 	 * actually exists (in other words, it will return <code>true</code> if we were unable to find the requested descriptor).
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) NativeBleDescriptor getNativeBleDescriptor_inChar(final UUID charUuid, final UUID descUuid)
+	public @Nullable(Nullable.Prevalence.NEVER)
+	BleDescriptorWrapper getNativeBleDescriptor_inChar(final UUID charUuid, final UUID descUuid)
 	{
 		return getNativeBleDescriptor(null, charUuid, descUuid);
 	}
@@ -561,10 +560,11 @@ public abstract class BleNode implements UsesCustomNull
 	 * Overload of {@link #getNativeDescriptor(UUID, UUID, UUID)} that will return the first descriptor we find
 	 * inside the given service matching the given {@link UUID}.
 	 *
-	 * Note that this will never return a <code>null</code> instance. You need to call {@link NativeBleDescriptor#isNull()} to check if the {@link BluetoothGattDescriptor}
+	 * Note that this will never return a <code>null</code> instance. You need to call {@link BleDescriptorWrapper#isNull()} to check if the {@link BluetoothGattDescriptor}
 	 * actually exists (in other words, it will return <code>true</code> if we were unable to find the requested descriptor).
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) NativeBleDescriptor getNativeBleDescriptor_inService(final UUID serviceUuid, final UUID descUuid)
+	public @Nullable(Nullable.Prevalence.NEVER)
+	BleDescriptorWrapper getNativeBleDescriptor_inService(final UUID serviceUuid, final UUID descUuid)
 	{
 		return getNativeBleDescriptor(serviceUuid, null, descUuid);
 	}
@@ -582,12 +582,13 @@ public abstract class BleNode implements UsesCustomNull
 	}
 
 	/**
-	 * Returns the {@link NativeBleDescriptor} for the given UUID in case you need lower-level access.
+	 * Returns the {@link BleDescriptorWrapper} for the given UUID in case you need lower-level access.
 	 *
-	 * Note that this will never return a <code>null</code> instance. You need to call {@link NativeBleDescriptor#isNull()} to check if the {@link BluetoothGattDescriptor}
+	 * Note that this will never return a <code>null</code> instance. You need to call {@link BleDescriptorWrapper#isNull()} to check if the {@link BluetoothGattDescriptor}
 	 * actually exists (in other words, it will return <code>true</code> if we were unable to find the requested descriptor).
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) NativeBleDescriptor getNativeBleDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
+	public @Nullable(Nullable.Prevalence.NEVER)
+	BleDescriptorWrapper getNativeBleDescriptor(final UUID serviceUuid, final UUID charUuid, final UUID descUuid)
 	{
 		return m_serviceMngr.getDescriptor(serviceUuid, charUuid, descUuid);
 	}
@@ -607,11 +608,12 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Returns the native characteristic for the given UUID in case you need lower-level access.
 	 *
-	 * Note that this will never return a <code>null</code> instance. You need to call {@link NativeBleCharacteristic#isNull()} to check if the {@link BluetoothGattCharacteristic}
+	 * Note that this will never return a <code>null</code> instance. You need to call {@link BleCharacteristicWrapper#isNull()} to check if the {@link BluetoothGattCharacteristic}
 	 * actually exists (in other words, it will return <code>true</code> if we were unable to find the requested characteristic).
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Nullable.Prevalence.NEVER) NativeBleCharacteristic getNativeBleCharacteristic(final UUID charUuid)
+	public @Nullable(Nullable.Prevalence.NEVER)
+	BleCharacteristicWrapper getNativeBleCharacteristic(final UUID charUuid)
 	{
 		return getNativeBleCharacteristic(null, charUuid);
 	}
@@ -631,10 +633,11 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Overload of {@link #getNativeCharacteristic(UUID)} for when you have characteristics with identical uuids under different services.
 	 *
-	 * Note that this will never return a <code>null</code> instance. You need to call {@link NativeBleCharacteristic#isNull()} to check if the {@link BluetoothGattCharacteristic}
+	 * Note that this will never return a <code>null</code> instance. You need to call {@link BleCharacteristicWrapper#isNull()} to check if the {@link BluetoothGattCharacteristic}
 	 * actually exists (in other words, it will return <code>true</code> if we were unable to find the requested characteristic).
 	 */
-	public @Nullable(Nullable.Prevalence.NEVER) NativeBleCharacteristic getNativeBleCharacteristic(final UUID serviceUuid, final UUID charUuid)
+	public @Nullable(Nullable.Prevalence.NEVER)
+	BleCharacteristicWrapper getNativeBleCharacteristic(final UUID serviceUuid, final UUID charUuid)
 	{
 		return m_serviceMngr.getCharacteristic(serviceUuid, charUuid);
 	}
@@ -644,7 +647,7 @@ public abstract class BleNode implements UsesCustomNull
 	 */
 	public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic getNativeCharacteristic(final UUID serviceUuid, final UUID charUuid, final DescriptorFilter descriptorFilter)
 	{
-		return m_serviceMngr.getCharacteristic(serviceUuid, charUuid, descriptorFilter);
+		return m_serviceMngr.getCharacteristic(serviceUuid, charUuid, descriptorFilter).getCharacteristic();
 	}
 
 	/**
@@ -662,11 +665,12 @@ public abstract class BleNode implements UsesCustomNull
 	/**
 	 * Returns the native service for the given UUID in case you need lower-level access.
 	 *
-	 * Note that this will never return a <code>null</code> instance. You need to call {@link NativeBleGattService#isNull()} to check if the {@link BluetoothGattService}
+	 * Note that this will never return a <code>null</code> instance. You need to call {@link BleServiceWrapper#isNull()} to check if the {@link BluetoothGattService}
 	 * actually exists (in other words, it will return <code>true</code> if we were unable to find the requested service).
 	 */
 	@com.idevicesinc.sweetblue.annotations.Advanced
-	public @Nullable(Nullable.Prevalence.NEVER) NativeBleGattService getNativeBleService(final UUID serviceUuid)
+	public @Nullable(Nullable.Prevalence.NEVER)
+	BleServiceWrapper getNativeBleService(final UUID serviceUuid)
 	{
 		return m_serviceMngr.getServiceDirectlyFromNativeNode(serviceUuid);
 	}

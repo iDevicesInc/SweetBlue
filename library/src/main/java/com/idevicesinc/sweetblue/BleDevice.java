@@ -43,7 +43,6 @@ import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.State.ChangeIntent;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
-import com.idevicesinc.sweetblue.utils.TimeTracker;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Byte;
@@ -5078,7 +5077,7 @@ public final class BleDevice extends BleNode
             return earlyOutResult;
         }
 
-        final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
+        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
 
         final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.READ);
 
@@ -5285,7 +5284,7 @@ public final class BleDevice extends BleNode
             }
         }
 
-        final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
         final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
         final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
@@ -6608,7 +6607,7 @@ public final class BleDevice extends BleNode
 
         if (descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID))
         {
-            final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+            final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristicUuid, BondFilter.CharacteristicEventType.READ);
 
             final P_Task_Read task;
@@ -6649,7 +6648,7 @@ public final class BleDevice extends BleNode
 
         if (wb.descriptorUuid == null || wb.descriptorUuid.equals(Uuids.INVALID))
         {
-            final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(wb.serviceUuid, wb.charUuid);
+            final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(wb.serviceUuid, wb.charUuid);
 
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
@@ -6715,7 +6714,7 @@ public final class BleDevice extends BleNode
             return earlyOutResult;
         }
 
-        final NativeBleCharacteristic characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
+        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
 
         if (characteristic != null && is(CONNECTED))
         {

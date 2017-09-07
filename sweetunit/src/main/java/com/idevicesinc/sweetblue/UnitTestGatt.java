@@ -90,7 +90,7 @@ public class UnitTestGatt implements P_GattLayer {
     }
 
     @Override
-    public NativeBleGattService getBleService(UUID serviceUuid, P_Logger logger)
+    public BleServiceWrapper getBleService(UUID serviceUuid, P_Logger logger)
     {
         if (m_services != null && m_services.size() > 0)
         {
@@ -98,11 +98,11 @@ public class UnitTestGatt implements P_GattLayer {
             {
                 if (service.getUuid().equals(serviceUuid))
                 {
-                    return new NativeBleGattService(service);
+                    return new BleServiceWrapper(service);
                 }
             }
         }
-        return NativeBleGattService.NULL;
+        return BleServiceWrapper.NULL;
     }
 
     @Override

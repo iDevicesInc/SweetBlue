@@ -327,7 +327,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else
 			{
-				fireUnsolicitedEvent(new NativeBleCharacteristic(characteristic), NativeBleDescriptor.NULL, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, value, gattStatus);
+				fireUnsolicitedEvent(new BleCharacteristicWrapper(characteristic), BleDescriptorWrapper.NULL, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, value, gattStatus);
 			}
 		}
 	}
@@ -361,11 +361,11 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			fireUnsolicitedEvent(new NativeBleCharacteristic(characteristic), NativeBleDescriptor.NULL, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, data, gattStatus);
+			fireUnsolicitedEvent(new BleCharacteristicWrapper(characteristic), BleDescriptorWrapper.NULL, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, data, gattStatus);
 		}
 	}
 
-	private void fireUnsolicitedEvent(final NativeBleCharacteristic characteristic_nullable, final NativeBleDescriptor descriptor_nullable, BleDevice.ReadWriteListener.Type type, final BleDevice.ReadWriteListener.Target target, final byte[] data, final int gattStatus)
+	private void fireUnsolicitedEvent(final BleCharacteristicWrapper characteristic_nullable, final BleDescriptorWrapper descriptor_nullable, BleDevice.ReadWriteListener.Type type, final BleDevice.ReadWriteListener.Target target, final byte[] data, final int gattStatus)
 	{
 		final BleDevice.ReadWriteListener.Type type_modified = characteristic_nullable != null ? P_DeviceServiceManager.modifyResultType(characteristic_nullable, type) : type;
 		final BleDevice.ReadWriteListener.Status status = Utils.isSuccess(gattStatus) ? BleDevice.ReadWriteListener.Status.SUCCESS : BleDevice.ReadWriteListener.Status.REMOTE_GATT_FAILURE;
@@ -507,7 +507,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else
 			{
-				fireUnsolicitedEvent(new NativeBleCharacteristic(descriptor.getCharacteristic()), new NativeBleDescriptor(descriptor), BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
+				fireUnsolicitedEvent(new BleCharacteristicWrapper(descriptor.getCharacteristic()), new BleDescriptorWrapper(descriptor), BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
 			}
 		}
 	}
@@ -533,11 +533,11 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		if (task_readOrWrite != null && task_readOrWrite.descriptorMatches(descriptor))
 		{
-			task_readOrWrite.onDescriptorReadCallback(gatt, new NativeBleDescriptor(descriptor), data, gattStatus);
+			task_readOrWrite.onDescriptorReadCallback(gatt, new BleDescriptorWrapper(descriptor), data, gattStatus);
 		}
 		else
 		{
-			fireUnsolicitedEvent(new NativeBleCharacteristic(descriptor.getCharacteristic()), new NativeBleDescriptor(descriptor), BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
+			fireUnsolicitedEvent(new BleCharacteristicWrapper(descriptor.getCharacteristic()), new BleDescriptorWrapper(descriptor), BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
 		}
 
 //		final P_Task_ReadDescriptor task_read = m_queue.getCurrent(P_Task_ReadDescriptor.class, m_device);

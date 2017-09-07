@@ -48,7 +48,7 @@ final class P_BleDeviceLayerManager
         return m_gattLayer.getNativeServiceList(m_device.logger());
     }
 
-    public final NativeBleGattService getService(UUID serviceUuid)
+    public final BleServiceWrapper getService(UUID serviceUuid)
     {
         return m_gattLayer.getBleService(serviceUuid, m_device.logger());
     }
