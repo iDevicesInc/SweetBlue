@@ -16,6 +16,7 @@ android {
 
     defaultConfig {
         minSdkVersion 18
+        project.archivesBaseName = "sweetblue"
     }
 
     buildTypes {
@@ -175,7 +176,7 @@ def checkDir(String dir) {
 }
 
 // Pull down the samples repo
-task getSamples(dependsOn: [jar, sourceJar, javadocJar]) {
+task getSamples(dependsOn: [jar, sourceJar, javadocJar, "assembleRelease"]) {
     group = "sweetblue"
 
     doLast {
@@ -232,7 +233,8 @@ def buildSampleTask(buildDir) {
 }
 
 // Copy the new sweetblue jar, sourcejar, and javadoc jars to each sample AS
-// project, and build 
+// project, and build
+// Copy the aar file to the bundle folder for inclusion in the zip file
 task copyAndRenameJars(dependsOn: copySamples) {
     group = "sweetblue"
 
@@ -242,7 +244,7 @@ task copyAndRenameJars(dependsOn: copySamples) {
             sampleDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File file) {
-                    return !file.isHidden();
+                    return !file.isHidden()
                 }
             })
         }
@@ -287,6 +289,10 @@ task copyAndRenameJars(dependsOn: copySamples) {
             // Delete build folders to save on space in the resulting zip file
             delete(file.getAbsolutePath() + AS_APP_BUILD_SUFFIX)
             delete(file.getAbsolutePath() + AS_BUILD_SUFFIX)
+        }
+        copy {
+            from 'build/outputs/aar/sweetblue-release.aar'
+            into "${BUNDLE_FOLDER}/aar/"
         }
     }
 }
