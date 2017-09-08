@@ -305,6 +305,21 @@ task copyGPL(dependsOn: copyAndRenameJars) {
             from "../LICENSE"
             into "${BUNDLE_FOLDER}"
         }
+        delete "${BUNDLE_FOLDER}/sweetblue_commercial_license.pdf"
+    }
+}
+
+ext.SB_COMM_LICENSE = System.getenv("SB_COMM_LICENSE")
+
+task copyCommercialLicense(dependsOn: copyAndRenameJars) {
+    group = "sweetblue"
+
+    doLast {
+        copy {
+            from "${SB_COMM_LICENSE}"
+            into "${BUNDLE_FOLDER}"
+        }
+        delete "${BUNDLE_FOLDER}/LICENSE"
     }
 }
 
@@ -315,7 +330,14 @@ task zipTrial(type: Zip, dependsOn: copyGPL) {
     group = "sweetblue"
 }
 
-task zipJar(dependsOn: [zipTrial]) {
+task zipCommercial(type: Zip, dependsOn: copyCommercialLicense) {
+    from "${BUNDLE_FOLDER}"
+    archiveName = "sweetblue_commercial.zip"
+    destinationDir = new File(projectDir.absolutePath + "/${STAGE}")
+    group = "sweetblue"
+}
+
+task zipJar(dependsOn: [zipTrial, zipCommercial]) {
     group = "sweetblue"
     description = "Pulls down samples, builds them, and zips up all SweetBlue files."
 
@@ -648,7 +670,7 @@ task uploadCommerceZip(dependsOn: zipJar) {
 
     doLast {
         // Upload zip file to the big commerce site
-        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@store-lec5paa.mybigcommerce.com/dav/product_downloads/s/"]
+        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue_commercial.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@store-lec5paa.mybigcommerce.com/dav/product_downloads/s/sweetblue.zip"]
         def curl = curlS.execute()
         curl.waitFor()
         if (curl.exitValue() != 0) {
