@@ -23,8 +23,8 @@ import com.idevicesinc.sweetblue.utils.UuidNameMap_ListWrapper;
 final class P_Logger
 {
 
-	private final static String MAIN = "MAIN";
-	private final static String UPDATE = "UPDATE";
+	private final static String MAIN = "MAIN(%d)";
+	private final static String UPDATE = "UPDATE(%d)";
 	private String[] m_debugThreadNamePool;
 	private int m_poolIndex = 0;
 	private final HashMap<Integer, String> m_threadNames = new HashMap<>();
@@ -100,12 +100,12 @@ final class P_Logger
 
 	public void setMainThread(int threadId)
 	{
-		m_threadNames.put(threadId, MAIN);
+		m_threadNames.put(threadId, String.format(MAIN, threadId));
 	}
 
 	public void setUpdateThread(int threadId)
 	{
-		m_threadNames.put(threadId, UPDATE);
+		m_threadNames.put(threadId, String.format(UPDATE, threadId));
 	}
 	
 	private StackTraceElement getSoonestTrace()
