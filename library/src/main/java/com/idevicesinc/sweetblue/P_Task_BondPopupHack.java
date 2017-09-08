@@ -1,6 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.utils.Interval;
+
 final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
 {
 
@@ -26,7 +28,14 @@ final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
     {
         super.update(timeStep);
         scanTime += timeStep;
-        if (scanTime > 1)
+        Interval maxTime = BleDeviceConfig.interval(getDevice().conf_device().forceBondHackInterval, getDevice().conf_mngr().forceBondHackInterval);
+        if (Interval.isDisabled(maxTime))
+        {
+            // In case the interval comes back null, or disabled, set it to one second. It could be argued that disabled should mean 0 delay, but if that
+            // were the case, this hack wouldn't work.
+            maxTime = Interval.ONE_SEC;
+        }
+        if (scanTime >= maxTime.secs())
         {
             getDevice().layerManager().cancelDiscovery();
             succeed();

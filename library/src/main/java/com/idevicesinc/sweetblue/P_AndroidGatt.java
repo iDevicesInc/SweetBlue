@@ -256,13 +256,16 @@ final class P_AndroidGatt implements P_GattLayer
     }
 
     @Override
-    public final BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
+    public BleServiceWrapper getBleService(UUID serviceUuid, P_Logger logger)
     {
-        BluetoothGattService service = null;
+        BleServiceWrapper wService;
+        final BluetoothGattService service;
         try
         {
             service = m_gatt.getService(serviceUuid);
-        } catch (Exception e)
+            wService = new BleServiceWrapper(service);
+        }
+        catch (Exception e)
         {
             BleManager.UhOhListener.UhOh uhoh;
             if (e instanceof ConcurrentModificationException)
@@ -274,9 +277,15 @@ final class P_AndroidGatt implements P_GattLayer
                 uhoh = BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION;
             }
             m_device.getManager().uhOh(uhoh);
+            wService = new BleServiceWrapper(uhoh);
             logger.e("Got a " + e.getClass().getSimpleName() + " with a message of " + e.getMessage() + " when trying to get the native service!");
         }
-        return service;
+        return wService;
+    }
+
+    @Override public BluetoothGattService getService(UUID serviceUuid, P_Logger logger)
+    {
+        return getBleService(serviceUuid, logger).getService();
     }
 
     @Override

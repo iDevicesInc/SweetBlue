@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.os.Handler;
 
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
@@ -195,9 +194,9 @@ final class P_PollManager
 			//---		regardless.
 			if( m_device.is(BleDeviceState.DISCONNECTED) )  return;
 			
-			BluetoothGattCharacteristic characteristic = m_device.getNativeCharacteristic(m_serviceUuid, m_charUuid);
+			BleCharacteristicWrapper characteristic = m_device.getNativeBleCharacteristic(m_serviceUuid, m_charUuid);
 			
-			if( characteristic == null )  return;
+			if( characteristic.isNull() )  return;
 
 			Type type = P_DeviceServiceManager.modifyResultType(characteristic, Type.NOTIFICATION);
 			int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
@@ -448,7 +447,7 @@ final class P_PollManager
 		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic, /*enable=*/true) : P_Const.EMPTY_BYTE_ARRAY;
 		int gattStatus = BluetoothGatt.GATT_SUCCESS;
 		ReadWriteEvent result = new ReadWriteEvent(m_device, serviceUuid, characteristicUuid, Uuids.CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_UUID, descriptorFilter, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, writeValue, Status.SUCCESS, gattStatus, 0.0, 0.0, /*solicited=*/true);
-		
+
 		return result;
 	}
 }

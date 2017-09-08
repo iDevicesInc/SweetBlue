@@ -255,6 +255,15 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
         }
         else
         {
+            // If the BleManager instance is somehow null here, we'll try to assign it now
+            if (m_bleManager == null)
+            {
+                m_bleManager = BleManager.s_instance;
+                
+                // If the manager is still somehow null here, we'll just return false for the time being
+                if (m_bleManager /*still*/ == null)
+                    return false;
+            }
             return m_bleManager.is(ON);
         }
     }

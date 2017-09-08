@@ -18,7 +18,6 @@ final class P_AndroidBleDevice implements P_NativeDeviceLayer {
     private static final String METHOD_NAME__CANCEL_BOND_PROCESS	= "cancelBondProcess";
     private static final int TRANSPORT_LE                           = 2; // Taken from BluetoothDevice.TRANSPORT_LE -- only available on API23+
 
-
     private BluetoothDevice m_native_device;
     private BleDevice m_device;
 

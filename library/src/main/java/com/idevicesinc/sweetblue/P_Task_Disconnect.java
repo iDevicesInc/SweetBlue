@@ -55,7 +55,7 @@ final class P_Task_Disconnect extends PA_Task_RequiresBleOn
 	
 	@Override public void execute()
 	{
-		if( !getDevice().m_nativeWrapper.isNativelyConnected() && !getDevice().m_nativeWrapper.isNativelyConnecting())
+		if( !getDevice().m_nativeWrapper.isNativelyConnectingOrConnected() )
 		{
 			getLogger().w("Already disconnected!");
 			

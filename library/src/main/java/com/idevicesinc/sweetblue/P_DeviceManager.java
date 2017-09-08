@@ -407,7 +407,7 @@ final class P_DeviceManager
         {
             BleDevice device = get(i);
 
-            if (device.m_nativeWrapper.isNativelyBonded() || device.m_nativeWrapper.isNativelyBonding())
+            if (device.m_bondMngr.isNativelyBondingOrBonded())
             {
                 device.unbond_internal(priority, status);
             }
@@ -454,7 +454,7 @@ final class P_DeviceManager
             //--- DRK > Just an early-out performance check here.
             if (device.isAny(BleDeviceState.CONNECTING_OVERALL, BleDeviceState.CONNECTED))
             {
-                device.disconnectWithReason(priority, Status.BLE_TURNING_OFF, ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
+                device.disconnectWithReason(priority, Status.BLE_TURNING_OFF, ConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, false, device.NULL_READWRITE_EVENT());
             }
         }
     }
@@ -467,7 +467,7 @@ final class P_DeviceManager
 
             if (!device.is(BleDeviceState.DISCOVERED))
             {
-                device.onNewlyDiscovered(device.layerManager().getDeviceLayer(), null, device.getRssi(), null, device.getOrigin());
+                device.onNewlyDiscovered(device.layerManager().getDeviceLayer(), null, device.getRssi(), device.getScanRecord(), device.getOrigin());
 
                 if (m_mngr.m_discoveryListener != null)
                 {

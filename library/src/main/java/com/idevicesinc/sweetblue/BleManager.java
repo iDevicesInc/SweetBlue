@@ -822,6 +822,7 @@ public final class BleManager
 	 */
 	public Object appData;
 
+
 	private BleManager(Context context, BleManagerConfig config)
 	{
 		m_context = context.getApplicationContext();
@@ -2260,6 +2261,9 @@ public final class BleManager
 				@Override
 				public void run()
 				{
+					P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, BleManager.this);
+					if (scanTask != null)
+						scanTask.succeed();
 					m_taskQueue.clearQueueOf(P_Task_Scan.class, BleManager.this);
 				}
 			});
@@ -2893,11 +2897,9 @@ public final class BleManager
 		if( device.is(BleDeviceState.UNDISCOVERED) )	return false;
 
 		if( device.is(BleDeviceState.CONNECTED) )
-		{
-			device.disconnect();
-		}
-
-		m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, m_deviceMngr_cache, E_Intent.INTENTIONAL);
+			device.disconnectAndUndiscover();
+		else
+			m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, m_deviceMngr_cache, E_Intent.INTENTIONAL);
 
 		return true;
 	}
@@ -2989,7 +2991,7 @@ public final class BleManager
 
 		if( m_server != null )
 		{
-			m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ChangeIntent.INTENTIONAL);
+			m_server.disconnect_internal(BleServer.ServiceAddListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, BleServer.ConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, State.ChangeIntent.INTENTIONAL);
 		}
 
 		final P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()
@@ -3041,7 +3043,7 @@ public final class BleManager
 		return false;
 	}
 
-	final void onDiscoveredFromNativeStack(List<DiscoveryEntry> entries)
+	final synchronized void onDiscoveredFromNativeStack(List<DiscoveryEntry> entries)
 	{
 		//--- DRK > Protects against fringe case where scan task is executing and app calls turnOff().
 		//---		Here the scan task will be interrupted but still potentially has enough time to
@@ -3106,6 +3108,7 @@ public final class BleManager
 				final boolean hitDisk = BleDeviceConfig.boolOrDefault(m_config.manageLastDisconnectOnDisk);
 				final State.ChangeIntent lastDisconnectIntent = m_diskOptionsMngr.loadLastDisconnect(macAddress, hitDisk);
 				scanEvent_nullable = m_filterMngr.makeEvent() ? ScanFilter.ScanEvent.fromScanRecord(entry.device().getNativeDevice(), rawDeviceName, normalizedDeviceName, entry.rssi(), lastDisconnectIntent, entry.record()) : null;
+
 				please = m_filterMngr.allow(m_logger, scanEvent_nullable);
 
 				if (please != null && false == please.ack()) continue;
