@@ -25,6 +25,7 @@ public class UnitTestGatt implements P_GattLayer {
     private boolean m_gattIsNull = true;
     private final BleDevice m_device;
     private boolean m_explicitDisconnect = false;
+
     private List<BluetoothGattService> m_services;
 
 
@@ -43,6 +44,14 @@ public class UnitTestGatt implements P_GattLayer {
     public void setDabatase(GattDatabase db)
     {
         m_services = db.getServiceList();
+    }
+
+    public void setDatabase(GattDatabase database)
+    {
+        if (database != null)
+        {
+            m_services = database.getServiceList();
+        }
     }
 
     @Override
@@ -77,17 +86,23 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public BluetoothGattService getService(UUID serviceUuid, P_Logger logger) {
-        if (m_services != null)
+        return getBleService(serviceUuid, logger).getService();
+    }
+
+    @Override
+    public BleServiceWrapper getBleService(UUID serviceUuid, P_Logger logger)
+    {
+        if (m_services != null && m_services.size() > 0)
         {
             for (BluetoothGattService service : m_services)
             {
                 if (service.getUuid().equals(serviceUuid))
                 {
-                    return service;
+                    return new BleServiceWrapper(service);
                 }
             }
         }
-        return null;
+        return BleServiceWrapper.NULL;
     }
 
     @Override

@@ -319,6 +319,15 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@Advanced
 	public BondRetryFilter bondRetryFilter						= new BondRetryFilter.DefaultBondRetryFilter();
+
+	/**
+	 * Default is <code>true</code> - By default SweetBlue will force a bond/unbond for certain phones (mostly Sony, Motorola) because it has been found to
+	 * improve connection rates with them, see {@link BondFilter} docs. This option is here in the case you don't want this behavior (for instance, the BLE
+	 * device you're connecting to needs a pairing dialog to come up). However, you should use this at your own risk because it may make further connections
+	 * to the device less reliable.
+	 */
+	@Advanced
+	public Boolean autoBondFixes								= true;
 	
 	/**
 	 * Default is {@link #DEFAULT_MINIMUM_SCAN_TIME} seconds - Undiscovery of devices must be

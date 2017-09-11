@@ -27,6 +27,7 @@ final class P_Logger
 	private final static String UPDATE = "UPDATE";
 	private final static String NATIVE_TAG = "%s [Native]";
 	private final static String THREAD_TMPLT = "%s(%d)";
+
 	private String[] m_debugThreadNamePool;
 	private int m_poolIndex = 0;
 	private final SparseArray<String> m_threadNames = new SparseArray<>();

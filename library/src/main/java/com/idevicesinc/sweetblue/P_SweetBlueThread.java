@@ -54,11 +54,14 @@ final class P_SweetBlueThread implements P_SweetHandler
     public void quit()
     {
         m_running = false;
-        try
+        if (Thread.currentThread() != thread)
         {
-            thread.join();
-        } catch (Exception e)
-        {
+            try
+            {
+                thread.join();
+            } catch (Exception e)
+            {
+            }
         }
     }
 

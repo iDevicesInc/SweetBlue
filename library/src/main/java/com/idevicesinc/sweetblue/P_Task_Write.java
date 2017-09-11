@@ -24,7 +24,7 @@ final class P_Task_Write extends PA_Task_ReadOrWrite
 	@Override
 	protected ReadWriteEvent newReadWriteEvent(final Status status, final int gattStatus, final Target target, BleOp bleOp)
 	{
-		final BluetoothGattCharacteristic char_native = getDevice().getNativeCharacteristic(bleOp.serviceUuid, bleOp.charUuid);
+		final BleCharacteristicWrapper char_native = getDevice().getNativeBleCharacteristic(bleOp.serviceUuid, bleOp.charUuid);
 		final Type type = P_DeviceServiceManager.modifyResultType(char_native, Type.WRITE);
 		final UUID actualDescUuid = getActualDescUuid(bleOp.descriptorUuid);
 		final BleWrite write = new BleWrite(bleOp.serviceUuid, bleOp.charUuid).setDescriptorUUID(actualDescUuid).setDescriptorFilter(bleOp.descriptorFilter).setBytes(bleOp.m_data.getData());

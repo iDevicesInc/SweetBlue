@@ -36,12 +36,12 @@ import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
+import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Rssi;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_State;
 import com.idevicesinc.sweetblue.utils.Uuids;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -91,7 +91,6 @@ public final class BleDevice extends BleNode
      */
     @Immutable
     public static final BleDevice NULL = new BleDevice(null, P_NativeDeviceLayer.NULL, NULL_STRING(), NULL_STRING(), BleDeviceOrigin.EXPLICIT, null, /*isNull=*/true);
-
 
     static DeviceConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultDeviceConnectionFailListener();
 
@@ -3840,8 +3839,9 @@ public final class BleDevice extends BleNode
             }
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(notify.serviceUuid, notify.charUuid);
+        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(notify.serviceUuid, notify.charUuid);
         final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(notify.serviceUuid, notify.charUuid);
+
         final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
         final ReadWriteEvent result;
@@ -3863,7 +3863,7 @@ public final class BleDevice extends BleNode
         {
             if (notify.readWriteListener != null && isConnected)
             {
-                result = m_pollMngr.newAlreadyEnabledEvent(characteristic, notify.serviceUuid, notify.charUuid, notify.descriptorFilter);
+                result = m_pollMngr.newAlreadyEnabledEvent(characteristic.getCharacteristic(), notify.serviceUuid, notify.charUuid, notify.descriptorFilter);
 
                 invokeReadWriteCallback(notify.readWriteListener, result);
             }
@@ -4535,7 +4535,8 @@ public final class BleDevice extends BleNode
         {
             final boolean tryBondingWhileDisconnected = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected, conf_mngr().tryBondingWhileDisconnected);
             final boolean tryBondingWhileDisconnected_manageOnDisk = BleDeviceConfig.bool(conf_device().tryBondingWhileDisconnected_manageOnDisk, conf_mngr().tryBondingWhileDisconnected_manageOnDisk);
-            needsBond = Utils.phoneHasBondingIssues() || BleDeviceConfig.bool(conf_device().alwaysBondOnConnect, conf_mngr().alwaysBondOnConnect);
+            final boolean autoBondFix = BleDeviceConfig.bool(conf_device().autoBondFixes, conf_mngr().autoBondFixes);
+            needsBond = autoBondFix && (Utils.phoneHasBondingIssues() || BleDeviceConfig.bool(conf_device().alwaysBondOnConnect, conf_mngr().alwaysBondOnConnect));
             final boolean doPreBond = getManager().m_diskOptionsMngr.loadNeedsBonding(getMacAddress(), tryBondingWhileDisconnected_manageOnDisk) || needsBond;
 
             if (doPreBond && tryBondingWhileDisconnected)
@@ -5237,9 +5238,7 @@ public final class BleDevice extends BleNode
         if (read.descriptorUuid == null || read.descriptorUuid.equals(Uuids.INVALID))
         {
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(read.charUuid, BondFilter.CharacteristicEventType.READ);
-
             final P_Task_Read task = new P_Task_Read(this, read, type, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
-
             queue().add(task);
         }
         else
@@ -5265,9 +5264,9 @@ public final class BleDevice extends BleNode
 
         if (wb.descriptorUuid == null || wb.descriptorUuid.equals(Uuids.INVALID))
         {
-            final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(wb.serviceUuid, wb.charUuid);
+            final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(wb.serviceUuid, wb.charUuid);
 
-            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getUuid(), BondFilter.CharacteristicEventType.WRITE);
+            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
             addWriteTasks(wb, requiresBonding);
         }
@@ -5322,9 +5321,9 @@ public final class BleDevice extends BleNode
             return earlyOutResult;
         }
 
-        final BluetoothGattCharacteristic characteristic = getServiceManager().getCharacteristic(notify.serviceUuid, notify.charUuid);
+        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(notify.serviceUuid, notify.charUuid);
 
-        if (characteristic != null && is(CONNECTED))
+        if (!characteristic.isNull() && is(CONNECTED))
         {
             final P_Task_ToggleNotify task = new P_Task_ToggleNotify(this, notify, false, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             queue().add(task);

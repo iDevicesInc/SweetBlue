@@ -1800,10 +1800,18 @@ public final class BleManager
 	 * Convenience method to return a {@link Set} of currently bonded devices. This simply calls
 	 * {@link BluetoothAdapter#getBondedDevices()}, and wraps all bonded devices into separate
 	 * {@link BleDevice} classes.
+	 *
+	 * NOTE: If the Bluetooth radio is turned off, some android devices return <code>null</code>. In this case,
+	 * SweetBlue will just return an empty list.
      */
 	public final Set<BleDevice> getDevices_bonded()
 	{
 		Set<BluetoothDevice> native_bonded_devices = managerLayer().getBondedDevices();
+		// The native system can return null from the above call if the bluetooth radio is
+		// turned off, so if that's the case, just return an empty Set.
+		if (native_bonded_devices == null)
+			return new HashSet<>(0);
+
 		Set<BleDevice> bonded_devices = new HashSet<>(native_bonded_devices.size());
 		BleDevice device;
 		for (BluetoothDevice d : native_bonded_devices)

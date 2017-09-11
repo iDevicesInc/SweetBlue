@@ -11,7 +11,6 @@ import com.idevicesinc.sweetblue.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA_Task.I_StateListener
@@ -270,33 +269,33 @@ abstract class PA_Task_ReadOrWrite extends PA_Task_Transactionable implements PA
 		}
 	}
 
-	void onDescriptorReadCallback(BluetoothGatt gatt, BluetoothGattDescriptor desc, byte[] value, int gattStatus)
+	void onDescriptorReadCallback(BluetoothGatt gatt, BleDescriptorWrapper desc, byte[] value, int gattStatus)
 	{
 		if (m_bleOp.descriptorFilter == null)
 		{
-			onDescriptorRead(gatt, desc.getUuid(), value, gattStatus);
+			onDescriptorRead(gatt, desc.getDescriptor().getUuid(), value, gattStatus);
 		}
 		else
 		{
-			if (!m_characteristicList.contains(desc.getCharacteristic()))
+			if (!m_characteristicList.contains(desc.getDescriptor().getCharacteristic()))
 			{
 				return;
 			}
 			if( Utils.isSuccess(gattStatus))
 			{
-				final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(desc.getCharacteristic().getService(), desc.getCharacteristic(), desc, new PresentData(value));
+				final DescriptorFilter.DescriptorEvent event = new DescriptorFilter.DescriptorEvent(desc.getDescriptor().getCharacteristic().getService(), desc.getDescriptor().getCharacteristic(), desc.getDescriptor(), new PresentData(value));
 				final DescriptorFilter.Please please = m_bleOp.descriptorFilter.onEvent(event);
 				if (please.isAccepted())
 				{
-					m_filteredCharacteristic = desc.getCharacteristic();
+					m_filteredCharacteristic = desc.getDescriptor().getCharacteristic();
 					executeReadOrWrite();
 				}
 				else
 				{
-					m_characteristicList.remove(desc.getCharacteristic());
+					m_characteristicList.remove(desc.getDescriptor().getCharacteristic());
 					if (m_characteristicList.size() == 0)
 					{
-						fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.DESCRIPTOR, desc.getCharacteristic().getUuid(), desc.getUuid());
+						fail(ReadWriteListener.Status.NO_MATCHING_TARGET, BleStatuses.GATT_STATUS_NOT_APPLICABLE, ReadWriteListener.Target.DESCRIPTOR, desc.getDescriptor().getCharacteristic().getUuid(), desc.getDescriptor().getUuid());
 					}
 					else
 					{

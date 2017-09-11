@@ -16,6 +16,7 @@ android {
 
     defaultConfig {
         minSdkVersion 18
+        project.archivesBaseName = "sweetblue"
     }
 
     buildTypes {
@@ -177,7 +178,7 @@ def checkDir(String dir) {
 }
 
 // Pull down the samples repo
-task getSamples(dependsOn: [jar, sourceJar, javadocJar]) {
+task getSamples(dependsOn: [jar, sourceJar, javadocJar, "assembleRelease"]) {
     group = "sweetblue"
 
     doLast {
@@ -234,7 +235,8 @@ def buildSampleTask(buildDir) {
 }
 
 // Copy the new sweetblue jar, sourcejar, and javadoc jars to each sample AS
-// project, and build 
+// project, and build
+// Copy the aar file to the bundle folder for inclusion in the zip file
 task copyAndRenameJars(dependsOn: copySamples) {
     group = "sweetblue"
 
@@ -244,7 +246,7 @@ task copyAndRenameJars(dependsOn: copySamples) {
             sampleDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File file) {
-                    return !file.isHidden();
+                    return !file.isHidden()
                 }
             })
         }
@@ -290,6 +292,10 @@ task copyAndRenameJars(dependsOn: copySamples) {
             delete(file.getAbsolutePath() + AS_APP_BUILD_SUFFIX)
             delete(file.getAbsolutePath() + AS_BUILD_SUFFIX)
         }
+        copy {
+            from 'build/outputs/aar/sweetblue-release.aar'
+            into "${BUNDLE_FOLDER}/aar/"
+        }
     }
 }
 
@@ -301,6 +307,21 @@ task copyGPL(dependsOn: copyAndRenameJars) {
             from "../LICENSE"
             into "${BUNDLE_FOLDER}"
         }
+        delete "${BUNDLE_FOLDER}/sweetblue_commercial_license.pdf"
+    }
+}
+
+ext.SB_COMM_LICENSE = System.getenv("SB_COMM_LICENSE")
+
+task copyCommercialLicense(dependsOn: copyAndRenameJars) {
+    group = "sweetblue"
+
+    doLast {
+        copy {
+            from "${SB_COMM_LICENSE}"
+            into "${BUNDLE_FOLDER}"
+        }
+        delete "${BUNDLE_FOLDER}/LICENSE"
     }
 }
 
@@ -311,7 +332,14 @@ task zipTrial(type: Zip, dependsOn: copyGPL) {
     group = "sweetblue"
 }
 
-task zipJar(dependsOn: [zipTrial]) {
+task zipCommercial(type: Zip, dependsOn: copyCommercialLicense) {
+    from "${BUNDLE_FOLDER}"
+    archiveName = "sweetblue_commercial.zip"
+    destinationDir = new File(projectDir.absolutePath + "/${STAGE}")
+    group = "sweetblue"
+}
+
+task zipJar(dependsOn: [zipTrial, zipCommercial]) {
     group = "sweetblue"
     description = "Pulls down samples, builds them, and zips up all SweetBlue files."
 
@@ -545,14 +573,6 @@ gradle.taskGraph.whenReady { taskGraph ->
         allprojects { ext."signing.secretKeyRingFile" = System.getenv("SIGN_RING") }
         allprojects { ext."signing.password" = System.getenv("SIGN_PW") }
     }
-    // Hack to get signArchives to NOT be executed on the build server. It seems the conditional check we had originally
-    // isn't enough to prevent the task from running, and consequently failing the job on the build server
-    // See https://discuss.gradle.org/t/signing-plugin-add-to-configuration-even-if-its-not-being-run/1001
-    if (taskGraph.hasTask("uploadArchives")) {
-        signing {
-            sign configurations.archives
-        }
-    }
 }
 
 uploadArchives {
@@ -604,12 +624,9 @@ task uploadInternal(type: Upload) {
     }
 }
 
-// Hopefully some day they fix this. The conditional check here doesn't bypass the signArchives task, so on build servers,
-// or computers that don't have the signing information, it makes builds fail.
-//signing {
-//    required { gradle.taskGraph.hasTask("uploadArchives") }
-//    sign configurations.archives
-//}
+// This is a hack to avoid signing archives when SweetBlue is run as a submodule within another project. Obviously, we need to sign to deploy,
+// so we apply the signing.gradle file (which the build server swaps out before building, then clears the file when done).
+apply from: 'signing.gradle'
 
 task androidJavadocs(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
@@ -644,7 +661,7 @@ task uploadCommerceZip(dependsOn: zipJar) {
 
     doLast {
         // Upload zip file to the big commerce site
-        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@store-lec5paa.mybigcommerce.com/dav/product_downloads/s/"]
+        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue_commercial.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@store-lec5paa.mybigcommerce.com/dav/product_downloads/s/sweetblue.zip"]
         def curl = curlS.execute()
         curl.waitFor()
         if (curl.exitValue() != 0) {

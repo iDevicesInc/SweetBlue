@@ -102,6 +102,8 @@ public class UhOhThrottleTest extends BaseBleUnitTest
             if (time > 5 && time < 10 && !secondTime)
             {
                 secondTime = true;
+                m_mgr.shutdown();
+
                 new Thread(new Runnable()
                 {
                     @Override
@@ -116,7 +118,6 @@ public class UhOhThrottleTest extends BaseBleUnitTest
                     }
                 }).start();
 
-                m_mgr.shutdown();
             }
             else if (time >= 10d)
             {

@@ -8,14 +8,11 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 import android.util.Log;
-
-import com.idevicesinc.sweetblue.BondListener.Status;
 import com.idevicesinc.sweetblue.NodeConnectionFailListener.AutoConnectUsage;
-import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
-import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Utils;
+import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 
 
 final class P_BleDevice_Listeners extends BluetoothGattCallback
@@ -323,7 +320,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			fireUnsolicitedEvent(characteristic, null, ReadWriteListener.Type.READ, ReadWriteListener.Target.CHARACTERISTIC, value, gattStatus);
+			fireUnsolicitedEvent(new BleCharacteristicWrapper(characteristic), null, ReadWriteListener.Type.READ, ReadWriteListener.Target.CHARACTERISTIC, value, gattStatus);
 		}
 	}
 
@@ -356,18 +353,18 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		}
 		else
 		{
-			fireUnsolicitedEvent(characteristic, null, ReadWriteListener.Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC, data, gattStatus);
+			fireUnsolicitedEvent(new BleCharacteristicWrapper(characteristic), BleDescriptorWrapper.NULL, ReadWriteListener.Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC, data, gattStatus);
 		}
 	}
 
-	private void fireUnsolicitedEvent(final BluetoothGattCharacteristic characteristic_nullable, final BluetoothGattDescriptor descriptor_nullable, ReadWriteListener.Type type, final ReadWriteListener.Target target, final byte[] data, final int gattStatus)
+	private void fireUnsolicitedEvent(final BleCharacteristicWrapper characteristic_nullable, final BleDescriptorWrapper descriptor_nullable, ReadWriteListener.Type type, final ReadWriteListener.Target target, final byte[] data, final int gattStatus)
 	{
-		final ReadWriteListener.Type type_modified = characteristic_nullable != null ? P_DeviceServiceManager.modifyResultType(characteristic_nullable, type) : type;
+		final ReadWriteListener.Type type_modified = characteristic_nullable != null && !characteristic_nullable.isNull() ? P_DeviceServiceManager.modifyResultType(characteristic_nullable, type) : type;
 		final ReadWriteListener.Status status = Utils.isSuccess(gattStatus) ? ReadWriteListener.Status.SUCCESS : ReadWriteListener.Status.REMOTE_GATT_FAILURE;
 
-		final UUID serviceUuid			= characteristic_nullable != null	? characteristic_nullable.getService().getUuid()	: ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
-		final UUID characteristicUuid	= characteristic_nullable != null	? characteristic_nullable.getUuid()					: ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;;
-		final UUID descriptorUuid		= descriptor_nullable != null		? descriptor_nullable.getUuid()						: ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
+		final UUID serviceUuid			= !characteristic_nullable.isNull()	? characteristic_nullable.getCharacteristic().getService().getUuid()	: ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
+		final UUID characteristicUuid	= !characteristic_nullable.isNull()	? characteristic_nullable.getCharacteristic().getUuid()					: ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
+		final UUID descriptorUuid		= !descriptor_nullable.isNull()		? descriptor_nullable.getDescriptor().getUuid()							: ReadWriteListener.ReadWriteEvent.NON_APPLICABLE_UUID;
 
 		final double time = Interval.DISABLED.secs();
 		final boolean solicited = false;
@@ -508,7 +505,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			}
 			else
 			{
-				fireUnsolicitedEvent(descriptor.getCharacteristic(), descriptor, ReadWriteListener.Type.WRITE, ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
+				fireUnsolicitedEvent(new BleCharacteristicWrapper(descriptor.getCharacteristic()), new BleDescriptorWrapper(descriptor), ReadWriteListener.Type.WRITE, ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
 			}
 		}
 	}
@@ -537,11 +534,11 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 		if (task_readOrWrite != null && task_readOrWrite.descriptorMatches(descriptor))
 		{
-			task_readOrWrite.onDescriptorReadCallback(gatt, descriptor, data, gattStatus);
+			task_readOrWrite.onDescriptorReadCallback(gatt, new BleDescriptorWrapper(descriptor), data, gattStatus);
 		}
 		else
 		{
-			fireUnsolicitedEvent(descriptor.getCharacteristic(), descriptor, ReadWriteListener.Type.READ, ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
+			fireUnsolicitedEvent(new BleCharacteristicWrapper(descriptor.getCharacteristic()), new BleDescriptorWrapper(descriptor), ReadWriteListener.Type.READ, ReadWriteListener.Target.DESCRIPTOR, data, gattStatus);
 		}
 
 //		final P_Task_ReadDescriptor task_read = m_queue.getCurrent(P_Task_ReadDescriptor.class, m_device);
@@ -617,7 +614,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			{
 				if( previousState == BluetoothDevice.BOND_BONDING || previousState == BluetoothDevice.BOND_NONE )
 				{
-					m_device.m_bondMngr.onNativeBondFailed(E_Intent.UNINTENTIONAL, Status.FAILED_EVENTUALLY, failReason, false);
+					m_device.m_bondMngr.onNativeBondFailed(E_Intent.UNINTENTIONAL, BondListener.Status.FAILED_EVENTUALLY, failReason, false);
 				}
 				else
 				{
@@ -634,7 +631,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
 			if ( !isCurrent )
 			{
-				m_queue.add(new P_Task_Bond(m_device, /*explicit=*/false, /*isDirect=*/false, /*partOfConnection=*/false, m_taskStateListener, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING, E_TransactionLockBehavior.PASSES));
+				m_queue.add(new P_Task_Bond(m_device, /*explicit=*/false, /*isDirect=*/false, /*partOfConnection=*/false, m_taskStateListener, PE_TaskPriority.FOR_IMPLICIT_BONDING_AND_CONNECTING, P_Task_Bond.E_TransactionLockBehavior.PASSES));
 			}
 
 			m_queue.fail(P_Task_Unbond.class, m_device);

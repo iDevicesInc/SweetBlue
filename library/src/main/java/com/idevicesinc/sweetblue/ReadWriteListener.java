@@ -77,6 +77,18 @@ public interface ReadWriteListener extends GenericListener_Void<ReadWriteListene
         NO_MATCHING_TARGET,
 
         /**
+         * Sometimes android can throw a {@link java.util.ConcurrentModificationException} when we try to retrieve a {@link BluetoothGattService},
+         * {@link BluetoothGattCharacteristic}, or {@link BluetoothGattDescriptor}. In this case, it's best to just try your operation again.
+         */
+        GATT_CONCURRENT_EXCEPTION,
+
+        /**
+         * Sometimes android can throw an {@link Exception} when we try to retrieve a {@link BluetoothGattService},
+         * {@link BluetoothGattCharacteristic}, or {@link BluetoothGattDescriptor}.
+         */
+        GATT_RANDOM_EXCEPTION,
+
+        /**
          * Specific to {@link ReadWriteListener.Target#RELIABLE_WRITE}, this means the underlying call to {@link BluetoothGatt#beginReliableWrite()}
          * returned <code>false</code>.
          */

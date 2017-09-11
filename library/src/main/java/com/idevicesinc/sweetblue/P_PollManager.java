@@ -193,9 +193,9 @@ final class P_PollManager
 			//---		regardless.
 			if( m_device.is(BleDeviceState.DISCONNECTED) )  return;
 			
-			BluetoothGattCharacteristic characteristic = m_device.getNativeCharacteristic(m_serviceUuid, m_charUuid);
+			BleCharacteristicWrapper characteristic = m_device.getNativeBleCharacteristic(m_serviceUuid, m_charUuid);
 			
-			if( characteristic == null )  return;
+			if( characteristic.isNull() )  return;
 
 			Type type = P_DeviceServiceManager.modifyResultType(characteristic, Type.NOTIFICATION);
 			int gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
@@ -455,7 +455,6 @@ final class P_PollManager
 		final BleNotify notify = new BleNotify(serviceUuid, characteristicUuid).setDescriptorFilter(descriptorFilter);
 		notify.m_data = new PresentData(writeValue);
 		ReadWriteEvent result = new ReadWriteEvent(m_device, notify, Type.ENABLING_NOTIFICATION, Target.DESCRIPTOR, Status.SUCCESS, gattStatus, 0.0, 0.0, /*solicited=*/true);
-		
 		return result;
 	}
 }
