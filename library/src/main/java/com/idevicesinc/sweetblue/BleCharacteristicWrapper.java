@@ -19,12 +19,12 @@ public final class BleCharacteristicWrapper extends P_NativeGattObject<Bluetooth
         super(characteristic);
     }
 
-    BleCharacteristicWrapper(BleManager.UhOhListener.UhOh uhoh)
+    BleCharacteristicWrapper(UhOhListener.UhOh uhoh)
     {
         super(uhoh);
     }
 
-    BleCharacteristicWrapper(BluetoothGattCharacteristic characteristic, BleManager.UhOhListener.UhOh uhoh)
+    BleCharacteristicWrapper(BluetoothGattCharacteristic characteristic, UhOhListener.UhOh uhoh)
     {
         super(characteristic, uhoh);
     }

@@ -21,12 +21,12 @@ public final class BleDescriptorWrapper extends P_NativeGattObject<BluetoothGatt
         super(descriptor);
     }
 
-    BleDescriptorWrapper(BleManager.UhOhListener.UhOh uhOh)
+    BleDescriptorWrapper(UhOhListener.UhOh uhOh)
     {
         super(uhOh);
     }
 
-    BleDescriptorWrapper(BluetoothGattDescriptor descriptor, BleManager.UhOhListener.UhOh uhoh)
+    BleDescriptorWrapper(BluetoothGattDescriptor descriptor, UhOhListener.UhOh uhoh)
     {
         super(descriptor, uhoh);
     }

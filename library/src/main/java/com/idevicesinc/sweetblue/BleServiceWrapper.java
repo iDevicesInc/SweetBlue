@@ -16,7 +16,7 @@ public final class BleServiceWrapper extends P_NativeGattObject<BluetoothGattSer
         super();
     }
 
-    BleServiceWrapper(BleManager.UhOhListener.UhOh uhoh)
+    BleServiceWrapper(UhOhListener.UhOh uhoh)
     {
         super(null, uhoh);
     }
@@ -26,7 +26,7 @@ public final class BleServiceWrapper extends P_NativeGattObject<BluetoothGattSer
         super(service, null);
     }
 
-    BleServiceWrapper(BluetoothGattService service, BleManager.UhOhListener.UhOh uhoh)
+    BleServiceWrapper(BluetoothGattService service, UhOhListener.UhOh uhoh)
     {
         super(service, uhoh);
     }
