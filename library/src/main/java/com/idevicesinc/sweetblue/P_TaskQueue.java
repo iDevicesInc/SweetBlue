@@ -130,7 +130,7 @@ final class P_TaskQueue
 		addAtIndex(task, -1);
 	}
 	
-	public final void softlyCancelTasks(PA_Task task)
+	public final void softlyCancelTasks(final PA_Task task)
 	{
 		m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
@@ -590,7 +590,7 @@ final class P_TaskQueue
 		print();
 	}
 
-	public final void clearQueueOf(Class<? extends PA_Task> taskClass, BleManager mngr)
+	public final void clearQueueOf(final Class<? extends PA_Task> taskClass, final BleManager mngr)
 	{
 		m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
@@ -608,7 +608,7 @@ final class P_TaskQueue
 		});
 	}
 
-	public final void clearQueueOf(Class<? extends PA_Task> taskClass, BleDevice device, final int ordinal)
+	public final void clearQueueOf(final Class<? extends PA_Task> taskClass, final BleDevice device, final int ordinal)
 	{
 		m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
@@ -631,7 +631,7 @@ final class P_TaskQueue
 		});
 	}
 
-	public final void clearQueueOf(Class<? extends PA_Task> taskClass, BleServer server)
+	public final void clearQueueOf(final Class<? extends PA_Task> taskClass, final BleServer server)
 	{
 		m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
 		{
