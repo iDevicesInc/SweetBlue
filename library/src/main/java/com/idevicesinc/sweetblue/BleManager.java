@@ -217,7 +217,7 @@ public final class BleManager
 	private P_WrappingResetListener m_resetListeners;
 	private AssertListener m_assertionListener;
 			DeviceStateListener m_defaultDeviceStateListener;
-			DeviceConnectionFailListener m_defaultConnectionFailListener;
+			DeviceReconnectFilter m_defaultConnectionFailListener;
 			ServerConnectionFailListener m_defaultConnectionFailListener_server;
 			BondListener m_defaultBondListener;
 			ReadWriteListener m_defaultReadWriteListener;
@@ -727,7 +727,7 @@ public final class BleManager
 	 *
 	 * @see BleDevice#setListener_ConnectionFail(DeviceConnectionFailListener)
 	 */
-	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceConnectionFailListener listener_nullable)
+	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
 	{
 		m_defaultConnectionFailListener = listener_nullable;
 	}

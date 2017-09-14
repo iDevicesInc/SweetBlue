@@ -6,11 +6,11 @@ import java.util.HashMap;
 
 final class P_ServerConnectionFailManager
 {
-	private static ServerConnectionFailListener DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultServerConnectionFailListener();
+	private static ServerReconnectFilter DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultServerConnectionFailListener();
 
 	final BleServer m_server;
 
-	private ServerConnectionFailListener m_connectionFailListener = DEFAULT_CONNECTION_FAIL_LISTENER;
+	private ServerReconnectFilter m_connectionFailListener = DEFAULT_CONNECTION_FAIL_LISTENER;
 
 	private final HashMap<String, P_ServerConnectionFailEntry> m_entries = new HashMap<String, P_ServerConnectionFailEntry>();
 
@@ -47,7 +47,7 @@ final class P_ServerConnectionFailManager
 		getOrCreateEntry(macAddress).onExplicitConnectionStarted();
 	}
 
-	public void setListener(ServerConnectionFailListener listener)
+	public void setListener(ServerReconnectFilter listener)
 	{
 		m_connectionFailListener = listener;
 	}

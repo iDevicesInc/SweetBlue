@@ -151,7 +151,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Set a listener here to override any listener provided previously.
 	 */
-	public final void setListener_ConnectionFail(final ServerConnectionFailListener listener)
+	public final void setListener_ConnectionFail(final ServerReconnectFilter listener)
 	{
 		m_connectionFailMngr.setListener(listener);
 	}

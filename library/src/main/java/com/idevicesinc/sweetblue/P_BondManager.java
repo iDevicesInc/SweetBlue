@@ -1,11 +1,9 @@
 package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
-
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
-import com.idevicesinc.sweetblue.BondListener.BondEvent;
 import com.idevicesinc.sweetblue.BondListener.Status;
 import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.UhOhListener.UhOh;
@@ -142,11 +140,11 @@ final class P_BondManager
 		return false;
 	}
 	
-	Object[] getOverrideBondStatesForDisconnect(DeviceConnectionFailListener.Status connectionFailReasonIfConnecting)
+	Object[] getOverrideBondStatesForDisconnect(DeviceReconnectFilter.Status connectionFailReasonIfConnecting)
 	{
 		final Object[] overrideBondingStates;
 		
-		if( connectionFailReasonIfConnecting == DeviceConnectionFailListener.Status.BONDING_FAILED )
+		if( connectionFailReasonIfConnecting == DeviceReconnectFilter.Status.BONDING_FAILED )
 		{
 			overrideBondingStates = OVERRIDE_UNBONDED_STATES;
 		}
@@ -198,7 +196,7 @@ final class P_BondManager
 		{
 			final boolean doingReconnect_shortTerm = m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM);
 			
-			m_device.disconnectWithReason(DeviceConnectionFailListener.Status.BONDING_FAILED, status.timing(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, failReason, m_device.NULL_READWRITE_EVENT());
+			m_device.disconnectWithReason(DeviceReconnectFilter.Status.BONDING_FAILED, status.timing(), BleStatuses.GATT_STATUS_NOT_APPLICABLE, failReason, m_device.NULL_READWRITE_EVENT());
 		}
 		else
 		{

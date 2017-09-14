@@ -4,38 +4,31 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
-
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils_String;
-
 import java.util.ArrayList;
 
-/**
- * Provide an implementation of this callback to {@link BleDevice#setListener_ConnectionFail(DeviceConnectionFailListener)}.
- *
- * @see DefaultDeviceConnectionFailListener
- * @see BleDevice#setListener_ConnectionFail(DeviceConnectionFailListener)
- */
-@com.idevicesinc.sweetblue.annotations.Lambda
-public interface DeviceConnectionFailListener extends NodeConnectionFailListener
+
+public interface DeviceReconnectFilter extends ReconnectFilter<DeviceReconnectFilter.ConnectFailEvent>
 {
+
     /**
      * The reason for the connection failure.
      */
-    public static enum Status implements UsesCustomNull
+    enum Status implements UsesCustomNull
     {
         /**
-         * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link ConnectionFailEvent#status()} given
-         * to {@link DeviceConnectionFailListener#onEvent(ConnectionFailEvent)} will *never* be {@link DeviceConnectionFailListener.Status#NULL}.
+         * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link ConnectFailEvent#status()} given
+         * to {@link #onConnectFailed(ReconnectFilter.ConnectFailEvent)} will *never* be {@link Status#NULL}.
          */
         NULL,
 
         /**
          * A call was made to {@link BleDevice#connect()} or its overloads
-         * but {@link ConnectionFailEvent#device()} is already
+         * but {@link ConnectFailEvent#device()} is already
          * {@link BleDeviceState#CONNECTING} or {@link BleDeviceState#CONNECTED}.
          */
         ALREADY_CONNECTING_OR_CONNECTED,
@@ -48,19 +41,19 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
         /**
          * Couldn't connect through {@link BluetoothDevice#connectGatt(android.content.Context, boolean, BluetoothGattCallback)}
          * because it (a) {@link Timing#IMMEDIATELY} returned <code>null</code>, (b) {@link Timing#EVENTUALLY} returned a bad
-         * {@link ConnectionFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
+         * {@link ConnectFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
          */
         NATIVE_CONNECTION_FAILED,
 
         /**
          * {@link BluetoothGatt#discoverServices()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
-         * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
+         * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectFailEvent#gattStatus()}, or (c) {@link Timing#TIMED_OUT}.
          */
         DISCOVERING_SERVICES_FAILED,
 
         /**
          * {@link BluetoothDevice#createBond()} either (a) {@link Timing#IMMEDIATELY} returned <code>false</code>,
-         * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectionFailEvent#bondFailReason()}, or (c) {@link Timing#TIMED_OUT}.
+         * (b) {@link Timing#EVENTUALLY} returned a bad {@link ConnectFailEvent#bondFailReason()}, or (c) {@link Timing#TIMED_OUT}.
          * <br><br>
          * NOTE: {@link BleDeviceConfig#bondingFailFailsConnection} must be <code>true</code> for this {@link Status} to be applicable.
          *
@@ -123,7 +116,7 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
         }
 
         /**
-         * Whether this status honors a {@link NodeConnectionFailListener.Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
+         * Whether this status honors a {@link com.idevicesinc.sweetblue.ReconnectFilter.ConnectFailPlease#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
          * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
          */
         public final boolean allowsRetry()
@@ -154,12 +147,12 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
     /**
      * For {@link Status#NATIVE_CONNECTION_FAILED}, {@link Status#DISCOVERING_SERVICES_FAILED}, and
      * {@link Status#BONDING_FAILED}, gives further timing information on when the failure took place.
-     * For all other reasons, {@link ConnectionFailEvent#timing()} will be {@link #NOT_APPLICABLE}.
+     * For all other reasons, {@link ConnectFailEvent#timing()} will be {@link #NOT_APPLICABLE}.
      */
-    public static enum Timing
+    enum Timing
     {
         /**
-         * For reasons like {@link DeviceConnectionFailListener.Status#BLE_TURNING_OFF}, {@link DeviceConnectionFailListener.Status#AUTHENTICATION_FAILED}, etc.
+         * For reasons like {@link Status#BLE_TURNING_OFF}, {@link Status#AUTHENTICATION_FAILED}, etc.
          */
         NOT_APPLICABLE,
 
@@ -169,11 +162,11 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
         IMMEDIATELY,
 
         /**
-         * The operation failed in the native stack. {@link DeviceConnectionFailListener.ConnectionFailEvent#gattStatus()}
-         * will probably be a positive number if {@link DeviceConnectionFailListener.ConnectionFailEvent#status()} is
-         * {@link DeviceConnectionFailListener.Status#NATIVE_CONNECTION_FAILED} or {@link DeviceConnectionFailListener.Status#DISCOVERING_SERVICES_FAILED}.
-         * {@link DeviceConnectionFailListener.ConnectionFailEvent#bondFailReason()} will probably be a positive number if
-         * {@link DeviceConnectionFailListener.ConnectionFailEvent#status()} is {@link DeviceConnectionFailListener.Status#BONDING_FAILED}.
+         * The operation failed in the native stack. {@link ConnectFailEvent#gattStatus()}
+         * will probably be a positive number if {@link ConnectFailEvent#status()} is
+         * {@link Status#NATIVE_CONNECTION_FAILED} or {@link Status#DISCOVERING_SERVICES_FAILED}.
+         * {@link ConnectFailEvent#bondFailReason()} will probably be a positive number if
+         * {@link ConnectFailEvent#status()} is {@link Status#BONDING_FAILED}.
          */
         EVENTUALLY,
 
@@ -184,13 +177,13 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
     }
 
     /**
-     * Structure passed to {@link DeviceConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
+     * Structure passed to {@link #onConnectFailed(ReconnectFilter.ConnectFailEvent)} to provide more info about how/why the connection failed.
      */
     @Immutable
-    class ConnectionFailEvent extends NodeConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
+    final class ConnectFailEvent extends ReconnectFilter.ConnectFailEvent implements UsesCustomNull
     {
         /**
-         * The {@link BleDevice} this {@link ConnectionFailEvent} is for.
+         * The {@link BleDevice} this {@link ConnectFailEvent} is for.
          */
         public final BleDevice device()
         {
@@ -261,7 +254,7 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
         private final Timing m_timing;
 
         /**
-         * If {@link ConnectionFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or
+         * If {@link ConnectFailEvent#status()} is {@link Status#AUTHENTICATION_FAILED} or
          * {@link Status#INITIALIZATION_FAILED} and {@link BleTransaction#fail()} was called somewhere in or
          * downstream of {@link ReadWriteListener#onEvent(Event)}, then the {@link ReadWriteListener.ReadWriteEvent} passed there will be returned
          * here. Otherwise, this will return a {@link ReadWriteListener.ReadWriteEvent} for which {@link ReadWriteListener.ReadWriteEvent#isNull()} returns <code>true</code>.
@@ -274,25 +267,25 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
         private final ReadWriteListener.ReadWriteEvent m_txnFailReason;
 
         /**
-         * Returns a chronologically-ordered list of all {@link ConnectionFailEvent} instances returned through
-         * {@link DeviceConnectionFailListener#onEvent(ConnectionFailEvent)} since the first call to {@link BleDevice#connect()},
+         * Returns a chronologically-ordered list of all {@link ConnectFailEvent} instances returned through
+         * {@link #onConnectFailed(ReconnectFilter.ConnectFailEvent)} since the first call to {@link BleDevice#connect()},
          * including the current instance. Thus this list will always have at least a length of one (except if {@link #isNull()} is <code>true</code>).
          * The list length is "reset" back to one whenever a {@link BleDeviceState#CONNECTING_OVERALL} operation completes, either
          * through becoming {@link BleDeviceState#INITIALIZED}, or {@link BleDeviceState#DISCONNECTED} for good.
          */
-        public final ConnectionFailEvent[] history()
+        public final ConnectFailEvent[] history()
         {
             if (isNull())
             {
-                return new ConnectionFailEvent[0];
+                return new ConnectFailEvent[0];
             }
             // We want to clear out any event after this one to prevent memory leaks from occurring. This doesn't affect the "main"
             // history, which is stored in P_ConnectionFailManager, so it's safe to do whatever we want to this list.
-            ArrayList<ConnectionFailEvent> history = m_device.m_connectionFailMngr.getHistory();
+            ArrayList<ConnectFailEvent> history = m_device.m_connectionFailMngr.getHistory();
             int position = history.indexOf(this);
             if (position != -1)
             {
-                ConnectionFailEvent[] h = new ConnectionFailEvent[position + 1];
+                ConnectFailEvent[] h = new ConnectFailEvent[position + 1];
                 for (int i = 0; i <= position; i++)
                 {
                     h[i] = history.get(i);
@@ -301,11 +294,11 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
             }
             // If this event is not in the list, then this event must have been cached app-side. So, we simply return an array with this
             // event in it.
-            ConnectionFailEvent[] h = { this };
+            ConnectFailEvent[] h = { this };
             return h;
         }
 
-        ConnectionFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, NodeConnectionFailListener.AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
+        ConnectFailEvent(BleDevice device, Status reason, Timing timing, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, BleDeviceState highestStateReached, BleDeviceState highestStateReached_total, AutoConnectUsage autoConnectUsage, int bondFailReason, ReadWriteListener.ReadWriteEvent txnFailReason)
         {
             super(failureCountSoFar, latestAttemptTime, totalAttemptTime, gattStatus, autoConnectUsage);
 
@@ -321,19 +314,19 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
             m_device.getManager().ASSERT(highestStateReached_total != null, "highestState_total shouldn't be null.");
         }
 
-        static ConnectionFailEvent NULL(BleDevice device)
+        static ConnectFailEvent NULL(BleDevice device)
         {
-            return new ConnectionFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, NodeConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
+            return new ConnectFailEvent(device, Status.NULL, Timing.NOT_APPLICABLE, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
         }
 
-        static ConnectionFailEvent EARLY_OUT(BleDevice device, Status reason)
+        static ConnectFailEvent EARLY_OUT(BleDevice device, Status reason)
         {
-            return new DeviceConnectionFailListener.ConnectionFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, NodeConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
+            return new ConnectFailEvent(device, reason, Timing.TIMED_OUT, 0, Interval.ZERO, Interval.ZERO, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleDeviceState.NULL, BleDeviceState.NULL, AutoConnectUsage.NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, device.NULL_READWRITE_EVENT());
         }
 
         /**
-         * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
-         * {@link BleNodeConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
+         * Returns whether this {@link ConnectFailEvent} instance is a "dummy" value. For now used for
+         * {@link ReconnectFilter.ConnectionLostEvent#connectionFailEvent()} in certain situations.
          */
         @Override public final boolean isNull()
         {
@@ -341,7 +334,7 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
         }
 
         /**
-         * Forwards {@link DeviceConnectionFailListener.Status#shouldBeReportedToUser()} using {@link #status()}.
+         * Forwards {@link Status#shouldBeReportedToUser()} using {@link #status()}.
          */
         public final boolean shouldBeReportedToUser()
         {
@@ -351,9 +344,9 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
         @Override
         public boolean equals(Object obj)
         {
-            if (obj != null && obj instanceof ConnectionFailEvent)
+            if (obj != null && obj instanceof ConnectFailEvent)
             {
-                ConnectionFailEvent other = (ConnectionFailEvent) obj;
+                ConnectFailEvent other = (ConnectFailEvent) obj;
                 return m_device.equals(other.m_device) && m_status == other.m_status && m_timing == other.m_timing && m_highestStateReached_latest == other.m_highestStateReached_latest
                         && m_highestStateReached_total == other.m_highestStateReached_total && m_bondFailReason == other.m_bondFailReason && m_txnFailReason == other.m_txnFailReason
                         && failureCountSoFar() == other.failureCountSoFar();
@@ -397,18 +390,4 @@ public interface DeviceConnectionFailListener extends NodeConnectionFailListener
         }
     }
 
-    /**
-     * Return value is ignored if device is either {@link BleDeviceState#RECONNECTING_LONG_TERM} or reason
-     * {@link Status#allowsRetry()} is <code>false</code>. If the device is {@link BleDeviceState#RECONNECTING_LONG_TERM}
-     * then authority is deferred to {@link BleNodeConfig.ReconnectFilter}.
-     * <br><br>
-     * Otherwise, this method offers a more convenient way of retrying a connection, as opposed to manually doing it yourself. It also lets
-     * the library handle things in a slightly more optimized/cleaner fashion and so is recommended for that reason also.
-     * <br><br>
-     * NOTE that this callback gets fired *after* {@link DeviceStateListener} lets you know that the device is {@link BleDeviceState#DISCONNECTED}.
-     * <br><br>
-     * The time parameters like {@link ConnectionFailEvent#attemptTime_latest()} are of optional use to you to decide if connecting again
-     * is worth it. For example if you've been trying to connect for 10 seconds already, chances are that another connection attempt probably won't work.
-     */
-    Please onEvent(final ConnectionFailEvent e);
 }

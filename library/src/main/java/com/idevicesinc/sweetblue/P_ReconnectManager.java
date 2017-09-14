@@ -1,10 +1,9 @@
 package com.idevicesinc.sweetblue;
 
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
-
+import com.idevicesinc.sweetblue.DeviceReconnectFilter.ConnectFailEvent;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.BleNodeConfig.*;
 
 final class P_ReconnectManager
 {
@@ -18,11 +17,11 @@ final class P_ReconnectManager
 	
 	private int m_gattStatusOfOriginalDisconnect = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	
-	private DeviceConnectionFailListener.ConnectionFailEvent m_connectionFailEvent;
+	private ConnectFailEvent m_connectionFailEvent;
 	
 	private final boolean m_isShortTerm;
 	
-	private static final BleNodeConfig.ReconnectFilter.ReconnectEvent EVENT = new BleNodeConfig.ReconnectFilter.ReconnectEvent();
+	private static final DeviceReconnectFilter.ConnectionLostEvent EVENT = new DeviceReconnectFilter.ConnectionLostEvent();
 	
 	P_ReconnectManager(final BleDevice device, final boolean isShortTerm)
 	{
@@ -89,7 +88,7 @@ final class P_ReconnectManager
 		return filter != null ? filter : m_device.conf_mngr().reconnectFilter;
 	}
 	
-	private double getNextTime(DeviceConnectionFailListener.ConnectionFailEvent connectionFailInfo)
+	private double getNextTime(ConnectFailEvent connectionFailInfo)
 	{
 		final ReconnectFilter filter = getFilter();
 		
@@ -102,9 +101,9 @@ final class P_ReconnectManager
 			final ReconnectFilter.Type type = m_isShortTerm ? ReconnectFilter.Type.SHORT_TERM__SHOULD_TRY_AGAIN : ReconnectFilter.Type.LONG_TERM__SHOULD_TRY_AGAIN;
 
 			EVENT.init(m_device, m_device.getMacAddress(), m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), connectionFailInfo, type);
-			final ReconnectFilter.Please please = filter.onEvent(EVENT);
+			final ReconnectFilter.ConnectionLostPlease please = filter.onConnectionLost(EVENT);
 			
-			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.Please.class);
+			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.ConnectionLostPlease.class);
 
 			if( false == please.shouldPersist() )
 			{
@@ -119,7 +118,7 @@ final class P_ReconnectManager
 		}
 	}
 	
-	void onConnectionFailed(final DeviceConnectionFailListener.ConnectionFailEvent connectionFailInfo)
+	void onConnectionFailed(final ConnectFailEvent connectionFailInfo)
 	{
 		if( !isRunning() )
 		{
@@ -177,9 +176,9 @@ final class P_ReconnectManager
 		
 		EVENT.init(m_device, m_device.getMacAddress(), m_attemptCount, Interval.secs(m_totalTime), Interval.secs(m_delay), m_connectionFailEvent, type);
 		
-		final ReconnectFilter.Please please = persistFilter.onEvent(EVENT);
+		final ReconnectFilter.ConnectionLostPlease please = persistFilter.onConnectionLost(EVENT);
 		
-		m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.Please.class);
+		m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.ConnectionLostPlease.class);
 		
 		if( please == null || false == please.shouldPersist() )
 		{

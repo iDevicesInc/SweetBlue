@@ -34,7 +34,7 @@ public enum BleDeviceState implements State
 	/**
 	 * If {@link BleNodeConfig#reconnectFilter} is set appropriately and the device implicitly disconnects, either through going out of range,
 	 * signal disruption, or whatever, then the device will enter this state. It will continue in this state until you return
-	 * {@link BleNodeConfig.ReconnectFilter.Please#stopRetrying()} from {@link BleNodeConfig.ReconnectFilter#onEvent(BleNodeConfig.ReconnectFilter.ReconnectEvent)}
+	 * {@link ReconnectFilter.ConnectionLostPlease#stopRetrying()} from {@link ReconnectFilter#onEvent(ReconnectFilter.ConnectionLostEvent)}
 	 * or call {@link BleDevice#disconnect()} or when the device actually successfully reconnects.
 	 * 
 	 * @see #RECONNECTING_SHORT_TERM

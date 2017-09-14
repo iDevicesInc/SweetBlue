@@ -120,7 +120,7 @@ public class MainActivity extends Activity
             }
         };
         config.forceBondDialog = true;
-        config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
+        config.reconnectFilter = new DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
         config.defaultScanFilter = new ScanFilter()
         {
