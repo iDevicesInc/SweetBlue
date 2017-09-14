@@ -274,6 +274,7 @@ final class P_ScanManager
                 Interval pauseTime = Interval.isEnabled(m_manager.m_config.infinitePauseInterval) ? m_manager.m_config.infinitePauseInterval : Interval.secs(BleManagerConfig.DEFAULT_SCAN_INFINITE_PAUSE_TIME);
                 if (m_timePausedScan >= pauseTime.secs())
                 {
+                    m_manager.getLogger().i("Restarting paused scan...");
                     startScan(PA_StateTracker.E_Intent.INTENTIONAL, Interval.INFINITE.secs(), false);
                 }
             }
@@ -307,6 +308,7 @@ final class P_ScanManager
 
                     if (!m_manager.isScanning())
                     {
+                        m_manager.getLogger().i("Auto starting scan after BLE turned back on...");
                         startScan = true;
                     }
                 }
@@ -316,6 +318,7 @@ final class P_ScanManager
 
                     if (!m_manager.isScanning())
                     {
+                        m_manager.getLogger().i("Auto starting scan after resume...");
                         startScan = true;
                     }
                 }
@@ -326,6 +329,7 @@ final class P_ScanManager
 
                 if( Interval.isEnabled(scanInterval) && m_timeNotScanning >= scanInterval )
                 {
+                    m_manager.getLogger().i("Starting scan as part of a periodic scan...");
                     startScan = true;
                 }
             }
@@ -371,7 +375,7 @@ final class P_ScanManager
     {
         m_triedToStartScanAfterResume = false;
 
-        if( m_doingInfiniteScan )
+        if( m_doingInfiniteScan && !m_manager.isScanning())
         {
             m_triedToStartScanAfterResume = true;
 

@@ -2256,9 +2256,11 @@ public final class BleManager
 
 		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
 		{
-			P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, BleManager.this);
-			if (scanTask != null)
-				scanTask.succeed();
+			// I don't think this is needed, if we're clearing it from the queue below.
+//			P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, BleManager.this);
+//			if (scanTask != null)
+//				scanTask.succeed();
+			m_logger.i("Clearing queue of any scan tasks...");
 			m_taskQueue.clearQueueOf(P_Task_Scan.class, BleManager.this);
 		}
 
