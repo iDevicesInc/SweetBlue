@@ -36,7 +36,6 @@ import com.idevicesinc.sweetblue.utils.Percent;
 import com.idevicesinc.sweetblue.utils.PresentData;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.TimeEstimator;
-import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Rssi;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
@@ -1460,7 +1459,7 @@ public final class BleDevice extends BleNode
                     }
                 }
             }, true, gattPause);
-            queue().add(discTask);
+            taskManager().add(discTask);
         }
     }
 
@@ -1962,7 +1961,7 @@ public final class BleDevice extends BleNode
 
         final boolean alreadyDisconnected = is(DISCONNECTED);
         final boolean reconnecting_longTerm = is(RECONNECTING_LONG_TERM);
-        final boolean alreadyQueuedToDisconnect = queue().isInQueue(P_Task_Disconnect.class, this);
+        final boolean alreadyQueuedToDisconnect = taskManager().isInQueue(P_Task_Disconnect.class, this);
 
         if (!alreadyQueuedToDisconnect)
         {
@@ -2934,7 +2933,7 @@ public final class BleDevice extends BleNode
             }
             else
             {
-                getTaskQueue().add(new P_Task_RequestConnectionPriority(this, listener, m_txnMngr.getCurrent(), taskPriority, connectionPriority));
+                getTaskManager().add(new P_Task_RequestConnectionPriority(this, listener, m_txnMngr.getCurrent(), taskPriority, connectionPriority));
 
                 return NULL_READWRITE_EVENT();
             }
@@ -3060,7 +3059,7 @@ public final class BleDevice extends BleNode
                 }
                 else
                 {
-                    getTaskQueue().add(new P_Task_RequestMtu(this, listener, m_txnMngr.getCurrent(), priority, mtu));
+                    getTaskManager().add(new P_Task_RequestMtu(this, listener, m_txnMngr.getCurrent(), priority, mtu));
 
                     return NULL_READWRITE_EVENT();
                 }
@@ -3113,7 +3112,7 @@ public final class BleDevice extends BleNode
 
     final void readRssi_internal(Type type, ReadWriteListener listener)
     {
-        queue().add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
+        taskManager().add(new P_Task_ReadRssi(this, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority(), type));
     }
 
     /**
@@ -3853,7 +3852,7 @@ public final class BleDevice extends BleNode
 
             final P_Task_ToggleNotify task = new P_Task_ToggleNotify(this, notify, true, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
 
-            queue().add(task);
+            taskManager().add(task);
 
             m_pollMngr.onNotifyStateChange(notify.serviceUuid, notify.charUuid, P_PollManager.E_NotifyState__ENABLING);
 
@@ -4271,9 +4270,9 @@ public final class BleDevice extends BleNode
         return m_listeners;
     }
 
-    final P_TaskQueue getTaskQueue()
+    final P_TaskManager getTaskManager()
     {
-        return queue();
+        return taskManager();
     }
 
     // PA_StateTracker getStateTracker(){ return m_stateTracker; }
@@ -4417,9 +4416,9 @@ public final class BleDevice extends BleNode
     {
         if (conf_device().forceBondDialog)
         {
-            queue().add(new P_Task_BondPopupHack(this, null));
+            taskManager().add(new P_Task_BondPopupHack(this, null));
         }
-        queue().add(new P_Task_Bond(this, /*isExplicit=*/true, isDirect, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
+        taskManager().add(new P_Task_Bond(this, /*isExplicit=*/true, isDirect, /*partOfConnection=*/false, m_taskStateListener, lockBehavior));
     }
 
     final void unbond_justAddTheTask()
@@ -4429,13 +4428,13 @@ public final class BleDevice extends BleNode
 
     final void unbond_justAddTheTask(final PE_TaskPriority priority_nullable)
     {
-        queue().add(new P_Task_Unbond(this, m_taskStateListener, priority_nullable));
+        taskManager().add(new P_Task_Unbond(this, m_taskStateListener, priority_nullable));
     }
 
     final void unbond_internal(final PE_TaskPriority priority_nullable, final BondListener.Status status)
     {
         // If the unbond task is already in the queue, then do nothing
-        if (!queue().isInQueue(P_Task_Unbond.class, this))
+        if (!taskManager().isInQueue(P_Task_Unbond.class, this))
         {
             unbond_justAddTheTask(priority_nullable);
 
@@ -4564,7 +4563,7 @@ public final class BleDevice extends BleNode
             return;
         }
 
-        queue().add(new P_Task_Connect(this, m_taskStateListener));
+        taskManager().add(new P_Task_Connect(this, m_taskStateListener));
 
         if (needsBond)
         {
@@ -4581,7 +4580,7 @@ public final class BleDevice extends BleNode
 
         if (bleConnect && is_internal(/* already */CONNECTING))
         {
-            P_Task_Connect task = getTaskQueue().getCurrent(P_Task_Connect.class, this);
+            P_Task_Connect task = getTaskManager().getCurrent(P_Task_Connect.class, this);
             boolean mostDefinitelyExplicit = task != null && task.isExplicit();
 
             //--- DRK > Not positive about this assert...we'll see if it trips.
@@ -4685,7 +4684,7 @@ public final class BleDevice extends BleNode
         BleDeviceConfig.RefreshOption option = conf_device().gattRefreshOption != null ? conf_device().gattRefreshOption : conf_mngr().gattRefreshOption;
         gattRefresh = gattRefresh && option == BleDeviceConfig.RefreshOption.BEFORE_SERVICE_DISCOVERY;
         Interval refreshDelay = BleDeviceConfig.interval(conf_device().gattRefreshDelay, conf_mngr().gattRefreshDelay);
-        queue().add(new P_Task_DiscoverServices(this, m_taskStateListener, gattRefresh, refreshDelay));
+        taskManager().add(new P_Task_DiscoverServices(this, m_taskStateListener, gattRefresh, refreshDelay));
 
         //--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
         //--- Even without this check the library should still be in a goodish state. Might send some weird state
@@ -4722,7 +4721,7 @@ public final class BleDevice extends BleNode
 
         if (Utils.phoneHasBondingIssues())
         {
-            getTaskQueue().clearQueueOf(P_Task_Bond.class, this, getTaskQueue().getSize());
+            getTaskManager().clearQueueOf(P_Task_Bond.class, this, getTaskManager().getSize());
         }
 
         boolean retryingConnection = false;
@@ -4861,7 +4860,7 @@ public final class BleDevice extends BleNode
 
                 // If there is already a disconnect task in the queue, then simply ignore this (in the case an explicit disconnect comes in while
                 // a transaction is processing...the transaction will call this method as well)
-                boolean inQueue = getTaskQueue().isInQueue(P_Task_Disconnect.class, BleDevice.this);
+                boolean inQueue = getTaskManager().isInQueue(P_Task_Disconnect.class, BleDevice.this);
 
                 if (!inQueue)
                 {
@@ -4915,7 +4914,7 @@ public final class BleDevice extends BleNode
                         if (isAny_internal(CONNECTED, CONNECTING, INITIALIZED))
                         {
                             final P_Task_Disconnect disconnectTask = new P_Task_Disconnect(BleDevice.this, m_taskStateListener, /*explicit=*/explicit, disconnectPriority_nullable, taskIsCancellable, saveLastDisconnectAfterTaskCompletes);
-                            queue().add(disconnectTask);
+                            taskManager().add(disconnectTask);
 
                             taskOrdinal = disconnectTask.getOrdinal();
                             clearQueue = true;
@@ -4941,8 +4940,8 @@ public final class BleDevice extends BleNode
 
                         if (clearQueue)
                         {
-                            queue().clearQueueOf(P_Task_Connect.class, BleDevice.this, -1);
-                            queue().clearQueueOf(PA_Task_RequiresConnection.class, BleDevice.this, taskOrdinal);
+                            taskManager().clearQueueOf(P_Task_Connect.class, BleDevice.this, -1);
+                            taskManager().clearQueueOf(PA_Task_RequiresConnection.class, BleDevice.this, taskOrdinal);
                         }
 
                         if (!attemptingReconnect_longTerm)
@@ -5191,7 +5190,7 @@ public final class BleDevice extends BleNode
         {
             if (m_nativeWrapper.isNativelyConnectingOrConnected())
             {
-                queue().add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/false, null, /*cancellable=*/true));
+                taskManager().add(new P_Task_Disconnect(this, m_taskStateListener, /*explicit=*/false, null, /*cancellable=*/true));
             }
         }
 
@@ -5200,7 +5199,7 @@ public final class BleDevice extends BleNode
         //--- TODO: Understand the conditions under which a connect task can still be queued...might be a bug upstream.
         if (!isConnectingOverall_2 && retrying__PE_Please == DeviceConnectionFailListener.Please.PE_Please_DO_NOT_RETRY)
         {
-            queue().clearQueueOf(P_Task_Connect.class, this, -1);
+            taskManager().clearQueueOf(P_Task_Connect.class, this, -1);
         }
 
         boolean doReconnectForConnectingOverall = BleDeviceConfig.bool(conf_device().connectFailRetryConnectingOverall, conf_mngr().connectFailRetryConnectingOverall);
@@ -5214,8 +5213,8 @@ public final class BleDevice extends BleNode
     private void softlyCancelTasks(final int overrideOrdinal)
     {
         m_dummyDisconnectTask.setOverrideOrdinal(overrideOrdinal);
-        queue().softlyCancelTasks(m_dummyDisconnectTask);
-        queue().clearQueueOf(PA_Task_RequiresConnection.class, this, overrideOrdinal);
+        taskManager().softlyCancelTasks(m_dummyDisconnectTask);
+        taskManager().clearQueueOf(PA_Task_RequiresConnection.class, this, overrideOrdinal);
     }
 
     private void stopPoll_private(final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter, final Double interval, final ReadWriteListener listener)
@@ -5239,13 +5238,13 @@ public final class BleDevice extends BleNode
         {
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(read.charUuid, BondFilter.CharacteristicEventType.READ);
             final P_Task_Read task = new P_Task_Read(this, read, type, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
-            queue().add(task);
+            taskManager().add(task);
         }
         else
         {
             final boolean requiresBonding = false;
 
-            queue().add(new P_Task_ReadDescriptor(this, read, type, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+            taskManager().add(new P_Task_ReadDescriptor(this, read, type, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
         }
 
         return NULL_READWRITE_EVENT();
@@ -5285,7 +5284,7 @@ public final class BleDevice extends BleNode
         int mtuSize = getEffectiveWriteMtuSize();
         if (!conf_device().autoStripeWrites || write.m_data.getData().length < mtuSize)
         {
-            queue().add(new P_Task_WriteDescriptor(this, write, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+            taskManager().add(new P_Task_WriteDescriptor(this, write, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
         }
         else
         {
@@ -5300,7 +5299,7 @@ public final class BleDevice extends BleNode
         if (!conf_device().autoStripeWrites || write.m_data.getData().length <= mtuSize)
         {
             final P_Task_Write task_write = new P_Task_Write(this, write, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
-            queue().add(task_write);
+            taskManager().add(task_write);
         }
         else
         {
@@ -5326,7 +5325,7 @@ public final class BleDevice extends BleNode
         if (!characteristic.isNull() && is(CONNECTED))
         {
             final P_Task_ToggleNotify task = new P_Task_ToggleNotify(this, notify, false, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
-            queue().add(task);
+            taskManager().add(task);
         }
 
         m_pollMngr.stopPoll(notify.serviceUuid, notify.charUuid, notify.descriptorFilter, notify.m_forceReadTimeout.secs(), notify.readWriteListener, /* usingNotify= */true);

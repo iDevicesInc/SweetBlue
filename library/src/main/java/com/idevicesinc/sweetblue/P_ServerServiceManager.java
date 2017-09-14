@@ -60,7 +60,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 
 	private void getTasks(ForEach_Breakable<P_Task_AddService> forEach)
 	{
-		final P_TaskQueue queue = m_server.getManager().getTaskQueue();
+		final P_TaskManager queue = m_server.getManager().getTaskQueue();
 		final List<PA_Task> queue_raw = queue.getRaw();
 
 		for( int i = queue_raw.size()-1; i >= 0; i-- )

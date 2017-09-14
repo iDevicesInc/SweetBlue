@@ -41,7 +41,7 @@ final class P_StripedWriteDescriptorTransaction extends BleTransaction
             m_writeList.add(new P_Task_WriteDescriptor(device, write, m_requiresBonding, device.m_txnMngr.getCurrent(), device.getOverrideReadWritePriority()));
             curIndex = end;
         }
-        device.queue().add(m_writeList.remove(0));
+        device.taskManager().add(m_writeList.remove(0));
     }
 
     private final class WriteListener implements ReadWriteListener
@@ -53,7 +53,7 @@ final class P_StripedWriteDescriptorTransaction extends BleTransaction
             {
                 if (m_writeList.size() > 0)
                 {
-                    getDevice().queue().add(m_writeList.remove(0));
+                    getDevice().taskManager().add(m_writeList.remove(0));
                 }
                 else
                 {

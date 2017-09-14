@@ -19,7 +19,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 {
 	private final BleDevice m_device;
 	private final P_Logger m_logger;
-	private final P_TaskQueue m_queue;
+	private final P_TaskManager m_queue;
 
 	final PA_Task.I_StateListener m_taskStateListener = new PA_Task.I_StateListener()
 	{
@@ -55,7 +55,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 			else if (task.getClass() == P_Task_Disconnect.class)
 			{
 				// Only add the disconnect task if it's not already in the queue
-				if ((state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT) && !m_device.queue().isInQueue(P_Task_Disconnect.class, m_device))
+				if ((state == PE_TaskState.SUCCEEDED || state == PE_TaskState.REDUNDANT) && !m_device.taskManager().isInQueue(P_Task_Disconnect.class, m_device))
 				{
 					P_Task_Disconnect task_cast = (P_Task_Disconnect) task;
 
@@ -100,7 +100,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 					else
 					{
 						// If an explicit disconnect() was called while discovering services, we do NOT want to throw another disconnectWithReason (the task will do it when it executes)
-						if (!m_device.queue().isInQueue(P_Task_Disconnect.class, m_device))
+						if (!m_device.taskManager().isInQueue(P_Task_Disconnect.class, m_device))
 						{
 							m_device.disconnectWithReason(DeviceConnectionFailListener.Status.DISCOVERING_SERVICES_FAILED, DeviceConnectionFailListener.Timing.EVENTUALLY, discoverTask.getGattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, m_device.NULL_READWRITE_EVENT());
 						}
@@ -120,7 +120,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		m_device = device;
 		m_logger = m_device.getManager().getLogger();
-		m_queue = m_device.getTaskQueue();
+		m_queue = m_device.getTaskManager();
 	}
 
 	@Override
@@ -596,7 +596,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 	{
 		if (newState == BluetoothDevice.ERROR)
 		{
-			P_TaskQueue queue = m_device.getTaskQueue();
+			P_TaskManager queue = m_device.getTaskManager();
 			queue.fail(P_Task_Bond.class, m_device);
 			queue.fail(P_Task_Unbond.class, m_device);
 			

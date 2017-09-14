@@ -460,7 +460,7 @@ public class ScanTest extends BaseBleUnitTest
             {
                 if (e.didEnter(BleManagerState.SCANNING))
                 {
-                    P_TaskQueue queue = m_mgr.getTaskQueue();
+                    P_TaskManager queue = m_mgr.getTaskQueue();
                     assertTrue(queue.isInQueue(P_Task_Connect.class, device2));
                     int position = queue.positionInQueue(P_Task_Connect.class, device2);
                     assertTrue(position != -1);

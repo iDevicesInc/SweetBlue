@@ -324,7 +324,7 @@ public final class BleServer extends BleNode
 
 		final boolean confirm = isIndication;
 		final P_Task_SendNotification task = new P_Task_SendNotification(this, nativeDevice, serviceUuid, charUuid, futureData, confirm, listener);
-		queue().add(task);
+		taskManager().add(task);
 
 		return OutgoingListener.OutgoingEvent.NULL__NOTIFICATION(this, nativeDevice, serviceUuid, charUuid);
 	}
@@ -720,7 +720,7 @@ public final class BleServer extends BleNode
 		m_clientMngr.onConnecting(nativeDevice.getAddress());
 
 		final P_Task_ConnectServer task = new P_Task_ConnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-		queue().add(task);
+		taskManager().add(task);
 
 		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
@@ -758,7 +758,7 @@ public final class BleServer extends BleNode
 			//--- DRK > Purposely doing explicit=true here without regarding the intent.
 			final boolean explicit = true;
 			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice.getNativeDevice(), m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-			queue().add(task);
+			taskManager().add(task);
 		}
 
 		m_stateTracker.doStateTransition(macAddress, oldConnectionState /* ==> */, BleServerState.DISCONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -833,7 +833,7 @@ public final class BleServer extends BleNode
 		if( status == ServerConnectionFailListener.Status.TIMED_OUT )
 		{
 			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
-			queue().add(task);
+			taskManager().add(task);
 		}
 
 		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.CONNECTING /* ==> */, BleServerState.DISCONNECTED, ChangeIntent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);

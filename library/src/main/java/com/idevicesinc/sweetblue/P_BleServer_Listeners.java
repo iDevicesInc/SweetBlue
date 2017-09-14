@@ -20,7 +20,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 {
 	private final BleServer m_server;
 	private final P_Logger m_logger;
-	private final P_TaskQueue m_queue;
+	private final P_TaskManager m_queue;
 
 	final PA_Task.I_StateListener m_taskStateListener = new PA_Task.I_StateListener()
 	{
