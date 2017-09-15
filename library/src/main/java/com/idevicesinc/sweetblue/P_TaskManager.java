@@ -9,6 +9,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 final class P_TaskManager
 {
+    private final Object m_lock = new Object();
     private final ArrayList<PA_Task> m_queue = new ArrayList<PA_Task>();
     private final AtomicReference<PA_Task> m_current;
     private long m_updateCount;
@@ -19,23 +20,23 @@ final class P_TaskManager
 
     private int m_currentOrdinal;
 
-
     P_TaskManager(BleManager mngr)
     {
         m_mngr = mngr;
         m_logger = mngr.getLogger();
 
         m_current = new AtomicReference<>(null);
-
     }
 
     final int assignOrdinal()
     {
-        final int toReturn = m_currentOrdinal;
-
-        m_currentOrdinal++;
-
-        return toReturn;
+        synchronized (m_lock)
+        {
+            // If we didn't synchronize this, its possible two simultaneous calls from different threads could be returned the same value
+            int retVal = m_currentOrdinal;
+            m_currentOrdinal++;
+            return retVal;
+        }
     }
 
     final int getCurrentOrdinal()
@@ -45,17 +46,23 @@ final class P_TaskManager
 
     public final PA_Task peek()
     {
-        return m_queue.size() > 0 ? m_queue.get(0) : null;
+        synchronized (m_lock)
+        {
+            return m_queue.size() > 0 ? m_queue.get(0) : null;
+        }
     }
 
     private boolean tryCancellingCurrentTask(PA_Task newTask)
     {
-        if (getCurrent() != null && getCurrent().isCancellableBy(newTask))
+        synchronized (m_lock)
         {
-            endCurrentTask(PE_TaskState.CANCELLED);
-            addAtIndex(newTask, 0);
+            if (getCurrent() != null && getCurrent().isCancellableBy(newTask))
+            {
+                endCurrentTask(PE_TaskState.CANCELLED);
+                addAtIndex(newTask, 0);
 
-            return true;
+                return true;
+            }
         }
 
         return false;
@@ -63,14 +70,17 @@ final class P_TaskManager
 
     private boolean tryInterruptingCurrentTask(PA_Task newTask)
     {
-        if (getCurrent() != null && getCurrent().isInterruptableBy(newTask))
+        synchronized (m_lock)
         {
-            PA_Task current_saved = getCurrent();
-            endCurrentTask(PE_TaskState.INTERRUPTED);
-            addAtIndex(newTask, 0);
-            addAtIndex(current_saved, 1);
+            if (getCurrent() != null && getCurrent().isInterruptableBy(newTask))
+            {
+                PA_Task current_saved = getCurrent();
+                endCurrentTask(PE_TaskState.INTERRUPTED);
+                addAtIndex(newTask, 0);
+                addAtIndex(current_saved, 1);
 
-            return true;
+                return true;
+            }
         }
 
         return false;
@@ -78,105 +88,104 @@ final class P_TaskManager
 
     private boolean tryInsertingIntoQueue(PA_Task newTask)
     {
-        int soonestSpot = PU_TaskQueue.findSoonestSpot(m_queue, newTask);
-
-        if (soonestSpot >= 0)
+        synchronized (m_lock)
         {
-            addAtIndex(newTask, soonestSpot);
+            int soonestSpot = PU_TaskQueue.findSoonestSpot(m_queue, newTask);
 
-            return true;
+            if (soonestSpot >= 0)
+            {
+                addAtIndex(newTask, soonestSpot);
+
+                return true;
+            }
+
+            return false;
         }
-
-        return false;
     }
 
     private void addToBack(PA_Task task)
     {
-        addAtIndex(task, -1);
+        synchronized (m_lock)
+        {
+            addAtIndex(task, -1);
+        }
     }
 
     public final void softlyCancelTasks(PA_Task task)
     {
-        for (int i = 0; i < m_queue.size() - 1; i++)
+        synchronized (m_lock)
         {
-            PA_Task ithTask = m_queue.get(i);
-            if (ithTask.isSoftlyCancellableBy(task))
-                ithTask.attemptToSoftlyCancel(task);
-        }
+            for (int i = 0; i < m_queue.size() - 1; i++)
+            {
+                PA_Task ithTask = m_queue.get(i);
+                if (ithTask.isSoftlyCancellableBy(task))
+                    ithTask.attemptToSoftlyCancel(task);
+            }
 
-        if (getCurrent() != null)
-        {
-            if (getCurrent().isSoftlyCancellableBy(task))
-                getCurrent().attemptToSoftlyCancel(task);
+            if (getCurrent() != null)
+            {
+                if (getCurrent().isSoftlyCancellableBy(task))
+                    getCurrent().attemptToSoftlyCancel(task);
+            }
         }
     }
 
     private void addAtIndex(PA_Task task, int index)
     {
-        if (index >= 0)
+        synchronized (m_lock)
         {
-            m_queue.add(index, task);
+            if (index >= 0)
+            {
+                m_queue.add(index, task);
+            }
+            else
+            {
+                m_queue.add(task);
+
+                index = m_queue.size() - 1;
+            }
+
+            task.assignDefaultOrdinal(this);
+
+            softlyCancelTasks(task);
+
+            task.onAddedToQueue(this);
+
+            print();
         }
-        else
-        {
-            m_queue.add(task);
-
-            index = m_queue.size() - 1;
-        }
-
-        task.assignDefaultOrdinal(this);
-
-        softlyCancelTasks(task);
-
-        task.onAddedToQueue(this);
-
-        print();
     }
 
     public final void add(final PA_Task newTask)
     {
-        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                newTask.init();
-                add_updateThread(newTask);
-            }
-        });
+        addNow(newTask);
     }
 
     final void addNow(final PA_Task newTask)
     {
-        if (!m_mngr.getPostManager().isOnSweetBlueThread())
+        synchronized (m_lock)
         {
-            throw new Error("Tried to add a task when not on the SweetBlue update thread!");
-        }
-        newTask.init();
-        add_updateThread(newTask);
-    }
+            newTask.init();
 
-    private void add_updateThread(final PA_Task newTask)
-    {
-        // Check the idle status to ensure the new task gets executed as soon as possible (rather than
-        // waiting until the idle interval's next tick)
-        m_mngr.checkIdleStatus();
-        if (tryCancellingCurrentTask(newTask))
-        {
-            if (getCurrent() == null)
+            // Check the idle status to ensure the new task gets executed as soon as possible (rather than
+            // waiting until the idle interval's next tick)
+            m_mngr.checkIdleStatus();
+            if (tryCancellingCurrentTask(newTask))
             {
-                dequeue();
+                if (getCurrent() == null)
+                {
+                    dequeue();
+                }
             }
-        }
-        else if (tryInterruptingCurrentTask(newTask))
-        {
-        }
-        else if (tryInsertingIntoQueue(newTask))
-        {
-        }
-        else
-        {
-            addToBack(newTask);
+            else if (tryInterruptingCurrentTask(newTask))
+            {
+            }
+            else if (tryInsertingIntoQueue(newTask))
+            {
+            }
+            else
+            {
+                addToBack(newTask);
+            }
         }
     }
 
@@ -217,28 +226,30 @@ final class P_TaskManager
         return m_timeSinceEnding >= delayTime.secs();
     }
 
-    private synchronized boolean dequeue()
+    private boolean dequeue()
     {
-        if (!m_mngr.ASSERT(m_current.get() == null)) return false;
-        if (m_queue.size() == 0) return false;
-        if (!hasDelayTimePassed()) return false;
-
-        for (int i = 0; i < m_queue.size(); i++)
+        synchronized (m_lock)
         {
-            PA_Task newPotentialCurrent = m_queue.get(i);
+            if (!m_mngr.ASSERT(m_current.get() == null)) return false;
+            if (m_queue.size() == 0) return false;
+            if (!hasDelayTimePassed()) return false;
 
-            if (newPotentialCurrent.isArmable())
+            for (int i = 0; i < m_queue.size(); i++)
             {
-                m_queue.remove(i);
-                m_current.set(newPotentialCurrent);
-                newPotentialCurrent.arm();
-                if (!newPotentialCurrent.tryExecuting())
+                PA_Task newPotentialCurrent = m_queue.get(i);
+
+                if (newPotentialCurrent.isArmable())
                 {
-                    print();
+                    m_queue.remove(i);
+                    m_current.set(newPotentialCurrent);
+                    newPotentialCurrent.arm();
+                    if (!newPotentialCurrent.tryExecuting())
+                        print();
+                    return true;
                 }
-                return true;
             }
         }
+
         return false;
     }
 
@@ -254,56 +265,66 @@ final class P_TaskManager
 
     private boolean endCurrentTask(PE_TaskState endingState)
     {
-        if (!m_mngr.ASSERT(endingState.isEndingState())) return false;
-        if (getCurrent() == null) return false;
-
-        PA_Task current_saved = m_current.get();
-        m_current.set(null);
-        m_timeSinceEnding = 0.0;
-        current_saved.setEndingState(endingState);
-
-        boolean printed = false;
-
-        if (m_queue.size() > 0 && getCurrent() == null)
+        synchronized (m_lock)
         {
-            if (endingState.canGoToNextTaskImmediately())
+            if (!m_mngr.ASSERT(endingState.isEndingState()))
+                return false;
+            if (getCurrent() == null)
+                return false;
+
+            PA_Task current_saved = m_current.get();
+            m_current.set(null);
+            m_timeSinceEnding = 0.0;
+            current_saved.setEndingState(endingState);
+
+            boolean printed = false;
+            if (m_queue.size() > 0 && getCurrent() == null)
             {
-                printed = dequeue();
-            }
-            else
-            {
-                //--- DRK > Posting to prevent potential stack overflow if queue is really big and all tasks are failing in a row.
-                m_mngr.getPostManager().forcePostToUpdate(new Runnable()
+                if (endingState.canGoToNextTaskImmediately())
                 {
-                    @Override
-                    public void run()
+                    printed = dequeue();
+                }
+                else
+                {
+                    //TODO:  Can we get rid of this?  It seems pointless
+
+                    //--- DRK > Posting to prevent potential stack overflow if queue is really big and all tasks are failing in a row.
+                    m_mngr.getPostManager().forcePostToUpdate(new Runnable()
                     {
-                        if (m_queue.size() > 0 && getCurrent() == null)
+                        @Override
+                        public void run()
                         {
-                            dequeue();
+                            synchronized (m_lock)
+                            {
+                                if (m_queue.size() > 0 && getCurrent() == null)
+                                {
+                                    dequeue();
+                                }
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
-        }
 
-        if (!printed)
-        {
-            print();
-        }
+            if (!printed)
+                print();
 
-        return true;
+            return true;
+        }
     }
 
     public final void interrupt(Class<? extends PA_Task> taskClass, BleManager manager)
     {
-        PA_Task current = getCurrent(taskClass, manager);
-
-        if (PU_TaskQueue.isMatch(getCurrent(), taskClass, manager, null, null))
+        synchronized (m_lock)
         {
-            tryEndingTask(current, PE_TaskState.INTERRUPTED);
+            PA_Task current = getCurrent(taskClass, manager);
 
-            add(current);
+            if (PU_TaskQueue.isMatch(getCurrent(), taskClass, manager, null, null))
+            {
+                tryEndingTask(current, PE_TaskState.INTERRUPTED);
+
+                add(current);
+            }
         }
     }
 
@@ -341,9 +362,10 @@ final class P_TaskManager
 
     private boolean tryEndingTask(final Class<? extends PA_Task> taskClass, final BleManager mngr_nullable, final BleDevice device_nullable, final BleServer server_nullable, final PE_TaskState endingState)
     {
-        if (PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr_nullable, device_nullable, server_nullable))
+        synchronized (m_lock)
         {
-            return endCurrentTask(endingState);
+            if (PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr_nullable, device_nullable, server_nullable))
+                return endCurrentTask(endingState);
         }
 
         return false;
@@ -351,49 +373,52 @@ final class P_TaskManager
 
     final void tryEndingTask(final PA_Task task, final PE_TaskState endingState)
     {
-        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
+        synchronized (m_lock)
         {
-            @Override
-            public void run()
+            if (task != null && task == getCurrent())
             {
-                tryEndingTask_updateThread(task, endingState);
-            }
-        });
-    }
-
-    private void tryEndingTask_updateThread(final PA_Task task, final PE_TaskState endingState)
-    {
-        if (task != null && task == getCurrent())
-        {
-            if (!endCurrentTask(endingState))
-            {
-                m_mngr.ASSERT(false);
+                if (!endCurrentTask(endingState))
+                {
+                    m_mngr.ASSERT(false);
+                }
             }
         }
     }
 
     public final boolean isCurrent(Class<? extends PA_Task> taskClass, BleManager mngr)
     {
-        return PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr, null, null);
+        synchronized (m_lock)
+        {
+            return PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr, null, null);
+        }
     }
 
     public final boolean isCurrent(Class<? extends PA_Task> taskClass, BleDevice device)
     {
-        return PU_TaskQueue.isMatch(getCurrent(), taskClass, null, device, null);
+        synchronized (m_lock)
+        {
+            return PU_TaskQueue.isMatch(getCurrent(), taskClass, null, device, null);
+        }
     }
 
     public final boolean isCurrent(Class<? extends PA_Task> taskClass, BleServer server)
     {
-        return PU_TaskQueue.isMatch(getCurrent(), taskClass, null, null, server);
+        synchronized (m_lock)
+        {
+            return PU_TaskQueue.isMatch(getCurrent(), taskClass, null, null, server);
+        }
     }
 
     private boolean isInQueue(Class<? extends PA_Task> taskClass, BleManager mngr_nullable, BleDevice device_nullable, BleServer server_nullable)
     {
-        for (int i = 0; i < m_queue.size(); i++)
+        synchronized (m_lock)
         {
-            if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr_nullable, device_nullable, server_nullable))
+            for (int i = 0; i < m_queue.size(); i++)
             {
-                return true;
+                if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr_nullable, device_nullable, server_nullable))
+                {
+                    return true;
+                }
             }
         }
 
@@ -402,11 +427,14 @@ final class P_TaskManager
 
     private int positionInQueue(Class<? extends PA_Task> taskClass, BleManager mngr_nullable, BleDevice device_nullable, BleServer server_nullable)
     {
-        for (int i = 0; i < m_queue.size(); i++)
+        synchronized (m_lock)
         {
-            if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr_nullable, device_nullable, server_nullable))
+            for (int i = 0; i < m_queue.size(); i++)
             {
-                return i;
+                if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr_nullable, device_nullable, server_nullable))
+                {
+                    return i;
+                }
             }
         }
 
@@ -460,16 +488,15 @@ final class P_TaskManager
 
     public final <T extends PA_Task> T get(Class<T> taskClass, BleManager mngr)
     {
-        if (PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr, null, null))
+        synchronized (m_lock)
         {
-            return (T)getCurrent();
-        }
+            if (PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr, null, null))
+                return (T)getCurrent();
 
-        for (int i = 0; i < m_queue.size(); i++)
-        {
-            if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr, null, null))
+            for (int i = 0; i < m_queue.size(); i++)
             {
-                return (T)m_queue.get(i);
+                if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr, null, null))
+                    return (T)m_queue.get(i);
             }
         }
 
@@ -478,9 +505,10 @@ final class P_TaskManager
 
     public final <T extends PA_Task> T getCurrent(Class<T> taskClass, BleDevice device)
     {
-        if (PU_TaskQueue.isMatch(getCurrent(), taskClass, null, device, null))
+        synchronized (m_lock)
         {
-            return (T)getCurrent();
+            if (PU_TaskQueue.isMatch(getCurrent(), taskClass, null, device, null))
+                return (T)getCurrent();
         }
 
         return null;
@@ -488,9 +516,10 @@ final class P_TaskManager
 
     public final <T extends PA_Task> T getCurrent(Class<T> taskClass, BleManager mngr)
     {
-        if (PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr, null, null))
+        synchronized (m_lock)
         {
-            return (T)getCurrent();
+            if (PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr, null, null))
+                return (T)getCurrent();
         }
 
         return null;
@@ -498,9 +527,10 @@ final class P_TaskManager
 
     public final <T extends PA_Task> T getCurrent(Class<T> taskClass, BleServer server)
     {
-        if (PU_TaskQueue.isMatch(getCurrent(), taskClass, null, null, server))
+        synchronized (m_lock)
         {
-            return (T)getCurrent();
+            if (PU_TaskQueue.isMatch(getCurrent(), taskClass, null, null, server))
+                return (T)getCurrent();
         }
 
         return null;
@@ -509,49 +539,49 @@ final class P_TaskManager
     final void print()
     {
         if (m_logger.isEnabled())
-        {
             m_logger.i(this.toString());
-        }
     }
 
     private void clearQueueOf$removeFromQueue(int index)
     {
-        PA_Task task = m_queue.remove(index);
+        PA_Task task;
+        synchronized (m_lock)
+        {
+            task = m_queue.remove(index);
+        }
 
         if (task.wasSoftlyCancelled())
-        {
             task.setEndingState(PE_TaskState.SOFTLY_CANCELLED);
-        }
         else
-        {
             task.setEndingState(PE_TaskState.CLEARED_FROM_QUEUE);
-        }
 
         print();
     }
 
     public final void clearQueueOf(Class<? extends PA_Task> taskClass, BleManager mngr)
     {
-        for (int i = m_queue.size() - 1; i >= 0; i--)
+        synchronized (m_lock)
         {
-            if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr, null, null))
+            for (int i = m_queue.size() - 1; i >= 0; i--)
             {
-                clearQueueOf$removeFromQueue(i);
+                if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr, null, null))
+                    clearQueueOf$removeFromQueue(i);
             }
         }
     }
 
     public final void clearQueueOf(Class<? extends PA_Task> taskClass, BleDevice device, final int ordinal)
     {
-        for (int i = m_queue.size() - 1; i >= 0; i--)
+        synchronized (m_lock)
         {
-            final PA_Task task_ith = m_queue.get(i);
-
-            if (ordinal <= -1 || ordinal >= 0 && task_ith.getOrdinal() <= ordinal)
+            for (int i = m_queue.size() - 1; i >= 0; i--)
             {
-                if (PU_TaskQueue.isMatch(task_ith, taskClass, null, device, null))
+                final PA_Task task_ith = m_queue.get(i);
+
+                if (ordinal <= -1 || ordinal >= 0 && task_ith.getOrdinal() <= ordinal)
                 {
-                    clearQueueOf$removeFromQueue(i);
+                    if (PU_TaskQueue.isMatch(task_ith, taskClass, null, device, null))
+                        clearQueueOf$removeFromQueue(i);
                 }
             }
         }
@@ -559,32 +589,41 @@ final class P_TaskManager
 
     public final void clearQueueOf(Class<? extends PA_Task> taskClass, BleServer server)
     {
-        for (int i = m_queue.size() - 1; i >= 0; i--)
+        synchronized (m_lock)
         {
-            if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, null, null, server))
+            for (int i = m_queue.size() - 1; i >= 0; i--)
             {
-                clearQueueOf$removeFromQueue(i);
+                if (PU_TaskQueue.isMatch(m_queue.get(i), taskClass, null, null, server))
+                {
+                    clearQueueOf$removeFromQueue(i);
+                }
             }
         }
     }
 
     public final void clearQueueOfAll()
     {
-        for (int i = m_queue.size() - 1; i >= 0; i--)
+        synchronized (m_lock)
         {
-            clearQueueOf$removeFromQueue(i);
+            for (int i = m_queue.size() - 1; i >= 0; i--)
+            {
+                clearQueueOf$removeFromQueue(i);
+            }
         }
     }
 
     @Override
     public final String toString()
     {
-        final String current = m_current.get() != null ? m_current.get().toString() : "no current task";
+        synchronized (m_lock)
+        {
+            final String current = m_current.get() != null ? m_current.get().toString() : "no current task";
 
-        final String queue = m_queue.size() > 0 ? m_queue.toString() : "[queue empty]";
+            final String queue = m_queue.size() > 0 ? m_queue.toString() : "[queue empty]";
 
-        final String toReturn = current + " " + queue;
+            final String toReturn = current + " " + queue;
 
-        return toReturn;
+            return toReturn;
+        }
     }
 }
