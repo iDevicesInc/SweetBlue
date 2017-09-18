@@ -17,6 +17,7 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.impl.DefaultDeviceReconnectFilter;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Distance;
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
@@ -4695,7 +4696,7 @@ public final class BleDevice extends BleNode
         }
     }
 
-    final void onNativeConnectFail(PE_TaskState state, int gattStatus, DeviceReconnectFilter.AutoConnectUsage autoConnectUsage)
+    final void onNativeConnectFail(PE_TaskState state, int gattStatus, ReconnectFilter.AutoConnectUsage autoConnectUsage)
     {
         m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */true);
 
@@ -5144,7 +5145,7 @@ public final class BleDevice extends BleNode
                 // So we don't need to post the event again here.
                 if (!isDisconnectedAfterReconnectingShortTermStateCallback)
                 {
-                    retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
+                    retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, ReconnectFilter.AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
                 }
                 else
                 {
@@ -5160,7 +5161,7 @@ public final class BleDevice extends BleNode
                 }
                 else
                 {
-                    retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
+                    retrying__PE_Please = m_connectionFailMngr.onConnectionFailed(connectionFailReason_nullable, Timing.NOT_APPLICABLE, isStillAttemptingReconnect_longTerm, gattStatus, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, highestState, ReconnectFilter.AutoConnectUsage.NOT_APPLICABLE, NULL_READWRITE_EVENT());
 //                    retrying__PE_Please = ConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;PE_Please_DO_NOT_RETRY
                 }
             }

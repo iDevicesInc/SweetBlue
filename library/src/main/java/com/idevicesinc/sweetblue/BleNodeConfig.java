@@ -6,6 +6,8 @@ import android.content.Context;
 import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.impl.DefaultReconnectFilter;
+import com.idevicesinc.sweetblue.impl.DefaultServerReconnectFilter;
 import com.idevicesinc.sweetblue.utils.EpochTime;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.HistoricalData;
@@ -84,8 +86,8 @@ public class BleNodeConfig
 	 * connection times, which becomes a UX problem. Would you rather have a 5-10 second connection process that is successful
 	 * with 99% of devices, or a 1-2 second connection process that is successful with 95% of devices? By default we've chosen the latter.
 	 * <br><br>
-	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link NodeConnectionFailListener.Please}
-	 * returned from {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)} (or the equivalent
+	 * HOWEVER, it's important to note that you can have fine-grained control over its usage through the {@link ReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)}
+	 * returned from {@link DeviceReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)} (or the equivalent
 	 * structures that are inner structures of {@link BleServer}).
 	 * <br><br>
 	 * So really this option mainly exists for those situations where you KNOW that you have a device or server that only works
@@ -170,7 +172,7 @@ public class BleNodeConfig
 	 * @see DefaultReconnectFilter
 	 */
 	@Nullable(Nullable.Prevalence.NORMAL)
-	public ReconnectFilter reconnectFilter									= new DefaultReconnectFilter();
+	public ReconnectFilter reconnectFilter									= new DefaultServerReconnectFilter();
 
 	/**
 	 * Provide an instance of this class to {@link com.idevicesinc.sweetblue.BleDeviceConfig#historicalDataLogFilter} to control
@@ -692,7 +694,7 @@ public class BleNodeConfig
 
 	/**
 	 * Creates a {@link BleNodeConfig} with all default options set. Then, any configuration options
-	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig.writeJSON}
+	 * specified in the given JSONObject will be applied over the defaults.  See {@link BleNodeConfig#writeJSON}
 	 * regarding the creation of the JSONObject
 	 */
 	public BleNodeConfig(JSONObject jo)
@@ -837,7 +839,7 @@ public class BleNodeConfig
 	}
 
 	/**
-	 * Acceps a JSON object that represents a set of configuration options.  These options will be
+	 * Accepts a JSON object that represents a set of configuration options.  These options will be
 	 * applied to this object, overwriting any existing options.  Options not defined in the JSON
 	 * object will not be effected at all.
 	 */

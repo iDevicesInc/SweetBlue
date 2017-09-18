@@ -54,9 +54,9 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 					}
 					else if( state == PE_TaskState.FAILED_IMMEDIATELY )
 					{
-						final ServerConnectionFailListener.Status status = task_cast.getStatus();
+						final ServerReconnectFilter.Status status = task_cast.getStatus();
 
-						if( status == ServerConnectionFailListener.Status.SERVER_OPENING_FAILED || status == ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY )
+						if( status == ServerReconnectFilter.Status.SERVER_OPENING_FAILED || status == ServerReconnectFilter.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY )
 						{
 							m_server.onNativeConnectFail(task_cast.m_nativeDevice, status, task_cast.getGattStatus());
 						}
@@ -64,16 +64,16 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 						{
 							m_server.getManager().ASSERT(false, "Didn't expect server failed-immediately status to be something else.");
 
-							m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY, task_cast.getGattStatus());
+							m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerReconnectFilter.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY, task_cast.getGattStatus());
 						}
 					}
 					else if( state == PE_TaskState.FAILED )
 					{
-						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
+						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerReconnectFilter.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
 					}
 					else if( state == PE_TaskState.TIMED_OUT )
 					{
-						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerConnectionFailListener.Status.TIMED_OUT, task_cast.getGattStatus());
+						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerReconnectFilter.Status.TIMED_OUT, task_cast.getGattStatus());
 					}
 					else if( state == PE_TaskState.SOFTLY_CANCELLED )
 					{
@@ -83,7 +83,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 					{
 						m_server.getManager().ASSERT(false, "Did not expect ending state " + state + " for connect task failure.");
 
-						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
+						m_server.onNativeConnectFail(task_cast.m_nativeDevice, ServerReconnectFilter.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, task_cast.getGattStatus());
 					}
 				}
 			}
@@ -152,7 +152,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 		}
 		else
 		{
-			m_server.onNativeConnectFail(nativeDevice, ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, gattStatus);
+			m_server.onNativeConnectFail(nativeDevice, ServerReconnectFilter.Status.NATIVE_CONNECTION_FAILED_EVENTUALLY, gattStatus);
 		}
 	}
 

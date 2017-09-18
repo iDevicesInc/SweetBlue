@@ -1,7 +1,9 @@
-package com.idevicesinc.sweetblue;
+package com.idevicesinc.sweetblue.impl;
 
 
 import android.util.Log;
+
+import com.idevicesinc.sweetblue.SweetLogger;
 
 public final class DefaultLogger implements SweetLogger
 {

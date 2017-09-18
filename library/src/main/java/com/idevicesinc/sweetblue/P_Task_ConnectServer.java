@@ -4,14 +4,14 @@ import android.bluetooth.BluetoothDevice;
 
 final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 {
-	private ServerConnectionFailListener.Status m_status = ServerConnectionFailListener.Status.NULL;
+	private ServerReconnectFilter.Status m_status = ServerReconnectFilter.Status.NULL;
 
 	public P_Task_ConnectServer(BleServer server, BluetoothDevice nativeDevice, I_StateListener listener, boolean explicit, PE_TaskPriority priority)
 	{
 		super(server, nativeDevice, listener, explicit, priority);
 	}
 
-	public ServerConnectionFailListener.Status getStatus()
+	public ServerReconnectFilter.Status getStatus()
 	{
 		return m_status;
 	}
@@ -24,7 +24,7 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 		{
 			if( !getServer().m_nativeWrapper.openServer() )
 			{
-				m_status = ServerConnectionFailListener.Status.SERVER_OPENING_FAILED;
+				m_status = ServerReconnectFilter.Status.SERVER_OPENING_FAILED;
 
 				failImmediately();
 
@@ -36,7 +36,7 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 
 		if( server_native.isServerNull() )
 		{
-			m_status = ServerConnectionFailListener.Status.SERVER_OPENING_FAILED;
+			m_status = ServerReconnectFilter.Status.SERVER_OPENING_FAILED;
 
 			failImmediately();
 
@@ -52,7 +52,7 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				}
 				else
 				{
-					m_status = ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
+					m_status = ServerReconnectFilter.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 				}
@@ -61,7 +61,7 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 			{
 				if( getServer().m_nativeWrapper.isDisconnecting(m_nativeDevice.getAddress()) )
 				{
-					m_status = ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
+					m_status = ServerReconnectFilter.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 
@@ -74,13 +74,13 @@ final class P_Task_ConnectServer extends PA_Task_ConnectOrDisconnectServer
 				}
 				else if( getServer().m_nativeWrapper.isConnected(m_nativeDevice.getAddress()) )
 				{
-					m_status = ServerConnectionFailListener.Status.ALREADY_CONNECTING_OR_CONNECTED;
+					m_status = ServerReconnectFilter.Status.ALREADY_CONNECTING_OR_CONNECTED;
 
 					redundant();
 				}
 				else
 				{
-					m_status = ServerConnectionFailListener.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
+					m_status = ServerReconnectFilter.Status.NATIVE_CONNECTION_FAILED_IMMEDIATELY;
 
 					failImmediately();
 

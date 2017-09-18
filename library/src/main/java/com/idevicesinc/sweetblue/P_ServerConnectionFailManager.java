@@ -2,11 +2,13 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothDevice;
 
+import com.idevicesinc.sweetblue.impl.DefaultServerReconnectFilter;
+
 import java.util.HashMap;
 
 final class P_ServerConnectionFailManager
 {
-	private static ServerReconnectFilter DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultServerConnectionFailListener();
+	private static ServerReconnectFilter DEFAULT_CONNECTION_FAIL_LISTENER = new DefaultServerReconnectFilter();
 
 	final BleServer m_server;
 
@@ -52,31 +54,31 @@ final class P_ServerConnectionFailManager
 		m_connectionFailListener = listener;
 	}
 
-	public ServerConnectionFailListener getListener()
+	public ServerReconnectFilter getListener()
 	{
 		return m_connectionFailListener;
 	}
 
-	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ServerConnectionFailListener.Status status, final int gattStatus)
+	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ServerReconnectFilter.Status status, final int gattStatus)
 	{
 		getOrCreateEntry(nativeDevice.getAddress()).onNativeConnectFail(nativeDevice, status, gattStatus);
 	}
 
-	int/*__PE_Please*/ invokeCallback(final ServerConnectionFailListener.ConnectionFailEvent e)
+	int/*__PE_Please*/ invokeCallback(final ServerReconnectFilter.ConnectFailEvent e)
 	{
 		final int ePlease__PE_Please;
 
 		if( m_connectionFailListener != null )
 		{
-			final ServerConnectionFailListener.Please please = m_connectionFailListener.onEvent(e);
+			final ServerReconnectFilter.ConnectFailPlease please = m_connectionFailListener.onConnectFailed(e);
 
-			ePlease__PE_Please = please != null ? please.please() : NodeConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+			ePlease__PE_Please = please != null ? please.please() : ReconnectFilter.ConnectFailPlease.PE_Please_DO_NOT_RETRY;
 		}
 		else
 		{
-			final ServerConnectionFailListener.Please please = m_server.getManager().m_defaultConnectionFailListener_server.onEvent(e);
+			final ServerReconnectFilter.ConnectFailPlease please = m_server.getManager().m_defaultConnectionFailListener_server.onConnectFailed(e);
 
-			ePlease__PE_Please = please != null ? please.please() : ServerConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+			ePlease__PE_Please = please != null ? please.please() : ReconnectFilter.ConnectFailPlease.PE_Please_DO_NOT_RETRY;
 		}
 
 		return ePlease__PE_Please;

@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothGattServer;
 import android.content.Context;
 
 import com.idevicesinc.sweetblue.annotations.Immutable;
+import com.idevicesinc.sweetblue.impl.DefaultDeviceReconnectFilter;
+import com.idevicesinc.sweetblue.impl.DefaultServerReconnectFilter;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
@@ -16,7 +18,8 @@ import com.idevicesinc.sweetblue.utils.Utils_String;
  * An optional interface you can implement on {@link BleNodeConfig#reconnectFilter} to control reconnection behavior.
  *
  * @see BleNodeConfig#reconnectFilter
- * @see DefaultReconnectFilter
+ * @see DefaultDeviceReconnectFilter
+ * @see DefaultServerReconnectFilter
  */
 public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
 {
@@ -79,7 +82,7 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
     }
 
     /**
-     * Struct passed to {@link ReconnectFilter#onEvent(ConnectionLostEvent)} to aid in making a decision.
+     * Struct passed to {@link ReconnectFilter#onConnectionLost(ConnectionLostEvent)} to aid in making a decision.
      */
     @Immutable
     class ConnectionLostEvent extends Event
@@ -126,9 +129,9 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
         private Interval m_previousDelay;
 
         /**
-         * Returns the more detailed information about why the connection failed. This is passed to {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)}
-         * before the call is made to {@link ReconnectFilter#onEvent(ConnectionLostEvent)}. For the first call to {@link ReconnectFilter#onEvent(ConnectionLostEvent)},
-         * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link NodeConnectionFailListener.ConnectionFailEvent#isNull()} will return <code>true</code>.
+         * Returns the more detailed information about why the connection failed. This is passed to {@link DeviceReconnectFilter#onConnectFailed(ConnectFailEvent)}
+         * before the call is made to {@link ReconnectFilter#onConnectionLost(ConnectionLostEvent)}. For the first call to {@link ReconnectFilter#onConnectionLost(ConnectionLostEvent)},
+         * right after a spontaneous disconnect occurred, the connection didn't fail, so {@link ReconnectFilter.ConnectFailEvent#isNull()} will return <code>true</code>.
          */
         public ConnectFailEvent connectionFailEvent(){  return m_connectionFailEvent;  }
         private ConnectFailEvent m_connectionFailEvent;
@@ -174,7 +177,7 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
     }
 
     /**
-     * Return value for {@link ReconnectFilter#onEvent(ConnectionLostEvent)}. Use static constructor methods to create instances.
+     * Return value for {@link ReconnectFilter#onConnectionLost(ConnectionLostEvent)}. Use static constructor methods to create instances.
      */
     @Immutable
     class ConnectionLostPlease
@@ -211,7 +214,7 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
 
         /**
          * When {@link ConnectionLostEvent#type()} is either {@link Type#SHORT_TERM__SHOULD_TRY_AGAIN} or {@link Type#LONG_TERM__SHOULD_TRY_AGAIN},
-         * return this from {@link ReconnectFilter#onEvent(ConnectionLostEvent)} to instantly reconnect.
+         * return this from {@link ReconnectFilter#onConnectionLost(ConnectionLostEvent)} to instantly reconnect.
          */
         public static ConnectionLostPlease retryInstantly()
         {
@@ -219,7 +222,7 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
         }
 
         /**
-         * Return this from {@link ReconnectFilter#onEvent(ConnectionLostEvent)} to stop a reconnect attempt loop.
+         * Return this from {@link ReconnectFilter#onConnectionLost(ConnectionLostEvent)} to stop a reconnect attempt loop.
          * Note that {@link BleDevice#disconnect()} {@link BleServer#disconnect(String)} will also stop any ongoing reconnect loops.
          */
         public static ConnectionLostPlease stopRetrying()
@@ -228,7 +231,7 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
         }
 
         /**
-         * Return this from {@link ReconnectFilter#onEvent(ConnectionLostEvent)} to retry after the given amount of time.
+         * Return this from {@link ReconnectFilter#onConnectionLost(ConnectionLostEvent)} to retry after the given amount of time.
          */
         public static ConnectionLostPlease retryIn(Interval interval)
         {
@@ -292,8 +295,8 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
     }
 
     /**
-     * Abstract base class for structures passed to {@link ServerConnectionFailListener#onEvent(ServerConnectionFailListener.ConnectionFailEvent)}
-     * and {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)} to provide more info about how/why a connection failed.
+     * Abstract base class for structures passed to {@link ServerReconnectFilter#onConnectFailed(ConnectFailEvent)}
+     * and {@link DeviceReconnectFilter#onConnectFailed(ConnectFailEvent)} to provide more info about how/why a connection failed.
      */
     @Immutable
     abstract class ConnectFailEvent extends Event implements UsesCustomNull
@@ -319,7 +322,7 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
         /**
          * The gattStatus returned, if applicable, from native callbacks like {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
          * or {@link BluetoothGattCallback#onServicesDiscovered(BluetoothGatt, int)}.
-         * If not applicable, for example if {@link DeviceConnectionFailListener.ConnectionFailEvent#status()} is {@link DeviceConnectionFailListener.Status#EXPLICIT_DISCONNECT},
+         * If not applicable, for example if {@link DeviceReconnectFilter.ConnectFailEvent#status()} is {@link DeviceReconnectFilter.Status#EXPLICIT_DISCONNECT},
          * then this is set to {@link BleStatuses#GATT_STATUS_NOT_APPLICABLE}.
          * <br><br>
          * See {@link ReadWriteListener.ReadWriteEvent#gattStatus()} for more information about gatt status codes in general.
@@ -348,8 +351,8 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
     }
 
     /**
-     * Return value for {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)}
-     * and {@link ServerConnectionFailListener#onEvent(ServerConnectionFailListener.ConnectionFailEvent)}.
+     * Return value for {@link DeviceReconnectFilter#onConnectFailed(ConnectFailEvent)}
+     * and {@link ServerReconnectFilter#onConnectFailed(ConnectFailEvent)}.
      * Generally you will only return {@link #retry()} or {@link #doNotRetry()}, but there are more advanced options as well.
      */
     @Immutable
@@ -467,8 +470,8 @@ public interface ReconnectFilter<T extends ReconnectFilter.ConnectFailEvent>
         {
             this
                     (
-                            DefaultReconnectFilter.SHORT_TERM_ATTEMPT_RATE,
-                            DefaultReconnectFilter.SHORT_TERM_TIMEOUT
+                            SHORT_TERM_ATTEMPT_RATE,
+                            SHORT_TERM_TIMEOUT
                     );
         }
 

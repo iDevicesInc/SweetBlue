@@ -1,13 +1,18 @@
-package com.idevicesinc.sweetblue;
+package com.idevicesinc.sweetblue.impl;
 
+
+import com.idevicesinc.sweetblue.BleDevice;
+import com.idevicesinc.sweetblue.BleServer;
+import com.idevicesinc.sweetblue.ServerReconnectFilter;
+import com.idevicesinc.sweetblue.utils.Interval;
 
 /**
  * Default implementation of {@link ServerReconnectFilter} that attempts a certain number of retries. An instance of this class is set by default
  * for all new {@link BleServer} instances using {@link DefaultServerReconnectFilter#DEFAULT_CONNECTION_FAIL_RETRY_COUNT}.
- * Use {@link BleServer#setListener_ConnectionFail(ServerReconnectFilter)} to override the default behavior.
+ * Use {@link BleServer#setListener_ReconnectFilter(ServerReconnectFilter)} to override the default behavior.
  *
  * @see ServerReconnectFilter
- * @see BleServer#setListener_ConnectionFail(ServerReconnectFilter)
+ * @see BleServer#setListener_ReconnectFilter(ServerReconnectFilter)
  */
 public class DefaultServerReconnectFilter implements ServerReconnectFilter
 {
@@ -30,6 +35,8 @@ public class DefaultServerReconnectFilter implements ServerReconnectFilter
     private final int m_retryCount;
     private final int m_failCountBeforeUsingAutoConnect;
 
+    private final DefaultReconnectFilter m_defaultConnectionLostFilter;
+
 
 
     public DefaultServerReconnectFilter()
@@ -39,8 +46,21 @@ public class DefaultServerReconnectFilter implements ServerReconnectFilter
 
     public DefaultServerReconnectFilter(int retryCount, int failCountBeforeUsingAutoConnect)
     {
+        this(retryCount, failCountBeforeUsingAutoConnect, DefaultReconnectFilter.SHORT_TERM_ATTEMPT_RATE, DefaultReconnectFilter.LONG_TERM_ATTEMPT_RATE,
+                DefaultReconnectFilter.SHORT_TERM_TIMEOUT, DefaultReconnectFilter.LONG_TERM_TIMEOUT);
+    }
+
+    public DefaultServerReconnectFilter(final Interval reconnectRate__SHORT_TERM, final Interval reconnectRate__LONG_TERM, final Interval timeout__SHORT_TERM, final Interval timeout__LONG_TERM)
+    {
+        this(DEFAULT_CONNECTION_FAIL_RETRY_COUNT, DEFAULT_FAIL_COUNT_BEFORE_USING_AUTOCONNECT, reconnectRate__SHORT_TERM, reconnectRate__LONG_TERM, timeout__SHORT_TERM, timeout__LONG_TERM);
+    }
+
+    public DefaultServerReconnectFilter(int retryCount, int failCountBeforeUsingAutoConnect, final Interval reconnectRate__SHORT_TERM, final Interval reconnectRate__LONG_TERM, final Interval timeout__SHORT_TERM, final Interval timeout__LONG_TERM)
+    {
         m_retryCount = retryCount;
         m_failCountBeforeUsingAutoConnect = failCountBeforeUsingAutoConnect;
+
+        m_defaultConnectionLostFilter = new DefaultReconnectFilter(reconnectRate__SHORT_TERM, reconnectRate__LONG_TERM, timeout__SHORT_TERM, timeout__LONG_TERM);
     }
 
     public final int getRetryCount()
@@ -68,6 +88,6 @@ public class DefaultServerReconnectFilter implements ServerReconnectFilter
     @Override
     public ConnectionLostPlease onConnectionLost(ConnectionLostEvent event)
     {
-        return null;
+        return m_defaultConnectionLostFilter.onConnectionLost(event);
     }
 }
