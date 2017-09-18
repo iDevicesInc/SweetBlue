@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
+import com.idevicesinc.sweetblue.impl.DefaultDeviceReconnectFilter;
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.Util;
@@ -9,6 +10,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
+import java.util.concurrent.Semaphore;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -123,7 +127,7 @@ public class ConnectTest extends BaseBleUnitTest
                     }
                 }
             }
-        }, new DefaultDeviceConnectionFailListener(3, 3));
+        }, new DefaultDeviceReconnectFilter(3, 3));
 
         startTest();
     }
@@ -345,9 +349,9 @@ public class ConnectTest extends BaseBleUnitTest
                                 }
                             }
                         }
-                    }, new DefaultDeviceConnectionFailListener()
+                    }, new DefaultDeviceReconnectFilter()
                     {
-                        @Override public Please onEvent(ConnectionFailEvent e)
+                        @Override public ConnectFailPlease onConnectFailed(ConnectFailEvent e)
                         {
                             System.out.println("Connection fail event: " + e.toString());
                             if (e.failureCountSoFar() == 3)
@@ -361,7 +365,7 @@ public class ConnectTest extends BaseBleUnitTest
                                     release();
                                 }
                             }
-                            return super.onEvent(e);
+                            return super.onConnectFailed(e);
                         }
                     } );
 
@@ -403,9 +407,9 @@ public class ConnectTest extends BaseBleUnitTest
     {
         m_mgr.setConfig(config);
 
-        m_mgr.setListener_ConnectionFail(new DefaultDeviceConnectionFailListener()
+        m_mgr.setListener_ConnectionFail(new DefaultDeviceReconnectFilter()
         {
-            @Override public Please onEvent(ConnectionFailEvent e)
+            @Override public ConnectFailPlease onConnectFailed(ConnectFailEvent e)
             {
                 System.out.println("Connection fail event: " + e.toString());
                 if (e.failureCountSoFar() == 3)
@@ -419,7 +423,7 @@ public class ConnectTest extends BaseBleUnitTest
                         release();
                     }
                 }
-                return super.onEvent(e);
+                return super.onConnectFailed(e);
             }
         });
 
@@ -497,8 +501,8 @@ public class ConnectTest extends BaseBleUnitTest
                         @Override public void onEvent(StateEvent e)
                         {
                         }
-                    }, new DefaultDeviceConnectionFailListener() {
-                        @Override public Please onEvent(ConnectionFailEvent e)
+                    }, new DefaultDeviceReconnectFilter() {
+                        @Override public ConnectFailPlease onConnectFailed(ConnectFailEvent e)
                         {
                             System.out.println("Connection fail event: " + e.toString());
                             if (e.failureCountSoFar() == 3)
@@ -512,7 +516,7 @@ public class ConnectTest extends BaseBleUnitTest
                                     release();
                                 }
                             }
-                            return super.onEvent(e);
+                            return super.onConnectFailed(e);
                         }
                     });
                 }
@@ -569,8 +573,8 @@ public class ConnectTest extends BaseBleUnitTest
                         @Override public void onEvent(StateEvent e)
                         {
                         }
-                    }, new DefaultDeviceConnectionFailListener() {
-                        @Override public Please onEvent(ConnectionFailEvent e)
+                    }, new DefaultDeviceReconnectFilter() {
+                        @Override public ConnectFailPlease onConnectFailed(ConnectFailEvent e)
                         {
                             System.out.println("Connection fail event: " + e.toString());
                             if (e.failureCountSoFar() == 3)
@@ -584,7 +588,7 @@ public class ConnectTest extends BaseBleUnitTest
                                     release();
                                 }
                             }
-                            return super.onEvent(e);
+                            return super.onConnectFailed(e);
                         }
                     });
                 }
@@ -661,8 +665,8 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(init, null, new DefaultDeviceConnectionFailListener() {
-                        @Override public Please onEvent(ConnectionFailEvent e)
+                    m_device.connect(init, null, new DefaultDeviceReconnectFilter() {
+                        @Override public ConnectFailPlease onConnectFailed(ConnectFailEvent e)
                         {
                             assertTrue(e.status() == Status.INITIALIZATION_FAILED);
                             System.out.println("Connection fail event: " + e.toString());
@@ -674,7 +678,7 @@ public class ConnectTest extends BaseBleUnitTest
                             {
                                 release();
                             }
-                            return super.onEvent(e);
+                            return super.onConnectFailed(e);
                         }
                     });
                 }
@@ -739,8 +743,8 @@ public class ConnectTest extends BaseBleUnitTest
                 if (e.was(LifeCycle.DISCOVERED))
                 {
                     m_device = e.device();
-                    m_device.connect(init, null, new DefaultDeviceConnectionFailListener() {
-                        @Override public Please onEvent(ConnectionFailEvent e)
+                    m_device.connect(init, null, new DefaultDeviceReconnectFilter() {
+                        @Override public ConnectFailPlease onConnectFailed(ConnectFailEvent e)
                         {
                             System.out.println("Connection fail event: " + e.toString());
                             if (e.failureCountSoFar() == 3)
@@ -754,7 +758,7 @@ public class ConnectTest extends BaseBleUnitTest
                                     release();
                                 }
                             }
-                            return super.onEvent(e);
+                            return super.onConnectFailed(e);
                         }
                     });
                 }

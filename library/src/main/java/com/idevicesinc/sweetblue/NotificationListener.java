@@ -147,7 +147,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
     enum Type implements UsesCustomNull
     {
         /**
-         * As of now, only used for {@link DeviceConnectionFailListener.ConnectionFailEvent#txnFailReason()} in some cases.
+         * As of now, only used for {@link DeviceReconnectFilter.ConnectFailEvent#txnFailReason()} in some cases.
          */
         NULL,
 
@@ -385,7 +385,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
          */
         public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattService service()
         {
-            return device().getNativeService(serviceUuid());
+            return device().getNativeBleService(serviceUuid()).getService();
         }
 
         /**
@@ -393,7 +393,7 @@ public interface NotificationListener extends GenericListener_Void<NotificationL
          */
         public @Nullable(Nullable.Prevalence.NORMAL) BluetoothGattCharacteristic characteristic()
         {
-            return device().getNativeCharacteristic(serviceUuid(), charUuid());
+            return device().getNativeBleCharacteristic(serviceUuid(), charUuid()).getCharacteristic();
         }
 
         /**

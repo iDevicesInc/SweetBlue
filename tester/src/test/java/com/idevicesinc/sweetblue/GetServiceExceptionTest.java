@@ -29,20 +29,20 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
     @Test
     public void getServiceExceptionTest() throws Exception
     {
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_mgr.setConfig(m_config);
 
         final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "ImaBlowUp");
 
-        device.connect(new BleDevice.StateListener()
+        device.connect(new DeviceStateListener()
         {
             @Override
             public void onEvent(StateEvent e)
             {
                 if (e.didEnter(BleDeviceState.INITIALIZED))
                 {
-                    device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new BleDevice.ReadWriteListener()
+                    device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new ReadWriteListener()
                     {
                         @Override
                         public void onEvent(ReadWriteEvent e)
@@ -61,7 +61,7 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
     @Test
     public void getServiceFromDuplicateExceptionTest() throws Exception
     {
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
 
         m_config.gattLayerFactory = new P_GattLayerFactory()
         {
@@ -76,7 +76,7 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
 
         final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "ImaBlowUp");
 
-        device.connect(new BleDevice.StateListener()
+        device.connect(new DeviceStateListener()
         {
             @Override
             public void onEvent(StateEvent e)
@@ -96,7 +96,7 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
                         {
                             return Uuids.CHARACTERISTIC_USER_DESCRIPTION_DESCRIPTOR_UUID;
                         }
-                    }, new BleDevice.ReadWriteListener()
+                    }, new ReadWriteListener()
                     {
                         @Override
                         public void onEvent(ReadWriteEvent e)
@@ -134,7 +134,7 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
         @Override
         public BleServiceWrapper getBleService(UUID serviceUuid, P_Logger logger)
         {
-            return new BleServiceWrapper(BleManager.UhOhListener.UhOh.CONCURRENT_EXCEPTION);
+            return new BleServiceWrapper(UhOhListener.UhOh.CONCURRENT_EXCEPTION);
         }
     }
 
