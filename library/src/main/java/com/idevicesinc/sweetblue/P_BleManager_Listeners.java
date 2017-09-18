@@ -58,13 +58,7 @@ final class P_BleManager_Listeners
                 {
                     if (state == PE_TaskState.INTERRUPTED)
                     {
-                        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
-                        {
-                            @Override public void run()
-                            {
-                                m_mngr.tryPurgingStaleDevices(totalTimeExecuting);
-                            }
-                        });
+                        m_mngr.getPostManager().runOrPostToUpdateThread(() -> m_mngr.tryPurgingStaleDevices(totalTimeExecuting));
                     }
                     else
                     {
