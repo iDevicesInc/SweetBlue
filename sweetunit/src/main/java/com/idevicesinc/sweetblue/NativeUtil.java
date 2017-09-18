@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
-
 import java.util.UUID;
 
 /**
@@ -25,22 +24,6 @@ public final class NativeUtil
 
     private NativeUtil() {}
 
-
-
-    /**
-     * Sends a broadcast for a bluetooth state change, such as {@link BluetoothAdapter#STATE_ON}, {@link BluetoothAdapter#STATE_OFF}, etc.
-     *
-     * @deprecated This is deprecated in favor of {@link #sendBluetoothStateChange(BleManager, int, int)}, as some build servers have issues with sending
-     * broadcasts.
-     */
-    @Deprecated
-    public static void sendBluetoothStateBroadcast(Context context, int previousState, int newState)
-    {
-        Intent intent = new Intent(BluetoothAdapter.ACTION_STATE_CHANGED);
-        intent.putExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE, previousState);
-        intent.putExtra(BluetoothAdapter.EXTRA_STATE, newState);
-        context.sendBroadcast(intent);
-    }
 
     /**
      * Sends a bluetooth state change, such as {@link BluetoothAdapter#STATE_ON}, {@link BluetoothAdapter#STATE_OFF}, etc.
@@ -66,26 +49,22 @@ public final class NativeUtil
      */
     public static void bondSuccess(final BleDevice device, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() ->
         {
-            @Override
-            public void run()
+            int oldState;
+            if (device.is(BleDeviceState.UNBONDED))
             {
-                int oldState;
-                if (device.is(BleDeviceState.UNBONDED))
-                {
-                    oldState = BluetoothDevice.BOND_NONE;
-                }
-                else if (device.is(BleDeviceState.BONDING))
-                {
-                    oldState = BluetoothDevice.BOND_BONDING;
-                }
-                else
-                {
-                    oldState = BluetoothDevice.BOND_BONDED;
-                }
-                device.getManager().m_listeners.onNativeBondStateChanged(device.getManager().m_config.newDeviceLayer(device), oldState, BluetoothDevice.BOND_BONDED, 0);
+                oldState = BluetoothDevice.BOND_NONE;
             }
+            else if (device.is(BleDeviceState.BONDING))
+            {
+                oldState = BluetoothDevice.BOND_BONDING;
+            }
+            else
+            {
+                oldState = BluetoothDevice.BOND_BONDED;
+            }
+            device.getManager().m_listeners.onNativeBondStateChanged(device.getManager().m_config.newDeviceLayer(device), oldState, BluetoothDevice.BOND_BONDED, 0);
         }, delay.millis());
     }
 
@@ -103,26 +82,22 @@ public final class NativeUtil
      */
     public static void bondFail(final BleDevice device, final int failReason, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() ->
         {
-            @Override
-            public void run()
+            int oldState;
+            if (device.is(BleDeviceState.UNBONDED))
             {
-                int oldState;
-                if (device.is(BleDeviceState.UNBONDED))
-                {
-                    oldState = BluetoothDevice.BOND_NONE;
-                }
-                else if (device.is(BleDeviceState.BONDING))
-                {
-                    oldState = BluetoothDevice.BOND_BONDING;
-                }
-                else
-                {
-                    oldState = BluetoothDevice.BOND_BONDED;
-                }
-                device.getManager().m_listeners.onNativeBondStateChanged(device.getManager().m_config.newDeviceLayer(device), oldState, BluetoothDevice.BOND_NONE, failReason);
+                oldState = BluetoothDevice.BOND_NONE;
             }
+            else if (device.is(BleDeviceState.BONDING))
+            {
+                oldState = BluetoothDevice.BOND_BONDING;
+            }
+            else
+            {
+                oldState = BluetoothDevice.BOND_BONDED;
+            }
+            device.getManager().m_listeners.onNativeBondStateChanged(device.getManager().m_config.newDeviceLayer(device), oldState, BluetoothDevice.BOND_NONE, failReason);
         }, delay.millis());
     }
 
@@ -139,13 +114,7 @@ public final class NativeUtil
      */
     public static void readError(final BleDevice device, final BluetoothGattCharacteristic characteristic, final int gattStatus, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onCharacteristicRead(null, characteristic, gattStatus);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onCharacteristicRead(null, characteristic, gattStatus), delay.millis());
     }
 
     /**
@@ -161,13 +130,10 @@ public final class NativeUtil
      */
     public static void readSuccess(final BleDevice device, final BluetoothGattCharacteristic characteristic, final byte[] data, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() ->
         {
-            @Override public void run()
-            {
-                characteristic.setValue(data);
-                device.m_listeners.onCharacteristicRead(null, characteristic, BleStatuses.GATT_SUCCESS);
-            }
+            characteristic.setValue(data);
+            device.m_listeners.onCharacteristicRead(null, characteristic, BleStatuses.GATT_SUCCESS);
         }, delay.millis());
     }
 
@@ -184,13 +150,10 @@ public final class NativeUtil
      */
     public static void readDescSuccess(final BleDevice device, final BluetoothGattDescriptor descriptor, final byte[] data, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() ->
         {
-            @Override public void run()
-            {
-                descriptor.setValue(data);
-                device.m_listeners.onDescriptorRead(null, descriptor, BleStatuses.GATT_SUCCESS);
-            }
+            descriptor.setValue(data);
+            device.m_listeners.onDescriptorRead(null, descriptor, BleStatuses.GATT_SUCCESS);
         }, delay.millis());
     }
 
@@ -207,13 +170,7 @@ public final class NativeUtil
      */
     public static void readDescError(final BleDevice device, final BluetoothGattDescriptor descriptor, final int gattStatus, long delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onDescriptorRead(null, descriptor, gattStatus);
-            }
-        }, delay);
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onDescriptorRead(null, descriptor, gattStatus), delay);
     }
 
     /**
@@ -229,13 +186,7 @@ public final class NativeUtil
      */
     public static void writeDescSuccess(final BleDevice device, final BluetoothGattDescriptor descriptor, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onDescriptorWrite(null, descriptor, BleStatuses.GATT_SUCCESS);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onDescriptorWrite(null, descriptor, BleStatuses.GATT_SUCCESS), delay.millis());
     }
 
     /**
@@ -251,13 +202,7 @@ public final class NativeUtil
      */
     public static void writeDescError(final BleDevice device, final BluetoothGattDescriptor descriptor, final int gattStatus, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onDescriptorWrite(null, descriptor, gattStatus);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onDescriptorWrite(null, descriptor, gattStatus), delay.millis());
     }
 
     /**
@@ -273,13 +218,7 @@ public final class NativeUtil
      */
     public static void writeSuccess(final BleDevice device, final BluetoothGattCharacteristic characteristic, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onCharacteristicWrite(null, characteristic, BleStatuses.GATT_SUCCESS);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onCharacteristicWrite(null, characteristic, BleStatuses.GATT_SUCCESS), delay.millis());
     }
 
     /**
@@ -295,13 +234,7 @@ public final class NativeUtil
      */
     public static void writeError(final BleDevice device, final BluetoothGattCharacteristic characteristic, final int gattStatus, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onCharacteristicWrite(null, characteristic, gattStatus);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onCharacteristicWrite(null, characteristic, gattStatus), delay.millis());
     }
 
     /**
@@ -317,13 +250,7 @@ public final class NativeUtil
      */
     public static void requestMTUSuccess(final BleDevice device, final int mtu, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onMtuChanged(null, mtu, BleStatuses.GATT_SUCCESS);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onMtuChanged(null, mtu, BleStatuses.GATT_SUCCESS), delay.millis());
     }
 
     /**
@@ -339,13 +266,7 @@ public final class NativeUtil
      */
     public static void requestMTUError(final BleDevice device, final int mtu, final int gattStatus, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onMtuChanged(null, mtu, gattStatus);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onMtuChanged(null, mtu, gattStatus), delay.millis());
     }
 
     /**
@@ -361,13 +282,7 @@ public final class NativeUtil
      */
     public static void remoteRssiSuccess(final BleDevice device, final int rssi, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onReadRemoteRssi(null, rssi, BleStatuses.GATT_SUCCESS);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onReadRemoteRssi(null, rssi, BleStatuses.GATT_SUCCESS), delay.millis());
     }
 
     /**
@@ -383,13 +298,7 @@ public final class NativeUtil
      */
     public static void remoteRssiError(final BleDevice device, final int gattStatus, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override public void run()
-            {
-                device.m_listeners.onReadRemoteRssi(null, device.getRssi(), gattStatus);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onReadRemoteRssi(null, device.getRssi(), gattStatus), delay.millis());
     }
 
     /**
@@ -405,13 +314,10 @@ public final class NativeUtil
      */
     public static void sendNotification(final BleDevice device, final BluetoothGattCharacteristic characteristic, final byte[] data, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() ->
         {
-            @Override public void run()
-            {
-                characteristic.setValue(data);
-                device.m_listeners.onCharacteristicChanged(null, characteristic);
-            }
+            characteristic.setValue(data);
+            device.m_listeners.onCharacteristicChanged(null, characteristic);
         }, delay.millis());
     }
 
@@ -422,14 +328,7 @@ public final class NativeUtil
 
     public static void failDiscoverServices(final BleDevice device, final int gattStatus, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                device.m_listeners.onServicesDiscovered(null, gattStatus);
-            }
-        }, delay.millis());
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() -> device.m_listeners.onServicesDiscovered(null, gattStatus), delay.millis());
     }
 
     /**
@@ -462,17 +361,13 @@ public final class NativeUtil
      */
     public static void setToConnecting(final BleDevice device, final int gattStatus, final boolean updateDeviceState, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() ->
         {
-            @Override
-            public void run()
+            if (updateDeviceState)
             {
-                if (updateDeviceState)
-                {
-                    ((UnitTestManagerLayer) device.layerManager().getManagerLayer()).updateDeviceState(device, BluetoothGatt.STATE_CONNECTING);
-                }
-                device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_CONNECTING);
+                ((UnitTestManagerLayer) device.layerManager().getManagerLayer()).updateDeviceState(device, BluetoothGatt.STATE_CONNECTING);
             }
+            device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_CONNECTING);
         }, delay.millis());
     }
 
@@ -506,17 +401,13 @@ public final class NativeUtil
      */
     public static void setToConnected(final BleDevice device, final int gattStatus, final boolean updateDeviceState, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() ->
         {
-            @Override
-            public void run()
+            if (updateDeviceState)
             {
-                if (updateDeviceState)
-                {
-                    ((UnitTestManagerLayer) device.layerManager().getManagerLayer()).updateDeviceState(device, BluetoothGatt.STATE_CONNECTED);
-                }
-                device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_CONNECTED);
+                ((UnitTestManagerLayer) device.layerManager().getManagerLayer()).updateDeviceState(device, BluetoothGatt.STATE_CONNECTED);
             }
+            device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_CONNECTED);
         }, delay.millis());
     }
 
@@ -550,16 +441,13 @@ public final class NativeUtil
      */
     public static void setToDisconnected(final BleDevice device, final int gattStatus, final boolean updateDeviceState, Interval delay)
     {
-        device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
+        device.getManager().getPostManager().postToUpdateThreadDelayed(() ->
         {
-            @Override public void run()
+            if (updateDeviceState)
             {
-                if (updateDeviceState)
-                {
-                    ((UnitTestManagerLayer) device.layerManager().getManagerLayer()).updateDeviceState(device, BluetoothGatt.STATE_DISCONNECTED);
-                }
-                device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_DISCONNECTED);
+                ((UnitTestManagerLayer) device.layerManager().getManagerLayer()).updateDeviceState(device, BluetoothGatt.STATE_DISCONNECTED);
             }
+            device.m_listeners.onConnectionStateChange(null, gattStatus, BluetoothGatt.STATE_DISCONNECTED);
         }, delay.millis());
     }
 
