@@ -7,6 +7,7 @@ import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Util;
 import com.idevicesinc.sweetblue.utils.Uuids;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -61,7 +62,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e1 ->
                         {
@@ -102,7 +104,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e1 ->
                         {
@@ -140,26 +143,24 @@ public class NotifyTest extends BaseBleUnitTest
 
         device.connect(e ->
         {
-            if (e.didEnter(BleDeviceState.INITIALIZED))
+            assertTrue(e.wasSuccess());
+            BleNotify.Builder builder = new BleNotify.Builder(mTestService, mTestChar).setReadWriteListener(e1 ->
             {
-                BleNotify.Builder builder = new BleNotify.Builder(mTestService, mTestChar).setReadWriteListener(e1 ->
+                if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
                 {
-                    if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
-                    {
-                        assertTrue(e1.wasSuccess());
-                        notifies[0] = true;
-                    }
-                });
-                builder.next().setCharacteristicUUID(mTest2Char).setReadWriteListener(e1 ->
+                    assertTrue(e1.wasSuccess());
+                    notifies[0] = true;
+                }
+            });
+            builder.next().setCharacteristicUUID(mTest2Char).setReadWriteListener(e1 ->
+            {
+                if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
                 {
-                    if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
-                    {
-                        assertTrue(e1.wasSuccess());
-                        succeed();
-                    }
-                });
-                device.enableNotifies(builder.build());
-            }
+                    assertTrue(e1.wasSuccess());
+                    succeed();
+                }
+            });
+            device.enableNotifies(builder.build());
         });
 
         startTest();
@@ -181,7 +182,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         final BleNotify notify = new BleNotify(mTestChar);
                         notify.setReadWriteListener(e1 ->
@@ -229,7 +231,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         final BleNotify notify = new BleNotify(mTestChar);
                         notify.setReadWriteListener(e1 ->
@@ -282,7 +285,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         final BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e1 ->
                         {
@@ -346,7 +350,8 @@ public class NotifyTest extends BaseBleUnitTest
                 });
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e12 ->
                         {
@@ -389,7 +394,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e1 ->
                         {
@@ -433,7 +439,8 @@ public class NotifyTest extends BaseBleUnitTest
             protected void start(BleDevice device)
             {
                 BleNotify notify = new BleNotify(mTestService, mTestChar)
-                        .setReadWriteListener((e) -> {
+                        .setReadWriteListener((e) ->
+                        {
                             assertTrue(e.wasSuccess());
                             succeed();
                         });
@@ -447,11 +454,13 @@ public class NotifyTest extends BaseBleUnitTest
 
         final BluetoothGattCharacteristic ch = device.getNativeCharacteristic(mTestService, mTestChar);
 
-        device.setListener_Notification((e) -> {
+        device.setListener_Notification((e) ->
+        {
             if (e.type() == NotificationListener.Type.NOTIFICATION)
             {
                 assertTrue(Arrays.equals(e.data(), first));
-                device.pushListener_Notification((e1) -> {
+                device.pushListener_Notification((e1) ->
+                {
                     assertTrue(Arrays.equals(e1.data(), second));
                     succeed();
                 });
@@ -459,11 +468,10 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        device.connect((e) -> {
-            if (e.didEnter(BleDeviceState.INITIALIZED))
-            {
-                NativeUtil.sendNotification(device, ch, first);
-            }
+        device.connect((e) ->
+        {
+            assertTrue(e.wasSuccess());
+            NativeUtil.sendNotification(device, ch, first);
         });
 
         startTest();

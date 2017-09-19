@@ -2,13 +2,17 @@ package com.idevicesinc.sweetblue;
 
 
 import android.bluetooth.BluetoothGattCharacteristic;
+
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Util;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
 import java.util.UUID;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -30,9 +34,9 @@ public class ReadTest extends BaseBleUnitTest
 
     private GattDatabase db =
             new GattDatabase().addService(firstServiceUuid).addCharacteristic(firstCharUuid).setProperties().readWrite().setPermissions().readWrite().completeService()
-            .addService(secondSeviceUuid).addCharacteristic(secondCharUuid).setProperties().readWrite().setPermissions().readWrite().completeService()
-            .addService(thirdServiceUuid).addCharacteristic(thirdCharUuid).setProperties().readWrite().setPermissions().readWrite().completeChar()
-            .addCharacteristic(fourthCharUuid).setProperties().readWrite().setPermissions().readWrite().completeService();
+                    .addService(secondSeviceUuid).addCharacteristic(secondCharUuid).setProperties().readWrite().setPermissions().readWrite().completeService()
+                    .addService(thirdServiceUuid).addCharacteristic(thirdCharUuid).setProperties().readWrite().setPermissions().readWrite().completeChar()
+                    .addCharacteristic(fourthCharUuid).setProperties().readWrite().setPermissions().readWrite().completeService();
 
 
     @Test
@@ -46,16 +50,14 @@ public class ReadTest extends BaseBleUnitTest
 
         device.connect(e ->
         {
-            if (e.didEnter(BleDeviceState.INITIALIZED))
+            assertTrue(e.wasSuccess());
+            BleRead read = new BleRead(firstServiceUuid, firstCharUuid).setReadWriteListener(r ->
             {
-                BleRead read = new BleRead(firstServiceUuid, firstCharUuid).setReadWriteListener(r ->
-                {
-                    assertTrue(r.wasSuccess());
-                    assertNotNull(r.data());
-                    succeed();
-                });
-                device.read(read);
-            }
+                assertTrue(r.wasSuccess());
+                assertNotNull(r.data());
+                succeed();
+            });
+            device.read(read);
         });
 
         startTest();
@@ -74,33 +76,31 @@ public class ReadTest extends BaseBleUnitTest
 
         device.connect(e ->
         {
-            if (e.didEnter(BleDeviceState.INITIALIZED))
+            assertTrue(e.wasSuccess());
+            BleRead.Builder builder = new BleRead.Builder(firstServiceUuid, firstCharUuid);
+            builder.setReadWriteListener(r ->
             {
-                BleRead.Builder builder = new BleRead.Builder(firstServiceUuid, firstCharUuid);
-                builder.setReadWriteListener(r ->
+                assertTrue(r.status().name(), r.wasSuccess());
+                assertNotNull(r.data());
+                if (r.isFor(firstCharUuid))
+                    reads[0] = true;
+                else if (r.isFor(secondCharUuid))
+                    reads[1] = true;
+                else if (r.isFor(thirdCharUuid))
+                    reads[2] = true;
+                else if (r.isFor(fourthCharUuid))
                 {
-                    assertTrue(r.status().name(), r.wasSuccess());
-                    assertNotNull(r.data());
-                    if (r.isFor(firstCharUuid))
-                        reads[0] = true;
-                    else if (r.isFor(secondCharUuid))
-                        reads[1] = true;
-                    else if (r.isFor(thirdCharUuid))
-                        reads[2] = true;
-                    else if (r.isFor(fourthCharUuid))
-                    {
-                        assertTrue(reads[0] && reads[1] && reads[2]);
-                        succeed();
-                    }
-                    else
-                        // We should never get to this option
-                        assertTrue(false);
-                })
-                        .next().setServiceUUID(secondSeviceUuid).setCharacteristicUUID(secondCharUuid)
-                        .next().setServiceUUID(thirdServiceUuid).setCharacteristicUUID(thirdCharUuid)
-                        .next().setCharacteristicUUID(fourthCharUuid);
-                device.readMany(builder.build());
-            }
+                    assertTrue(reads[0] && reads[1] && reads[2]);
+                    succeed();
+                }
+                else
+                    // We should never get to this option
+                    assertTrue(false);
+            })
+                    .next().setServiceUUID(secondSeviceUuid).setCharacteristicUUID(secondCharUuid)
+                    .next().setServiceUUID(thirdServiceUuid).setCharacteristicUUID(thirdCharUuid)
+                    .next().setCharacteristicUUID(fourthCharUuid);
+            device.readMany(builder.build());
         });
 
         startTest();
@@ -117,20 +117,21 @@ public class ReadTest extends BaseBleUnitTest
 
         final BleRead read = new BleRead(firstServiceUuid, firstCharUuid);
 
-        device.setListener_ReadWrite((e) -> {
+        device.setListener_ReadWrite((e) ->
+        {
             assertTrue(e.wasSuccess());
-            device.pushListener_ReadWrite((e1) -> {
+            device.pushListener_ReadWrite((e1) ->
+            {
                 assertTrue(e.wasSuccess());
                 succeed();
             });
             device.read(read);
         });
 
-        device.connect(e -> {
-            if (e.didEnter(BleDeviceState.INITIALIZED))
-            {
-                device.read(read);
-            }
+        device.connect(e ->
+        {
+            assertTrue(e.wasSuccess());
+            device.read(read);
         });
 
         startTest();

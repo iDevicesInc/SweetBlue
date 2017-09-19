@@ -5,7 +5,6 @@ import static com.idevicesinc.sweetblue.BleDeviceState.BONDED;
 import static com.idevicesinc.sweetblue.BleDeviceState.BONDING;
 import static com.idevicesinc.sweetblue.BleDeviceState.UNBONDED;
 import com.idevicesinc.sweetblue.BondListener.Status;
-import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.State;
@@ -242,11 +241,11 @@ final class P_BondManager
 
 	final boolean bondIfNeeded(final UUID charUuid, final BondFilter.CharacteristicEventType type)
 	{
-		final BleDeviceConfig.BondFilter bondFilter = m_device.conf_device().bondFilter != null ? m_device.conf_device().bondFilter : m_device.conf_mngr().bondFilter;
+		final BondFilter bondFilter = m_device.conf_device().bondFilter != null ? m_device.conf_device().bondFilter : m_device.conf_mngr().bondFilter;
 		
 		if( bondFilter == null )  return false;
 		
-		final BondFilter.CharacteristicEvent event = new BleDeviceConfig.BondFilter.CharacteristicEvent(m_device, charUuid, type);
+		final BondFilter.CharacteristicEvent event = new BondFilter.CharacteristicEvent(m_device, charUuid, type);
 		
 		final BondFilter.Please please = bondFilter.onEvent(event);
 		

@@ -28,31 +28,27 @@ public class GattRefreshTest extends BaseBleUnitTest
         final Pointer<Boolean> refreshingGatt = new Pointer<>(false);
 
 
-        m_mgr.setListener_Discovery(new DiscoveryListener()
+        m_mgr.setListener_Discovery(e ->
         {
-            @Override public void onEvent(DiscoveryEvent e)
+            if (e.was(DiscoveryListener.LifeCycle.DISCOVERED) || e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
             {
-                if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
+                final BleDevice device = e.device();
+                device.setListener_State(e1 ->
                 {
-                    e.device().connect(new DeviceStateListener()
+                    if (e1.didEnter(BleDeviceState.SERVICES_DISCOVERED))
                     {
-                        @Override public void onEvent(StateEvent e)
+                        if (refreshingGatt.value)
                         {
-                            if (e.didEnter(BleDeviceState.SERVICES_DISCOVERED))
-                            {
-                                if (refreshingGatt.value)
-                                {
-                                    succeed();
-                                }
-                            }
-                            if (e.didEnter(BleDeviceState.INITIALIZED))
-                            {
-                                refreshingGatt.value = true;
-                                e.device().refreshGattDatabase();
-                            }
+                            succeed();
                         }
-                    });
-                }
+                    }
+                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    {
+                        refreshingGatt.value = true;
+                        e1.device().refreshGattDatabase();
+                    }
+                });
+                device.connect();
             }
         });
 

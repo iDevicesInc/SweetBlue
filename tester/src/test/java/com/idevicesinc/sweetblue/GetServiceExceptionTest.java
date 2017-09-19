@@ -9,6 +9,8 @@ import org.robolectric.annotation.Config;
 import java.util.Arrays;
 import java.util.UUID;
 import com.idevicesinc.sweetblue.utils.GattDatabase;
+
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -35,24 +37,15 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
 
         final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "ImaBlowUp");
 
-        device.connect(new DeviceStateListener()
+        device.connect(e ->
         {
-            @Override
-            public void onEvent(StateEvent e)
+            assertTrue(e.wasSuccess());
+            BleRead read = new BleRead(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL).setReadWriteListener(e1 ->
             {
-                if (e.didEnter(BleDeviceState.INITIALIZED))
-                {
-                    device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new ReadWriteListener()
-                    {
-                        @Override
-                        public void onEvent(ReadWriteEvent e)
-                        {
-                            assertTrue(e.status() == Status.GATT_CONCURRENT_EXCEPTION);
-                            succeed();
-                        }
-                    });
-                }
-            }
+                assertTrue(e1.status() == ReadWriteListener.Status.GATT_CONCURRENT_EXCEPTION);
+                succeed();
+            });
+            device.read(read);
         });
 
         startTest();
@@ -63,50 +56,34 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
     {
         m_config.loggingOptions = LogOptions.ON;
 
-        m_config.gattLayerFactory = new P_GattLayerFactory()
-        {
-            @Override
-            public P_GattLayer newInstance(BleDevice device)
-            {
-                return new ConcurrentGatt(device, db2);
-            }
-        };
+        m_config.gattLayerFactory = device -> new ConcurrentGatt(device, db2);
 
         m_mgr.setConfig(m_config);
 
         final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "ImaBlowUp");
 
-        device.connect(new DeviceStateListener()
+        device.connect(e ->
         {
-            @Override
-            public void onEvent(StateEvent e)
+            assertTrue(e.wasSuccess());
+            BleRead read = new BleRead(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL).setDescriptorFilter(new DescriptorFilter()
             {
-                if (e.didEnter(BleDeviceState.INITIALIZED))
+                @Override
+                public Please onEvent(DescriptorEvent event)
                 {
-                    device.read(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, new DescriptorFilter()
-                    {
-                        @Override
-                        public Please onEvent(DescriptorEvent event)
-                        {
-                            return Please.acceptIf(Arrays.equals(event.value(), new byte[] { 0x08 }));
-                        }
-
-                        @Override
-                        public UUID descriptorUuid()
-                        {
-                            return Uuids.CHARACTERISTIC_USER_DESCRIPTION_DESCRIPTOR_UUID;
-                        }
-                    }, new ReadWriteListener()
-                    {
-                        @Override
-                        public void onEvent(ReadWriteEvent e)
-                        {
-                            assertTrue(e.status() == Status.GATT_CONCURRENT_EXCEPTION);
-                            succeed();
-                        }
-                    });
+                    return Please.acceptIf(Arrays.equals(event.value(), new byte[] { 0x08 }));
                 }
-            }
+
+                @Override
+                public UUID descriptorUuid()
+                {
+                    return Uuids.CHARACTERISTIC_USER_DESCRIPTION_DESCRIPTOR_UUID;
+                }
+            }).setReadWriteListener(e1 ->
+            {
+                assertTrue(e1.status() == ReadWriteListener.Status.GATT_CONCURRENT_EXCEPTION);
+                succeed();
+            });
+            device.read(read);
         });
 
         startTest();
