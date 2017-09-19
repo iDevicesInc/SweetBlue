@@ -634,7 +634,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         m_config.runOnMainThread = false;
         m_config.loggingOptions = LogOptions.ON;
-        m_config.gattLayerFactory = device -> new UnitTestGatt(device);
+        m_config.gattLayerFactory = UnitTestGatt::new;
 
         doDisconnectDuringConnectTest(m_config, false);
 

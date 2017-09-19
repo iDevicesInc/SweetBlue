@@ -31,6 +31,16 @@ public class BleRead extends BleOp<BleRead>
         super(characteristicUuid);
     }
 
+    /**
+     * Constructor which creates a new {@link BleRead} from the one given. This will only copy over the service, characteristic, and descriptor Uuids. It will
+     * NOT copy over any listeners, or filters.
+     */
+    public BleRead(BleRead read)
+    {
+        super(read.serviceUuid, read.charUuid);
+        descriptorUuid = read.descriptorUuid;
+    }
+
     @Override
     public final boolean isValid()
     {

@@ -52,6 +52,18 @@ public final class BleWrite extends BleOp<BleWrite>
         this.bigEndian = bigEndian;
     }
 
+    /**
+     * Constructor which creates a new {@link BleWrite} from an existing one. This only copies over the service, characteristic, and descriptor UUids, the writeType,
+     * and if it's bigEndian or not. This does NOT copy over any listeners or filters.
+     */
+    public BleWrite(BleWrite write)
+    {
+        super(write.serviceUuid, write.charUuid);
+        descriptorUuid = write.descriptorUuid;
+        writeType = write.writeType;
+        bigEndian = write.bigEndian;
+    }
+
 
     @Override
     public final boolean isValid()
