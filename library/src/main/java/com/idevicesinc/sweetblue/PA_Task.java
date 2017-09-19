@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-abstract class PA_Task
+abstract class PA_Task implements Comparable<PA_Task>
 {
 	static interface I_StateListener
 	{
@@ -499,5 +499,15 @@ abstract class PA_Task
 	public boolean isExplicit()
 	{
 		return false;
+	}
+
+	// Utilize the isMoreImportantThan call to decide how these tasks should be ordered
+	public int compareTo(PA_Task t)
+	{
+		if (isMoreImportantThan(t))
+			return 1;
+		if (t.isMoreImportantThan(this))
+			return -1;
+		return 0;
 	}
 }
