@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.concurrent.Semaphore;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -76,7 +76,7 @@ public class BondTest extends BaseBleUnitTest
             }
         };
 
-        m_config.bondFilter = new BleDeviceConfig.BondFilter()
+        m_config.bondFilter = new BondFilter()
         {
             @Override
             public Please onEvent(StateChangeEvent e)

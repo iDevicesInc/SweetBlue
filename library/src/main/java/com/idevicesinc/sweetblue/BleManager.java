@@ -721,11 +721,11 @@ public final class BleManager
 	/**
 	 * Convenience method to handle connection fail events at the manager level. The listener provided
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
-	 * {@link BleDevice#setListener_ConnectionFail(DeviceReconnectFilter)}. This is unlike the behavior
+	 * {@link BleDevice#setListener_Reconnect(DeviceReconnectFilter)}. This is unlike the behavior
 	 * behind {@link #setListener_DeviceState(DeviceStateListener)} because
 	 * {@link DeviceReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)} requires a return value.
 	 *
-	 * @see BleDevice#setListener_ConnectionFail(DeviceReconnectFilter)
+	 * @see BleDevice#setListener_Reconnect(DeviceReconnectFilter)
 	 */
 	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
 	{

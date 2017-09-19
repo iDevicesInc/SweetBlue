@@ -9,8 +9,7 @@ import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.DeviceReconnectFilter.Status;
 import com.idevicesinc.sweetblue.DeviceReconnectFilter.Timing;
 import com.idevicesinc.sweetblue.DeviceReconnectFilter.ConnectFailEvent;
-import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
-import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
+import com.idevicesinc.sweetblue.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.P_Task_Bond.E_TransactionLockBehavior;
 import com.idevicesinc.sweetblue.annotations.Advanced;
@@ -42,6 +41,8 @@ import com.idevicesinc.sweetblue.utils.Utils_Rssi;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_State;
 import com.idevicesinc.sweetblue.utils.Uuids;
+
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -116,6 +117,9 @@ public final class BleDevice extends BleNode
 
     private final Stack<ReadWriteListener> m_readWriteListenerStack;
     private final Stack<NotificationListener> m_notificationListenerStack;
+    private final Stack<DeviceConnectListener> m_connectListenerStack;
+    WeakReference<DeviceConnectListener> m_ephemeralConnectListener;
+
 
     private TimeEstimator m_writeTimeEstimator;
     private TimeEstimator m_readTimeEstimator;
@@ -162,6 +166,7 @@ public final class BleDevice extends BleNode
 
         m_readWriteListenerStack = new Stack<>();
         m_notificationListenerStack = new Stack<>();
+        m_connectListenerStack = new Stack<>();
 
         m_deviceLayer = device_native;
 
@@ -482,9 +487,64 @@ public final class BleDevice extends BleNode
      * Returns the current {@link DeviceStateListener} being used (the top of the stack). This can return <code>null</code> if there
      * are no listeners in the stack.
      */
-    public final @Nullable(Prevalence.NORMAL) DeviceStateListener getStateListener()
+    public final @Nullable(Prevalence.NORMAL) DeviceStateListener getListener_State()
     {
         return stateTracker_main().getListener();
+    }
+
+    /**
+     * Set a listener here to be notified whenever this device connects, or gets disconnected. NOTE: This will clear the stack of {@link DeviceStateListener}s, and set
+     * the one provided here to be the only one in the stack.
+     *
+     * If the provided listener is <code>null</code>, then the stack of listeners will be cleared.
+     */
+    public final void setListener_Connect(@Nullable(Prevalence.NORMAL) DeviceConnectListener listener)
+    {
+        if (isNull()) return;
+
+        m_connectListenerStack.clear();
+        if (listener != null)
+            m_connectListenerStack.push(listener);
+    }
+
+    /**
+     * Push a new {@link DeviceConnectListener} onto the stack. This new listener will be the one events are dispatched to, until
+     * {@link #popListener_State()} is called.
+     * This method will early-out if the provided listener is <code>null</code>
+     */
+    public final void pushListener_Connect(@Nullable(Prevalence.NEVER) DeviceConnectListener listener)
+    {
+        if (isNull()) return;
+
+        if (listener == null) return;
+
+        m_connectListenerStack.push(listener);
+    }
+
+    /**
+     * Pop the current {@link DeviceConnectListener} out of the stack of listeners.
+     * Returns <code>true</code> if a listener was actually removed from the stack (it will only be false if the stack is already empty).
+     */
+    public final boolean popListener_Connect()
+    {
+        if (isNull()) return false;
+
+        if (m_connectListenerStack.empty()) return false;
+
+        m_connectListenerStack.pop();
+
+        return true;
+    }
+
+    /**
+     * Returns the current {@link DeviceConnectListener} being used (the top of the stack). This can return <code>null</code> if there
+     * are no listeners in the stack.
+     */
+    public final @Nullable(Prevalence.NORMAL) DeviceConnectListener getListener_Connect()
+    {
+        if (m_connectListenerStack.empty()) return null;
+
+        return m_connectListenerStack.peek();
     }
 
     /**
@@ -492,7 +552,7 @@ public final class BleDevice extends BleNode
      * have control over retry behavior. NOTE: This will clear the stack of {@link DeviceReconnectFilter}s, and set
      * the one provided here to be the only one in the stack. If the provided listener is <code>null</code>, then the stack of listeners will be cleared.
      */
-    public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
+    public final void setListener_Reconnect(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
     {
         if (isNull()) return;
 
@@ -671,7 +731,7 @@ public final class BleDevice extends BleNode
 
     /**
      * Returns the connection failure retry count during a retry loop. Basic example use case is to provide a callback to
-     * {@link #setListener_ConnectionFail(DeviceReconnectFilter)} and update your application's UI with this method's return value downstream of your
+     * {@link #setListener_Reconnect(DeviceReconnectFilter)} and update your application's UI with this method's return value downstream of your
      * {@link DeviceReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)} override.
      */
     public final int getConnectionRetryCount()
@@ -1675,7 +1735,7 @@ public final class BleDevice extends BleNode
      * BLE so take it with a grain of salt because it has been directly observed
      * by us to degrade stability in some cases as well.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      * @see #unbond()
      */
     public final @Nullable(Prevalence.NEVER) BondListener.BondEvent bond()
@@ -1700,54 +1760,26 @@ public final class BleDevice extends BleNode
 
     /**
      * Starts a connection process, or does nothing if already {@link BleDeviceState#CONNECTED} or {@link BleDeviceState#CONNECTING}.
-     * Use {@link #setListener_ConnectionFail(DeviceReconnectFilter)} and {@link #setListener_State(DeviceStateListener)} to receive callbacks for
+     * Use {@link #setListener_Reconnect(DeviceReconnectFilter)} and {@link #setListener_State(DeviceStateListener)} to receive callbacks for
      * progress and errors.
      *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect()
     {
-        return connect((DeviceStateListener) null);
+        return connect(null, null);
     }
 
     /**
-     * Same as {@link #connect()} but calls {@link #setListener_State(DeviceStateListener)} for you.
+     * Starts a connection process, or does nothing if already {@link BleDeviceState#CONNECTED} or {@link BleDeviceState#CONNECTING}.
+     * Use {@link #setListener_Reconnect(DeviceReconnectFilter)} and {@link #setListener_State(DeviceStateListener)} to receive callbacks for more
+     * thorough progress and errors.
      *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(DeviceStateListener stateListener)
+    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(DeviceConnectListener connectListener)
     {
-        return connect(stateListener, null);
-    }
-
-    /**
-     * Same as {@link #connect()} but calls {@link #setListener_ConnectionFail(DeviceReconnectFilter)} for you.
-     *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(DeviceReconnectFilter failListener)
-    {
-        return connect((DeviceStateListener) null, failListener);
-    }
-
-    /**
-     * Same as {@link #connect()} but calls {@link #setListener_State(DeviceStateListener)} and
-     * {@link #setListener_ConnectionFail(DeviceReconnectFilter)} for you.
-     *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(DeviceStateListener stateListener, DeviceReconnectFilter failListener)
-    {
-        return connect(null, null, stateListener, failListener);
-    }
-
-    /**
-     * Same as {@link #connect(DeviceStateListener, DeviceReconnectFilter)}
-     * with reversed arguments.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(DeviceReconnectFilter failListener, DeviceStateListener stateListener)
-    {
-        return connect(stateListener, failListener);
+        return connect(null, null, connectListener);
     }
 
     /**
@@ -1756,36 +1788,14 @@ public final class BleDevice extends BleNode
      * for your device than you ;-). Usually the characteristics read/written inside this transaction are encrypted and so one way or another will require
      * the device to become {@link BleDeviceState#BONDED}. This should happen automatically for you, i.e you shouldn't need to call {@link #bond()} yourself.
      *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      * @see #connect()
      * @see BleDeviceState#AUTHENTICATING
      * @see BleDeviceState#AUTHENTICATED
      */
     public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Auth authenticationTxn)
     {
-        return connect(authenticationTxn, (DeviceStateListener) null);
-    }
-
-    /**
-     * Same as {@link #connect(BleTransaction.Auth)} but calls {@link #setListener_State(DeviceStateListener)} for you.
-     *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Auth authenticationTxn, DeviceStateListener stateListener)
-    {
-        return connect(authenticationTxn, stateListener, (DeviceReconnectFilter) null);
-    }
-
-    /**
-     * Same as {@link #connect(BleTransaction.Auth)} but calls
-     * {@link #setListener_State(DeviceStateListener)} and
-     * {@link #setListener_ConnectionFail(DeviceReconnectFilter)} for you.
-     *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Auth authenticationTxn, DeviceStateListener stateListener, DeviceReconnectFilter failListener)
-    {
-        return connect(authenticationTxn, null, stateListener, failListener);
+        return connect(authenticationTxn, null);
     }
 
     /**
@@ -1793,73 +1803,32 @@ public final class BleDevice extends BleNode
      * {@link BleDeviceState#INITIALIZED}. For example if you had a BLE-enabled thermometer you could use this transaction to attempt an initial
      * temperature read before updating your UI to indicate "full" connection success, even though BLE connection itself already succeeded.
      *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      * @see #connect()
      * @see BleDeviceState#INITIALIZING
      * @see BleDeviceState#INITIALIZED
      */
     public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Init initTxn)
     {
-        return connect(initTxn, (DeviceStateListener) null);
-    }
-
-    /**
-     * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(DeviceStateListener)} for you.
-     *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Init initTxn, DeviceStateListener stateListener)
-    {
-        return connect(initTxn, stateListener, (DeviceReconnectFilter) null);
-    }
-
-    /**
-     * Same as {@link #connect(BleTransaction.Auth)} but calls {@link #setListener_ConnectionFail(DeviceReconnectFilter)} for you.
-     *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Auth authTxn, DeviceReconnectFilter connectionFailListener)
-    {
-        return connect(authTxn, (DeviceStateListener) null, connectionFailListener);
-    }
-
-    /**
-     * Same as {@link #connect(BleTransaction.Init)} but calls {@link #setListener_State(DeviceStateListener)} and
-     * {@link #setListener_ConnectionFail(DeviceReconnectFilter)} for you.
-     *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Init initTxn, DeviceStateListener stateListener, DeviceReconnectFilter failListener)
-    {
-        return connect(null, initTxn, stateListener, failListener);
+        return connect(null, initTxn);
     }
 
     /**
      * Combination of {@link #connect(BleTransaction.Auth)} and {@link #connect(BleTransaction.Init)}. See those two methods for explanation.
      *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      * @see #connect()
      * @see #connect(BleTransaction.Auth)
      * @see #connect(BleTransaction.Init)
      */
     public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn)
     {
-        return connect(authenticationTxn, initTxn, null, (DeviceReconnectFilter) null);
-    }
-
-    /**
-     * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls {@link #setListener_State(DeviceStateListener)} for you.
-     *
-     * @return same as {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
-     */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, DeviceStateListener stateListener)
-    {
-        return connect(authenticationTxn, initTxn, stateListener, (DeviceReconnectFilter) null);
+        return connect(authenticationTxn, initTxn, null);
     }
 
     /**
      * Same as {@link #connect(BleTransaction.Auth, BleTransaction.Init)} but calls {@link #setListener_State(DeviceStateListener)} and
-     * {@link #setListener_ConnectionFail(DeviceReconnectFilter)} for you.
+     * {@link #setListener_Reconnect(DeviceReconnectFilter)} for you.
      *
      * @return If the attempt could not even "leave the gate" for some reason, a valid {@link ConnectFailEvent} is returned telling you why. Otherwise
      * this method will still return a non-null instance but {@link ConnectFailEvent#isNull()} will be <code>true</code>.
@@ -1870,17 +1839,11 @@ public final class BleDevice extends BleNode
      * callback to {@link DeviceReconnectFilter}. However if {@link ConnectFailEvent#isNull()} for the return value is <code>false</code>, meaning
      * the connection attempt couldn't even start for some reason, then you don't have to throw up the spinner in the first place.
      */
-    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, DeviceStateListener stateListener, DeviceReconnectFilter failListener)
+    public final @Nullable(Prevalence.NEVER) ConnectFailEvent connect(BleTransaction.Auth authenticationTxn, BleTransaction.Init initTxn, DeviceConnectListener connectionListener)
     {
-        if (stateListener != null)
-        {
-            setListener_State(stateListener);
-        }
 
-        if (failListener != null)
-        {
-            setListener_ConnectionFail(failListener);
-        }
+        if (connectionListener != null)
+            m_ephemeralConnectListener = new WeakReference<>(connectionListener);
 
         m_connectionFailMngr.onExplicitConnectionStarted();
 
@@ -2409,7 +2372,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device with a callback.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent write(BleWrite bleWrite, ReadWriteListener listener)
     {
@@ -2761,7 +2724,7 @@ public final class BleDevice extends BleNode
     /**
      * Writes to the device descriptor with a callback.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent writeDescriptor(BleWrite write, ReadWriteListener listener)
     {
@@ -2841,7 +2804,7 @@ public final class BleDevice extends BleNode
     /**
      * Reads a descriptor from the device with a callback, if one is set in the provided {@link BleRead}.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent readDescriptor(final BleRead read)
     {
@@ -2867,7 +2830,7 @@ public final class BleDevice extends BleNode
      * this call to succeed. When the device is not {@link BleDeviceState#CONNECTED} then the value returned by
      * {@link #getRssi()} will be automatically updated every time this device is discovered (or rediscovered) by a scan operation.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
     {
@@ -2902,7 +2865,7 @@ public final class BleDevice extends BleNode
      * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
      * this call to succeed.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      * @see #setConnectionPriority(BleConnectionPriority, ReadWriteListener)
      * @see #getConnectionPriority()
      */
@@ -2977,7 +2940,7 @@ public final class BleDevice extends BleNode
      * Unlike {@link #setMtu(int)}, this can be called when the device is {@link BleDeviceState#DISCONNECTED} in the event that you don't want the
      * MTU to be auto-set upon next reconnection.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault(final ReadWriteListener listener)
@@ -3020,7 +2983,7 @@ public final class BleDevice extends BleNode
      * payload. Namely, we've found the Moto Pure X, and the OnePlus OnePlus2 to have this behavior. For those phones any MTU above
      * 50 failed.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
@@ -3465,7 +3428,7 @@ public final class BleDevice extends BleNode
     /**
      * Reads a characteristic from the device.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      *
      * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
@@ -3481,7 +3444,7 @@ public final class BleDevice extends BleNode
      * Reads a characteristic from the device. The provided {@link DescriptorFilter} will grab the correct {@link BluetoothGattCharacteristic} in the case there are
      * more than one with the same {@link UUID} in the same {@link BluetoothGattService}.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      *
      * @deprecated - This will be removed in v3.1. Please use {@link #read(BleRead)} instead.
      */
@@ -3542,7 +3505,7 @@ public final class BleDevice extends BleNode
      * Reads a characteristic from the device. The provided {@link DescriptorFilter} (if set in the {@link BleRead} will grab the correct {@link BluetoothGattCharacteristic} in the case there are
      * more than one with the same {@link UUID} in the same {@link BluetoothGattService}.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent read(final BleRead read)
     {
@@ -3816,7 +3779,7 @@ public final class BleDevice extends BleNode
      * registration for the notification. <code>switch</code> on {@link Type#ENABLING_NOTIFICATION}
      * and {@link Type#NOTIFICATION} (or {@link Type#INDICATION}) in your listener to distinguish between these.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(BleNotify notify)
     {
@@ -4003,7 +3966,7 @@ public final class BleDevice extends BleNode
      * any of it's overloads. The listener provided should be the same one that you passed to {@link #enableNotify(BleNotify)}. Listen for
      * {@link Type#DISABLING_NOTIFICATION} in your listener to know when the remote device actually confirmed.
      *
-     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, DeviceReconnectFilter)}.
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceConnectListener)}.
      */
     public final ReadWriteListener.ReadWriteEvent disableNotify(BleNotify notify)
     {
@@ -4802,6 +4765,26 @@ public final class BleDevice extends BleNode
                 INITIALIZED, true, RETRYING_BLE_CONNECTION, false);
 
         stateTracker_main().remove(BleDeviceState.RECONNECTING_SHORT_TERM, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+        final DeviceConnectListener.ConnectEvent event = new DeviceConnectListener.ConnectEvent(this, null);
+
+        invokeConnectCallback(event);
+
+    }
+
+    final void invokeConnectCallback(DeviceConnectListener.ConnectEvent event)
+    {
+        // Post to the ephemeral listener first, if it's not null
+        if (m_ephemeralConnectListener != null && m_ephemeralConnectListener.get() != null)
+        {
+            m_ephemeralConnectListener.get().onEvent(event);
+        }
+
+        // Now post to the default listener, if there is one
+        final DeviceConnectListener listener = getListener_Connect();
+
+        if (listener != null)
+            listener.onEvent(event);
     }
 
     final void setStateToDisconnected(final boolean attemptingReconnect_longTerm, final boolean retryingConnection, final E_Intent intent, final int gattStatus, final boolean forceMainStateTracker, final Object[] overrideBondingStates)

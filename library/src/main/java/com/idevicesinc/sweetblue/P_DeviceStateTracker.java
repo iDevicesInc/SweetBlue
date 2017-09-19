@@ -1,7 +1,6 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.DeviceStateListener.StateEvent;
-import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter;
 import com.idevicesinc.sweetblue.utils.State;
 import java.util.Stack;
 
@@ -84,7 +83,7 @@ final class P_DeviceStateTracker extends PA_StateTracker
 			m_device.postEventAsCallback(m_device.getManager().m_defaultDeviceStateListener, event);
 		}
 
-		final BleDeviceConfig.BondFilter bondFilter = BleDeviceConfig.filter(m_device.conf_device().bondFilter, m_device.conf_mngr().bondFilter);
+		final BondFilter bondFilter = BleDeviceConfig.filter(m_device.conf_device().bondFilter, m_device.conf_mngr().bondFilter);
 		
 		if( bondFilter == null )  return;
 		

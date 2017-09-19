@@ -3,12 +3,16 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Pointer;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
 import java.util.UUID;
+
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 @Config(manifest = Config.NONE, sdk = 25)
@@ -23,9 +27,9 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     private final static UUID mInitCharUuid = UUID.randomUUID();
 
     private GattDatabase db = new GattDatabase().addService(mAuthServiceUuid)
-            .addCharacteristic(mAuthCharUuid).setValue(new byte[] { 0x2, 0x4 }).setProperties().read().setPermissions().read().completeService()
+            .addCharacteristic(mAuthCharUuid).setValue(new byte[]{0x2, 0x4}).setProperties().read().setPermissions().read().completeService()
             .addService(mInitServiceUuid)
-            .addCharacteristic(mInitCharUuid).setValue(new byte[] { 0x8, 0xA }).setProperties().read().setPermissions().read().completeService();
+            .addCharacteristic(mInitCharUuid).setValue(new byte[]{0x8, 0xA}).setProperties().read().setPermissions().read().completeService();
 
 
     @Test(timeout = 40000)
@@ -37,7 +41,8 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
         m_config.defaultAuthFactory = () -> new BleTransaction.Auth()
         {
-            @Override protected void start(BleDevice device)
+            @Override
+            protected void start(BleDevice device)
             {
                 final BleRead read = new BleRead(mAuthServiceUuid, mAuthCharUuid).setReadWriteListener(e ->
                 {
@@ -78,7 +83,8 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
         m_config.defaultInitFactory = () -> new BleTransaction.Init()
         {
-            @Override protected void start(BleDevice device)
+            @Override
+            protected void start(BleDevice device)
             {
                 BleRead read = new BleRead(mInitServiceUuid, mInitCharUuid).setReadWriteListener(e ->
                 {
@@ -119,7 +125,8 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
         m_config.defaultInitFactory = () -> new BleTransaction.Init()
         {
-            @Override protected void start(BleDevice device)
+            @Override
+            protected void start(BleDevice device)
             {
                 BleRead read = new BleRead(mInitServiceUuid, mInitCharUuid).setReadWriteListener(e ->
                 {
@@ -137,7 +144,8 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         };
         m_config.defaultAuthFactory = () -> new BleTransaction.Auth()
         {
-            @Override protected void start(BleDevice device)
+            @Override
+            protected void start(BleDevice device)
             {
                 BleRead read = new BleRead(mAuthServiceUuid, mAuthCharUuid).setReadWriteListener(e ->
                 {
@@ -177,26 +185,25 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         {
             final Pointer<Integer> connected = new Pointer(0);
 
-            @Override public void onEvent(DiscoveryEvent e)
+            @Override
+            public void onEvent(DiscoveryEvent e)
             {
                 if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
                 {
                     e.device().connect(e1 ->
                     {
-                        if (e1.didEnter(BleDeviceState.INITIALIZED))
+                        assertTrue(e1.wasSuccess());
+                        connected.value++;
+                        System.out.println(e1.device().getName_override() + " connected. #" + connected.value);
+                        if (connected.value == 3)
                         {
-                            connected.value++;
-                            System.out.println(e1.device().getName_override() + " connected. #" + connected.value);
-                            if (connected.value == 3)
+                            if (completeTest)
                             {
-                                if (completeTest)
-                                {
-                                    succeed();
-                                }
-                                else
-                                {
-                                    release();
-                                }
+                                succeed();
+                            }
+                            else
+                            {
+                                release();
                             }
                         }
                     });

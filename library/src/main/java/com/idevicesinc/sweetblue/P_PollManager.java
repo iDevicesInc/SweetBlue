@@ -9,11 +9,10 @@ import com.idevicesinc.sweetblue.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.ReadWriteListener.Status;
 import com.idevicesinc.sweetblue.ReadWriteListener.Target;
 import com.idevicesinc.sweetblue.ReadWriteListener.Type;
-import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventType;
+import com.idevicesinc.sweetblue.BondFilter.CharacteristicEventType;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.PresentData;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 final class P_PollManager

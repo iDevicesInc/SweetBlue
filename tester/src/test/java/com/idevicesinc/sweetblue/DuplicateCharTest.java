@@ -5,13 +5,16 @@ import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Util;
 import com.idevicesinc.sweetblue.utils.Uuids;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
+
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -29,15 +32,15 @@ public class DuplicateCharTest extends BaseBleUnitTest
     private BleDevice m_device;
 
     private GattDatabase db = new GattDatabase().addService(mTestService)
-            .addCharacteristic(mTestChar).setValue(new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }).setProperties().readWriteNotify().setPermissions().readWrite().build()
-            .addDescriptor(mTestDesc).setValue(new byte[] { 0x1 }).setPermissions().read().completeChar()
-            .addCharacteristic(mTestChar).setValue(new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }).setProperties().readWriteNotify().setPermissions().readWrite().build()
-            .addDescriptor(mTestDesc).setValue(new byte[] { 0x2 }).setPermissions().read().completeService();
+            .addCharacteristic(mTestChar).setValue(new byte[]{0x2, 0x3, 0x4, 0x5, 0x6}).setProperties().readWriteNotify().setPermissions().readWrite().build()
+            .addDescriptor(mTestDesc).setValue(new byte[]{0x1}).setPermissions().read().completeChar()
+            .addCharacteristic(mTestChar).setValue(new byte[]{0x2, 0x3, 0x4, 0x5, 0x6}).setProperties().readWriteNotify().setPermissions().readWrite().build()
+            .addDescriptor(mTestDesc).setValue(new byte[]{0x2}).setPermissions().read().completeService();
 
     private GattDatabase db2 = new GattDatabase().addService(mTestService)
-            .addCharacteristic(mTestChar).setValue(new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }).setProperties().readWriteNotify().setPermissions().readWrite().build()
+            .addCharacteristic(mTestChar).setValue(new byte[]{0x2, 0x3, 0x4, 0x5, 0x6}).setProperties().readWriteNotify().setPermissions().readWrite().build()
             .addDescriptor(mNotifyDesc).setPermissions().readWrite().completeChar()
-            .addCharacteristic(mTestChar).setValue(new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }).setProperties().readWrite().setPermissions().readWrite().completeService();
+            .addCharacteristic(mTestChar).setValue(new byte[]{0x2, 0x3, 0x4, 0x5, 0x6}).setProperties().readWrite().setPermissions().readWrite().completeService();
 
 
     @Test
@@ -54,28 +57,28 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(e1 ->
                 {
-                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    assertTrue(e1.wasSuccess());
+                    final BleWrite bleWrite = new BleWrite(mTestChar).setBytes(new byte[]{0x0, 0x1, 0x2, 0x3});
+                    bleWrite.setDescriptorFilter(new DescriptorFilter()
                     {
-                        final BleWrite bleWrite = new BleWrite(mTestChar).setBytes(new byte[] {0x0, 0x1, 0x2, 0x3});
-                        bleWrite.setDescriptorFilter(new DescriptorFilter()
+                        @Override
+                        public Please onEvent(DescriptorEvent event)
                         {
-                            @Override public Please onEvent(DescriptorEvent event)
-                            {
-                                return Please.acceptIf(event.value()[0] == 0x2);
-                            }
+                            return Please.acceptIf(event.value()[0] == 0x2);
+                        }
 
-                            @Override public UUID descriptorUuid()
-                            {
-                                return mTestDesc;
-                            }
-                        });
-                        m_device.write(bleWrite , e11 ->
+                        @Override
+                        public UUID descriptorUuid()
                         {
-                            assertTrue(e11.status().name(), e11.wasSuccess());
-                            assertTrue(e11.characteristic().getDescriptor(mTestDesc).getValue()[0] == 2);
-                            succeed();
-                        });
-                    }
+                            return mTestDesc;
+                        }
+                    });
+                    m_device.write(bleWrite, e11 ->
+                    {
+                        assertTrue(e11.status().name(), e11.wasSuccess());
+                        assertTrue(e11.characteristic().getDescriptor(mTestDesc).getValue()[0] == 2);
+                        succeed();
+                    });
                 });
             }
         });
@@ -99,28 +102,28 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(e1 ->
                 {
-                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    assertTrue(e1.wasSuccess());
+                    BleRead read = new BleRead(mTestChar).setDescriptorFilter(new DescriptorFilter()
                     {
-                        BleRead read = new BleRead(mTestChar).setDescriptorFilter(new DescriptorFilter()
+                        @Override
+                        public Please onEvent(DescriptorEvent event)
                         {
-                            @Override public Please onEvent(DescriptorEvent event)
-                            {
-                                return Please.acceptIf(event.value()[0] == 0x2);
-                            }
+                            return Please.acceptIf(event.value()[0] == 0x2);
+                        }
 
-                            @Override public UUID descriptorUuid()
-                            {
-                                return mTestDesc;
-                            }
-                        }).setReadWriteListener(e11 ->
+                        @Override
+                        public UUID descriptorUuid()
                         {
-                            assertTrue(e11.status().name(), e11.wasSuccess());
-                            assertTrue(e11.characteristic().getDescriptor(mTestDesc).getValue()[0] == 2);
-                            assertTrue("Goal: " + Arrays.toString(new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }) + " Return: " + Arrays.toString(e11.data()), Arrays.equals(e11.data(), new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }));
-                            succeed();
-                        });
-                        m_device.read(read);
-                    }
+                            return mTestDesc;
+                        }
+                    }).setReadWriteListener(e11 ->
+                    {
+                        assertTrue(e11.status().name(), e11.wasSuccess());
+                        assertTrue(e11.characteristic().getDescriptor(mTestDesc).getValue()[0] == 2);
+                        assertTrue("Goal: " + Arrays.toString(new byte[]{0x2, 0x3, 0x4, 0x5, 0x6}) + " Return: " + Arrays.toString(e11.data()), Arrays.equals(e11.data(), new byte[]{0x2, 0x3, 0x4, 0x5, 0x6}));
+                        succeed();
+                    });
+                    m_device.read(read);
                 });
             }
         });
@@ -147,29 +150,29 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(e1 ->
                 {
-                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    assertTrue(e1.wasSuccess());
+                    BleRead read = new BleRead(mTestChar).setDescriptorFilter(new DescriptorFilter()
                     {
-                        BleRead read = new BleRead(mTestChar).setDescriptorFilter(new DescriptorFilter()
+                        @Override
+                        public Please onEvent(DescriptorEvent event)
                         {
-                            @Override public Please onEvent(DescriptorEvent event)
-                            {
-                                // we're looking to read the char withOUT the notification descriptor
-                                return Please.acceptIf(event.characteristic().getDescriptor(mNotifyDesc) == null);
-                            }
+                            // we're looking to read the char withOUT the notification descriptor
+                            return Please.acceptIf(event.characteristic().getDescriptor(mNotifyDesc) == null);
+                        }
 
-                            @Override public UUID descriptorUuid()
-                            {
-                                return null;
-                            }
-                        }).setReadWriteListener(e11 ->
+                        @Override
+                        public UUID descriptorUuid()
                         {
-                            assertTrue(e11.status().name(), e11.wasSuccess());
-                            assertNull(e11.characteristic().getDescriptor(mNotifyDesc));
-                            assertTrue(Arrays.equals(e11.data(), new byte[] { 0x2, 0x3, 0x4, 0x5, 0x6 }));
-                            succeed();
-                        });
-                        m_device.read(read);
-                    }
+                            return null;
+                        }
+                    }).setReadWriteListener(e11 ->
+                    {
+                        assertTrue(e11.status().name(), e11.wasSuccess());
+                        assertNull(e11.characteristic().getDescriptor(mNotifyDesc));
+                        assertTrue(Arrays.equals(e11.data(), new byte[]{0x2, 0x3, 0x4, 0x5, 0x6}));
+                        succeed();
+                    });
+                    m_device.read(read);
                 });
             }
         });
@@ -192,29 +195,29 @@ public class DuplicateCharTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(e1 ->
                 {
-                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    assertTrue(e1.wasSuccess());
+                    BleNotify notify = new BleNotify(mTestService, mTestChar).setDescriptorFilter(new DescriptorFilter()
                     {
-                        BleNotify notify = new BleNotify(mTestService, mTestChar).setDescriptorFilter(new DescriptorFilter()
+                        @Override
+                        public Please onEvent(DescriptorEvent event)
                         {
-                            @Override public Please onEvent(DescriptorEvent event)
-                            {
-                                return Please.acceptIf(event.value()[0] == 0x2);
-                            }
+                            return Please.acceptIf(event.value()[0] == 0x2);
+                        }
 
-                            @Override public UUID descriptorUuid()
-                            {
-                                return mTestDesc;
-                            }
-                        }).setReadWriteListener(e11 ->
+                        @Override
+                        public UUID descriptorUuid()
                         {
-                            if (e11.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
-                            {
-                                assertTrue(e11.wasSuccess());
-                                succeed();
-                            }
-                        }).setForceReadTimeout(Interval.DISABLED);
-                        m_device.enableNotify(notify);
-                    }
+                            return mTestDesc;
+                        }
+                    }).setReadWriteListener(e11 ->
+                    {
+                        if (e11.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
+                        {
+                            assertTrue(e11.wasSuccess());
+                            succeed();
+                        }
+                    }).setForceReadTimeout(Interval.DISABLED);
+                    m_device.enableNotify(notify);
                 });
             }
         });
@@ -224,7 +227,8 @@ public class DuplicateCharTest extends BaseBleUnitTest
         startTest();
     }
 
-    @Override public BleManagerConfig getConfig()
+    @Override
+    public BleManagerConfig getConfig()
     {
         BleManagerConfig config = super.getConfig();
         config.gattLayerFactory = device -> new UnitTestGatt(device, db);

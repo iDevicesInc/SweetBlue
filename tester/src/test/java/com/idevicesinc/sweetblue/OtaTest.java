@@ -28,10 +28,8 @@ public class OtaTest extends BaseBleUnitTest
 
         device.connect(e ->
         {
-            if (e.didEnter(BleDeviceState.INITIALIZED))
-            {
-                e.device().performOta(new TestOta());
-            }
+            assertTrue(e.wasSuccess());
+            e.device().performOta(new TestOta());
         });
         startTest();
     }
