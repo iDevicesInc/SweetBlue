@@ -4,9 +4,10 @@ buildscript {
     repositories {
         jcenter()
         mavenCentral()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-beta5'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta6'
         classpath 'commons-codec:commons-codec:1.8'
         //classpath 'org.apache.ant:ant-jsch:1.7.1', 'jsch:jsch:0.1.29'
 

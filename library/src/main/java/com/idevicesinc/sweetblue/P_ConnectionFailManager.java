@@ -4,8 +4,8 @@ import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTED;
 import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTING;
 import static com.idevicesinc.sweetblue.BleDeviceState.CONNECTING_OVERALL;
 import static com.idevicesinc.sweetblue.BleDeviceState.RECONNECTING_LONG_TERM;
-import com.idevicesinc.sweetblue.DeviceConnectionFailListener.ConnectionFailEvent;
-import com.idevicesinc.sweetblue.NodeConnectionFailListener.Please;
+import com.idevicesinc.sweetblue.DeviceReconnectFilter.ConnectFailEvent;
+import com.idevicesinc.sweetblue.ReconnectFilter.ConnectFailPlease;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -18,7 +18,7 @@ final class P_ConnectionFailManager
 	private final BleDevice m_device;
 	
 
-	private final Stack<DeviceConnectionFailListener> m_connectionFailListenerStack;
+	private final Stack<DeviceReconnectFilter> m_connectionFailListenerStack;
 
 	private int m_failCount = 0;
 	private BleDeviceState m_highestStateReached_total = null;
@@ -30,7 +30,7 @@ final class P_ConnectionFailManager
 	// This boolean is here to prevent trying to reconnect when we've fallen out of reconnecting long term
 	private boolean m_triedReconnectingLongTerm = false;
 
-	private final ArrayList<ConnectionFailEvent> m_history = new ArrayList<ConnectionFailEvent>();
+	private final ArrayList<ConnectFailEvent> m_history = new ArrayList<>();
 	
 	P_ConnectionFailManager(BleDevice device)
 	{
@@ -97,9 +97,9 @@ final class P_ConnectionFailManager
 		return retryCount;
 	}
 
-	final int/*__PE_Please*/ onConnectionFailed(DeviceConnectionFailListener.Status reason_nullable, DeviceConnectionFailListener.Timing timing, boolean isAttemptingReconnect_longTerm, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, NodeConnectionFailListener.AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
+	final int/*__PE_Please*/ onConnectionFailed(DeviceReconnectFilter.Status reason_nullable, DeviceReconnectFilter.Timing timing, boolean isAttemptingReconnect_longTerm, int gattStatus, int bondFailReason, BleDeviceState highestStateReached, ReconnectFilter.AutoConnectUsage autoConnectUsage, ReadWriteListener.ReadWriteEvent txnFailReason)
 	{
-		if( reason_nullable == null )  return DeviceConnectionFailListener.Please.PE_Please_DO_NOT_RETRY;
+		if( reason_nullable == null )  return DeviceReconnectFilter.ConnectFailPlease.PE_Please_DO_NOT_RETRY;
 		
 		final long currentTime = System.currentTimeMillis();
 		
@@ -132,7 +132,7 @@ final class P_ConnectionFailManager
 			}
 		}
 
-		final ConnectionFailEvent moreInfo = new ConnectionFailEvent
+		final ConnectFailEvent moreInfo = new ConnectFailEvent
 		(
 			m_device, reason_nullable, timing, m_failCount, attemptTime_latest, attemptTime_total, gattStatus,
 			highestStateReached, m_highestStateReached_total, autoConnectUsage, bondFailReason, txnFailReason
@@ -141,10 +141,10 @@ final class P_ConnectionFailManager
 		addToHistory(moreInfo);
 		
 		//--- DRK > Not invoking callback if we're attempting short-term reconnect.
-		int retryChoice__PE_Please = m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) ? Please.PE_Please_DO_NOT_RETRY : invokeCallback(moreInfo);
+		int retryChoice__PE_Please = m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) ? ConnectFailPlease.PE_Please_DO_NOT_RETRY : invokeCallback(moreInfo);
 		
 		//--- DRK > Retry choice doesn't matter if we're attempting reconnect.
-		retryChoice__PE_Please = !isAttemptingReconnect_longTerm ? retryChoice__PE_Please : Please.PE_Please_DO_NOT_RETRY;
+		retryChoice__PE_Please = !isAttemptingReconnect_longTerm ? retryChoice__PE_Please : ConnectFailPlease.PE_Please_DO_NOT_RETRY;
 		
 		//--- DRK > Disabling retry if app-land decided to call connect() themselves in fail callback...hopefully fringe but must check for now.
 		//--- RB > Commenting this out for now. If the user calls connect in the fail callback, it gets posted to the update thread, so this shouldn't
@@ -153,7 +153,7 @@ final class P_ConnectionFailManager
 		
 		if( reason_nullable != null && reason_nullable.wasCancelled() )
 		{
-			retryChoice__PE_Please = Please.PE_Please_DO_NOT_RETRY;
+			retryChoice__PE_Please = ConnectFailPlease.PE_Please_DO_NOT_RETRY;
 		}
 		else
 		{
@@ -173,7 +173,7 @@ final class P_ConnectionFailManager
 				}
 				else if( m_device.is(BleDeviceState.RECONNECTING_SHORT_TERM) )
 				{
-					retryChoice__PE_Please = Please.PE_Please_DO_NOT_RETRY;
+					retryChoice__PE_Please = ConnectFailPlease.PE_Please_DO_NOT_RETRY;
 					m_device.onNativeDisconnect(/*wasExplicit=*/false, gattStatusOfOriginalDisconnect, /*doShortTermReconnect=*/false, /*saveLastDisconnect=*/true);
 				}
 			}
@@ -181,7 +181,7 @@ final class P_ConnectionFailManager
 
 		final boolean retryConnectOverall = BleDeviceConfig.bool(m_device.conf_device().connectFailRetryConnectingOverall, m_device.conf_mngr().connectFailRetryConnectingOverall);
 
-		if( !m_triedReconnectingLongTerm && retryChoice__PE_Please != Please.PE_Please_NULL && Please.isRetry(retryChoice__PE_Please) && !m_device.is(CONNECTED))
+		if( !m_triedReconnectingLongTerm && retryChoice__PE_Please != ConnectFailPlease.PE_Please_NULL && ConnectFailPlease.isRetry(retryChoice__PE_Please) && !m_device.is(CONNECTED))
 		{
 			if (m_device.isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 			{
@@ -201,7 +201,7 @@ final class P_ConnectionFailManager
 			}
 			if (m_device.isAny_internal(CONNECTED, CONNECTING, CONNECTING_OVERALL))
 			{
-				boolean isretryConnectOverall = Please.isRetry(retryChoice__PE_Please) && retryConnectOverall;
+				boolean isretryConnectOverall = ConnectFailPlease.isRetry(retryChoice__PE_Please) && retryConnectOverall;
 				m_device.setStateToDisconnected(isAttemptingReconnect_longTerm, isretryConnectOverall, E_Intent.UNINTENTIONAL, gattStatus, /*forceMainStateTracker=*/false, P_BondManager.OVERRIDE_EMPTY_STATES);
 			}
 		}
@@ -209,12 +209,12 @@ final class P_ConnectionFailManager
 		return retryChoice__PE_Please;
 	}
 
-	final ArrayList<ConnectionFailEvent> getHistory()
+	final ArrayList<ConnectFailEvent> getHistory()
 	{
 		return new ArrayList<>(m_history);
 	}
 
-	private void addToHistory(ConnectionFailEvent event)
+	private void addToHistory(ConnectFailEvent event)
 	{
 		int maxSize = Math.max(BleDeviceConfig.integer(m_device.conf_device().maxConnectionFailHistorySize, m_device.conf_mngr().maxConnectionFailHistorySize), 1);
 		if (m_history.size() >= maxSize)
@@ -224,45 +224,45 @@ final class P_ConnectionFailManager
 		m_history.add(event);
 	}
 
-	final int/*__PE_Please*/ invokeCallback(final ConnectionFailEvent moreInfo)
+	final int/*__PE_Please*/ invokeCallback(final ConnectFailEvent moreInfo)
 	{
-		int retryChoice__PE_Please = Please.PE_Please_NULL;
+		int retryChoice__PE_Please = ConnectFailPlease.PE_Please_NULL;
 		
 		if( getListener() != null )
 		{
-			final Please please = getListener().onEvent(moreInfo);
-			retryChoice__PE_Please = please != null ? please.please() : Please.PE_Please_NULL;
+			final ReconnectFilter.ConnectFailPlease please = getListener().onConnectFailed(moreInfo);
+			retryChoice__PE_Please = please != null ? please.please() : ConnectFailPlease.PE_Please_NULL;
 			
-			m_device.getManager().getLogger().checkPlease(please, Please.class);
+			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.ConnectFailPlease.class);
 		}
 		else if( m_device.getManager().m_defaultConnectionFailListener != null )
 		{
-			final Please please = m_device.getManager().m_defaultConnectionFailListener.onEvent(moreInfo);
-			retryChoice__PE_Please = please != null ? please.please() : Please.PE_Please_NULL;
+			final ReconnectFilter.ConnectFailPlease please = m_device.getManager().m_defaultConnectionFailListener.onConnectFailed(moreInfo);
+			retryChoice__PE_Please = please != null ? please.please() : ConnectFailPlease.PE_Please_NULL;
 			
-			m_device.getManager().getLogger().checkPlease(please, Please.class);
+			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.ConnectFailPlease.class);
 		}
 		else
 		{
-			final Please please = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER.onEvent(moreInfo);
-			retryChoice__PE_Please = please != null ? please.please() : Please.PE_Please_NULL;
+			final ReconnectFilter.ConnectFailPlease please = BleDevice.DEFAULT_CONNECTION_FAIL_LISTENER.onConnectFailed(moreInfo);
+			retryChoice__PE_Please = please != null ? please.please() : ConnectFailPlease.PE_Please_NULL;
 
-			m_device.getManager().getLogger().checkPlease(please, Please.class);
+			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.ConnectFailPlease.class);
 		}
 
-		retryChoice__PE_Please = retryChoice__PE_Please != Please.PE_Please_NULL ? retryChoice__PE_Please : Please.PE_Please_DO_NOT_RETRY;
+		retryChoice__PE_Please = retryChoice__PE_Please != ConnectFailPlease.PE_Please_NULL ? retryChoice__PE_Please : ConnectFailPlease.PE_Please_DO_NOT_RETRY;
 		
 		return retryChoice__PE_Please;
 	}
 
-	public final DeviceConnectionFailListener getListener()
+	public final DeviceReconnectFilter getListener()
 	{
 		if (m_connectionFailListenerStack.empty())
 			return null;
 		return m_connectionFailListenerStack.peek();
 	}
 	
-	public final void setListener(DeviceConnectionFailListener listener)
+	public final void setListener(DeviceReconnectFilter listener)
 	{
 		m_connectionFailListenerStack.clear();
 		m_connectionFailListenerStack.push(listener);
@@ -273,7 +273,7 @@ final class P_ConnectionFailManager
         m_connectionFailListenerStack.clear();
     }
 
-	public final void pushListener(DeviceConnectionFailListener listener)
+	public final void pushListener(DeviceReconnectFilter listener)
     {
         if (listener != null)
             m_connectionFailListenerStack.push(listener);

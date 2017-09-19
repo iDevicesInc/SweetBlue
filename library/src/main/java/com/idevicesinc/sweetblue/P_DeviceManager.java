@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import com.idevicesinc.sweetblue.DeviceConnectionFailListener.Status;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
@@ -451,7 +450,7 @@ final class P_DeviceManager
             //--- DRK > Just an early-out performance check here.
             if (device.isAny(BleDeviceState.CONNECTING_OVERALL, BleDeviceState.CONNECTED))
             {
-                device.disconnectWithReason(priority, Status.BLE_TURNING_OFF, DeviceConnectionFailListener.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, false, device.NULL_READWRITE_EVENT());
+                device.disconnectWithReason(priority, DeviceReconnectFilter.Status.BLE_TURNING_OFF, DeviceReconnectFilter.Timing.NOT_APPLICABLE, BleStatuses.GATT_STATUS_NOT_APPLICABLE, BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, false, device.NULL_READWRITE_EVENT());
             }
         }
     }

@@ -10,28 +10,24 @@ import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import java.util.ArrayList;
 
-/**
- * Provide an implementation of this callback to {@link BleServer#setListener_ConnectionFail(ServerConnectionFailListener)}.
- *
- * @see BleServer#setListener_ConnectionFail(ServerConnectionFailListener)
- */
-@com.idevicesinc.sweetblue.annotations.Lambda
-public interface ServerConnectionFailListener extends NodeConnectionFailListener
+
+public interface ServerReconnectFilter extends ReconnectFilter<ServerReconnectFilter.ConnectFailEvent>
 {
+
     /**
      * The reason for the connection failure.
      */
     enum Status implements UsesCustomNull
     {
         /**
-         * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link ConnectionFailEvent#status()} given
-         * to {@link ServerConnectionFailListener#onEvent(ConnectionFailEvent)} will *never* be {@link Status#NULL}.
+         * Used in place of Java's built-in <code>null</code> wherever needed. As of now, the {@link ConnectFailEvent#status()} given
+         * to {@link ServerReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)} will *never* be {@link Status#NULL}.
          */
         NULL,
 
         /**
          * A call was made to {@link BleServer#connect(String)} or its overloads
-         * but {@link ConnectionFailEvent#server()} is already
+         * but {@link ConnectFailEvent#server()} is already
          * {@link BleServerState#CONNECTING} or {@link BleServerState#CONNECTED} for the given client.
          */
         ALREADY_CONNECTING_OR_CONNECTED,
@@ -99,7 +95,7 @@ public interface ServerConnectionFailListener extends NodeConnectionFailListener
         }
 
         /**
-         * Whether this reason honors a {@link Please#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
+         * Whether this reason honors a {@link com.idevicesinc.sweetblue.ReconnectFilter.ConnectFailPlease#isRetry()}. Returns <code>false</code> if {@link #wasCancelled()} or
          * <code>this</code> is {@link #ALREADY_CONNECTING_OR_CONNECTED}.
          */
         public final boolean allowsRetry()
@@ -126,19 +122,19 @@ public interface ServerConnectionFailListener extends NodeConnectionFailListener
     }
 
     /**
-     * Structure passed to {@link ServerConnectionFailListener#onEvent(ConnectionFailEvent)} to provide more info about how/why the connection failed.
+     * Structure passed to {@link #onConnectFailed(ReconnectFilter.ConnectFailEvent)} to provide more info about how/why the connection failed.
      */
     @Immutable
-    class ConnectionFailEvent extends NodeConnectionFailListener.ConnectionFailEvent implements UsesCustomNull
+    class ConnectFailEvent extends ReconnectFilter.ConnectFailEvent implements UsesCustomNull
     {
         /**
-         * The {@link BleServer} this {@link ConnectionFailEvent} is for.
+         * The {@link BleServer} this {@link ConnectFailEvent} is for.
          */
         public final BleServer server() {  return m_server;  }
         private final BleServer m_server;
 
         /**
-         * The native {@link BluetoothDevice} client this {@link ConnectionFailEvent} is for.
+         * The native {@link BluetoothDevice} client this {@link ConnectFailEvent} is for.
          */
         public final BluetoothDevice nativeDevice() {  return m_nativeDevice;  }
         private final BluetoothDevice m_nativeDevice;
@@ -155,16 +151,16 @@ public interface ServerConnectionFailListener extends NodeConnectionFailListener
         private final Status m_status;
 
         /**
-         * Returns a chronologically-ordered list of all {@link ConnectionFailEvent} instances returned through
-         * {@link ServerConnectionFailListener#onEvent(ConnectionFailEvent)} since the first call to {@link BleDevice#connect()},
+         * Returns a chronologically-ordered list of all {@link ConnectFailEvent} instances returned through
+         * {@link ServerReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)} since the first call to {@link BleDevice#connect()},
          * including the current instance. Thus this list will always have at least a length of one (except if {@link #isNull()} is <code>true</code>).
          * The list length is "reset" back to one whenever a {@link BleDeviceState#CONNECTING_OVERALL} operation completes, either
          * through becoming {@link BleDeviceState#INITIALIZED}, or {@link BleDeviceState#DISCONNECTED} for good.
          */
-        public final ConnectionFailEvent[] history()  {  return m_history;  }
-        private final ConnectionFailEvent[] m_history;
+        public final ConnectFailEvent[] history()  {  return m_history;  }
+        private final ConnectFailEvent[] m_history;
 
-        ConnectionFailEvent(BleServer server, final BluetoothDevice nativeDevice, Status status, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, AutoConnectUsage autoConnectUsage, ArrayList<ConnectionFailEvent> history)
+        ConnectFailEvent(BleServer server, final BluetoothDevice nativeDevice, Status status, int failureCountSoFar, Interval latestAttemptTime, Interval totalAttemptTime, int gattStatus, AutoConnectUsage autoConnectUsage, ArrayList<ConnectFailEvent> history)
         {
             super(failureCountSoFar, latestAttemptTime, totalAttemptTime, gattStatus, autoConnectUsage);
 
@@ -178,7 +174,7 @@ public interface ServerConnectionFailListener extends NodeConnectionFailListener
             }
             else
             {
-                this.m_history = new ConnectionFailEvent[history.size()+1];
+                this.m_history = new ConnectFailEvent[history.size()+1];
                 for( int i = 0; i < history.size(); i++ )
                 {
                     this.m_history[i] = history.get(i);
@@ -188,27 +184,27 @@ public interface ServerConnectionFailListener extends NodeConnectionFailListener
             }
         }
 
-        private static ConnectionFailEvent[] s_emptyHistory = null;
-        /*package*/ static ConnectionFailEvent[] EMPTY_HISTORY()
+        private static ConnectFailEvent[] s_emptyHistory = null;
+        /*package*/ static ConnectFailEvent[] EMPTY_HISTORY()
         {
-            s_emptyHistory = s_emptyHistory != null ? s_emptyHistory : new ConnectionFailEvent[0];
+            s_emptyHistory = s_emptyHistory != null ? s_emptyHistory : new ConnectFailEvent[0];
 
             return s_emptyHistory;
         }
 
-        /*package*/ static ConnectionFailEvent NULL(BleServer server, BluetoothDevice nativeDevice)
+        /*package*/ static ConnectFailEvent NULL(BleServer server, BluetoothDevice nativeDevice)
         {
-            return new ConnectionFailEvent(server, nativeDevice, Status.NULL, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AutoConnectUsage.NOT_APPLICABLE, null);
+            return new ConnectFailEvent(server, nativeDevice, Status.NULL, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AutoConnectUsage.NOT_APPLICABLE, null);
         }
 
-        /*package*/ static ConnectionFailEvent EARLY_OUT(BleServer server, BluetoothDevice nativeDevice, Status status)
+        /*package*/ static ConnectFailEvent EARLY_OUT(BleServer server, BluetoothDevice nativeDevice, Status status)
         {
-            return new ConnectionFailEvent(server, nativeDevice, status, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AutoConnectUsage.NOT_APPLICABLE, null);
+            return new ConnectFailEvent(server, nativeDevice, status, 0, Interval.DISABLED, Interval.DISABLED, BleStatuses.GATT_STATUS_NOT_APPLICABLE, AutoConnectUsage.NOT_APPLICABLE, null);
         }
 
         /**
-         * Returns whether this {@link ConnectionFailEvent} instance is a "dummy" value. For now used for
-         * {@link BleNodeConfig.ReconnectFilter.ReconnectEvent#connectionFailEvent()} in certain situations.
+         * Returns whether this {@link ConnectFailEvent} instance is a "dummy" value. For now used for
+         * {@link ReconnectFilter.ConnectionLostEvent#connectionFailEvent()} in certain situations.
          */
         @Override public final boolean isNull()
         {
@@ -216,7 +212,7 @@ public interface ServerConnectionFailListener extends NodeConnectionFailListener
         }
 
         /**
-         * Forwards {@link DeviceConnectionFailListener.Status#shouldBeReportedToUser()}
+         * Forwards {@link DeviceReconnectFilter.Status#shouldBeReportedToUser()}
          * using {@link #status()}.
          */
         public final boolean shouldBeReportedToUser()
@@ -233,17 +229,16 @@ public interface ServerConnectionFailListener extends NodeConnectionFailListener
             else
             {
                 return Utils_String.toString
-                (
-                    this.getClass(),
-                    "server",				server(),
-                    "macAddress",			macAddress(),
-                    "status", 				status(),
-                    "gattStatus",			server().getManager().getLogger().gattStatus(gattStatus()),
-                    "failureCountSoFar",	failureCountSoFar()
-                );
+                        (
+                                this.getClass(),
+                                "server",				server(),
+                                "macAddress",			macAddress(),
+                                "status", 				status(),
+                                "gattStatus",			server().getManager().getLogger().gattStatus(gattStatus()),
+                                "failureCountSoFar",	failureCountSoFar()
+                        );
             }
         }
     }
 
-    Please onEvent(final ConnectionFailEvent e);
 }

@@ -217,8 +217,8 @@ public final class BleManager
 	private P_WrappingResetListener m_resetListeners;
 	private AssertListener m_assertionListener;
 			DeviceStateListener m_defaultDeviceStateListener;
-			DeviceConnectionFailListener m_defaultConnectionFailListener;
-			ServerConnectionFailListener m_defaultConnectionFailListener_server;
+			DeviceReconnectFilter m_defaultConnectionFailListener;
+			ServerReconnectFilter m_defaultConnectionFailListener_server;
 			BondListener m_defaultBondListener;
 			ReadWriteListener m_defaultReadWriteListener;
 			NotificationListener m_defaultNotificationListener;
@@ -657,13 +657,13 @@ public final class BleManager
 	/**
 	 * Convenience method to handle server connection fail events at the manager level. The listener provided
 	 * will only get called if the server whose connection failed doesn't have a listener provided to
-	 * {@link BleServer#setListener_ConnectionFail(ServerConnectionFailListener)}. This is unlike the behavior
+	 * {@link BleServer#setListener_ReconnectFilter(ServerReconnectFilter)}. This is unlike the behavior
 	 * behind (for example) {@link #setListener_ServerState(ServerStateListener)} because
-	 * {@link ServerConnectionFailListener#onEvent(ServerConnectionFailListener.ConnectionFailEvent)} requires a return value.
+	 * {@link ServerReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)} requires a return value.
 	 *
-	 * @see BleServer#setListener_ConnectionFail(ServerConnectionFailListener)
+	 * @see BleServer#setListener_ReconnectFilter(ServerReconnectFilter)
 	 */
-	public final void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) ServerConnectionFailListener listener_nullable)
+	public final void setListener_ConnectionFail_Server(@Nullable(Prevalence.NORMAL) ServerReconnectFilter listener_nullable)
 	{
 		m_defaultConnectionFailListener_server = listener_nullable;
 	}
@@ -721,13 +721,13 @@ public final class BleManager
 	/**
 	 * Convenience method to handle connection fail events at the manager level. The listener provided
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
-	 * {@link BleDevice#setListener_ConnectionFail(DeviceConnectionFailListener)}. This is unlike the behavior
+	 * {@link BleDevice#setListener_ConnectionFail(DeviceReconnectFilter)}. This is unlike the behavior
 	 * behind {@link #setListener_DeviceState(DeviceStateListener)} because
-	 * {@link DeviceConnectionFailListener#onEvent(DeviceConnectionFailListener.ConnectionFailEvent)} requires a return value.
+	 * {@link DeviceReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)} requires a return value.
 	 *
-	 * @see BleDevice#setListener_ConnectionFail(DeviceConnectionFailListener)
+	 * @see BleDevice#setListener_ConnectionFail(DeviceReconnectFilter)
 	 */
-	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceConnectionFailListener listener_nullable)
+	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
 	{
 		m_defaultConnectionFailListener = listener_nullable;
 	}
@@ -2356,7 +2356,7 @@ public final class BleManager
 
 		if( m_server != null )
 		{
-			m_server.disconnect_internal(AddServiceListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ServerConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, State.ChangeIntent.INTENTIONAL);
+			m_server.disconnect_internal(AddServiceListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ServerReconnectFilter.Status.CANCELLED_FROM_BLE_TURNING_OFF, State.ChangeIntent.INTENTIONAL);
 		}
 
 		final P_Task_TurnBleOff task = new P_Task_TurnBleOff(this, /*implicit=*/false, new PA_Task.I_StateListener()

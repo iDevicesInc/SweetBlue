@@ -12,6 +12,8 @@ import com.idevicesinc.sweetblue.annotations.Extendable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
+import com.idevicesinc.sweetblue.impl.DefaultDeviceReconnectFilter;
+import com.idevicesinc.sweetblue.impl.DefaultReconnectFilter;
 import com.idevicesinc.sweetblue.utils.*;
 import org.json.JSONObject;
 
@@ -148,6 +150,20 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 */
 	@Nullable(Prevalence.NORMAL)
 	public Boolean saveNameChangesToDisk						= true;
+
+	/**
+	 * Default is an instance of {@link DefaultReconnectFilter} using the timings that are <code>public static final</code> members thereof - set your own implementation here to
+	 * have fine-grain control over reconnect behavior while a device is {@link BleDeviceState#RECONNECTING_LONG_TERM} or {@link BleDeviceState#RECONNECTING_SHORT_TERM}.
+	 * This is basically how often and how long the library attempts to reconnect to a device that for example may have gone out of range. Set this variable to
+	 * <code>null</code> if reconnect behavior isn't desired. If not <code>null</code>, your app may find
+	 * {@link BleManagerConfig#manageCpuWakeLock} useful in order to force the app/phone to stay awake while attempting a reconnect.
+	 *
+	 * @see BleManagerConfig#manageCpuWakeLock
+	 * @see ReconnectFilter
+	 * @see DefaultReconnectFilter
+	 */
+	@Nullable(Nullable.Prevalence.NORMAL)
+	public ReconnectFilter reconnectFilter						= new DefaultDeviceReconnectFilter();
 	
 	/**
 	 * Default is <code>true</code> - whether to automatically get services immediately after a {@link BleDevice} is

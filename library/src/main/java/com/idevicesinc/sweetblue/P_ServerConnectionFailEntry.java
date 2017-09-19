@@ -13,7 +13,7 @@ final class P_ServerConnectionFailEntry
 	private Long m_timeOfFirstConnect = null;
 	private Long m_timeOfLastConnectFail = null;
 
-	private final ArrayList<ServerConnectionFailListener.ConnectionFailEvent> m_history = new ArrayList<ServerConnectionFailListener.ConnectionFailEvent>();
+	private final ArrayList<ServerReconnectFilter.ConnectFailEvent> m_history = new ArrayList<>();
 
 	private final P_ServerConnectionFailManager m_mngr;
 
@@ -43,7 +43,7 @@ final class P_ServerConnectionFailEntry
 		m_history.clear();
 	}
 
-	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ServerConnectionFailListener.Status status, final int gattStatus)
+	void onNativeConnectFail(final BluetoothDevice nativeDevice, final ServerReconnectFilter.Status status, final int gattStatus)
 	{
 		final long currentTime = System.currentTimeMillis();
 
@@ -55,17 +55,17 @@ final class P_ServerConnectionFailEntry
 
 		m_failCount++;
 
-		final ServerConnectionFailListener.ConnectionFailEvent e = new ServerConnectionFailListener.ConnectionFailEvent
+		final ServerReconnectFilter.ConnectFailEvent e = new ServerReconnectFilter.ConnectFailEvent
 		(
 			m_mngr.m_server, nativeDevice, status, m_failCount, attemptTime_latest, attemptTime_total,
-			gattStatus, ServerConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, m_history
+			gattStatus, ServerReconnectFilter.AutoConnectUsage.NOT_APPLICABLE, m_history
 		);
 
 		m_history.add(e);
 
 		final int ePlease__PE_Please = m_mngr.invokeCallback(e);
 
-		if( NodeConnectionFailListener.Please.isRetry(ePlease__PE_Please) )
+		if( ReconnectFilter.ConnectFailPlease.isRetry(ePlease__PE_Please) )
 		{
 			m_mngr.m_server.connect_internal(nativeDevice);
 		}

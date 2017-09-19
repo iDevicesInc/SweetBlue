@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothGattService;
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.impl.DefaultServerReconnectFilter;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
 import com.idevicesinc.sweetblue.utils.FutureData;
@@ -71,6 +72,8 @@ public final class BleServer extends BleNode
 			m_nativeWrapper = new P_NativeServerWrapper(this);
 			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
 			m_clientMngr = new P_ClientManager(this);
+			m_config = mngr.getConfigClone();
+			m_config.reconnectFilter = new DefaultServerReconnectFilter();
 		}
 	}
 
@@ -151,7 +154,7 @@ public final class BleServer extends BleNode
 	/**
 	 * Set a listener here to override any listener provided previously.
 	 */
-	public final void setListener_ConnectionFail(final ServerConnectionFailListener listener)
+	public final void setListener_ReconnectFilter(final ServerReconnectFilter listener)
 	{
 		m_connectionFailMngr.setListener(listener);
 	}
@@ -644,46 +647,46 @@ public final class BleServer extends BleNode
 	}
 
 	/**
-	 * Overload of {@link #connect(String, ServerStateListener, ServerConnectionFailListener)} with no listeners.
+	 * Overload of {@link #connect(String, ServerStateListener, ServerReconnectFilter)} with no listeners.
 	 */
-	public final ServerConnectionFailListener.ConnectionFailEvent connect(final String macAddress)
+	public final ServerReconnectFilter.ConnectFailEvent connect(final String macAddress)
 	{
 		return connect(macAddress, null, null);
 	}
 
 	/**
-	 * Overload of {@link #connect(String, ServerStateListener, ServerConnectionFailListener)} with only one listener.
+	 * Overload of {@link #connect(String, ServerStateListener, ServerReconnectFilter)} with only one listener.
 	 */
-	public final ServerConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ServerStateListener stateListener)
+	public final ServerReconnectFilter.ConnectFailEvent connect(final String macAddress, final ServerStateListener stateListener)
 	{
 		return connect(macAddress, stateListener, null);
 	}
 
 	/**
-	 * Overload of {@link #connect(String, ServerStateListener, ServerConnectionFailListener)} with only one listener.
+	 * Overload of {@link #connect(String, ServerStateListener, ServerReconnectFilter)} with only one listener.
 	 */
-	public final ServerConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ServerConnectionFailListener connectionFailListener)
+	public final ServerReconnectFilter.ConnectFailEvent connect(final String macAddress, final ServerReconnectFilter connectionFailListener)
 	{
 		return connect(macAddress, null, connectionFailListener);
 	}
 
 	/**
 	 * Connect to the given client mac address and provided listeners that are shorthand for calling {@link #setListener_State(ServerStateListener)}
-	 * {@link #setListener_ConnectionFail(ServerConnectionFailListener)}.
+	 * {@link #setListener_ReconnectFilter(ServerReconnectFilter)}.
 	 */
-	public final ServerConnectionFailListener.ConnectionFailEvent connect(final String macAddress, final ServerStateListener stateListener, final ServerConnectionFailListener connectionFailListener)
+	public final ServerReconnectFilter.ConnectFailEvent connect(final String macAddress, final ServerStateListener stateListener, final ServerReconnectFilter connectionFailListener)
 	{
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
 		return connect_internal(newNativeDevice(macAddress_normalized).getNativeDevice(), stateListener, connectionFailListener);
 	}
 
-	/*package*/ final ServerConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice)
+	/*package*/ final ServerReconnectFilter.ConnectFailEvent connect_internal(final BluetoothDevice nativeDevice)
 	{
 		return connect_internal(nativeDevice, null, null);
 	}
 
-	/*package*/ final ServerConnectionFailListener.ConnectionFailEvent connect_internal(final BluetoothDevice nativeDevice, final ServerStateListener stateListener, final ServerConnectionFailListener connectionFailListener)
+	/*package*/ final ServerReconnectFilter.ConnectFailEvent connect_internal(final BluetoothDevice nativeDevice, final ServerStateListener stateListener, final ServerReconnectFilter connectionFailListener)
 	{
 		m_nativeWrapper.clearImplicitDisconnectIgnoring(nativeDevice.getAddress());
 
@@ -694,12 +697,12 @@ public final class BleServer extends BleNode
 
 		if( connectionFailListener != null )
 		{
-			setListener_ConnectionFail(connectionFailListener);
+			setListener_ReconnectFilter(connectionFailListener);
 		}
 
 		if( isNull() )
 		{
-			final ServerConnectionFailListener.ConnectionFailEvent e = ServerConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, nativeDevice, ServerConnectionFailListener.Status.NULL_SERVER);
+			final ServerReconnectFilter.ConnectFailEvent e = ServerReconnectFilter.ConnectFailEvent.EARLY_OUT(this, nativeDevice, ServerReconnectFilter.Status.NULL_SERVER);
 
 			m_connectionFailMngr.invokeCallback(e);
 
@@ -710,7 +713,7 @@ public final class BleServer extends BleNode
 
 		if( isAny(nativeDevice.getAddress(), CONNECTING, CONNECTED) )
 		{
-			final ServerConnectionFailListener.ConnectionFailEvent e = ServerConnectionFailListener.ConnectionFailEvent.EARLY_OUT(this, nativeDevice, ServerConnectionFailListener.Status.ALREADY_CONNECTING_OR_CONNECTED);
+			final ServerReconnectFilter.ConnectFailEvent e = ServerReconnectFilter.ConnectFailEvent.EARLY_OUT(this, nativeDevice, ServerReconnectFilter.Status.ALREADY_CONNECTING_OR_CONNECTED);
 
 			m_connectionFailMngr.invokeCallback(e);
 
@@ -724,24 +727,24 @@ public final class BleServer extends BleNode
 
 		m_stateTracker.doStateTransition(nativeDevice.getAddress(), BleServerState.DISCONNECTED /* ==> */, BleServerState.CONNECTING, ChangeIntent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
-		return ServerConnectionFailListener.ConnectionFailEvent.NULL(this, nativeDevice);
+		return ServerReconnectFilter.ConnectFailEvent.NULL(this, nativeDevice);
 	}
 
 	private P_NativeDeviceLayer newNativeDevice(final String macAddress)
 	{
 		final BleManager mngr = getManager();
 
-		return mngr == null ? null : mngr.newNativeDevice(macAddress);
+		return mngr == null ? P_NativeDeviceLayer.NULL : mngr.newNativeDevice(macAddress);
 	}
 
 	public final boolean disconnect(final String macAddress)
 	{
 		final String macAddress_normalized = getManager().normalizeMacAddress(macAddress);
 
-		return disconnect_private(macAddress_normalized, ServerConnectionFailListener.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
+		return disconnect_private(macAddress_normalized, ServerReconnectFilter.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
 	}
 
-	private boolean disconnect_private(final String macAddress, final ServerConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
+	private boolean disconnect_private(final String macAddress, final ServerReconnectFilter.Status status_connectionFail, final ChangeIntent intent)
 	{
 		final boolean addTask = true;
 
@@ -771,7 +774,7 @@ public final class BleServer extends BleNode
 		return true;
 	}
 
-	/*package*/ final void disconnect_internal(final AddServiceListener.Status status_serviceAdd, final ServerConnectionFailListener.Status status_connectionFail, final ChangeIntent intent)
+	/*package*/ final void disconnect_internal(final AddServiceListener.Status status_serviceAdd, final ServerReconnectFilter.Status status_connectionFail, final ChangeIntent intent)
 	{
 		stopAdvertising();
 
@@ -797,7 +800,7 @@ public final class BleServer extends BleNode
 	 */
 	public final void disconnect()
 	{
-		disconnect_internal(AddServiceListener.Status.CANCELLED_FROM_DISCONNECT, ServerConnectionFailListener.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
+		disconnect_internal(AddServiceListener.Status.CANCELLED_FROM_DISCONNECT, ServerReconnectFilter.Status.CANCELLED_FROM_DISCONNECT, ChangeIntent.INTENTIONAL);
 	}
 
 	@Override public final boolean isNull()
@@ -828,9 +831,9 @@ public final class BleServer extends BleNode
 		m_stateTracker.doStateTransition(macAddress, previousState /* ==> */, BleServerState.CONNECTED, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
 
-	/*package*/ final void onNativeConnectFail(final BluetoothDevice nativeDevice, final ServerConnectionFailListener.Status status, final int gattStatus)
+	/*package*/ final void onNativeConnectFail(final BluetoothDevice nativeDevice, final ServerReconnectFilter.Status status, final int gattStatus)
 	{
-		if( status == ServerConnectionFailListener.Status.TIMED_OUT )
+		if( status == ServerReconnectFilter.Status.TIMED_OUT )
 		{
 			final P_Task_DisconnectServer task = new P_Task_DisconnectServer(this, nativeDevice, m_listeners.m_taskStateListener, /*explicit=*/true, PE_TaskPriority.FOR_EXPLICIT_BONDING_AND_CONNECTING);
 			queue().add(task);

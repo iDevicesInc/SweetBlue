@@ -1,6 +1,6 @@
 package com.idevicesinc.sweetblue;
 
-import com.idevicesinc.sweetblue.NodeConnectionFailListener.AutoConnectUsage;
+import com.idevicesinc.sweetblue.ReconnectFilter.AutoConnectUsage;
 
 
 final class P_Task_Connect extends PA_Task_RequiresBleOn

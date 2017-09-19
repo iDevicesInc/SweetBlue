@@ -58,13 +58,7 @@ final class P_BleManager_Listeners
                 {
                     if (state == PE_TaskState.INTERRUPTED)
                     {
-                        m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
-                        {
-                            @Override public void run()
-                            {
-                                m_mngr.tryPurgingStaleDevices(totalTimeExecuting);
-                            }
-                        });
+                        m_mngr.getPostManager().runOrPostToUpdateThread(() -> m_mngr.tryPurgingStaleDevices(totalTimeExecuting));
                     }
                     else
                     {
@@ -401,7 +395,7 @@ final class P_BleManager_Listeners
 
                 if (m_mngr.m_server != null)
                 {
-                    m_mngr.m_server.disconnect_internal(AddServiceListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ServerConnectionFailListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, State.ChangeIntent.UNINTENTIONAL);
+                    m_mngr.m_server.disconnect_internal(AddServiceListener.Status.CANCELLED_FROM_BLE_TURNING_OFF, ServerReconnectFilter.Status.CANCELLED_FROM_BLE_TURNING_OFF, State.ChangeIntent.UNINTENTIONAL);
                 }
 
                 intent = E_Intent.UNINTENTIONAL;

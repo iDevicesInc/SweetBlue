@@ -14,6 +14,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.idevicesinc.sweetblue.impl.DefaultReconnectFilter;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.DebugLogger;
 import com.idevicesinc.sweetblue.utils.Interval;
@@ -54,6 +56,8 @@ public class MainActivity extends Activity
         mDevices = new ArrayList<>(0);
         mAdaptor = new ScanAdaptor(this, mDevices);
         mListView.setAdapter(mAdaptor);
+
+
         mListView.setOnItemClickListener((parent, view, position, id) ->
         {
             final BleDevice device = mDevices.get(position);
@@ -120,7 +124,6 @@ public class MainActivity extends Activity
             }
         };
         config.forceBondDialog = true;
-        config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
         config.defaultScanFilter = new ScanFilter()
         {
