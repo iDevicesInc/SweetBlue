@@ -2,9 +2,7 @@ package com.idevicesinc.sweetblue;
 
 import android.bluetooth.BluetoothGatt;
 
-import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Utils;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 final class P_ReliableWriteManager
@@ -163,7 +161,7 @@ final class P_ReliableWriteManager
 
 			final P_Task_ExecuteReliableWrite task = new P_Task_ExecuteReliableWrite(m_device, listener, m_device.getOverrideReadWritePriority());
 
-			m_device.getTaskQueue().add(task);
+			m_device.getTaskManager().add(task);
 
 			return m_device.NULL_READWRITE_EVENT();
 		}

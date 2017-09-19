@@ -759,7 +759,7 @@ public abstract class BleNode implements UsesCustomNull
 
 	abstract BleNodeConfig conf_node();
 
-	P_TaskQueue queue()
+	P_TaskManager taskManager()
 	{
 		return getManager().getTaskQueue();
 	}

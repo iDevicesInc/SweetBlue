@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
-abstract class PA_Task
+abstract class PA_Task implements Comparable<PA_Task>
 {
 	static interface I_StateListener
 	{
@@ -33,7 +33,7 @@ abstract class PA_Task
 	
 	private PE_TaskState m_state = null;
 	
-	private P_TaskQueue m_queue;
+	private P_TaskManager m_queue;
 	
 //	private int m_maxRetries;
 //	private int m_retryCount;
@@ -122,7 +122,7 @@ abstract class PA_Task
 	}
 
 	/**
-	 * Returns <code>true</code> if {@link P_TaskQueue#print()} was called.
+	 * Returns <code>true</code> if {@link P_TaskManager#print()} was called.
      */
 	private boolean setState(PE_TaskState newState)
 	{
@@ -163,12 +163,12 @@ abstract class PA_Task
 		return m_defaultOrdinal;
 	}
 
-	void assignDefaultOrdinal(final P_TaskQueue queue)
+	void assignDefaultOrdinal(final P_TaskManager queue)
 	{
 		m_defaultOrdinal = m_defaultOrdinal == ORDINAL_NOT_YET_ASSIGNED ? queue.assignOrdinal() : m_defaultOrdinal;
 	}
 	
-	void onAddedToQueue(P_TaskQueue queue)
+	void onAddedToQueue(P_TaskManager queue)
 	{
 		m_queue = queue;
 		setState(PE_TaskState.QUEUED);
@@ -295,7 +295,7 @@ abstract class PA_Task
 
 
 	/**
-	 * Returns <code>true</code> if {@link P_TaskQueue#print()} ends up getting called.
+	 * Returns <code>true</code> if {@link P_TaskManager#print()} ends up getting called.
  	 */
 	public boolean tryExecuting()
 	{
@@ -436,7 +436,7 @@ abstract class PA_Task
 		return m_timeout;
 	}
 	
-	protected P_TaskQueue getQueue()
+	protected P_TaskManager getQueue()
 	{
 		return m_queue;
 	}
@@ -499,5 +499,15 @@ abstract class PA_Task
 	public boolean isExplicit()
 	{
 		return false;
+	}
+
+	// Utilize the isMoreImportantThan call to decide how these tasks should be ordered
+	public int compareTo(PA_Task t)
+	{
+		if (isMoreImportantThan(t))
+			return 1;
+		if (t.isMoreImportantThan(this))
+			return -1;
+		return 0;
 	}
 }

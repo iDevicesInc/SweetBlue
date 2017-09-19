@@ -208,7 +208,7 @@ public final class BleManager
 	final P_NativeBleStateTracker m_nativeStateTracker;
 	private P_PostManager m_postManager;
 	private P_ScanManager m_scanManager;
-	private final P_TaskQueue m_taskQueue;
+	private final P_TaskManager m_taskManager;
 	private 	P_UhOhThrottler m_uhOhThrottler;
 				P_WakeLockManager m_wakeLockMngr;
 
@@ -285,7 +285,7 @@ public final class BleManager
 		m_stateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 		m_nativeStateTracker = new P_NativeBleStateTracker(this);
 		m_nativeStateTracker.append(nativeState, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-		m_taskQueue = new P_TaskQueue(this);
+		m_taskManager = new P_TaskManager(this);
 		m_crashResolver = new P_BluetoothCrashResolver(m_context);
 		m_deviceMngr = new P_DeviceManager(this);
 //		m_serverMngr = new P_ServerManager(this);
@@ -1017,7 +1017,7 @@ public final class BleManager
 //    {
 	final boolean startScan_private(ScanOptions options)
 	{
-		if (m_taskQueue.isInQueue(P_Task_Scan.class, this))
+		if (m_taskManager.isInQueue(P_Task_Scan.class, this))
 		{
 			getLogger().w("A startScan method was called when there's already a scan task in the queue!");
 			return false;
@@ -1030,7 +1030,7 @@ public final class BleManager
 			return false;
 		}
 
-		final P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, this);
+		final P_Task_Scan scanTask = m_taskManager.get(P_Task_Scan.class, this);
 
 		if( scanTask != null )
 		{
@@ -1038,7 +1038,7 @@ public final class BleManager
 		}
 		else
 		{
-			ASSERT(!m_taskQueue.isCurrentOrInQueue(P_Task_Scan.class, this));
+			ASSERT(!m_taskManager.isCurrentOrInQueue(P_Task_Scan.class, this));
 
 			m_stateTracker.append(BleManagerState.STARTING_SCAN, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 
@@ -1077,7 +1077,7 @@ public final class BleManager
 
 			if (startScan)
 			{
-				m_taskQueue.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), options.m_isPeriodic, pri));
+				m_taskManager.add(new P_Task_Scan(this, m_listeners.getScanTaskListener(), options.m_scanTime.secs(), options.m_isPeriodic, pri));
 			}
 		}
 
@@ -1184,7 +1184,7 @@ public final class BleManager
 			m_stateTracker.update(E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, TURNING_ON, true, OFF, false);
 		}
 
-		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
+		m_taskManager.add(new P_Task_TurnBleOn(this, /*implicit=*/false));
 		if (m_timeTurnedOn == 0) {
 			m_timeTurnedOn = System.currentTimeMillis();
 		}
@@ -1247,12 +1247,12 @@ public final class BleManager
 
 		if( m_config.enableCrashResolverForReset )
 		{
-			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver, /*partOfReset=*/true));
+			m_taskManager.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver, /*partOfReset=*/true));
 		}
 
 		turnOff_private(/*removeAllBonds=*/true);
 
-		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		m_taskManager.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
 		{
 			@Override
 			public void onStateChange(PA_Task taskClass, PE_TaskState state)
@@ -1611,17 +1611,17 @@ public final class BleManager
 	{
 		m_scanManager.resetTimeNotScanning();
 
-		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
+		if( !m_taskManager.succeed(P_Task_Scan.class, this) )
 		{
 			m_postManager.runOrPostToUpdateThread(new Runnable()
 			{
 				@Override
 				public void run()
 				{
-					P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, BleManager.this);
+					P_Task_Scan scanTask = m_taskManager.get(P_Task_Scan.class, BleManager.this);
 					if (scanTask != null)
 						scanTask.succeed();
-					m_taskQueue.clearQueueOf(P_Task_Scan.class, BleManager.this);
+					m_taskManager.clearQueueOf(P_Task_Scan.class, BleManager.this);
 				}
 			});
 
@@ -2281,7 +2281,7 @@ public final class BleManager
 			@Override
 			public void run()
 			{
-				m_taskQueue.clearQueueOfAll();
+				m_taskManager.clearQueueOfAll();
 			}
 		});
 	}
@@ -2328,7 +2328,7 @@ public final class BleManager
 	final P_BleStateTracker			getStateTracker(){				return m_stateTracker;									}
 	final P_NativeBleStateTracker	getNativeStateTracker(){		return m_nativeStateTracker;							}
 	final P_BluetoothCrashResolver	getCrashResolver(){				return m_crashResolver;									}
-	final P_TaskQueue				getTaskQueue(){					return m_taskQueue;										}
+	final P_TaskManager getTaskQueue(){					return m_taskManager;										}
 	final P_Logger					getLogger(){					return m_logger;										}
 	final long 						timeTurnedOn(){					return m_timeTurnedOn;									}
 	final double 					timeForegrounded(){				return m_timeForegrounded;								}
@@ -2375,7 +2375,7 @@ public final class BleManager
 			}
 		});
 
-		m_taskQueue.add(task);
+		m_taskManager.add(task);
 	}
 
 	String getDeviceName(P_NativeDeviceLayer device, byte[] scanRecord) throws Exception
@@ -2727,7 +2727,7 @@ public final class BleManager
 
 		m_uhOhThrottler.update(timeStep_seconds);
 
-		if (m_taskQueue.update(timeStep_seconds, currentTime))
+		if (m_taskManager.update(timeStep_seconds, currentTime))
 		{
 			m_lastTaskExecution = currentTime;
 			checkIdleStatus();
