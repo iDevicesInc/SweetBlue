@@ -55,6 +55,7 @@ def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle")
 
 repositories {
     mavenCentral()
+    google()
     maven {
         url 'https://maven.google.com'
     }
