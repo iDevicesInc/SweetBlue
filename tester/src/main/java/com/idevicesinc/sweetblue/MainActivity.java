@@ -100,7 +100,6 @@ public class MainActivity extends Activity
         mLogger = new DebugLogger(250);
 
 
-
         BleManagerConfig config = new BleManagerConfig();
         config.loggingOptions = new LogOptions(LogOptions.LogLevel.INFO, LogOptions.LogLevel.INFO);
         config.logger = mLogger;

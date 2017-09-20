@@ -250,6 +250,33 @@ public class Utils
 		return false;
 	}
 
+	public static boolean haveMatchingName(String nameNative, List<String> lookedForNames)
+	{
+		if (TextUtils.isEmpty(nameNative))
+			return false;
+
+		if (lookedForNames != null && !lookedForNames.isEmpty())
+		{
+			String nameNative_lower = nameNative.toLowerCase();
+
+			boolean match = false;
+
+			for (int i = 0; i < lookedForNames.size(); i++)
+			{
+				if (nameNative_lower.contains(lookedForNames.get(i).toLowerCase()))
+				{
+					match = true;
+					break;
+				}
+			}
+
+			if (!match)
+				return false;
+		}
+
+		return true;
+	}
+
 	public static boolean haveMatchingIds(List<UUID> advertisedIds, Collection<UUID> lookedForIds)
 	{
 		if(lookedForIds != null && !lookedForIds.isEmpty())

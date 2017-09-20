@@ -546,35 +546,6 @@ public class BleManagerConfig extends BleDeviceConfig
 	}
 
 	/**
-	 * Convenience implementation of {@link ScanFilter} which filters using
-	 * a whitelist of known primary advertising {@link UUID}s passed in to the constructor.
-	 */
-	public static class DefaultScanFilter implements ScanFilter
-	{
-		private final ArrayList<UUID> m_whitelist;
-
-		public DefaultScanFilter(Collection<UUID> whitelist)
-		{
-			m_whitelist = new ArrayList<UUID>(whitelist);
-		}
-
-		public DefaultScanFilter(UUID whitelist)
-		{
-			m_whitelist = new ArrayList<UUID>();
-			m_whitelist.add(whitelist);
-		}
-
-		/**
-		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
-		 * and the {@link Collection} passed into the constructor of {@link BleManagerConfig.DefaultScanFilter}.
-		 */
-		@Override public Please onEvent(final ScanEvent e)
-		{
-			return Please.acknowledgeIf( Utils.haveMatchingIds(e.advertisedServices(), m_whitelist) );
-		}
-	}
-
-	/**
 	 * Default sorter class for sorting the list of devices in {@link BleManager}. This sorts by
 	 * {@link BleDevice#getName_debug()}.
 	 */
