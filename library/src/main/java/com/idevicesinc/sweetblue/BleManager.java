@@ -2198,6 +2198,12 @@ public final class BleManager
 	 */
 	public final @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name, final BleDeviceConfig config)
 	{
+		return newDevice(macAddress, name, null, config);
+	}
+
+
+	final @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name, final byte[] scanRecord, final BleDeviceConfig config)
+	{
 		final String macAddress_normalized = normalizeMacAddress(macAddress);
 
 		final BleDevice existingDevice = this.getDevice(macAddress_normalized);
@@ -2219,7 +2225,7 @@ public final class BleManager
 
 		final P_NativeDeviceLayer device_native = newNativeDevice(macAddress_normalized);
 
-		if( device_native == null ) //--- DRK > API says this should never happen...not trusting it!
+		if( device_native == null && scanRecord == null) //--- DRK > API says this should never happen...not trusting it! Only returning null instance if scanRecord is null
 		{
 			return BleDevice.NULL;
 		}
@@ -2233,7 +2239,7 @@ public final class BleManager
 			newDevice.setName(name);
 		}
 
-		onDiscovered_wrapItUp(newDevice, device_native, /*newlyDiscovered=*/true, /*scanRecord=*/null, 0, BleDeviceOrigin.EXPLICIT, /*scanEvent=*/null);
+		onDiscovered_wrapItUp(newDevice, device_native, /*newlyDiscovered=*/true, /*scanRecord=*/scanRecord, 0, BleDeviceOrigin.EXPLICIT, /*scanEvent=*/null);
 
 		return newDevice;
 	}
