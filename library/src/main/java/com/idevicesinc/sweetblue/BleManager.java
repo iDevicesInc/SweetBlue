@@ -217,8 +217,9 @@ public final class BleManager
 	private P_WrappingResetListener m_resetListeners;
 	private AssertListener m_assertionListener;
 			DeviceStateListener m_defaultDeviceStateListener;
-			DeviceReconnectFilter m_defaultConnectionFailListener;
+			DeviceReconnectFilter m_defaultDeviceReconnectFilter;
 			ServerReconnectFilter m_defaultConnectionFailListener_server;
+			DeviceConnectListener m_defaultDeviceConnectListener;
 			BondListener m_defaultBondListener;
 			ReadWriteListener m_defaultReadWriteListener;
 			NotificationListener m_defaultNotificationListener;
@@ -727,9 +728,20 @@ public final class BleManager
 	 *
 	 * @see BleDevice#setListener_Reconnect(DeviceReconnectFilter)
 	 */
-	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
+	public final void setListener_DeviceReconnect(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
 	{
-		m_defaultConnectionFailListener = listener_nullable;
+		m_defaultDeviceReconnectFilter = listener_nullable;
+	}
+
+	/**
+	 * Convenience method to handle {@link BleDevice} connect events at a manager level. This listener simply reports when
+	 * a device is connected, or has failed to connect -- {@link DeviceConnectListener#onEvent(Event)} may fire multiple times
+	 * when {@link DeviceConnectListener.ConnectEvent#wasSuccess()} is <code>false</code>, as SweetBlue may be retrying the connection
+	 * in the background, remember to check {@link DeviceConnectListener.ConnectEvent#isRetrying()}.
+	 */
+	public final void setListener_DeviceConnect(@Nullable(Prevalence.NORMAL) DeviceConnectListener listener_nullable)
+	{
+		m_defaultDeviceConnectListener = listener_nullable;
 	}
 
 	/**

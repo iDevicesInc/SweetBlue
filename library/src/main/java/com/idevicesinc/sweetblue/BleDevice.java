@@ -4768,11 +4768,11 @@ public final class BleDevice extends BleNode
 
         final DeviceConnectListener.ConnectEvent event = new DeviceConnectListener.ConnectEvent(this, null);
 
-        invokeConnectCallback(event);
+        invokeConnectCallbacks(event);
 
     }
 
-    final void invokeConnectCallback(DeviceConnectListener.ConnectEvent event)
+    final void invokeConnectCallbacks(DeviceConnectListener.ConnectEvent event)
     {
         // Post to the ephemeral listener first, if it's not null
         if (m_ephemeralConnectListener != null && m_ephemeralConnectListener.get() != null)
@@ -4781,8 +4781,13 @@ public final class BleDevice extends BleNode
         }
 
         // Now post to the default listener, if there is one
-        final DeviceConnectListener listener = getListener_Connect();
+        DeviceConnectListener listener = getListener_Connect();
 
+        if (listener != null)
+            listener.onEvent(event);
+
+        // Now post to the manager's listener, if there is one
+        listener = getManager().m_defaultDeviceConnectListener;
         if (listener != null)
             listener.onEvent(event);
     }

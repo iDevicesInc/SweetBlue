@@ -11,7 +11,6 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 import java.util.ArrayList;
 import java.util.Stack;
-import java.util.function.Function;
 
 
 final class P_ConnectionFailManager
@@ -237,9 +236,9 @@ final class P_ConnectionFailManager
 			
 			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.ConnectFailPlease.class);
 		}
-		else if( m_device.getManager().m_defaultConnectionFailListener != null )
+		else if( m_device.getManager().m_defaultDeviceReconnectFilter != null )
 		{
-			final ReconnectFilter.ConnectFailPlease please = m_device.getManager().m_defaultConnectionFailListener.onConnectFailed(moreInfo);
+			final ReconnectFilter.ConnectFailPlease please = m_device.getManager().m_defaultDeviceReconnectFilter.onConnectFailed(moreInfo);
 			retryChoice__PE_Please = please != null ? please.please() : ConnectFailPlease.PE_Please_NULL;
 			
 			m_device.getManager().getLogger().checkPlease(please, ReconnectFilter.ConnectFailPlease.class);
@@ -255,7 +254,7 @@ final class P_ConnectionFailManager
 		retryChoice__PE_Please = retryChoice__PE_Please != ConnectFailPlease.PE_Please_NULL ? retryChoice__PE_Please : ConnectFailPlease.PE_Please_DO_NOT_RETRY;
 
 		final DeviceConnectListener.ConnectEvent event = new DeviceConnectListener.ConnectEvent(m_device, moreInfo);
-		m_device.invokeConnectCallback(event);
+		m_device.invokeConnectCallbacks(event);
 
 		return retryChoice__PE_Please;
 	}
