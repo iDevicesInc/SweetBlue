@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -23,7 +23,7 @@ public class UndiscoverTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Undiscover Me!");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Undiscover Me!");
 
         m_mgr.setListener_Discovery(e ->
         {

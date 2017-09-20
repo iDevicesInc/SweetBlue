@@ -2,7 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,7 +22,7 @@ public class BondTest extends BaseBleUnitTest
     @Test(timeout = 20000)
     public void bondTest() throws Exception
     {
-        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #1");
+        BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test device #1");
         device.bond(new BondListener()
         {
             @Override
@@ -50,7 +50,7 @@ public class BondTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Test device #2");
+        BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test device #2");
         device.bond(new BondListener()
         {
             @Override
@@ -103,7 +103,7 @@ public class BondTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test device #3");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test device #3");
 
         startTest();
     }

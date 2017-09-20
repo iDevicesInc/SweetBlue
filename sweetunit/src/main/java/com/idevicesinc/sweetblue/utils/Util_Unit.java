@@ -8,10 +8,10 @@ import java.util.Random;
  * Utility class to handle various things when unit testing, such as generating random mac addresses, random byte arrays. For generating a scan record, you
  * should use the {@link BleScanInfo} class.
  */
-public final class Util
+public final class Util_Unit
 {
 
-    private Util() {}
+    private Util_Unit() {}
 
 
     /**

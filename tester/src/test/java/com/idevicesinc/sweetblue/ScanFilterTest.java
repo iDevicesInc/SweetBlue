@@ -5,7 +5,7 @@ import com.idevicesinc.sweetblue.impl.DefaultScanFilter;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Uuids;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -25,7 +25,7 @@ public class ScanFilterTest extends BaseBleUnitTest
     public void uuidFilterTest() throws Exception
     {
         byte[] record = Utils_ScanRecord.newScanRecord("FilterTesterer", Uuids.BATTERY_SERVICE_UUID);
-        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "FilterTesterer", record, null);
+        BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "FilterTesterer", record, null);
 
         ScanFilter filter = new DefaultScanFilter(Uuids.BATTERY_SERVICE_UUID);
         ScanFilter.ScanEvent event = newEvent(device);
@@ -42,13 +42,13 @@ public class ScanFilterTest extends BaseBleUnitTest
     public void uuidListTest() throws Exception
     {
         byte[] record = Utils_ScanRecord.newScanRecord("FilterTesterer", Uuids.BATTERY_SERVICE_UUID);
-        BleDevice device1 = m_mgr.newDevice(Util.randomMacAddress(), "FilterTesterer", record, null);
+        BleDevice device1 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "FilterTesterer", record, null);
 
         byte[] record2 = Utils_ScanRecord.newScanRecord("Milano", Uuids.CURRENT_TIME_SERVICE);
-        BleDevice device2 = m_mgr.newDevice(Util.randomMacAddress(), "Milano", record2, null);
+        BleDevice device2 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Milano", record2, null);
 
         byte[] record3 = Utils_ScanRecord.newScanRecord("Wretched", Uuids.BLOOD_PRESSURE_SERVICE_UUID);
-        BleDevice device3 = m_mgr.newDevice(Util.randomMacAddress(), "Wretched", record3, null);
+        BleDevice device3 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Wretched", record3, null);
 
         ArrayList<UUID> list = new ArrayList<>();
         list.add(Uuids.BATTERY_SERVICE_UUID);
@@ -71,7 +71,7 @@ public class ScanFilterTest extends BaseBleUnitTest
     public void nameFilterTest() throws Exception
     {
         byte[] record = Utils_ScanRecord.newScanRecord("FilterTesterer", Uuids.BATTERY_SERVICE_UUID);
-        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "FilterTesterer", record, null);
+        BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "FilterTesterer", record, null);
 
         ScanFilter filter = new DefaultScanFilter("TERtes");
         ScanFilter.ScanEvent event = newEvent(device);
@@ -87,9 +87,9 @@ public class ScanFilterTest extends BaseBleUnitTest
     @Test
     public void nameListTest() throws Exception
     {
-        BleDevice device1 = m_mgr.newDevice(Util.randomMacAddress(), "FilterTesterer");
-        BleDevice device2 = m_mgr.newDevice(Util.randomMacAddress(), "Milano");
-        BleDevice device3 = m_mgr.newDevice(Util.randomMacAddress(), "Wretched");
+        BleDevice device1 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "FilterTesterer");
+        BleDevice device2 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Milano");
+        BleDevice device3 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Wretched");
 
         ScanFilter filter = new DefaultScanFilter("TESter", "laNo");
         ScanFilter.ScanEvent event = newEvent(device1);
@@ -109,13 +109,13 @@ public class ScanFilterTest extends BaseBleUnitTest
     public void uuidAndNameListTest() throws Exception
     {
         byte[] record = Utils_ScanRecord.newScanRecord("FilterTesterer", Uuids.BATTERY_SERVICE_UUID);
-        BleDevice device1 = m_mgr.newDevice(Util.randomMacAddress(), "FilterTesterer", record, null);
+        BleDevice device1 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "FilterTesterer", record, null);
 
         byte[] record2 = Utils_ScanRecord.newScanRecord("Milano", Uuids.CURRENT_TIME_SERVICE);
-        BleDevice device2 = m_mgr.newDevice(Util.randomMacAddress(), "Milano", record2, null);
+        BleDevice device2 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Milano", record2, null);
 
         byte[] record3 = Utils_ScanRecord.newScanRecord("Wretched", Uuids.BLOOD_PRESSURE_SERVICE_UUID);
-        BleDevice device3 = m_mgr.newDevice(Util.randomMacAddress(), "Wretched", record3, null);
+        BleDevice device3 = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Wretched", record3, null);
 
         ArrayList<UUID> list = new ArrayList<>();
         list.add(Uuids.BATTERY_SERVICE_UUID);

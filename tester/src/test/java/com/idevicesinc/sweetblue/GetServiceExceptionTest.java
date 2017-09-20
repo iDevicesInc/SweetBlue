@@ -35,7 +35,7 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "ImaBlowUp");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "ImaBlowUp");
 
         device.connect(e ->
         {
@@ -60,7 +60,7 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "ImaBlowUp");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "ImaBlowUp");
 
         device.connect(e ->
         {

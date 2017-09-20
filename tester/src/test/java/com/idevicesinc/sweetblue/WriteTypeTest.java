@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.utils.GattDatabase;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,7 +73,7 @@ public class WriteTypeTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress());
+        m_mgr.newDevice(Util_Unit.randomMacAddress());
         reacquire();
     }
 

@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.GattDatabase;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -24,7 +24,7 @@ public class OtaTest extends BaseBleUnitTest
     @Test
     public void otaTest() throws Exception
     {
-        BleDevice device = m_mgr.newDevice(Util.randomMacAddress());
+        BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress());
 
         device.connect(e ->
         {
@@ -41,15 +41,15 @@ public class OtaTest extends BaseBleUnitTest
         @Override
         protected void start(BleDevice device)
         {
-            final BleWrite bleWrite = new BleWrite(m_serviceUuid, m_charUuid).setBytes(Util.randomBytes(10));
+            final BleWrite bleWrite = new BleWrite(m_serviceUuid, m_charUuid).setBytes(Util_Unit.randomBytes(10));
             device.write(bleWrite, e -> {
 
                 assertTrue(e.wasSuccess());
-                bleWrite.setBytes(Util.randomBytes(10));
+                bleWrite.setBytes(Util_Unit.randomBytes(10));
                 device.write(bleWrite, e1 -> {
 
                     assertTrue(e1.wasSuccess());
-                    bleWrite.setBytes(Util.randomBytes(10));
+                    bleWrite.setBytes(Util_Unit.randomBytes(10));
                     device.write(bleWrite, e2 -> {
 
                         assertTrue(e2.wasSuccess());

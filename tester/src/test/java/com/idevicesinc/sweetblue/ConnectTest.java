@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.impl.DefaultDeviceReconnectFilter;
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Pointer;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import org.junit.Test;
@@ -70,7 +70,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -86,7 +86,7 @@ public class ConnectTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        m_device = m_mgr.newDevice(Util.randomMacAddress());
+        m_device = m_mgr.newDevice(Util_Unit.randomMacAddress());
 
         m_device.setListener_Reconnect(new DefaultDeviceReconnectFilter(3, 3));
 
@@ -303,7 +303,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -370,7 +370,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -420,7 +420,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -474,7 +474,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -552,7 +552,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -620,7 +620,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -682,7 +682,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -746,7 +746,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }
@@ -811,7 +811,7 @@ public class ConnectTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         reacquire();
     }

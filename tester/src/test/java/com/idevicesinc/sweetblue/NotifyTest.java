@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import org.junit.Test;
@@ -16,7 +16,6 @@ import org.robolectric.annotation.Config;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
@@ -81,7 +80,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         startTest();
     }
@@ -123,7 +122,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         startTest();
     }
@@ -137,7 +136,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "NotifyTesterererer");
+        BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "NotifyTesterererer");
 
         final boolean[] notifies = new boolean[2];
 
@@ -210,7 +209,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         startTest();
     }
@@ -259,7 +258,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         startTest();
     }
@@ -309,7 +308,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         startTest();
     }
@@ -368,7 +367,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         startTest();
     }
@@ -418,7 +417,7 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
         startTest();
     }
@@ -430,8 +429,8 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_config.gattLayerFactory = device -> new UnitTestGatt(device, dbNotify);
 
-        final byte[] first = Util.randomBytes(20);
-        final byte[] second = Util.randomBytes(20);
+        final byte[] first = Util_Unit.randomBytes(20);
+        final byte[] second = Util_Unit.randomBytes(20);
 
         m_config.defaultInitFactory = () -> new BleTransaction.Init()
         {
@@ -450,7 +449,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "NotifMotif");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "NotifMotif");
 
         final BluetoothGattCharacteristic ch = device.getNativeCharacteristic(mTestService, mTestChar);
 

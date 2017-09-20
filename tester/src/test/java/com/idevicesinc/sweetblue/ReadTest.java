@@ -4,7 +4,7 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.utils.GattDatabase;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +46,7 @@ public class ReadTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "DeviceOfRead-ness");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "DeviceOfRead-ness");
 
         device.connect(e ->
         {
@@ -70,7 +70,7 @@ public class ReadTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "DeviceOfRead-nes");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "DeviceOfRead-nes");
 
         final boolean[] reads = new boolean[4];
 
@@ -113,7 +113,7 @@ public class ReadTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "SomeBLEdevice");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "SomeBLEdevice");
 
         final BleRead read = new BleRead(firstServiceUuid, firstCharUuid);
 
@@ -154,7 +154,7 @@ public class ReadTest extends BaseBleUnitTest
         @Override
         public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
         {
-            characteristic.setValue(Util.randomBytes(20));
+            characteristic.setValue(Util_Unit.randomBytes(20));
             return super.readCharacteristic(characteristic);
         }
     }

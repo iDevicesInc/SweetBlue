@@ -6,7 +6,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Pointer;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 import com.idevicesinc.sweetblue.utils.Uuids;
 
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class PollingTest extends BaseBleUnitTest
     @Test(timeout = 30000)
     public void rssiPollTest() throws Exception
     {
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Rssi Poll Tester");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Rssi Poll Tester");
         final Pointer<Integer> counter = new Pointer<>(0);
         device.connect(e ->
         {
@@ -56,7 +56,7 @@ public class PollingTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Battery Poll Tester");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Battery Poll Tester");
         final Pointer<Integer> counter = new Pointer<>(0);
         device.connect(e ->
         {
