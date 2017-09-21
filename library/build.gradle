@@ -12,7 +12,7 @@ version = "${SEMVER}".replace("_", ".")
 
 android {
     compileSdkVersion 26
-    buildToolsVersion '26.0.1'
+	buildToolsVersion '26.0.1'
 
     defaultConfig {
         minSdkVersion 18
@@ -288,7 +288,7 @@ task copyAndRenameJars(dependsOn: copySamples) {
             }
             buildSampleTask(file.getAbsolutePath()).execute()
             delete(file.getAbsolutePath() + "/android_studio/local.properties")
-            
+
             // Delete build folders to save on space in the resulting zip file
             delete(file.getAbsolutePath() + AS_APP_BUILD_SUFFIX)
             delete(file.getAbsolutePath() + AS_BUILD_SUFFIX)
@@ -474,6 +474,28 @@ task bumpCompileSdkVersion (dependsOn: getSamples) {
             String contents = f.getText('UTF-8')
             contents = contents.replaceAll("compileSdkVersion \\d+", "compileSdkVersion " + compileSdkVersion)  // Replace compileSdkVersion
             contents = contents.replaceAll("targetSdkVersion \\d+", "targetSdkVersion " + compileSdkVersion)  // Replace targetSdkVersion
+            f.write(contents, 'UTF-8')
+        }
+    }
+}
+
+task bumpBuildToolsVersion (dependsOn: getSamples) {
+    // Takes parameter buildToolsVersion (e.g. 25.0.3)
+    group = "sweetblue"
+    description = "Updates buildToolsVersion in all inner project's build.gradle"
+    doLast {
+        def allFiles = moduleFiles
+
+        // Add samples to allFiles
+        File samplesDir = file(projectDir.absolutePath + "/${STAGE}/samples/samples")
+        def samples = files { samplesDir.listFiles() }
+        samples.each {File sample ->
+            allFiles.add files(sample.absolutePath + "/android_studio/app/build.gradle") }
+        println allFiles.asFileTree.files
+
+        allFiles.each { File f ->
+            String contents = f.getText('UTF-8')
+            contents = contents.replaceAll("\\s+buildToolsVersion '.*'", "\n\tbuildToolsVersion '" + buildToolsVersion + "'")  // Replace compileSdkVersion
             f.write(contents, 'UTF-8')
         }
     }
