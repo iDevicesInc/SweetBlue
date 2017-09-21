@@ -159,9 +159,9 @@ final class P_TaskManager
         {
             task.assignDefaultOrdinal(this);
 
-            softlyCancelTasks(task);
-
             task.onAddedToQueue(this);
+
+            softlyCancelTasks(task);
 
             print();
         }
