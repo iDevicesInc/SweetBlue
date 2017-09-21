@@ -13,7 +13,6 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventT
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.PresentData;
-import com.idevicesinc.sweetblue.utils.Uuids;
 
 
 final class P_PollManager
@@ -429,7 +428,7 @@ final class P_PollManager
 						{
 							m_device.m_bondMngr.bondIfNeeded(characteristic.getUuid(), CharacteristicEventType.ENABLE_NOTIFY);
 
-							m_device.getManager().getTaskQueue().add(new P_Task_ToggleNotify(m_device, notify, /*enable=*/true, null, m_device.getOverrideReadWritePriority()));
+							m_device.getManager().getTaskManager().add(new P_Task_ToggleNotify(m_device, notify, /*enable=*/true, null, m_device.getOverrideReadWritePriority()));
 
 							notifyState = E_NotifyState__ENABLING;
 						}

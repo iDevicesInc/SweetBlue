@@ -761,7 +761,7 @@ public abstract class BleNode implements UsesCustomNull
 
 	P_TaskManager taskManager()
 	{
-		return getManager().getTaskQueue();
+		return getManager().getTaskManager();
 	}
 
 	P_Logger logger()

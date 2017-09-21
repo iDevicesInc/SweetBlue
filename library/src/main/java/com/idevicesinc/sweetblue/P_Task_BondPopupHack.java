@@ -45,7 +45,7 @@ final class P_Task_BondPopupHack extends PA_Task_RequiresBleOn
     @Override protected void failWithoutRetry()
     {
         super.failWithoutRetry();
-        getManager().getTaskQueue().fail(P_Task_Bond.class, getDevice());
+        getManager().getTaskManager().fail(P_Task_Bond.class, getDevice());
     }
 
     @Override public PE_TaskPriority getPriority()

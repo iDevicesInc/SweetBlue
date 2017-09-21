@@ -94,7 +94,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 	{
 		m_server = server;
 		m_logger = m_server.getManager().getLogger();
-		m_queue = m_server.getManager().getTaskQueue();
+		m_queue = m_server.getManager().getTaskManager();
 	}
 
 	private boolean hasCurrentDisconnectTaskFor(final BluetoothDevice device)

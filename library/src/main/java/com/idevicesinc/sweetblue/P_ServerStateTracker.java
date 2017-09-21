@@ -74,7 +74,7 @@ final class P_ServerStateTracker
 
 	public int getStateMask(final String macAddress)
 	{
-		final P_TaskManager queue = m_server.getManager().getTaskQueue();
+		final P_TaskManager queue = m_server.getManager().getTaskManager();
 		final List<PA_Task> queue_raw = queue.getRaw();
 		final int bitForUnknownState = BleServerState.DISCONNECTED.bit();
 		final PA_Task current = queue.getCurrent();

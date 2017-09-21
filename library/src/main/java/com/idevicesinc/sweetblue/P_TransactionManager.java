@@ -127,7 +127,7 @@ final class P_TransactionManager
 	{
 		if( txn.needsAtomicity() )
 		{
-			device.getManager().getTaskQueue().add(new P_Task_TxnLock(device, txn));
+			device.getManager().getTaskManager().add(new P_Task_TxnLock(device, txn));
 		}
 		
 		txn.start_internal();
@@ -151,9 +151,9 @@ final class P_TransactionManager
 
 	private void clearQueueLock_updateThread()
 	{
-		if( !m_device.getManager().getTaskQueue().succeed(P_Task_TxnLock.class, m_device) )
+		if( !m_device.getManager().getTaskManager().succeed(P_Task_TxnLock.class, m_device) )
 		{
-			m_device.getManager().getTaskQueue().clearQueueOf(P_Task_TxnLock.class, m_device, -1);
+			m_device.getManager().getTaskManager().clearQueueOf(P_Task_TxnLock.class, m_device, -1);
 		}
 	}
 	

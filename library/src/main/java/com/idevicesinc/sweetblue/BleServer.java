@@ -362,7 +362,7 @@ public final class BleServer extends BleNode
 	 */
 	public final boolean isAdvertising()
 	{
-		return getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager());
+		return getManager().getTaskManager().isCurrentOrInQueue(P_Task_Advertise.class, getManager());
 	}
 
 	/**
@@ -372,7 +372,7 @@ public final class BleServer extends BleNode
 	{
 		if (Utils.isLollipop())
 		{
-			P_Task_Advertise adtask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
+			P_Task_Advertise adtask = getManager().getTaskManager().get(P_Task_Advertise.class, getManager());
 			if (adtask != null)
 			{
 				return adtask.getPacket().hasUuid(serviceUuid);
@@ -516,7 +516,7 @@ public final class BleServer extends BleNode
 			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.BLE_NOT_ON);
 		}
 
-		final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
+		final P_Task_Advertise adTask = getManager().getTaskManager().get(P_Task_Advertise.class, getManager());
 		if (adTask != null)
 		{
 			getManager().getLogger().w(BleServer.class.getSimpleName() + " is already advertising!");
@@ -525,9 +525,9 @@ public final class BleServer extends BleNode
 		}
 		else
 		{
-			getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
+			getManager().ASSERT(!getManager().getTaskManager().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
 
-			getManager().getTaskQueue().add(new P_Task_Advertise(this, advertisePacket, settings, listener));
+			getManager().getTaskManager().add(new P_Task_Advertise(this, advertisePacket, settings, listener));
 			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.NULL);
 		}
 	}
@@ -540,13 +540,13 @@ public final class BleServer extends BleNode
 		if (Utils.isLollipop())
 		{
 
-			final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
+			final P_Task_Advertise adTask = getManager().getTaskManager().get(P_Task_Advertise.class, getManager());
 			if (adTask != null)
 			{
 				adTask.stopAdvertising();
 				adTask.clearFromQueue();
 			}
-			getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
+			getManager().ASSERT(!getManager().getTaskManager().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
 		}
 	}
 

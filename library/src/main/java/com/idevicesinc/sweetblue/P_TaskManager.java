@@ -7,7 +7,7 @@ import com.idevicesinc.sweetblue.utils.Interval;
 
 final class P_TaskManager
 {
-    private final P_TaskQueue m_queue2;
+    private final P_TaskQueue m_queue;
     private final Object m_lock = new Object();
     private final AtomicReference<PA_Task> m_current;
     private long m_updateCount;
@@ -15,6 +15,12 @@ final class P_TaskManager
     private final BleManager m_mngr;
     private double m_time = 0.0;
     private double m_timeSinceEnding = 0.0;
+    private boolean m_suspended = false;
+
+    // This counter tracks how many levels deep we are into a recursive loop, which lets us avoid stack overflows
+    private int m_recursionCounter = 0;
+
+    private final static int kRecursionLimit = 10;
 
     private int m_currentOrdinal;
 
@@ -25,7 +31,7 @@ final class P_TaskManager
 
         m_current = new AtomicReference<>(null);
 
-        m_queue2 = new P_TaskQueue();
+        m_queue = new P_TaskQueue();
     }
 
     //TODO:  Re-examine this and see if it's needed or not
@@ -40,6 +46,15 @@ final class P_TaskManager
         }
     }
 
+    final void setSuspended(boolean suspended)
+    {
+        if (m_suspended == suspended)
+            return;
+
+        m_suspended = suspended;
+        m_logger.i("Setting TaskManager suspended flag to " + suspended);
+    }
+
     final int getCurrentOrdinal()
     {
         return m_currentOrdinal;
@@ -49,7 +64,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            return m_queue2.peek();
+            return m_queue.peek();
         }
     }
 
@@ -64,7 +79,7 @@ final class P_TaskManager
                 endCurrentTask(PE_TaskState.CANCELLED);
 
                 // And insert the new task at the front of the queue so it will be dequeued next
-                m_queue2.pushFront(newTask);
+                m_queue.pushFront(newTask);
 
                 return true;
             }
@@ -102,7 +117,7 @@ final class P_TaskManager
         synchronized (m_lock)
         {
             // Softly cancel anything in the queue that is softly cancelable by the given task
-            m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task d)
@@ -124,7 +139,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            m_queue2.pushFront(task);
+            m_queue.pushFront(task);
             onTaskAddedToQueue(task);
         }
     }
@@ -133,7 +148,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            m_queue2.pushBack(task);
+            m_queue.pushBack(task);
             onTaskAddedToQueue(task);
         }
     }
@@ -169,8 +184,6 @@ final class P_TaskManager
 
     final void addTask(final PA_Task newTask)
     {
-        m_logger.i("About to add task.  current queue:");
-        print();
         synchronized (m_lock)
         {
             newTask.init();
@@ -190,12 +203,11 @@ final class P_TaskManager
             else
             {
                 // Toss the task into the queue at the 'best' location (earliest spot it can go)
-                m_queue2.insertAtSoonestPosition(newTask);
+                m_queue.insertAtSoonestPosition(newTask);
                 onTaskAddedToQueue(newTask);
             }
         }
         print();
-        m_logger.i("Done adding task:");
     }
 
     final double getTime()
@@ -205,6 +217,9 @@ final class P_TaskManager
 
     public final boolean update(double timeStep, long currentTime)
     {
+        if (m_suspended)
+            return false;
+
         boolean executingTask = false;
 
         m_time += timeStep;
@@ -248,7 +263,7 @@ final class P_TaskManager
                 return false;
 
             // Locate the next armable task, if any, in the queue
-            PA_Task nextTask = m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            PA_Task nextTask = m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task d)
@@ -290,6 +305,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
+            //
             if (!m_mngr.ASSERT(endingState.isEndingState()))
                 return false;
 
@@ -303,33 +319,11 @@ final class P_TaskManager
             current_saved.setEndingState(endingState);
 
             boolean printed = false;
-            if (m_queue2.getSize() > 0)
-            {
-                if (endingState.canGoToNextTaskImmediately())
-                {
-                    printed = dequeue();
-                }
-                else
-                {
-                    //TODO:  Can we get rid of this?  It seems pointless
 
-                    //--- DRK > Posting to prevent potential stack overflow if queue is really big and all tasks are failing in a row.
-                    m_mngr.getPostManager().forcePostToUpdate(new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            synchronized (m_lock)
-                            {
-                                if (m_queue2.getSize() > 0 && getCurrent() == null)
-                                {
-                                    dequeue();
-                                }
-                            }
-                        }
-                    });
-                }
-            }
+            if (m_queue.size() > 0 && m_recursionCounter++ < kRecursionLimit)
+                printed = dequeue();
+
+            --m_recursionCounter;
 
             if (!printed)
                 print();
@@ -438,7 +432,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            return m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            return m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task task)
@@ -455,7 +449,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            return m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            return m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task task)
@@ -472,14 +466,14 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            return m_queue2.getSize();
+            return m_queue.size();
         }
     }
 
     //FIXME:  Replace this with a way to get a read only forEach iterator over the queue
     public final List<PA_Task> getRaw()
     {
-        return m_queue2.getRaw();
+        return m_queue.getRaw();
     }
 
     public final int positionInQueue(Class<? extends PA_Task> taskClass, BleManager mngr)
@@ -527,7 +521,7 @@ final class P_TaskManager
                 return (T)getCurrent();
 
             // See if any task in queue matches
-            return (T)m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            return (T)m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task task)
@@ -586,7 +580,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task task)
@@ -606,7 +600,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task task)
@@ -629,7 +623,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task task)
@@ -649,7 +643,7 @@ final class P_TaskManager
     {
         synchronized (m_lock)
         {
-            m_queue2.forEachTask(new P_TaskQueue.ForEachTaskHandler()
+            m_queue.forEachTask(new P_TaskQueue.ForEachTaskHandler()
             {
                 @Override
                 public ProcessResult process(PA_Task task)
@@ -664,15 +658,37 @@ final class P_TaskManager
     @Override
     public final String toString()
     {
+        return (toString(10));
+    }
+
+    public final String toString(int taskLimit)
+    {
         synchronized (m_lock)
         {
-            final String current = m_current.get() != null ? m_current.get().toString() : "no current task";
+            StringBuilder sb = new StringBuilder();
 
-            final String queue = m_queue2.getSize() > 0 ? m_queue2.toString() : "[queue empty]";
+            sb.append(m_current.get() != null ? m_current.get().toString() : "no current task");
 
-            final String toReturn = current + " " + queue;
+            sb.append(" ");
 
-            return toReturn;
+            int queueSize = m_queue.size();
+            int loopLimit = taskLimit >= 0 ? Math.min(taskLimit, queueSize) : queueSize;
+
+            sb.append("[");
+            for (int i = 0; i < loopLimit; ++i)
+            {
+                sb.append(m_queue.get(i).toString());
+                if (i < loopLimit - 1)
+                    sb.append(", ");
+            }
+
+            // Make a note of how many we skipped over
+            if (loopLimit < queueSize)
+                sb.append(" ... and " + (queueSize - loopLimit) + " more");
+
+            sb.append("]");
+
+            return sb.toString();
         }
     }
 

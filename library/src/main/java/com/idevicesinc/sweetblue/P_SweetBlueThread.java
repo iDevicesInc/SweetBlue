@@ -142,7 +142,14 @@ final class P_SweetBlueThread implements P_SweetHandler
                 }
 
                 // Sleep for a short period, so we don't hog the cpu
-                Thread.yield();
+                try
+                {
+                    Thread.sleep(0);
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
             }
         }
     }

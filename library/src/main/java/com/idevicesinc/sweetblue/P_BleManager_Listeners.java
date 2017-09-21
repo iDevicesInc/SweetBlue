@@ -228,10 +228,10 @@ final class P_BleManager_Listeners
     {
         // If this was discovered via the hack to show the bond popup, then do not propagate this
         // any further, as this scan is JUST to get the dialog to pop up (rather than show in the notification area)
-        P_Task_BondPopupHack hack = m_mngr.getTaskQueue().getCurrent(P_Task_BondPopupHack.class, m_mngr);
+        P_Task_BondPopupHack hack = m_mngr.getTaskManager().getCurrent(P_Task_BondPopupHack.class, m_mngr);
 
         // Only pipe discovery event if the scan task is running, and the manager says we're doing a classic scan
-        P_Task_Scan scan = m_mngr.getTaskQueue().getCurrent(P_Task_Scan.class, m_mngr);
+        P_Task_Scan scan = m_mngr.getTaskManager().getCurrent(P_Task_Scan.class, m_mngr);
         if (hack == null && scan != null && m_mngr.m_config.scanApi == BleScanApi.CLASSIC)
         {
             final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -253,7 +253,7 @@ final class P_BleManager_Listeners
 
     private void onClassicDiscoveryFinished()
     {
-        P_Task_Scan scanTask = m_mngr.getTaskQueue().getCurrent(P_Task_Scan.class, m_mngr);
+        P_Task_Scan scanTask = m_mngr.getTaskManager().getCurrent(P_Task_Scan.class, m_mngr);
         if (scanTask != null)
         {
             if (scanTask.isClassicBoosted())
@@ -261,7 +261,7 @@ final class P_BleManager_Listeners
                 return;
             }
         }
-        m_mngr.getTaskQueue().interrupt(P_Task_Scan.class, m_mngr);
+        m_mngr.getTaskManager().interrupt(P_Task_Scan.class, m_mngr);
     }
 
     final void onNativeBleStateChangeFromBroadcastReceiver(Context context, Intent intent)
@@ -340,15 +340,15 @@ final class P_BleManager_Listeners
         {
             m_mngr.m_wakeLockMngr.clear();
 
-            if (m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOn.class, m_mngr))
+            if (m_mngr.getTaskManager().isCurrent(P_Task_TurnBleOn.class, m_mngr))
             {
                 return;
             }
 
-            m_mngr.getTaskQueue().fail(P_Task_TurnBleOn.class, m_mngr);
-            P_Task_TurnBleOff turnOffTask = m_mngr.getTaskQueue().getCurrent(P_Task_TurnBleOff.class, m_mngr);
+            m_mngr.getTaskManager().fail(P_Task_TurnBleOn.class, m_mngr);
+            P_Task_TurnBleOff turnOffTask = m_mngr.getTaskManager().getCurrent(P_Task_TurnBleOff.class, m_mngr);
             intent = turnOffTask == null || turnOffTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
-            m_mngr.getTaskQueue().succeed(P_Task_TurnBleOff.class, m_mngr);
+            m_mngr.getTaskManager().succeed(P_Task_TurnBleOff.class, m_mngr);
 
             //--- DRK > Should have already been handled by the "turning off" event, but this is just to be
             //---		sure all devices are cleared in case something weird happens and we go straight
@@ -363,20 +363,20 @@ final class P_BleManager_Listeners
         }
         else if (newNativeState == BluetoothAdapter.STATE_TURNING_ON)
         {
-            if (!m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOn.class, m_mngr))
+            if (!m_mngr.getTaskManager().isCurrent(P_Task_TurnBleOn.class, m_mngr))
             {
-                m_mngr.getTaskQueue().add(new P_Task_TurnBleOn(m_mngr, /*implicit=*/true));
+                m_mngr.getTaskManager().add(new P_Task_TurnBleOn(m_mngr, /*implicit=*/true));
                 intent = E_Intent.UNINTENTIONAL;
             }
 
-            m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
+            m_mngr.getTaskManager().fail(P_Task_TurnBleOff.class, m_mngr);
         }
         else if (newNativeState == BluetoothAdapter.STATE_ON)
         {
-            m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
-            P_Task_TurnBleOn turnOnTask = m_mngr.getTaskQueue().getCurrent(P_Task_TurnBleOn.class, m_mngr);
+            m_mngr.getTaskManager().fail(P_Task_TurnBleOff.class, m_mngr);
+            P_Task_TurnBleOn turnOnTask = m_mngr.getTaskManager().getCurrent(P_Task_TurnBleOn.class, m_mngr);
             intent = turnOnTask == null || turnOnTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
-            m_mngr.getTaskQueue().succeed(P_Task_TurnBleOn.class, m_mngr);
+            m_mngr.getTaskManager().succeed(P_Task_TurnBleOn.class, m_mngr);
 
             // We need to make sure to remove the transitory states, in case they were missed, and to enforce the ON/OFF state to get propagated app-side
             if (m_mngr.isAny(TURNING_OFF, TURNING_ON))
@@ -386,12 +386,12 @@ final class P_BleManager_Listeners
         }
         else if (newNativeState == BluetoothAdapter.STATE_TURNING_OFF)
         {
-            if (!m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOff.class, m_mngr))
+            if (!m_mngr.getTaskManager().isCurrent(P_Task_TurnBleOff.class, m_mngr))
             {
                 m_mngr.m_deviceMngr.disconnectAllForTurnOff(PE_TaskPriority.CRITICAL);
 
 //				m_mngr.m_deviceMngr.undiscoverAllForTurnOff(m_mngr.m_deviceMngr_cache, E_Intent.UNINTENTIONAL);
-                m_mngr.getTaskQueue().add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
+                m_mngr.getTaskManager().add(new P_Task_TurnBleOff(m_mngr, /*implicit=*/true));
 
                 if (m_mngr.m_server != null)
                 {
@@ -401,7 +401,7 @@ final class P_BleManager_Listeners
                 intent = E_Intent.UNINTENTIONAL;
             }
 
-            m_mngr.getTaskQueue().fail(P_Task_TurnBleOn.class, m_mngr);
+            m_mngr.getTaskManager().fail(P_Task_TurnBleOn.class, m_mngr);
         }
 
         //--- DRK > Can happen I suppose if newNativeState is an error and we revert to using the queried state and it's the same as previous state.
@@ -490,7 +490,7 @@ final class P_BleManager_Listeners
 
         if (device == null)
         {
-            final P_Task_Bond bondTask = m_mngr.getTaskQueue().getCurrent(P_Task_Bond.class, m_mngr);
+            final P_Task_Bond bondTask = m_mngr.getTaskManager().getCurrent(P_Task_Bond.class, m_mngr);
 
             if (bondTask != null)
             {
@@ -503,7 +503,7 @@ final class P_BleManager_Listeners
 
         if (device /*still*/ == null)
         {
-            final P_Task_Unbond unbondTask = m_mngr.getTaskQueue().getCurrent(P_Task_Unbond.class, m_mngr);
+            final P_Task_Unbond unbondTask = m_mngr.getTaskManager().getCurrent(P_Task_Unbond.class, m_mngr);
 
             if (unbondTask != null)
             {
@@ -645,7 +645,7 @@ final class P_BleManager_Listeners
 
                         // Fail the Turn off task, as we're now turning on
 
-                        m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
+                        m_mngr.getTaskManager().fail(P_Task_TurnBleOff.class, m_mngr);
 
                         onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_OFF, BleStatuses.STATE_TURNING_ON);
                     }
@@ -656,7 +656,7 @@ final class P_BleManager_Listeners
 
                         // Fail the Turn off task, as we're now turning on
 
-                        m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
+                        m_mngr.getTaskManager().fail(P_Task_TurnBleOff.class, m_mngr);
 
                         onNativeBleStateChange_fromPolling(BleStatuses.STATE_TURNING_OFF, BleStatuses.STATE_TURNING_ON);
                     }

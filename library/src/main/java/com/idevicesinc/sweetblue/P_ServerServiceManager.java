@@ -60,7 +60,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 
 	private void getTasks(ForEach_Breakable<P_Task_AddService> forEach)
 	{
-		final P_TaskManager queue = m_server.getManager().getTaskQueue();
+		final P_TaskManager queue = m_server.getManager().getTaskManager();
 		final List<PA_Task> queue_raw = queue.getRaw();
 
 		for( int i = queue_raw.size()-1; i >= 0; i-- )
@@ -167,7 +167,7 @@ final class P_ServerServiceManager extends PA_ServiceManager
 		else
 		{
 			final P_Task_AddService task = new P_Task_AddService(m_server, service, listener_specific_nullable);
-			m_server.getManager().getTaskQueue().add(task);
+			m_server.getManager().getTaskManager().add(task);
 
 			return AddServiceListener.ServiceAddEvent.NULL(m_server, service);
 		}

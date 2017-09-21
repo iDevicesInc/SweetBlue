@@ -2328,7 +2328,7 @@ public final class BleManager
 	final P_BleStateTracker			getStateTracker(){				return m_stateTracker;									}
 	final P_NativeBleStateTracker	getNativeStateTracker(){		return m_nativeStateTracker;							}
 	final P_BluetoothCrashResolver	getCrashResolver(){				return m_crashResolver;									}
-	final P_TaskManager getTaskQueue(){					return m_taskManager;										}
+	final P_TaskManager				getTaskManager(){				return m_taskManager;									}
 	final P_Logger					getLogger(){					return m_logger;										}
 	final long 						timeTurnedOn(){					return m_timeTurnedOn;									}
 	final double 					timeForegrounded(){				return m_timeForegrounded;								}

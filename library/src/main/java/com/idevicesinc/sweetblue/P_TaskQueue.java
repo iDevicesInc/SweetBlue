@@ -1,6 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class P_TaskQueue
@@ -40,6 +41,33 @@ public class P_TaskQueue
         };
         public abstract ProcessResult process(PA_Task task);
     }
+
+    /*HandlerResult forEachTask(ForEachTaskHandler handler)
+    {
+        Iterator<PA_Task> it = m_taskList.iterator();
+
+        while (it.hasNext())
+        {
+            PA_Task task = it.next();
+            ForEachTaskHandler.ProcessResult pr = handler.process(task);
+
+            switch (pr)
+            {
+                case Return:
+                    return new HandlerResult(task, 0);
+
+                case ReturnAndDequeue:
+                    it.remove();
+                    return new HandlerResult(task, 0);
+
+                case ContinueAndDequeue:
+                    it.remove();
+                    break;
+            }
+        }
+
+        return new HandlerResult(null, -1);
+    }*/
 
     // This method allows for forward iteration over the queue
     // During the iteration, any number of elements can be removed
@@ -136,6 +164,11 @@ public class P_TaskQueue
         return m_taskList.size() > 0 ? m_taskList.get(0) : null;
     }
 
+    PA_Task get(int index)
+    {
+        return m_taskList.get(index);
+    }
+
     void pushFront(PA_Task task)
     {
         m_taskList.add(0, task);
@@ -148,6 +181,19 @@ public class P_TaskQueue
 
     void insertAtSoonestPosition(PA_Task task)
     {
+        // Before walking the entire list, see if the task is more important than the last.  If not, just throw it in the back
+        if (m_taskList.size() > 0)
+        {
+            PA_Task last = m_taskList.get(m_taskList.size() - 1);
+            if (!task.isMoreImportantThan(last))
+            {
+                m_taskList.add(task);
+                return;
+            }
+        }
+
+        //FIXME:  This can be done with a modified binary search that finds the first element that task claims it is more important than
+
         // Locate the best spot to insert, and put the task there
         for (int i = 0; i < m_taskList.size(); ++i)
         {
@@ -161,7 +207,7 @@ public class P_TaskQueue
         m_taskList.add(task);
     }
 
-    int getSize()
+    int size()
     {
         return m_taskList.size();
     }

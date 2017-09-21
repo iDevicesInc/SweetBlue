@@ -5021,7 +5021,7 @@ public final class BleDevice extends BleNode
             m_nativeWrapper.closeGattIfNeeded(/* disconnectAlso= */false);
         }
 
-        final int overrideOrdinal = getManager().getTaskQueue().getCurrentOrdinal();
+        final int overrideOrdinal = getManager().getTaskManager().getCurrentOrdinal();
 
         final boolean wasInitialized = is(INITIALIZED);
 

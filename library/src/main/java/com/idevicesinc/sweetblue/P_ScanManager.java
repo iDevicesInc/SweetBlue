@@ -342,7 +342,7 @@ final class P_ScanManager
             }
         }
 
-        final P_Task_Scan scanTask = m_manager.getTaskQueue().get(P_Task_Scan.class, m_manager);
+        final P_Task_Scan scanTask = m_manager.getTaskManager().get(P_Task_Scan.class, m_manager);
 
         if( scanTask != null )
         {
@@ -705,7 +705,7 @@ final class P_ScanManager
 
     private void fail()
     {
-        m_manager.getTaskQueue().fail(P_Task_Scan.class, m_manager);
+        m_manager.getTaskManager().fail(P_Task_Scan.class, m_manager);
     }
 
     private void stopScanPreLollipop()
