@@ -79,7 +79,7 @@ final class P_TaskManager
                 endCurrentTask(PE_TaskState.CANCELLED);
 
                 // And insert the new task at the front of the queue so it will be dequeued next
-                m_queue.pushFront(newTask);
+                addToFront(newTask);
 
                 return true;
             }
@@ -184,6 +184,7 @@ final class P_TaskManager
 
     final void addTask(final PA_Task newTask)
     {
+        m_logger.i("Adding task to queue: " + newTask);
         synchronized (m_lock)
         {
             newTask.init();

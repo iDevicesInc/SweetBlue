@@ -493,7 +493,7 @@ abstract class PA_Task implements Comparable<PA_Task>
 		
 		String deviceEntry = getDevice() != null ? " " + getDevice().getName_debug(): "";
 		String addition = getToStringAddition() != null ? " " + getToStringAddition() : "";
-		return name + "(" + m_state.name() + deviceEntry + addition + " " + hashCode() + " )";
+		return name + "(" + (m_state != null ? m_state.name() : "<null>") + deviceEntry + addition + " " + hashCode() + " )";
 	}
 	
 	public boolean isExplicit()
