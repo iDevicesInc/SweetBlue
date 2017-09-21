@@ -176,7 +176,7 @@ public class QueueTest extends BaseBleUnitTest
         // Suspend the queue so we can cram it full of stuff w/o it doing anything just yet
         tm.setSuspended(true);
 
-        final int kTaskCount = 5000;
+        final int kTaskCount = 1000;
 
         mStartTimestamp = System.currentTimeMillis();
         System.out.println("Starting queue operations at " + mStartTimestamp);
@@ -230,7 +230,7 @@ public class QueueTest extends BaseBleUnitTest
                     {
                         System.out.println("oops");
                     }
-                    assertTrue(currentOrdinal > prevOrdinal);
+                    assertTrue(expr);
                 }
             }
 
@@ -244,7 +244,7 @@ public class QueueTest extends BaseBleUnitTest
         succeed();
     }
 
-    /*@Test
+    @Test
     public void queueProcessTest() throws Exception
     {
         m_config.loggingOptions = LogOptions.ON;
@@ -252,13 +252,17 @@ public class QueueTest extends BaseBleUnitTest
 
         P_TaskManager tm = m_mgr.getTaskManager();
 
+        // Suspend the queue so we can cram it full of stuff w/o it doing anything just yet
+        tm.setSuspended(true);
+
+        final int kTaskCount = 1000;
+        populateQueue(kTaskCount, .35, 0);
+
         mRemainingTasks = tm.getSize();
 
         tm.setSuspended(false);
 
-        // Suspend the queue so we can cram it full of stuff w/o it doing anything just yet
-        tm.setSuspended(true);
-
-    }*/
+        startAsyncTest();
+    }
 
 }
