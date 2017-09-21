@@ -40,6 +40,7 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     @Override public boolean cancelDiscovery()
     {
+        BleManager.s_instance.m_listeners.onClassicDiscoveryFinished();
         return true;
     }
 

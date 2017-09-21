@@ -1615,18 +1615,12 @@ public final class BleManager
 
 		if( !m_taskQueue.succeed(P_Task_Scan.class, this) )
 		{
-			m_postManager.runOrPostToUpdateThread(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, BleManager.this);
-					if (scanTask != null)
-						scanTask.succeed();
-					m_taskQueue.clearQueueOf(P_Task_Scan.class, BleManager.this);
-				}
-			});
-
+			// I don't think this is needed, if we're clearing it from the queue below.
+//			P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, BleManager.this);
+//			if (scanTask != null)
+//				scanTask.succeed();
+			m_logger.i("Clearing queue of any scan tasks...");
+			m_taskQueue.clearQueueOf(P_Task_Scan.class, BleManager.this);
 		}
 
 		m_stateTracker.remove(BleManagerState.STARTING_SCAN, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -2284,14 +2278,7 @@ public final class BleManager
 	@Advanced
 	public final void clearQueue()
 	{
-		m_postManager.runOrPostToUpdateThread(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				m_taskQueue.clearQueueOfAll();
-			}
-		});
+		m_taskQueue.clearQueueOfAll();
 	}
 
 	/**

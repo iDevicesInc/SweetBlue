@@ -46,7 +46,7 @@ final class P_BleManager_Listeners
 
             //--- DRK > Got this assert to trip by putting a breakpoint in constructor of NativeDeviceWrapper
             //---		and waiting, but now can't reproduce.
-            if (!m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && m_mngr.isAny(SCANNING, BOOST_SCANNING, STARTING_SCAN, SCANNING_PAUSED)))
+            if (!m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && state != PE_TaskState.CLEARED_FROM_QUEUE && m_mngr.isAny(SCANNING, BOOST_SCANNING, STARTING_SCAN, SCANNING_PAUSED)))
                 return;
 
             if (state.isEndingState())
@@ -251,17 +251,29 @@ final class P_BleManager_Listeners
         }
     }
 
-    private void onClassicDiscoveryFinished()
+    void onClassicDiscoveryFinished()
     {
         P_Task_Scan scanTask = m_mngr.getTaskQueue().getCurrent(P_Task_Scan.class, m_mngr);
+        boolean interrupt = false;
         if (scanTask != null)
         {
             if (scanTask.isClassicBoosted())
             {
                 return;
             }
+            if (m_mngr.getScanManager().isPeriodicScan())
+                interrupt = true;
+
         }
-        m_mngr.getTaskQueue().interrupt(P_Task_Scan.class, m_mngr);
+        if (interrupt)
+            m_mngr.getTaskQueue().interrupt(P_Task_Scan.class, m_mngr);
+        else
+            // Try to succeed the task, if that fails, it means it's no longer current, so we'll clear the queue of the scan task, just to be sure it doesn't
+            // start up again
+            if (!m_mngr.getTaskQueue().succeed(P_Task_Scan.class, m_mngr))
+            {
+                m_mngr.getTaskQueue().clearQueueOf(P_Task_Scan.class, m_mngr);
+            }
     }
 
     final void onNativeBleStateChangeFromBroadcastReceiver(Context context, Intent intent)
