@@ -43,27 +43,23 @@ public class ScanTest extends BaseBleUnitTest
     public void scanClassicOneTimeTest() throws Exception
     {
         m_config.scanApi = BleScanApi.CLASSIC;
-        m_config.loggingEnabled = true;
+        m_config.loggingOptions = LogOptions.ON;
         m_mgr.setConfig(m_config);
-        m_mgr.setListener_State(new ManagerStateListener()
+        m_mgr.setListener_State(e ->
         {
-            @Override
-            public void onEvent(BleManager.StateListener.StateEvent e)
+            if (e.didEnter(BleManagerState.SCANNING))
             {
-                if (e.didEnter(BleManagerState.SCANNING))
-                {
-                    assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.CLASSIC);
-                }
-                else if (e.didExit(BleManagerState.SCANNING))
-                {
-                    assertFalse("Scan task is in the queue, when it should not be!", m_mgr.getTaskQueue().isInQueue(P_Task_Scan.class, m_mgr) || m_mgr.getTaskQueue().isCurrent(P_Task_Scan.class, m_mgr));
-                    succeed();
-                }
+                assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.CLASSIC);
+            }
+            else if (e.didExit(BleManagerState.SCANNING))
+            {
+                assertFalse("Scan task is in the queue, when it should not be!", m_mgr.getTaskQueue().isInQueue(P_Task_Scan.class, m_mgr) || m_mgr.getTaskQueue().isCurrent(P_Task_Scan.class, m_mgr));
+                succeed();
             }
         });
 
         m_mgr.startScan(Interval.FIVE_SECS);
-        startTest();
+        startAsyncTest();
     }
 
     @Test(timeout = 10000)
