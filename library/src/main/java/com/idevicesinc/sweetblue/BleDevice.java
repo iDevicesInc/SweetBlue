@@ -118,7 +118,7 @@ public final class BleDevice extends BleNode
     private final Stack<ReadWriteListener> m_readWriteListenerStack;
     private final Stack<NotificationListener> m_notificationListenerStack;
     private final Stack<DeviceConnectListener> m_connectListenerStack;
-    WeakReference<DeviceConnectListener> m_ephemeralConnectListener;
+    private DeviceConnectListener m_ephemeralConnectListener;
 
 
     private TimeEstimator m_writeTimeEstimator;
@@ -1843,7 +1843,7 @@ public final class BleDevice extends BleNode
     {
 
         if (connectionListener != null)
-            m_ephemeralConnectListener = new WeakReference<>(connectionListener);
+            m_ephemeralConnectListener = connectionListener;
 
         m_connectionFailMngr.onExplicitConnectionStarted();
 
@@ -4775,9 +4775,9 @@ public final class BleDevice extends BleNode
     final void invokeConnectCallbacks(DeviceConnectListener.ConnectEvent event)
     {
         // Post to the ephemeral listener first, if it's not null
-        if (m_ephemeralConnectListener != null && m_ephemeralConnectListener.get() != null)
+        if (m_ephemeralConnectListener != null)
         {
-            m_ephemeralConnectListener.get().onEvent(event);
+            m_ephemeralConnectListener.onEvent(event);
         }
 
         // Now post to the default listener, if there is one
