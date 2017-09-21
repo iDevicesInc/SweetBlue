@@ -4,7 +4,7 @@ import java.util.UUID;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
+
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.DiscoveryListener.DiscoveryEvent;
 import com.idevicesinc.sweetblue.DiscoveryListener.LifeCycle;
@@ -258,7 +258,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	
 	/**
 	 * Default is <code>true</code> - controls whether a {@link BleDevice} is placed into an in-memory cache when it becomes {@link BleDeviceState#UNDISCOVERED}.
-	 * If <code>true</code>, subsequent calls to {@link DiscoveryListener#onEvent(DiscoveryListener.DiscoveryEvent)} with
+	 * If <code>true</code>, subsequent calls to {@link DiscoveryListener#onEvent(Event)} with
 	 * {@link LifeCycle#DISCOVERED} (or calls to {@link BleManager#newDevice(String)}) will return the cached {@link BleDevice} instead of creating a new one.
 	 * <br><br>
 	 * The advantages of caching are:<br>
@@ -276,8 +276,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	public Boolean cacheDeviceOnUndiscovery						= true;
 	
 	/**
-	 * Default is <code>true</code> - controls whether {@link DeviceConnectionFailListener.Status#BONDING_FAILED} is capable of
-	 * inducing {@link DeviceConnectionFailListener#onEvent(com.idevicesinc.sweetblue.DeviceConnectionFailListener.ConnectionFailEvent)}
+	 * Default is <code>true</code> - controls whether {@link DeviceReconnectFilter.Status#BONDING_FAILED} is capable of
+	 * inducing {@link DeviceReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)}
 	 * while a device is {@link BleDeviceState#CONNECTING_OVERALL}.
 	 */
 	@Nullable(Prevalence.NORMAL)
@@ -354,7 +354,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * <br><br>
 	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
-	 * @see DiscoveryListener#onEvent(DiscoveryEvent)
+	 * @see DiscoveryListener#onEvent(Event)
 	 * @see #undiscoveryKeepAlive
 	 */
 	@Nullable(Prevalence.NORMAL)
@@ -369,7 +369,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * <br><br>
 	 * Use {@link Interval#DISABLED} to disable undiscovery altogether.
 	 * 
-	 * @see DiscoveryListener#onEvent(DiscoveryEvent)
+	 * @see DiscoveryListener#onEvent(Event)
 	 * @see #minScanTimeNeededForUndiscovery
 	 */
 	@Nullable(Prevalence.NORMAL)
@@ -480,7 +480,7 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 	/**
 	 * Default is {@link #DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE} - This sets the size of the list that tracks the history
-	 * of {@link com.idevicesinc.sweetblue.NodeConnectionFailListener.ConnectionFailEvent}s. Note that this will always be
+	 * of {@link com.idevicesinc.sweetblue.ReconnectFilter.ConnectFailEvent}s. Note that this will always be
 	 * at least 1. If set to anything lower, it will be ignored, and the max size will be 1.
 	 */
 	public int maxConnectionFailHistorySize									= DEFAULT_MAX_CONNECTION_FAIL_HISTORY_SIZE;
@@ -501,203 +501,6 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 		 * when the database is refreshed prior to connecting, if you have connected at least once already.
 		 */
 		AFTER_DISCONNECTING
-	}
-
-	/**
-	 * As of now there are two main default uses for this class...
-	 * <br><br>
-	 * The first is that in at least some cases it's not possible to determine beforehand whether a given characteristic requires
-	 * bonding, so implementing this interface on {@link BleManagerConfig#bondFilter} lets the app give
-	 * a hint to the library so it can bond before attempting to read or write an encrypted characteristic.
-	 * Providing these hints lets the library handle things in a more deterministic and optimized fashion, but is not required.
-	 * <br><br>
-	 * The second is that some android devices have issues when it comes to bonding. So far the worst culprits
-	 * are certain Sony and Motorola phones, so if it looks like {@link Build#MANUFACTURER}
-	 * is either one of those, {@link DefaultBondFilter} is set to unbond upon discoveries and disconnects.
-	 * Please look at the source of {@link DefaultBondFilter} for the most up-to-date spec.
-	 * The problem seems to be associated with mismanagement of pairing keys by the OS and
-	 * this brute force solution seems to be the only way to smooth things out.
-	 */
-	@com.idevicesinc.sweetblue.annotations.Advanced
-	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface BondFilter
-	{
-		/**
-		 * Just a dummy subclass of {@link DeviceStateListener.StateEvent} so that this gets auto-imported for implementations of {@link BondFilter}.
-		 */
-		@com.idevicesinc.sweetblue.annotations.Advanced
-		public static class StateChangeEvent extends DeviceStateListener.StateEvent
-		{
-			StateChangeEvent(BleDevice device, int oldStateBits, int newStateBits, int intentMask, int gattStatus)
-			{
-				super(device, oldStateBits, newStateBits, intentMask, gattStatus);
-			}
-		}
-
-		/**
-		 * An enumeration of the type of characteristic operation for a {@link CharacteristicEvent}.
-		 */
-		@com.idevicesinc.sweetblue.annotations.Advanced
-		public static enum CharacteristicEventType
-		{
-			/**
-			 * Started from {@link BleDevice#read(UUID, ReadWriteListener)}, {@link BleDevice#startPoll(UUID, Interval, ReadWriteListener)}, etc.
-			 */
-			READ,
-
-			/**
-			 * Started from {@link BleDevice#write(UUID, byte[], ReadWriteListener)} or overloads.
-			 */
-			WRITE,
-
-			/**
-			 * Started from {@link BleDevice#enableNotify(UUID, ReadWriteListener)} or overloads.
-			 */
-			ENABLE_NOTIFY;
-		}
-
-		/**
-		 * Struct passed to {@link BondFilter#onEvent(CharacteristicEvent)}.
-		 */
-		@com.idevicesinc.sweetblue.annotations.Advanced
-		@Immutable
-		public static class CharacteristicEvent extends Event
-		{
-			/**
-			 * Returns the {@link BleDevice} in question.
-			 */
-			public BleDevice device(){  return m_device;  }
-			private final BleDevice m_device;
-
-			/**
-			 * Convience to return the mac address of {@link #device()}.
-			 */
-			public String macAddress()  {  return m_device.getMacAddress();  }
-
-			/**
-			 * Returns the {@link UUID} of the characteristic in question.
-			 */
-			public UUID charUuid(){  return m_uuid;  }
-			private final UUID m_uuid;
-
-			/**
-			 * Returns the type of characteristic operation, read, write, etc.
-			 */
-			public CharacteristicEventType type(){  return m_type;  }
-			private final CharacteristicEventType m_type;
-
-			CharacteristicEvent(BleDevice device, UUID uuid, CharacteristicEventType type)
-			{
-				m_device = device;
-				m_uuid = uuid;
-				m_type = type;
-			}
-
-			@Override public String toString()
-			{
-				return Utils_String.toString
-				(
-					this.getClass(),
-					"device",		device().getName_debug(),
-					"charUuid",		device().getManager().getLogger().charName(charUuid()),
-					"type",			type()
-				);
-			}
-		}
-
-		/**
-		 * Return value for the various interface methods of {@link BondFilter}.
-		 * Use static constructor methods to create instances.
-		 */
-		@com.idevicesinc.sweetblue.annotations.Advanced
-		@Immutable
-		public static class Please
-		{
-			private final Boolean m_bond;
-			private final BondListener m_bondListener;
-
-			Please(Boolean bond, BondListener listener)
-			{
-				m_bond = bond;
-				m_bondListener = listener;
-			}
-
-			Boolean bond_private()
-			{
-				return m_bond;
-			}
-
-			BondListener listener()
-			{
-				return m_bondListener;
-			}
-
-			/**
-			 * Device should be bonded if it isn't already.
-			 */
-			public static Please bond()
-			{
-				return new Please(true, null);
-			}
-
-			/**
-			 * Returns {@link #bond()} if the given condition holds <code>true</code>, {@link #doNothing()} otherwise.
-			 */
-			public static Please bondIf(boolean condition)
-			{
-				return condition ? bond() : doNothing();
-			}
-
-			/**
-			 * Same as {@link #bondIf(boolean)} but lets you pass a {@link BondListener} as well.
-			 */
-			public static Please bondIf(boolean condition, BondListener listener)
-			{
-				return condition ? bond(listener) : doNothing();
-			}
-
-			/**
-			 * Same as {@link #bond()} but lets you pass a {@link BondListener} as well.
-			 */
-			public static Please bond(BondListener listener)
-			{
-				return new Please(true, listener);
-			}
-
-			/**
-			 * Device should be unbonded if it isn't already.
-			 */
-			public static Please unbond()
-			{
-				return new Please(false, null);
-			}
-
-			/**
-			 * Returns {@link #bond()} if the given condition holds <code>true</code>, {@link #doNothing()} otherwise.
-			 */
-			public static Please unbondIf(boolean condition)
-			{
-				return condition ? unbond() : doNothing();
-			}
-
-			/**
-			 * Device's bond state should not be affected.
-			 */
-			public static Please doNothing()
-			{
-				return new Please(null, null);
-			}
-		}
-
-		/**
-		 * Called after a device undergoes a change in its {@link BleDeviceState}.
-		 */
-		Please onEvent(StateChangeEvent e);
-
-		/**
-		 * Called immediately before reading, writing, or enabling notification on a characteristic.
-		 */
-		Please onEvent(CharacteristicEvent e);
 	}
 
 	/**

@@ -424,16 +424,6 @@ public class BleManagerConfig extends BleDeviceConfig
 	public boolean allowManagerStatePolling					= true;
 
 	/**
-	 * Default is <code>null</code>
-	 *
-	 * @deprecated This is deprecated in favor of {@link BleScanApi}. If this is not null, SweetBlue will set
-	 * {@link #scanApi} automatically from this setting.
-	 */
-	@Deprecated
-	public BleScanMode scanMode								= null;
-
-
-	/**
 	 * Default is {@link BleScanApi#AUTO} - see {@link BleScanApi} for more details.
 	 */
 	public BleScanApi scanApi								= BleScanApi.AUTO;
@@ -542,35 +532,6 @@ public class BleManagerConfig extends BleDeviceConfig
 		@Override public P_AndroidGatt newInstance(BleDevice device)
 		{
 			return new P_AndroidGatt(device);
-		}
-	}
-
-	/**
-	 * Convenience implementation of {@link ScanFilter} which filters using
-	 * a whitelist of known primary advertising {@link UUID}s passed in to the constructor.
-	 */
-	public static class DefaultScanFilter implements ScanFilter
-	{
-		private final ArrayList<UUID> m_whitelist;
-
-		public DefaultScanFilter(Collection<UUID> whitelist)
-		{
-			m_whitelist = new ArrayList<UUID>(whitelist);
-		}
-
-		public DefaultScanFilter(UUID whitelist)
-		{
-			m_whitelist = new ArrayList<UUID>();
-			m_whitelist.add(whitelist);
-		}
-
-		/**
-		 * Acknowledges the discovery if there's an overlap between the given advertisedServices
-		 * and the {@link Collection} passed into the constructor of {@link BleManagerConfig.DefaultScanFilter}.
-		 */
-		@Override public Please onEvent(final ScanEvent e)
-		{
-			return Please.acknowledgeIf( Utils.haveMatchingIds(e.advertisedServices(), m_whitelist) );
 		}
 	}
 

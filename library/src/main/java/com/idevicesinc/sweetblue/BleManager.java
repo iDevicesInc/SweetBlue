@@ -217,8 +217,9 @@ public final class BleManager
 	private P_WrappingResetListener m_resetListeners;
 	private AssertListener m_assertionListener;
 			DeviceStateListener m_defaultDeviceStateListener;
-			DeviceReconnectFilter m_defaultConnectionFailListener;
+			DeviceReconnectFilter m_defaultDeviceReconnectFilter;
 			ServerReconnectFilter m_defaultConnectionFailListener_server;
+			DeviceConnectListener m_defaultDeviceConnectListener;
 			BondListener m_defaultBondListener;
 			ReadWriteListener m_defaultReadWriteListener;
 			NotificationListener m_defaultNotificationListener;
@@ -382,16 +383,6 @@ public final class BleManager
 				startUpdate = false;
 				m_updateRunnable = new UpdateRunnable();
 			}
-		}
-
-		if (m_config.scanMode != null)
-		{
-			m_config.scanApi = BleScanApi.fromBleScanMode(m_config.scanMode);
-			if (m_config.scanMode.isLollipopScanMode())
-			{
-				m_config.scanPower = BleScanPower.fromBleScanMode(m_config.scanMode);
-			}
-			m_config.scanMode = null;
 		}
 
 		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.secs(m_config.uhOhCallbackThrottle));
@@ -721,15 +712,26 @@ public final class BleManager
 	/**
 	 * Convenience method to handle connection fail events at the manager level. The listener provided
 	 * will only get called if the device whose connection failed doesn't have a listener provided to
-	 * {@link BleDevice#setListener_ConnectionFail(DeviceReconnectFilter)}. This is unlike the behavior
+	 * {@link BleDevice#setListener_Reconnect(DeviceReconnectFilter)}. This is unlike the behavior
 	 * behind {@link #setListener_DeviceState(DeviceStateListener)} because
 	 * {@link DeviceReconnectFilter#onConnectFailed(ReconnectFilter.ConnectFailEvent)} requires a return value.
 	 *
-	 * @see BleDevice#setListener_ConnectionFail(DeviceReconnectFilter)
+	 * @see BleDevice#setListener_Reconnect(DeviceReconnectFilter)
 	 */
-	public final void setListener_ConnectionFail(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
+	public final void setListener_DeviceReconnect(@Nullable(Prevalence.NORMAL) DeviceReconnectFilter listener_nullable)
 	{
-		m_defaultConnectionFailListener = listener_nullable;
+		m_defaultDeviceReconnectFilter = listener_nullable;
+	}
+
+	/**
+	 * Convenience method to handle {@link BleDevice} connect events at a manager level. This listener simply reports when
+	 * a device is connected, or has failed to connect -- {@link DeviceConnectListener#onEvent(Event)} may fire multiple times
+	 * when {@link DeviceConnectListener.ConnectEvent#wasSuccess()} is <code>false</code>, as SweetBlue may be retrying the connection
+	 * in the background, remember to check {@link DeviceConnectListener.ConnectEvent#isRetrying()}.
+	 */
+	public final void setListener_DeviceConnect(@Nullable(Prevalence.NORMAL) DeviceConnectListener listener_nullable)
+	{
+		m_defaultDeviceConnectListener = listener_nullable;
 	}
 
 	/**
@@ -1613,18 +1615,12 @@ public final class BleManager
 
 		if( !m_taskManager.succeed(P_Task_Scan.class, this) )
 		{
-			m_postManager.runOrPostToUpdateThread(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					P_Task_Scan scanTask = m_taskManager.get(P_Task_Scan.class, BleManager.this);
-					if (scanTask != null)
-						scanTask.succeed();
-					m_taskManager.clearQueueOf(P_Task_Scan.class, BleManager.this);
-				}
-			});
-
+			// I don't think this is needed, if we're clearing it from the queue below.
+//			P_Task_Scan scanTask = m_taskQueue.get(P_Task_Scan.class, BleManager.this);
+//			if (scanTask != null)
+//				scanTask.succeed();
+			m_logger.i("Clearing queue of any scan tasks...");
+			m_taskManager.clearQueueOf(P_Task_Scan.class, BleManager.this);
 		}
 
 		m_stateTracker.remove(BleManagerState.STARTING_SCAN, intent, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
@@ -2198,6 +2194,12 @@ public final class BleManager
 	 */
 	public final @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name, final BleDeviceConfig config)
 	{
+		return newDevice(macAddress, name, null, config);
+	}
+
+
+	final @Nullable(Prevalence.NEVER) BleDevice newDevice(final String macAddress, final String name, final byte[] scanRecord, final BleDeviceConfig config)
+	{
 		final String macAddress_normalized = normalizeMacAddress(macAddress);
 
 		final BleDevice existingDevice = this.getDevice(macAddress_normalized);
@@ -2219,7 +2221,7 @@ public final class BleManager
 
 		final P_NativeDeviceLayer device_native = newNativeDevice(macAddress_normalized);
 
-		if( device_native == null ) //--- DRK > API says this should never happen...not trusting it!
+		if( device_native == null && scanRecord == null) //--- DRK > API says this should never happen...not trusting it! Only returning null instance if scanRecord is null
 		{
 			return BleDevice.NULL;
 		}
@@ -2233,7 +2235,7 @@ public final class BleManager
 			newDevice.setName(name);
 		}
 
-		onDiscovered_wrapItUp(newDevice, device_native, /*newlyDiscovered=*/true, /*scanRecord=*/null, 0, BleDeviceOrigin.EXPLICIT, /*scanEvent=*/null);
+		onDiscovered_wrapItUp(newDevice, device_native, /*newlyDiscovered=*/true, /*scanRecord=*/scanRecord, 0, BleDeviceOrigin.EXPLICIT, /*scanEvent=*/null);
 
 		return newDevice;
 	}
@@ -2276,14 +2278,7 @@ public final class BleManager
 	@Advanced
 	public final void clearQueue()
 	{
-		m_postManager.runOrPostToUpdateThread(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				m_taskManager.clearQueueOfAll();
-			}
-		});
+		m_taskManager.clearQueueOfAll();
 	}
 
 	/**

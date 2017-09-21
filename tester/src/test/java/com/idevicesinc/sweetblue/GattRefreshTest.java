@@ -2,13 +2,12 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.Pointer;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.concurrent.Semaphore;
 
 
 @Config(manifest = Config.NONE, sdk = 25)
@@ -28,37 +27,33 @@ public class GattRefreshTest extends BaseBleUnitTest
         final Pointer<Boolean> refreshingGatt = new Pointer<>(false);
 
 
-        m_mgr.setListener_Discovery(new DiscoveryListener()
+        m_mgr.setListener_Discovery(e ->
         {
-            @Override public void onEvent(DiscoveryEvent e)
+            if (e.was(DiscoveryListener.LifeCycle.DISCOVERED) || e.was(DiscoveryListener.LifeCycle.REDISCOVERED))
             {
-                if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
+                final BleDevice device = e.device();
+                device.setListener_State(e1 ->
                 {
-                    e.device().connect(new DeviceStateListener()
+                    if (e1.didEnter(BleDeviceState.SERVICES_DISCOVERED))
                     {
-                        @Override public void onEvent(StateEvent e)
+                        if (refreshingGatt.value)
                         {
-                            if (e.didEnter(BleDeviceState.SERVICES_DISCOVERED))
-                            {
-                                if (refreshingGatt.value)
-                                {
-                                    succeed();
-                                }
-                            }
-                            if (e.didEnter(BleDeviceState.INITIALIZED))
-                            {
-                                refreshingGatt.value = true;
-                                e.device().refreshGattDatabase();
-                            }
+                            succeed();
                         }
-                    });
-                }
+                    }
+                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    {
+                        refreshingGatt.value = true;
+                        e1.device().refreshGattDatabase();
+                    }
+                });
+                device.connect();
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
 
     }
 

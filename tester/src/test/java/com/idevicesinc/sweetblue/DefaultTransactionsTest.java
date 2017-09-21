@@ -3,12 +3,16 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Pointer;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
 import java.util.UUID;
+
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 @Config(manifest = Config.NONE, sdk = 25)
@@ -23,32 +27,25 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
     private final static UUID mInitCharUuid = UUID.randomUUID();
 
     private GattDatabase db = new GattDatabase().addService(mAuthServiceUuid)
-            .addCharacteristic(mAuthCharUuid).setValue(new byte[] { 0x2, 0x4 }).setProperties().read().setPermissions().read().completeService()
+            .addCharacteristic(mAuthCharUuid).setValue(new byte[]{0x2, 0x4}).setProperties().read().setPermissions().read().completeService()
             .addService(mInitServiceUuid)
-            .addCharacteristic(mInitCharUuid).setValue(new byte[] { 0x8, 0xA }).setProperties().read().setPermissions().read().completeService();
+            .addCharacteristic(mInitCharUuid).setValue(new byte[]{0x8, 0xA}).setProperties().read().setPermissions().read().completeService();
 
 
     @Test(timeout = 40000)
     public void defaultAuthTransactionTest() throws Exception
     {
-        startTest(false);
-
         m_config.runOnMainThread = false;
         m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
         m_config.defaultAuthFactory = () -> new BleTransaction.Auth()
         {
-            @Override protected void start(BleDevice device)
+            @Override
+            protected void start(BleDevice device)
             {
                 final BleRead read = new BleRead(mAuthServiceUuid, mAuthCharUuid).setReadWriteListener(e ->
                 {
-                    if (e.wasSuccess())
-                    {
-                        succeed();
-                    }
-                    else
-                    {
-                        assertFalse(e.status().toString(), true);
-                    }
+                    assertTrue(e.status().toString(), e.wasSuccess());
+                    succeed();
                 });
                 device.read(read);
             }
@@ -56,40 +53,49 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
 
         m_config.loggingOptions = LogOptions.ON;
 
-        connectToMultipleDevices(m_config, false);
+        connectToMultipleDevices(m_config);
+        startAsyncTest();
+    }
 
-        m_mgr.stopScan();
-        m_mgr.disconnectAll();
-
+    @Test(timeout = 40000)
+    public void defaultAuthTransactionTest_main() throws Exception
+    {
         m_config.runOnMainThread = true;
+        m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
+        m_config.defaultAuthFactory = () -> new BleTransaction.Auth()
+        {
+            @Override
+            protected void start(BleDevice device)
+            {
+                final BleRead read = new BleRead(mAuthServiceUuid, mAuthCharUuid).setReadWriteListener(e ->
+                {
+                    assertTrue(e.status().toString(), e.wasSuccess());
+                    succeed();
+                });
+                device.read(read);
+            }
+        };
 
-        connectToMultipleDevices(m_config, true);
+        m_config.loggingOptions = LogOptions.ON;
 
-        m_mgr.stopScan();
-        m_mgr.disconnectAll();
+        connectToMultipleDevices(m_config);
+        startAsyncTest();
     }
 
     @Test(timeout = 40000)
     public void defaultInitTransactionTest() throws Exception
     {
-        startTest(false);
-
         m_config.runOnMainThread = false;
         m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
         m_config.defaultInitFactory = () -> new BleTransaction.Init()
         {
-            @Override protected void start(BleDevice device)
+            @Override
+            protected void start(BleDevice device)
             {
                 BleRead read = new BleRead(mInitServiceUuid, mInitCharUuid).setReadWriteListener(e ->
                 {
-                    if (e.wasSuccess())
-                    {
-                        succeed();
-                    }
-                    else
-                    {
-                        assertFalse(e.status().toString(), true);
-                    }
+                    assertTrue(e.status().toString(), e.wasSuccess());
+                    succeed();
                 });
                 device.read(read);
             }
@@ -97,58 +103,62 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
 
         m_config.loggingOptions = LogOptions.ON;
 
-        connectToMultipleDevices(m_config, false);
+        connectToMultipleDevices(m_config);
+        startAsyncTest();
+    }
 
-        m_mgr.stopScan();
-        m_mgr.disconnectAll();
-
+    @Test(timeout = 40000)
+    public void defaultInitTransactionTest_main() throws Exception
+    {
         m_config.runOnMainThread = true;
+        m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
+        m_config.defaultInitFactory = () -> new BleTransaction.Init()
+        {
+            @Override
+            protected void start(BleDevice device)
+            {
+                BleRead read = new BleRead(mInitServiceUuid, mInitCharUuid).setReadWriteListener(e ->
+                {
+                    assertTrue(e.status().toString(), e.wasSuccess());
+                    succeed();
+                });
+                device.read(read);
+            }
+        };
 
-        connectToMultipleDevices(m_config, true);
+        m_config.loggingOptions = LogOptions.ON;
 
-        m_mgr.stopScan();
-        m_mgr.disconnectAll();
+        connectToMultipleDevices(m_config);
+        startAsyncTest();
     }
 
     @Test(timeout = 40000)
     public void defaultAuthAndInitTransactionTest() throws Exception
     {
-        startTest(false);
-
         m_config.runOnMainThread = false;
         m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
         m_config.defaultInitFactory = () -> new BleTransaction.Init()
         {
-            @Override protected void start(BleDevice device)
+            @Override
+            protected void start(BleDevice device)
             {
                 BleRead read = new BleRead(mInitServiceUuid, mInitCharUuid).setReadWriteListener(e ->
                 {
-                    if (e.wasSuccess())
-                    {
-                        succeed();
-                    }
-                    else
-                    {
-                        assertFalse(e.status().toString(), true);
-                    }
+                    assertTrue(e.status().toString(), e.wasSuccess());
+                    succeed();
                 });
                 device.read(read);
             }
         };
         m_config.defaultAuthFactory = () -> new BleTransaction.Auth()
         {
-            @Override protected void start(BleDevice device)
+            @Override
+            protected void start(BleDevice device)
             {
                 BleRead read = new BleRead(mAuthServiceUuid, mAuthCharUuid).setReadWriteListener(e ->
                 {
-                    if (e.wasSuccess())
-                    {
-                        succeed();
-                    }
-                    else
-                    {
-                        assertFalse(e.status().toString(), true);
-                    }
+                    assertTrue(e.status().toString(), e.wasSuccess());
+                    succeed();
                 });
                 device.read(read);
             }
@@ -156,20 +166,49 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
 
         m_config.loggingOptions = LogOptions.ON;
 
-        connectToMultipleDevices(m_config, false);
-
-        m_mgr.stopScan();
-        m_mgr.disconnectAll();
-
-        m_config.runOnMainThread = true;
-
-        connectToMultipleDevices(m_config, true);
-
-        m_mgr.disconnectAll();
-        m_mgr.stopScan();
+        connectToMultipleDevices(m_config);
+        startAsyncTest();
     }
 
-    private void connectToMultipleDevices(BleManagerConfig config, final boolean completeTest) throws Exception
+    @Test(timeout = 40000)
+    public void defaultAuthAndInitTransactionTest_main() throws Exception
+    {
+        m_config.runOnMainThread = true;
+        m_config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_native().contains("Test Device"));
+        m_config.defaultInitFactory = () -> new BleTransaction.Init()
+        {
+            @Override
+            protected void start(BleDevice device)
+            {
+                BleRead read = new BleRead(mInitServiceUuid, mInitCharUuid).setReadWriteListener(e ->
+                {
+                    assertTrue(e.status().toString(), e.wasSuccess());
+                    succeed();
+                });
+                device.read(read);
+            }
+        };
+        m_config.defaultAuthFactory = () -> new BleTransaction.Auth()
+        {
+            @Override
+            protected void start(BleDevice device)
+            {
+                BleRead read = new BleRead(mAuthServiceUuid, mAuthCharUuid).setReadWriteListener(e ->
+                {
+                    assertTrue(e.status().toString(), e.wasSuccess());
+                    succeed();
+                });
+                device.read(read);
+            }
+        };
+
+        m_config.loggingOptions = LogOptions.ON;
+
+        connectToMultipleDevices(m_config);
+        startAsyncTest();
+    }
+
+    private void connectToMultipleDevices(BleManagerConfig config) throws Exception
     {
         m_mgr.setConfig(config);
 
@@ -177,27 +216,19 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         {
             final Pointer<Integer> connected = new Pointer(0);
 
-            @Override public void onEvent(DiscoveryEvent e)
+            @Override
+            public void onEvent(DiscoveryEvent e)
             {
                 if (e.was(LifeCycle.DISCOVERED) || e.was(LifeCycle.REDISCOVERED))
                 {
                     e.device().connect(e1 ->
                     {
-                        if (e1.didEnter(BleDeviceState.INITIALIZED))
+                        assertTrue(e1.wasSuccess());
+                        connected.value++;
+                        System.out.println(e1.device().getName_override() + " connected. #" + connected.value);
+                        if (connected.value == 3)
                         {
-                            connected.value++;
-                            System.out.println(e1.device().getName_override() + " connected. #" + connected.value);
-                            if (connected.value == 3)
-                            {
-                                if (completeTest)
-                                {
-                                    succeed();
-                                }
-                                else
-                                {
-                                    release();
-                                }
-                            }
+                            succeed();
                         }
                     });
                 }
@@ -215,7 +246,6 @@ public final class DefaultTransactionsTest extends BaseBleUnitTest
         });
 
         m_mgr.startScan();
-        reacquire();
     }
 
     @Override

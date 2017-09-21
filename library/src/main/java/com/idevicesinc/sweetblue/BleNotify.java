@@ -26,6 +26,16 @@ public class BleNotify extends BleOp<BleNotify>
         super(characteristicUuid);
     }
 
+    /**
+     * Constructor which creates a new {@link BleNotify} from the one given. Note that this only copies over the service, and characteristic UUIDs, and the
+     * forceReadTimeout value. No interfaces or filters are copied over.
+     */
+    public BleNotify(BleNotify notify)
+    {
+        super(notify.serviceUuid, notify.charUuid);
+        m_forceReadTimeout = Interval.secs(notify.m_forceReadTimeout.secs());
+    }
+
 
     @Override
     public final boolean isValid()

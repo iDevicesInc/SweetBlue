@@ -14,7 +14,7 @@ abstract class PA_Task implements Comparable<PA_Task>
 
 	private static final int ORDINAL_NOT_YET_ASSIGNED = -1;
 	
-	private static final BleNodeConfig.TaskTimeoutRequestFilter.TaskTimeoutRequestEvent s_timeoutRequestEvent = new BleNodeConfig.TaskTimeoutRequestFilter.TaskTimeoutRequestEvent();
+	private static final TaskTimeoutRequestFilter.TaskTimeoutRequestEvent s_timeoutRequestEvent = new TaskTimeoutRequestFilter.TaskTimeoutRequestEvent();
 
 	
 	private 	  BleDevice m_device;

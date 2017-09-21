@@ -39,6 +39,7 @@ public class MainActivity extends Activity
     private ScanAdaptor mAdaptor;
     private ArrayList<BleDevice> mDevices;
     private DebugLogger mLogger;
+    private BleRead mNameRead;
     private long mLastStateChange;
 
 
@@ -52,6 +53,8 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mNameRead = new BleRead(Uuids.GENERIC_ACCESS_SERVICE_UUID, Uuids.DEVICE_NAME);
+
         mListView = (ListView) findViewById(R.id.listView);
         mDevices = new ArrayList<>(0);
         mAdaptor = new ScanAdaptor(this, mDevices);
@@ -61,14 +64,13 @@ public class MainActivity extends Activity
         mListView.setOnItemClickListener((parent, view, position, id) ->
         {
             final BleDevice device = mDevices.get(position);
-            device.setListener_State(e ->
+            device.connect(e ->
             {
-                if (e.didEnter(BleDeviceState.INITIALIZED))
+                if (e.wasSuccess())
                 {
-                    device.read(Uuids.BATTERY_LEVEL);
+                    e.device().read(mNameRead);
                 }
             });
-            device.connect();
         });
         mListView.setOnItemLongClickListener((parent, view, position, id) ->
         {
@@ -98,7 +100,6 @@ public class MainActivity extends Activity
         mLogger = new DebugLogger(250);
 
 
-
         BleManagerConfig config = new BleManagerConfig();
         config.loggingOptions = new LogOptions(LogOptions.LogLevel.INFO, LogOptions.LogLevel.INFO);
         config.logger = mLogger;
@@ -110,7 +111,8 @@ public class MainActivity extends Activity
             @Override
             protected void start(BleDevice device)
             {
-                device.read(Uuids.BATTERY_LEVEL, e ->
+                BleRead read = new BleRead(mNameRead);
+                read.setReadWriteListener((e) ->
                 {
                     if (e.wasSuccess())
                     {
@@ -121,17 +123,12 @@ public class MainActivity extends Activity
                         fail();
                     }
                 });
+                device.read(read);
             }
         };
         config.forceBondDialog = true;
         config.uhOhCallbackThrottle = Interval.secs(60.0);
-        config.defaultScanFilter = new ScanFilter()
-        {
-            @Override public Please onEvent(ScanEvent e)
-            {
-                return Please.acknowledgeIf(e.name_normalized().contains("wall"));
-            }
-        };
+        config.defaultScanFilter = e -> ScanFilter.Please.acknowledgeIf(e.name_normalized().contains("wall"));
 
 //        config.defaultScanFilter = new ScanFilter()
 //        {

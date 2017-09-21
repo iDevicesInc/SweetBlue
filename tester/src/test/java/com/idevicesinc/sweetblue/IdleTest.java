@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.concurrent.Semaphore;
+
 import static org.junit.Assert.assertTrue;
 
 
@@ -37,7 +37,7 @@ public class IdleTest extends BaseBleUnitTest
             }
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test(timeout = 6000)
@@ -66,7 +66,7 @@ public class IdleTest extends BaseBleUnitTest
             }
         });
 
-        startTest();
+        startAsyncTest();
     }
 
 }

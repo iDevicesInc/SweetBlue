@@ -6,13 +6,10 @@ import com.idevicesinc.sweetblue.utils.BleUuid;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
-
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import static org.junit.Assert.assertTrue;
 
 
 public class BleScanInfoTest extends BaseTest
@@ -22,7 +19,7 @@ public class BleScanInfoTest extends BaseTest
     @Test
     public void scanRecordTestWithServiceData() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         final UUID uuid = Uuids.BATTERY_SERVICE_UUID;
         final short manId = (short) 16454;
         final byte[] manData = new byte[] { 0x5,(byte) 0xAA, 0x44, (byte) 0xB3, 0x66 };
@@ -49,7 +46,7 @@ public class BleScanInfoTest extends BaseTest
     @Test
     public void scanRecordTestWithShort() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         final UUID uuid = Uuids.BATTERY_SERVICE_UUID;
         final short manId = (short) 16454;
         final byte[] manData = new byte[] { 0x5,(byte) 0xAA, 0x44, (byte) 0xB3, 0x66 };
@@ -76,7 +73,7 @@ public class BleScanInfoTest extends BaseTest
     @Test
     public void scanRecordTestWithFull() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         final short manId = (short) 16454;
         final byte[] manData = new byte[] { 0x5,(byte) 0xAA, 0x44, (byte) 0xB3, 0x66 };
         BleScanInfo bleRecord = new BleScanInfo()
@@ -104,7 +101,7 @@ public class BleScanInfoTest extends BaseTest
     @Test
     public void scanRecordTestWithMedium() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         UUID myUuid = Uuids.fromInt("ABABCDCD");
         final short manId = (short) 16454;
         final byte[] manData = new byte[] { 0x5,(byte) 0xAA, 0x44, (byte) 0xB3, 0x66 };

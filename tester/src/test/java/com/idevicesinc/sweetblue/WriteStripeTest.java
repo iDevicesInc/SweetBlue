@@ -6,15 +6,15 @@ import android.bluetooth.BluetoothGattDescriptor;
 
 import com.idevicesinc.sweetblue.utils.ByteBuffer;
 import com.idevicesinc.sweetblue.utils.GattDatabase;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
@@ -57,26 +57,24 @@ public class WriteStripeTest extends BaseBleUnitTest
                 m_device.connect(e1 ->
                 {
 
-                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    assertTrue(e1.wasSuccess());
+                    final byte[] data = new byte[100];
+                    new Random().nextBytes(data);
+                    final BleWrite bleWrite = new BleWrite(tempUuid).setBytes(data);
+                    m_device.write(bleWrite, e11 ->
                     {
-                        final byte[] data = new byte[100];
-                        new Random().nextBytes(data);
-                        final BleWrite bleWrite = new BleWrite(tempUuid).setBytes(data);
-                        m_device.write(bleWrite, e11 ->
-                        {
 
-                            assertTrue(e11.wasSuccess());
-                            assertArrayEquals(data, m_buffer.bytesAndClear());
-                            succeed();
-                        });
-                    }
+                        assertTrue(e11.wasSuccess());
+                        assertArrayEquals(data, m_buffer.bytesAndClear());
+                        succeed();
+                    });
                 });
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -95,28 +93,27 @@ public class WriteStripeTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(e1 ->
                 {
-                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    assertTrue(e1.wasSuccess());
+                    final byte[] data = new byte[100];
+                    new Random().nextBytes(data);
+                    final BleWrite bleWrite = new BleWrite(tempUuid).setDescriptorUUID(tempDescUuid).setBytes(data);
+                    m_device.writeDescriptor(bleWrite, e11 ->
                     {
-                        final byte[] data = new byte[100];
-                        new Random().nextBytes(data);
-                        final BleWrite bleWrite = new BleWrite(tempUuid).setDescriptorUUID(tempDescUuid).setBytes(data);
-                        m_device.writeDescriptor(bleWrite, e11 ->
-                        {
-                            assertTrue(e11.wasSuccess());
-                            assertArrayEquals(data, m_buffer.bytesAndClear());
-                            succeed();
-                        });
-                    }
+                        assertTrue(e11.wasSuccess());
+                        assertArrayEquals(data, m_buffer.bytesAndClear());
+                        succeed();
+                    });
                 });
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
-    @Override public P_GattLayer getGattLayer(BleDevice device)
+    @Override
+    public P_GattLayer getGattLayer(BleDevice device)
     {
         return new StripeGatt(device);
     }

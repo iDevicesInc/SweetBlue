@@ -196,6 +196,6 @@ public class QueueTest extends BaseBleUnitTest
 
         tm.setSuspended(false);
 
-        startTest();
+        startAsyncTest();
     }
 }

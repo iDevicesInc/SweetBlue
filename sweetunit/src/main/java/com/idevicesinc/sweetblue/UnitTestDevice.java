@@ -8,7 +8,7 @@ import android.content.Context;
 import android.text.TextUtils;
 
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 
 import java.util.Random;
 
@@ -44,7 +44,7 @@ public class UnitTestDevice implements P_NativeDeviceLayer
     public String getAddress() {
         if (TextUtils.isEmpty(m_address))
         {
-            m_address = Util.randomMacAddress();
+            m_address = Util_Unit.randomMacAddress();
         }
         return m_address;
     }

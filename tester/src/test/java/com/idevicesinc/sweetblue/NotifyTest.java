@@ -5,8 +5,9 @@ import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 import com.idevicesinc.sweetblue.utils.Uuids;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -15,11 +16,6 @@ import org.robolectric.annotation.Config;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 
 @Config(manifest = Config.NONE, sdk = 25)
@@ -61,7 +57,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e1 ->
                         {
@@ -79,9 +76,9 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -102,7 +99,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e1 ->
                         {
@@ -120,9 +118,9 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -134,35 +132,33 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "NotifyTesterererer");
+        BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "NotifyTesterererer");
 
         final boolean[] notifies = new boolean[2];
 
         device.connect(e ->
         {
-            if (e.didEnter(BleDeviceState.INITIALIZED))
+            assertTrue(e.wasSuccess());
+            BleNotify.Builder builder = new BleNotify.Builder(mTestService, mTestChar).setReadWriteListener(e1 ->
             {
-                BleNotify.Builder builder = new BleNotify.Builder(mTestService, mTestChar).setReadWriteListener(e1 ->
+                if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
                 {
-                    if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
-                    {
-                        assertTrue(e1.wasSuccess());
-                        notifies[0] = true;
-                    }
-                });
-                builder.next().setCharacteristicUUID(mTest2Char).setReadWriteListener(e1 ->
+                    assertTrue(e1.wasSuccess());
+                    notifies[0] = true;
+                }
+            });
+            builder.next().setCharacteristicUUID(mTest2Char).setReadWriteListener(e1 ->
+            {
+                if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
                 {
-                    if (e1.type() == ReadWriteListener.Type.ENABLING_NOTIFICATION)
-                    {
-                        assertTrue(e1.wasSuccess());
-                        succeed();
-                    }
-                });
-                device.enableNotifies(builder.build());
-            }
+                    assertTrue(e1.wasSuccess());
+                    succeed();
+                }
+            });
+            device.enableNotifies(builder.build());
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -181,7 +177,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         final BleNotify notify = new BleNotify(mTestChar);
                         notify.setReadWriteListener(e1 ->
@@ -208,9 +205,9 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -229,7 +226,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         final BleNotify notify = new BleNotify(mTestChar);
                         notify.setReadWriteListener(e1 ->
@@ -256,9 +254,9 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -282,7 +280,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         final BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e1 ->
                         {
@@ -305,9 +304,9 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -346,7 +345,8 @@ public class NotifyTest extends BaseBleUnitTest
                 });
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e12 ->
                         {
@@ -363,9 +363,9 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -389,7 +389,8 @@ public class NotifyTest extends BaseBleUnitTest
                 m_device = e.device();
                 m_device.connect(new BleTransaction.Init()
                 {
-                    @Override protected void start(BleDevice device)
+                    @Override
+                    protected void start(BleDevice device)
                     {
                         BleNotify notify = new BleNotify(mTestChar).setReadWriteListener(e1 ->
                         {
@@ -412,9 +413,9 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        m_mgr.newDevice(Util.randomMacAddress(), "Test Device");
+        m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -424,8 +425,8 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_config.gattLayerFactory = device -> new UnitTestGatt(device, dbNotify);
 
-        final byte[] first = Util.randomBytes(20);
-        final byte[] second = Util.randomBytes(20);
+        final byte[] first = Util_Unit.randomBytes(20);
+        final byte[] second = Util_Unit.randomBytes(20);
 
         m_config.defaultInitFactory = () -> new BleTransaction.Init()
         {
@@ -433,7 +434,8 @@ public class NotifyTest extends BaseBleUnitTest
             protected void start(BleDevice device)
             {
                 BleNotify notify = new BleNotify(mTestService, mTestChar)
-                        .setReadWriteListener((e) -> {
+                        .setReadWriteListener((e) ->
+                        {
                             assertTrue(e.wasSuccess());
                             succeed();
                         });
@@ -443,15 +445,17 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "NotifMotif");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "NotifMotif");
 
         final BluetoothGattCharacteristic ch = device.getNativeCharacteristic(mTestService, mTestChar);
 
-        device.setListener_Notification((e) -> {
+        device.setListener_Notification((e) ->
+        {
             if (e.type() == NotificationListener.Type.NOTIFICATION)
             {
                 assertTrue(Arrays.equals(e.data(), first));
-                device.pushListener_Notification((e1) -> {
+                device.pushListener_Notification((e1) ->
+                {
                     assertTrue(Arrays.equals(e1.data(), second));
                     succeed();
                 });
@@ -459,14 +463,13 @@ public class NotifyTest extends BaseBleUnitTest
             }
         });
 
-        device.connect((e) -> {
-            if (e.didEnter(BleDeviceState.INITIALIZED))
-            {
-                NativeUtil.sendNotification(device, ch, first);
-            }
+        device.connect((e) ->
+        {
+            assertTrue(e.wasSuccess());
+            NativeUtil.sendNotification(device, ch, first);
         });
 
-        startTest();
+        startAsyncTest();
     }
 
 }

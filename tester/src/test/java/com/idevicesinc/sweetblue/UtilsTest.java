@@ -18,7 +18,7 @@ public class UtilsTest extends BaseTest
     @Test
     public void getStringValueTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         String s = "This is just a test";
         byte[] sb = s.getBytes();
         assertEquals(s, Utils_String.getStringValue(sb));
@@ -29,7 +29,7 @@ public class UtilsTest extends BaseTest
     @Test
     public void normalizeNameTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         String name = "This Is A Test-To make sure it works";
         assertEquals("this_is_a_test", Utils_String.normalizeDeviceName(name));
         succeed();
@@ -38,7 +38,7 @@ public class UtilsTest extends BaseTest
     @Test
     public void matchingUUIDTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         List<UUID> adIds = new ArrayList<UUID>();
         adIds.add(Uuids.BATTERY_LEVEL);
         adIds.add(Uuids.BATTERY_SERVICE_UUID);

@@ -57,19 +57,4 @@ public enum BleScanPower
         return nativeMode;
     }
 
-    public static BleScanPower fromBleScanMode(BleScanMode mode)
-    {
-        switch (mode)
-        {
-            case HIGH_POWER:
-                return HIGH_POWER;
-            case MEDIUM_POWER:
-                return MEDIUM_POWER;
-            case LOW_POWER:
-                return LOW_POWER;
-            default:
-                return AUTO;
-        }
-    }
-
 }

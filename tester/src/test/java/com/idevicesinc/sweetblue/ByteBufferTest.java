@@ -3,8 +3,6 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.ByteBuffer;
 import org.junit.Test;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
 
 
 public class ByteBufferTest extends BaseTest
@@ -17,7 +15,7 @@ public class ByteBufferTest extends BaseTest
     @Test
     public void appendBytesTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         ByteBuffer buff = new ByteBuffer();
 
         buff.append(array1);
@@ -31,7 +29,7 @@ public class ByteBufferTest extends BaseTest
     @Test
     public void appendThenCheckLengthTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         ByteBuffer buff = new ByteBuffer(array1);
 
         buff.append(array2);
@@ -44,7 +42,7 @@ public class ByteBufferTest extends BaseTest
     @Test
     public void bytesAndClearTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         ByteBuffer buff = new ByteBuffer(2);
 
         buff.append(array1);
@@ -58,7 +56,7 @@ public class ByteBufferTest extends BaseTest
     @Test
     public void subDataTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         final byte[] empty = new byte[0];
 
         ByteBuffer buff = new ByteBuffer(2);
@@ -89,7 +87,7 @@ public class ByteBufferTest extends BaseTest
     @Test
     public void clearTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         ByteBuffer buff = new ByteBuffer(array1);
 
         buff.append(array2);

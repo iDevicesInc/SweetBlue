@@ -1,12 +1,13 @@
 package com.idevicesinc.sweetblue;
 
 
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 @Config(manifest = Config.NONE, sdk = 25)
@@ -22,34 +23,25 @@ public class UndiscoverTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        final BleDevice device = m_mgr.newDevice(Util.randomMacAddress(), "Undiscover Me!");
+        final BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Undiscover Me!");
 
-        m_mgr.setListener_Discovery(new DiscoveryListener()
+        m_mgr.setListener_Discovery(e ->
         {
-            @Override
-            public void onEvent(DiscoveryEvent e)
+            if (e.was(DiscoveryListener.LifeCycle.UNDISCOVERED))
             {
-                if (e.was(LifeCycle.UNDISCOVERED))
-                {
-                    assertFalse(m_mgr.m_deviceMngr.has(device));
-                    assertFalse(device.is(BleDeviceState.CONNECTED));
-                    succeed();
-                }
+                assertFalse(m_mgr.m_deviceMngr.has(device));
+                assertFalse(device.is(BleDeviceState.CONNECTED));
+                succeed();
             }
         });
 
-        device.connect(new DeviceStateListener() {
-            @Override
-            public void onEvent(DeviceStateListener.StateEvent e)
-            {
-                if (e.didEnter(BleDeviceState.INITIALIZED))
-                {
-                    device.undiscover();
-                }
-            }
+        device.connect(e ->
+        {
+            assertTrue(e.wasSuccess());
+            device.undiscover();
         });
 
-        startTest();
+        startAsyncTest();
 
     }
 

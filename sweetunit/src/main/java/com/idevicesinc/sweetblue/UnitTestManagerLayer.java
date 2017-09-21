@@ -11,7 +11,7 @@ import android.text.TextUtils;
 
 import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
-import com.idevicesinc.sweetblue.utils.Util;
+import com.idevicesinc.sweetblue.utils.Util_Unit;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +40,7 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
 
     @Override public boolean cancelDiscovery()
     {
+        BleManager.s_instance.m_listeners.onClassicDiscoveryFinished();
         return true;
     }
 
@@ -140,7 +141,7 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
     {
         if (TextUtils.isEmpty(m_address))
         {
-            m_address = Util.randomMacAddress();
+            m_address = Util_Unit.randomMacAddress();
         }
         return m_address;
     }
