@@ -76,6 +76,33 @@ public class ScanTest extends BaseBleUnitTest
         });
     }
 
+    @Test
+    public void scanClassicOneTimeTest() throws Exception
+    {
+        m_config.scanApi = BleScanApi.CLASSIC;
+        m_config.loggingEnabled = true;
+        m_mgr.setConfig(m_config);
+        m_mgr.setListener_State(new ManagerStateListener()
+        {
+            @Override
+            public void onEvent(BleManager.StateListener.StateEvent e)
+            {
+                if (e.didEnter(BleManagerState.SCANNING))
+                {
+                    assertTrue("Scan Api: " + getScanApi().name(), getScanApi() == BleScanApi.CLASSIC);
+                }
+                else if (e.didExit(BleManagerState.SCANNING))
+                {
+                    assertFalse("Scan task is in the queue, when it should not be!", m_mgr.getTaskQueue().isInQueue(P_Task_Scan.class, m_mgr) || m_mgr.getTaskQueue().isCurrent(P_Task_Scan.class, m_mgr));
+                    succeed();
+                }
+            }
+        });
+
+        m_mgr.startScan(Interval.FIVE_SECS);
+        startTest();
+    }
+
     @Test(timeout = 10000)
     public void scanApiPreLollipop() throws Exception
     {
