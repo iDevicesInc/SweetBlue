@@ -49,6 +49,7 @@ ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 // List of all of the modules' build.gradle files
 def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
         + files(rootDir.absolutePath + "/library/build.gradle") \
+        + files(rootDir.absolutePath + "/gattspecparser/build.gradle") \
         + files(rootDir.absolutePath + "/sweetunit/build.gradle") \
         + files(rootDir.absolutePath + "/tester/build.gradle") \
         + files(rootDir.absolutePath + "/lint.gradle")
