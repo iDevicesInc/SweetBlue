@@ -15,11 +15,11 @@ fi
 ./gradlew bumpBuildToolsVersion -PbuildToolsVersion=${v}
 
 # Push to SweetBlue repo
-git add -u
-git commit -m "Bump Build Tools Version to $v"
-git push origin HEAD
+#git add -u
+#git commit -m "Bump Build Tools Version to $v"
+#git push origin HEAD
 # Push to samples repo
-cd library/script_output/samples/
-git add -u
-git commit -m "Bump Build Tools Version to $v"
-git push origin HEAD
+#cd library/script_output/samples/
+#git add -u
+#git commit -m "Bump Build Tools Version to $v"
+#git push origin HEAD
