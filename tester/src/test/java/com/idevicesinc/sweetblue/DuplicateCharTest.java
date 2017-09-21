@@ -85,7 +85,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -130,7 +130,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
 
     }
 
@@ -179,7 +179,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
 
     }
 
@@ -224,7 +224,7 @@ public class DuplicateCharTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Override

@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import java.util.concurrent.Semaphore;
+
 import static org.junit.Assert.assertFalse;
 
 
@@ -54,7 +54,7 @@ public class UhOhThrottleTest extends BaseBleUnitTest
         });
         m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
         m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-        startTest();
+        startAsyncTest();
     }
 
     @Test(timeout = 30000)
@@ -85,7 +85,7 @@ public class UhOhThrottleTest extends BaseBleUnitTest
         });
         m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
         m_mgr.uhOh(UhOhListener.UhOh.CANNOT_ENABLE_BLUETOOTH);
-        startTest();
+        startAsyncTest();
     }
 
     private final class UhOhCallback implements PI_UpdateLoop.Callback

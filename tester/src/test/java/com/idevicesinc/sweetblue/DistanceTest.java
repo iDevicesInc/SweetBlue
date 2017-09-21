@@ -10,7 +10,7 @@ public class DistanceTest extends BaseTest
 
     @Test
     public void smokeTests() throws Exception {
-        startTest(false);
+        startSynchronousTest();
         Distance d = Distance.meters(4.0);
         assertEquals(4.0, d.meters(), 0);
         assertEquals(4.0 * 3.28084, d.feet(), 0);
@@ -21,7 +21,7 @@ public class DistanceTest extends BaseTest
 
     @Test
     public void meterToFeetTest() throws Exception {
-        startTest(false);
+        startSynchronousTest();
         double meters = 4.0;
         double feet = meters * 3.28084;
         assertEquals(feet, Distance.meters(meters).feet(), 0);
@@ -30,7 +30,7 @@ public class DistanceTest extends BaseTest
 
     @Test
     public void feetToMeterTest() throws Exception {
-        startTest(false);
+        startSynchronousTest();
         double feet = 25;
         double meters = feet / 3.28084;
         assertEquals(meters, Distance.feet(feet).meters(), 0);

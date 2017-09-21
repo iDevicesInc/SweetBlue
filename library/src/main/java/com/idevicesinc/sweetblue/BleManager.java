@@ -385,16 +385,6 @@ public final class BleManager
 			}
 		}
 
-		if (m_config.scanMode != null)
-		{
-			m_config.scanApi = BleScanApi.fromBleScanMode(m_config.scanMode);
-			if (m_config.scanMode.isLollipopScanMode())
-			{
-				m_config.scanPower = BleScanPower.fromBleScanMode(m_config.scanMode);
-			}
-			m_config.scanMode = null;
-		}
-
 		m_uhOhThrottler = new P_UhOhThrottler(this, Interval.secs(m_config.uhOhCallbackThrottle));
 
 		if( m_wakeLockMngr == null )

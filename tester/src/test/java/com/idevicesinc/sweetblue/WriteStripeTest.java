@@ -74,7 +74,7 @@ public class WriteStripeTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -109,7 +109,7 @@ public class WriteStripeTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Override

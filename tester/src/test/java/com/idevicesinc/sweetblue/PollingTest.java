@@ -46,7 +46,7 @@ public class PollingTest extends BaseBleUnitTest
                 }
             });
         });
-        startTest();
+        startAsyncTest();
     }
 
     @Test(timeout = 30000)
@@ -71,7 +71,7 @@ public class PollingTest extends BaseBleUnitTest
                 }
             });
         });
-        startTest();
+        startAsyncTest();
     }
 
     @Override

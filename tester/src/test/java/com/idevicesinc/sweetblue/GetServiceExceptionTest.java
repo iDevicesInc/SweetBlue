@@ -48,7 +48,7 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
             device.read(read);
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -86,7 +86,7 @@ public class GetServiceExceptionTest extends BaseBleUnitTest
             device.read(read);
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Override

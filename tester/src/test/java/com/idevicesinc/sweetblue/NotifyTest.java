@@ -17,10 +17,6 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 
 @Config(manifest = Config.NONE, sdk = 25)
 @RunWith(RobolectricTestRunner.class)
@@ -82,7 +78,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -124,7 +120,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -162,7 +158,7 @@ public class NotifyTest extends BaseBleUnitTest
             device.enableNotifies(builder.build());
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -211,7 +207,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -260,7 +256,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -310,7 +306,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -369,7 +365,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -419,7 +415,7 @@ public class NotifyTest extends BaseBleUnitTest
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test Device");
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -473,7 +469,7 @@ public class NotifyTest extends BaseBleUnitTest
             NativeUtil.sendNotification(device, ch, first);
         });
 
-        startTest();
+        startAsyncTest();
     }
 
 }

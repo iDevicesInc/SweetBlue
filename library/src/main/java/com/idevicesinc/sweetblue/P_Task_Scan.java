@@ -80,7 +80,7 @@ final class P_Task_Scan extends PA_Task_RequiresBleOn
 
     boolean isClassicBoosted()
     {
-        boolean isClassicScan = getManager().m_config.scanApi == BleScanApi.CLASSIC || getManager().m_config.scanMode == BleScanMode.CLASSIC;
+        boolean isClassicScan = getManager().m_config.scanApi == BleScanApi.CLASSIC;
         return !isClassicScan && Interval.isEnabled(getManager().m_config.scanClassicBoostLength);
     }
 

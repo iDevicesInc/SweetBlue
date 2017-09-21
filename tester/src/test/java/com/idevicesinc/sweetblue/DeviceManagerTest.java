@@ -54,7 +54,7 @@ public class DeviceManagerTest extends BaseBleUnitTest
                 succeed();
             }
         }).start();
-        startTest();
+        startAsyncTest();
     }
 
 }

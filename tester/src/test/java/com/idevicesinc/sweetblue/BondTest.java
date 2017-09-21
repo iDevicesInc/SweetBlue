@@ -3,14 +3,11 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Util_Unit;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 
 @Config(manifest = Config.NONE, sdk = 25)
@@ -23,58 +20,36 @@ public class BondTest extends BaseBleUnitTest
     public void bondTest() throws Exception
     {
         BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test device #1");
-        device.bond(new BondListener()
+        device.bond(e ->
         {
-            @Override
-            public void onEvent(BondEvent e)
-            {
-                assertTrue(e.wasSuccess());
-                succeed();
-            }
+            assertTrue(e.wasSuccess());
+            succeed();
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test(timeout = 20000)
     public void bondRetryTest() throws Exception
     {
-        m_config.nativeDeviceFactory = new P_NativeDeviceLayerFactory()
-        {
-            @Override
-            public P_NativeDeviceLayer newInstance(BleDevice device)
-            {
-                return new BondFailACoupleTimesLayer(device, 3);
-            }
-        };
+        m_config.nativeDeviceFactory = device -> new BondFailACoupleTimesLayer(device, 3);
 
         m_mgr.setConfig(m_config);
 
         BleDevice device = m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test device #2");
-        device.bond(new BondListener()
+        device.bond(e ->
         {
-            @Override
-            public void onEvent(BondEvent e)
-            {
-                assertTrue(e.wasSuccess());
-                succeed();
-            }
+            assertTrue(e.wasSuccess());
+            succeed();
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test(timeout = 20000)
     public void bondFilterTest() throws Exception
     {
-        m_config.nativeDeviceFactory = new P_NativeDeviceLayerFactory()
-        {
-            @Override
-            public P_NativeDeviceLayer newInstance(BleDevice device)
-            {
-                return new BondFailACoupleTimesLayer(device, 1);
-            }
-        };
+        m_config.nativeDeviceFactory = device -> new BondFailACoupleTimesLayer(device, 1);
 
         m_config.bondFilter = new BondFilter()
         {
@@ -93,19 +68,15 @@ public class BondTest extends BaseBleUnitTest
 
         m_mgr.setConfig(m_config);
 
-        m_mgr.setListener_Bond(new BondListener()
+        m_mgr.setListener_Bond(e ->
         {
-            @Override
-            public void onEvent(BondEvent e)
-            {
-                assertFalse(e.wasSuccess());
-                succeed();
-            }
+            assertFalse(e.wasSuccess());
+            succeed();
         });
 
         m_mgr.newDevice(Util_Unit.randomMacAddress(), "Test device #3");
 
-        startTest();
+        startAsyncTest();
     }
 
 

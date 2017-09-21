@@ -11,7 +11,7 @@ public class IntervalTest extends BaseTest
     @Test
     public void smokeTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         assertEquals(-1.0, Interval.DISABLED.secs(), 0);
         assertEquals(Double.POSITIVE_INFINITY, Interval.INFINITE.secs(), 0);
         assertEquals(0.0, Interval.ZERO.secs(), 0);
@@ -24,7 +24,7 @@ public class IntervalTest extends BaseTest
     @Test
     public void enablingTests() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         Interval in = Interval.secs(400);
         assert Interval.isEnabled(in);
         in = Interval.secs(-400);
@@ -35,7 +35,7 @@ public class IntervalTest extends BaseTest
     @Test
     public void secsToMillisTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         Interval in = Interval.secs(400);
         assertEquals(400 * 1000, in.millis());
         succeed();
@@ -44,7 +44,7 @@ public class IntervalTest extends BaseTest
     @Test
     public void millisToSecsTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         Interval in = Interval.millis(500000);
         assertEquals(500000 / 1000, in.secs(), 0);
         succeed();
@@ -53,7 +53,7 @@ public class IntervalTest extends BaseTest
     @Test
     public void deltaTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         Interval in = Interval.delta(1000, 10000);
         assertEquals(10000 - 1000, in.millis());
         assertEquals((10000 - 1000) / 1000, in.secs(), 0);

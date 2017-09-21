@@ -60,7 +60,7 @@ public class ReadTest extends BaseBleUnitTest
             device.read(read);
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -103,7 +103,7 @@ public class ReadTest extends BaseBleUnitTest
             device.readMany(builder.build());
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -134,7 +134,7 @@ public class ReadTest extends BaseBleUnitTest
             device.read(read);
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Override

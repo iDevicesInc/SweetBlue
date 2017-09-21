@@ -57,7 +57,7 @@ public class WriteTest extends BaseBleUnitTest
             device.write(write);
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -100,7 +100,7 @@ public class WriteTest extends BaseBleUnitTest
             device.writeMany(builder.build());
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test
@@ -132,7 +132,7 @@ public class WriteTest extends BaseBleUnitTest
             device.write(write);
         });
 
-        startTest();
+        startAsyncTest();
     }
 
     @Override

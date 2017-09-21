@@ -5,7 +5,6 @@ import android.app.Activity;
 import org.junit.After;
 import org.junit.Before;
 import org.robolectric.Robolectric;
-import java.util.concurrent.Semaphore;
 
 
 public abstract class BaseBleUnitTest extends BaseTest
@@ -52,13 +51,7 @@ public abstract class BaseBleUnitTest extends BaseTest
 
     public void doTestOperation(final TestOp action) throws Exception
     {
-        new Thread(new Runnable()
-        {
-            @Override public void run()
-            {
-                action.run();
-            }
-        }).start();
+        new Thread(() -> action.run()).start();
 
         reacquire();
     }
@@ -67,20 +60,8 @@ public abstract class BaseBleUnitTest extends BaseTest
     {
         m_config = new BleManagerConfig();
         m_config.nativeManagerLayer = getManagerLayer();
-        m_config.gattLayerFactory = new P_GattLayerFactory()
-        {
-            @Override public P_GattLayer newInstance(BleDevice device)
-            {
-                return getGattLayer(device);
-            }
-        };
-        m_config.nativeDeviceFactory = new P_NativeDeviceLayerFactory()
-        {
-            @Override public P_NativeDeviceLayer newInstance(BleDevice device)
-            {
-                return getDeviceLayer(device);
-            }
-        };
+        m_config.gattLayerFactory = this::getGattLayer;
+        m_config.nativeDeviceFactory = this::getDeviceLayer;
         m_config.logger = new UnitTestLogger();
         return m_config;
     }

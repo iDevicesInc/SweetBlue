@@ -15,7 +15,7 @@ public class DebugLoggerTest extends BaseTest
     @Test
     public void getLogListTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         DebugLogger log = new DebugLogger(true, 10);
         log.onLogEntry(2, "tag", "2");
         log.onLogEntry(2, "tag", "3");
@@ -37,7 +37,7 @@ public class DebugLoggerTest extends BaseTest
     @Test
     public void getLastLogsTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         DebugLogger log = new DebugLogger(true, 10);
         log.onLogEntry(2, "tag", "2");
         log.onLogEntry(2, "tag", "3");
@@ -59,7 +59,7 @@ public class DebugLoggerTest extends BaseTest
     @Test
     public void getLastLogTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         DebugLogger log = new DebugLogger(true, 10);
         log.onLogEntry(2, "tag", "2");
         log.onLogEntry(2, "tag", "3");

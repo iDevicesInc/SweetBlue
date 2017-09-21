@@ -424,16 +424,6 @@ public class BleManagerConfig extends BleDeviceConfig
 	public boolean allowManagerStatePolling					= true;
 
 	/**
-	 * Default is <code>null</code>
-	 *
-	 * @deprecated This is deprecated in favor of {@link BleScanApi}. If this is not null, SweetBlue will set
-	 * {@link #scanApi} automatically from this setting.
-	 */
-	@Deprecated
-	public BleScanMode scanMode								= null;
-
-
-	/**
 	 * Default is {@link BleScanApi#AUTO} - see {@link BleScanApi} for more details.
 	 */
 	public BleScanApi scanApi								= BleScanApi.AUTO;

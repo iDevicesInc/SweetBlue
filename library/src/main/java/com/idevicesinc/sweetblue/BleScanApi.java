@@ -43,23 +43,4 @@ public enum BleScanApi
      */
     POST_LOLLIPOP;
 
-
-    public static BleScanApi fromBleScanMode(BleScanMode mode)
-    {
-        switch (mode)
-        {
-            case AUTO:
-                return AUTO;
-            case CLASSIC:
-                return CLASSIC;
-            case POST_LOLLIPOP:
-            case HIGH_POWER:
-            case LOW_POWER:
-            case MEDIUM_POWER:
-                return POST_LOLLIPOP;
-            default:
-                return PRE_LOLLIPOP;
-        }
-    }
-
 }

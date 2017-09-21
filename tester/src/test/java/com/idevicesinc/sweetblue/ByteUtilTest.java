@@ -15,7 +15,7 @@ public class ByteUtilTest extends BaseTest
     @Test
     public void intTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         int value = 424242;
         byte[] bytes = Utils_Byte.intToBytes(value);
         assertArrayEquals(new byte[] { 0x0, 0x6, 0x79, 0x32 }, bytes);
@@ -35,7 +35,7 @@ public class ByteUtilTest extends BaseTest
     @Test
     public void shortTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         short value = 8724;
         byte[] bytes = Utils_Byte.shortToBytes(value);
         assertArrayEquals(new byte[] { 0x22, 0x14 }, bytes);
@@ -55,7 +55,7 @@ public class ByteUtilTest extends BaseTest
     @Test
     public void longTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         long value = 8279580351934L;
         byte[] bytes = Utils_Byte.longToBytes(value);
         assertArrayEquals(new byte[] { 0x0, 0x0, 0x7, (byte) 0x87, (byte) 0xBD, 0x72, 0x1D, (byte) 0xBE }, bytes);
@@ -75,7 +75,7 @@ public class ByteUtilTest extends BaseTest
     @Test
     public void floatTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         float value = 71.8781f;
         byte[] bytes = Utils_Byte.floatToBytes(value);
         assertArrayEquals(new byte[] { 0x42, (byte) 0x8f, (byte) 0xc1, (byte) 0x96 }, bytes);
@@ -95,7 +95,7 @@ public class ByteUtilTest extends BaseTest
     @Test
     public void doubleTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         double value = 7187.813292399d;
         byte[] bytes = Utils_Byte.doubleToBytes(value);
         assertArrayEquals(new byte[] { 0x40, (byte) 0xbc, (byte) 0x13, (byte) 0xd0, (byte) 0x33, (byte) 0xee, (byte) 0x3f, (byte) 0xca }, bytes);
@@ -115,7 +115,7 @@ public class ByteUtilTest extends BaseTest
     @Test
     public void hexTest() throws Exception
     {
-        startTest(false);
+        startSynchronousTest();
         String hex = "A7B244FFBA5C";
         byte[] bytes = Utils_Byte.hexStringToBytes(hex);
         assertArrayEquals(new byte[] { (byte) 0xA7, (byte) 0xB2, 0x44, (byte) 0xFF, (byte) 0xBA, 0x5C }, bytes);

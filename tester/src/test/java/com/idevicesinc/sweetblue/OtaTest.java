@@ -31,7 +31,7 @@ public class OtaTest extends BaseBleUnitTest
             assertTrue(e.wasSuccess());
             e.device().performOta(new TestOta());
         });
-        startTest();
+        startAsyncTest();
     }
 
 

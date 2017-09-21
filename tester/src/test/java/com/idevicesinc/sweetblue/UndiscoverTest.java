@@ -41,7 +41,7 @@ public class UndiscoverTest extends BaseBleUnitTest
             device.undiscover();
         });
 
-        startTest();
+        startAsyncTest();
 
     }
 

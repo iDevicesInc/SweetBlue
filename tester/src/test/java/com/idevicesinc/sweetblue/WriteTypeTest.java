@@ -31,22 +31,22 @@ public class WriteTypeTest extends BaseBleUnitTest
     @Test
     public void writeNoResponseTest() throws Exception
     {
-        startTest(false);
         doWriteTest(ReadWriteListener.Type.WRITE_NO_RESPONSE, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+        startAsyncTest();
     }
 
     @Test
     public void writeSignedTest() throws Exception
     {
-        startTest(false);
         doWriteTest(ReadWriteListener.Type.WRITE_SIGNED, BluetoothGattCharacteristic.WRITE_TYPE_SIGNED);
+        startAsyncTest();
     }
 
     @Test
     public void defaultWriteTest() throws Exception
     {
-        startTest(false);
         doWriteTest(ReadWriteListener.Type.WRITE, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+        startAsyncTest();
     }
 
 
@@ -74,7 +74,6 @@ public class WriteTypeTest extends BaseBleUnitTest
         });
 
         m_mgr.newDevice(Util_Unit.randomMacAddress());
-        reacquire();
     }
 
     @Override

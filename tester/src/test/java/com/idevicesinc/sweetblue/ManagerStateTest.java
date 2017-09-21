@@ -47,7 +47,7 @@ public final class ManagerStateTest extends BaseBleUnitTest
 
         m_mgr.turnOff();
 
-        startTest();
+        startAsyncTest();
     }
 
     @Test(timeout = 20000)
@@ -91,7 +91,7 @@ public final class ManagerStateTest extends BaseBleUnitTest
 
         m_mgr.turnOff();
 
-        startTest();
+        startAsyncTest();
     }
 
 //    @Test
