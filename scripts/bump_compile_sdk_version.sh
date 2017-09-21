@@ -15,11 +15,11 @@ fi
 ./gradlew bumpCompileSdkVersion -PcompileSdkVersion=${v}
 
 # Push to SweetBlue repo
-git add -u
-git commit -m "Bump Compile/Target Sdk Version to $v"
-git push origin HEAD
+#git add -u
+#git commit -m "Bump Compile/Target Sdk Version to $v"
+#git push origin HEAD
 # Push to samples repo
-cd library/script_output/samples/
-git add -u
-git commit -m "Bump Compile/Target Sdk Version to $v"
-git push origin HEAD
+#cd library/script_output/samples/
+#git add -u
+#git commit -m "Bump Compile/Target Sdk Version to $v"
+#git push origin HEAD
