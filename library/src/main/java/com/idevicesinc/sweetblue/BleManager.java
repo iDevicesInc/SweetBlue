@@ -2527,7 +2527,11 @@ public final class BleManager
 	 * Accessor into the underlying array used to store {@link BleDevice} instances.
 	 * Combine with {@link #getDeviceCount()} to iterate, or you may want to use the
 	 * {@link java.util.Iterator} returned from {@link #getDevices()} and its various overloads instead.
+	 *
+	 * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+	 * sweetblue@idevicesinc.com.
 	 */
+	@Deprecated
 	public final @Nullable(Prevalence.NEVER) BleDevice getDeviceAt(final int index)
 	{
 		return m_deviceMngr.get(index);
@@ -2535,7 +2539,11 @@ public final class BleManager
 
 	/**
 	 * Returns the index of this device in the internal list, or -1 if it's not found.
+	 *
+	 * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+	 * sweetblue@idevicesinc.com.
 	 */
+	@Deprecated
 	public final int getDeviceIndex(final BleDevice device)
 	{
 		for( int i = 0; i < getDeviceCount(); i++ )
@@ -2551,6 +2559,12 @@ public final class BleManager
 		return -1;
 	}
 
+	/**
+	 *
+	 * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+	 * sweetblue@idevicesinc.com.
+	 */
+	@Deprecated
 	public final @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device)
 	{
 		return m_deviceMngr.getDevice_offset(device, -1);
@@ -2559,7 +2573,11 @@ public final class BleManager
 	/**
 	 * Same as {@link #getDevice_next(BleDevice, BleDeviceState)} but just returns the next device in the internal list
 	 * with no state checking.
+	 *
+	 * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+	 * sweetblue@idevicesinc.com.
 	 */
+	@Deprecated
 	public final @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device)
 	{
 		return m_deviceMngr.getDevice_offset(device, 1);
@@ -2569,7 +2587,11 @@ public final class BleManager
 	 * Returns the first device previous to the provided one in the internal list that is in the given state. For various fringe cases like
 	 * this manager not having any devices, this method returns {@link BleDevice#NULL}. This method wraps
 	 * around so that if the provided device is at index 0, the returned device will be the last device this manager holds.
+	 *
+	 * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+	 * sweetblue@idevicesinc.com.
 	 */
+	@Deprecated
 	public final @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device, final BleDeviceState state)
 	{
 		return m_deviceMngr.getDevice_offset(device, -1, state, true);
@@ -2578,7 +2600,11 @@ public final class BleManager
 	/**
 	 * Same as {@link #getDevice_previous(BleDevice, BleDeviceState)} but returns the next device in the internal list
 	 * with no state checking.
+	 *
+	 * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+	 * sweetblue@idevicesinc.com.
 	 */
+	@Deprecated
 	public final @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device, final BleDeviceState state)
 	{
 		return m_deviceMngr.getDevice_offset(device, 1, state, true);
@@ -2587,7 +2613,11 @@ public final class BleManager
 	/**
 	 * Same as {@link #getDevice_previous(BleDevice, BleDeviceState)} but allows you to pass a query.
 	 * See {@link BleDevice#is(Object...)} for the query format.
+	 *
+	 * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+	 * sweetblue@idevicesinc.com.
 	 */
+	@Deprecated
 	public final @Nullable(Prevalence.NEVER) BleDevice getDevice_previous(final BleDevice device, final Object ... query)
 	{
 		return m_deviceMngr.getDevice_offset(device, -1, query);
@@ -2596,7 +2626,11 @@ public final class BleManager
 	/**
 	 * Same as {@link #getDevice_next(BleDevice, BleDeviceState)} but allows you to pass a query.
 	 * See {@link BleDevice#is(Object...)} for the query format.
+	 *
+	 * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+	 * sweetblue@idevicesinc.com.
 	 */
+	@Deprecated
 	public final @Nullable(Prevalence.NEVER) BleDevice getDevice_next(final BleDevice device, final Object ... query)
 	{
 		return m_deviceMngr.getDevice_offset(device, 1, query);
