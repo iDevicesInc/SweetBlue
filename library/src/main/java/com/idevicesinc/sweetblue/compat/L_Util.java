@@ -211,6 +211,13 @@ public class L_Util
 
     static void startScan(BluetoothAdapter adapter, ScanSettings scanSettings, ScanCallback listener) {
         m_UserCallback = listener;
+        // Add a last ditch check to make sure the adapter isn't null before trying to start the scan.
+        // We check in the task, but by the time we reach this method, it could have been shut off
+        if (adapter == null)
+        {
+            m_callback.onScanFailed(android.bluetooth.le.ScanCallback.SCAN_FAILED_INTERNAL_ERROR);
+            return;
+        }
         adapter.getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
     }
 
