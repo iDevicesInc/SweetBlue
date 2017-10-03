@@ -506,6 +506,12 @@ final class P_ScanManager
         {
             m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, SCANNING_PAUSED, true, BOOST_SCANNING, false);
         }
+        // Clear out the scan entries list so we don't end up caching old discoveries (it's possible there's a large amount of time between scans, so
+        // what's held in the list may not actually be within range anymore, or some other data on it has changed).
+        synchronized (entryLock)
+        {
+            m_scanEntries.clear();
+        }
     }
 
     private boolean startScanPreLollipop(PA_StateTracker.E_Intent intent)
