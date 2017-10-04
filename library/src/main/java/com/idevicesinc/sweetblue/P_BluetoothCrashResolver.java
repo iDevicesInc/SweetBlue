@@ -181,7 +181,10 @@ final class P_BluetoothCrashResolver {
 
         if (isDebugEnabled()) oldSize = distinctBluetoothAddresses.size();
 
-        distinctBluetoothAddresses.add(device.getAddress());
+        synchronized (distinctBluetoothAddresses)
+        {
+            distinctBluetoothAddresses.add(device.getAddress());
+        }
         if (isDebugEnabled()) {
             newSize = distinctBluetoothAddresses.size();
             if (oldSize != newSize && newSize % 100 == 0) {
@@ -315,7 +318,10 @@ final class P_BluetoothCrashResolver {
     }
     private void finishRecovery() {
         Log.w(TAG, "Recovery attempt finished");
-        distinctBluetoothAddresses.clear();
+        synchronized (distinctBluetoothAddresses)
+        {
+            distinctBluetoothAddresses.clear();
+        }
         recoveryInProgress = false;
     }
 
@@ -435,7 +441,10 @@ final class P_BluetoothCrashResolver {
 
             String mac;
             while ((mac = reader.readLine()) != null) {
-                distinctBluetoothAddresses.add(mac);
+                synchronized (distinctBluetoothAddresses)
+                {
+                    distinctBluetoothAddresses.add(mac);
+                }
             }
 
         } catch (IOException e) {
