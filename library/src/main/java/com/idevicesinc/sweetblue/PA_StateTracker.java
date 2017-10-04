@@ -182,7 +182,16 @@ abstract class PA_StateTracker
 	{
 		this.setStateMask(stateTracker.getState(), 0x0, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
 	}
-	
+
+	private long currentTime()
+	{
+		if (BleManager.s_instance == null)
+		{
+			return System.currentTimeMillis();
+		}
+		return BleManager.s_instance.currentTime();
+	}
+
 	private void setStateMask(final int newStateBits, int intentMask, final int status)
 	{
 		int oldStateBits = m_stateMask;
@@ -199,7 +208,7 @@ abstract class PA_StateTracker
 				{
 					if( m_timesInState != null )
 					{
-						m_timesInState[i] = System.currentTimeMillis() - m_timesInState[i];
+						m_timesInState[i] = currentTime() - m_timesInState[i];
 					}
 				}
 				//--- DRK > State entered...
@@ -207,7 +216,7 @@ abstract class PA_StateTracker
 				{
 					if( m_timesInState != null )
 					{
-						m_timesInState[i] = System.currentTimeMillis();
+						m_timesInState[i] = currentTime();
 					}
 				}
 				else
