@@ -324,7 +324,10 @@ final class P_Logger
 		if( m_gattConnStatusCodes != null )
 		{
 			String actualErrorName = m_gattConnStatusCodes != null ? m_gattConnStatusCodes.get(code) : null;
-			errorName = actualErrorName != null ? "GATT_" + actualErrorName : errorName;
+			// If we couldn't find a relevant gatt conn code, then we'll fall back to the old gattStatus checks
+			if (actualErrorName == null)
+				return gattStatus(code);
+			errorName = "GATT_" + actualErrorName;
 		}
 
 		return Utils_String.makeString(errorName, "(", code, ")");

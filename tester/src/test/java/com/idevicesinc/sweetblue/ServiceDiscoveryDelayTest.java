@@ -44,7 +44,7 @@ public class ServiceDiscoveryDelayTest extends BaseBleUnitTest
                 if (e.didExit(BleDeviceState.DISCOVERING_SERVICES))
                 {
                     Interval time = e.device().getTimeInState(BleDeviceState.DISCOVERING_SERVICES);
-                    assertTrue(time.secs() > 1.0);
+                    assertTrue(time.secs() >= 1.0);
                     succeed();
                 }
             }
