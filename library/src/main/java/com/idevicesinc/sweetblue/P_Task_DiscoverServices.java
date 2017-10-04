@@ -10,15 +10,17 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 
 	private int m_gattStatus = BleStatuses.GATT_STATUS_NOT_APPLICABLE;
 	private boolean m_gattRefresh;
+	private boolean m_useDelay;
 	private double m_curGattDelay;
 	private double m_gattDelayTarget;
 	private boolean m_discoverAttempted;
 
 	
-	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener, boolean gattRefresh, Interval gattDelay)
+	public P_Task_DiscoverServices(BleDevice bleDevice, I_StateListener listener, boolean gattRefresh, boolean useDelay, Interval gattDelay)
 	{
 		super(bleDevice, listener);
 		m_gattRefresh = gattRefresh;
+		m_useDelay = useDelay;
 		m_gattDelayTarget = Interval.isDisabled(gattDelay) || gattDelay == Interval.INFINITE ? 0.0 : gattDelay.secs();
 	}
 
@@ -27,6 +29,11 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 		if( m_gattRefresh )
 		{
 			getDevice().layerManager().refreshGatt();
+		}
+
+		if (m_useDelay)
+		{
+			getLogger().i("Delaying service discovery by " + m_gattDelayTarget + " seconds.");
 			return;
 		}
 
@@ -41,7 +48,7 @@ final class P_Task_DiscoverServices extends PA_Task_RequiresConnection
 
 	@Override protected void update(double timeStep)
 	{
-		if (m_gattRefresh && !m_discoverAttempted)
+		if (m_useDelay && !m_discoverAttempted)
 		{
 			m_curGattDelay += timeStep;
 			if (m_curGattDelay >= m_gattDelayTarget)
