@@ -104,7 +104,7 @@ final class P_ScanManager
                 {
                     m_manager.getLogger().e("Tried to start BLE scan, but scanning is not ready (most likely need to get permissions). Falling back to classic discovery.");
                     mCurrentApi.set(BleScanApi.CLASSIC);
-                    return tryClassicDiscovery(intent, true);
+                    return tryClassicDiscovery(PA_StateTracker.E_Intent.UNINTENTIONAL, true);
                 }
             case AUTO:
             case PRE_LOLLIPOP:
@@ -274,6 +274,7 @@ final class P_ScanManager
                 Interval pauseTime = Interval.isEnabled(m_manager.m_config.infinitePauseInterval) ? m_manager.m_config.infinitePauseInterval : Interval.secs(BleManagerConfig.DEFAULT_SCAN_INFINITE_PAUSE_TIME);
                 if (m_timePausedScan >= pauseTime.secs())
                 {
+                    m_manager.getLogger().i("Restarting paused scan...");
                     startScan(PA_StateTracker.E_Intent.INTENTIONAL, Interval.INFINITE.secs(), false);
                 }
             }
@@ -307,6 +308,7 @@ final class P_ScanManager
 
                     if (!m_manager.isScanning())
                     {
+                        m_manager.getLogger().i("Auto starting scan after BLE turned back on...");
                         startScan = true;
                     }
                 }
@@ -316,6 +318,7 @@ final class P_ScanManager
 
                     if (!m_manager.isScanning())
                     {
+                        m_manager.getLogger().i("Auto starting scan after resume...");
                         startScan = true;
                     }
                 }
@@ -326,6 +329,7 @@ final class P_ScanManager
 
                 if( Interval.isEnabled(scanInterval) && m_timeNotScanning >= scanInterval )
                 {
+                    m_manager.getLogger().i("Starting scan as part of a periodic scan...");
                     startScan = true;
                 }
             }
@@ -371,7 +375,7 @@ final class P_ScanManager
     {
         m_triedToStartScanAfterResume = false;
 
-        if( m_doingInfiniteScan )
+        if( m_doingInfiniteScan && !m_manager.isScanning())
         {
             m_triedToStartScanAfterResume = true;
 
@@ -502,6 +506,12 @@ final class P_ScanManager
         {
             m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, SCANNING_PAUSED, true, BOOST_SCANNING, false);
         }
+        // Clear out the scan entries list so we don't end up caching old discoveries (it's possible there's a large amount of time between scans, so
+        // what's held in the list may not actually be within range anymore, or some other data on it has changed).
+        synchronized (entryLock)
+        {
+            m_scanEntries.clear();
+        }
     }
 
     private boolean startScanPreLollipop(PA_StateTracker.E_Intent intent)
@@ -561,7 +571,7 @@ final class P_ScanManager
         {
             m_manager.getLogger().w("Pre-Lollipop LeScan totally failed to start!");
 
-            tryClassicDiscovery(intent, /*suppressUhOh=*/false);
+            tryClassicDiscovery(PA_StateTracker.E_Intent.UNINTENTIONAL, /*suppressUhOh=*/false);
             return true;
         }
         else
@@ -642,7 +652,8 @@ final class P_ScanManager
 
     private boolean tryClassicDiscovery(final PA_StateTracker.E_Intent intent, final boolean suppressUhOh)
     {
-        if (m_manager.m_config.revertToClassicDiscoveryIfNeeded)
+        boolean intentional = intent == PA_StateTracker.E_Intent.INTENTIONAL;
+        if (intentional || m_manager.m_config.revertToClassicDiscoveryIfNeeded)
         {
             if (false == startClassicDiscovery())
             {
@@ -837,7 +848,7 @@ final class P_ScanManager
             }
             else
             {
-                tryClassicDiscovery(PA_StateTracker.E_Intent.INTENTIONAL, /*suppressUhOh=*/false);
+                tryClassicDiscovery(PA_StateTracker.E_Intent.UNINTENTIONAL, /*suppressUhOh=*/false);
 
                 m_mode = Mode_CLASSIC;
             }

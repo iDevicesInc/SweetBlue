@@ -118,6 +118,12 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * alleviates some instability when {@link #useGattRefresh} is <code>true</code>.
 	 */
 	public Interval gattRefreshDelay							= Interval.millis(DEFAULT_GATT_REFRESH_DELAY);
+
+	/**
+	 * Default is {@link Interval#DISABLED}. This option adds a delay between establishing a BLE connection, and service discovery, if {@link #autoGetServices} is
+	 * <code>true</code>. This value will be ignored if {@link #useGattRefresh} is <code>true</code>, as the library will use {@link #gattRefreshDelay} instead.
+	 */
+	public Interval serviceDiscoveryDelay						= Interval.DISABLED;
 	
 	/**
 	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},
@@ -706,7 +712,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 		@Override public Please onEvent(StateChangeEvent e)
 		{
-			if( phoneHasBondingIssues() )
+			final boolean autoBondFix = bool(e.device().conf_device().autoBondFixes, e.device().conf_mngr().autoBondFixes);
+			if( phoneHasBondingIssues() && autoBondFix )
 			{
 				if( !e.device().is(BleDeviceState.BONDING) )
 				{

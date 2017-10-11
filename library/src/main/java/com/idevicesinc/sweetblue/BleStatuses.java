@@ -215,14 +215,15 @@ public final class BleStatuses
 	public static final int  GATT_SIGN_CMD_WRITE                 = 0xD2; /* changed in V4.0 1101-0010 (signed write)  see write cmd above*/
 	public static final int  GATT_OP_CODE_MAX                    = GATT_HANDLE_VALUE_CONF + 1; /* 0x1E = 30 + 1 = 31*/
 //	public static final int  GATT_HANDLE_IS_VALID(x) ((x) != 0)
-	public static final int GATT_CONN_UNKNOWN                   = 0;
-//	public static final int GATT_CONN_NO_RESOURCES              = L2CAP_CONN_NO_RESOURCES;         /* connection fail for l2cap resource failure */
-//	public static final int GATT_CONN_TIMEOUT                   = HCI_ERR_CONNECTION_TOUT;         /* 0x08 connection timeout  */
-//	public static final int GATT_CONN_TERMINATE_PEER_USER       = HCI_ERR_PEER_USER;               /* 0x13 connection terminate by peer user  */
-//	public static final int GATT_CONN_TERMINATE_LOCAL_HOST      = HCI_ERR_CONN_CAUSE_LOCAL_HOST;   /* 0x16 connectionterminated by local host  */
-//	public static final int GATT_CONN_FAIL_ESTABLISH            = HCI_ERR_CONN_FAILED_ESTABLISHMENT;/* 0x03E connection fail to establish  */
-//	public static final int GATT_CONN_LMP_TIMEOUT               = HCI_ERR_LMP_RESPONSE_TIMEOUT;     /* 0x22 connection fail for LMP response tout */
-//	public static final int GATT_CONN_CANCEL                    = L2CAP_CONN_CANCEL;                /* 0x0100 L2CAP connection cancelled  */
+
+	public static final int CONN_SUCCESS                   = 0;			// This is actually GATT_CONN_UNKNOWN, but 0 is always SUCCESS, so using SUCCESS here instead
+	public static final int CONN_NO_RESOURCES              = 4;         // L2CAP_CONN_NO_RESOURCES				/* connection fail for l2cap resource failure */
+	public static final int CONN_TIMEOUT                   = 0x08;      // HCI_ERR_CONNECTION_TOUT				/* 0x08 connection timeout  */
+	public static final int CONN_TERMINATE_PEER_USER       = 0x13;      // HCI_ERR_PEER_USER					/* 0x13 connection terminate by peer user  */
+	public static final int CONN_TERMINATE_LOCAL_HOST      = 0x16;   	// HCI_ERR_CONN_CAUSE_LOCAL_HOST		/* 0x16 connectionterminated by local host  */
+	public static final int CONN_FAIL_ESTABLISH            = 0x03E;		// HCI_ERR_CONN_FAILED_ESTABLISHMENT	/* 0x03E connection fail to establish  */
+	public static final int CONN_LMP_TIMEOUT               = 0x22;     	// HCI_ERR_LMP_RESPONSE_TIMEOUT			/* 0x22 connection fail for LMP response tout */
+	public static final int CONN_CANCEL                    = 0x0100;    // L2CAP_CONN_CANCEL					/* 0x0100 L2CAP connection cancelled  */
 //	typedef UINT16 tGATT_DISCONN_REASON;
 
 

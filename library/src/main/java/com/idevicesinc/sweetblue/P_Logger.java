@@ -17,6 +17,7 @@ import android.util.Log;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_Reflection;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.UuidNameMap_ListWrapper;
 
@@ -29,6 +30,7 @@ final class P_Logger
 	private int m_poolIndex = 0;
 	private final HashMap<Integer, String> m_threadNames = new HashMap<>();
 	private HashMap<Integer, String> m_gattStatusCodes = null;
+	private HashMap<Integer, String> m_gattConnStatusCodes = null;
 	private HashMap<Integer, String> m_gattConnStates = null;
 	private HashMap<Integer, String> m_gattBleStates = null;
 	private HashMap<Integer, String> m_gattBondStates = null;
@@ -160,6 +162,21 @@ final class P_Logger
 		
 		log(level, message);
 	}
+
+	public void log_conn_status(int gattStatus)
+	{
+		log_conn_status(gattStatus, "");
+	}
+
+	public void log_conn_status(int gattStatus, String message)
+	{
+		if (!m_enabled)	return;
+
+		int level = Utils.isSuccess(gattStatus) ? Log.INFO : Log.WARN;
+		message = gattConnStatus(gattStatus) + " " + message;
+
+		log(level, message);
+	}
 	
 	public void log(int level, String tag, String message)
 	{
@@ -258,13 +275,11 @@ final class P_Logger
 	{
 		if( m_gattConnStates != null )  return;
 		
-		m_gattConnStates = new HashMap<Integer, String>();
+		m_gattConnStates = new HashMap<>();
 		
 		initFromReflection(BluetoothProfile.class, "STATE_", m_gattConnStates);
 	}
-	
-	
-	
+
 	
 	
 	public String gattStatus(int code)
@@ -282,7 +297,7 @@ final class P_Logger
 			errorName = actualErrorName != null ? actualErrorName : errorName;
 		}
 		
-		return errorName+"("+code+")";
+		return Utils_String.makeString(errorName, "(", code, ")");
 	}
 	
 	private synchronized void initGattStatusCodes()
@@ -295,8 +310,38 @@ final class P_Logger
 		initFromReflection(BleDeviceConfig.class, "GATT_", m_gattStatusCodes);
 		initFromReflection(BleStatuses.class, "GATT_", m_gattStatusCodes);
 	}
-	
-	
+
+
+	public String gattConnStatus(int code)
+	{
+		String errorName = "GATT_STATUS_NOT_APPLICABLE";
+
+		if( m_gattConnStatusCodes == null && m_enabled )
+		{
+			initGattConnStatusCodes();
+		}
+
+		if( m_gattConnStatusCodes != null )
+		{
+			String actualErrorName = m_gattConnStatusCodes != null ? m_gattConnStatusCodes.get(code) : null;
+			// If we couldn't find a relevant gatt conn code, then we'll fall back to the old gattStatus checks
+			if (actualErrorName == null)
+				return gattStatus(code);
+			errorName = "GATT_" + actualErrorName;
+		}
+
+		return Utils_String.makeString(errorName, "(", code, ")");
+	}
+
+
+	private synchronized void initGattConnStatusCodes()
+	{
+		if (m_gattConnStatusCodes != null)	return;
+
+		m_gattConnStatusCodes = new HashMap<>();
+
+		initFromReflection(BleStatuses.class, "CONN_", m_gattConnStatusCodes);
+	}
 	
 	
 	public String gattBleState(int code)

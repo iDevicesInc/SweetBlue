@@ -142,7 +142,11 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 		//--- DRK > NOTE: For some devices disconnecting by turning off the peripheral comes back with a status of 8, which is BluetoothGatt.GATT_SERVER.
 		//---				For that same device disconnecting from the app the status is 0. Just an FYI to future developers in case they want to distinguish
 		//---				between the two as far as user intent or something.
-		m_logger.log_status(gattStatus, m_logger.gattConn(newState));
+
+		//--- RB > NOTE: Regarding the above comment, 8 is actually BleStatuses.CONN_TIMEOUT -- it seems connection status codes have different variables
+		//---				associated to them. Some of them share the same value as BluetoothGatt status codes. This is fixed now with the new log_conn_status
+		//---				logger method (and the values are in BleStatuses)
+		m_logger.log_conn_status(gattStatus, m_logger.gattConn(newState));
 
 		if (newState == BluetoothProfile.STATE_DISCONNECTED)
 		{

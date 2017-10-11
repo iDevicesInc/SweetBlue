@@ -121,8 +121,9 @@ public final class Utils_ScanRecord extends Utils
 			}
 
 			// New problem in Android 8.0. It seems some records come in with a length greater than 0, but then there's nothing afterwards, causing
-			// a crash. This check avoids the crash
-			if (currentPos >= scanRecord.length)
+			// a crash. This check avoids the crash. This also early outs if there's a type int, but no data afterwards. It seems we're seeing more
+			// and more malformed scan records out in the field
+			if (currentPos >= scanRecord.length - 1)
 				break;
 
 			// Note the length includes the length of the field type itself.

@@ -622,10 +622,9 @@ task uploadInternal(type: Upload) {
     }
 }
 
-signing {
-    required { gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
+// This is a hack to avoid signing archives when SweetBlue is run as a submodule within another project. Obviously, we need to sign to deploy,
+// so we apply the signing.gradle file (which the build server swaps out before building, then clears the file when done).
+apply from: 'signing.gradle'
 
 task androidJavadocs(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs

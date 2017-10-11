@@ -170,7 +170,7 @@ class P_BleServer_Listeners extends BluetoothGattServerCallback
 
     private void onConnectionStateChange_updateThread(final BluetoothDevice device, final int gattStatus, final int newState)
 	{
-		m_logger.log_status(gattStatus, m_logger.gattConn(newState));
+		m_logger.log_conn_status(gattStatus, m_logger.gattConn(newState));
 
 		if( newState == BluetoothProfile.STATE_DISCONNECTED )
 		{

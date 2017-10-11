@@ -3144,7 +3144,7 @@ public final class BleDevice extends BleNode
                         }
                     }
                 }
-            }, true, gattPause);
+            }, true, true, gattPause);
             queue().add(discTask);
         }
     }
@@ -6055,8 +6055,18 @@ public final class BleDevice extends BleNode
         boolean gattRefresh = BleDeviceConfig.bool(conf_device().useGattRefresh, conf_mngr().useGattRefresh);
         BleDeviceConfig.RefreshOption option = conf_device().gattRefreshOption != null ? conf_device().gattRefreshOption : conf_mngr().gattRefreshOption;
         gattRefresh = gattRefresh && option == BleDeviceConfig.RefreshOption.BEFORE_SERVICE_DISCOVERY;
-        Interval refreshDelay = BleDeviceConfig.interval(conf_device().gattRefreshDelay, conf_mngr().gattRefreshDelay);
-        queue().add(new P_Task_DiscoverServices(this, m_taskStateListener, gattRefresh, refreshDelay));
+        Interval delay = BleDeviceConfig.interval(conf_device().gattRefreshDelay, conf_mngr().gattRefreshDelay);
+        boolean useDelay = gattRefresh;
+        if (!gattRefresh)
+        {
+            Interval serviceDelay = BleDeviceConfig.interval(conf_device().serviceDiscoveryDelay, conf_mngr().serviceDiscoveryDelay);
+            if (Interval.isEnabled(serviceDelay))
+            {
+                useDelay = true;
+                delay = serviceDelay;
+            }
+        }
+        queue().add(new P_Task_DiscoverServices(this, m_taskStateListener, gattRefresh, useDelay, delay));
 
         //--- DRK > We check up top, but check again here cause we might have been disconnected on another thread in the mean time.
         //--- Even without this check the library should still be in a goodish state. Might send some weird state
@@ -6917,7 +6927,11 @@ public final class BleDevice extends BleNode
 
     /**
      * Convenience forwarding of {@link BleManager#getDevice_next(BleDevice)}.
+     *
+     * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+     * sweetblue@idevicesinc.com.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) BleDevice getNext()
     {
         return getManager().getDevice_next(this);
@@ -6925,7 +6939,11 @@ public final class BleDevice extends BleNode
 
     /**
      * Convenience forwarding of {@link BleManager#getDevice_next(BleDevice, BleDeviceState)}.
+     *
+     * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+     * sweetblue@idevicesinc.com.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) BleDevice getNext(final BleDeviceState state)
     {
         return getManager().getDevice_next(this, state);
@@ -6933,7 +6951,11 @@ public final class BleDevice extends BleNode
 
     /**
      * Convenience forwarding of {@link BleManager#getDevice_next(BleDevice, Object...)}.
+     *
+     * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+     * sweetblue@idevicesinc.com.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) BleDevice getNext(final Object... query)
     {
         return getManager().getDevice_next(this, query);
@@ -6941,7 +6963,11 @@ public final class BleDevice extends BleNode
 
     /**
      * Convenience forwarding of {@link BleManager#getDevice_previous(BleDevice)}.
+     *
+     * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+     * sweetblue@idevicesinc.com.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) BleDevice getPrevious()
     {
         return getManager().getDevice_previous(this);
@@ -6949,7 +6975,11 @@ public final class BleDevice extends BleNode
 
     /**
      * Convenience forwarding of {@link BleManager#getDevice_previous(BleDevice, BleDeviceState)}.
+     *
+     * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+     * sweetblue@idevicesinc.com.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) BleDevice getPrevious(final BleDeviceState state)
     {
         return getManager().getDevice_previous(this, state);
@@ -6957,7 +6987,11 @@ public final class BleDevice extends BleNode
 
     /**
      * Convenience forwarding of {@link BleManager#getDevice_previous(BleDevice, Object...)}.
+     *
+     * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+     * sweetblue@idevicesinc.com.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) BleDevice getPrevious(final Object... query)
     {
         return getManager().getDevice_previous(this, query);
@@ -6965,7 +6999,11 @@ public final class BleDevice extends BleNode
 
     /**
      * Convenience forwarding of {@link BleManager#getDeviceIndex(BleDevice)}.
+     *
+     * @deprecated This is going to be removed in version 3. If this is something you use a lot, please let us know at
+     * sweetblue@idevicesinc.com.
      */
+    @Deprecated
     public final int getIndex()
     {
         return getManager().getDeviceIndex(this);
