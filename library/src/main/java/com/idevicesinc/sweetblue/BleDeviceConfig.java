@@ -712,7 +712,8 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 
 		@Override public Please onEvent(StateChangeEvent e)
 		{
-			if( phoneHasBondingIssues() )
+			final boolean autoBondFix = bool(e.device().conf_device().autoBondFixes, e.device().conf_mngr().autoBondFixes);
+			if( phoneHasBondingIssues() && autoBondFix )
 			{
 				if( !e.device().is(BleDeviceState.BONDING) )
 				{

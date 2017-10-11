@@ -203,7 +203,7 @@ public class Utils
 	 * All sony devices<br></br>
 	 * Motorola ("ghost", and "victara" products)
 	 * Samsung ("degaswifiue" product - Tab 4)
-	 * AMobile IOT-500 ("full_amobile2601)wp_l" product)
+	 * AMobile IOT-500 ("full_amobile2601_wp_l" product)
 	 */ 
 	public static boolean phoneHasBondingIssues()
 	{
