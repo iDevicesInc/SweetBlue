@@ -828,7 +828,9 @@ public final class BluetoothEnabler
 				}
 			});
 
-			builder.show();
+			builder.setCancelable(false);
+
+			builder.show().setCanceledOnTouchOutside(false);
         }
         else
         {
