@@ -841,16 +841,24 @@ final class P_ScanManager
 
         @Override public void onScanFailed(int errorCode)
         {
-            m_manager.getLogger().e(Utils_String.concatStrings("Post lollipop scan failed with error code ", String.valueOf(errorCode)));
-            if (errorCode != SCAN_FAILED_ALREADY_STARTED)
+            if (errorCode == SCAN_FAILED_ALREADY_STARTED)
             {
-                fail();
+                m_manager.ASSERT(false, "Got an error stating the scan has already started when trying to start a scan.");
+                // We're already scanning, so nothing to do here
             }
             else
             {
-                tryClassicDiscovery(PA_StateTracker.E_Intent.UNINTENTIONAL, /*suppressUhOh=*/false);
+                m_manager.getLogger().e(Utils_String.concatStrings("Post lollipop scan failed with error code ", String.valueOf(errorCode)));
 
-                m_mode = Mode_CLASSIC;
+                if (m_manager.m_config.revertToClassicDiscoveryIfNeeded)
+                {
+                    m_manager.getLogger().i("Reverting to a CLASSIC scan...");
+                    tryClassicDiscovery(PA_StateTracker.E_Intent.UNINTENTIONAL, /*suppressUhOh=*/false);
+
+                    m_mode = Mode_CLASSIC;
+                }
+                else
+                    fail();
             }
         }
     }
