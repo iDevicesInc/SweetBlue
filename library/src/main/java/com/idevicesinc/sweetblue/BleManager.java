@@ -2932,7 +2932,7 @@ public final class BleManager
 		if( !hasDevice(device) )						return false;
 		if( device.is(BleDeviceState.UNDISCOVERED) )	return false;
 
-		if( device.is(BleDeviceState.CONNECTED) )
+		if( device.isAny(BleDeviceState.CONNECTED, BleDeviceState.CONNECTING, BleDeviceState.CONNECTING_OVERALL) )
 			device.disconnectAndUndiscover();
 		else
 			m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, m_deviceMngr_cache, E_Intent.INTENTIONAL);
