@@ -6345,6 +6345,11 @@ public final class BleDevice extends BleNode
                     {
                         if (getManager().ASSERT(connectionFailReasonIfConnecting != null))
                         {
+                            if (connectionFailReasonIfConnecting == Status.EXPLICIT_DISCONNECT && is(RECONNECTING_SHORT_TERM))
+                            {
+                                stateTracker_main().remove(RECONNECTING_SHORT_TERM, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+                                setStateToDisconnected(false, false, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, true, P_BondManager.OVERRIDE_EMPTY_STATES);
+                            }
                             m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect_longTerm, gattStatus, bondFailReason, highestState, ConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
                         }
                     }
