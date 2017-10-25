@@ -7,6 +7,8 @@ final class P_Task_Unbond extends PA_Task_RequiresBleOn
 {
 
 	private final PE_TaskPriority m_priority;
+	private boolean m_waitingForNativeSideToCatchUp = false;
+
 	
 	public P_Task_Unbond(BleDevice device, I_StateListener listener, PE_TaskPriority priority)
 	{
@@ -72,7 +74,24 @@ final class P_Task_Unbond extends PA_Task_RequiresBleOn
 	{
 		return getDevice().layerManager().getDeviceLayer().cancelBond();
 	}
-	
+
+	void waitForNativeToCatchUp()
+	{
+		m_waitingForNativeSideToCatchUp = true;
+	}
+
+	@Override
+	protected void update(double timeStep)
+	{
+		if (m_waitingForNativeSideToCatchUp)
+		{
+			if (getDevice().m_nativeWrapper.isNativelyUnbonded())
+			{
+				succeed();
+			}
+		}
+	}
+
 	@Override public boolean isExplicit()
 	{
 		return true; //TODO
