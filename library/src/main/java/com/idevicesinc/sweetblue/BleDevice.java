@@ -1190,6 +1190,12 @@ public final class BleDevice extends BleNode
             ROGUE_DISCONNECT,
 
             /**
+             * This status can get set if an implicit disconnect happened -- for example, {@link BleDevice#unbond()} was called while the device
+             * was connected.
+             */
+            IMPLICIT_DISCONNECT,
+
+            /**
              * {@link BleDevice#disconnect()} was called sometime during the connection process.
              */
             EXPLICIT_DISCONNECT,
@@ -5805,6 +5811,14 @@ public final class BleDevice extends BleNode
 
     final void unbond_internal(final PE_TaskPriority priority_nullable, final BondListener.Status status)
     {
+        // This fixes an android bug, where if you unbond while connected, it screws up the native bond state, so even though the unbond was
+        // successful, if you query the bond state, it will still report as being bonded. The fix is to unbond when disconnected.
+        boolean unbondWhenDisconnected = BleDeviceConfig.bool(conf_device().disconnectBeforeUnbond, conf_mngr().disconnectBeforeUnbond);
+        if (unbondWhenDisconnected)
+        {
+            if (isAny(CONNECTED, CONNECTING_OVERALL))
+                disconnect_private(PE_TaskPriority.CRITICAL, Status.IMPLICIT_DISCONNECT, false);
+        }
         // If the unbond task is already in the queue, then do nothing
         if (!queue().isInQueue(P_Task_Unbond.class, this))
         {
@@ -6195,7 +6209,23 @@ public final class BleDevice extends BleNode
 
         final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
 
-        final int bondState = m_nativeWrapper.getNativeBondState();
+        final int bondState;
+
+        // If an unbond task is in the queue, then cache the bond state. It was found that if we don't, we'll still report the device as bonded because
+        // the native side hasn't caught up yet (sometimes it posts the disconnect callback before the bond state has changed on the native side, even though
+        // we already got the native bond state callback).
+
+        if (queue().isInQueue(P_Task_Unbond.class, this))
+        {
+            if (is(BONDED))
+                bondState = BluetoothDevice.BOND_BONDED;
+            else if (is(BONDING))
+                bondState = BluetoothDevice.BOND_BONDING;
+            else
+                bondState = BluetoothDevice.BOND_NONE;
+        }
+        else
+            bondState = m_nativeWrapper.getNativeBondState();
 
         tracker.set
                 (
