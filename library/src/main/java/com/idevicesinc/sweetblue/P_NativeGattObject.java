@@ -1,7 +1,7 @@
 package com.idevicesinc.sweetblue;
 
 
-import android.os.Parcelable;
+
 import com.idevicesinc.sweetblue.utils.UsesCustomNull;
 
 
