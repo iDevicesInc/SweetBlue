@@ -2805,7 +2805,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #getServer(IncomingListener, GattDatabase, BleServer.ServiceAddListener)}, with no {@link IncomingListener} set.
+	 * Overload of {@link BleManager#getServer(IncomingListener, GattDatabase, BleServer.ServiceAddListener)}, with no {@link IncomingListener} set.
 	 */
 	public final BleServer getServer(final GattDatabase gattDatabase, BleServer.ServiceAddListener addServiceListener)
 	{
