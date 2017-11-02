@@ -16,6 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.DebugLogger;
+import com.idevicesinc.sweetblue.utils.GattDatabase;
 import com.idevicesinc.sweetblue.utils.Interval;
 import java.util.ArrayList;
 import java.util.List;

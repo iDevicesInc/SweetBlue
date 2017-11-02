@@ -27,6 +27,11 @@ android {
             minifyEnabled false
         }
     }
+
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
 }
 
 // Set base variables
@@ -41,8 +46,6 @@ ext.AS_APP_BUILD_SUFFIX = "/android_studio/app/build"
 ext.AS_SUFFIX = "/android_studio/app/libs"
 ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
-sourceCompatibility = '1.7'
-targetCompatibility = '1.7'
 
 // List of all of the modules' build.gradle files
 def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \

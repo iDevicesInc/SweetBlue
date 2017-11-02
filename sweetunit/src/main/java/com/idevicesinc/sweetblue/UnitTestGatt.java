@@ -166,6 +166,7 @@ public class UnitTestGatt implements P_GattLayer {
 
     @Override
     public boolean requestMtu(int mtu) {
+        NativeUtil.requestMTUSuccess(getBleDevice(), mtu, getDelayTime());
         return true;
     }
 

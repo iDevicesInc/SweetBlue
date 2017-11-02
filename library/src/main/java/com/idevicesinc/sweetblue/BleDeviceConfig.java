@@ -190,6 +190,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * this to <code>false</code>, as the transaction will run on reconnection.
 	 */
 	public boolean autoNegotiateMtuOnReconnect					= true;
+
+	/**
+	 * Default is <code>null</code> - This callback is used after calling {@link BleDevice#setMtu(int, ReadWriteListener)} or {@link BleDevice#setMtu(int)}, if the
+	 * negotiation was successful, and provides a way to know if the test failed/succeeded. If the MTU test fails, SweetBlue will disconnect the device, as it won't work beyond
+	 * that point anyway (depending on your settings, SweetBlue may reconnect automatically for you).
+	 */
+	public MtuTestCallback mtuTestCallback						= null;
 	
 	/**
 	 * Default is <code>false</code> - if <code>true</code> and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}
