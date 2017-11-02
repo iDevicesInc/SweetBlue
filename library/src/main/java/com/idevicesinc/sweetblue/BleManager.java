@@ -394,6 +394,13 @@ public final class BleManager
 			 */
 			WRITE_TIMED_OUT,
 
+			/**
+			 * Similar to {@link #WRITE_TIMED_OUT}, only used to signify when testing a new MTU size, and it times out. This usually means the android device
+			 * has a bug where it says the MTU size has changed, but can't write the MTU size amount (OnePlus2, Moto X Pure). In this case, SweetBlue will disconnect
+			 * the device, as no other reads/writes will work once this happens.
+			 */
+			WRITE_MTU_TEST_TIMED_OUT,
+
 
 			/**
 			 * When the underlying stack meets a race condition where {@link android.bluetooth.BluetoothAdapter#getState()} does not

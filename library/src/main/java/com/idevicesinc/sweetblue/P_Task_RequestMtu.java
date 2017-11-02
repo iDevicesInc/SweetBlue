@@ -8,8 +8,10 @@ import com.idevicesinc.sweetblue.utils.Utils;
 
 final class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task.I_StateListener
 {
+
 	protected final BleDevice.ReadWriteListener m_readWriteListener;
 	private final int m_mtu;
+
 
 	public P_Task_RequestMtu(BleDevice device, BleDevice.ReadWriteListener readWriteListener, BleTransaction txn_nullable, PE_TaskPriority priority, final int mtu)
 	{
@@ -24,7 +26,7 @@ final class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task
 		return new ReadWriteEvent(getDevice(), /*mtu=*/mtu, status, gattStatus, getTotalTime(), getTotalTimeExecuting(), /*solicited=*/true);
 	}
 
-	@Override protected void onNotExecutable()
+	@Override protected final void onNotExecutable()
 	{
 		super.onNotExecutable();
 
@@ -38,7 +40,7 @@ final class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task
 		getDevice().invokeReadWriteCallback(m_readWriteListener, newEvent(status, gattStatus, 0));
 	}
 
-	@Override public void execute()
+	@Override public final void execute()
 	{
 		if( Utils.isLollipop() )
 		{
@@ -62,12 +64,14 @@ final class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task
 	{
 		super.succeed();
 
+		getDevice().onMtuChanged();
+
 		final ReadWriteEvent event = newEvent(Status.SUCCESS, gattStatus, mtu);
 		
 		getDevice().invokeReadWriteCallback(m_readWriteListener, event);
 	}
 	
-	public void onMtuChanged(BluetoothGatt gatt, int mtu, int gattStatus)
+	final void onMtuChanged(BluetoothGatt gatt, int mtu, int gattStatus)
 	{
 		getManager().ASSERT(getDevice().layerManager().gattEquals(gatt));
 		
@@ -81,7 +85,7 @@ final class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task
 		}
 	}
 	
-	@Override public void onStateChange(PA_Task task, PE_TaskState state)
+	@Override public final void onStateChange(PA_Task task, PE_TaskState state)
 	{
 		if( state == PE_TaskState.TIMED_OUT )
 		{
@@ -93,7 +97,7 @@ final class P_Task_RequestMtu extends PA_Task_Transactionable implements PA_Task
 		}
 	}
 	
-	@Override protected BleTask getTaskType()
+	@Override protected final BleTask getTaskType()
 	{
 		return BleTask.SET_MTU;
 	}

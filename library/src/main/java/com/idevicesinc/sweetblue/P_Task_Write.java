@@ -15,8 +15,7 @@ import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 
 final class P_Task_Write extends PA_Task_ReadOrWrite
 {
-	public static final int MTU_LIMIT = 20;
-	
+
 	private byte[] m_data = null;
 
 	private final FutureData m_futureData;

@@ -445,6 +445,12 @@ public final class BleDevice extends BleNode
             CHARACTERISTIC,
 
             /**
+             * The {@link ReadWriteEvent} returned has to do with testing the MTU size change after calling {@link BleDevice#setMtu(int)}. Functionally,
+             * this is no different that a normal write, this target just calls out this particular write as being used to test the new MTU size.
+             */
+            CHARACTERISTIC_TEST_MTU,
+
+            /**
              * The {@link ReadWriteEvent} returned has to do with a {@link BluetoothGattDescriptor} under the hood.
              */
             DESCRIPTOR,
@@ -1191,7 +1197,7 @@ public final class BleDevice extends BleNode
 
             /**
              * This status can get set if an implicit disconnect happened -- for example, {@link BleDevice#unbond()} was called while the device
-             * was connected.
+             * was connected, or the MTU write test failed.
              */
             IMPLICIT_DISCONNECT,
 
@@ -1909,6 +1915,7 @@ public final class BleDevice extends BleNode
     private Boolean m_lastConnectOrDisconnectWasUserExplicit = null;
     private boolean m_lastDisconnectWasBecauseOfBleTurnOff = false;
     private boolean m_underwentPossibleImplicitBondingAttempt = false;
+    private Boolean m_hasMtuBug = null;
 
     private BleDeviceConfig m_config = null;
     private P_BleDeviceLayerManager m_layerManager;
@@ -1921,6 +1928,8 @@ public final class BleDevice extends BleNode
     private final boolean m_isNull;
 
     final P_ReliableWriteManager m_reliableWriteMngr;
+
+
 
     BleDevice(BleManager mngr, P_NativeDeviceLayer device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
     {
@@ -5762,6 +5771,61 @@ public final class BleDevice extends BleNode
     final void updateRssi(final int rssi)
     {
         m_rssi = rssi;
+    }
+
+    final void onMtuChanged()
+    {
+        // At this point updateMtu() was already called, so we just need to check if we need to test the new MTU size or not
+        final MtuTestCallback testCallback = conf_device().mtuTestCallback != null ? conf_device().mtuTestCallback : conf_mngr().mtuTestCallback;
+        if (testCallback != null)
+        {
+            // If there's a callback set, then call the onTestRequest method to see if we need to perform a test
+            MtuTestCallback.MtuTestEvent event = new MtuTestCallback.MtuTestEvent(this, m_mtu);
+            MtuTestCallback.Please please = testCallback.onTestRequest(event);
+            if (please != null && please.doTest())
+            {
+                final boolean requiresBonding = m_bondMngr.bondIfNeeded(please.charUuid(), BondFilter.CharacteristicEventType.WRITE);
+                final P_Task_TestMtu task = new P_Task_TestMtu(this, please.serviceUuid(), please.charUuid(), null, new PresentData(please.data()), requiresBonding, please.writeType(),
+                        this::onMtuWriteComplete, m_txnMngr.getCurrent(), PE_TaskPriority.CRITICAL);
+                queue().add(task);
+            }
+            else
+            {
+                final MtuTestCallback.TestResult res = new MtuTestCallback.TestResult(this, MtuTestCallback.TestResult.Result.NO_OP, null);
+                testCallback.onResult(res);
+            }
+        }
+    }
+
+    private void onMtuWriteComplete(ReadWriteEvent e)
+    {
+        // The callback shouldn't be null here if we're getting a MTU write callback, but checking it for null safety to be sure
+        final MtuTestCallback testCallback = conf_device().mtuTestCallback != null ? conf_device().mtuTestCallback : conf_mngr().mtuTestCallback;
+        if (testCallback != null)
+        {
+            // Filter the result back to the callback. If the write failed due to a time out, then we implicitly disconnect the device.
+            MtuTestCallback.TestResult.Result res;
+            ReadWriteListener.Status status = e.status();
+            if (e.wasSuccess())
+            {
+                m_hasMtuBug = false;
+                res = MtuTestCallback.TestResult.Result.SUCCESS;
+            }
+            else
+            {
+                if (status == ReadWriteListener.Status.TIMED_OUT)
+                {
+                    m_hasMtuBug = true;
+                    res = MtuTestCallback.TestResult.Result.WRITE_TIMED_OUT;
+                    clearMtu();
+                    disconnectWithReason(ConnectionFailListener.Status.IMPLICIT_DISCONNECT, Timing.EVENTUALLY, e.gattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, e);
+                }
+                else
+                    res = MtuTestCallback.TestResult.Result.OTHER_FAILURE;
+            }
+            final MtuTestCallback.TestResult result = new MtuTestCallback.TestResult(BleDevice.this, res, status);
+            testCallback.onResult(result);
+        }
     }
 
     final void updateMtu(final int mtu)

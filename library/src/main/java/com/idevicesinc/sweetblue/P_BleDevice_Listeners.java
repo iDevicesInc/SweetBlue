@@ -361,12 +361,14 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
         final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
 
         if (task != null && task.isFor(characteristic))
-        {
             task.onCharacteristicWrite(gatt, characteristic.getUuid(), gattStatus);
-        }
         else
         {
-            fireUnsolicitedEvent(new BleCharacteristicWrapper(characteristic), BleDescriptorWrapper.NULL, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, data, gattStatus);
+            final P_Task_TestMtu testTask = m_queue.getCurrent(P_Task_TestMtu.class, m_device);
+            if (testTask != null && testTask.isFor(characteristic))
+                testTask.onCharacteristicWrite(gatt, characteristic.getUuid(), gattStatus);
+            else
+                fireUnsolicitedEvent(new BleCharacteristicWrapper(characteristic), BleDescriptorWrapper.NULL, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.CHARACTERISTIC, data, gattStatus);
         }
     }
 
