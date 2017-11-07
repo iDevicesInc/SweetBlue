@@ -269,6 +269,7 @@ public final class BleManager
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
 		void onEvent(final DiscoveryEvent e);
+
 	}
 
 	/**
