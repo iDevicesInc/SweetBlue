@@ -132,6 +132,12 @@ public class L_Util
     }
 
     public static void stopNativeScan(BluetoothAdapter adapter) {
+        if (adapter == null)
+        {
+            Log.e("ScanManager", "Tried to stop the scan, but the Bluetooth Adapter instance was null!");
+            return;
+        }
+
         final BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
         if (scanner != null)
             scanner.stopScan(m_callback);
@@ -213,7 +219,8 @@ public class L_Util
         m_UserCallback = listener;
         // Add a last ditch check to make sure the adapter isn't null before trying to start the scan.
         // We check in the task, but by the time we reach this method, it could have been shut off
-        if (adapter == null)
+        // Either the adapter, or the scanner object may be null, so we check it here
+        if (adapter == null || adapter.getBluetoothLeScanner() == null)
         {
             m_callback.onScanFailed(android.bluetooth.le.ScanCallback.SCAN_FAILED_INTERNAL_ERROR);
             return;

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.idevicesinc.sweetblue.utils.Interval;
 
@@ -250,7 +251,7 @@ final class P_TaskQueue
 			return executingTask;
 		}
 
-		if( m_current.get() == null )
+		if( getCurrent() == null )
 		{
 			executingTask = dequeue();
 		}

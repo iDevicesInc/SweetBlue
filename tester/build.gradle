@@ -35,9 +35,7 @@ tasks.withType(Test) {
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://maven.google.com'
-    }
+    google()
 }
 
 dependencies {

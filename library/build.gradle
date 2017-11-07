@@ -28,10 +28,12 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
-    }
+    // Commenting out Java 8 support for now until the lambda issue can be fixed
+    // See https://issuetracker.google.com/issues/68977385
+//    compileOptions {
+//        sourceCompatibility = '1.8'
+//        targetCompatibility = '1.8'
+//    }
 }
 
 // Set base variables
@@ -56,9 +58,7 @@ def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle")
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://maven.google.com'
-    }
+    google()
 }
 
 dependencies {

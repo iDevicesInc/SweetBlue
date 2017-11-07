@@ -5786,7 +5786,14 @@ public final class BleDevice extends BleNode
             {
                 final boolean requiresBonding = m_bondMngr.bondIfNeeded(please.charUuid(), BondFilter.CharacteristicEventType.WRITE);
                 final P_Task_TestMtu task = new P_Task_TestMtu(this, please.serviceUuid(), please.charUuid(), null, new PresentData(please.data()), requiresBonding, please.writeType(),
-                        this::onMtuWriteComplete, m_txnMngr.getCurrent(), PE_TaskPriority.CRITICAL);
+                        new ReadWriteListener()
+                        {
+                            @Override
+                            public void onEvent(ReadWriteEvent e)
+                            {
+                                BleDevice.this.onMtuWriteComplete(e);
+                            }
+                        }, m_txnMngr.getCurrent(), PE_TaskPriority.CRITICAL);
                 queue().add(task);
             }
             else
@@ -6792,7 +6799,7 @@ public final class BleDevice extends BleNode
     private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, Type writeType, DescriptorFilter filter, ReadWriteListener listener)
     {
         int mtuSize = getEffectiveWriteMtuSize();
-        if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
+        if (!conf_device().autoStripeWrites || data.getData().length <= mtuSize)
         {
             final P_Task_Write task_write;
             if (filter == null)
