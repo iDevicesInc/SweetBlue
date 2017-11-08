@@ -23,14 +23,9 @@ public class P_Task_FactoryReset extends PA_Task
     @Override
     void execute()
     {
-        // It seems when this method is invoked, it causes the BLE radio to turn off. So, we won't call success() here, as it will
-        // be handled in P_BleManager_Listeners when we see the state change back to ON.
+        // This only gets called after ble is turned off, so we'll succeed right after calling it.
         Utils_Reflection.callBooleanReturnMethod(getManager().getNativeAdapter(), "factoryReset", false);
-    }
-
-    void onBleTurnedOff()
-    {
-        getManager().managerLayer().enable();
+        succeed();
     }
 
     @Override

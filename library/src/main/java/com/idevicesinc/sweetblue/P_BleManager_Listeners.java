@@ -361,13 +361,6 @@ final class P_BleManager_Listeners
                 return;
             }
 
-            P_Task_FactoryReset reset = m_mngr.getTaskQueue().getCurrent(P_Task_FactoryReset.class, m_mngr);
-            if (reset != null)
-            {
-                reset.onBleTurnedOff();
-                return;
-            }
-
             m_mngr.getTaskQueue().fail(P_Task_TurnBleOn.class, m_mngr);
             P_Task_TurnBleOff turnOffTask = m_mngr.getTaskQueue().getCurrent(P_Task_TurnBleOff.class, m_mngr);
             intent = turnOffTask == null || turnOffTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
@@ -386,9 +379,6 @@ final class P_BleManager_Listeners
         }
         else if (newNativeState == BluetoothAdapter.STATE_TURNING_ON)
         {
-            if (m_mngr.getTaskQueue().isCurrent(P_Task_FactoryReset.class, m_mngr))
-                return;
-
             if (!m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOn.class, m_mngr))
             {
                 m_mngr.getTaskQueue().add(new P_Task_TurnBleOn(m_mngr, /*implicit=*/true));
@@ -399,16 +389,10 @@ final class P_BleManager_Listeners
         }
         else if (newNativeState == BluetoothAdapter.STATE_ON)
         {
-            P_Task_FactoryReset reset = m_mngr.getTaskQueue().getCurrent(P_Task_FactoryReset.class, m_mngr);
-            if (reset != null)
-                reset.succeed();
-            else
-            {
-                m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
-                P_Task_TurnBleOn turnOnTask = m_mngr.getTaskQueue().getCurrent(P_Task_TurnBleOn.class, m_mngr);
-                intent = turnOnTask == null || turnOnTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
-                m_mngr.getTaskQueue().succeed(P_Task_TurnBleOn.class, m_mngr);
-            }
+            m_mngr.getTaskQueue().fail(P_Task_TurnBleOff.class, m_mngr);
+            P_Task_TurnBleOn turnOnTask = m_mngr.getTaskQueue().getCurrent(P_Task_TurnBleOn.class, m_mngr);
+            intent = turnOnTask == null || turnOnTask.isImplicit() ? E_Intent.UNINTENTIONAL : intent;
+            m_mngr.getTaskQueue().succeed(P_Task_TurnBleOn.class, m_mngr);
 
             // We need to make sure to remove the transitory states, in case they were missed, and to enforce the ON/OFF state to get propagated app-side
             if (m_mngr.isAny(TURNING_OFF, TURNING_ON))
@@ -418,8 +402,6 @@ final class P_BleManager_Listeners
         }
         else if (newNativeState == BluetoothAdapter.STATE_TURNING_OFF)
         {
-            if (m_mngr.getTaskQueue().isCurrent(P_Task_FactoryReset.class, m_mngr))
-                return;
 
             if (!m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOff.class, m_mngr))
             {
