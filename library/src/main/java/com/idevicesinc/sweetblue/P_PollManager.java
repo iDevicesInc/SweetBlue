@@ -339,6 +339,11 @@ final class P_PollManager
 		{
 			CallbackEntry ithEntry = m_entries.get(i);
 
+			// An NPE was reported from a customer where it looks like the CallbackEntry here is null. Not sure how this could happen,
+			// so we're just guarding against it now
+			if (ithEntry == null)
+				continue;
+
 			if( ithEntry.isFor(serviceUuid, charUuid) && ithEntry.usingNotify() )
 			{
 				ithEntry.onCharacteristicChangedFromNativeNotify(value);
