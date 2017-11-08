@@ -40,6 +40,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Experimental;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
@@ -1877,52 +1878,31 @@ public final class BleManager
 	 */
 	public final void reset(ResetListener listener)
 	{
-		if( listener != null )
-		{
-			if( m_resetListeners != null )
-			{
-				m_resetListeners.addListener(listener);
-			}
-			else
-			{
-				m_resetListeners = new P_WrappingResetListener(listener, m_postManager.getUIHandler(), m_config.postCallbacksToMainThread);
-			}
-		}
+		reset_private(false, listener);
+	}
 
-		if( is(BleManagerState.RESETTING) )
-		{
-			return;
-		}
+	/**
+	 * Similar to {@link BleManager#reset()}, only this also calls the factoryReset method hidden in {@link BluetoothAdapter} after turning
+	 * off BLE, and running the crash resolver. It's not clear what this method does, hence why this is marked as being experimental.
+	 *
+	 * @see #reset()
+	 */
+	@Experimental
+	public final void nukeBle()
+	{
+		nukeBle(null);
+	}
 
-		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-		if( m_config.enableCrashResolverForReset )
-		{
-			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver, /*partOfReset=*/true));
-		}
-
-		turnOff_private(/*removeAllBonds=*/true);
-
-		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
-		{
-			@Override
-			public void onStateChange(PA_Task taskClass, PE_TaskState state)
-			{
-				if (state.isEndingState())
-				{
-					ResetListener nukeListeners = m_resetListeners;
-					m_resetListeners = null;
-					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-					if (nukeListeners != null)
-					{
-						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
-						nukeListeners.onEvent(event);
-					}
-				}
-			}
-		}));
+	/**
+	 * Similar to {@link BleManager#reset(ResetListener)}, only this also calls the factoryReset method hidden in {@link BluetoothAdapter} after turning
+	 * off BLE, and running the crash resolver. It's not clear what this method does, hence why this is marked as being experimental.
+	 *
+	 * @see #reset(ResetListener)
+	 */
+	@Experimental
+	public final void nukeBle(ResetListener resetListener)
+	{
+		reset_private(true, resetListener);
 	}
 
 	/**
@@ -3170,6 +3150,62 @@ public final class BleManager
 		}
 
 		onDiscovered_wrapItUp(list);
+	}
+
+	private void reset_private(boolean nuclear, ResetListener listener)
+	{
+		if( listener != null )
+		{
+			if( m_resetListeners != null )
+			{
+				m_resetListeners.addListener(listener);
+			}
+			else
+			{
+				m_resetListeners = new P_WrappingResetListener(listener, m_postManager.getUIHandler(), m_config.postCallbacksToMainThread);
+			}
+		}
+
+		if( is(BleManagerState.RESETTING) )
+		{
+			return;
+		}
+
+		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		if( m_config.enableCrashResolverForReset )
+		{
+			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver, /*partOfReset=*/true));
+		}
+
+		turnOff_private(/*removeAllBonds=*/true);
+
+		if (nuclear)
+		{
+			P_Task_FactoryReset reset = new P_Task_FactoryReset(this, null);
+			m_taskQueue.add(reset);
+		}
+
+		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		{
+			@Override
+			public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			{
+				if (state.isEndingState())
+				{
+					ResetListener nukeListeners = m_resetListeners;
+					m_resetListeners = null;
+					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+					if (nukeListeners != null)
+					{
+						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
+						nukeListeners.onEvent(event);
+					}
+				}
+			}
+		}));
 	}
 
 	private BleDevice newDevice_private(final P_NativeDeviceLayer device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
