@@ -40,6 +40,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Experimental;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
@@ -2994,6 +2995,14 @@ public final class BleManager
 	public final void clearSharedPreferences()
 	{
 		m_diskOptionsMngr.clear();
+	}
+
+
+	@Experimental
+	public final void nukeBle()
+	{
+		P_Task_FactoryReset reset = new P_Task_FactoryReset(this, null);
+		m_taskQueue.add(reset);
 	}
 
 	//--- DRK > Smooshing together a bunch of package-private accessors here.

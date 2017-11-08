@@ -2,7 +2,6 @@ package com.idevicesinc.sweetblue;
 
 import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.utils.FutureData;
-
 import java.util.UUID;
 
 /**
@@ -22,6 +21,11 @@ public enum BleTask
 	 * Associated with {@link BleManager#turnOn()}
 	 */
 	TURN_BLE_ON,
+
+	/**
+	 * Associated with {@link BleManager#nukeBle()}
+	 */
+	NUKE_BLE_STACK,
 	
 	/**
 	 * Associated with {@link BleManagerConfig#enableCrashResolver}.
@@ -153,6 +157,7 @@ public enum BleTask
 			//--- DRK > Manager-specific.
 			case TURN_BLE_OFF:
 			case TURN_BLE_ON:
+			case NUKE_BLE_STACK:
 			case RESOLVE_CRASHES:	return false;
 
 			default:				return true;
@@ -168,6 +173,7 @@ public enum BleTask
 		{
 			case TURN_BLE_OFF:
 			case TURN_BLE_ON:
+			case NUKE_BLE_STACK:
 			case RESOLVE_CRASHES:	return true;
 
 			default:				return false;

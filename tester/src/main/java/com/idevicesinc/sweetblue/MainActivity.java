@@ -177,6 +177,9 @@ public class MainActivity extends Activity
             case R.id.print_pretty_log:
                 Log.e("Logs!", Utils_String.prettyFormatLogList(mLogger.getLogList()));
                 return true;
+            case R.id.nukeBle:
+                mgr.nukeBle();
+                return true;
         }
         return false;
     }
