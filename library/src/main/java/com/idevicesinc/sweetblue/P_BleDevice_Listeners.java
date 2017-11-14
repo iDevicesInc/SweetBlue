@@ -473,7 +473,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
         }
         else
         {
-            fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.RSSI, P_Const.EMPTY_BYTE_ARRAY, gattStatus);
+            fireUnsolicitedEvent(BleCharacteristicWrapper.NULL, BleDescriptorWrapper.NULL, BleDevice.ReadWriteListener.Type.READ, BleDevice.ReadWriteListener.Target.RSSI, P_Const.EMPTY_BYTE_ARRAY, gattStatus);
         }
     }
 
@@ -703,7 +703,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
         }
         else
         {
-            fireUnsolicitedEvent(null, null, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.MTU, P_Const.EMPTY_BYTE_ARRAY, gattStatus);
+            fireUnsolicitedEvent(BleCharacteristicWrapper.NULL, BleDescriptorWrapper.NULL, BleDevice.ReadWriteListener.Type.WRITE, BleDevice.ReadWriteListener.Target.MTU, P_Const.EMPTY_BYTE_ARRAY, gattStatus);
         }
     }
 }
