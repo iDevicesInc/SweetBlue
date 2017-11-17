@@ -124,6 +124,17 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * <code>true</code>. This value will be ignored if {@link #useGattRefresh} is <code>true</code>, as the library will use {@link #gattRefreshDelay} instead.
 	 */
 	public Interval serviceDiscoveryDelay						= Interval.DISABLED;
+
+	/**
+	 * Default is <code>true</code>. - This option was added in 2.52.13 to fix an android bug, where if you unbond while connected, the native bond state is wrong (we
+	 * get a native callback saying the unbond worked, but when we request the bond state, it says it's still bonded). To avoid this, it's best to unbond when
+	 * disconnected. Set this to <code>false</code> if you want the old behavior (but it's not recommended for the above stated reason). This option will not exist in
+	 * v3, hence why it is marked as deprecated.
+	 *
+	 * @deprecated
+	 */
+	@Deprecated
+	public boolean disconnectBeforeUnbond						= true;
 	
 	/**
 	 * Default is <code>true</code> - some devices can only reliably become {@link BleDeviceState#BONDED} while {@link BleDeviceState#DISCONNECTED},
@@ -179,6 +190,13 @@ public class BleDeviceConfig extends BleNodeConfig implements Cloneable
 	 * this to <code>false</code>, as the transaction will run on reconnection.
 	 */
 	public boolean autoNegotiateMtuOnReconnect					= true;
+
+	/**
+	 * Default is <code>null</code> - This callback is used after calling {@link BleDevice#setMtu(int, ReadWriteListener)} or {@link BleDevice#setMtu(int)}, if the
+	 * negotiation was successful, and provides a way to know if the test failed/succeeded. If the MTU test fails, SweetBlue will disconnect the device, as it won't work beyond
+	 * that point anyway (depending on your settings, SweetBlue may reconnect automatically for you).
+	 */
+	public MtuTestCallback mtuTestCallback						= null;
 	
 	/**
 	 * Default is <code>false</code> - if <code>true</code> and you call {@link BleDevice#startPoll(UUID, Interval, BleDevice.ReadWriteListener)}

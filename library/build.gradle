@@ -11,8 +11,8 @@ apply plugin: 'signing'
 version = "${SEMVER}".replace("_", ".")
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.3'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         minSdkVersion 18
@@ -27,6 +27,13 @@ android {
             minifyEnabled false
         }
     }
+
+    // Commenting out Java 8 support for now until the lambda issue can be fixed
+    // See https://issuetracker.google.com/issues/68977385
+//    compileOptions {
+//        sourceCompatibility = '1.8'
+//        targetCompatibility = '1.8'
+//    }
 }
 
 // Set base variables
@@ -41,8 +48,6 @@ ext.AS_APP_BUILD_SUFFIX = "/android_studio/app/build"
 ext.AS_SUFFIX = "/android_studio/app/libs"
 ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
-sourceCompatibility = '1.7'
-targetCompatibility = '1.7'
 
 // List of all of the modules' build.gradle files
 def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle") \
@@ -53,9 +58,7 @@ def moduleFiles = files(rootDir.getAbsolutePath() + "/integration/build.gradle")
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://maven.google.com'
-    }
+    google()
 }
 
 dependencies {

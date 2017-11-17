@@ -3,14 +3,10 @@ package com.idevicesinc.sweetblue;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.text.TextUtils;
-import android.util.Log;
-
 import com.idevicesinc.sweetblue.BleManager.UhOhListener.UhOh;
 import com.idevicesinc.sweetblue.utils.Utils_String;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import static com.idevicesinc.sweetblue.BleManagerState.ON;
 
 
@@ -22,7 +18,6 @@ final class P_NativeDeviceWrapper
 
 	private String m_name_native;
 	private String m_name_normalized;
-	private String m_name_debug;
 	private String m_name_override;
 
 	private int m_bondState_cached = BluetoothDevice.BOND_NONE;
@@ -56,20 +51,6 @@ final class P_NativeDeviceWrapper
 			final boolean saveToDisk = BleDeviceConfig.bool(m_device.conf_device().saveNameChangesToDisk, m_device.conf_mngr().saveNameChangesToDisk);
 			getManager().m_diskOptionsMngr.saveName(m_address, m_name_native, saveToDisk);
 		}
-	}
-
-	private P_NativeDeviceLayer createLayer(Class<? extends P_NativeDeviceLayer> layerClass)
-	{
-		P_NativeDeviceLayer layer = null;
-		try
-		{
-			layer = layerClass.newInstance();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		return layer;
 	}
 
 	private BleManager getManager()
@@ -147,11 +128,6 @@ final class P_NativeDeviceWrapper
 		m_name_native = name_native;
 
 		m_name_normalized = name_normalized;
-
-//		String[] address_split = m_address.split(":");
-//		String lastFourOfMac = address_split[address_split.length - 2] + address_split[address_split.length - 1];
-//		String debugName = m_name_normalized.length() == 0 ? "<no_name>" : m_name_normalized;
-//		m_name_debug = m_device_native != null ? String.format("%s%s%s", debugName, "_", lastFourOfMac) : debugName;
 	}
 	
 	public String getAddress()

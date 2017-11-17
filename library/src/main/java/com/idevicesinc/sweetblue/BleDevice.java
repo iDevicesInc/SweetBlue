@@ -445,6 +445,12 @@ public final class BleDevice extends BleNode
             CHARACTERISTIC,
 
             /**
+             * The {@link ReadWriteEvent} returned has to do with testing the MTU size change after calling {@link BleDevice#setMtu(int)}. Functionally,
+             * this is no different that a normal write, this target just calls out this particular write as being used to test the new MTU size.
+             */
+            CHARACTERISTIC_TEST_MTU,
+
+            /**
              * The {@link ReadWriteEvent} returned has to do with a {@link BluetoothGattDescriptor} under the hood.
              */
             DESCRIPTOR,
@@ -1190,6 +1196,12 @@ public final class BleDevice extends BleNode
             ROGUE_DISCONNECT,
 
             /**
+             * This status can get set if an implicit disconnect happened -- for example, {@link BleDevice#unbond()} was called while the device
+             * was connected, or the MTU write test failed.
+             */
+            IMPLICIT_DISCONNECT,
+
+            /**
              * {@link BleDevice#disconnect()} was called sometime during the connection process.
              */
             EXPLICIT_DISCONNECT,
@@ -1903,6 +1915,7 @@ public final class BleDevice extends BleNode
     private Boolean m_lastConnectOrDisconnectWasUserExplicit = null;
     private boolean m_lastDisconnectWasBecauseOfBleTurnOff = false;
     private boolean m_underwentPossibleImplicitBondingAttempt = false;
+    private Boolean m_hasMtuBug = null;
 
     private BleDeviceConfig m_config = null;
     private P_BleDeviceLayerManager m_layerManager;
@@ -1915,6 +1928,8 @@ public final class BleDevice extends BleNode
     private final boolean m_isNull;
 
     final P_ReliableWriteManager m_reliableWriteMngr;
+
+
 
     BleDevice(BleManager mngr, P_NativeDeviceLayer device_native, String name_normalized, String name_native, BleDeviceOrigin origin, BleDeviceConfig config_nullable, boolean isNull)
     {
@@ -5758,6 +5773,68 @@ public final class BleDevice extends BleNode
         m_rssi = rssi;
     }
 
+    final void onMtuChanged()
+    {
+        // At this point updateMtu() was already called, so we just need to check if we need to test the new MTU size or not
+        final MtuTestCallback testCallback = conf_device().mtuTestCallback != null ? conf_device().mtuTestCallback : conf_mngr().mtuTestCallback;
+        if (testCallback != null)
+        {
+            // If there's a callback set, then call the onTestRequest method to see if we need to perform a test
+            MtuTestCallback.MtuTestEvent event = new MtuTestCallback.MtuTestEvent(this, m_mtu);
+            MtuTestCallback.Please please = testCallback.onTestRequest(event);
+            if (please != null && please.doTest())
+            {
+                final boolean requiresBonding = m_bondMngr.bondIfNeeded(please.charUuid(), BondFilter.CharacteristicEventType.WRITE);
+                final P_Task_TestMtu task = new P_Task_TestMtu(this, please.serviceUuid(), please.charUuid(), null, new PresentData(please.data()), requiresBonding, please.writeType(),
+                        new ReadWriteListener()
+                        {
+                            @Override
+                            public void onEvent(ReadWriteEvent e)
+                            {
+                                BleDevice.this.onMtuWriteComplete(e);
+                            }
+                        }, m_txnMngr.getCurrent(), PE_TaskPriority.CRITICAL);
+                queue().add(task);
+            }
+            else
+            {
+                final MtuTestCallback.TestResult res = new MtuTestCallback.TestResult(this, MtuTestCallback.TestResult.Result.NO_OP, null);
+                testCallback.onResult(res);
+            }
+        }
+    }
+
+    private void onMtuWriteComplete(ReadWriteEvent e)
+    {
+        // The callback shouldn't be null here if we're getting a MTU write callback, but checking it for null safety to be sure
+        final MtuTestCallback testCallback = conf_device().mtuTestCallback != null ? conf_device().mtuTestCallback : conf_mngr().mtuTestCallback;
+        if (testCallback != null)
+        {
+            // Filter the result back to the callback. If the write failed due to a time out, then we implicitly disconnect the device.
+            MtuTestCallback.TestResult.Result res;
+            ReadWriteListener.Status status = e.status();
+            if (e.wasSuccess())
+            {
+                m_hasMtuBug = false;
+                res = MtuTestCallback.TestResult.Result.SUCCESS;
+            }
+            else
+            {
+                if (status == ReadWriteListener.Status.TIMED_OUT)
+                {
+                    m_hasMtuBug = true;
+                    res = MtuTestCallback.TestResult.Result.WRITE_TIMED_OUT;
+                    clearMtu();
+                    disconnectWithReason(ConnectionFailListener.Status.IMPLICIT_DISCONNECT, Timing.EVENTUALLY, e.gattStatus(), BleStatuses.BOND_FAIL_REASON_NOT_APPLICABLE, e);
+                }
+                else
+                    res = MtuTestCallback.TestResult.Result.OTHER_FAILURE;
+            }
+            final MtuTestCallback.TestResult result = new MtuTestCallback.TestResult(BleDevice.this, res, status);
+            testCallback.onResult(result);
+        }
+    }
+
     final void updateMtu(final int mtu)
     {
         m_mtu = mtu;
@@ -5805,6 +5882,14 @@ public final class BleDevice extends BleNode
 
     final void unbond_internal(final PE_TaskPriority priority_nullable, final BondListener.Status status)
     {
+        // This fixes an android bug, where if you unbond while connected, it screws up the native bond state, so even though the unbond was
+        // successful, if you query the bond state, it will still report as being bonded. The fix is to unbond when disconnected.
+        boolean unbondWhenDisconnected = BleDeviceConfig.bool(conf_device().disconnectBeforeUnbond, conf_mngr().disconnectBeforeUnbond);
+        if (unbondWhenDisconnected)
+        {
+            if (isAny(CONNECTED, CONNECTING_OVERALL))
+                disconnect_private(PE_TaskPriority.CRITICAL, Status.IMPLICIT_DISCONNECT, false);
+        }
         // If the unbond task is already in the queue, then do nothing
         if (!queue().isInQueue(P_Task_Unbond.class, this))
         {
@@ -6195,7 +6280,23 @@ public final class BleDevice extends BleNode
 
         final P_DeviceStateTracker tracker = forceMainStateTracker ? stateTracker_main() : stateTracker();
 
-        final int bondState = m_nativeWrapper.getNativeBondState();
+        final int bondState;
+
+        // If an unbond task is in the queue, then cache the bond state. It was found that if we don't, we'll still report the device as bonded because
+        // the native side hasn't caught up yet (sometimes it posts the disconnect callback before the bond state has changed on the native side, even though
+        // we already got the native bond state callback).
+
+        if (queue().isInQueue(P_Task_Unbond.class, this))
+        {
+            if (is(BONDED))
+                bondState = BluetoothDevice.BOND_BONDED;
+            else if (is(BONDING))
+                bondState = BluetoothDevice.BOND_BONDING;
+            else
+                bondState = BluetoothDevice.BOND_NONE;
+        }
+        else
+            bondState = m_nativeWrapper.getNativeBondState();
 
         tracker.set
                 (
@@ -6345,6 +6446,11 @@ public final class BleDevice extends BleNode
                     {
                         if (getManager().ASSERT(connectionFailReasonIfConnecting != null))
                         {
+                            if (connectionFailReasonIfConnecting == Status.EXPLICIT_DISCONNECT && is(RECONNECTING_SHORT_TERM))
+                            {
+                                stateTracker_main().remove(RECONNECTING_SHORT_TERM, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+                                setStateToDisconnected(false, false, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, true, P_BondManager.OVERRIDE_EMPTY_STATES);
+                            }
                             m_connectionFailMngr.onConnectionFailed(connectionFailReasonIfConnecting, timing, attemptingReconnect_longTerm, gattStatus, bondFailReason, highestState, ConnectionFailListener.AutoConnectUsage.NOT_APPLICABLE, txnFailReason);
                         }
                     }
@@ -6693,7 +6799,7 @@ public final class BleDevice extends BleNode
     private void addWriteTasks(BluetoothGattCharacteristic characteristic, FutureData data, boolean requiresBonding, Type writeType, DescriptorFilter filter, ReadWriteListener listener)
     {
         int mtuSize = getEffectiveWriteMtuSize();
-        if (!conf_device().autoStripeWrites || data.getData().length < mtuSize)
+        if (!conf_device().autoStripeWrites || data.getData().length <= mtuSize)
         {
             final P_Task_Write task_write;
             if (filter == null)

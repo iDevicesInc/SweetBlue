@@ -402,6 +402,7 @@ final class P_BleManager_Listeners
         }
         else if (newNativeState == BluetoothAdapter.STATE_TURNING_OFF)
         {
+
             if (!m_mngr.getTaskQueue().isCurrent(P_Task_TurnBleOff.class, m_mngr))
             {
                 m_mngr.m_deviceMngr.disconnectAllForTurnOff(PE_TaskPriority.CRITICAL);

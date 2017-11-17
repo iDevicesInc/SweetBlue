@@ -4,7 +4,7 @@ android:
   components:
   - tools
   - tools
-  - android-25
+  - android-26
   - doc
   - platform-tools
 script:
@@ -14,7 +14,7 @@ cache:
   - $HOME/.gradle/caches/
   - $HOME/.gradle/wrapper/
 before_install:
-  - echo y | android update sdk --no-ui --all --filter build-tools-25.0.3
+  - echo y | android update sdk --no-ui --all --filter build-tools-26.0.2
 jdk:
 - oraclejdk8
 env:

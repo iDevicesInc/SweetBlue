@@ -40,6 +40,7 @@ import com.idevicesinc.sweetblue.BleManagerConfig.ScanFilter.Please;
 import com.idevicesinc.sweetblue.P_ScanManager.DiscoveryEntry;
 import com.idevicesinc.sweetblue.PA_StateTracker.E_Intent;
 import com.idevicesinc.sweetblue.annotations.Advanced;
+import com.idevicesinc.sweetblue.annotations.Experimental;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
@@ -269,6 +270,7 @@ public final class BleManager
 		 * then from a user-experience perspective it's most often best to automatically connect without user confirmation.
 		 */
 		void onEvent(final DiscoveryEvent e);
+
 	}
 
 	/**
@@ -393,6 +395,13 @@ public final class BleManager
 			 * Similar to {@link #READ_TIMED_OUT} but for {@link BleDevice#write(java.util.UUID, byte[])}.
 			 */
 			WRITE_TIMED_OUT,
+
+			/**
+			 * Similar to {@link #WRITE_TIMED_OUT}, only used to signify when testing a new MTU size, and it times out. This usually means the android device
+			 * has a bug where it says the MTU size has changed, but can't write the MTU size amount (OnePlus2, Moto X Pure). In this case, SweetBlue will disconnect
+			 * the device, as no other reads/writes will work once this happens.
+			 */
+			WRITE_MTU_TEST_TIMED_OUT,
 
 
 			/**
@@ -1869,52 +1878,31 @@ public final class BleManager
 	 */
 	public final void reset(ResetListener listener)
 	{
-		if( listener != null )
-		{
-			if( m_resetListeners != null )
-			{
-				m_resetListeners.addListener(listener);
-			}
-			else
-			{
-				m_resetListeners = new P_WrappingResetListener(listener, m_postManager.getUIHandler(), m_config.postCallbacksToMainThread);
-			}
-		}
+		reset_private(false, listener);
+	}
 
-		if( is(BleManagerState.RESETTING) )
-		{
-			return;
-		}
+	/**
+	 * Similar to {@link BleManager#reset()}, only this also calls the factoryReset method hidden in {@link BluetoothAdapter} after turning
+	 * off BLE, and running the crash resolver. It's not clear what this method does, hence why this is marked as being experimental.
+	 *
+	 * @see #reset()
+	 */
+	@Experimental
+	public final void nukeBle()
+	{
+		nukeBle(null);
+	}
 
-		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-		if( m_config.enableCrashResolverForReset )
-		{
-			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver, /*partOfReset=*/true));
-		}
-
-		turnOff_private(/*removeAllBonds=*/true);
-
-		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
-		{
-			@Override
-			public void onStateChange(PA_Task taskClass, PE_TaskState state)
-			{
-				if (state.isEndingState())
-				{
-					ResetListener nukeListeners = m_resetListeners;
-					m_resetListeners = null;
-					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
-
-					if (nukeListeners != null)
-					{
-						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
-						nukeListeners.onEvent(event);
-					}
-				}
-			}
-		}));
+	/**
+	 * Similar to {@link BleManager#reset(ResetListener)}, only this also calls the factoryReset method hidden in {@link BluetoothAdapter} after turning
+	 * off BLE, and running the crash resolver. It's not clear what this method does, hence why this is marked as being experimental.
+	 *
+	 * @see #reset(ResetListener)
+	 */
+	@Experimental
+	public final void nukeBle(ResetListener resetListener)
+	{
+		reset_private(true, resetListener);
 	}
 
 	/**
@@ -2805,7 +2793,7 @@ public final class BleManager
 	}
 
 	/**
-	 * Overload of {@link #getServer(IncomingListener, GattDatabase, BleServer.ServiceAddListener)}, with no {@link IncomingListener} set.
+	 * Overload of {@link BleManager#getServer(IncomingListener, GattDatabase, BleServer.ServiceAddListener)}, with no {@link IncomingListener} set.
 	 */
 	public final BleServer getServer(final GattDatabase gattDatabase, BleServer.ServiceAddListener addServiceListener)
 	{
@@ -2932,7 +2920,7 @@ public final class BleManager
 		if( !hasDevice(device) )						return false;
 		if( device.is(BleDeviceState.UNDISCOVERED) )	return false;
 
-		if( device.is(BleDeviceState.CONNECTED) )
+		if( device.isAny(BleDeviceState.CONNECTED, BleDeviceState.CONNECTING, BleDeviceState.CONNECTING_OVERALL) )
 			device.disconnectAndUndiscover();
 		else
 			m_deviceMngr.undiscoverAndRemove(device, m_discoveryListener, m_deviceMngr_cache, E_Intent.INTENTIONAL);
@@ -3162,6 +3150,62 @@ public final class BleManager
 		}
 
 		onDiscovered_wrapItUp(list);
+	}
+
+	private void reset_private(boolean nuclear, ResetListener listener)
+	{
+		if( listener != null )
+		{
+			if( m_resetListeners != null )
+			{
+				m_resetListeners.addListener(listener);
+			}
+			else
+			{
+				m_resetListeners = new P_WrappingResetListener(listener, m_postManager.getUIHandler(), m_config.postCallbacksToMainThread);
+			}
+		}
+
+		if( is(BleManagerState.RESETTING) )
+		{
+			return;
+		}
+
+		m_stateTracker.append(RESETTING, E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+		if( m_config.enableCrashResolverForReset )
+		{
+			m_taskQueue.add(new P_Task_CrashResolver(BleManager.this, m_crashResolver, /*partOfReset=*/true));
+		}
+
+		turnOff_private(/*removeAllBonds=*/true);
+
+		if (nuclear)
+		{
+			P_Task_FactoryReset reset = new P_Task_FactoryReset(this, null);
+			m_taskQueue.add(reset);
+		}
+
+		m_taskQueue.add(new P_Task_TurnBleOn(this, /*implicit=*/false, new PA_Task.I_StateListener()
+		{
+			@Override
+			public void onStateChange(PA_Task taskClass, PE_TaskState state)
+			{
+				if (state.isEndingState())
+				{
+					ResetListener nukeListeners = m_resetListeners;
+					m_resetListeners = null;
+					m_nativeStateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+					m_stateTracker.remove(RESETTING, E_Intent.UNINTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE);
+
+					if (nukeListeners != null)
+					{
+						ResetEvent event = new ResetEvent(BleManager.this, ResetListener.Progress.COMPLETED);
+						nukeListeners.onEvent(event);
+					}
+				}
+			}
+		}));
 	}
 
 	private BleDevice newDevice_private(final P_NativeDeviceLayer device_native, final String name_normalized, final String name_native, final BleDeviceOrigin origin, final BleDeviceConfig config_nullable)
