@@ -15,7 +15,6 @@ final class P_TaskQueue
 	private final ArrayList<PA_Task> m_queue = new ArrayList<PA_Task>();
 	private final AtomicReference<PA_Task> m_current;
 	private long m_updateCount;
-	private final P_Logger m_logger;
 	private final BleManager m_mngr;
 	private double m_time = 0.0;
 	private double m_timeSinceEnding = 0.0;
@@ -28,11 +27,15 @@ final class P_TaskQueue
 	P_TaskQueue(BleManager mngr)
 	{
 		m_mngr = mngr;
-		m_logger = mngr.getLogger();
 
 		m_current = new AtomicReference<>(null);
 		
 		initHandler(); 
+	}
+
+	private P_Logger logger()
+	{
+		return m_mngr.getLogger();
 	}
 	
 	final int assignOrdinal()
@@ -246,7 +249,7 @@ final class P_TaskQueue
 
 		if( m_executeHandler == null )
 		{
-			m_logger.d("Waiting for execute handler to initialize.");
+			logger().d("Waiting for execute handler to initialize.");
 
 			return executingTask;
 		}
@@ -569,9 +572,9 @@ final class P_TaskQueue
 
 	final void print()
 	{
-		if( m_logger.isEnabled() )
+		if( logger().isEnabled() )
 		{
-			m_logger.i(this.toString());
+			logger().i(this.toString());
 		}
 	}
 

@@ -21,7 +21,7 @@ import com.idevicesinc.sweetblue.utils.Utils;
 final class P_BleDevice_Listeners extends BluetoothGattCallback
 {
     private final BleDevice m_device;
-    private final P_Logger m_logger;
+//    private final P_Logger m_logger;
     private final P_TaskQueue m_queue;
 
     final PA_Task.I_StateListener m_taskStateListener = new PA_Task.I_StateListener()
@@ -121,8 +121,13 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
     public P_BleDevice_Listeners(BleDevice device)
     {
         m_device = device;
-        m_logger = m_device.getManager().getLogger();
         m_queue = m_device.getTaskQueue();
+    }
+
+
+    private P_Logger logger()
+    {
+        return m_device.getManager().getLogger();
     }
 
     @Override
@@ -147,7 +152,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
         //--- RB > NOTE: Regarding the above comment, 8 is actually BleStatuses.CONN_TIMEOUT -- it seems connection status codes have different variables
         //---				associated to them. Some of them share the same value as BluetoothGatt status codes. This is fixed now with the new log_conn_status
         //---				logger method (and the values are in BleStatuses)
-        m_logger.log_conn_status(gattStatus, m_logger.gattConn(newState));
+        logger().log_conn_status(gattStatus, logger().gattConn(newState));
 
         if (newState == BluetoothProfile.STATE_DISCONNECTED)
         {
@@ -225,7 +230,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
         //--- DRK > NOTE: never seen this case happen.
         else if (newState == BluetoothProfile.STATE_DISCONNECTING)
         {
-            m_logger.e("Actually natively disconnecting!"); // DRK > error level just so it's noticeable...never seen this.
+            logger().e("Actually natively disconnecting!"); // DRK > error level just so it's noticeable...never seen this.
 
             m_device.m_nativeWrapper.updateNativeConnectionState(gatt, newState);
 
@@ -279,7 +284,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
     private void onServicesDiscovered_updateThread(final BluetoothGatt gatt, final int gattStatus)
     {
-        m_logger.log_status(gattStatus);
+        logger().log_status(gattStatus);
 
         if (Utils.isSuccess(gattStatus))
         {
@@ -314,8 +319,8 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
     private void onCharacteristicRead_updateThread(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int gattStatus, final byte[] value)
     {
         final UUID uuid = characteristic.getUuid();
-        m_logger.i(m_logger.charName(uuid));
-        m_logger.log_status(gattStatus);
+        logger().i(logger().charName(uuid));
+        logger().log_status(gattStatus);
 
         final P_Task_Read readTask = m_queue.getCurrent(P_Task_Read.class, m_device);
 
@@ -355,8 +360,8 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
     private void onCharacteristicWrite_updateThread(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final byte[] data, final int gattStatus)
     {
         final UUID uuid = characteristic.getUuid();
-        m_logger.i(m_logger.charName(uuid));
-        m_logger.log_status(gattStatus);
+        logger().i(logger().charName(uuid));
+        logger().log_status(gattStatus);
 
         final P_Task_Write task = m_queue.getCurrent(P_Task_Write.class, m_device);
 
@@ -431,7 +436,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
 
     private void onReliableWriteCompleted_updateThread(final BluetoothGatt gatt, final int gattStatus)
     {
-        m_logger.log_status(gattStatus);
+        logger().log_status(gattStatus);
 
         final P_Task_ExecuteReliableWrite task = m_queue.getCurrent(P_Task_ExecuteReliableWrite.class, m_device);
 
@@ -495,8 +500,8 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
     private void onDescriptorWrite_updateThread(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final byte[] data, final int gattStatus)
     {
         final UUID uuid = descriptor.getUuid();
-        m_logger.i(m_logger.descriptorName(uuid));
-        m_logger.log_status(gattStatus);
+        logger().i(logger().descriptorName(uuid));
+        logger().log_status(gattStatus);
 
         final P_Task_WriteDescriptor task_write = m_queue.getCurrent(P_Task_WriteDescriptor.class, m_device);
 
@@ -587,14 +592,14 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
         final UUID characteristicUuid = characteristic.getUuid();
         final UUID serviceUuid = characteristic.getService().getUuid();
 
-        m_logger.d("characteristic=" + characteristicUuid.toString());
+        logger().d("characteristic=" + characteristicUuid.toString());
 
         m_device.getPollManager().onCharacteristicChangedFromNativeNotify(serviceUuid, characteristicUuid, value);
     }
 
     public final void onNativeBoneRequest_updateThread(BleDevice device)
     {
-        m_logger.i("Bond request served for device with mac " + device.getMacAddress());
+        logger().i("Bond request served for device with mac " + device.getMacAddress());
         device.m_bondMngr.onNativeBondRequest();
     }
 
@@ -606,7 +611,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
             queue.fail(P_Task_Bond.class, m_device);
             queue.fail(P_Task_Unbond.class, m_device);
 
-            m_logger.e("newState for bond is BluetoothDevice.ERROR!(?)");
+            logger().e("newState for bond is BluetoothDevice.ERROR!(?)");
         }
         else if (newState == BluetoothDevice.BOND_NONE)
         {
