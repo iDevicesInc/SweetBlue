@@ -21,7 +21,6 @@ final class P_DeviceManager
     private final HashMap<String, BleDevice> m_map = new HashMap<String, BleDevice>();
     private final ArrayList<BleDevice> m_list = new ArrayList<BleDevice>();
 
-    private final P_Logger m_logger;
     private final BleManager m_mngr;
 
     private boolean m_updating = false;
@@ -30,7 +29,11 @@ final class P_DeviceManager
     P_DeviceManager(BleManager mngr)
     {
         m_mngr = mngr;
-        m_logger = m_mngr.getLogger();
+    }
+
+    private P_Logger logger()
+    {
+        return m_mngr.getLogger();
     }
 
     public ArrayList<BleDevice> getList()
@@ -318,7 +321,7 @@ final class P_DeviceManager
             {
                 if (m_map.containsKey(device.getMacAddress()))
                 {
-                    m_logger.e("Already registered device " + device.getMacAddress());
+                    logger().e("Already registered device " + device.getMacAddress());
                     return;
                 }
 
