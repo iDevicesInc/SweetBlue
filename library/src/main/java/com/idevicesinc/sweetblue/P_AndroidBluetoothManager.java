@@ -167,31 +167,19 @@ public final class P_AndroidBluetoothManager implements P_NativeManagerLayer
     }
 
     @Override
-    public final void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, AdvertiseCallback callback)
+    public final void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, L_Util.AdvertisingCallback callback)
     {
-        final BluetoothLeAdvertiser ad = L_Util.getBluetoothLeAdvertiser(m_adaptor);
-        if (ad != null)
+        if (!L_Util.startAdvertising(m_adaptor, settings, adData, callback))
         {
-            ad.startAdvertising(settings, adData, callback);
-        }
-        else
-        {
-            m_bleManager.getLogger().e("Tried to start advertising, but the BluetoothLeAdvertiser was null!");
+            m_bleManager.ASSERT(false, "Unable to start advertising!");
+            m_bleManager.getLogger().e("Failed to start advertising!");
         }
     }
 
     @Override
-    public final void stopAdvertising(AdvertiseCallback callback)
+    public final void stopAdvertising()
     {
-        final BluetoothLeAdvertiser ad = L_Util.getBluetoothLeAdvertiser(m_adaptor);
-        if (ad != null)
-        {
-            ad.stopAdvertising(callback);
-        }
-        else
-        {
-            m_bleManager.getLogger().e("Tried to stop advertising, but the BluetoothLeAdvertiser was null!");
-        }
+        L_Util.stopAdvertising(m_adaptor);
     }
 
     @Override public final Set<BluetoothDevice> getBondedDevices()
