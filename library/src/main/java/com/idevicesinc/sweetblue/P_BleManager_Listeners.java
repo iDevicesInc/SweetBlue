@@ -121,27 +121,26 @@ final class P_BleManager_Listeners
             //---		They don't seem to be but leaving it here for the future if needed anyway.
             else if (action.contains("ACL") || action.equals(BluetoothDevice.ACTION_UUID) || action.equals(BluetoothDevice_ACTION_DISAPPEARED))
             {
-                final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+//                final BluetoothDevice device_native = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+//
+//                if (action.equals(BluetoothDevice.ACTION_FOUND))
+//                {
+////					device_native.fetchUuidsWithSdp();
+//                }
+//                else if (action.equals(BluetoothDevice.ACTION_UUID))
+//                {
+//                    m_mngr.getLogger().d("");
+//                }
 
-                if (action.equals(BluetoothDevice.ACTION_FOUND))
-                {
-//					device_native.fetchUuidsWithSdp();
-                }
-                else if (action.equals(BluetoothDevice.ACTION_UUID))
-                {
-                    m_mngr.getLogger().d("");
-                }
-
-                BleDevice device = m_mngr.getDevice(device_native.getAddress());
-
-                if (device != null)
-                {
+//                BleDevice device = m_mngr.getDevice(device_native.getAddress());
+//                if (device != null)
+//                {
 //					m_mngr.getLogger().e("Known device " + device.getDebugName() + " " + action);
-                }
-                else
-                {
+//                }
+//                else
+//                {
 //					m_mngr.getLogger().e("Mystery device " + device_native.getName() + " " + device_native.getAddress() + " " + action);
-                }
+//                }
             }
         }
     };
