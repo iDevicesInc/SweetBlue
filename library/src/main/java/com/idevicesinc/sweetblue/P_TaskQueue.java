@@ -660,12 +660,17 @@ final class P_TaskQueue
 			@Override
 			public void run()
 			{
-				for (int i = m_queue.size() - 1; i >= 0; i-- )
-				{
-					clearQueueOf$removeFromQueue(i);
-				}
+			clearQueueOfAll_blocking();
 			}
 		});
+	}
+
+	final void clearQueueOfAll_blocking()
+	{
+		for (int i = m_queue.size() - 1; i >= 0; i-- )
+		{
+			clearQueueOf$removeFromQueue(i);
+		}
 	}
 
 	@Override public final String toString()

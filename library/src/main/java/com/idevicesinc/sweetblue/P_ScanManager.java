@@ -446,7 +446,7 @@ final class P_ScanManager
                 }
                 else
                 {
-                    m_manager.getCrashResolver().notifyScannedDevice(layer, null, L_Util.getNativeCallback());
+                    m_manager.getCrashResolver().notifyScannedDevice(layer, null, L_Util.getNativeScanCallback());
                 }
 
                 entries.add(DiscoveryEntry.newEntry(layer, info.m_rssi, info.m_record));

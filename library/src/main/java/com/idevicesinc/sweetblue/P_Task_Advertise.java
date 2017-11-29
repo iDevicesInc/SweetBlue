@@ -1,10 +1,8 @@
 package com.idevicesinc.sweetblue;
 
 import android.annotation.TargetApi;
-import android.bluetooth.le.AdvertiseCallback;
-import android.bluetooth.le.AdvertiseSettings;
-import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.Build;
+import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.BleAdvertisingSettings.BleAdvertisingMode;
@@ -22,13 +20,12 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
     private final Interval m_timeOut;
 
 
-    private final AdvertiseCallback adCallback = new AdvertiseCallback()
+    private final L_Util.AdvertisingCallback adCallback = new L_Util.AdvertisingCallback()
     {
         @Override
-        public void onStartSuccess(AdvertiseSettings settingsInEffect)
+        public void onStartSuccess(BleAdvertisingSettings settings)
         {
-            getLogger().d("Advertising started successfully.");
-            getServer().invokeAdvertiseListeners(BleServer.AdvertisingListener.Status.SUCCESS, m_listener);
+            getServer().onAdvertiseStarted(m_packet, m_listener);
             succeed();
         }
 
@@ -36,8 +33,7 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
         public void onStartFailure(int errorCode)
         {
             BleServer.AdvertisingListener.Status result = BleServer.AdvertisingListener.Status.fromNativeStatus(errorCode);
-            getLogger().e("Failed to start advertising! Result: " + result);
-            getServer().invokeAdvertiseListeners(result, m_listener);
+            getServer().onAdvertiseStartFailed(result, m_listener);
             fail();
         }
     };
@@ -90,7 +86,7 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
 
     /*package*/ final void stopAdvertising()
     {
-        getManager().managerLayer().stopAdvertising(adCallback);
+        getManager().managerLayer().stopAdvertising();
     }
 
     @Override
