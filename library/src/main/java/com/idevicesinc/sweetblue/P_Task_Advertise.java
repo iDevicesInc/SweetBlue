@@ -25,8 +25,7 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
         @Override
         public void onStartSuccess(BleAdvertisingSettings settings)
         {
-            getLogger().d("Advertising started successfully.");
-            getServer().invokeAdvertiseListeners(BleServer.AdvertisingListener.Status.SUCCESS, m_listener);
+            getServer().onAdvertiseStarted(m_packet, m_listener);
             succeed();
         }
 
@@ -34,8 +33,7 @@ final class P_Task_Advertise extends PA_Task_RequiresBleOn {
         public void onStartFailure(int errorCode)
         {
             BleServer.AdvertisingListener.Status result = BleServer.AdvertisingListener.Status.fromNativeStatus(errorCode);
-            getLogger().e("Failed to start advertising! Result: " + result);
-            getServer().invokeAdvertiseListeners(result, m_listener);
+            getServer().onAdvertiseStartFailed(result, m_listener);
             fail();
         }
     };

@@ -112,6 +112,16 @@ public class L_Util
         return m_callback;
     }
 
+    public static AdvertiseCallback getNativeAdvertisingCallback()
+    {
+        return m_nativeAdvertiseCallback;
+    }
+
+    static void setAdvCallback(AdvertisingCallback callback)
+    {
+        m_userAdvCallback = callback;
+    }
+
 
     public static BleAdvertisingSettings fromNativeSettings(AdvertiseSettings settings)
     {

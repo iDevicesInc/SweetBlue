@@ -4,15 +4,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-
-import com.idevicesinc.sweetblue.BleAdvertisingPacket;
-import com.idevicesinc.sweetblue.BleDevice;
+import android.widget.TextView;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleServer;
 import com.idevicesinc.sweetblue.utils.BluetoothEnabler;
 import com.idevicesinc.sweetblue.utils.GattDatabase;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
+import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.Uuids;
+import java.util.Random;
+
 
 public class MainActivity extends AppCompatActivity implements BleServer.IncomingListener, BleServer.OutgoingListener
 {
@@ -21,6 +23,8 @@ public class MainActivity extends AppCompatActivity implements BleServer.Incomin
     private BleServer m_server;
     private Button m_startAdvertising;
     private Button m_stopAdvertising;
+    private TextView m_textView;
+
 
     private GattDatabase m_db = new GattDatabase()
             .addService(Uuids.BATTERY_SERVICE_UUID)
@@ -37,6 +41,8 @@ public class MainActivity extends AppCompatActivity implements BleServer.Incomin
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        m_textView = findViewById(R.id.textView);
 
         m_startAdvertising = findViewById(R.id.startAdvertising);
         m_stopAdvertising = findViewById(R.id.stopAdvertising);
@@ -97,8 +103,46 @@ public class MainActivity extends AppCompatActivity implements BleServer.Incomin
     }
 
     @Override
-    public Please onEvent(IncomingEvent e)
+    public Please onEvent(final IncomingEvent e)
     {
+        switch (e.type())
+        {
+            case READ:
+                final String msg = Utils_String.makeString("READ request for: ", e.charUuid(), "\n");
+                if (msg != null)
+                {
+                    runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            m_textView.append(msg);
+                        }
+                    });
+                }
+                byte[] data;
+                Random r = new Random();
+                if (e.charUuid().equals(Uuids.BATTERY_LEVEL))
+                {
+                    data = new byte[1];
+                }
+                else
+                {
+                    data = new byte[20];
+                }
+                r.nextBytes(data);
+                return Please.respondWithSuccess(data);
+            case WRITE:
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        m_textView.append(Utils_String.makeString("WRITE request for: ", e.charUuid(), " Data: ", Utils_Byte.bytesToHexString(e.data_received()), "\n"));
+                    }
+                });
+                return Please.respondWithSuccess();
+        }
         return Please.respondWithSuccess();
     }
 
