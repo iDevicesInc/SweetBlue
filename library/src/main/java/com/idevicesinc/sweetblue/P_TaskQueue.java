@@ -574,7 +574,16 @@ final class P_TaskQueue
 	{
 		if( logger().isEnabled() )
 		{
-			logger().i(this.toString());
+			// Wrapping this in a try/catch for now. Threading has changed in v3, so this may not happen there, and this is a band-aid to prevent
+			// crashing the app. As we're just printing to logcat, there's no reason not to continue on at this point.
+			try
+			{
+				logger().i(this.toString());
+			}
+			catch (Exception e)
+			{
+				logger().e("Got exception when trying to print! Exception Class: " + e.getClass().getSimpleName() + " Message: " + e.getMessage());
+			}
 		}
 	}
 
