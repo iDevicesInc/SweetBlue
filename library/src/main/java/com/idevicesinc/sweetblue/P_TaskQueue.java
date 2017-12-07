@@ -15,7 +15,6 @@ final class P_TaskQueue
 	private final ArrayList<PA_Task> m_queue = new ArrayList<PA_Task>();
 	private final AtomicReference<PA_Task> m_current;
 	private long m_updateCount;
-	private final P_Logger m_logger;
 	private final BleManager m_mngr;
 	private double m_time = 0.0;
 	private double m_timeSinceEnding = 0.0;
@@ -28,11 +27,15 @@ final class P_TaskQueue
 	P_TaskQueue(BleManager mngr)
 	{
 		m_mngr = mngr;
-		m_logger = mngr.getLogger();
 
 		m_current = new AtomicReference<>(null);
 		
 		initHandler(); 
+	}
+
+	private P_Logger logger()
+	{
+		return m_mngr.getLogger();
 	}
 	
 	final int assignOrdinal()
@@ -246,7 +249,7 @@ final class P_TaskQueue
 
 		if( m_executeHandler == null )
 		{
-			m_logger.d("Waiting for execute handler to initialize.");
+			logger().d("Waiting for execute handler to initialize.");
 
 			return executingTask;
 		}
@@ -569,9 +572,18 @@ final class P_TaskQueue
 
 	final void print()
 	{
-		if( m_logger.isEnabled() )
+		if( logger().isEnabled() )
 		{
-			m_logger.i(this.toString());
+			// Wrapping this in a try/catch for now. Threading has changed in v3, so this may not happen there, and this is a band-aid to prevent
+			// crashing the app. As we're just printing to logcat, there's no reason not to continue on at this point.
+			try
+			{
+				logger().i(this.toString());
+			}
+			catch (Exception e)
+			{
+				logger().e("Got exception when trying to print! Exception Class: " + e.getClass().getSimpleName() + " Message: " + e.getMessage());
+			}
 		}
 	}
 
@@ -657,12 +669,17 @@ final class P_TaskQueue
 			@Override
 			public void run()
 			{
-				for (int i = m_queue.size() - 1; i >= 0; i-- )
-				{
-					clearQueueOf$removeFromQueue(i);
-				}
+			clearQueueOfAll_blocking();
 			}
 		});
+	}
+
+	final void clearQueueOfAll_blocking()
+	{
+		for (int i = m_queue.size() - 1; i >= 0; i-- )
+		{
+			clearQueueOf$removeFromQueue(i);
+		}
 	}
 
 	@Override public final String toString()

@@ -2186,7 +2186,9 @@ public final class BleManager
 	 */
 	public final void shutdown()
 	{
+		m_logger.e("Received shutdown call, shutting down BleManager...");
 		disconnectAll();
+		clearQueue_blocking();
 		m_uhOhThrottler.shutdown();
 		m_updateRunnable.m_shutdown = true;
 		m_postManager.removeUpdateCallbacks(m_updateRunnable);
@@ -2194,6 +2196,11 @@ public final class BleManager
 		m_wakeLockMngr.clear();
 		m_listeners.onDestroy();
 		s_instance = null;
+	}
+
+	private void clearQueue_blocking()
+	{
+		m_taskQueue.clearQueueOfAll_blocking();
 	}
 
 	/**

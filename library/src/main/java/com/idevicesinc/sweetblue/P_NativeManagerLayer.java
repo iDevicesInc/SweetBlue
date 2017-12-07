@@ -33,8 +33,8 @@ interface P_NativeManagerLayer {
     BluetoothAdapter getNativeAdaptor();
     BluetoothManager getNativeManager();
     P_NativeServerLayer openGattServer(Context context, P_BleServer_Listeners listeners);
-    void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, AdvertiseCallback callback);
-    void stopAdvertising(AdvertiseCallback callback);
+    void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, L_Util.AdvertisingCallback callback);
+    void stopAdvertising();
     boolean isLocationEnabledForScanning_byOsServices();
     boolean isLocationEnabledForScanning_byRuntimePermissions();
     boolean isLocationEnabledForScanning();

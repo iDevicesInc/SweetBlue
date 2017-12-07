@@ -17,6 +17,7 @@ import com.idevicesinc.sweetblue.annotations.Advanced;
 import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Lambda;
 import com.idevicesinc.sweetblue.annotations.Nullable;
+import com.idevicesinc.sweetblue.compat.L_Util;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.ForEach_Void;
@@ -1352,13 +1353,14 @@ public final class BleServer extends BleNode
 	private final P_ServerStateTracker m_stateTracker;
 	final P_BleServer_Listeners m_listeners;
 	final P_NativeServerWrapper m_nativeWrapper;
-	private AdvertisingListener m_advertisingListener;
 	private IncomingListener m_incomingListener;
 	private OutgoingListener m_outgoingListener_default;
 	private final boolean m_isNull;
 	private BleNodeConfig m_config = null;
 	private final P_ServerConnectionFailManager m_connectionFailMngr;
 	private final P_ClientManager m_clientMngr;
+	private final P_AdvertisementManager m_advManager;
+
 
 	/*package*/ BleServer(final BleManager mngr, final boolean isNull)
 	{
@@ -1366,22 +1368,17 @@ public final class BleServer extends BleNode
 
 		m_isNull = isNull;
 
+		m_advManager = new P_AdvertisementManager(this);
+		m_stateTracker = new P_ServerStateTracker(this);
+		m_nativeWrapper = new P_NativeServerWrapper(this);
+		m_connectionFailMngr = new P_ServerConnectionFailManager(this);
+		m_clientMngr = new P_ClientManager(this);
+
+
 		if( isNull )
-		{
-			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = null;
-			m_nativeWrapper = new P_NativeServerWrapper(this);
-			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
-			m_clientMngr = new P_ClientManager(this);
-		}
 		else
-		{
-			m_stateTracker = new P_ServerStateTracker(this);
 			m_listeners = new P_BleServer_Listeners(this);
-			m_nativeWrapper = new P_NativeServerWrapper(this);
-			m_connectionFailMngr = new P_ServerConnectionFailManager(this);
-			m_clientMngr = new P_ClientManager(this);
-		}
 	}
 
 	@Override protected final PA_ServiceManager newServiceManager()
@@ -1430,13 +1427,13 @@ public final class BleServer extends BleNode
 
 	public final void setListener_Advertising(@Nullable(Nullable.Prevalence.NORMAL) final AdvertisingListener listener_nullable)
 	{
-		m_advertisingListener = listener_nullable;
+		m_advManager.setListener_Advertising(listener_nullable);
 	}
 
 	public final @Nullable(Nullable.Prevalence.RARE)
 	AdvertisingListener getListener_Advertise()
 	{
-		return m_advertisingListener;
+		return m_advManager.getListener_advertising();
 	}
 
 	/**
@@ -1645,7 +1642,7 @@ public final class BleServer extends BleNode
 	 */
 	public final boolean isAdvertisingSupportedByAndroidVersion()
 	{
-		return getManager().isAdvertisingSupportedByAndroidVersion();
+		return m_advManager.isAdvertisingSupportedByAndroidVersion();
 	}
 
 	/**
@@ -1653,7 +1650,7 @@ public final class BleServer extends BleNode
 	 */
 	public final boolean isAdvertisingSupportedByChipset()
 	{
-		return getManager().isAdvertisingSupportedByChipset();
+		return m_advManager.isAdvertisingSupportedByChipset();
 	}
 
 	/**
@@ -1661,7 +1658,7 @@ public final class BleServer extends BleNode
 	 */
 	public final boolean isAdvertisingSupported()
 	{
-		return getManager().isAdvertisingSupported();
+		return m_advManager.isAdvertisingSupported();
 	}
 
 	/**
@@ -1669,7 +1666,7 @@ public final class BleServer extends BleNode
 	 */
 	public final boolean isAdvertising()
 	{
-		return getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager());
+		return m_advManager.isAdvertising();
 	}
 
 	/**
@@ -1679,11 +1676,7 @@ public final class BleServer extends BleNode
 	{
 		if (Utils.isLollipop())
 		{
-			P_Task_Advertise adtask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
-			if (adtask != null)
-			{
-				return adtask.getPacket().hasUuid(serviceUuid);
-			}
+			return m_advManager.isAdvertising(serviceUuid);
 		}
 		return false;
 	}
@@ -1795,48 +1788,7 @@ public final class BleServer extends BleNode
 	 */
 	public final @Nullable(Nullable.Prevalence.NEVER) AdvertisingListener.AdvertisingEvent startAdvertising(BleAdvertisingPacket advertisePacket, BleAdvertisingSettings settings, AdvertisingListener listener)
 	{
-		if (isNull())
-		{
-			getManager().getLogger().e(BleServer.class.getSimpleName() + " is null!");
-
-			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.NULL_SERVER);
-		}
-
-		if (!isAdvertisingSupportedByAndroidVersion())
-		{
-			getManager().getLogger().e("Advertising NOT supported on android OS's less than Lollipop!");
-
-			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.ANDROID_VERSION_NOT_SUPPORTED);
-		}
-
-		if (!isAdvertisingSupportedByChipset())
-		{
-			getManager().getLogger().e("Advertising NOT supported by current device's chipset!");
-
-			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.CHIPSET_NOT_SUPPORTED);
-		}
-
-		if (!getManager().is(BleManagerState.ON))
-		{
-			getManager().getLogger().e(BleManager.class.getSimpleName() + " is not " + ON + "! Please use the turnOn() method first.");
-
-			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.BLE_NOT_ON);
-		}
-
-		final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
-		if (adTask != null)
-		{
-			getManager().getLogger().w(BleServer.class.getSimpleName() + " is already advertising!");
-
-			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.ALREADY_STARTED);
-		}
-		else
-		{
-			getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
-
-			getManager().getTaskQueue().add(new P_Task_Advertise(this, advertisePacket, settings, listener));
-			return new AdvertisingListener.AdvertisingEvent(this, AdvertisingListener.Status.NULL);
-		}
+		return m_advManager.startAdvertising(advertisePacket, settings, listener);
 	}
 
 	/**
@@ -1846,14 +1798,7 @@ public final class BleServer extends BleNode
 	{
 		if (Utils.isLollipop())
 		{
-
-			final P_Task_Advertise adTask = getManager().getTaskQueue().get(P_Task_Advertise.class, getManager());
-			if (adTask != null)
-			{
-				adTask.stopAdvertising();
-				adTask.clearFromQueue();
-			}
-			getManager().ASSERT(!getManager().getTaskQueue().isCurrentOrInQueue(P_Task_Advertise.class, getManager()));
+			m_advManager.stopAdvertising();
 		}
 	}
 
@@ -2165,6 +2110,30 @@ public final class BleServer extends BleNode
 		}
 	}
 
+	final void onAdvertiseStarted(BleAdvertisingPacket packet, AdvertisingListener listener)
+	{
+		m_advManager.onAdvertiseStart(packet);
+		invokeAdvertiseListeners(AdvertisingListener.Status.SUCCESS, listener);
+	}
+
+	final void onAdvertiseStartFailed(final AdvertisingListener.Status status, final AdvertisingListener listener)
+	{
+		m_advManager.onAdvertiseStartFailed(status);
+		if (getManager().m_config.postCallbacksToMainThread)
+		{
+			getManager().getPostManager().postToMain(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					invokeAdvertiseListeners(status, listener);
+				}
+			});
+		}
+		else
+			invokeAdvertiseListeners(status, listener);
+	}
+
 	final void invokeAdvertiseListeners(AdvertisingListener.Status result, AdvertisingListener listener)
 	{
 		final AdvertisingListener.AdvertisingEvent event = new AdvertisingListener.AdvertisingEvent(this, result);
@@ -2172,9 +2141,10 @@ public final class BleServer extends BleNode
 		{
 			listener.onEvent(event);
 		}
-		if (m_advertisingListener != null)
+		final AdvertisingListener defaultListener = m_advManager.getListener_advertising();
+		if (defaultListener != null)
 		{
-			m_advertisingListener.onEvent(event);
+			defaultListener.onEvent(event);
 		}
 		if (getManager().m_advertisingListener != null)
 		{

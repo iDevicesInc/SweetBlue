@@ -45,6 +45,9 @@ final class P_DiskOptionsManager
 
 	private final HashMap[] m_inMemoryDbs = new HashMap[E_Namespace.values().length];
 
+	private final SharedPreferences[] m_prefsInstances = new SharedPreferences[E_Namespace.values().length];
+
+
 	public P_DiskOptionsManager(Context context)
 	{
 		m_context = context;
@@ -68,7 +71,12 @@ final class P_DiskOptionsManager
 	
 	private SharedPreferences prefs(E_Namespace namespace)
 	{
-		final SharedPreferences prefs = m_context.getSharedPreferences(namespace.key(), ACCESS_MODE);
+		SharedPreferences prefs = m_prefsInstances[namespace.ordinal()];
+		if (prefs == null)
+		{
+			prefs = m_context.getSharedPreferences(namespace.key(), ACCESS_MODE);
+			m_prefsInstances[namespace.ordinal()] = prefs;
+		}
 		
 		return prefs;
 	}

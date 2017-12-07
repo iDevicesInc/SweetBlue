@@ -53,6 +53,18 @@ public class BleAdvertisingSettings {
         {
             return m_nativeMode;
         }
+
+        public static BleAdvertisingMode fromNative(int nativeMode)
+        {
+            for (BleAdvertisingMode mode : values())
+            {
+                if (mode.getNativeMode() == nativeMode)
+                {
+                    return mode;
+                }
+            }
+            return AUTO;
+        }
     }
 
     /**
@@ -94,6 +106,19 @@ public class BleAdvertisingSettings {
         public int getNativeMode()
         {
             return m_nativeMode;
+        }
+
+
+        public static BleTransmissionPower fromNative(int nativePower)
+        {
+            for (BleTransmissionPower p : values())
+            {
+                if (p.getNativeMode() == nativePower)
+                {
+                    return p;
+                }
+            }
+            return MEDIUM;
         }
 
     }
@@ -167,6 +192,7 @@ public class BleAdvertisingSettings {
     public Interval getTimeout() {
         return m_timeout;
     }
+
 
 
 }

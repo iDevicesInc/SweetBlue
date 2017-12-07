@@ -167,12 +167,13 @@ public class UnitTestManagerLayer implements P_NativeManagerLayer
     }
 
     @Override
-    public void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, AdvertiseCallback callback)
+    public void startAdvertising(AdvertiseSettings settings, AdvertiseData adData, L_Util.AdvertisingCallback callback)
     {
+        NativeUtil.setToAdvertising(BleManager.s_instance, settings, callback);
     }
 
     @Override
-    public void stopAdvertising(AdvertiseCallback callback)
+    public void stopAdvertising()
     {
     }
 

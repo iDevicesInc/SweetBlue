@@ -1,14 +1,21 @@
 package com.idevicesinc.sweetblue;
 
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+
+import com.idevicesinc.sweetblue.compat.L_Util;
+import com.idevicesinc.sweetblue.compat.L_UtilBridge;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.Utils;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 
 import java.util.UUID;
@@ -17,14 +24,15 @@ import java.util.UUID;
  * Utility class for simulating Bluetooth operations (read/writes, notifications, etc). When unit testing, you will need to use this class
  * to simulate bluetooth operations. {@link UnitTestGatt}, {@link UnitTestDevice}, and {@link UnitTestManagerLayer} use this class. If you are implementing your own
  * version of those classes, you will need to use this class to simulate the native callbacks.
- *
+ * <p>
  * This is not in the utils package as it accesses several package private methods.
  */
 public final class NativeUtil
 {
 
-    private NativeUtil() {}
-
+    private NativeUtil()
+    {
+    }
 
 
     /**
@@ -141,7 +149,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onCharacteristicRead(null, characteristic, gattStatus);
             }
@@ -163,7 +172,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 characteristic.setValue(data);
                 device.m_listeners.onCharacteristicRead(null, characteristic, BleStatuses.GATT_SUCCESS);
@@ -186,7 +196,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 descriptor.setValue(data);
                 device.m_listeners.onDescriptorRead(null, descriptor, BleStatuses.GATT_SUCCESS);
@@ -209,7 +220,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onDescriptorRead(null, descriptor, gattStatus);
             }
@@ -231,7 +243,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onDescriptorWrite(null, descriptor, BleStatuses.GATT_SUCCESS);
             }
@@ -253,7 +266,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onDescriptorWrite(null, descriptor, gattStatus);
             }
@@ -275,7 +289,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onCharacteristicWrite(null, characteristic, BleStatuses.GATT_SUCCESS);
             }
@@ -297,7 +312,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onCharacteristicWrite(null, characteristic, gattStatus);
             }
@@ -319,7 +335,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onMtuChanged(null, mtu, BleStatuses.GATT_SUCCESS);
             }
@@ -341,7 +358,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onMtuChanged(null, mtu, gattStatus);
             }
@@ -363,7 +381,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onReadRemoteRssi(null, rssi, BleStatuses.GATT_SUCCESS);
             }
@@ -385,7 +404,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 device.m_listeners.onReadRemoteRssi(null, device.getRssi(), gattStatus);
             }
@@ -407,7 +427,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 characteristic.setValue(data);
                 device.m_listeners.onCharacteristicChanged(null, characteristic);
@@ -552,7 +573,8 @@ public final class NativeUtil
     {
         device.getManager().getPostManager().postToUpdateThreadDelayed(new Runnable()
         {
-            @Override public void run()
+            @Override
+            public void run()
             {
                 if (updateDeviceState)
                 {
@@ -585,6 +607,28 @@ public final class NativeUtil
     public static void advertiseNewDevice(BleManager mgr, int rssi, String deviceName)
     {
         advertiseNewDevice(mgr, rssi, Utils_ScanRecord.newScanRecord(deviceName));
+    }
+
+    public static void setToAdvertising(BleManager mgr, AdvertiseSettings settings, L_Util.AdvertisingCallback callback)
+    {
+        setToAdvertising(mgr, settings, callback, Interval.millis(50));
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public static void setToAdvertising(BleManager mgr, final AdvertiseSettings settings, L_Util.AdvertisingCallback callback, Interval delay)
+    {
+        if (Utils.isLollipop())
+        {
+            L_UtilBridge.setAdvListener(callback);
+            mgr.getPostManager().postToUpdateThreadDelayed(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    L_Util.getNativeAdvertisingCallback().onStartSuccess(settings);
+                }
+            }, delay.millis());
+        }
     }
 
 }
