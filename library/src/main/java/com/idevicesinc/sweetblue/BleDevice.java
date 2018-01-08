@@ -1653,7 +1653,7 @@ public final class BleDevice extends BleNode
      * Pass an instance of this listener to {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
      */
     @com.idevicesinc.sweetblue.annotations.Lambda
-    public static interface BondListener
+    public static interface BondListener extends GenericListener_Void<BondEvent>
     {
         /**
          * Used on {@link BondEvent#status()} to roughly enumerate success or failure.
