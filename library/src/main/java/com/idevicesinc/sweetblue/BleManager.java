@@ -327,14 +327,14 @@ public final class BleManager
 	 */
 	@Advanced
 	@com.idevicesinc.sweetblue.annotations.Lambda
-	public static interface NativeStateListener
+	public interface NativeStateListener extends GenericListener_Void<NativeStateListener.NativeStateEvent>
 	{
 		/**
 		 * Class declared here to be make it implicitly imported for overrides.
 		 */
 		@Advanced
 		@Immutable
-		public static class NativeStateEvent extends StateListener.StateEvent
+		class NativeStateEvent extends StateListener.StateEvent
 		{
 			NativeStateEvent(final BleManager manager, final int oldStateBits, final int newStateBits, final int intentMask)
 			{
