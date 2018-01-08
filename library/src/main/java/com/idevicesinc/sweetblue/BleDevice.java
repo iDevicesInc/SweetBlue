@@ -1653,7 +1653,7 @@ public final class BleDevice extends BleNode
      * Pass an instance of this listener to {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
      */
     @com.idevicesinc.sweetblue.annotations.Lambda
-    public static interface BondListener extends GenericListener_Void<BondEvent>
+    public static interface BondListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<BondListener.BondEvent>
     {
         /**
          * Used on {@link BondEvent#status()} to roughly enumerate success or failure.
@@ -1750,8 +1750,8 @@ public final class BleDevice extends BleNode
         /**
          * Struct passed to {@link BondListener#onEvent(BondEvent)} to provide more information about a {@link BleDevice#bond()} attempt.
          */
-        @Immutable
-        public static class BondEvent extends Event implements UsesCustomNull
+        @com.idevicesinc.sweetblue.annotations.Immutable
+        public static class BondEvent extends com.idevicesinc.sweetblue.utils.Event implements com.idevicesinc.sweetblue.utils.UsesCustomNull
         {
             /**
              * The {@link BleDevice} that attempted to {@link BleDevice#bond()}.
