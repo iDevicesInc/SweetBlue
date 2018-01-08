@@ -324,9 +324,12 @@ public final class BleManager
 	 * when the {@link BleManager} undergoes a *native* {@link BleManagerState} change. This is similar to {@link BleManager.StateListener}
 	 * but reflects what is going on in the actual underlying stack, which may lag slightly behind the
 	 * abstracted state reflected by {@link BleManager.StateListener}. Most apps will not find this callback useful.
+	 *
+	 * @deprecated This will be removed in v3.
 	 */
 	@Advanced
 	@com.idevicesinc.sweetblue.annotations.Lambda
+	@Deprecated
 	public interface NativeStateListener extends GenericListener_Void<NativeStateListener.NativeStateEvent>
 	{
 		/**
@@ -1419,7 +1422,11 @@ public final class BleManager
 
 	/**
 	 * Set a listener here to be notified whenever this manager's native {@link BleManagerState} changes.
+	 *
+	 * @deprecated {@link NativeStateListener} is being removed in v3. There is no alternative. Just use SweetBlue's internal state management (which
+	 * is keyed from the native state, and callbacks).
 	 */
+	@Deprecated
 	public final void setListener_NativeState(NativeStateListener listener)
 	{
 		m_nativeStateTracker.setListener(listener);
