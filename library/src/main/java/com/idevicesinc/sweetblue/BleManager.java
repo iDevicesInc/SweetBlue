@@ -3437,8 +3437,12 @@ public final class BleManager
 	 * This method is made public in case you want to tie the library in to an update loop
 	 * from another codebase. Generally you should leave {@link BleManagerConfig#autoUpdateRate}
 	 * alone and let the library handle the calling of this method.
+	 *
+	 * @deprecated - This is marked as deprecated because it will no longer be exposed in v3 (there will be a new way
+	 * to have SweetBlue run on a thread of your choosing).
 	 */
 	@Advanced
+	@Deprecated
 	public final void update(final double timeStep_seconds, final long currentTime)
 	{
 		m_currentTick = currentTime;
