@@ -472,10 +472,11 @@ final class P_DeviceManager
             {
                 device.onNewlyDiscovered(device.layerManager().getDeviceLayer(), null, device.getRssi(), device.getScanRecord(), device.getOrigin());
 
-                if (m_mngr.m_discoveryListener != null)
+                BleManager.DiscoveryListener listener = m_mngr.m_discoveryListener;
+                if (listener != null)
                 {
                     DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.DISCOVERED);
-                    m_mngr.m_discoveryListener.onEvent(event);
+                    m_mngr.postEvent(listener, event);
                 }
             }
         }
@@ -537,7 +538,7 @@ final class P_DeviceManager
         if (listener != null)
         {
             DiscoveryEvent event = new DiscoveryEvent(device, LifeCycle.UNDISCOVERED);
-            listener.onEvent(event);
+            device.getManager().postEvent(listener, event);
         }
     }
 
