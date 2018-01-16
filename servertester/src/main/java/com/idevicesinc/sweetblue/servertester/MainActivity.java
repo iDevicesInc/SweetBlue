@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.idevicesinc.sweetblue.BleAdvertisingPacket;
 import com.idevicesinc.sweetblue.BleManager;
 import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleServer;
@@ -24,6 +26,8 @@ public class MainActivity extends AppCompatActivity implements BleServer.Incomin
     private Button m_startAdvertising;
     private Button m_stopAdvertising;
     private TextView m_textView;
+
+    private boolean connectableFlag = true;
 
 
     private GattDatabase m_db = new GattDatabase()
@@ -73,7 +77,8 @@ public class MainActivity extends AppCompatActivity implements BleServer.Incomin
             {
                 if (m_manager != null && m_manager.isScanningReady())
                 {
-                    startAdvertising();
+                    startAdvertising(connectableFlag);
+                    connectableFlag = !connectableFlag;
                 }
             }
         });
@@ -93,11 +98,18 @@ public class MainActivity extends AppCompatActivity implements BleServer.Incomin
         });
     }
 
-    private void startAdvertising()
+    private void startAdvertising(boolean connectable)
     {
         m_server = m_manager.getServer(this, m_db, null);
         m_server.setListener_Outgoing(this);
-        m_server.startAdvertising(Uuids.BATTERY_SERVICE_UUID);
+        BleAdvertisingPacket advPacket;
+
+        if (connectable)
+            advPacket = new BleAdvertisingPacket(Uuids.BATTERY_SERVICE_UUID);
+        else
+            advPacket = new BleAdvertisingPacket(Uuids.BATTERY_SERVICE_UUID, BleAdvertisingPacket.Option.INCLUDE_NAME);
+
+        m_server.startAdvertising(advPacket);
         m_stopAdvertising.setEnabled(true);
         m_startAdvertising.setEnabled(false);
     }

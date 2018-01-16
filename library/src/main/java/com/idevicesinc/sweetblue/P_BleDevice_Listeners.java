@@ -467,7 +467,7 @@ final class P_BleDevice_Listeners extends BluetoothGattCallback
     {
         if (Utils.isSuccess(gattStatus))
         {
-            m_device.updateRssi(rssi);
+            m_device.updateRssi(rssi, false);
         }
 
         final P_Task_ReadRssi task = m_queue.getCurrent(P_Task_ReadRssi.class, m_device);

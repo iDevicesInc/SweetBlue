@@ -198,8 +198,9 @@ public class MainActivity extends Activity
         if (v.getId() == R.id.listView)
         {
             AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            boolean isBonded = mDevices.get(info.position).is(BleDeviceState.BONDED);
-            boolean connected = mDevices.get(info.position).is(BleDeviceState.CONNECTED);
+            final BleDevice device = mDevices.get(info.position);
+            boolean isBonded = device.is(BleDeviceState.BONDED);
+            boolean connected = device.is(BleDeviceState.CONNECTED);
 
             menu.add(0, 0, 0, "Remove Bond");
 
