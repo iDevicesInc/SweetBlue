@@ -38,6 +38,7 @@ final class P_RssiPollManager
 	private double m_timeTracker = DISABLE_TIMER;
 	private double m_interval = 0.0;
 	private boolean m_waitingOnResponse = false;
+	private int m_cachedRssi = Integer.MAX_VALUE;
 	
 	private ReadWriteListener m_listener;
 	
@@ -48,7 +49,7 @@ final class P_RssiPollManager
 		stop();
 	}
 	
-	void start(double interval, ReadWriteListener listener_nullable)
+	final void start(double interval, ReadWriteListener listener_nullable)
 	{
 		if( interval > 0.0 )
 		{
@@ -57,21 +58,21 @@ final class P_RssiPollManager
 			m_listener = new CustomListener(this, listener_nullable, m_device.getManager().getPostManager().getUIHandler(), m_device.conf_mngr().postCallbacksToMainThread);
 		}
 	}
-	
-	boolean isRunning()
+
+	final boolean isRunning()
 	{
 		return m_timeTracker != DISABLE_TIMER;
 	}
-	
-	void stop()
+
+	final void stop()
 	{
 		m_listener = null;
 		m_interval = DISABLE_TIMER;
 		m_timeTracker = DISABLE_TIMER;
 		m_waitingOnResponse = false;
 	}
-	
-	void update(double timestep)
+
+	final void update(double timestep)
 	{
 		if( m_timeTracker != DISABLE_TIMER )
 		{
@@ -84,7 +85,24 @@ final class P_RssiPollManager
 					m_waitingOnResponse = true;
 					m_device.readRssi_internal(Type.POLL, m_listener);
 				}
+				else if (m_cachedRssi != Integer.MAX_VALUE)
+				{
+					final ReadWriteListener.ReadWriteEvent event = new ReadWriteListener.ReadWriteEvent(m_device, Type.POLL, m_cachedRssi, ReadWriteListener.Status.SUCCESS, BleStatuses.GATT_STATUS_NOT_APPLICABLE, 0.0, 0.0, false);
+					m_device.postEventAsCallback(m_listener, event);
+
+					// Put the cached value as MAX_VALUE to prevent constantly sending the same rssi value.
+					m_cachedRssi = Integer.MAX_VALUE;
+				}
 			}
 		}
 	}
+
+	final void onScanRssiUpdate(int rssi)
+	{
+		if (isRunning() && m_timeTracker >= m_interval)
+		{
+			m_cachedRssi = rssi;
+		}
+	}
+
 }

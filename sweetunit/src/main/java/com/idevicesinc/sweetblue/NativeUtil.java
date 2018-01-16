@@ -585,20 +585,54 @@ public final class NativeUtil
         }, delay.millis());
     }
 
+    public static void advertiseNewDevice(final BleManager mgr, final int rssi, final byte[] scanRecord, Interval delay)
+    {
+        mgr.getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (mgr.is(BleManagerState.SCANNING))
+                {
+                    mgr.getScanManager().addScanResult(null, rssi, scanRecord);
+                }
+                else
+                {
+                    mgr.getLogger().e("Tried to advertise a device when not scanning!");
+                }
+            }
+        }, delay.millis());
+    }
+
+    public static void advertiseNewDevice(final BleManager mgr, final int rssi, final byte[] scanRecord, String macAddress, Interval delay)
+    {
+        mgr.getPostManager().postToUpdateThreadDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (mgr.is(BleManagerState.SCANNING))
+                {
+                    mgr.getScanManager().addScanResult(null, rssi, scanRecord);
+                }
+                else
+                {
+                    mgr.getLogger().e("Tried to advertise a device when not scanning!");
+                }
+            }
+        }, delay.millis());
+    }
+
     /**
      * Simulate a device that is advertising, so SweetBlue picks up on it (as long as scanning is occurring at the time you call this method).
      * Use one of the methods {@link Utils_ScanRecord#newScanRecord(String)}, {@link Utils_ScanRecord#newScanRecord(String, UUID)}, etc to get the byte[] of the scan record easily.
+     * This will generate a random mac address for the device.
+     *
+     * @see #advertiseDevice(BleManager, int, byte[], String)
      */
     public static void advertiseNewDevice(BleManager mgr, int rssi, byte[] scanRecord)
     {
-        if (mgr.is(BleManagerState.SCANNING))
-        {
-            mgr.getScanManager().addScanResult(null, rssi, scanRecord);
-        }
-        else
-        {
-            mgr.getLogger().e("Tried to advertise a device when not scanning!");
-        }
+        advertiseNewDevice(mgr, rssi, scanRecord, Interval.ZERO);
     }
 
     /**
