@@ -543,9 +543,10 @@ final class P_TaskQueue
 
 	public final <T extends PA_Task> T getCurrent(Class<T> taskClass, BleDevice device)
 	{
-		if( PU_TaskQueue.isMatch(getCurrent(), taskClass, null, device, null) )
+		final PA_Task current = getCurrent();
+		if( PU_TaskQueue.isMatch(current, taskClass, null, device, null) )
 		{
-			return (T) getCurrent();
+			return (T) current;
 		}
 
 		return null;
@@ -553,9 +554,10 @@ final class P_TaskQueue
 
 	public final <T extends PA_Task> T getCurrent(Class<T> taskClass, BleManager mngr)
 	{
-		if( PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr, null, null) )
+		final PA_Task current = getCurrent();
+		if( PU_TaskQueue.isMatch(current, taskClass, mngr, null, null) )
 		{
-			return (T) getCurrent();
+			return (T) current;
 		}
 
 		return null;
@@ -563,9 +565,10 @@ final class P_TaskQueue
 
 	public final <T extends PA_Task> T getCurrent(Class<T> taskClass, BleServer server)
 	{
-		if( PU_TaskQueue.isMatch(getCurrent(), taskClass, null, null, server) )
+		final PA_Task current = getCurrent();
+		if( PU_TaskQueue.isMatch(current, taskClass, null, null, server) )
 		{
-			return (T) getCurrent();
+			return (T) current;
 		}
 
 		return null;
