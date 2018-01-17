@@ -524,9 +524,10 @@ final class P_TaskQueue
 
 	public final <T extends PA_Task> T get(Class<T> taskClass, BleManager mngr)
 	{
-		if( PU_TaskQueue.isMatch(getCurrent(), taskClass, mngr, null, null) )
+		final PA_Task current = getCurrent();
+		if( PU_TaskQueue.isMatch(current, taskClass, mngr, null, null) )
 		{
-			return (T) getCurrent();
+			return (T) current;
 		}
 
 		for( int i = 0; i < m_queue.size(); i++ )
