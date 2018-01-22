@@ -45,7 +45,7 @@ ext.JAVADOC_JAR_NAME = JAR_BASE_NAME + "-javadoc.jar"
 ext.SOURCES_JAR_NAME = JAR_BASE_NAME + "-sources.jar"
 ext.AS_BUILD_SUFFIX = "/android_studio/build"
 ext.AS_APP_BUILD_SUFFIX = "/android_studio/app/build"
-ext.AS_SUFFIX = "/android_studio/app/libs"
+ext.AS_SUFFIX = "/android_studio/sweetblue"
 ext.ECLIPSE_SUFFIX = "/eclipse/lib"
 
 
@@ -133,7 +133,7 @@ task gendocs(type: Javadoc) {
         getLogging().removeStandardOutputListener(listener)
         outputEvents.each { e ->
             if (e =~ " warning -") {
-                throw new GradleException("You have some javadoc warnings, please fix them!");
+                throw new GradleException("You have some javadoc warnings, please fix them!")
             }
         }
     }
@@ -171,7 +171,7 @@ task copyFiles {
     }
 }
 
-def checkDir(String dir) {
+static def checkDir(String dir) {
     File f = new File(dir)
     if (!f.exists()) {
         f.mkdirs()
@@ -194,11 +194,11 @@ task getSamples(dependsOn: [jar, sourceJar, javadocJar, "assembleRelease"]) {
         // When running on the build server, we need to inject the username and password
         // otherwise it will pull the un/pw of the current user.
         String gu = System.getenv("G_UNAME")
-        def r;
+        def r
         if (!gu || !gu.trim()) {
-            r = "git clone https://github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}".execute()
+            r = "git clone https://bitbucket.org/idevices/sweetblue_samples.git ${samplePath}".execute()
         } else {
-            String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@github.com/iDevicesInc/SweetBlue_Samples.git ${samplePath}"
+            String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@bitbucket.org/idevices/sweetblue_samples.git ${samplePath}"
             r = run.execute()
         }
         r.waitFor()
@@ -213,6 +213,7 @@ task getSamples(dependsOn: [jar, sourceJar, javadocJar, "assembleRelease"]) {
 ext.mainJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}.jar"
 ext.sourcesJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-sources.jar"
 ext.javadocJar = "${BUNDLE_FOLDER}/jars/${JAR_BASE_NAME}-javadoc.jar"
+ext.mainAar = "build/outputs/aar/sweetblue-release.aar"
 
 // Copy the samples to the bundle folder
 task copySamples(dependsOn: [copyFiles, getSamples]) {
@@ -246,25 +247,19 @@ task copyAndRenameJars(dependsOn: copySamples) {
         FileCollection collection = files {
             sampleDir.listFiles(new FileFilter() {
                 @Override
-                public boolean accept(File file) {
+                boolean accept(File file) {
                     return !file.isHidden()
                 }
             })
         }
         collection.each { File file ->
             copy {
-                from mainJar
+                from mainAar
                 into file.getAbsolutePath() + AS_SUFFIX
-                rename("_${SEMVER}", "")
             }
             copy {
                 from mainJar
                 into file.getAbsolutePath() + ECLIPSE_SUFFIX
-                rename("_${SEMVER}", "")
-            }
-            copy {
-                from sourcesJar
-                into file.getAbsolutePath() + AS_SUFFIX
                 rename("_${SEMVER}", "")
             }
             copy {
@@ -286,7 +281,14 @@ task copyAndRenameJars(dependsOn: copySamples) {
                 from '../local.properties'
                 into file.getAbsolutePath() + "/android_studio"
             }
-            buildSampleTask(file.getAbsolutePath()).execute()
+//            File outerBuildFile = new File(file.getAbsolutePath() + "/android_studio/build.gradle")
+//            String contents = outerBuildFile.getText("UTF-8")
+//            contents = contents.replace("classpath", "// classpath")
+//            outerBuildFile.write(contents, "UTF-8")
+            // TODO - Fix this! With the latest APIs, this no longer works.
+//            buildSampleTask(file.getAbsolutePath()).execute()
+//            contents = contents.replace("// classpath", "classpath")
+//            outerBuildFile.write(contents, "UTF-8")
             delete(file.getAbsolutePath() + "/android_studio/local.properties")
             
             // Delete build folders to save on space in the resulting zip file
@@ -294,7 +296,7 @@ task copyAndRenameJars(dependsOn: copySamples) {
             delete(file.getAbsolutePath() + AS_BUILD_SUFFIX)
         }
         copy {
-            from 'build/outputs/aar/sweetblue-release.aar'
+            from mainAar
             into "${BUNDLE_FOLDER}/aar/"
         }
     }
@@ -355,15 +357,15 @@ task zipJar(dependsOn: [zipTrial, zipCommercial]) {
     }
 }
 
-def String getHexString(byte[] data) {
-    def hex = "0123456789abcdef".toCharArray();
-    StringBuilder b = new StringBuilder();
+static String getHexString(byte[] data) {
+    def hex = "0123456789abcdef".toCharArray()
+    StringBuilder b = new StringBuilder()
     for (int i = 0; i < data.length; i++) {
-        int v = data[i] & 0xFF;
-        b.append(hex[v >>> 4]);
-        b.append(hex[v & 0x0F]);
+        int v = data[i] & 0xFF
+        b.append(hex[v >>> 4])
+        b.append(hex[v & 0x0F])
     }
-    return b.toString().trim();
+    return b.toString().trim()
 }
 
 import java.security.MessageDigest
@@ -662,7 +664,7 @@ task uploadCommerceZip(dependsOn: zipJar) {
 
     doLast {
         // Upload zip file to the big commerce site
-        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue_commercial.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@store-lec5paa.mybigcommerce.com/dav/product_downloads/s/sweetblue.zip"]
+        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue_commercial.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@solutions.idevicesinc.com/dav/product_downloads/s/sweetblue.zip"]
         def curl = curlS.execute()
         curl.waitFor()
         if (curl.exitValue() != 0) {

@@ -303,12 +303,14 @@ final class P_BondManager
 	{		
 		if( m_listener != null )
 		{
-			m_listener.onEvent(event);
+			m_device.getManager().postEvent(m_listener, event);
 		}
-		
-		if( m_device.getManager().m_defaultBondListener != null )
+
+		final BondListener listener = m_device.getManager().m_defaultBondListener;
+
+		if( listener != null )
 		{
-			m_device.getManager().m_defaultBondListener.onEvent(event);
+			m_device.getManager().postEvent(listener, event);
 		}
 	}
 

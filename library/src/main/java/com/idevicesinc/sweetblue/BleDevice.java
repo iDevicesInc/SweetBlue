@@ -1653,7 +1653,7 @@ public final class BleDevice extends BleNode
      * Pass an instance of this listener to {@link BleDevice#setListener_Bond(BondListener)} or {@link BleDevice#bond(BondListener)}.
      */
     @com.idevicesinc.sweetblue.annotations.Lambda
-    public static interface BondListener
+    public static interface BondListener extends com.idevicesinc.sweetblue.utils.GenericListener_Void<BondListener.BondEvent>
     {
         /**
          * Used on {@link BondEvent#status()} to roughly enumerate success or failure.
@@ -1750,8 +1750,8 @@ public final class BleDevice extends BleNode
         /**
          * Struct passed to {@link BondListener#onEvent(BondEvent)} to provide more information about a {@link BleDevice#bond()} attempt.
          */
-        @Immutable
-        public static class BondEvent extends Event implements UsesCustomNull
+        @com.idevicesinc.sweetblue.annotations.Immutable
+        public static class BondEvent extends com.idevicesinc.sweetblue.utils.Event implements com.idevicesinc.sweetblue.utils.UsesCustomNull
         {
             /**
              * The {@link BleDevice} that attempted to {@link BleDevice#bond()}.
@@ -1904,7 +1904,6 @@ public final class BleDevice extends BleNode
     private BleConnectionPriority m_connectionPriority = BleConnectionPriority.MEDIUM;
     private int m_mtu = 0;
     private int m_rssi = 0;
-    private int m_advertisingFlags = 0x0;
     private Integer m_knownTxPower = null;
     private byte[] m_scanRecord = P_Const.EMPTY_BYTE_ARRAY;
 
@@ -2525,7 +2524,8 @@ public final class BleDevice extends BleNode
      */
     public final int getAdvertisingFlags()
     {
-        return m_advertisingFlags;
+        final int flags = (m_scanInfo != null && m_scanInfo.getAdvFlags() != null) ? m_scanInfo.getAdvFlags().value : 0;
+        return flags;
     }
 
     /**
@@ -4644,7 +4644,8 @@ public final class BleDevice extends BleNode
     /**
      * Same as {@link #startPoll(UUID, Interval, ReadWriteListener)} but for when you don't care when/if the RSSI is actually updated.
      * <br><br>
-     * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}.
+     * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}, however, a scan must
+     * be running in order to receive any updates (and of course, the device must be found in the scan).
      */
     public final void startRssiPoll(final Interval interval)
     {
@@ -4656,7 +4657,8 @@ public final class BleDevice extends BleNode
      * specified. This can be called before the device is actually {@link BleDeviceState#CONNECTED}. If you call this more than once in a
      * row then the most recent call's parameters will be respected.
      * <br><br>
-     * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}.
+     * TIP: You can call this method when the device is in any {@link BleDeviceState}, even {@link BleDeviceState#DISCONNECTED}, however, a scan must
+     * be running in order to receive any updates (and of course, the device must be found in the scan).
      */
     public final void startRssiPoll(final Interval interval, final ReadWriteListener listener)
     {
@@ -5731,7 +5733,7 @@ public final class BleDevice extends BleNode
     {
         m_lastDiscoveryTime = EpochTime.now();
         m_timeSinceLastDiscovery = 0.0;
-        updateRssi(rssi);
+        updateRssi(rssi, true);
 
         if (scanEvent_nullable != null)
         {
@@ -5739,13 +5741,18 @@ public final class BleDevice extends BleNode
 
             updateKnownTxPower(scanEvent_nullable.txPower());
 
-            m_advertisingFlags = scanEvent_nullable.advertisingFlags();
+            m_scanInfo.setAdvFlags((byte) scanEvent_nullable.advertisingFlags());
+
+            m_scanInfo.setName(scanEvent_nullable.name_native());
+
+            m_scanInfo.setTxPower((byte) scanEvent_nullable.txPower());
 
             m_scanInfo.clearServiceUUIDs();
             m_scanInfo.addServiceUUIDs(scanEvent_nullable.advertisedServices());
 
             m_scanInfo.setManufacturerId((short) scanEvent_nullable.manufacturerId());
             m_scanInfo.setManufacturerData(scanEvent_nullable.manufacturerData());
+
 
             m_scanInfo.clearServiceData();
             m_scanInfo.addServiceData(scanEvent_nullable.serviceData());
@@ -5768,9 +5775,15 @@ public final class BleDevice extends BleNode
         }
     }
 
-    final void updateRssi(final int rssi)
+    final void updateRssi(final int rssi, boolean fromScan)
     {
         m_rssi = rssi;
+        // If this update is from a scan, it will not call the event from the rssi poll (if running). So we have to manually
+        // tell the poll manager that we got an rssi update.
+        if (fromScan)
+        {
+            m_rssiPollMngr.onScanRssiUpdate(rssi);
+        }
     }
 
     final void onMtuChanged()

@@ -218,7 +218,11 @@ public class BleManagerConfig extends BleDeviceConfig
 	 * Setting this to false will result in a smoother UI experience, at the cost of the possibility of multithreading
 	 * issues, as stated above. While we have put a lot of effort to safe-guard against multithreading issues, they may
 	 * still happen, which is why this is true by default.
+	 *
+	 * @deprecated - This option will be replaced in version 3.0. This is only marked as deprecated as an early notice (there's
+	 * nothing to replace it currently).
 	 */
+	@Deprecated
 	public boolean runOnMainThread									= true;
 	
 	/**

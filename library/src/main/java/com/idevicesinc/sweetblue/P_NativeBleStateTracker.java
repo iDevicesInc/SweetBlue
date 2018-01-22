@@ -26,7 +26,7 @@ final class P_NativeBleStateTracker extends PA_StateTracker
 		{
 			final NativeStateEvent event = new NativeStateEvent(m_mngr, oldStateBits, newStateBits, intentMask);
 
-			m_stateListener.onEvent(event);
+			m_mngr.postEvent(m_stateListener, event);
 		}
 	}
 }
