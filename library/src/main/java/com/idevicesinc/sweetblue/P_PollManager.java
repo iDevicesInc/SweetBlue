@@ -255,7 +255,7 @@ final class P_PollManager
 	}
 	
 	private final BleDevice m_device;
-	private final ArrayList<CallbackEntry> m_entries = new ArrayList<CallbackEntry>();
+	private final ArrayList<CallbackEntry> m_entries = new ArrayList<>();
 	
 
 	P_PollManager(BleDevice device)

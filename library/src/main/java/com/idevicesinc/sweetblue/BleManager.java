@@ -2196,6 +2196,7 @@ public final class BleManager
 		m_logger.e("Received shutdown call, shutting down BleManager...");
 		disconnectAll();
 		clearQueue_blocking();
+		m_scanManager.stopScan();
 		m_uhOhThrottler.shutdown();
 		m_updateRunnable.m_shutdown = true;
 		m_postManager.removeUpdateCallbacks(m_updateRunnable);
