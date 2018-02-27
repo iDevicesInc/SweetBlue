@@ -613,7 +613,7 @@ task uploadInternal(type: Upload) {
             pom.groupId = 'com.idevicesinc'
             pom.artifactId = 'sweetblue'
 
-            repository(url: "http://10.0.1.239:5819/repository/internal") {
+            repository(url: "http://10.0.2.174:5819/repository/internal") {
                 authentication(userName: "${a_user}", password: "${a_pw}")
             }
 
