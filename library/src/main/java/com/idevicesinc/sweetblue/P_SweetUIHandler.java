@@ -88,4 +88,10 @@ final class P_SweetUIHandler implements P_SweetHandler
             return m_thread.getThread();
         }
     }
+
+    @Override public void quit()
+    {
+        if (m_thread != null)
+            m_thread.quit();
+    }
 }

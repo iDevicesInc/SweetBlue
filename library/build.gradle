@@ -192,12 +192,12 @@ task getSamples(dependsOn: [jar, sourceJar, javadocJar, "assembleRelease"]) {
 
         // When running on the build server, we need to inject the username and password
         // otherwise it will pull the un/pw of the current user.
-        String gu = System.getenv("G_UNAME")
+        String gu = System.getenv("B_UNAME")
         def r
         if (!gu || !gu.trim()) {
             r = "git clone https://bitbucket.org/idevices/sweetblue_samples.git ${samplePath}".execute()
         } else {
-            String run = "git clone https://" + System.getenv("G_UNAME") + ":" + System.getenv("G_PW") + "@bitbucket.org/idevices/sweetblue_samples.git ${samplePath}"
+            String run = "git clone https://" + gu + ":" + System.getenv("B_PW") + "@bitbucket.org/idevices/sweetblue_samples.git ${samplePath}"
             r = run.execute()
         }
         r.waitFor()
