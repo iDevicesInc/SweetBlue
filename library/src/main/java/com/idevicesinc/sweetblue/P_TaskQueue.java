@@ -241,10 +241,10 @@ final class P_TaskQueue
 	public final boolean update(double timeStep, long currentTime)
 	{
 		boolean executingTask = false;
-
+		PA_Task task = getCurrent();
 		m_time += timeStep;
 
-		if (getCurrent() == null)
+		if (task == null)
 			m_timeSinceEnding += timeStep;
 
 		if( m_executeHandler == null )
@@ -254,14 +254,14 @@ final class P_TaskQueue
 			return executingTask;
 		}
 
-		if( getCurrent() == null )
+		if( task == null )
 		{
 			executingTask = dequeue();
 		}
 
-		if( getCurrent() != null )
+		if( task != null )
 		{
-			getCurrent().update_internal(timeStep, currentTime);
+			task.update_internal(timeStep, currentTime);
 			executingTask = true;
 		}
 
