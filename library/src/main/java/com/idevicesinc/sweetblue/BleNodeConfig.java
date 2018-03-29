@@ -122,7 +122,13 @@ public class BleNodeConfig
 	/**
 	 * Default is <code>true</code> - this will automatically stripe writes that are larger than the MTU size into multiple WRITE requests for you.
 	 * If you are using {@link BleDevice#setMtu(int)}, this may make things unstable.
+	 *
+	 * @deprecated - While this is still working, this is marked as deprecated because its behavior is going to change in v3. Currently, this ends up
+	 * creating a transaction for each write task. This will not work if you try to use this feature within another transaction (you can't run a transaction
+	 * inside of another transaction). V3 will change this so that it will simply create multiple writes based on the MTU size, and the size of the byte
+	 * array given (no transaction will be created). This setting will also be changed to <code>false</code> for v3.
 	 */
+	@Deprecated
 	public boolean autoStripeWrites											= true;
 
 	/**
