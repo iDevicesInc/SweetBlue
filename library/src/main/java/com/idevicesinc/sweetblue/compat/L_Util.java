@@ -10,6 +10,7 @@ import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import android.util.Log;
@@ -226,7 +227,7 @@ public class L_Util
     @Deprecated
     static void startScan(BleManager mgr, ScanSettings scanSettings, ScanCallback listener) {
         m_UserScanCallback = listener;
-        mgr.getNativeAdapter().getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
+        mgr.getNativeAdapter().getBluetoothLeScanner().startScan(getFilterList(), scanSettings, m_callback);
     }
 
     static ScanSettings.Builder buildSettings(BluetoothAdapter adapter, int scanMode, Interval scanReportDelay) {
@@ -255,7 +256,7 @@ public class L_Util
             m_callback.onScanFailed(android.bluetooth.le.ScanCallback.SCAN_FAILED_INTERNAL_ERROR);
             return;
         }
-        adapter.getBluetoothLeScanner().startScan(null, scanSettings, m_callback);
+        adapter.getBluetoothLeScanner().startScan(getFilterList(), scanSettings, m_callback);
     }
 
     public static boolean startAdvertising(BluetoothAdapter adapter, AdvertiseSettings settings, AdvertiseData adData, AdvertisingCallback callback)
@@ -284,6 +285,13 @@ public class L_Util
 
 
 
+    private static List<ScanFilter> getFilterList()
+    {
+        final ScanFilter sf = new ScanFilter.Builder().build();
+        final List<ScanFilter> list = new ArrayList<>(1);
+        list.add(sf);
+        return list;
+    }
 
     private static ScanResult toLScanResult(android.bluetooth.le.ScanResult result) {
         ScanResult res = new ScanResult();
