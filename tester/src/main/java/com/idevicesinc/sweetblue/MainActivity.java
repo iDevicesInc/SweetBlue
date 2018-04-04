@@ -117,7 +117,7 @@ public class MainActivity extends Activity
         config.reconnectFilter = new BleNodeConfig.DefaultReconnectFilter(Interval.ONE_SEC, Interval.secs(3.0), Interval.FIVE_SECS, Interval.secs(45));
         config.uhOhCallbackThrottle = Interval.secs(60.0);
 
-        config.defaultScanFilter = e -> BleManagerConfig.ScanFilter.Please.acknowledgeIf(e.name_normalized().contains("wall"));
+//        config.defaultScanFilter = e -> BleManagerConfig.ScanFilter.Please.acknowledgeIf(e.name_normalized().contains("wall"));
 
         mgr = BleManager.get(this, config);
 
@@ -138,6 +138,7 @@ public class MainActivity extends Activity
         {
             if (e.was(BleManager.DiscoveryListener.LifeCycle.DISCOVERED))
             {
+                Log.e("+++", "Discovery Event: " + e);
                 if (!mDevices.contains(e.device()))
                 {
                     mDevices.add(e.device());
