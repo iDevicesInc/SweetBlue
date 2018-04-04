@@ -12,6 +12,6 @@ public class ServiceActivity extends Activity
     @Override protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        startForegroundService(new Intent(this, MyBleService.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        startService(new Intent(this, MyBleService.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     }
 }
