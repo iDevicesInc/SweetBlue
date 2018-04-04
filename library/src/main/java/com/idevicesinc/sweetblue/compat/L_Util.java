@@ -287,10 +287,18 @@ public class L_Util
 
     private static List<ScanFilter> getFilterList()
     {
-        final ScanFilter sf = new ScanFilter.Builder().build();
-        final List<ScanFilter> list = new ArrayList<>(1);
-        list.add(sf);
-        return list;
+        // A change in Android 8.1 made it so that if you run an "unfiltered" scan, you will not receive scan results when the screen is off
+        // This is a hack to ensure we still get results back when the screen is off. We may have to monitor this in the future, if they
+        // start checking the filter instances themselves (right now, they simply check that the list isn't null).
+        // Gating this with and SDK version check, as we know it was introduced in API 27, and we're unsure of how this will affect lower versions
+        if (Build.VERSION.SDK_INT >= 27)
+        {
+            final ScanFilter sf = new ScanFilter.Builder().build();
+            final List<ScanFilter> list = new ArrayList<>(1);
+            list.add(sf);
+            return list;
+        }
+        return null;
     }
 
     private static ScanResult toLScanResult(android.bluetooth.le.ScanResult result) {
