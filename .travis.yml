@@ -1,5 +1,4 @@
 language: android
-before_script: ./prebuild.sh
 android:
   components:
   - tools
