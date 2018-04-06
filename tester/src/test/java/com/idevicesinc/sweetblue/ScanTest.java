@@ -500,51 +500,51 @@ public class ScanTest extends BaseBleUnitTest
         startTest();
     }
 
-    @Test
-    public void scanRecordUpdateTest() throws Exception
-    {
-        // TODO - Get this working in v3. This would require too many internal changes to get working right now. As we've refactored quite a lot
-        // in v3, it doesnt make sense to do it here. Will have to manually test to make sure things are working correctly.
-//        final int START_FLAGS = 15;
-//
-//        final int CHANGED_FLAGS = 28;
-//
-//        m_config.loggingEnabled = true;
-//
-//        m_mgr.setConfig(m_config);
-//
-//        byte[] record = Utils_ScanRecord.newScanRecord((byte) START_FLAGS, null, "Testerino", false, (byte) 1, (short) 0, null);
-//
-//        m_mgr.setListener_Discovery(e ->
-//        {
-//            if (e.was(BleManager.DiscoveryListener.LifeCycle.DISCOVERED))
-//            {
-//                assertTrue("Advertising flags don't match! Expected: " + START_FLAGS + " Got: " + e.device().getAdvertisingFlags(), e.device().getAdvertisingFlags() == START_FLAGS);
-//                byte[] newRecord = Utils_ScanRecord.newScanRecord((byte) CHANGED_FLAGS, null, "Testerino4", false, (byte) 10, (short) 57, null);
-//                NativeUtil.advertiseNewDevice(m_mgr, -35, newRecord, Interval.millis(250));
-//            }
-//            else if (e.was(BleManager.DiscoveryListener.LifeCycle.REDISCOVERED))
-//            {
-//                assertTrue(e.device().getAdvertisingFlags() == CHANGED_FLAGS);
-//                assertTrue(e.device().getName_native().contains("4"));
-//                assertTrue(e.device().getTxPower() == 10);
-//                assertTrue(e.device().getManufacturerId() == 57);
-//                succeed();
-//            }
-//        });
-//
-//        m_mgr.setListener_State((ManagerStateListener) e ->
-//        {
-//            if (e.didEnter(BleManagerState.SCANNING))
-//            {
-//                NativeUtil.advertiseNewDevice(m_mgr, -45, record);
-//            }
-//        });
-//
-//        m_mgr.startScan();
-//
-//        startTest();
-    }
+//    @Test
+//    public void scanRecordUpdateTest() throws Exception
+//    {
+//        // TODO - Get this working in v3. This would require too many internal changes to get working right now. As we've refactored quite a lot
+//        // in v3, it doesnt make sense to do it here. Will have to manually test to make sure things are working correctly.
+////        final int START_FLAGS = 15;
+////
+////        final int CHANGED_FLAGS = 28;
+////
+////        m_config.loggingEnabled = true;
+////
+////        m_mgr.setConfig(m_config);
+////
+////        byte[] record = Utils_ScanRecord.newScanRecord((byte) START_FLAGS, null, "Testerino", false, (byte) 1, (short) 0, null);
+////
+////        m_mgr.setListener_Discovery(e ->
+////        {
+////            if (e.was(BleManager.DiscoveryListener.LifeCycle.DISCOVERED))
+////            {
+////                assertTrue("Advertising flags don't match! Expected: " + START_FLAGS + " Got: " + e.device().getAdvertisingFlags(), e.device().getAdvertisingFlags() == START_FLAGS);
+////                byte[] newRecord = Utils_ScanRecord.newScanRecord((byte) CHANGED_FLAGS, null, "Testerino4", false, (byte) 10, (short) 57, null);
+////                NativeUtil.advertiseNewDevice(m_mgr, -35, newRecord, Interval.millis(250));
+////            }
+////            else if (e.was(BleManager.DiscoveryListener.LifeCycle.REDISCOVERED))
+////            {
+////                assertTrue(e.device().getAdvertisingFlags() == CHANGED_FLAGS);
+////                assertTrue(e.device().getName_native().contains("4"));
+////                assertTrue(e.device().getTxPower() == 10);
+////                assertTrue(e.device().getManufacturerId() == 57);
+////                succeed();
+////            }
+////        });
+////
+////        m_mgr.setListener_State((ManagerStateListener) e ->
+////        {
+////            if (e.didEnter(BleManagerState.SCANNING))
+////            {
+////                NativeUtil.advertiseNewDevice(m_mgr, -45, record);
+////            }
+////        });
+////
+////        m_mgr.startScan();
+////
+////        startTest();
+//    }
 
 
 
