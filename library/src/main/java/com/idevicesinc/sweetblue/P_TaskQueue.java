@@ -244,7 +244,9 @@ final class P_TaskQueue
 
 		m_time += timeStep;
 
-		if (getCurrent() == null)
+		PA_Task curTask = getCurrent();
+
+		if (curTask == null)
 			m_timeSinceEnding += timeStep;
 
 		if( m_executeHandler == null )
@@ -254,14 +256,17 @@ final class P_TaskQueue
 			return executingTask;
 		}
 
-		if( getCurrent() == null )
+		if( curTask == null )
 		{
 			executingTask = dequeue();
+			// As the current task could have changed at this point from the dequeue operation, we need to update our
+			// current task instance
+			curTask = getCurrent();
 		}
 
-		if( getCurrent() != null )
+		if( curTask != null )
 		{
-			getCurrent().update_internal(timeStep, currentTime);
+			curTask.update_internal(timeStep, currentTime);
 			executingTask = true;
 		}
 

@@ -1,5 +1,4 @@
 language: android
-before_script: ./prebuild.sh
 android:
   components:
   - tools
@@ -15,6 +14,7 @@ cache:
   - $HOME/.gradle/wrapper/
 before_install:
   - echo y | android update sdk --no-ui --all --filter build-tools-26.0.2
+  - echo y | android update sdk --no-ui --all --filter build-tools-27.0.3
 jdk:
 - oraclejdk8
 env:

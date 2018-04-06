@@ -200,7 +200,7 @@ public final class BleDevice extends BleNode
 
             /**
              * The android api level doesn't support the lower level API call in the native stack. For example if you try to use
-             * {@link BleDevice#setMtu(int, ReadWriteListener)}, which requires API level 21, and you are at level 18.
+             * {@link BleDevice#negotiateMtu(int, ReadWriteListener)}, which requires API level 21, and you are at level 18.
              */
             ANDROID_VERSION_NOT_SUPPORTED,
 
@@ -258,7 +258,7 @@ public final class BleDevice extends BleNode
             EMPTY_DATA,
 
             /**
-             * For now only used when giving a negative or zero value to {@link BleDevice#setMtu(int, ReadWriteListener)}.
+             * For now only used when giving a negative or zero value to {@link BleDevice#negotiateMtu(int, ReadWriteListener)}.
              */
             INVALID_DATA,
 
@@ -309,7 +309,7 @@ public final class BleDevice extends BleNode
 
             /**
              * Associated with {@link BleDevice#write(UUID, byte[])} or {@link BleDevice#write(UUID, byte[], ReadWriteListener)}
-             * or {@link BleDevice#setMtu(int)} or {@link BleDevice#setName(String, UUID, ReadWriteListener)}.
+             * or {@link BleDevice#negotiateMtu(int)} or {@link BleDevice#setName(String, UUID, ReadWriteListener)}.
              *
              * @see #isWrite()
              */
@@ -445,7 +445,7 @@ public final class BleDevice extends BleNode
             CHARACTERISTIC,
 
             /**
-             * The {@link ReadWriteEvent} returned has to do with testing the MTU size change after calling {@link BleDevice#setMtu(int)}. Functionally,
+             * The {@link ReadWriteEvent} returned has to do with testing the MTU size change after calling {@link BleDevice#negotiateMtu(int)}. Functionally,
              * this is no different that a normal write, this target just calls out this particular write as being used to test the new MTU size.
              */
             CHARACTERISTIC_TEST_MTU,
@@ -462,7 +462,7 @@ public final class BleDevice extends BleNode
             RSSI,
 
             /**
-             * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#setMtu(int, ReadWriteListener)} or overloads.
+             * The {@link ReadWriteEvent} is coming in from using {@link BleDevice#negotiateMtu(int, ReadWriteListener)} or overloads.
              */
             MTU,
 
@@ -598,8 +598,8 @@ public final class BleDevice extends BleNode
             private final int m_rssi;
 
             /**
-             * This value gets set as a result of a {@link BleDevice#setMtu(int, ReadWriteListener)} call. The value returned
-             * will be the same as that given to {@link BleDevice#setMtu(int, ReadWriteListener)}, which means it will be the
+             * This value gets set as a result of a {@link BleDevice#negotiateMtu(int, ReadWriteListener)} call. The value returned
+             * will be the same as that given to {@link BleDevice#negotiateMtu(int, ReadWriteListener)}, which means it will be the
              * same as {@link BleDevice#getMtu()} if {@link #status()} equals {@link ReadWriteListener.Status#SUCCESS}.
              *
              * @see BleDevice#getMtu()
@@ -4444,13 +4444,13 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent readRssi(final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
+        final ReadWriteEarlyOutResult earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.RSSI);
 
-        if (earlyOutResult != null)
+        if (earlyOutResult.earlyOut())
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(listener, earlyOutResult.m_readWriteEvent);
 
-            return earlyOutResult;
+            return earlyOutResult.m_readWriteEvent;
         }
 
         readRssi_internal(Type.READ, listener);
@@ -4497,13 +4497,13 @@ public final class BleDevice extends BleNode
         }
         else
         {
-            final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
+            final ReadWriteEarlyOutResult earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.CONNECTION_PRIORITY);
 
-            if (earlyOutResult != null)
+            if (earlyOutResult.earlyOut())
             {
-                invokeReadWriteCallback(listener, earlyOutResult);
+                invokeReadWriteCallback(listener, earlyOutResult.m_readWriteEvent);
 
-                return earlyOutResult;
+                return earlyOutResult.m_readWriteEvent;
             }
             else
             {
@@ -4525,7 +4525,7 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Returns the "maximum transmission unit" value set by {@link #setMtu(int, ReadWriteListener)}, or {@link BleDeviceConfig#DEFAULT_MTU_SIZE} if
+     * Returns the "maximum transmission unit" value set by {@link #negotiateMtu(int, ReadWriteListener)}, or {@link BleDeviceConfig#DEFAULT_MTU_SIZE} if
      * it was never set explicitly.
      */
     @Advanced
@@ -4538,11 +4538,14 @@ public final class BleDevice extends BleNode
      * Same as {@link #setMtuToDefault(ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
      *
      * @return (same as {@link #setMtu(int, ReadWriteListener)}).
+     *
+     * @deprecated Please use {@link #negotiateMtuToDefault()} instead.
      */
+    @Deprecated
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault()
     {
-        return setMtuToDefault(null);
+        return negotiateMtuToDefault();
     }
 
     /**
@@ -4551,13 +4554,76 @@ public final class BleDevice extends BleNode
      * MTU to be auto-set upon next reconnection.
      *
      * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
+     *
+     * @deprecated Please use {@link #negotiateMtuToDefault(ReadWriteListener)} instead.
      */
+    @Deprecated
     @Advanced
     public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtuToDefault(final ReadWriteListener listener)
     {
+        return negotiateMtuToDefault(listener);
+    }
+
+    /**
+     * Same as {@link #setMtu(int, ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
+     *
+     * @return (same as {@link #setMtu(int, ReadWriteListener)}).
+     *
+     * @deprecated Please use {@link #negotiateMtu(int)} instead.
+     */
+    @Deprecated
+    @Advanced
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu)
+    {
+        return negotiateMtu(mtu);
+    }
+
+    /**
+     * Wrapper for {@link BluetoothGatt#requestMtu(int)} which attempts to change the "maximum transmission unit" for a given connection.
+     * This will eventually update the value returned by {@link #getMtu()} but it is not
+     * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
+     * this call to succeed.
+     *
+     * <b>NOTE 1:</b> This will only work on devices running Android Lollipop (5.0) or higher. Otherwise it will be ignored.
+     * <b>NOTE 2:</b> Some phones will request an MTU, and accept a higher number, but will fail (time out) when writing a characteristic with a large
+     * payload. Namely, we've found the Moto Pure X, and the OnePlus OnePlus2 to have this behavior. For those phones any MTU above
+     * 50 failed.
+     *
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}.
+     *
+     * @deprecated Please use {@link #negotiateMtu(int, ReadWriteListener)} instead.
+     */
+    @Deprecated
+    @Advanced
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
+    {
+        return negotiateMtu(mtu, listener);
+    }
+
+    /**
+     * Same as {@link #negotiateMtuToDefault(ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
+     *
+     * @return same as {@link #negotiateMtu(int, ReadWriteListener)}.
+     */
+    @Advanced
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent negotiateMtuToDefault()
+    {
+        return negotiateMtuToDefault(null);
+    }
+
+    /**
+     * Overload of {@link #negotiateMtu(int, ReadWriteListener)} that returns the "maximum transmission unit" to the default.
+     * Unlike {@link #negotiateMtu(int)}, this can be called when the device is {@link BleDeviceState#DISCONNECTED} in the event that you don't want the
+     * MTU to be auto-set upon next reconnection.
+     *
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}.
+     */
+    @Advanced
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent negotiateMtuToDefault(final ReadWriteListener listener)
+    {
         if (is(CONNECTED))
         {
-            return setMtu(BleNodeConfig.DEFAULT_MTU_SIZE, listener);
+            return negotiateMtu(BleNodeConfig.DEFAULT_MTU_SIZE, listener);
         }
         else
         {
@@ -4572,36 +4638,37 @@ public final class BleDevice extends BleNode
     }
 
     /**
-     * Same as {@link #setMtu(int, ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
+     * Same as {@link #negotiateMtu(int, ReadWriteListener)} but use this method when you don't much care when/if the "maximum transmission unit" is actually updated.
      *
-     * @return (same as {@link #setMtu(int, ReadWriteListener)}).
+     * @return same as {@link #negotiateMtu(int, ReadWriteListener)}.
      */
-    @Advanced
-    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu)
+     @Advanced
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent negotiateMtu(final int mtu)
     {
-        return setMtu(mtu, null);
+        return negotiateMtu(mtu, null);
     }
 
     /**
      * Wrapper for {@link BluetoothGatt#requestMtu(int)} which attempts to change the "maximum transmission unit" for a given connection.
      * This will eventually update the value returned by {@link #getMtu()} but it is not
      * instantaneous. When we receive confirmation from the native stack then this value will be updated. The device must be {@link BleDeviceState#CONNECTED} for
-     * this call to succeed.
+     * this call to succeed. Note that this is a negotiation. This means it's possible the callback reports a success when the MTU size doesn't change. It's a
+     * good idea to check {@link ReadWriteEvent#mtu()} in the callback to see what the MTU was negotiated to.
      *
      * <b>NOTE 1:</b> This will only work on devices running Android Lollipop (5.0) or higher. Otherwise it will be ignored.
      * <b>NOTE 2:</b> Some phones will request an MTU, and accept a higher number, but will fail (time out) when writing a characteristic with a large
      * payload. Namely, we've found the Moto Pure X, and the OnePlus OnePlus2 to have this behavior. For those phones any MTU above
      * 50 failed.
      *
-     * @return (see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}).
+     * @return see similar comment for return value of {@link #connect(BleTransaction.Auth, BleTransaction.Init, DeviceStateListener, ConnectionFailListener)}.
      */
     @Advanced
-    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent setMtu(final int mtu, final ReadWriteListener listener)
+    public final @Nullable(Prevalence.NEVER) ReadWriteListener.ReadWriteEvent negotiateMtu(final int mtu, final ReadWriteListener listener)
     {
-        return setMtu_private(mtu, listener, getOverrideReadWritePriority());
+        return negotiateMtu_private(mtu, listener, getOverrideReadWritePriority());
     }
 
-    private ReadWriteListener.ReadWriteEvent setMtu_private(final int mtu, final ReadWriteListener listener, PE_TaskPriority priority)
+    private ReadWriteListener.ReadWriteEvent negotiateMtu_private(final int mtu, final ReadWriteListener listener, PE_TaskPriority priority)
     {
         if (false == Utils.isLollipop())
         {
@@ -4623,13 +4690,13 @@ public final class BleDevice extends BleNode
             }
             else
             {
-                final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
+                final ReadWriteEarlyOutResult earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.INVALID, Uuids.INVALID, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.WRITE, ReadWriteListener.Target.MTU);
 
-                if (earlyOutResult != null)
+                if (earlyOutResult.earlyOut())
                 {
-                    invokeReadWriteCallback(listener, earlyOutResult);
+                    invokeReadWriteCallback(listener, earlyOutResult.m_readWriteEvent);
 
-                    return earlyOutResult;
+                    return earlyOutResult.m_readWriteEvent;
                 }
                 else
                 {
@@ -5085,18 +5152,16 @@ public final class BleDevice extends BleNode
     @Advanced
     public final ReadWriteEvent readBatteryLevel(byte[] valueToMatch, UUID descriptorUuid, ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEarlyOutResult earlyOutResult = serviceMngr_device().getEarlyOutEvent(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL, Uuids.INVALID, null, P_Const.EMPTY_FUTURE_DATA, Type.READ, ReadWriteListener.Target.CHARACTERISTIC);
 
-        if (earlyOutResult != null)
+        if (earlyOutResult.earlyOut())
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(listener, earlyOutResult.m_readWriteEvent);
 
-            return earlyOutResult;
+            return earlyOutResult.m_readWriteEvent;
         }
 
-        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(Uuids.BATTERY_SERVICE_UUID, Uuids.BATTERY_LEVEL);
-
-        final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.READ);
+        final boolean requiresBonding = m_bondMngr.bondIfNeeded(earlyOutResult.m_characteristicWrapper.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.READ);
 
         queue().add(new P_Task_BatteryLevel(this, valueToMatch, descriptorUuid, listener, requiresBonding, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
 
@@ -5287,28 +5352,27 @@ public final class BleDevice extends BleNode
      */
     public final ReadWriteListener.ReadWriteEvent enableNotify(final UUID serviceUuid, final UUID characteristicUuid, final Interval forceReadTimeout, final DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEarlyOutResult earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.ENABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
-        if (earlyOutResult != null)
+        if (earlyOutResult.earlyOut())
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(listener, earlyOutResult.m_readWriteEvent);
 
-            if (earlyOutResult.status() == ReadWriteListener.Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)))
+            if (earlyOutResult.m_readWriteEvent.status() == ReadWriteListener.Status.NO_MATCHING_TARGET || (Interval.INFINITE.equals(forceReadTimeout) || Interval.DISABLED.equals(forceReadTimeout)))
             {
                 //--- DRK > No need to put this notify in the poll manager because either the characteristic wasn't found
                 //--- or the notify (or indicate) property isn't supported and we're not doing a backing read poll.
-                return earlyOutResult;
+                return earlyOutResult.m_readWriteEvent;
             }
         }
 
-        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
         final int/*__E_NotifyState*/ notifyState = m_pollMngr.getNotifyState(serviceUuid, characteristicUuid);
-        final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult == null || earlyOutResult.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
+        final boolean shouldSendOutNotifyEnable = notifyState == P_PollManager.E_NotifyState__NOT_ENABLED && (earlyOutResult.m_readWriteEvent == null || earlyOutResult.m_readWriteEvent.status() != ReadWriteListener.Status.OPERATION_NOT_SUPPORTED);
 
         final ReadWriteEvent result;
         final boolean isConnected = is(CONNECTED);
 
-        if (shouldSendOutNotifyEnable && characteristic != null && isConnected)
+        if (shouldSendOutNotifyEnable && !earlyOutResult.isCharNull() && isConnected)
         {
             m_bondMngr.bondIfNeeded(characteristicUuid, CharacteristicEventType.ENABLE_NOTIFY);
 
@@ -5316,7 +5380,7 @@ public final class BleDevice extends BleNode
 
             if (descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic.getCharacteristic(), /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, earlyOutResult.m_characteristicWrapper.getCharacteristic(), /*enable=*/true, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
             }
             else
             {
@@ -5332,7 +5396,7 @@ public final class BleDevice extends BleNode
         {
             if (listener != null && isConnected)
             {
-                result = m_pollMngr.newAlreadyEnabledEvent(characteristic.getCharacteristic(), serviceUuid, characteristicUuid, descriptorFilter);
+                result = m_pollMngr.newAlreadyEnabledEvent(earlyOutResult.m_characteristicWrapper.getCharacteristic(), serviceUuid, characteristicUuid, descriptorFilter);
 
                 invokeReadWriteCallback(listener, result);
             }
@@ -6249,7 +6313,7 @@ public final class BleDevice extends BleNode
         {
             if (isAny(RECONNECTING_SHORT_TERM, RECONNECTING_LONG_TERM))
             {
-                setMtu_private(m_mtu, null, PE_TaskPriority.FOR_PRIORITY_READS_WRITES);
+                negotiateMtu_private(m_mtu, null, PE_TaskPriority.FOR_PRIORITY_READS_WRITES);
             }
         }
 
@@ -6726,18 +6790,17 @@ public final class BleDevice extends BleNode
     final ReadWriteListener.ReadWriteEvent read_internal(final UUID serviceUuid, final UUID characteristicUuid, final UUID descriptorUuid, final Type type, DescriptorFilter descriptorFilter, final ReadWriteListener listener)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEarlyOutResult earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, type, ReadWriteListener.Target.CHARACTERISTIC);
 
-        if (earlyOutResult != null)
+        if (earlyOutResult.earlyOut())
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(listener, earlyOutResult.m_readWriteEvent);
 
-            return earlyOutResult;
+            return earlyOutResult.m_readWriteEvent;
         }
 
         if (descriptorUuid == null || descriptorUuid.equals(Uuids.INVALID))
         {
-            final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
             final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristicUuid, BondFilter.CharacteristicEventType.READ);
 
             final P_Task_Read task;
@@ -6745,11 +6808,11 @@ public final class BleDevice extends BleNode
             if (descriptorFilter == null)
             {
 
-                task = new P_Task_Read(this, characteristic.getCharacteristic(), type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, earlyOutResult.m_characteristicWrapper.getCharacteristic(), type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
             else
             {
-                task = new P_Task_Read(this, characteristic.getCharacteristic().getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
+                task = new P_Task_Read(this, earlyOutResult.m_characteristicWrapper.getCharacteristic().getService().getUuid(), characteristicUuid, type, requiresBonding, descriptorFilter, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority());
             }
 
             queue().add(task);
@@ -6757,9 +6820,8 @@ public final class BleDevice extends BleNode
         else
         {
             final boolean requiresBonding = false;
-            final BluetoothGattDescriptor descriptor = getNativeDescriptor(serviceUuid, characteristicUuid, descriptorUuid);
 
-            queue().add(new P_Task_ReadDescriptor(this, descriptor, type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
+            queue().add(new P_Task_ReadDescriptor(this, earlyOutResult.m_descriptorWrapper.getDescriptor(), type, requiresBonding, listener, m_txnMngr.getCurrent(), getOverrideReadWritePriority()));
         }
 
         return NULL_READWRITE_EVENT();
@@ -6767,29 +6829,26 @@ public final class BleDevice extends BleNode
 
     final ReadWriteListener.ReadWriteEvent write_internal(final com.idevicesinc.sweetblue.WriteBuilder wb)
     {
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(wb.serviceUuid, wb.charUuid, wb.descriptorUuid, wb.descriptorFilter, wb.data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEarlyOutResult earlyOutResult = serviceMngr_device().getEarlyOutEvent(wb.serviceUuid, wb.charUuid, wb.descriptorUuid, wb.descriptorFilter, wb.data, Type.WRITE, ReadWriteListener.Target.CHARACTERISTIC);
 
-        if (earlyOutResult != null)
+        if (earlyOutResult.earlyOut())
         {
-            invokeReadWriteCallback(wb.readWriteListener, earlyOutResult);
+            invokeReadWriteCallback(wb.readWriteListener, earlyOutResult.m_readWriteEvent);
 
-            return earlyOutResult;
+            return earlyOutResult.m_readWriteEvent;
         }
 
         if (wb.descriptorUuid == null || wb.descriptorUuid.equals(Uuids.INVALID))
         {
-            final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(wb.serviceUuid, wb.charUuid);
+            final boolean requiresBonding = m_bondMngr.bondIfNeeded(earlyOutResult.m_characteristicWrapper.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.WRITE);
 
-            final boolean requiresBonding = m_bondMngr.bondIfNeeded(characteristic.getCharacteristic().getUuid(), BondFilter.CharacteristicEventType.WRITE);
-
-            addWriteTasks(characteristic.getCharacteristic(), wb.data, requiresBonding, wb.writeType, wb.descriptorFilter, wb.readWriteListener);
+            addWriteTasks(earlyOutResult.m_characteristicWrapper.getCharacteristic(), wb.data, requiresBonding, wb.writeType, wb.descriptorFilter, wb.readWriteListener);
         }
         else
         {
             final boolean requiresBonding = false;
-            final BluetoothGattDescriptor descriptor = getNativeDescriptor(wb.serviceUuid, wb.charUuid, wb.descriptorUuid);
 
-            addWriteDescriptorTasks(descriptor, wb.data, requiresBonding, wb.readWriteListener);
+            addWriteDescriptorTasks(earlyOutResult.m_descriptorWrapper.getDescriptor(), wb.data, requiresBonding, wb.readWriteListener);
         }
 
         return NULL_READWRITE_EVENT();
@@ -6835,23 +6894,21 @@ public final class BleDevice extends BleNode
     private ReadWriteListener.ReadWriteEvent disableNotify_private(UUID serviceUuid, UUID characteristicUuid, Double forceReadTimeout, DescriptorFilter descriptorFilter, ReadWriteListener listener)
     {
 
-        final ReadWriteEvent earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
+        final ReadWriteEarlyOutResult earlyOutResult = serviceMngr_device().getEarlyOutEvent(serviceUuid, characteristicUuid, Uuids.INVALID, descriptorFilter, P_Const.EMPTY_FUTURE_DATA, Type.DISABLING_NOTIFICATION, ReadWriteListener.Target.CHARACTERISTIC);
 
-        if (earlyOutResult != null)
+        if (earlyOutResult.earlyOut())
         {
-            invokeReadWriteCallback(listener, earlyOutResult);
+            invokeReadWriteCallback(listener, earlyOutResult.m_readWriteEvent);
 
-            return earlyOutResult;
+            return earlyOutResult.m_readWriteEvent;
         }
 
-        final BleCharacteristicWrapper characteristic = getServiceManager().getCharacteristic(serviceUuid, characteristicUuid);
-
-        if (characteristic != null && is(CONNECTED))
+        if (!earlyOutResult.isCharNull() && is(CONNECTED))
         {
             final P_Task_ToggleNotify task;
             if (descriptorFilter == null)
             {
-                task = new P_Task_ToggleNotify(this, characteristic.getCharacteristic(), /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
+                task = new P_Task_ToggleNotify(this, earlyOutResult.m_characteristicWrapper.getCharacteristic(), /* enable= */false, m_txnMngr.getCurrent(), listener, getOverrideReadWritePriority());
             }
             else
             {
