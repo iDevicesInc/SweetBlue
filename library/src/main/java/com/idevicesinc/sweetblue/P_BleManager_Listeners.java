@@ -50,8 +50,9 @@ final class P_BleManager_Listeners
 
             //--- DRK > Got this assert to trip by putting a breakpoint in constructor of NativeDeviceWrapper
             //---		and waiting, but now can't reproduce.
-            if (!m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && state != PE_TaskState.CLEARED_FROM_QUEUE && m_mngr.isAny(SCANNING, BOOST_SCANNING, STARTING_SCAN, SCANNING_PAUSED)))
-                return;
+            //--- RB > I don't think this assert is doing anything of value for us, if anything, it's confusing people.
+//            if (!m_mngr.ASSERT(task.getClass() == P_Task_Scan.class && state != PE_TaskState.CLEARED_FROM_QUEUE && m_mngr.isAny(SCANNING, BOOST_SCANNING, STARTING_SCAN, SCANNING_PAUSED)))
+//                return;
 
             if (state.isEndingState())
             {
@@ -76,16 +77,11 @@ final class P_BleManager_Listeners
                     }
                 }
 
-                m_mngr.getScanManager().stopNativeScan(scanTask);
+                m_mngr.getScanManager().stopScan();
 
-                if (state == PE_TaskState.INTERRUPTED)
-                {
-                    // task will be put back onto the queue presently...nothing to do here
-                }
-                else
-                {
+                if (state != PE_TaskState.INTERRUPTED)
                     m_mngr.clearScanningRelatedMembers(scanTask.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
-                }
+
             }
         }
     };

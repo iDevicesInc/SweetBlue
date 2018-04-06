@@ -7,6 +7,9 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.idevicesinc.sweetblue.utils.DebugLogger;
+import com.idevicesinc.sweetblue.utils.Interval;
+
+import java.util.UUID;
 
 
 public class MyBleService extends Service
@@ -24,17 +27,24 @@ public class MyBleService extends Service
         startForeground(1, new Notification());
         BleManagerConfig config = new BleManagerConfig();
         config.loggingEnabled = true;
+        config.scanReportDelay = Interval.DISABLED;
         config.stopScanOnPause = false;
         config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
         config.scanApi = BleScanApi.POST_LOLLIPOP;
-        config.defaultScanFilter = e -> BleManagerConfig.ScanFilter.Please.acknowledgeIf(e.name_normalized().contains("wall"));
         config.runOnMainThread = false;
         mgr = BleManager.get(this, config);
         mgr.setListener_Discovery(e ->
         {
             if (e.was(BleManager.DiscoveryListener.LifeCycle.DISCOVERED))
             {
-                Log.e("+++", "Discovery Event: " + e);
+                Log.e("+++", "Discovered: " + e.device().getName_native());
+                e.device().connect(e1 -> {
+                    if (e1.didEnter(BleDeviceState.INITIALIZED))
+                    {
+                        Log.e("+++", "Connected to " + e1.device().getName_native());
+                        e1.device().disconnect();
+                    }
+                });
             }
             else if (e.was(BleManager.DiscoveryListener.LifeCycle.REDISCOVERED))
             {

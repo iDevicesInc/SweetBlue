@@ -23,10 +23,10 @@ import static com.idevicesinc.sweetblue.BleManagerState.STARTING_SCAN;
 final class P_ScanManager
 {
 
-    static final int Mode_NULL = -1;
-    static final int Mode_BLE = 0;
-    static final int Mode_CLASSIC = 1;
-    static final int Mode_BLE_POST_LOLLIPOP = 2;
+    private static final int Mode_NULL = -1;
+    private static final int Mode_BLE = 0;
+    private static final int Mode_CLASSIC = 1;
+    private static final int Mode_BLE_POST_LOLLIPOP = 2;
 
 
     private final BleManager m_manager;
@@ -55,7 +55,7 @@ final class P_ScanManager
     private final Object entryLock = new Object();
 
 
-    public P_ScanManager(BleManager mgr)
+    P_ScanManager(BleManager mgr)
     {
         m_manager = mgr;
         mCurrentApi = new AtomicReference<>(mgr.m_config.scanApi);
@@ -127,60 +127,6 @@ final class P_ScanManager
     public final void stopScan()
     {
         stopScan_private(true);
-    }
-
-    public final void stopNativeScan(final P_Task_Scan scanTask)
-    {
-        if (m_periodicScan)
-        {
-            pauseScan();
-            return;
-        }
-        if( m_mode == Mode_BLE )
-        {
-            try
-            {
-                stopScanPreLollipop();
-            }
-            catch(NullPointerException e)
-            {
-                //--- DRK > Catching this because of exception thrown one time...only ever seen once, so not very reproducible.
-                //			java.lang.NullPointerException
-                //			07-02 15:04:48.149: E/AndroidRuntime(24389): 	at android.bluetooth.BluetoothAdapter$GattCallbackWrapper.stopLeScan(BluetoothAdapter.java:1819)
-                //			07-02 15:04:48.149: E/AndroidRuntime(24389): 	at android.bluetooth.BluetoothAdapter.stopLeScan(BluetoothAdapter.java:1722)
-                m_manager.getLogger().w(e.getStackTrace().toString());
-
-                m_manager.uhOh(BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION);
-            }
-        }
-        else if ( m_mode == Mode_BLE_POST_LOLLIPOP)
-        {
-            try
-            {
-                stopScanPostLollipop();
-            }
-            catch (NullPointerException e)
-            {
-                m_manager.getLogger().w(e.getStackTrace().toString());
-
-                m_manager.uhOh(BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION);
-            }
-        }
-        else if( m_mode == Mode_CLASSIC )
-        {
-            //--- DRK > This assert tripped, but not sure what I can do about it. Technically discovery can be cancelled
-            //---		by another app or something, so its usefulness as a logic checker is debatable.
-//			ASSERT(m_btMngr.getAdapter().isDiscovering(), "Trying to cancel discovery when not natively running.");
-
-            stopClassicDiscovery();
-        }
-
-        if( m_manager.m_config.enableCrashResolver )
-        {
-            m_manager.m_crashResolver.stop();
-        }
-
-        m_manager.getNativeStateTracker().remove(BleManagerState.SCANNING, scanTask.getIntent(), BleStatuses.GATT_STATUS_NOT_APPLICABLE);
     }
 
     public final void setInfiniteScan(boolean infinite, boolean force)
@@ -501,6 +447,10 @@ final class P_ScanManager
         if (stopping)
         {
             m_manager.getStateTracker().update(PA_StateTracker.E_Intent.INTENTIONAL, BleStatuses.GATT_STATUS_NOT_APPLICABLE, SCANNING, false, BOOST_SCANNING, false, SCANNING_PAUSED, false);
+            if( m_manager.m_config.enableCrashResolver )
+            {
+                m_manager.m_crashResolver.stop();
+            }
         }
         else
         {
@@ -716,6 +666,9 @@ final class P_ScanManager
         } catch (Exception e)
         {
             m_manager.getLogger().e("Got an exception (" + e.getClass().getSimpleName() + ") with a message of " + e.getMessage() + " when trying to stop a pre-lollipop scan!");
+            m_manager.getLogger().w(e.getStackTrace().toString());
+
+            m_manager.uhOh(BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION);
         }
     }
 
@@ -726,7 +679,15 @@ final class P_ScanManager
 
     private void stopScanPostLollipop()
     {
-        m_manager.managerLayer().stopLeScan(m_preLollipopScanCallback);
+        try
+        {
+            m_manager.managerLayer().stopLeScan(m_preLollipopScanCallback);
+        }
+        catch (Exception e)
+        {
+            m_manager.getLogger().w(e.getStackTrace().toString());
+            m_manager.uhOh(BleManager.UhOhListener.UhOh.RANDOM_EXCEPTION);
+        }
     }
 
     private void stopClassicDiscovery()
