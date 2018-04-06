@@ -31,7 +31,6 @@ public class MyBleService extends Service
         config.stopScanOnPause = false;
         config.bondRetryFilter = new BondRetryFilter.DefaultBondRetryFilter(5);
         config.scanApi = BleScanApi.POST_LOLLIPOP;
-        config.defaultScanFilter = new BleManagerConfig.DefaultScanFilter(UUID.fromString("ba067250-9b6e-11e4-bd06-0800200c9a66"));
         config.runOnMainThread = false;
         mgr = BleManager.get(this, config);
         mgr.setListener_Discovery(e ->
