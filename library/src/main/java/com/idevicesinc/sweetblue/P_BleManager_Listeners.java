@@ -63,8 +63,6 @@ final class P_BleManager_Listeners
                 {
                     if (state == PE_TaskState.INTERRUPTED)
                     {
-                        // Make sure the scan actually stops when it's interrupted.
-                        m_mngr.getScanManager().stopScan();
                         m_mngr.getPostManager().runOrPostToUpdateThread(new Runnable()
                         {
                             @Override public void run()
@@ -79,7 +77,7 @@ final class P_BleManager_Listeners
                     }
                 }
 
-                m_mngr.getScanManager().stopNativeScan(scanTask);
+                m_mngr.getScanManager().stopScan();
 
                 if (state != PE_TaskState.INTERRUPTED)
                     m_mngr.clearScanningRelatedMembers(scanTask.isExplicit() ? E_Intent.INTENTIONAL : E_Intent.UNINTENTIONAL);
