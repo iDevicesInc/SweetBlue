@@ -416,11 +416,11 @@ final class P_PollManager
 				
 				if( notifyState == E_NotifyState__NOT_ENABLED )
 				{
-					BleDevice.ReadWriteListener.ReadWriteEvent earlyOutResult = m_device.serviceMngr_device().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, Uuids.INVALID, ithEntry.m_descriptorFilter, P_Const.EMPTY_FUTURE_DATA, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
+					ReadWriteEarlyOutResult earlyOutResult = m_device.serviceMngr_device().getEarlyOutEvent(ithEntry.m_serviceUuid, ithEntry.m_charUuid, Uuids.INVALID, ithEntry.m_descriptorFilter, P_Const.EMPTY_FUTURE_DATA, BleDevice.ReadWriteListener.Type.ENABLING_NOTIFICATION, Target.CHARACTERISTIC);
 					
-					if( earlyOutResult != null )
+					if( earlyOutResult.earlyOut())
 					{
-						ithEntry.m_pollingReadListener.onEvent(earlyOutResult);
+						ithEntry.m_pollingReadListener.onEvent(earlyOutResult.m_readWriteEvent);
 					}
 					else
 					{
