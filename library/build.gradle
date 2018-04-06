@@ -27,6 +27,10 @@ android {
         }
     }
 
+    lintOptions {
+        disable 'ProtectedPermissions'
+    }
+
     // Commenting out Java 8 support for now until the lambda issue can be fixed
     // See https://issuetracker.google.com/issues/68977385
 //    compileOptions {
