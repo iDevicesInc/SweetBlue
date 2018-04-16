@@ -1,5 +1,6 @@
 package com.idevicesinc.sweetblue.utils;
 
+import android.util.SparseArray;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ public final class BleScanInfo implements UsesCustomNull
     public final static BleScanInfo NULL = new BleScanInfo();
 
     private Short m_manufactuerId;
+    private List<ManufacturerData> m_manufacturerDataList;
     private byte[] m_manufacturerData;
     private Pointer<Integer> m_advFlags;
     private Pointer<Integer> m_txPower;
@@ -30,13 +32,17 @@ public final class BleScanInfo implements UsesCustomNull
      */
     public BleScanInfo()
     {
+        m_advFlags = new Pointer<>();
+        m_txPower = new Pointer<>();
         m_serviceUuids = new ArrayList<>();
         m_serviceData = new HashMap<>();
+        m_manufacturerDataList = new ArrayList<>();
         m_completeUuidList = false;
     }
 
     /**
-     * Constructor used internally when a {@link com.idevicesinc.sweetblue.BleDevice} is discovered.
+     * Old Constructor used to be used internally when a {@link com.idevicesinc.sweetblue.BleDevice} is discovered. Now, {@link #BleScanInfo(Pointer, Pointer, List, boolean, List, Map, String, boolean)} is
+     * used instead.
      */
     public BleScanInfo(Pointer<Integer> advFlags, Pointer<Integer> txPower, List<UUID> serviceUuids, boolean uuidCompleteList, short mfgId, byte[] mfgData, Map<UUID, byte[]> serviceData, String localName, boolean shortName)
     {
@@ -46,6 +52,35 @@ public final class BleScanInfo implements UsesCustomNull
         addServiceUUIDs(serviceUuids);
         m_manufactuerId = mfgId;
         m_manufacturerData = mfgData;
+        if (serviceData == null)
+        {
+            m_serviceData = new HashMap<>(0);
+        }
+        else
+        {
+            m_serviceData = serviceData;
+        }
+        m_localName = localName;
+        m_shortName = shortName;
+        m_completeUuidList = uuidCompleteList;
+    }
+
+    /**
+     * Constructor used internally when a {@link com.idevicesinc.sweetblue.BleDevice} is discovered.
+     */
+    public BleScanInfo(Pointer<Integer> advFlags, Pointer<Integer> txPower, List<UUID> serviceUuids, boolean uuidCompleteList, List<ManufacturerData> mfgData, Map<UUID, byte[]> serviceData, String localName, boolean shortName)
+    {
+        m_advFlags = advFlags;
+        m_txPower = txPower;
+        m_serviceUuids = new ArrayList<>();
+        addServiceUUIDs(serviceUuids);
+        m_manufacturerDataList = mfgData;
+        if (m_manufacturerDataList != null && m_manufacturerDataList.size() > 0)
+        {
+            ManufacturerData data = m_manufacturerDataList.get(0);
+            m_manufactuerId = data.m_id;
+            m_manufacturerData = data.m_data;
+        }
         if (serviceData == null)
         {
             m_serviceData = new HashMap<>(0);
@@ -133,7 +168,10 @@ public final class BleScanInfo implements UsesCustomNull
 
     /**
      * Set the manufacturer Id
+     *
+     * @deprecated Please don't use anymore. Use {@link #addManufacturerData(short, byte[])} instead.
      */
+    @Deprecated
     public final BleScanInfo setManufacturerId(short id)
     {
         m_manufactuerId = id;
@@ -141,8 +179,23 @@ public final class BleScanInfo implements UsesCustomNull
     }
 
     /**
-     * Set the manufacturer data
+     * Add some manufacturer data, along with the given manufacturer id to the {@link SparseArray}.
      */
+    public final BleScanInfo addManufacturerData(short manId, byte[] data)
+    {
+        final ManufacturerData mdata = new ManufacturerData();
+        mdata.m_id = manId;
+        mdata.m_data = data;
+        m_manufacturerDataList.add(mdata);
+        return this;
+    }
+
+    /**
+     * Set the manufacturer data
+     *
+     * @deprecated Please don't use anymore. Use {@link #addManufacturerData(short, byte[])} instead.
+     */
+    @Deprecated
     public final BleScanInfo setManufacturerData(byte[] data)
     {
         m_manufacturerData = data;
@@ -169,6 +222,8 @@ public final class BleScanInfo implements UsesCustomNull
 
     /**
      * Get the manufacturer Id from this {@link BleScanInfo} instance.
+     *
+     * @see #getManufacturerDataList()
      */
     public final short getManufacturerId()
     {
@@ -180,7 +235,10 @@ public final class BleScanInfo implements UsesCustomNull
     }
 
     /**
-     * Get the manufacturer data from this instance.
+     * Get the manufacturer data from this instance. This is a convenience method. This simply returns the first item in the {@link SparseArray} holding
+     * all manufacturer data.
+     *
+     * @see #getManufacturerDataList()
      */
     public final byte[] getManufacturerData()
     {
@@ -189,6 +247,14 @@ public final class BleScanInfo implements UsesCustomNull
             return P_Const.EMPTY_BYTE_ARRAY;
         }
         return m_manufacturerData;
+    }
+
+    /**
+     * Returns a {@link List} of all manufacturer data parsed in the scan record.
+     */
+    public final List<ManufacturerData> getManufacturerDataList()
+    {
+        return m_manufacturerDataList;
     }
 
     /**
@@ -344,7 +410,9 @@ public final class BleScanInfo implements UsesCustomNull
                 map.put(new BleUuid(u, BleUuid.UuidSize.SHORT), m_serviceData.get(u));
             }
         }
-        return Utils_ScanRecord.newScanRecord(m_advFlags.value.byteValue(), map, m_completeUuidList, m_localName, m_shortName, m_txPower.value.byteValue(), m_manufactuerId, m_manufacturerData);
+        byte flags = m_advFlags.value != null ? m_advFlags.value.byteValue() : 0;
+        byte tx = m_txPower.value != null ? m_txPower.value.byteValue() : 0;
+        return Utils_ScanRecord.newScanRecord(flags, map, m_completeUuidList, m_localName, m_shortName, tx, m_manufacturerDataList);
     }
 
 
