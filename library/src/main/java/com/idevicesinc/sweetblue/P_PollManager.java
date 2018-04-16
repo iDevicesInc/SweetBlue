@@ -2,11 +2,10 @@ package com.idevicesinc.sweetblue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
-
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.ReadWriteEvent;
 import com.idevicesinc.sweetblue.BleDevice.ReadWriteListener.Status;
@@ -16,6 +15,7 @@ import com.idevicesinc.sweetblue.BleDeviceConfig.BondFilter.CharacteristicEventT
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.P_Const;
 import com.idevicesinc.sweetblue.utils.Uuids;
+
 
 final class P_PollManager
 {
@@ -129,17 +129,17 @@ final class P_PollManager
 			m_pollingReadListener.init(this);
 		}
 		
-		boolean trackingChanges()
+		final boolean trackingChanges()
 		{
 			return m_pollingReadListener instanceof TrackingWrappingReadListener;
 		}
-		
-		boolean usingNotify()
+
+		final boolean usingNotify()
 		{
 			return m_usingNotify;
 		}
-		
-		boolean isFor(final UUID serviceUuid, final UUID charUuid, DescriptorFilter descriptorFilter, Double interval_nullable, ReadWriteListener readWriteListener_nullable, boolean usingNotify)
+
+		final boolean isFor(final UUID serviceUuid, final UUID charUuid, DescriptorFilter descriptorFilter, Double interval_nullable, ReadWriteListener readWriteListener_nullable, boolean usingNotify)
 		{
 			return
 				usingNotify == m_usingNotify																			&&
@@ -150,7 +150,7 @@ final class P_PollManager
 				(readWriteListener_nullable == null || m_pollingReadListener.hasListener(readWriteListener_nullable))	 ;
 		}
 
-		boolean descriptorMatches(DescriptorFilter curfilter, DescriptorFilter newFilter)
+		final boolean descriptorMatches(DescriptorFilter curfilter, DescriptorFilter newFilter)
 		{
 			if (curfilter == null)
 			{
@@ -173,8 +173,8 @@ final class P_PollManager
 			}
 			return false;
 		}
-		
-		boolean isFor(final UUID serviceUuid, final UUID charUuid)
+
+		final boolean isFor(final UUID serviceUuid, final UUID charUuid)
 		{
 			if( serviceUuid == null || m_serviceUuid == null )
 			{
@@ -185,8 +185,8 @@ final class P_PollManager
 				return charUuid.equals(m_charUuid) && m_serviceUuid != null && m_serviceUuid.equals(serviceUuid);
 			}
 		}
-		
-		void onCharacteristicChangedFromNativeNotify(byte[] value)
+
+		final void onCharacteristicChangedFromNativeNotify(byte[] value)
 		{
 			//--- DRK > The early-outs in this method are for when, for example, a native onNotify comes in on a random thread,
 			//---		BleDevice#disconnect() is called on main thread before notify gets passed to main thread (to here).
@@ -223,14 +223,14 @@ final class P_PollManager
 			
 			m_timeTracker = 0.0;
 		}
-		
-		void onSuccessOrFailure()
+
+		final void onSuccessOrFailure()
 		{
 			m_waitingForResponse = false;
 			m_timeTracker = 0.0;
 		}
-		
-		void update(double timeStep)
+
+		final void update(double timeStep)
 		{
 			if( m_interval <= 0.0 )  return;
 			if( m_interval == Interval.INFINITE.secs() )  return;
@@ -256,6 +256,7 @@ final class P_PollManager
 	
 	private final BleDevice m_device;
 	private final ArrayList<CallbackEntry> m_entries = new ArrayList<>();
+	private final Object m_entryLock = new Object();
 	
 
 	P_PollManager(BleDevice device)
@@ -263,12 +264,15 @@ final class P_PollManager
 		m_device = device;
 	}
 
-	void clear()
+	final void clear()
 	{
-		m_entries.clear();
+		synchronized (m_entryLock)
+		{
+			m_entries.clear();
+		}
 	}
-	
-	void startPoll(final UUID serviceUuid, final UUID charUuid, final DescriptorFilter decriptorFilter, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
+
+	final void startPoll(final UUID serviceUuid, final UUID charUuid, final DescriptorFilter decriptorFilter, double interval, ReadWriteListener listener, boolean trackChanges, boolean usingNotify)
 	{
 		if( m_device.isNull() )  return;
 		
@@ -276,9 +280,14 @@ final class P_PollManager
 		
 		if( !allowDuplicatePollEntries )
 		{
-			for( int i = m_entries.size()-1; i >= 0; i-- )
+			final List<CallbackEntry> entryList;
+			synchronized (m_entryLock)
 			{
-				CallbackEntry ithEntry = m_entries.get(i);
+				entryList = new ArrayList<>(m_entries);
+			}
+			for( int i = entryList.size()-1; i >= 0; i-- )
+			{
+				CallbackEntry ithEntry = entryList.get(i);
 
 				if( ithEntry.m_charUuid.equals(charUuid) )
 				{
@@ -305,39 +314,54 @@ final class P_PollManager
 			newEntry.m_notifyState = state;
 		}
 
-		m_entries.add(newEntry);
+		synchronized (m_entryLock)
+		{
+			m_entries.add(newEntry);
+		}
 	}
-	
-	void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, DescriptorFilter descriptorFilter, Double interval_nullable, ReadWriteListener listener, boolean usingNotify)
+
+	final void stopPoll(final UUID serviceUuid, final UUID characteristicUuid, DescriptorFilter descriptorFilter, Double interval_nullable, ReadWriteListener listener, boolean usingNotify)
 	{
 		if( m_device.isNull() )  return;
-		
-		for( int i = m_entries.size()-1; i >= 0; i-- )
+
+		synchronized (m_entryLock)
 		{
-			CallbackEntry ithEntry = m_entries.get(i);
-			
-			if( ithEntry.isFor(serviceUuid, characteristicUuid, descriptorFilter, interval_nullable, listener, usingNotify) )
+			for (int i = m_entries.size() - 1; i >= 0; i--)
 			{
-				m_entries.remove(i);
+				CallbackEntry ithEntry = m_entries.get(i);
+
+				if (ithEntry.isFor(serviceUuid, characteristicUuid, descriptorFilter, interval_nullable, listener, usingNotify))
+				{
+					m_entries.remove(i);
+				}
 			}
 		}
 	}
-	
-	void update(double timeStep)
-	{
-		for( int i = 0; i < m_entries.size(); i++ )
-		{
-			CallbackEntry ithEntry = m_entries.get(i);
 
-			ithEntry.update(timeStep);
+	final void update(double timeStep)
+	{
+		synchronized (m_entryLock)
+		{
+			for (int i = 0; i < m_entries.size(); i++)
+			{
+				CallbackEntry ithEntry = m_entries.get(i);
+
+				if (ithEntry != null)
+					ithEntry.update(timeStep);
+			}
 		}
 	}
-	
-	void onCharacteristicChangedFromNativeNotify(final UUID serviceUuid, final UUID charUuid, byte[] value)
+
+	final void onCharacteristicChangedFromNativeNotify(final UUID serviceUuid, final UUID charUuid, byte[] value)
 	{
-		for( int i = 0; i < m_entries.size(); i++ )
+		final List<CallbackEntry> entryList;
+		synchronized (m_entryLock)
 		{
-			CallbackEntry ithEntry = m_entries.get(i);
+			entryList = new ArrayList<>(m_entries);
+		}
+		for( int i = 0; i < entryList.size(); i++ )
+		{
+			CallbackEntry ithEntry = entryList.get(i);
 
 			// An NPE was reported from a customer where it looks like the CallbackEntry here is null. Not sure how this could happen,
 			// so we're just guarding against it now
@@ -350,14 +374,20 @@ final class P_PollManager
 			}
 		}
 	}
-	
-	int/*__E_NotifyState*/ getNotifyState(final UUID serviceUuid, final UUID charUuid)
+
+	final int/*__E_NotifyState*/ getNotifyState(final UUID serviceUuid, final UUID charUuid)
 	{
 		int/*__E_NotifyState*/ highestState = E_NotifyState__NOT_ENABLED;
-		
-		for( int i = 0; i < m_entries.size(); i++ )
+
+		final List<CallbackEntry> entryList;
+		synchronized (m_entryLock)
 		{
-			CallbackEntry ithEntry = m_entries.get(i);
+			entryList = new ArrayList<>(m_entries);
+		}
+
+		for( int i = 0; i < entryList.size(); i++ )
+		{
+			CallbackEntry ithEntry = entryList.get(i);
 			
 			if( ithEntry.isFor(serviceUuid, charUuid) )
 			{
@@ -370,12 +400,17 @@ final class P_PollManager
 		
 		return highestState;
 	}
-	
-	void onNotifyStateChange(final UUID serviceUuid, final UUID charUuid, int/*__E_NotifyState*/ state)
+
+	final void onNotifyStateChange(final UUID serviceUuid, final UUID charUuid, int/*__E_NotifyState*/ state)
 	{
-		for( int i = 0; i < m_entries.size(); i++ )
+		final List<CallbackEntry> entryList;
+		synchronized (m_entryLock)
 		{
-			CallbackEntry ithEntry = m_entries.get(i);
+			entryList = new ArrayList<>(m_entries);
+		}
+		for( int i = 0; i < entryList.size(); i++ )
+		{
+			CallbackEntry ithEntry = entryList.get(i);
 			
 			if( ithEntry.usingNotify() && ithEntry.isFor(serviceUuid, charUuid) )
 			{
@@ -383,22 +418,30 @@ final class P_PollManager
 			}
 		}
 	}
-	
-	void resetNotifyStates()
+
+	final void resetNotifyStates()
 	{
-		for( int i = 0; i < m_entries.size(); i++ )
+		synchronized (m_entryLock)
 		{
-			CallbackEntry ithEntry = m_entries.get(i);
-			
-			ithEntry.m_notifyState = E_NotifyState__NOT_ENABLED;
+			for (int i = 0; i < m_entries.size(); i++)
+			{
+				CallbackEntry ithEntry = m_entries.get(i);
+
+				ithEntry.m_notifyState = E_NotifyState__NOT_ENABLED;
+			}
 		}
 	}
 	
-	void enableNotifications_assumesWeAreConnected()
+	final void enableNotifications_assumesWeAreConnected()
 	{
-		for( int i = 0; i < m_entries.size(); i++ )
+		final List<CallbackEntry> entryList;
+		synchronized (m_entryLock)
 		{
-			CallbackEntry ithEntry = m_entries.get(i);
+			entryList = new ArrayList<>(m_entries);
+		}
+		for( int i = 0; i < entryList.size(); i++ )
+		{
+			CallbackEntry ithEntry = entryList.get(i);
 			
 			if( ithEntry.usingNotify() )
 			{
@@ -446,7 +489,7 @@ final class P_PollManager
 		}
 	}
 	
-	ReadWriteEvent newAlreadyEnabledEvent(BluetoothGattCharacteristic characteristic, final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter)
+	final ReadWriteEvent newAlreadyEnabledEvent(BluetoothGattCharacteristic characteristic, final UUID serviceUuid, final UUID characteristicUuid, final DescriptorFilter descriptorFilter)
 	{
 		//--- DRK > Just being anal with the null check here.
 		byte[] writeValue = characteristic != null ? P_Task_ToggleNotify.getWriteValue(characteristic, /*enable=*/true) : P_Const.EMPTY_BYTE_ARRAY;
