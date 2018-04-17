@@ -183,6 +183,11 @@ public final class BleScanInfo implements UsesCustomNull
      */
     public final BleScanInfo addManufacturerData(short manId, byte[] data)
     {
+        if (m_manufacturerDataList.size() == 0)
+        {
+            m_manufactuerId = manId;
+            m_manufacturerData = data;
+        }
         final ManufacturerData mdata = new ManufacturerData();
         mdata.m_id = manId;
         mdata.m_data = data;
