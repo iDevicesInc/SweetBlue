@@ -31,8 +31,7 @@ public class BleScanInfoTest extends BaseTest
                 .setAdvFlags((byte) 1, (byte) 0x2)
                 .setTxPower((byte) 10)
                 .addServiceData(uuid, new byte[] { 100 })
-                .setManufacturerId(manId)
-                .setManufacturerData(manData);
+                .addManufacturerData(manId, manData);
         byte[] record = bleRecord.buildPacket();
         BleScanInfo info = Utils_ScanRecord.parseScanRecord(record);
         assertTrue(info.getName().equals("Johnny 5"));

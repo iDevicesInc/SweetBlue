@@ -32,8 +32,8 @@ public final class BleScanInfo implements UsesCustomNull
      */
     public BleScanInfo()
     {
-        m_advFlags = new Pointer<>();
-        m_txPower = new Pointer<>();
+        m_advFlags = new Pointer<>(0);
+        m_txPower = new Pointer<>(0);
         m_serviceUuids = new ArrayList<>();
         m_serviceData = new HashMap<>();
         m_manufacturerDataList = new ArrayList<>();
@@ -409,6 +409,16 @@ public final class BleScanInfo implements UsesCustomNull
             {
                 map.put(new BleUuid(u, BleUuid.UuidSize.SHORT), m_serviceData.get(u));
             }
+        }
+        if (m_manufactuerId != null)
+        {
+            ManufacturerData data = new ManufacturerData();
+            data.m_id = m_manufactuerId;
+            if (m_manufacturerData != null)
+            {
+                data.m_data = m_manufacturerData;
+            }
+            m_manufacturerDataList.add(data);
         }
         byte flags = m_advFlags.value != null ? m_advFlags.value.byteValue() : 0;
         byte tx = m_txPower.value != null ? m_txPower.value.byteValue() : 0;
