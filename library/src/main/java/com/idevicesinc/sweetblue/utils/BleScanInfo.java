@@ -191,6 +191,15 @@ public final class BleScanInfo implements UsesCustomNull
     }
 
     /**
+     * Sets this {@link BleScanInfo}'s manufacturer data list. This creates a new list from the one given.
+     */
+    public final BleScanInfo setManufacturerDataList(List<ManufacturerData> list)
+    {
+        m_manufacturerDataList = new ArrayList<>(list);
+        return this;
+    }
+
+    /**
      * Set the manufacturer data
      *
      * @deprecated Please don't use anymore. Use {@link #addManufacturerData(short, byte[])} instead.

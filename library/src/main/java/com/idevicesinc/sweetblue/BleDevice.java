@@ -5814,9 +5814,8 @@ public final class BleDevice extends BleNode
             m_scanInfo.clearServiceUUIDs();
             m_scanInfo.addServiceUUIDs(scanEvent_nullable.advertisedServices());
 
-            m_scanInfo.setManufacturerId((short) scanEvent_nullable.manufacturerId());
-            m_scanInfo.setManufacturerData(scanEvent_nullable.manufacturerData());
 
+            m_scanInfo.setManufacturerDataList(scanEvent_nullable.manufacturerDataList());
 
             m_scanInfo.clearServiceData();
             m_scanInfo.addServiceData(scanEvent_nullable.serviceData());
