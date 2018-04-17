@@ -21,8 +21,8 @@ import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
+import com.idevicesinc.sweetblue.utils.ManufacturerData;
 import com.idevicesinc.sweetblue.utils.P_Const;
-import com.idevicesinc.sweetblue.utils.Pointer;
 import com.idevicesinc.sweetblue.utils.ReflectionUuidNameMap;
 import com.idevicesinc.sweetblue.utils.State;
 import com.idevicesinc.sweetblue.utils.Utils;
@@ -30,7 +30,6 @@ import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Utils_String;
 import com.idevicesinc.sweetblue.utils.UuidNameMap;
 import com.idevicesinc.sweetblue.utils.Uuids;
-
 import org.json.JSONObject;
 
 /**
@@ -507,15 +506,6 @@ public class BleManagerConfig extends BleDeviceConfig
 
 	P_NativeManagerLayer nativeManagerLayer						= new P_AndroidBluetoothManager();
 
-// TODO - Remove this once we figure out a different solution for unit tests
-//
-//	/**
-//	 * This allows the use of custom {@link PI_UpdateLoop} for the internal processing of SweetBlue. This is only exposed
-//	 * for unit testing purposes, you should never change this unless you know the internals of SweetBlue intimately.
-//	 */
-//	@UnitTest
-//	public PI_UpdateLoop.IUpdateLoopFactory updateLoopFactory	= new PI_UpdateLoop.DefaultUpdateLoopFactory();
-
 
 	/**
 	 * Used if {@link #loggingEnabled} is <code>true</code>. Gives threads names so they are more easily identifiable.
@@ -641,10 +631,24 @@ public class BleManagerConfig extends BleDeviceConfig
 			public int advertisingFlags()  {  return m_advertisingFlags;  }
 			private final int m_advertisingFlags;
 
+            /**
+             * Returns a {@link List} of {@link ManufacturerData} instances that were parsed from the scan record. This is handy if the peripheral
+             * has more than one manufacturer data inside the scan record/advertising data.
+             */
+			public List<ManufacturerData> manufacturerDataList() {
+			    return m_manufacturerDataList;
+            }
+            private final List<ManufacturerData> m_manufacturerDataList;
+
 			/**
 			 * Returns the manufacturer-specific data, if any, parsed from {@link #scanRecord()}.
+             *
+             * @deprecated This never holds anything. Use {@link #manufacturerDataList()} instead.
 			 */
+			@Deprecated
 			public SparseArray<byte[]> manufacturerCombinedData(){  return m_manufacturerCombinedData;  }
+
+			@Deprecated
 			private final SparseArray<byte[]> m_manufacturerCombinedData;
 
 			public byte[] manufacturerData(){ return m_manufacturerData;}
@@ -679,15 +683,11 @@ public class BleManagerConfig extends BleDeviceConfig
 				this.m_serviceData = scanInfo != null ? scanInfo.getServiceData() : new HashMap<UUID, byte[]>(0);
 
 				this.m_manufacturerCombinedData = new SparseArray<>();
+				this.m_manufacturerDataList = scanInfo != null ? scanInfo.getManufacturerDataList() : new ArrayList<ManufacturerData>(0);
 			}
 
 			/*package*/ static ScanEvent fromScanRecord(final BluetoothDevice device_native, final String rawDeviceName, final String normalizedDeviceName, final int rssi, final State.ChangeIntent lastDisconnectIntent, final byte[] scanRecord)
 			{
-				final Pointer<Integer> advFlags = new Pointer<Integer>();
-				final Pointer<Integer> txPower = new Pointer<Integer>();
-				final List<UUID> serviceUuids = new ArrayList<UUID>();
-				final SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
-				final Map<UUID, byte[]> serviceData = new HashMap<UUID, byte[]>();
 				final String name = rawDeviceName != null ? rawDeviceName : Utils_ScanRecord.parseName(scanRecord);
 
 				BleScanInfo scanInfo = Utils_ScanRecord.parseScanRecord(scanRecord);

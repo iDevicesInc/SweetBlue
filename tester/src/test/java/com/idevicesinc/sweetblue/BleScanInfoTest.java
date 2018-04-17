@@ -31,8 +31,7 @@ public class BleScanInfoTest extends BaseTest
                 .setAdvFlags((byte) 1, (byte) 0x2)
                 .setTxPower((byte) 10)
                 .addServiceData(uuid, new byte[] { 100 })
-                .setManufacturerId(manId)
-                .setManufacturerData(manData);
+                .addManufacturerData(manId, manData);
         byte[] record = bleRecord.buildPacket();
         BleScanInfo info = Utils_ScanRecord.parseScanRecord(record);
         assertTrue(info.getName().equals("Johnny 5"));
@@ -129,6 +128,21 @@ public class BleScanInfoTest extends BaseTest
         assertTrue(services.contains(Uuids.CURRENT_TIME_SERVICE));
         assertTrue(services.contains(Uuids.CURRENT_TIME_SERVICE__CURRENT_TIME));
         assertTrue(services.contains(myUuid));
+        succeed();
+    }
+
+    @Test
+    public void multipleMfgDataTest() throws Exception
+    {
+        startTest(false);
+        BleScanInfo info = new BleScanInfo();
+        info.addManufacturerData((short) 14, new byte[] { 0x0, 0x1, 0x2 });
+        info.addManufacturerData((short) 14, new byte[] { 0x3, 0x4, 0x5 });
+
+        byte[] record = info.buildPacket();
+
+        BleScanInfo info2 = Utils_ScanRecord.parseScanRecord(record);
+        assertTrue(info2.getManufacturerDataList().size() == 2);
         succeed();
     }
 
