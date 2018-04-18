@@ -26,6 +26,7 @@ public final class BleScanInfo implements UsesCustomNull
     private boolean m_completeUuidList;
     private String m_localName;
     private boolean m_shortName;
+    private ManufacturerData m_tempManData;
 
     /**
      * Basic constructor to use if you are building a scan record to advertise.
@@ -175,6 +176,9 @@ public final class BleScanInfo implements UsesCustomNull
     public final BleScanInfo setManufacturerId(short id)
     {
         m_manufactuerId = id;
+        if (m_tempManData == null)
+            m_tempManData = new ManufacturerData();
+        m_tempManData.m_id = id;
         return this;
     }
 
@@ -213,6 +217,9 @@ public final class BleScanInfo implements UsesCustomNull
     public final BleScanInfo setManufacturerData(byte[] data)
     {
         m_manufacturerData = data;
+        if (m_tempManData == null)
+            m_tempManData = new ManufacturerData();
+        m_tempManData.m_data = data;
         return this;
     }
 
@@ -424,15 +431,9 @@ public final class BleScanInfo implements UsesCustomNull
                 map.put(new BleUuid(u, BleUuid.UuidSize.SHORT), m_serviceData.get(u));
             }
         }
-        if (m_manufactuerId != null)
+        if (m_tempManData != null)
         {
-            ManufacturerData data = new ManufacturerData();
-            data.m_id = m_manufactuerId;
-            if (m_manufacturerData != null)
-            {
-                data.m_data = m_manufacturerData;
-            }
-            m_manufacturerDataList.add(data);
+            m_manufacturerDataList.add(m_tempManData);
         }
         byte flags = m_advFlags.value != null ? m_advFlags.value.byteValue() : 0;
         byte tx = m_txPower.value != null ? m_txPower.value.byteValue() : 0;
