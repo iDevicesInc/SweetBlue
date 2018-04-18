@@ -789,6 +789,7 @@ final class P_ScanManager
     {
 
         public static final int SCAN_FAILED_ALREADY_STARTED = 1;
+        public static final int SCAN_FAILED_APPLICATION_REGISTRATION_FAILED = 2;
 
         @Override public void onScanResult(int callbackType, L_Util.ScanResult result)
         {
@@ -806,6 +807,12 @@ final class P_ScanManager
             {
                 m_manager.ASSERT(false, "Got an error stating the scan has already started when trying to start a scan.");
                 // We're already scanning, so nothing to do here
+            }
+            else if (errorCode == SCAN_FAILED_APPLICATION_REGISTRATION_FAILED)
+            {
+                fail();
+
+                m_manager.uhOh(BleManager.UhOhListener.UhOh.START_BLE_SCAN_FAILED);
             }
             else
             {
