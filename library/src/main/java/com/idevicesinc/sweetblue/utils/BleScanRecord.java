@@ -10,14 +10,11 @@ import java.util.UUID;
 
 /**
  * Class used to store information from a BLE scan record. This class can also be used to create a scan record.
- *
- * @deprecated This class will be removed in version 3. Please use {@link BleScanRecord} instead.
  */
-@Deprecated
-public final class BleScanInfo implements UsesCustomNull
+public final class BleScanRecord implements UsesCustomNull
 {
 
-    public final static BleScanInfo NULL = new BleScanInfo();
+    public final static BleScanRecord NULL = new BleScanRecord();
 
     private Short m_manufactuerId;
     private List<ManufacturerData> m_manufacturerDataList;
@@ -34,7 +31,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Basic constructor to use if you are building a scan record to advertise.
      */
-    public BleScanInfo()
+    public BleScanRecord()
     {
         m_advFlags = new Pointer<>(0);
         m_txPower = new Pointer<>(0);
@@ -45,10 +42,10 @@ public final class BleScanInfo implements UsesCustomNull
     }
 
     /**
-     * Old Constructor used to be used internally when a {@link com.idevicesinc.sweetblue.BleDevice} is discovered. Now, {@link #BleScanInfo(Pointer, Pointer, List, boolean, List, Map, String, boolean)} is
+     * Old Constructor used to be used internally when a {@link com.idevicesinc.sweetblue.BleDevice} is discovered. Now, {@link #BleScanRecord(Pointer, Pointer, List, boolean, List, Map, String, boolean)} is
      * used instead.
      */
-    public BleScanInfo(Pointer<Integer> advFlags, Pointer<Integer> txPower, List<UUID> serviceUuids, boolean uuidCompleteList, short mfgId, byte[] mfgData, Map<UUID, byte[]> serviceData, String localName, boolean shortName)
+    public BleScanRecord(Pointer<Integer> advFlags, Pointer<Integer> txPower, List<UUID> serviceUuids, boolean uuidCompleteList, short mfgId, byte[] mfgData, Map<UUID, byte[]> serviceData, String localName, boolean shortName)
     {
         m_advFlags = advFlags;
         m_txPower = txPower;
@@ -72,7 +69,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Constructor used internally when a {@link com.idevicesinc.sweetblue.BleDevice} is discovered.
      */
-    public BleScanInfo(Pointer<Integer> advFlags, Pointer<Integer> txPower, List<UUID> serviceUuids, boolean uuidCompleteList, List<ManufacturerData> mfgData, Map<UUID, byte[]> serviceData, String localName, boolean shortName)
+    public BleScanRecord(Pointer<Integer> advFlags, Pointer<Integer> txPower, List<UUID> serviceUuids, boolean uuidCompleteList, List<ManufacturerData> mfgData, Map<UUID, byte[]> serviceData, String localName, boolean shortName)
     {
         m_advFlags = advFlags;
         m_txPower = txPower;
@@ -99,9 +96,13 @@ public final class BleScanInfo implements UsesCustomNull
     }
 
     /**
-     * Convenience constructor used internally to map the newer class to this deprecated class for deprecated methods.
+     * Convenience constructor to create a new {@link BleScanRecord} from the deprecated {@link BleScanInfo} instance. This will be removed in
+     * version 3 as will {@link BleScanInfo}.
+     *
+     * @deprecated
      */
-    public BleScanInfo(BleScanRecord scanInfo)
+    @Deprecated
+    public BleScanRecord(BleScanInfo scanInfo)
     {
         m_advFlags = scanInfo.getAdvFlags();
         m_txPower = scanInfo.getTxPower();
@@ -124,7 +125,7 @@ public final class BleScanInfo implements UsesCustomNull
      * Clear all service data that may be in this {@link BleScanInfo} instance.
      * See also {@link #clearServiceUUIDs()}.
      */
-    public final BleScanInfo clearServiceData()
+    public final BleScanRecord clearServiceData()
     {
         m_serviceData.clear();
         return this;
@@ -133,7 +134,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Set the service data for this {@link BleScanInfo} instance.
      */
-    public final BleScanInfo addServiceData(Map<UUID, byte[]> data)
+    public final BleScanRecord addServiceData(Map<UUID, byte[]> data)
     {
         m_serviceData.putAll(data);
         return this;
@@ -142,7 +143,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Clears any service UUIDs in this instance.
      */
-    public final BleScanInfo clearServiceUUIDs()
+    public final BleScanRecord clearServiceUUIDs()
     {
         m_serviceUuids.clear();
         return this;
@@ -151,7 +152,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Add the given List of {@link UUID}s to this instance's UUID list.
      */
-    public final BleScanInfo addServiceUUIDs(List<UUID> uuids)
+    public final BleScanRecord addServiceUUIDs(List<UUID> uuids)
     {
         if (uuids != null)
         {
@@ -167,7 +168,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Add the given {@link UUID} and data to this instance's service data map.
      */
-    public final BleScanInfo addServiceData(UUID uuid, byte[] data)
+    public final BleScanRecord addServiceData(UUID uuid, byte[] data)
     {
         m_serviceData.put(uuid, data);
         return this;
@@ -176,7 +177,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Add a {@link UUID} with the given {@link BleUuid.UuidSize} to this instance's {@link UUID} list.
      */
-    public final BleScanInfo addServiceUuid(UUID uuid, BleUuid.UuidSize size)
+    public final BleScanRecord addServiceUuid(UUID uuid, BleUuid.UuidSize size)
     {
         m_serviceUuids.add(new BleUuid(uuid, size));
         return this;
@@ -186,7 +187,7 @@ public final class BleScanInfo implements UsesCustomNull
      * Overload of {@link #addServiceUuid(UUID, BleUuid.UuidSize)}, which sets the size to {@link BleUuid.UuidSize#SHORT}, if it can fit, otherwise it will
      * default to {@link BleUuid.UuidSize#FULL}
      */
-    public final BleScanInfo addServiceUuid(UUID uuid)
+    public final BleScanRecord addServiceUuid(UUID uuid)
     {
         final BleUuid.UuidSize size = shortUuid(uuid) ? BleUuid.UuidSize.SHORT : BleUuid.UuidSize.FULL;
         return addServiceUuid(uuid, size);
@@ -198,7 +199,7 @@ public final class BleScanInfo implements UsesCustomNull
      * @deprecated Please don't use anymore. Use {@link #addManufacturerData(short, byte[])} instead.
      */
     @Deprecated
-    public final BleScanInfo setManufacturerId(short id)
+    public final BleScanRecord setManufacturerId(short id)
     {
         m_manufactuerId = id;
         if (m_tempManData == null)
@@ -210,7 +211,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Add some manufacturer data, along with the given manufacturer id to the {@link SparseArray}.
      */
-    public final BleScanInfo addManufacturerData(short manId, byte[] data)
+    public final BleScanRecord addManufacturerData(short manId, byte[] data)
     {
         if (m_manufacturerDataList.size() == 0)
         {
@@ -227,7 +228,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Sets this {@link BleScanInfo}'s manufacturer data list. This creates a new list from the one given.
      */
-    public final BleScanInfo setManufacturerDataList(List<ManufacturerData> list)
+    public final BleScanRecord setManufacturerDataList(List<ManufacturerData> list)
     {
         m_manufacturerDataList = new ArrayList<>(list);
         return this;
@@ -239,7 +240,7 @@ public final class BleScanInfo implements UsesCustomNull
      * @deprecated Please don't use anymore. Use {@link #addManufacturerData(short, byte[])} instead.
      */
     @Deprecated
-    public final BleScanInfo setManufacturerData(byte[] data)
+    public final BleScanRecord setManufacturerData(byte[] data)
     {
         m_manufacturerData = data;
         if (m_tempManData == null)
@@ -251,7 +252,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Overload of {@link #setName(String, boolean)}, which defaults to a complete name (not short).
      */
-    public final BleScanInfo setName(String name)
+    public final BleScanRecord setName(String name)
     {
         return setName(name, false);
     }
@@ -259,7 +260,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Set the device name, and if it's a shortened name or not.
      */
-    public final BleScanInfo setName(String name, boolean shortName)
+    public final BleScanRecord setName(String name, boolean shortName)
     {
         m_localName = name;
         m_shortName = shortName;
@@ -306,7 +307,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Set the advertising flags. This method expects a byte bitmask (so all flags are already OR'd).
      */
-    public final BleScanInfo setAdvFlags(byte mask)
+    public final BleScanRecord setAdvFlags(byte mask)
     {
         if (m_advFlags == null)
         {
@@ -323,7 +324,7 @@ public final class BleScanInfo implements UsesCustomNull
      * Convenience method to set the advertising flags, which allows you to pass in every flag you want, and this
      * method will OR them together for you.
      */
-    public final BleScanInfo setAdvFlags(byte... flags)
+    public final BleScanRecord setAdvFlags(byte... flags)
     {
         if (flags == null || flags.length == 0)
         {
@@ -355,7 +356,7 @@ public final class BleScanInfo implements UsesCustomNull
     /**
      * Set the TX power
      */
-    public final BleScanInfo setTxPower(byte power)
+    public final BleScanRecord setTxPower(byte power)
     {
         if (m_txPower == null)
         {
@@ -429,7 +430,7 @@ public final class BleScanInfo implements UsesCustomNull
     }
 
     /**
-     * Returns whether the list of UUIDs contained in the advertising packet is complete or not.
+     * Returns whether the list of UUIDs contained in the record are a complete list or not.
      */
     public final boolean isCompleteUuidList()
     {

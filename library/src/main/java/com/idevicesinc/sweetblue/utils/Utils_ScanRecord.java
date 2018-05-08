@@ -81,7 +81,7 @@ public final class Utils_ScanRecord extends Utils
 		return serviceUuids;
 	}
 
-	public static BleScanInfo parseScanRecord(final byte[] scanRecord)
+	public static BleScanRecord parseScanRecord(final byte[] scanRecord)
 	{
 		Pointer<Integer> txPower = new Pointer<>();
 		txPower.value = BleNodeConfig.INVALID_TX_POWER;
@@ -102,7 +102,7 @@ public final class Utils_ScanRecord extends Utils
 
 		if(scanRecord == null)
 		{
-			return BleScanInfo.NULL;
+			return BleScanRecord.NULL;
 		}
 
 		int currentPos = 0;
@@ -198,7 +198,7 @@ public final class Utils_ScanRecord extends Utils
 			}
 			currentPos += dataLength;
 		}
-		return new BleScanInfo(advFlags, txPower, serviceUUIDs, completeList, manData, serviceData, localName, shortName);
+		return new BleScanRecord(advFlags, txPower, serviceUUIDs, completeList, manData, serviceData, localName, shortName);
 	}
 
 	@Deprecated

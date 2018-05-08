@@ -2,6 +2,7 @@ package com.idevicesinc.sweetblue;
 
 
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
+import com.idevicesinc.sweetblue.utils.BleScanRecord;
 import com.idevicesinc.sweetblue.utils.BleUuid;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Uuids;
@@ -15,7 +16,7 @@ import java.util.UUID;
 import static org.junit.Assert.assertTrue;
 
 
-public class BleScanInfoTest extends BaseTest
+public class BleScanRecordTest extends BaseTest
 {
 
 
@@ -26,14 +27,14 @@ public class BleScanInfoTest extends BaseTest
         final UUID uuid = Uuids.BATTERY_SERVICE_UUID;
         final short manId = (short) 16454;
         final byte[] manData = new byte[] { 0x5,(byte) 0xAA, 0x44, (byte) 0xB3, 0x66 };
-        BleScanInfo bleRecord = new BleScanInfo()
+        BleScanRecord bleRecord = new BleScanRecord()
                 .setName("Johnny 5")
                 .setAdvFlags((byte) 1, (byte) 0x2)
                 .setTxPower((byte) 10)
                 .addServiceData(uuid, new byte[] { 100 })
                 .addManufacturerData(manId, manData);
         byte[] record = bleRecord.buildPacket();
-        BleScanInfo info = Utils_ScanRecord.parseScanRecord(record);
+        BleScanRecord info = Utils_ScanRecord.parseScanRecord(record);
         assertTrue(info.getName().equals("Johnny 5"));
         assertTrue(info.getAdvFlags().value == 3);
         assertTrue(info.getManufacturerId() == manId);
@@ -52,7 +53,7 @@ public class BleScanInfoTest extends BaseTest
         final UUID uuid = Uuids.BATTERY_SERVICE_UUID;
         final short manId = (short) 16454;
         final byte[] manData = new byte[] { 0x5,(byte) 0xAA, 0x44, (byte) 0xB3, 0x66 };
-        BleScanInfo bleRecord = new BleScanInfo()
+        BleScanRecord bleRecord = new BleScanRecord()
                 .setName("Johnny 5")
                 .setAdvFlags((byte) 0x3)
                 .setTxPower((byte) 10)
@@ -60,7 +61,7 @@ public class BleScanInfoTest extends BaseTest
                 .setManufacturerId(manId)
                 .setManufacturerData(manData);
         byte[] record = bleRecord.buildPacket();
-        BleScanInfo info = Utils_ScanRecord.parseScanRecord(record);
+        BleScanRecord info = Utils_ScanRecord.parseScanRecord(record);
         assertTrue(info.getName().equals("Johnny 5"));
         assertTrue(info.getAdvFlags().value == 3);
         assertTrue(info.getManufacturerId() == manId);
@@ -78,7 +79,7 @@ public class BleScanInfoTest extends BaseTest
         startTest(false);
         final short manId = (short) 16454;
         final byte[] manData = new byte[] { 0x5,(byte) 0xAA, 0x44, (byte) 0xB3, 0x66 };
-        BleScanInfo bleRecord = new BleScanInfo()
+        BleScanRecord bleRecord = new BleScanRecord()
                 .setName("Johnny 5")
                 .setAdvFlags((byte) 1, (byte) 0x2)
                 .setTxPower((byte) 10)
@@ -87,7 +88,7 @@ public class BleScanInfoTest extends BaseTest
                 .setManufacturerId(manId)
                 .setManufacturerData(manData);
         byte[] record = bleRecord.buildPacket();
-        BleScanInfo info = Utils_ScanRecord.parseScanRecord(record);
+        BleScanRecord info = Utils_ScanRecord.parseScanRecord(record);
         assertTrue(info.getName().equals("Johnny 5"));
         assertTrue(info.getAdvFlags().value == 3);
         assertTrue(info.getManufacturerId() == manId);
@@ -107,7 +108,7 @@ public class BleScanInfoTest extends BaseTest
         UUID myUuid = Uuids.fromInt("ABABCDCD");
         final short manId = (short) 16454;
         final byte[] manData = new byte[] { 0x5,(byte) 0xAA, 0x44, (byte) 0xB3, 0x66 };
-        BleScanInfo bleRecord = new BleScanInfo()
+        BleScanRecord bleRecord = new BleScanRecord()
                 .setName("Johnny 5")
                 .setAdvFlags((byte) 1, (byte) 0x2)
                 .setTxPower((byte) 10)
@@ -117,7 +118,7 @@ public class BleScanInfoTest extends BaseTest
                 .setManufacturerId(manId)
                 .setManufacturerData(manData);
         byte[] record = bleRecord.buildPacket();
-        BleScanInfo info = Utils_ScanRecord.parseScanRecord(record);
+        BleScanRecord info = Utils_ScanRecord.parseScanRecord(record);
         assertTrue(info.getName().equals("Johnny 5"));
         assertTrue(info.getAdvFlags().value == 3);
         assertTrue(info.getManufacturerId() == manId);
@@ -141,7 +142,7 @@ public class BleScanInfoTest extends BaseTest
 
         byte[] record = info.buildPacket();
 
-        BleScanInfo info2 = Utils_ScanRecord.parseScanRecord(record);
+        BleScanRecord info2 = Utils_ScanRecord.parseScanRecord(record);
         assertTrue(info2.getManufacturerDataList().size() == 2);
         succeed();
     }

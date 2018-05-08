@@ -24,6 +24,7 @@ import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
+import com.idevicesinc.sweetblue.utils.BleScanRecord;
 import com.idevicesinc.sweetblue.utils.Distance;
 import com.idevicesinc.sweetblue.utils.EmptyIterator;
 import com.idevicesinc.sweetblue.utils.EpochTime;
@@ -1908,6 +1909,7 @@ public final class BleDevice extends BleNode
     private byte[] m_scanRecord = P_Const.EMPTY_BYTE_ARRAY;
 
     private BleScanInfo m_scanInfo = new BleScanInfo();
+    private BleScanRecord m_bleScanRecord = new BleScanRecord();
 
     private boolean m_useAutoConnect = false;
     private boolean m_alwaysUseAutoConnect = false;
@@ -2513,10 +2515,21 @@ public final class BleDevice extends BleNode
 
     /**
      * Returns the {@link BleScanInfo} instance held by this {@link BleDevice}.
+     *
+     * @deprecated Use {@link #getBleScanRecord()} instead.
      */
+    @Deprecated
     public final @Nullable(Prevalence.NEVER) BleScanInfo getScanInfo()
     {
         return m_scanInfo;
+    }
+
+    /**
+     * Returns the {@link BleScanRecord} instance held by this {@link BleDevice}.
+     */
+    public final @Nullable(Prevalence.NEVER) BleScanRecord getBleScanRecord()
+    {
+        return m_bleScanRecord;
     }
 
     /**
@@ -5805,26 +5818,29 @@ public final class BleDevice extends BleNode
 
             updateKnownTxPower(scanEvent_nullable.txPower());
 
-            m_scanInfo.setAdvFlags((byte) scanEvent_nullable.advertisingFlags());
+            m_bleScanRecord.setAdvFlags((byte) scanEvent_nullable.advertisingFlags());
 
-            m_scanInfo.setName(scanEvent_nullable.name_native());
+            m_bleScanRecord.setName(scanEvent_nullable.name_native());
 
-            m_scanInfo.setTxPower((byte) scanEvent_nullable.txPower());
+            m_bleScanRecord.setTxPower((byte) scanEvent_nullable.txPower());
 
-            m_scanInfo.clearServiceUUIDs();
-            m_scanInfo.addServiceUUIDs(scanEvent_nullable.advertisedServices());
+            m_bleScanRecord.clearServiceUUIDs();
+            m_bleScanRecord.addServiceUUIDs(scanEvent_nullable.advertisedServices());
 
 
-            m_scanInfo.setManufacturerDataList(scanEvent_nullable.manufacturerDataList());
+            m_bleScanRecord.setManufacturerDataList(scanEvent_nullable.manufacturerDataList());
 
-            m_scanInfo.clearServiceData();
-            m_scanInfo.addServiceData(scanEvent_nullable.serviceData());
+            m_bleScanRecord.clearServiceData();
+            m_bleScanRecord.addServiceData(scanEvent_nullable.serviceData());
+
+            m_scanInfo = new BleScanInfo(m_bleScanRecord);
         }
         else if (scanRecord_nullable != null)
         {
             m_scanRecord = scanRecord_nullable;
 
-            m_scanInfo = Utils_ScanRecord.parseScanRecord(scanRecord_nullable);
+            m_bleScanRecord = Utils_ScanRecord.parseScanRecord(scanRecord_nullable);
+            m_scanInfo = new BleScanInfo(m_bleScanRecord);
 
             updateKnownTxPower(m_scanInfo.getTxPower().value);
         }

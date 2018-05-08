@@ -19,6 +19,7 @@ import com.idevicesinc.sweetblue.annotations.Immutable;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 import com.idevicesinc.sweetblue.annotations.Nullable.Prevalence;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
+import com.idevicesinc.sweetblue.utils.BleScanRecord;
 import com.idevicesinc.sweetblue.utils.Event;
 import com.idevicesinc.sweetblue.utils.Interval;
 import com.idevicesinc.sweetblue.utils.ManufacturerData;
@@ -666,7 +667,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			ScanEvent(
 					BluetoothDevice nativeInstance, String rawDeviceName,
 					String normalizedDeviceName, byte[] scanRecord, int rssi, State.ChangeIntent lastDisconnectIntent,
-					BleScanInfo scanInfo
+					BleScanRecord scanInfo
 			)
 			{
 				this.m_nativeInstance = nativeInstance;
@@ -690,7 +691,7 @@ public class BleManagerConfig extends BleDeviceConfig
 			{
 				final String name = rawDeviceName != null ? rawDeviceName : Utils_ScanRecord.parseName(scanRecord);
 
-				BleScanInfo scanInfo = Utils_ScanRecord.parseScanRecord(scanRecord);
+				BleScanRecord scanInfo = Utils_ScanRecord.parseScanRecord(scanRecord);
 
 				final ScanEvent e = new ScanEvent(device_native, name, normalizedDeviceName, scanRecord, rssi, lastDisconnectIntent, scanInfo);
 
