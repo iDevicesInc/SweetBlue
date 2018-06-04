@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.idevicesinc.sweetblue.utils.ForEach_Breakable;
 import com.idevicesinc.sweetblue.utils.Interval;
 
 
@@ -369,7 +370,7 @@ final class P_TaskQueue
 	{
 		PA_Task current = getCurrent(taskClass, manager);
 
-		if( PU_TaskQueue.isMatch(getCurrent(), taskClass, manager, null, null) )
+		if( PU_TaskQueue.isMatch(current, taskClass, manager, null, null) )
 		{
 			tryEndingTask(current, PE_TaskState.INTERRUPTED);
 
@@ -527,7 +528,7 @@ final class P_TaskQueue
 		return isCurrent(taskClass, mngr) || isInQueue(taskClass, mngr);
 	}
 
-	public final <T extends PA_Task> T get(Class<T> taskClass, BleManager mngr)
+	public final <T extends PA_Task> T get(final Class<T> taskClass, final BleManager mngr)
 	{
 		final PA_Task current = getCurrent();
 		if( PU_TaskQueue.isMatch(current, taskClass, mngr, null, null) )
@@ -535,15 +536,17 @@ final class P_TaskQueue
 			return (T) current;
 		}
 
-		for( int i = 0; i < m_queue.size(); i++ )
+		return (T) forEach_queue(new ForEach_Breakable<PA_Task>()
 		{
-			if( PU_TaskQueue.isMatch(m_queue.get(i), taskClass, mngr, null, null) )
+			@Override
+			public Please next(PA_Task task)
 			{
-				return (T) m_queue.get(i);
+				if (PU_TaskQueue.isMatch(task, taskClass, mngr, null, null))
+					return ForEach_Breakable.Please.doBreak();
+				else
+					return ForEach_Breakable.Please.doContinue();
 			}
-		}
-
-		return null;
+		});
 	}
 
 	public final <T extends PA_Task> T getCurrent(Class<T> taskClass, BleDevice device)
@@ -704,5 +707,19 @@ final class P_TaskQueue
 		final String toReturn = current + " " + queue;
 		
 		return toReturn;
+	}
+
+
+
+	private PA_Task forEach_queue(ForEach_Breakable<PA_Task> forEach_breakable)
+	{
+		ArrayList<PA_Task> cacheList = new ArrayList<>(m_queue);
+		for (int i = 0; i < cacheList.size(); i++)
+		{
+			ForEach_Breakable.Please please = forEach_breakable.next(cacheList.get(i));
+			if (please.shouldBreak())
+				return cacheList.get(i);
+		}
+		return null;
 	}
 }
