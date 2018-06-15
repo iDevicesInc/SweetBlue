@@ -7,6 +7,9 @@ apply plugin: 'checkstyle'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
+ssh.settings {
+    knownHosts = allowAnyHosts
+}
 
 version = "${SEMVER}".replace("_", ".")
 
@@ -667,7 +670,7 @@ task uploadCommerceZip(dependsOn: zipJar) {
 
     doLast {
         // Upload zip file to the big commerce site
-        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue_commercial.zip", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@solutions.idevicesinc.com/dav/product_downloads/s/sweetblue.zip"]
+        def curlS = ['curl', '-T', projectDir.absolutePath + "/${STAGE}/sweetblue_commercial.zip", "--http1.1", "--digest", "https://sweetblue%40idevicesinc.com:${COMMERCE_PW}@solutions.idevicesinc.com/dav/product_downloads/s/sweetblue.zip"]
         def curl = curlS.execute()
         curl.waitFor()
         if (curl.exitValue() != 0) {
