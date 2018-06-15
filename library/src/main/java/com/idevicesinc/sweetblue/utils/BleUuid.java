@@ -7,7 +7,7 @@ import java.util.UUID;
  * as a 128-bit UUID, but with scan records, you can have a 16, 32, or 128 bit UUID. Use {@link UuidSize} to specify this, so the packet
  * will be built properly.
  *
- * If you use {@link BleScanInfo} to create your scan packets, you will not need to use this class directly.
+ * If you use {@link BleScanRecord} to create your scan packets, you will not need to use this class directly.
  */
 public final class BleUuid
 {

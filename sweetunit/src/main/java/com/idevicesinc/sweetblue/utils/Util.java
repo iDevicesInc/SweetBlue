@@ -6,7 +6,7 @@ import java.util.Random;
 
 /**
  * Utility class to handle various things when unit testing, such as generating random mac addresses, random byte arrays. For generating a scan record, you
- * should use the {@link BleScanInfo} class.
+ * should use the {@link BleScanRecord} class.
  */
 public final class Util
 {

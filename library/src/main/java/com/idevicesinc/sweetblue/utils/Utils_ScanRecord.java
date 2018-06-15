@@ -16,27 +16,21 @@
 
 package com.idevicesinc.sweetblue.utils;
 
-import java.nio.ByteBuffer;
+
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import android.bluetooth.le.*;
-import android.nfc.Tag;
 import android.os.ParcelUuid;
 import android.text.TextUtils;
-import android.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
-
-import com.idevicesinc.sweetblue.BleManager;
-import com.idevicesinc.sweetblue.BleManagerConfig;
 import com.idevicesinc.sweetblue.BleNodeConfig;
-import com.idevicesinc.sweetblue.SweetLogger;
 import com.idevicesinc.sweetblue.annotations.Nullable;
 
 /**
@@ -77,16 +71,17 @@ public final class Utils_ScanRecord extends Utils
 	/**
 	 *
 	 */
-	@Deprecated  public static @Nullable(Nullable.Prevalence.NEVER) List<UUID> parseServiceUuids(final byte[] scanRecord)
+	@Deprecated
+	public static @Nullable(Nullable.Prevalence.NEVER) List<UUID> parseServiceUuids(final byte[] scanRecord)
 	{
-		final ArrayList<UUID> serviceUuids = new ArrayList<UUID>();
+		final ArrayList<UUID> serviceUuids = new ArrayList<>();
 
 		parseScanRecord(scanRecord, null, null, serviceUuids, null, null);
 
 		return serviceUuids;
 	}
 
-	public static BleScanInfo parseScanRecord(final byte[] scanRecord)
+	public static BleScanRecord parseScanRecord(final byte[] scanRecord)
 	{
 		Pointer<Integer> txPower = new Pointer<>();
 		txPower.value = BleNodeConfig.INVALID_TX_POWER;
@@ -94,21 +89,20 @@ public final class Utils_ScanRecord extends Utils
 		Pointer<Integer> advFlags = new Pointer<>();
 		advFlags.value = -1;
 
-		Map<UUID, byte[]> serviceData = new HashMap<UUID, byte[]>();
+		Map<UUID, byte[]> serviceData = new HashMap<>();
 		serviceData.clear();
 
-		List<UUID> serviceUUIDs =  new ArrayList<UUID>();
+		List<UUID> serviceUUIDs =  new ArrayList<>();
 		serviceUUIDs.clear();
 
 		boolean shortName = false;
 		boolean completeList = false;
 
-		int mfgId = -1;
-		byte[] mfgData = new byte[0];
+		List<ManufacturerData> manData = new ArrayList<>();
 
 		if(scanRecord == null)
 		{
-			return BleScanInfo.NULL;
+			return BleScanRecord.NULL;
 		}
 
 		int currentPos = 0;
@@ -186,8 +180,11 @@ public final class Utils_ScanRecord extends Utils
 					// manufacturer ids in little endian.
 					try
 					{
-						mfgId = ((scanRecord[currentPos + 1] & 0xFF) << 8) + (scanRecord[currentPos] & 0xFF);
-						mfgData = extractBytes(scanRecord, currentPos + 2, dataLength - 2);
+						short mfgId = (short) (((scanRecord[currentPos + 1] & 0xFF) << 8) + (scanRecord[currentPos] & 0xFF));
+						ManufacturerData mdata = new ManufacturerData();
+						mdata.m_id = mfgId;
+						mdata.m_data = extractBytes(scanRecord, currentPos + 2, dataLength - 2);
+						manData.add(mdata);
 					}
 					catch(Exception e)
 					{
@@ -201,10 +198,11 @@ public final class Utils_ScanRecord extends Utils
 			}
 			currentPos += dataLength;
 		}
-		return new BleScanInfo(advFlags, txPower, serviceUUIDs, completeList, (short) mfgId, mfgData, serviceData, localName, shortName);
+		return new BleScanRecord(advFlags, txPower, serviceUUIDs, completeList, manData, serviceData, localName, shortName);
 	}
 
-	@Deprecated public static void parseScanRecord(final byte[] scanRecord, final Pointer<Integer> advFlags_out_nullable, final Pointer<Integer> txPower_nullable, final List<UUID> serviceUuids_out_nullable, final SparseArray<byte[]> manufacturerData_out_nullable, final Map<UUID, byte[]> serviceData_out_nullable)
+	@Deprecated
+	public static void parseScanRecord(final byte[] scanRecord, final Pointer<Integer> advFlags_out_nullable, final Pointer<Integer> txPower_nullable, final List<UUID> serviceUuids_out_nullable, final SparseArray<byte[]> manufacturerData_out_nullable, final Map<UUID, byte[]> serviceData_out_nullable)
 	{
 		if( txPower_nullable != null )
 		{
@@ -427,7 +425,7 @@ public final class Utils_ScanRecord extends Utils
 		// Construct a 128 bit UUID.
 		if( length == UUID_BYTES_128_BIT )
 		{
-			ByteBuffer buf = ByteBuffer.wrap(uuidBytes).order(ByteOrder.LITTLE_ENDIAN);
+			java.nio.ByteBuffer buf = java.nio.ByteBuffer.wrap(uuidBytes).order(ByteOrder.LITTLE_ENDIAN);
 			long msb = buf.getLong(8);
 			long lsb = buf.getLong(0);
 			return new UUID(msb, lsb);
@@ -506,12 +504,91 @@ public final class Utils_ScanRecord extends Utils
 		return newScanRecord(advFlags, serviceMap, false, name, shortName, txPowerLevel, manufacturerId, manufacturerData);
 	}
 
+	public static byte[] newScanRecord(Byte advFlags, Map<BleUuid, byte[]> serviceMap, boolean completeList, String name, boolean shortName, Byte txPowerLevel, List<ManufacturerData> mfgData)
+	{
+		final ByteBuffer buff = new ByteBuffer();
+		if (advFlags != null)
+		{
+			buff.append((byte) 2);
+			buff.append(DATA_TYPE_FLAGS);
+			buff.append(advFlags);
+		}
+		if (serviceMap != null && serviceMap.size() > 0)
+		{
+			for (BleUuid uuid : serviceMap.keySet())
+			{
+				final byte[] serviceData = serviceMap.get(uuid);
+				if (uuid.uuid() == null && serviceData != null && serviceData.length > 0)
+				{
+					buff.append((byte) (1 + serviceData.length));
+					buff.append(DATA_TYPE_SERVICE_DATA);
+					buff.append(serviceData);
+				}
+				else if (serviceData != null && serviceData.length > 0)
+				{
+					buff.append((byte) (3 + serviceData.length));
+					buff.append(DATA_TYPE_SERVICE_DATA);
+					byte[] uid = getUuidBytes(uuid.uuid(), BleUuid.UuidSize.SHORT);
+					buff.append(uid);
+					buff.append(serviceData);
+				}
+				else if (uuid.uuid() != null)
+				{
+					byte[] uuidBytes = getUuidBytes(uuid.uuid(), uuid.uuidSize());
+					buff.append((byte) (1 + uuidBytes.length));
+					byte headerByte = getServiceUuidHeaderByte(uuid.uuidSize(), completeList);
+					buff.append(headerByte);
+					buff.append(uuidBytes);
+				}
+			}
+		}
+		if (name != null && name.length() > 0)
+		{
+			buff.append((byte) (name.length() + 1));
+			buff.append(shortName ? DATA_TYPE_LOCAL_NAME_SHORT : DATA_TYPE_LOCAL_NAME_COMPLETE);
+			buff.append(name.getBytes());
+		}
+		if (txPowerLevel != null)
+		{
+			buff.append((byte) 2);
+			buff.append(DATA_TYPE_TX_POWER_LEVEL);
+			buff.append(txPowerLevel);
+		}
+		if (mfgData != null && mfgData.size() > 0)
+		{
+			for (int i = 0; i < mfgData.size(); i++)
+			{
+				ManufacturerData mdata = mfgData.get(i);
+				short mid = mdata.m_id;
+				byte[] data = mdata.m_data;
+				if (data == null)
+				{
+					buff.append((byte) 3);
+					buff.append((byte) DATA_TYPE_MANUFACTURER_SPECIFIC_DATA);
+					byte[] id = Utils_Byte.shortToBytes((short) mid);
+					Utils_Byte.reverseBytes(id);
+					buff.append(id);
+				}
+				else
+				{
+					buff.append((byte) (3 + data.length));
+					buff.append((byte) DATA_TYPE_MANUFACTURER_SPECIFIC_DATA);
+					byte[] id = Utils_Byte.shortToBytes((short) mid);
+					Utils_Byte.reverseBytes(id);
+					buff.append(id);
+					buff.append(data);
+				}
+			}
+		}
+		return buff.bytesAndClear();
+	}
+
 	/**
 	 * Create the byte[] scanRecord from the given advertising flags, serviceUuid, serviceData, device name, txPower level, manufacturerID, and manufacturerData
 	 */
 	public static byte[] newScanRecord(Byte advFlags, Map<BleUuid, byte[]> serviceMap, boolean completeList, String name, boolean shortName, Byte txPowerLevel, Short manufacturerId, byte[] manufacturerData)
 	{
-		final com.idevicesinc.sweetblue.utils.ByteBuffer buff = new com.idevicesinc.sweetblue.utils.ByteBuffer();
+		final ByteBuffer buff = new ByteBuffer();
 		if (advFlags != null)
 		{
 			buff.append((byte) 2);
@@ -612,7 +689,7 @@ public final class Utils_ScanRecord extends Utils
 				byte[] lsbBytes = Utils_Byte.longToBytes(lsb);
 				Utils_Byte.reverseBytes(lsbBytes);
 				Utils_Byte.reverseBytes(msbBytes);
-				com.idevicesinc.sweetblue.utils.ByteBuffer buff = new com.idevicesinc.sweetblue.utils.ByteBuffer(size.byteSize());
+				ByteBuffer buff = new ByteBuffer(size.byteSize());
 				buff.append(lsbBytes);
 				buff.append(msbBytes);
 				return buff.bytesAndClear();
