@@ -56,7 +56,9 @@ public final class Utils_ScanRecord extends Utils
 	private static final byte DATA_TYPE_LOCAL_NAME_SHORT = 0x08;
 	private static final byte DATA_TYPE_LOCAL_NAME_COMPLETE = 0x09;
 	private static final byte DATA_TYPE_TX_POWER_LEVEL = 0x0A;
-	private static final byte DATA_TYPE_SERVICE_DATA = 0x16;
+	private static final byte DATA_TYPE_SERVICE_DATA_16_BIT = 0x16;
+	private static final byte DATA_TYPE_SERVICE_DATA_32_BIT = 0x20;
+	private static final byte DATA_TYPE_SERVICE_DATA_128_BIT = 0x21;
 	private static final int DATA_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF;
 
 	/** Length of bytes for 16 bit UUID */
@@ -158,12 +160,18 @@ public final class Utils_ScanRecord extends Utils
 				case DATA_TYPE_TX_POWER_LEVEL:
 					txPower.value = (int) scanRecord[currentPos];
 					break;
-				case DATA_TYPE_SERVICE_DATA:
+				case DATA_TYPE_SERVICE_DATA_16_BIT:
+				case DATA_TYPE_SERVICE_DATA_32_BIT:
+				case DATA_TYPE_SERVICE_DATA_128_BIT:
+					int serviceUuidLength = UUID_BYTES_16_BIT;
+					if (fieldType == DATA_TYPE_SERVICE_DATA_32_BIT)
+						serviceUuidLength = UUID_BYTES_32_BIT;
+					else if (fieldType == DATA_TYPE_SERVICE_DATA_128_BIT)
+						serviceUuidLength = UUID_BYTES_128_BIT;
 					// The first two bytes of the service data are service data UUID in little
 					// endian. The rest bytes are service data.
 					try
 					{
-						int serviceUuidLength = UUID_BYTES_16_BIT;
 						byte[] serviceDataUuidBytes = extractBytes(scanRecord, currentPos, serviceUuidLength);
 						UUID serviceDataUuid = parseUuidFrom(serviceDataUuidBytes);
 						byte[] serviceDataArray = extractBytes(scanRecord, currentPos + serviceUuidLength, dataLength - serviceUuidLength);
@@ -286,10 +294,16 @@ public final class Utils_ScanRecord extends Utils
 							txPower_nullable.value = (int) scanRecord[currentPos];
 						}
 						break;
-					case DATA_TYPE_SERVICE_DATA:
+					case DATA_TYPE_SERVICE_DATA_16_BIT:
+					case DATA_TYPE_SERVICE_DATA_32_BIT:
+					case DATA_TYPE_SERVICE_DATA_128_BIT:
+						int serviceUuidLength = UUID_BYTES_16_BIT;
+						if (fieldType == DATA_TYPE_SERVICE_DATA_32_BIT)
+							serviceUuidLength = UUID_BYTES_32_BIT;
+						else if (fieldType == DATA_TYPE_SERVICE_DATA_128_BIT)
+							serviceUuidLength = UUID_BYTES_128_BIT;
 						// The first two bytes of the service data are service data UUID in little
 						// endian. The rest bytes are service data.
-						int serviceUuidLength = UUID_BYTES_16_BIT;
 						byte[] serviceDataUuidBytes = extractBytes(scanRecord, currentPos, serviceUuidLength);
 						UUID serviceDataUuid = parseUuidFrom(serviceDataUuidBytes);
 						byte[] serviceDataArray = extractBytes(scanRecord, currentPos + serviceUuidLength, dataLength - serviceUuidLength);
@@ -521,13 +535,13 @@ public final class Utils_ScanRecord extends Utils
 				if (uuid.uuid() == null && serviceData != null && serviceData.length > 0)
 				{
 					buff.append((byte) (1 + serviceData.length));
-					buff.append(DATA_TYPE_SERVICE_DATA);
+					buff.append(DATA_TYPE_SERVICE_DATA_16_BIT);
 					buff.append(serviceData);
 				}
 				else if (serviceData != null && serviceData.length > 0)
 				{
 					buff.append((byte) (3 + serviceData.length));
-					buff.append(DATA_TYPE_SERVICE_DATA);
+					buff.append(DATA_TYPE_SERVICE_DATA_16_BIT);
 					byte[] uid = getUuidBytes(uuid.uuid(), BleUuid.UuidSize.SHORT);
 					buff.append(uid);
 					buff.append(serviceData);
@@ -603,13 +617,13 @@ public final class Utils_ScanRecord extends Utils
 				if (uuid.uuid() == null && serviceData != null && serviceData.length > 0)
 				{
 					buff.append((byte) (1 + serviceData.length));
-					buff.append(DATA_TYPE_SERVICE_DATA);
+					buff.append(DATA_TYPE_SERVICE_DATA_16_BIT);
 					buff.append(serviceData);
 				}
 				else if (serviceData != null && serviceData.length > 0)
 				{
 					buff.append((byte) (3 + serviceData.length));
-					buff.append(DATA_TYPE_SERVICE_DATA);
+					buff.append(DATA_TYPE_SERVICE_DATA_16_BIT);
 					byte[] uid = getUuidBytes(uuid.uuid(), BleUuid.UuidSize.SHORT);
 					buff.append(uid);
 					buff.append(serviceData);
