@@ -4,6 +4,7 @@ package com.idevicesinc.sweetblue;
 import com.idevicesinc.sweetblue.utils.BleScanInfo;
 import com.idevicesinc.sweetblue.utils.BleScanRecord;
 import com.idevicesinc.sweetblue.utils.BleUuid;
+import com.idevicesinc.sweetblue.utils.Utils_Byte;
 import com.idevicesinc.sweetblue.utils.Utils_ScanRecord;
 import com.idevicesinc.sweetblue.utils.Uuids;
 import org.junit.Test;
@@ -144,6 +145,24 @@ public class BleScanRecordTest extends BaseTest
 
         BleScanRecord info2 = Utils_ScanRecord.parseScanRecord(record);
         assertTrue(info2.getManufacturerDataList().size() == 2);
+        succeed();
+    }
+
+    @Test
+    public void serviceUUID128BitTest() throws Exception
+    {
+        startTest(false);
+        // This is a sample raw scan record which contains a 128bit service uuid with data.
+        byte[] rawRecord = Utils_Byte.hexStringToBytes("0201020709363534333231020AF11821024DE6A9087CC2831D48D87196E28455303132333435360000000000000000000000000000000000000000000000");
+        BleScanRecord record = Utils_ScanRecord.parseScanRecord(rawRecord);
+        assertTrue(record.getServiceData().size() > 0);
+        byte[] data = null;
+        for (UUID id : record.getServiceData().keySet())
+        {
+            data = record.getServiceData().get(id);
+            break;
+        }
+        assertTrue(data != null && data.length > 0);
         succeed();
     }
 
