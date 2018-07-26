@@ -2893,7 +2893,7 @@ public final class BleManager
 
 		final P_NativeDeviceLayer device_native = newNativeDevice(macAddress_normalized);
 
-		if( device_native == null ) //--- DRK > API says this should never happen...not trusting it!
+		if( device_native.isDeviceNull()) //--- DRK > API says this should never happen...not trusting it!
 		{
 			return BleDevice.NULL;
 		}

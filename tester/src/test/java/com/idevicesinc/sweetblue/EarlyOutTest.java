@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -23,7 +24,9 @@ public class EarlyOutTest extends BaseBleUnitTest
         startTest(false);
         BleDevice device = m_mgr.newDevice(Util.randomMacAddress());
         BleDevice.ReadWriteListener.ReadWriteEvent event = device.read(Uuids.BATTERY_SERVICE_UUID);
+        assertNotNull("ReadWriteEvent was null!", event);
         assertTrue(event.status() == BleDevice.ReadWriteListener.Status.NOT_CONNECTED);
+        succeed();
     }
 
     @Test
