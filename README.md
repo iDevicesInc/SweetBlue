@@ -1,4 +1,4 @@
-# With the release of SweetBlue v3 (https://sweetblue.io), this project will no longer be actively developed. Critical bugs will be addressed until December 31, 2018. #
+# With the release of SweetBlue v3 (https://sweetblue.io), this project is no longer being actively developed. Consider this project as abandoned. #
 <br><br>
 <b>|</b>&nbsp;<a href='#why'>Why?</a>
 <b>|</b>&nbsp;<a href='#features'>Features</a>
